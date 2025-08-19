@@ -148,50 +148,49 @@ const ModuleNotesDisplay = ({ courseId, moduleIndex, refreshKey, onNoteChange, o
                                       <Button variant="ghost" size="icon">
                                         <Trash2 className="h-4 w-4 text-red-500" />
                                         <span className="sr-only">Supprimer</span>
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Cette action ne peut pas être annulée. Cela supprimera définitivement votre note.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteNote(noteGroup.key, noteIdx)}>Supprimer</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </>
-                              )}
-                            </div>
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Cette action ne peut pas être annulée. Cela supprimera définitivement votre note.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteNote(noteGroup.key, noteIdx)}>Supprimer</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
                           </div>
-                        ))}
-                        <div className="flex justify-end gap-2 mt-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onAddNoteClick(noteGroup.context.split(': ')[1].split(' (')[0], sectionIndex)}
-                          >
-                            <PlusCircle className="h-4 w-4 mr-1" /> Ajouter une note
-                          </Button>
-                          <Link to="/all-notes">
-                            <Button variant="link" size="sm" className="p-0 h-auto text-xs text-muted-foreground hover:underline">
-                              Gérer toutes les notes
-                            </Button>
-                          </Link>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </Card>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onAddNoteClick(noteGroup.context.split(': ')[1].split(' (')[0], sectionIndex)}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-1" /> Ajouter une note
+                      </Button>
+                      <Link to="/all-notes">
+                        <Button variant="link" size="sm" className="p-0 h-auto text-xs text-muted-foreground hover:underline">
+                          Gérer toutes les notes
+                        </Button>
+                      </Link>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+        )}
+      </div>
+    </ScrollArea>
   );
 };
 
