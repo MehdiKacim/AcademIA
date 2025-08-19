@@ -2,10 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User as UserIcon, X } from "lucide-react";
+import { Send, Bot, User as UserIcon, X, Minus, Maximize } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 
@@ -20,32 +18,32 @@ const AiAPersistentChat = () => {
     { id: 1, sender: 'aia', text: "Bonjour ! Je suis AiA, votre tuteur personnel. Comment puis-je vous aider aujourd'hui ?" },
   ]);
   const [input, setInput] = useState('');
+  const [isMinimized, setIsMinimized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { currentCourseTitle, currentModuleTitle, isChatOpen, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
 
   const isMobile = useIsMobile();
 
-  // Fonction pour faire défiler vers le bas
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Sync initial message and scroll when chat opens
   useEffect(() => {
-    if (isChatOpen) {
+    if (isChatOpen && !isMinimized) {
       if (initialChatMessage) {
         setInput(initialChatMessage);
-        setInitialChatMessage(null); // Clear initial message after setting
+        setInitialChatMessage(null);
       }
       scrollToBottom();
     }
-  }, [isChatOpen, initialChatMessage, setInitialChatMessage]);
+  }, [isChatOpen, isMinimized, initialChatMessage, setInitialChatMessage]);
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isMinimized) {
+      scrollToBottom();
+    }
+  }, [messages, isMinimized]);
 
   const handleSendMessage = () => {
     if (input.trim()) {
@@ -79,101 +77,115 @@ const AiAPersistentChat = () => {
     }
   };
 
-  const chatContent = (
-    <div className="flex-grow flex flex-col py-4">
-      <ScrollArea className="flex-grow p-4 border rounded-md mb-4">
-        <div className="flex flex-col gap-4">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                "flex items-start gap-3",
-                msg.sender === 'user' ? "justify-end" : "justify-start"
-              )}
-            >
-              {msg.sender === 'aia' && (
-                <div className="flex-shrink-0 p-2 rounded-full bg-primary text-primary-foreground">
-                  <Bot className="h-4 w-4" />
-                </div>
-              )}
-              <div
-                className={cn(
-                  "max-w-[70%] p-3 rounded-lg",
-                  msg.sender === 'user'
-                    ? "bg-primary text-primary-foreground rounded-br-none"
-                    : "bg-muted text-muted-foreground rounded-bl-none"
-                )}
-              >
-                {msg.text}
-              </div>
-              {msg.sender === 'user' && (
-                <div className="flex-shrink-0 p-2 rounded-full bg-secondary text-secondary-foreground">
-                  <UserIcon className="h-4 w-4" />
-                </div>
-              )}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
-      <div className="flex gap-2 flex-wrap">
-        {currentCourseTitle && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
-            className="whitespace-nowrap text-xs"
-          >
-            @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
-          </Button>
-        )}
-        {currentModuleTitle && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
-            className="whitespace-nowrap text-xs"
-          >
-            @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
-          </Button>
-        )}
-        <Input
-          placeholder="Écrivez votre message à AiA..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="flex-grow"
-        />
-        <Button onClick={handleSendMessage} disabled={!input.trim()}>
-          <Send className="h-5 w-5" />
-          <span className="sr-only">Envoyer</span>
-        </Button>
-      </div>
-    </div>
-  );
+  if (!isChatOpen) {
+    return null; // Ne rien afficher si le chat n'est pas ouvert
+  }
 
-  return isMobile ? (
-    <Sheet open={isChatOpen} onOpenChange={closeChat}>
-      <SheetContent className="flex flex-col w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <Bot className="h-6 w-6 text-primary" /> Discuter avec AiA
-          </SheetTitle>
-        </SheetHeader>
-        {chatContent}
-      </SheetContent>
-    </Sheet>
-  ) : (
-    <Dialog open={isChatOpen} onOpenChange={closeChat}>
-      <DialogContent className="flex flex-col w-full max-w-2xl h-[80vh] p-0">
-        <DialogHeader className="p-4 border-b border-border">
-          <DialogTitle className="flex items-center gap-2">
-            <Bot className="h-6 w-6 text-primary" /> Discuter avec AiA
-          </DialogTitle>
-        </DialogHeader>
-        {chatContent}
-      </DialogContent>
-    </Dialog>
+  return (
+    <div
+      className={cn(
+        "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000]", // Z-index élevé pour être au-dessus
+        isMobile
+          ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg" // Taille et position spécifiques pour mobile
+          : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg", // Taille et position spécifiques pour desktop
+        isMinimized && (isMobile ? "h-auto w-auto" : "h-14 w-56"), // État minimisé
+        "transition-all duration-300 ease-in-out" // Transitions fluides
+      )}
+    >
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
+          <Bot className="h-6 w-6 text-primary" /> AiA
+        </h3>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={() => setIsMinimized(!isMinimized)}>
+            {isMinimized ? <Maximize className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
+            <span className="sr-only">{isMinimized ? "Maximiser" : "Minimiser"}</span>
+          </Button>
+          <Button variant="ghost" size="icon" onClick={closeChat}>
+            <X className="h-4 w-4" />
+            <span className="sr-only">Fermer le chat</span>
+          </Button>
+        </div>
+      </div>
+
+      {!isMinimized && (
+        <div className="flex-grow flex flex-col py-4 px-4">
+          <ScrollArea className="flex-grow border rounded-md mb-4">
+            <div className="flex flex-col gap-4 p-4">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "flex items-start gap-3",
+                    msg.sender === 'user' ? "justify-end" : "justify-start"
+                  )}
+                >
+                  {msg.sender === 'aia' && (
+                    <div className="flex-shrink-0 p-2 rounded-full bg-primary text-primary-foreground">
+                      <Bot className="h-4 w-4" />
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "max-w-[70%] p-3 rounded-lg",
+                      msg.sender === 'user'
+                        ? "bg-primary text-primary-foreground rounded-br-none"
+                        : "bg-muted text-muted-foreground rounded-bl-none"
+                    )}
+                  >
+                    {msg.text}
+                  </div>
+                  {msg.sender === 'user' && (
+                    <div className="flex-shrink-0 p-2 rounded-full bg-secondary text-secondary-foreground">
+                      <UserIcon className="h-4 w-4" />
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+          <div className="flex gap-2 flex-wrap">
+            {currentCourseTitle && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
+                className="whitespace-nowrap text-xs"
+              >
+                @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
+              </Button>
+            )}
+            {currentModuleTitle && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
+                className="whitespace-nowrap text-xs"
+              >
+                @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
+              </Button>
+            )}
+            <Input
+              placeholder="Écrivez votre message à AiA..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="flex-grow"
+            />
+            <Button onClick={handleSendMessage} disabled={!input.trim()}>
+              <Send className="h-5 w-5" />
+              <span className="sr-only">Envoyer</span>
+            </Button>
+          </div>
+        </div>
+      )}
+      {isMinimized && (
+        <div className="p-4 text-center text-sm text-muted-foreground">
+          Chat AiA minimisé
+        </div>
+      )}
+    </div>
   );
 };
 
