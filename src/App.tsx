@@ -50,6 +50,7 @@ const App = () => {
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
                   <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} />
                   <Route path="/create-course" element={<CreateCourse />} />
+                  <Route path="/create-course/:courseId" element={<CreateCourse />} /> {/* Nouvelle route pour la modification */}
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/all-notes" element={<AllNotes />} /> {/* Nouvelle route */}
                 </Route>

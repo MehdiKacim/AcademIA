@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { Course, addCourseToStorage, dummyCourses } from "@/lib/courseData"; // Import addCourseToStorage and dummyCourses
+import { Course, addCourseToStorage, loadCourses, updateCourseInStorage } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses
+import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
 
 // Zod Schemas for validation
 const QuizOptionSchema = z.object({
@@ -98,6 +99,8 @@ const CourseSchema = z.object({
 
 const CreateCourse = () => {
   const { currentRole } = useRole();
+  const { courseId } = useParams<{ courseId: string }>(); // Récupérer l'ID du cours depuis l'URL
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof CourseSchema>>({
     resolver: zodResolver(CourseSchema),
@@ -126,9 +129,47 @@ const CreateCourse = () => {
     name: "modules",
   });
 
+  // Charger les données du cours si courseId est présent
+  useEffect(() => {
+    if (courseId) {
+      const courses = loadCourses();
+      const courseToEdit = courses.find(c => c.id === courseId);
+      if (courseToEdit) {
+        // Convertir skillsToAcquire de tableau à chaîne pour le formulaire
+        const formattedCourse = {
+          ...courseToEdit,
+          skillsToAcquire: courseToEdit.skillsToAcquire.join(', '),
+        };
+        form.reset(formattedCourse); // Remplir le formulaire avec les données du cours
+      } else {
+        showError("Cours non trouvé pour la modification.");
+        navigate("/create-course"); // Rediriger vers la page de création si le cours n'existe pas
+      }
+    } else {
+      form.reset({ // Réinitialiser le formulaire pour la création d'un nouveau cours
+        title: "",
+        description: "",
+        category: "",
+        difficulty: "Débutant",
+        imageUrl: "",
+        skillsToAcquire: "",
+        modules: [
+          {
+            title: "Introduction",
+            sections: [
+              { title: "Bienvenue", content: "Contenu de la section de bienvenue.", type: "text", url: "", isCompleted: false },
+            ],
+            isCompleted: false,
+            level: 0,
+          },
+        ],
+      });
+    }
+  }, [courseId, form, navigate]); // Dépendances pour recharger si l'ID du cours change
+
   const onSubmit = (values: z.infer<typeof CourseSchema>) => {
-    const newCourse: Course = {
-      id: (dummyCourses.length + 1).toString(), // Simple ID generation
+    const courseData: Course = {
+      id: courseId || (loadCourses().length + 1).toString(), // Utiliser l'ID existant ou en générer un nouveau
       title: values.title,
       description: values.description,
       category: values.category,
@@ -138,10 +179,14 @@ const CreateCourse = () => {
       modules: values.modules,
     };
 
-    addCourseToStorage(newCourse); // Sauvegarder le nouveau cours
-    console.log("Nouveau cours créé:", newCourse);
-    showSuccess("Cours créé avec succès !");
-    form.reset(); // Réinitialiser le formulaire après soumission
+    if (courseId) {
+      updateCourseInStorage(courseData);
+      showSuccess("Cours modifié avec succès !");
+    } else {
+      addCourseToStorage(courseData);
+      showSuccess("Cours créé avec succès !");
+    }
+    navigate("/courses"); // Rediriger vers la liste des cours après soumission
   };
 
   if (currentRole !== 'creator') {
@@ -160,7 +205,9 @@ const CreateCourse = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">Créer un nouveau cours</h1>
+        <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          {courseId ? "Modifier le cours" : "Créer un nouveau cours"}
+        </h1>
         
         <Card>
           <CardHeader>
@@ -463,9 +510,11 @@ const CreateCourse = () => {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => {
-                                          const currentOptions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`);
-                                          currentOptions?.splice(optionIndex, 1);
-                                          form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`, currentOptions);
+                                          const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
+                                          if (currentQuestions && currentQuestions[questionIndex]) {
+                                            currentQuestions[questionIndex].options.splice(optionIndex, 1);
+                                            form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                          }
                                         }}
                                         disabled={form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`)?.length === 2}
                                       >
@@ -550,7 +599,9 @@ const CreateCourse = () => {
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full">Créer le cours</Button>
+        <Button type="submit" className="w-full">
+          {courseId ? "Sauvegarder les modifications" : "Créer le cours"}
+        </Button>
       </form>
     </Form>
   );

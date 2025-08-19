@@ -84,7 +84,9 @@ const Courses = () => {
                   <p className="text-sm text-muted-foreground">Statut: {course.status}</p>
                   <p className="text-sm text-muted-foreground">Élèves inscrits: {course.students}</p>
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline">Modifier</Button>
+                    <Link to={`/create-course/${course.id}`}> {/* Lien de modification */}
+                      <Button variant="outline">Modifier</Button>
+                    </Link>
                     <Button variant="secondary">Voir les statistiques</Button>
                   </div>
                 </CardContent>
