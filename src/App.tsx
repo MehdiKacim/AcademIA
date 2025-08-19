@@ -14,7 +14,7 @@ import Analytics from "./pages/Analytics";
 import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
-import ClassManagement from "./pages/ClassManagement"; // Nouvelle importation
+import ClassManagement from "./pages/ClassManagement";
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -36,7 +36,16 @@ const App = () => {
           ) : (
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
+                {/* Envelopper la route de la page d'accueil avec les fournisseurs de contexte */}
+                <Route element={
+                  <RoleProvider>
+                    <CourseChatProvider>
+                      <Outlet /> {/* Outlet rend le composant enfant (Index) */}
+                    </CourseChatProvider>
+                  </RoleProvider>
+                }>
+                  <Route path="/" element={<Index />} />
+                </Route>
 
                 {/* Routes with Dashboard Layout, wrapped by RoleProvider and CourseChatProvider */}
                 <Route element={
@@ -54,7 +63,7 @@ const App = () => {
                   <Route path="/create-course/:courseId" element={<CreateCourse />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/all-notes" element={<AllNotes />} />
-                  <Route path="/class-management" element={<ClassManagement />} /> {/* Nouvelle route */}
+                  <Route path="/class-management" element={<ClassManagement />} />
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
