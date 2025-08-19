@@ -15,6 +15,8 @@ import {
   Target,
   MessageCircleMore,
   Home,
+  LogIn, // Import de l'icône LogIn
+  UserPlus, // Import de l'icône UserPlus
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -121,7 +123,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background overflow-x-hidden"> {/* Ajout de overflow-x-hidden */}
+    <div className="flex flex-col min-h-screen bg-background overflow-x-hidden">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
@@ -143,11 +145,13 @@ const Index = () => {
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
-          <Button variant="outline" onClick={openLoginModal}>
-            Se connecter
+          <Button variant="outline" size="icon" onClick={openLoginModal}>
+            <LogIn className="h-5 w-5" />
+            <span className="sr-only">Se connecter</span>
           </Button>
-          <Button onClick={openRegisterModal}>
-            Créer un compte
+          <Button size="icon" onClick={openRegisterModal}>
+            <UserPlus className="h-5 w-5" />
+            <span className="sr-only">Créer un compte</span>
           </Button>
         </div>
       </header>
@@ -194,7 +198,7 @@ const Index = () => {
           className="py-20 w-full border-y border-border/50 px-4"
         >
           <div className="max-w-5xl mx-auto text-center">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               Votre Tuteur IA Personnel : AiA
             </h3>
             <p className="text-lg text-muted-foreground mb-12">
@@ -216,7 +220,7 @@ const Index = () => {
           ref={sectionRefs.methodologie}
           className="py-20 w-full px-4"
         >
-          <h3 className="text-3xl md:text-4xl font-bold mb-4">
+          <h3 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             Notre Méthodologie Révolutionnaire
           </h3>
           <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">

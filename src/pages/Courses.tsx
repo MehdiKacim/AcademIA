@@ -9,7 +9,7 @@ import {
 const Courses = () => {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Mes Cours</h1>
+      <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">Mes Cours</h1>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Placeholder course cards */}
         <Card>
