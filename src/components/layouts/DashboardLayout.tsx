@@ -16,7 +16,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 px-3 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
         <Logo />
         {/* Desktop Navigation */}
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">

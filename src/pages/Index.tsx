@@ -138,7 +138,7 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 px-3 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
         <Logo />
         {/* Desktop Navigation */}
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
