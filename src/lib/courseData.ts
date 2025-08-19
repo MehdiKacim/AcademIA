@@ -824,15 +824,35 @@ const LOCAL_STORAGE_KEY = 'academia_courses';
 // Fonction pour charger les cours depuis le localStorage
 export const loadCourses = (): Course[] => {
   try {
-    const storedCourses = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (storedCourses) {
-      return JSON.parse(storedCourses);
-    }
+    const storedCourses: Course[] = localStorage.getItem(LOCAL_STORAGE_KEY)
+      ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!)
+      : [];
+
+    // Créer une map pour une recherche rapide des cours stockés par ID
+    const storedCoursesMap = new Map<string, Course>();
+    storedCourses.forEach(course => storedCoursesMap.set(course.id, course));
+
+    // Commencer avec les cours par défaut initiaux
+    const combinedCourses: Course[] = [...initialDummyCourses];
+
+    // Ajouter ou mettre à jour avec les cours du stockage local
+    storedCourses.forEach(storedCourse => {
+      const existingInitialCourse = combinedCourses.find(c => c.id === storedCourse.id);
+      if (existingInitialCourse) {
+        // Si un cours initial avec le même ID existe, le mettre à jour avec la version stockée
+        // Cela garantit que le statut de complétion, etc., de la session de l'utilisateur est préservé
+        Object.assign(existingInitialCourse, storedCourse);
+      } else {
+        // S'il s'agit d'un nouveau cours (non présent dans initialDummyCourses), l'ajouter
+        combinedCourses.push(storedCourse);
+      }
+    });
+
+    return combinedCourses;
   } catch (error) {
     console.error("Erreur lors du chargement des cours depuis le localStorage:", error);
+    return initialDummyCourses; // Revenir aux cours initiaux en cas d'erreur
   }
-  // Si rien n'est trouvé ou s'il y a une erreur, initialiser avec les dummyCourses
-  return initialDummyCourses;
 };
 
 // Fonction pour sauvegarder les cours dans le localStorage
