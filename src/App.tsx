@@ -12,6 +12,7 @@ import Courses from "./pages/Courses";
 import CreateCourse from "./pages/CreateCourse";
 import Analytics from "./pages/Analytics";
 import CourseDetail from "./pages/CourseDetail";
+import ModuleDetail from "./pages/ModuleDetail"; // Nouvelle importation
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -46,6 +47,7 @@ const App = () => {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
+                  <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} /> {/* Nouvelle route */}
                   <Route path="/create-course" element={<CreateCourse />} />
                   <Route path="/analytics" element={<Analytics />} />
                 </Route>

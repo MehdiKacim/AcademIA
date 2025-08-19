@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, Send, Lock, CheckCircle } from "lucide-react";
@@ -12,7 +12,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { motion } from 'framer-motion';
-import { showSuccess, showError } from '@/utils/toast'; // Import toast utilities
+import { showSuccess, showError } from '@/utils/toast';
+import { Badge } from "@/components/ui/badge"; // Import du composant Badge
+import { Progress } from "@/components/ui/progress"; // Import du composant Progress
 
 interface Module {
   title: string;
@@ -25,6 +27,7 @@ interface Course {
   title: string;
   description: string;
   modules: Module[];
+  skillsToAcquire: string[]; // Nouvelle propriété
 }
 
 const initialDummyCourses: Course[] = [
@@ -38,6 +41,7 @@ const initialDummyCourses: Course[] = [
       { title: "Module 3: Réseaux de Neurones", content: "Introduction aux réseaux de neurones et au Deep Learning.", isCompleted: false },
       { title: "Module 4: Applications de l'IA", content: "Exemples concrets : vision par ordinateur, traitement du langage naturel.", isCompleted: false },
     ],
+    skillsToAcquire: ["Comprendre l'IA", "Maîtriser le ML", "Appliquer le Deep Learning", "Analyser les données"]
   },
   {
     id: '2',
@@ -49,6 +53,7 @@ const initialDummyCourses: Course[] = [
       { title: "Module 3: Routage avec React Router", content: "Navigation entre les pages de votre application.", isCompleted: false },
       { title: "Module 4: Requêtes API et cycle de vie", content: "Fetching de données et gestion des effets secondaires.", isCompleted: false },
     ],
+    skillsToAcquire: ["Développer avec React", "Gérer l'état", "Naviguer avec React Router", "Intégrer des APIs"]
   },
   {
     id: '3',
@@ -60,6 +65,7 @@ const initialDummyCourses: Course[] = [
       { title: "Module 3: Programmation dynamique", content: "Optimisation de problèmes complexes.", isCompleted: false },
       { title: "Module 4: Algorithmes de graphes", content: "Dijkstra, BFS, DFS.", isCompleted: false },
     ],
+    skillsToAcquire: ["Maîtriser les structures de données", "Optimiser les algorithmes", "Résoudre des problèmes complexes", "Analyser les graphes"]
   },
 ];
 
@@ -88,33 +94,6 @@ const CourseDetail = () => {
     }
   };
 
-  const handleAskAiaAboutModule = (moduleTitle: string, isCompleted: boolean) => {
-    if (!isCompleted) {
-      showError("Ce module est verrouillé. Veuillez le compléter d'abord.");
-      return;
-    }
-    if (course) {
-      setModuleContext(moduleTitle);
-      openChat(`J'ai une question sur le module "${moduleTitle}" du cours "${course.title}".`);
-    }
-  };
-
-  const handleMarkModuleComplete = (moduleId: string, moduleIndex: number) => {
-    setCourses(prevCourses =>
-      prevCourses.map(c =>
-        c.id === moduleId
-          ? {
-              ...c,
-              modules: c.modules.map((mod, idx) =>
-                idx === moduleIndex ? { ...mod, isCompleted: true } : mod
-              ),
-            }
-          : c
-      )
-    );
-    showSuccess(`Module "${course?.modules[moduleIndex].title}" marqué comme terminé !`);
-  };
-
   if (!course) {
     return (
       <div className="text-center py-20">
@@ -128,6 +107,10 @@ const CourseDetail = () => {
     );
   }
 
+  const totalModules = course.modules.length;
+  const completedModules = course.modules.filter(m => m.isCompleted).length;
+  const progressPercentage = Math.round((completedModules / totalModules) * 100);
+
   return (
     <div className="space-y-8">
       <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -136,53 +119,74 @@ const CourseDetail = () => {
       <p className="text-lg text-muted-foreground">{course.description}</p>
 
       <section>
+        <h2 className="text-2xl font-semibold mb-4">Compétences à acquérir</h2>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {course.skillsToAcquire.map((skill, index) => (
+            <Badge key={index} variant="secondary" className="text-sm px-3 py-1">
+              {skill}
+            </Badge>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Progression du cours</h2>
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <Progress value={progressPercentage} className="w-full" />
+              <span className="text-lg font-medium">{progressPercentage}%</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              {completedModules} modules terminés sur {totalModules}
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section>
         <h2 className="text-2xl font-semibold mb-4">Modules du cours</h2>
         <Accordion type="single" collapsible className="w-full">
-          {course.modules.map((module, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <Card className="mb-4">
-                <AccordionItem value={`item-${index}`}>
-                  <AccordionTrigger className="flex items-center justify-between p-4 text-lg font-medium hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      {module.isCompleted ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <Lock className="h-5 w-5 text-muted-foreground" />
-                      )}
-                      {module.title}
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <CardContent className="p-4 pt-0">
-                      <p className="text-muted-foreground mb-4">{module.content}</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => handleAskAiaAboutModule(module.title, module.isCompleted)}
-                          disabled={!module.isCompleted}
-                        >
-                          <Send className="h-4 w-4 mr-2" /> Demander à AiA sur ce module
-                        </Button>
-                        {!module.isCompleted && (
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleMarkModuleComplete(course.id, index)}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
-                          </Button>
+          {course.modules.map((module, index) => {
+            const isModuleAccessible = index === 0 || course.modules[index - 1]?.isCompleted;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Card className="mb-4">
+                  <AccordionItem value={`item-${index}`}>
+                    <AccordionTrigger className="flex items-center justify-between p-4 text-lg font-medium hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        {module.isCompleted ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Lock className="h-5 w-5 text-muted-foreground" />
                         )}
+                        {module.title}
                       </div>
-                    </CardContent>
-                  </AccordionContent>
-                </AccordionItem>
-              </Card>
-            </motion.div>
-          ))}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CardContent className="p-4 pt-0">
+                        <p className="text-muted-foreground mb-4">
+                          {module.content.substring(0, 150)}...
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Link to={`/courses/${course.id}/modules/${index}`}>
+                            <Button disabled={!isModuleAccessible}>
+                              Accéder au module
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Card>
+              </motion.div>
+            );
+          })}
         </Accordion>
       </section>
 
