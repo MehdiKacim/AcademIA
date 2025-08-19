@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail, ArrowLeft } from "lucide-react";
 import {
   Establishment,
   Class,
@@ -26,8 +26,8 @@ import {
   deleteData,
 } from "@/lib/localStorageUtils";
 import { showSuccess, showError } from "@/utils/toast";
-import { dummyStudents, saveStudents, addStudent, deleteStudent, updateStudent } from '@/lib/studentData'; // Importation des fonctions CRUD pour les élèves
-import { useCourseChat } from '@/contexts/CourseChatContext'; // Pour envoyer des messages à AiA
+import { dummyStudents, saveStudents, addStudent, deleteStudent, updateStudent } from '@/lib/studentData';
+import { useCourseChat } from '@/contexts/CourseChatContext';
 
 const LOCAL_STORAGE_ESTABLISHMENTS_KEY = 'academia_establishments';
 const LOCAL_STORAGE_CLASSES_KEY = 'academia_classes';
@@ -41,6 +41,7 @@ const ClassManagement = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [currentStudents, setCurrentStudents] = useState<Student[]>([]);
+  const [selectedClassIdForStudents, setSelectedClassIdForStudents] = useState<string | null>(null);
 
   // États pour les formulaires d'ajout/édition
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
@@ -55,7 +56,7 @@ const ClassManagement = () => {
     setEstablishments(loadData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY, [{ id: 'est1', name: 'École Primaire Alpha' }]));
     setClasses(loadData<Class>(LOCAL_STORAGE_CLASSES_KEY, [{ id: 'class1', name: 'CE1 A', establishmentId: 'est1', studentIds: ['student1', 'student2'] }, { id: 'class2', name: 'CE2 B', establishmentId: 'est1', studentIds: ['student3'] }]));
     setCurricula(loadData<Curriculum>(LOCAL_STORAGE_CURRICULA_KEY, [{ id: 'cur1', name: 'Cursus Fondamental', courseIds: ['1', '2'] }]));
-    setCurrentStudents(dummyStudents); // Charger les élèves depuis la variable exportée
+    setCurrentStudents(dummyStudents);
   }, []);
 
   const handleAddEstablishment = () => {
@@ -71,7 +72,6 @@ const ClassManagement = () => {
 
   const handleDeleteEstablishment = (id: string) => {
     setEstablishments(prev => deleteData(LOCAL_STORAGE_ESTABLISHMENTS_KEY, id));
-    // Supprimer aussi les classes liées à cet établissement
     const updatedClasses = classes.filter(cls => cls.establishmentId !== id);
     saveData(LOCAL_STORAGE_CLASSES_KEY, updatedClasses);
     setClasses(updatedClasses);
@@ -91,12 +91,11 @@ const ClassManagement = () => {
 
   const handleDeleteClass = (id: string) => {
     setClasses(prev => deleteData(LOCAL_STORAGE_CLASSES_KEY, id));
-    // Mettre à jour les élèves qui étaient dans cette classe
     const updatedStudents = currentStudents.map(student =>
       student.classId === id ? { ...student, classId: undefined } : student
     );
-    saveStudents(updatedStudents); // Sauvegarder les élèves mis à jour
-    setCurrentStudents(updatedStudents); // Mettre à jour l'état local des élèves
+    saveStudents(updatedStudents);
+    setCurrentStudents(updatedStudents);
     showSuccess("Classe supprimée !");
   };
 
@@ -113,7 +112,6 @@ const ClassManagement = () => {
 
   const handleDeleteCurriculum = (id: string) => {
     setCurricula(prev => deleteData(LOCAL_STORAGE_CURRICULA_KEY, id));
-    // Il faudrait aussi mettre à jour les classes qui utilisaient ce cursus
     showSuccess("Cursus supprimé !");
   };
 
@@ -128,7 +126,7 @@ const ClassManagement = () => {
         establishmentId: selectedClassForStudent ? classes.find(c => c.id === selectedClassForStudent)?.establishmentId : undefined,
         enrolledCoursesProgress: [],
       };
-      const updatedStudents = addStudent(newStu); // Utilise la fonction addStudent de studentData.ts
+      const updatedStudents = addStudent(newStu);
       setCurrentStudents(updatedStudents);
       setNewStudentName('');
       setNewStudentEmail('');
@@ -140,7 +138,7 @@ const ClassManagement = () => {
   };
 
   const handleDeleteStudent = (id: string) => {
-    const updatedStudents = deleteStudent(id); // Utilise la fonction deleteStudent de studentData.ts
+    const updatedStudents = deleteStudent(id);
     setCurrentStudents(updatedStudents);
     showSuccess("Élève supprimé !");
   };
@@ -153,15 +151,13 @@ const ClassManagement = () => {
         classId: classId,
         establishmentId: classes.find(c => c.id === classId)?.establishmentId,
       };
-      const updatedStudents = updateStudent(updatedStudent); // Utilise la fonction updateStudent
+      const updatedStudents = updateStudent(updatedStudent);
       setCurrentStudents(updatedStudents);
 
-      // Mettre à jour la liste des élèves dans la classe
       const updatedClasses = classes.map(cls => {
         if (cls.id === classId && !cls.studentIds.includes(studentId)) {
           return { ...cls, studentIds: [...cls.studentIds, studentId] };
         }
-        // Si l'élève était dans une autre classe, le retirer de cette classe
         if (cls.id !== classId && cls.studentIds.includes(studentId)) {
           return { ...cls, studentIds: cls.studentIds.filter(id => id !== studentId) };
         }
@@ -204,6 +200,16 @@ const ClassManagement = () => {
     openChat(`Bonjour ${student.name}, j'ai une question ou un message pour vous.`);
   };
 
+  const handleViewStudentsInClass = (classId: string) => {
+    setSelectedClassIdForStudents(classId);
+  };
+
+  const handleBackToClasses = () => {
+    setSelectedClassIdForStudents(null);
+  };
+
+  const selectedClass = selectedClassIdForStudents ? classes.find(cls => cls.id === selectedClassIdForStudents) : null;
+  const studentsInSelectedClass = selectedClass ? currentStudents.filter(student => student.classId === selectedClass.id) : [];
 
   if (currentRole !== 'creator') {
     return (
@@ -228,7 +234,7 @@ const ClassManagement = () => {
       </p>
 
       <Tabs defaultValue="establishments" className="w-full">
-        <TabsList className="grid w-full grid-cols-4"> {/* Augmenté à 4 colonnes */}
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="establishments">
             <School className="h-4 w-4 mr-2" /> Établissements
           </TabsTrigger>
@@ -238,7 +244,7 @@ const ClassManagement = () => {
           <TabsTrigger value="curricula">
             <BookOpen className="h-4 w-4 mr-2" /> Cursus
           </TabsTrigger>
-          <TabsTrigger value="students"> {/* Nouvel onglet Élèves */}
+          <TabsTrigger value="students">
             <GraduationCap className="h-4 w-4 mr-2" /> Élèves
           </TabsTrigger>
         </TabsList>
@@ -309,8 +315,7 @@ const ClassManagement = () => {
                         <div key={cls.id} className="flex items-center justify-between p-3 border rounded-md bg-muted/20">
                           <span>{cls.name} ({cls.studentIds.length} élèves)</span>
                           <div className="flex gap-2">
-                            {/* Bouton pour gérer les élèves de la classe (à implémenter plus tard) */}
-                            <Button variant="outline" size="sm" onClick={() => console.log('Gérer élèves de la classe', cls.id)}>
+                            <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
                               <GraduationCap className="h-4 w-4 mr-1" /> Élèves
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => console.log('Modifier classe', cls.id)}>
@@ -328,6 +333,40 @@ const ClassManagement = () => {
               )}
             </CardContent>
           </Card>
+
+          {selectedClassIdForStudents && selectedClass && (
+            <Card className="mt-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowLeft className="h-5 w-5 cursor-pointer" onClick={handleBackToClasses} />
+                  Élèves de la classe "{selectedClass.name}"
+                </CardTitle>
+                <CardDescription>{studentsInSelectedClass.length} élève(s)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {studentsInSelectedClass.length === 0 ? (
+                  <p className="text-muted-foreground">Aucun élève dans cette classe.</p>
+                ) : (
+                  studentsInSelectedClass.map(student => (
+                    <Card key={student.id} className="p-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{student.name}</p>
+                        <p className="text-sm text-muted-foreground">{student.email}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
+                          <Mail className="h-4 w-4 mr-1" /> Message
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id, selectedClass.id)}>
+                          <Trash2 className="h-4 w-4" /> Retirer
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="curricula" className="mt-4">
@@ -369,7 +408,7 @@ const ClassManagement = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="students" className="mt-4"> {/* Contenu du nouvel onglet Élèves */}
+        <TabsContent value="students" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle>Gérer les Élèves</CardTitle>
@@ -389,7 +428,6 @@ const ClassManagement = () => {
                   value={newStudentEmail}
                   onChange={(e) => setNewStudentEmail(e.target.value)}
                 />
-                {/* Sélecteur de classe pour le nouvel élève */}
                 <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={selectedClassForStudent || ''}
@@ -423,7 +461,6 @@ const ClassManagement = () => {
                         )}
                       </div>
                       <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                        {/* Affecter/Retirer de la classe */}
                         {student.classId ? (
                           <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(student.id, student.classId!)}>
                             <Users className="h-4 w-4 mr-1" /> Retirer de la classe
@@ -431,7 +468,7 @@ const ClassManagement = () => {
                         ) : (
                           <select
                             className="flex h-9 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value="" // Valeur vide pour forcer la sélection
+                            value=""
                             onChange={(e) => handleAssignStudentToClass(student.id, e.target.value)}
                           >
                             <option value="">Affecter à une classe</option>
@@ -441,11 +478,9 @@ const ClassManagement = () => {
                           </select>
                         )}
 
-                        {/* Envoyer un message */}
                         <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
                           <Mail className="h-4 w-4 mr-1" /> Message
                         </Button>
-                        {/* Supprimer l'élève */}
                         <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(student.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
