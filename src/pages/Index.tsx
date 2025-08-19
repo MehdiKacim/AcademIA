@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   Target,
   MessageCircleMore,
-} from "lucide-react"; // Suppression de l'importation de Menu
+  Menu, // Importation de l'icône Menu
+} from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
 import LoginModal from "@/components/LoginModal"; // Import LoginModal
@@ -128,7 +129,7 @@ const Index = () => {
             navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))}
             onLinkClick={() => {}}
             triggerContent={
-              <Logo showText={false} iconClassName="w-8 h-8" /> {/* Utilisation du Logo comme déclencheur */}
+              <Menu className="h-5 w-5" /> // Passe l'icône comme contenu
             }
           >
             <ThemeToggle />
