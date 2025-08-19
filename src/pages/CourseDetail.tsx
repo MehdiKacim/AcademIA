@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input"; // Keep Input for potential future use or if it's used elsewhere
+import { Textarea } from "@/components/ui/textarea"; // Keep Textarea for potential future use or if it's used elsewhere
 import { Bot, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCourseChat } from "@/contexts/CourseChatContext"; // New import
 
 const dummyCourses = [
   {
@@ -46,14 +47,24 @@ const dummyCourses = [
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const course = dummyCourses.find(c => c.id === courseId);
+  const { setCourseContext, openChat } = useCourseChat(); // Use the new context hook
 
-  const [aiaQuestion, setAiaQuestion] = useState('');
-  const [aiaResponse, setAiaResponse] = useState('');
+  // Set course context when component mounts or courseId changes
+  useEffect(() => {
+    if (course) {
+      setCourseContext(course.id, course.title);
+    } else {
+      setCourseContext(null, null); // Clear context if course not found
+    }
+    // Clean up context when component unmounts
+    return () => {
+      setCourseContext(null, null);
+    };
+  }, [courseId, course, setCourseContext]);
 
-  const handleAskAia = () => {
-    if (aiaQuestion.trim()) {
-      setAiaResponse(`AiA répond à votre question sur "${course?.title}" : "${aiaQuestion}". Pour ce module, concentrez-vous sur les concepts clés de... (Ceci est une réponse simulée)`);
-      setAiaQuestion('');
+  const handleAskAiaAboutCourse = () => {
+    if (course) {
+      openChat(`J'ai une question sur le cours "${course.title}".`);
     }
   };
 
@@ -99,21 +110,12 @@ const CourseDetail = () => {
         </h2>
         <Card>
           <CardContent className="p-6 space-y-4">
-            <Textarea
-              placeholder="Posez une question à AiA sur ce cours, un module spécifique ou un concept..."
-              value={aiaQuestion}
-              onChange={(e) => setAiaQuestion(e.target.value)}
-              rows={3}
-            />
-            <Button onClick={handleAskAia} disabled={!aiaQuestion.trim()}>
-              <Send className="h-5 w-5 mr-2" /> Poser la question à AiA
+            <p className="text-muted-foreground mb-4">
+              Cliquez ci-dessous pour poser une question à AiA concernant ce cours.
+            </p>
+            <Button onClick={handleAskAiaAboutCourse}>
+              <Send className="h-5 w-5 mr-2" /> Poser une question à AiA sur ce cours
             </Button>
-            {aiaResponse && (
-              <div className="mt-4 p-4 bg-muted rounded-md text-muted-foreground">
-                <p className="font-semibold mb-2">Réponse d'AiA :</p>
-                <p>{aiaResponse}</p>
-              </div>
-            )}
           </CardContent>
         </Card>
       </section>

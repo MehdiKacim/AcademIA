@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } => "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -15,6 +15,7 @@ import CourseDetail from "./pages/CourseDetail";
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
+import { CourseChatProvider } from "./contexts/CourseChatContext"; // New import
 
 const queryClient = new QueryClient();
 
@@ -34,8 +35,14 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
 
-                {/* Routes with Dashboard Layout, wrapped by RoleProvider */}
-                <Route element={<RoleProvider><DashboardLayout /></RoleProvider>}>
+                {/* Routes with Dashboard Layout, wrapped by RoleProvider and CourseChatProvider */}
+                <Route element={
+                  <RoleProvider>
+                    <CourseChatProvider> {/* Wrap DashboardLayout with CourseChatProvider */}
+                      <DashboardLayout />
+                    </CourseChatProvider>
+                  </RoleProvider>
+                }>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
