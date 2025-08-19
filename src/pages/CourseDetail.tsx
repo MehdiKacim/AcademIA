@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { showSuccess, showError } from '@/utils/toast';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import ModuleFlowVisualizer from "@/components/ModuleFlowVisualizer"; // Nouvelle importation
 
 interface Module {
   title: string;
@@ -145,7 +146,12 @@ const CourseDetail = () => {
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4">Modules du cours</h2>
+        <h2 className="text-2xl font-semibold mb-4">Visualisation du parcours</h2>
+        <ModuleFlowVisualizer course={course} />
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Modules du cours (Détails)</h2>
         <Accordion type="single" collapsible className="w-full">
           {course.modules.map((module, index) => {
             const isAccessible = index === 0 || course.modules[index - 1]?.isCompleted;
