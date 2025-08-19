@@ -83,6 +83,21 @@ const initialDummyCourses: Course[] = [
     ],
     skillsToAcquire: ["Développer Frontend", "Développer Backend", "Gérer les bases de données", "Déployer des applications"]
   },
+  {
+    id: '5',
+    title: "Fondamentaux de la Science des Données",
+    description: "Explorez les concepts clés de la science des données, de la collecte à l'analyse et la visualisation.",
+    modules: [
+      { title: "Module 1: Introduction aux Données", content: "Qu'est-ce que la science des données, son importance.", isCompleted: true, level: 0 },
+      { title: "Module 2: Collecte et Préparation des Données", content: "Sources de données, nettoyage, transformation.", isCompleted: false, level: 0 },
+      { title: "Module 2.1: Exploration des Données (EDA)", content: "Statistiques descriptives, visualisation.", isCompleted: false, level: 1 },
+      { title: "Module 2.2: Ingénierie des Caractéristiques", content: "Création de nouvelles variables.", isCompleted: false, level: 1 },
+      { title: "Module 3: Modélisation Prédictive", content: "Introduction aux modèles, régression, classification.", isCompleted: false, level: 0 },
+      { title: "Module 3.1: Évaluation des Modèles", content: "Métriques de performance, surapprentissage.", isCompleted: false, level: 1 },
+      { title: "Module 4: Déploiement et Maintien", content: "Mise en production, monitoring.", isCompleted: false, level: 0 },
+    ],
+    skillsToAcquire: ["Collecte de données", "Analyse statistique", "Modélisation ML", "Visualisation"]
+  },
 ];
 
 const CourseDetail = () => {

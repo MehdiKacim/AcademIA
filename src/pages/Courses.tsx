@@ -16,13 +16,15 @@ const Courses = () => {
     { id: '1', title: "Introduction à l'IA", description: "Les bases de l'intelligence artificielle.", progress: 50 },
     { id: '2', title: "React pour débutants", description: "Apprenez les fondamentaux de React.", progress: 25 },
     { id: '3', title: "Algorithmes Avancés", description: "Maîtrisez les structures de données complexes.", progress: 80 },
-    { id: '4', title: "Développement Web Fullstack", description: "Apprenez à construire des applications web complètes, du frontend au backend, avec les technologies modernes.", progress: 10 }, // Nouveau cours
+    { id: '4', title: "Développement Web Fullstack", description: "Apprenez à construire des applications web complètes, du frontend au backend, avec les technologies modernes.", progress: 10 },
+    { id: '5', title: "Fondamentaux de la Science des Données", description: "Explorez les concepts clés de la science des données.", progress: 0 }, // Nouveau cours
   ];
 
   const creatorCourses = [
-    { id: 101, title: "Développement Web Fullstack", description: "Créez des applications web complètes.", status: "Publié", students: 150 }, // Nouveau cours
+    { id: 101, title: "Développement Web Fullstack", description: "Créez des applications web complètes.", status: "Publié", students: 150 },
     { id: 102, title: "Machine Learning avec Python", description: "Introduction aux concepts du ML.", status: "Brouillon", students: 0 },
     { id: 103, title: "Design UI/UX", description: "Principes de conception d'interfaces utilisateur.", status: "Publié", students: 80 },
+    { id: 104, title: "Fondamentaux de la Science des Données", description: "Explorez les concepts clés de la science des données.", status: "Brouillon", students: 0 }, // Nouveau cours
   ];
 
   const tutorSupervisedCourses = [
