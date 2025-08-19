@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } => "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -15,7 +15,7 @@ import CourseDetail from "./pages/CourseDetail";
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
-import { CourseChatProvider } from "./contexts/CourseChatContext"; // New import
+import { CourseChatProvider } from "./contexts/CourseChatContext";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,7 @@ const App = () => {
                 {/* Routes with Dashboard Layout, wrapped by RoleProvider and CourseChatProvider */}
                 <Route element={
                   <RoleProvider>
-                    <CourseChatProvider> {/* Wrap DashboardLayout with CourseChatProvider */}
+                    <CourseChatProvider>
                       <DashboardLayout />
                     </CourseChatProvider>
                   </RoleProvider>
@@ -48,7 +48,6 @@ const App = () => {
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
                   <Route path="/create-course" element={<CreateCourse />} />
                   <Route path="/analytics" element={<Analytics />} />
-                  {/* La route /aia-chat est supprimée car le chat est maintenant flottant */}
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
