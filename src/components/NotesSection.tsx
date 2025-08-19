@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -80,91 +79,90 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
   };
 
   return (
-    <Card>
-      <Accordion type="single" collapsible defaultValue="notes-section" className="w-full">
-        <AccordionItem value="notes-section">
-          <AccordionTrigger className="p-4 text-base font-semibold flex items-center gap-2"> {/* Ajusté ici */}
-            <NotebookPen className="h-5 w-5 text-primary" /> {title} {/* Ajusté ici */}
-          </AccordionTrigger>
-          <AccordionContent className="p-6 pt-0 space-y-4">
-            <ScrollArea className="h-40 w-full rounded-md border p-4 bg-muted/20">
-              {notes.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Aucune note pour le moment. Ajoutez-en une ci-dessous !</p>
-              ) : (
-                <div className="space-y-2">
-                  {notes.map((note, index) => (
-                    <div key={index} className="p-2 bg-background rounded-md shadow-sm text-sm text-foreground flex justify-between items-center">
+    <Accordion type="single" collapsible defaultValue="notes-section" className="w-full">
+      <AccordionItem value="notes-section" className="border-b border-border">
+        <AccordionTrigger className="p-3 text-sm font-semibold flex items-center gap-2 hover:bg-muted/50 transition-colors rounded-md">
+          <NotebookPen className="h-4 w-4 text-primary" /> {title}
+        </AccordionTrigger>
+        <AccordionContent className="p-4 pt-0 space-y-3">
+          <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/20">
+            {notes.length === 0 ? (
+              <p className="text-muted-foreground text-xs">Aucune note pour le moment. Ajoutez-en une ci-dessous !</p>
+            ) : (
+              <div className="space-y-2">
+                {notes.map((note, index) => (
+                  <div key={index} className="p-2 bg-background rounded-md shadow-sm text-xs text-foreground flex justify-between items-center">
+                    {editingIndex === index ? (
+                      <Textarea
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        className="flex-grow mr-2 text-xs"
+                        rows={2}
+                      />
+                    ) : (
+                      <span className="flex-grow">{note}</span>
+                    )}
+                    <div className="flex gap-1 ml-2">
                       {editingIndex === index ? (
-                        <Textarea
-                          value={editedContent}
-                          onChange={(e) => setEditedContent(e.target.value)}
-                          className="flex-grow mr-2"
-                          rows={2}
-                        />
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => handleSaveEdit(index)}>
+                            <Save className="h-4 w-4 text-green-500" />
+                            <span className="sr-only">Sauvegarder</span>
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <span className="sr-only">Annuler</span>
+                          </Button>
+                        </>
                       ) : (
-                        <span className="flex-grow">{note}</span>
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => handleEditClick(index, note)}>
+                            <Edit className="h-4 w-4 text-blue-500" />
+                            <span className="sr-only">Éditer</span>
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                                <span className="sr-only">Supprimer</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Cette action ne peut pas être annulée. Cela supprimera définitivement votre note.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteNote(index)}>Supprimer</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
                       )}
-                      <div className="flex gap-1 ml-2">
-                        {editingIndex === index ? (
-                          <>
-                            <Button variant="ghost" size="icon" onClick={() => handleSaveEdit(index)}>
-                              <Save className="h-4 w-4 text-green-500" />
-                              <span className="sr-only">Sauvegarder</span>
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
-                              <XCircle className="h-4 w-4 text-red-500" />
-                              <span className="sr-only">Annuler</span>
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(index, note)}>
-                              <Edit className="h-4 w-4 text-blue-500" />
-                              <span className="sr-only">Éditer</span>
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                  <span className="sr-only">Supprimer</span>
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Cette action ne peut pas être annulée. Cela supprimera définitivement votre note.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteNote(index)}>Supprimer</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </>
-                        )}
-                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-            <div className="flex flex-col gap-2">
-              <Textarea
-                placeholder="Écrivez votre nouvelle note ici..."
-                value={newNote}
-                onChange={(e) => setNewNote(e.target.value)}
-                rows={3}
-              />
-              <Button onClick={handleAddNote} disabled={!newNote.trim()}>
-                <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une note
-              </Button>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </Card>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          <div className="flex flex-col gap-2">
+            <Textarea
+              placeholder="Écrivez votre nouvelle note ici..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              rows={3}
+              className="text-xs"
+            />
+            <Button onClick={handleAddNote} disabled={!newNote.trim()} size="sm">
+              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une note
+            </Button>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 };
 
