@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button"; // Garder l'import pour d'autres usages si nécessaire
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"; // Import SheetHeader et SheetTitle
+import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -31,15 +31,15 @@ const MobileSheetNav = ({ navItems, onLinkClick, children, triggerContent }: Mob
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        {/* Remplacé Button par un span avec les styles de bouton pour le débogage */}
         <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10">
           {triggerContent}
         </span>
       </SheetTrigger>
       <SheetContent side="left" className="flex flex-col">
-        <div className="p-4 border-b">
+        <SheetHeader className="p-4 border-b"> {/* Utilisation de SheetHeader */}
+          <SheetTitle className="sr-only">Menu de navigation</SheetTitle> {/* Titre pour l'accessibilité, visuellement caché */}
           <Logo />
-        </div>
+        </SheetHeader>
         <nav className="flex flex-col gap-2 p-4 flex-grow">
           {navItems.map((item) => (
             <NavLink
