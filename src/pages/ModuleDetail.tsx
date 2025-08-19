@@ -159,7 +159,7 @@ const ModuleDetail = () => {
       <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `module-${course.id}-${currentModuleIndex}` : null)}>
         <ContextMenuTrigger asChild>
           <Card className={cn(
-            "relative",
+            "relative", // Ensure relative positioning for absolute children
             highlightedElementId === `module-${course.id}-${currentModuleIndex}` ? "bg-primary/10" : ""
           )}>
             <CardHeader>
@@ -171,12 +171,25 @@ const ModuleDetail = () => {
                 Module {currentModuleIndex + 1} sur {totalModules}
               </CardDescription>
               <Progress value={progressPercentage} className="w-full mt-2" />
+              {/* Hidden trigger for module notes popover, positioned relative to CardHeader */}
+              <NotesPopover
+                noteKey={moduleNoteKey}
+                title={module.title}
+                isOpen={openPopoverKey === moduleNoteKey}
+                onOpenChange={(open) => setOpenPopoverKey(open ? moduleNoteKey : null)}
+                refreshKey={refreshNotesSection}
+                side="bottom" // Position below the trigger
+                align="end" // Align to the end (right) of the trigger
+              >
+                {/* This hidden button acts as the PopoverTrigger */}
+                <Button className="sr-only absolute top-0 right-0 w-0 h-0"></Button>
+              </NotesPopover>
             </CardHeader>
             <CardContent>
               {module.sections.map((section, index) => {
                 const sectionNoteKey = generateNoteKey('section', course.id, currentModuleIndex, index);
                 return (
-                  <div key={index} className="mb-6">
+                  <div key={index} className="mb-6 relative"> {/* Add relative positioning here */}
                     <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `section-${course.id}-${currentModuleIndex}-${index}` : null)}>
                       <ContextMenuTrigger className="block w-full">
                         <div
@@ -225,16 +238,18 @@ const ModuleDetail = () => {
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
-                    {/* Notes Popover for each section (rendered separately) */}
+                    {/* Notes Popover for each section, positioned relative to the section's div */}
                     <NotesPopover
                       noteKey={sectionNoteKey}
                       title={section.title}
                       isOpen={openPopoverKey === sectionNoteKey}
                       onOpenChange={(open) => setOpenPopoverKey(open ? sectionNoteKey : null)}
                       refreshKey={refreshNotesSection}
+                      side="right" // Position to the right of the trigger
+                      align="start" // Align to the start of the trigger
                     >
-                      {/* A hidden button to act as the PopoverTrigger */}
-                      <Button className="sr-only">Toggle Notes for {section.title}</Button>
+                      {/* This hidden button acts as the PopoverTrigger */}
+                      <Button className="sr-only absolute top-0 right-0 w-0 h-0"></Button>
                     </NotesPopover>
                   </div>
                 );
@@ -279,18 +294,6 @@ const ModuleDetail = () => {
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
-
-      {/* Notes Popover for the entire module (rendered separately) */}
-      <NotesPopover
-        noteKey={moduleNoteKey}
-        title={module.title}
-        isOpen={openPopoverKey === moduleNoteKey}
-        onOpenChange={(open) => setOpenPopoverKey(open ? moduleNoteKey : null)}
-        refreshKey={refreshNotesSection}
-      >
-        {/* A hidden button to act as the PopoverTrigger */}
-        <Button className="sr-only">Toggle Notes for Module {module.title}</Button>
-      </NotesPopover>
 
       {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
