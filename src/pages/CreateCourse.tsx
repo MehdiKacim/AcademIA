@@ -25,14 +25,47 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { dummyCourses, Course } from "@/lib/courseData"; // Import Course interface
+import { Course, addCourseToStorage, dummyCourses } from "@/lib/courseData"; // Import addCourseToStorage and dummyCourses
 
 // Zod Schemas for validation
+const QuizOptionSchema = z.object({
+  text: z.string().min(1, "Le texte de l'option est requis."),
+  isCorrect: z.boolean(),
+});
+
+const QuizQuestionSchema = z.object({
+  question: z.string().min(1, "La question est requise."),
+  options: z.array(QuizOptionSchema).min(2, "Une question doit avoir au moins deux options."),
+});
+
 const ModuleSectionSchema = z.object({
   title: z.string().min(1, "Le titre de la section est requis."),
   content: z.string().min(1, "Le contenu de la section est requis."),
   type: z.enum(["text", "quiz", "video", "image"]),
   url: z.string().url("L'URL doit être valide.").optional().or(z.literal("")),
+  questions: z.array(QuizQuestionSchema).optional(), // Optionnel pour les sections non-quiz
+}).superRefine((data, ctx) => {
+  if (data.type === 'quiz' && (!data.questions || data.questions.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Une section de type 'quiz' doit avoir au moins une question.",
+      path: ['questions'],
+    });
+  }
+  if (data.type === 'video' && !data.url) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Une section de type 'vidéo' doit avoir une URL.",
+      path: ['url'],
+    });
+  }
+  if (data.type === 'image' && !data.url) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Une section de type 'image' doit avoir une URL.",
+      path: ['url'],
+    });
+  }
 });
 
 const ModuleSchema = z.object({
@@ -83,22 +116,21 @@ const CreateCourse = () => {
   });
 
   const onSubmit = (values: z.infer<typeof CourseSchema>) => {
-    // Explicitly construct newCourse to match the Course interface
     const newCourse: Course = {
       id: (dummyCourses.length + 1).toString(), // Simple ID generation
       title: values.title,
       description: values.description,
-      category: values.category, // Now included in Course interface
-      difficulty: values.difficulty, // Now included in Course interface
-      imageUrl: values.imageUrl || undefined, // Ensure empty string becomes undefined
+      category: values.category,
+      difficulty: values.difficulty,
+      imageUrl: values.imageUrl || undefined,
       skillsToAcquire: values.skillsToAcquire.split(',').map(s => s.trim()),
       modules: values.modules,
     };
 
-    dummyCourses.push(newCourse); // Directly modifying for demo
+    addCourseToStorage(newCourse); // Sauvegarder le nouveau cours
     console.log("Nouveau cours créé:", newCourse);
     showSuccess("Cours créé avec succès !");
-    form.reset(); // Reset form after submission
+    form.reset(); // Réinitialiser le formulaire après soumission
   };
 
   if (currentRole !== 'creator') {
@@ -288,7 +320,12 @@ const CreateCourse = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Type de section</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={(value) => {
+                              field.onChange(value);
+                              // Reset URL and questions when type changes
+                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.url`, '');
+                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, []);
+                            }} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Sélectionnez un type" />
@@ -313,19 +350,6 @@ const CreateCourse = () => {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name={`modules.${moduleIndex}.sections.${sectionIndex}.content`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Contenu de la section</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Contenu détaillé de la section..." {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                       {["video", "image"].includes(form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.type`)) && (
                         <FormField
                           control={form.control}
@@ -340,6 +364,122 @@ const CreateCourse = () => {
                             </FormItem>
                           )}
                         />
+                      )}
+                      {form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.type`) === 'quiz' && (
+                        <div className="space-y-3 mt-4 p-3 border rounded-md bg-background">
+                          <h6 className="text-sm font-semibold">Questions du Quiz</h6>
+                          {form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions`)?.map((question, questionIndex) => (
+                            <Card key={questionIndex} className="p-3 bg-muted/10 space-y-2">
+                              <div className="flex justify-between items-center">
+                                <h6 className="text-sm font-medium">Question {questionIndex + 1}</h6>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
+                                    currentQuestions?.splice(questionIndex, 1);
+                                    form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                  }}
+                                >
+                                  <MinusCircle className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <FormField
+                                control={form.control}
+                                name={`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.question`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Texte de la question</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Quelle est la capitale de la France ?" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <div className="space-y-2 pl-2 border-l border-muted-foreground/30">
+                                <h6 className="text-xs font-semibold">Options</h6>
+                                {form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`)?.map((option, optionIndex) => (
+                                  <div key={optionIndex} className="flex items-center gap-2">
+                                    <FormField
+                                      control={form.control}
+                                      name={`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options.${optionIndex}.text`}
+                                      render={({ field }) => (
+                                        <FormItem className="flex-grow">
+                                          <FormControl>
+                                            <Input placeholder="Option de réponse" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={form.control}
+                                      name={`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options.${optionIndex}.isCorrect`}
+                                      render={({ field }) => (
+                                        <FormItem className="flex items-center space-x-2">
+                                          <FormControl>
+                                            <input
+                                              type="checkbox"
+                                              checked={field.value}
+                                              onChange={field.onChange}
+                                              className="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary"
+                                            />
+                                          </FormControl>
+                                          <FormLabel className="text-xs font-normal">Correct</FormLabel>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        const currentOptions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`);
+                                        currentOptions?.splice(optionIndex, 1);
+                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`, currentOptions);
+                                      }}
+                                      disabled={form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`)?.length === 2}
+                                    >
+                                      <MinusCircle className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
+                                    if (currentQuestions && currentQuestions[questionIndex]) {
+                                      currentQuestions[questionIndex].options.push({ text: "", isCorrect: false });
+                                      form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                    }
+                                  }}
+                                >
+                                  <PlusCircle className="h-3 w-3 mr-1" /> Ajouter une option
+                                </Button>
+                              </div>
+                            </Card>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const currentSections = form.getValues(`modules.${moduleIndex}.sections`);
+                              if (currentSections && currentSections[sectionIndex]) {
+                                currentSections[sectionIndex].questions = currentSections[sectionIndex].questions || [];
+                                currentSections[sectionIndex].questions?.push({ question: "", options: [{ text: "", isCorrect: false }, { text: "", isCorrect: false }] });
+                                form.setValue(`modules.${moduleIndex}.sections`, currentSections);
+                              }
+                            }}
+                          >
+                            <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une question
+                          </Button>
+                        </div>
                       )}
                     </Card>
                   ))}

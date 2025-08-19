@@ -8,29 +8,37 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { dummyCourses } from "@/lib/courseData"; // Import dummyCourses (now loaded from localStorage)
 
 const Courses = () => {
   const { currentRole } = useRole();
 
-  const studentCourses = [
-    { id: '1', title: "Introduction à l'IA", description: "Les bases de l'intelligence artificielle.", progress: 50 },
-    { id: '2', title: "React pour débutants", description: "Apprenez les fondamentaux de React.", progress: 25 },
-    { id: '3', title: "Algorithmes Avancés", description: "Maîtrisez les structures de données complexes.", progress: 80 },
-    { id: '4', title: "Développement Web Fullstack", description: "Apprenez à construire des applications web complètes, du frontend au backend, avec les technologies modernes.", progress: 10 },
-    { id: '5', title: "Fondamentaux de la Science des Données", description: "Explorez les concepts clés de la science des données.", progress: 0 }, // Nouveau cours
-  ];
+  // Filter courses based on role or display all for creators
+  const getCoursesForRole = () => {
+    if (currentRole === 'student') {
+      // For students, show all courses (or could filter by enrolled courses if we had user data)
+      return dummyCourses.map(course => ({
+        ...course,
+        progress: Math.floor(Math.random() * 100), // Dummy progress for students
+      }));
+    } else if (currentRole === 'creator') {
+      // For creators, show all courses they created (or all for demo)
+      return dummyCourses.map(course => ({
+        ...course,
+        status: Math.random() > 0.5 ? "Publié" : "Brouillon", // Dummy status
+        students: Math.floor(Math.random() * 200), // Dummy student count
+      }));
+    } else if (currentRole === 'tutor') {
+      // For tutors, show supervised courses (dummy data for now)
+      return [
+        { studentName: "John Doe", courseTitle: "Mathématiques Avancées", progress: 60, alerts: "Difficultés en géométrie" },
+        { studentName: "Jane Smith", courseTitle: "Physique Quantique", progress: 90, alerts: "Excellent progrès" },
+      ];
+    }
+    return [];
+  };
 
-  const creatorCourses = [
-    { id: 101, title: "Développement Web Fullstack", description: "Créez des applications web complètes.", status: "Publié", students: 150 },
-    { id: 102, title: "Machine Learning avec Python", description: "Introduction aux concepts du ML.", status: "Brouillon", students: 0 },
-    { id: 103, title: "Design UI/UX", description: "Principes de conception d'interfaces utilisateur.", status: "Publié", students: 80 },
-    { id: 104, title: "Fondamentaux de la Science des Données", description: "Explorez les concepts clés de la science des données.", status: "Brouillon", students: 0 }, // Nouveau cours
-  ];
-
-  const tutorSupervisedCourses = [
-    { studentName: "John Doe", courseTitle: "Mathématiques Avancées", progress: 60, alerts: "Difficultés en géométrie" },
-    { studentName: "Jane Smith", courseTitle: "Physique Quantique", progress: 90, alerts: "Excellent progrès" },
-  ];
+  const coursesToDisplay = getCoursesForRole();
 
   const renderCoursesContent = () => {
     if (currentRole === 'student') {
@@ -38,7 +46,7 @@ const Courses = () => {
         <>
           <p className="text-lg text-muted-foreground mb-8">Voici les cours auxquels vous êtes inscrit(e) et votre progression.</p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {studentCourses.map(course => (
+            {coursesToDisplay.map((course: any) => ( // Use 'any' for simplicity due to mixed types
               <Card key={course.id}>
                 <CardHeader>
                   <CardTitle>{course.title}</CardTitle>
@@ -60,7 +68,7 @@ const Courses = () => {
         <>
           <p className="text-lg text-muted-foreground mb-8">Gérez les cours que vous avez créés.</p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {creatorCourses.map(course => (
+            {coursesToDisplay.map((course: any) => ( // Use 'any' for simplicity due to mixed types
               <Card key={course.id}>
                 <CardHeader>
                   <CardTitle>{course.title}</CardTitle>
@@ -89,7 +97,7 @@ const Courses = () => {
         <>
           <p className="text-lg text-muted-foreground mb-8">Suivez les cours de vos élèves.</p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {tutorSupervisedCourses.map((data, index) => (
+            {coursesToDisplay.map((data: any, index: number) => ( // Use 'any' for simplicity due to mixed types
               <Card key={index}>
                 <CardHeader>
                   <CardTitle>{data.courseTitle}</CardTitle>

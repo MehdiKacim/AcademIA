@@ -10,14 +10,15 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
-import NotesSection from "@/components/NotesSection"; // Import NotesSection directly
+import NotesSection from "@/components/NotesSection";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { dummyCourses, Course, Module, ModuleSection } from "@/lib/courseData";
+import { dummyCourses, Course, Module, ModuleSection, updateCourseInStorage } from "@/lib/courseData"; // Import updateCourseInStorage
+import QuizComponent from "@/components/QuizComponent"; // Import QuizComponent
 
 const ModuleDetail = () => {
   const { courseId, moduleIndex } = useParams<{ courseId: string; moduleIndex: string }>();
@@ -25,7 +26,9 @@ const ModuleDetail = () => {
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
   const isMobile = useIsMobile();
 
-  const course = dummyCourses.find(c => c.id === courseId);
+  // Utiliser une copie mutable de dummyCourses pour les mises à jour locales
+  const [currentCourses, setCurrentCourses] = useState<Course[]>(dummyCourses);
+  const course = currentCourses.find(c => c.id === courseId);
   const currentModuleIndex = parseInt(moduleIndex || '0', 10);
   const module = course?.modules[currentModuleIndex];
 
@@ -33,9 +36,14 @@ const ModuleDetail = () => {
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
   const [refreshNotesSection, setRefreshNotesSection] = useState(0);
   const [highlightedElementId, setHighlightedElementId] = useState<string | null>(null);
-  const [visibleNotesKey, setVisibleNotesKey] = useState<string | null>(null); // State to control which NotesSection is visible
+  const [visibleNotesKey, setVisibleNotesKey] = useState<string | null>(null);
 
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Recharger les cours depuis le stockage local si dummyCourses change (par exemple, après une création de cours)
+  useEffect(() => {
+    setCurrentCourses(dummyCourses);
+  }, [dummyCourses]);
 
   useEffect(() => {
     if (course && module) {
@@ -92,18 +100,14 @@ const ModuleDetail = () => {
   }
 
   const handleMarkModuleComplete = () => {
-    const updatedCourses = dummyCourses.map(c =>
-      c.id === courseId
-        ? {
-            ...c,
-            modules: c.modules.map((mod, idx) =>
-              idx === currentModuleIndex ? { ...mod, isCompleted: true } : mod
-            ),
-          }
-        : c
-    );
-    // Mettre à jour dummyCourses directement (pour la démo)
-    Object.assign(dummyCourses, updatedCourses);
+    const updatedCourse = {
+      ...course,
+      modules: course.modules.map((mod, idx) =>
+        idx === currentModuleIndex ? { ...mod, isCompleted: true } : mod
+      ),
+    };
+    updateCourseInStorage(updatedCourse); // Sauvegarder dans le localStorage
+    setCurrentCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c)); // Mettre à jour l'état local
 
     showSuccess(`Module "${module.title}" marqué comme terminé !`);
 
@@ -112,6 +116,16 @@ const ModuleDetail = () => {
     } else {
       showSuccess("Félicitations ! Vous avez terminé tous les modules de ce cours.");
       navigate(`/courses/${courseId}`);
+    }
+  };
+
+  const handleQuizComplete = (score: number, total: number) => {
+    if (score / total >= 0.7) { // Exemple: 70% pour réussir le quiz
+      showSuccess(`Quiz terminé ! Votre score : ${score}/${total}. Vous avez réussi !`);
+      // Optionnel: marquer la section comme complétée si nécessaire, ou le module entier
+      // Pour l'instant, le quiz ne marque pas la section comme complétée, mais le module entier.
+    } else {
+      showError(`Quiz terminé ! Votre score : ${score}/${total}. Vous n'avez pas atteint le seuil de réussite.`);
     }
   };
 
@@ -201,11 +215,9 @@ const ModuleDetail = () => {
                             </div>
                           ) : section.type === 'image' && section.url ? (
                             <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md my-4" />
-                          ) : section.type === 'quiz' ? (
-                            <div className="p-4 bg-accent rounded-md text-accent-foreground flex flex-col items-center justify-center text-center my-4">
-                              <p className="text-lg font-medium mb-2">Quiz : {section.title}</p>
-                              <p className="text-sm mb-4">{section.content}</p>
-                              <Button>Commencer le Quiz</Button>
+                          ) : section.type === 'quiz' && section.questions ? (
+                            <div className="my-4">
+                              <QuizComponent questions={section.questions} onQuizComplete={handleQuizComplete} />
                             </div>
                           ) : (
                             <p className="text-muted-foreground mt-2">{section.content}</p>

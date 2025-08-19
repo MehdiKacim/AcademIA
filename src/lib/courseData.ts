@@ -1,8 +1,19 @@
+export interface QuizOption {
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: QuizOption[];
+}
+
 export interface ModuleSection {
   title: string;
   content: string;
-  type?: 'text' | 'quiz' | 'video' | 'image'; // Ajout de 'image'
-  url?: string; // Pour les vidéos et images
+  type?: 'text' | 'quiz' | 'video' | 'image';
+  url?: string;
+  questions?: QuizQuestion[]; // Pour les sections de type 'quiz'
 }
 
 export interface Module {
@@ -18,14 +29,14 @@ export interface Course {
   description: string;
   modules: Module[];
   skillsToAcquire: string[];
-  imageUrl?: string; // Nouvelle propriété pour l'image du cours
-  category?: string; // Ajouté pour correspondre au formulaire
-  difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé'; // Ajouté pour correspondre au formulaire
+  imageUrl?: string;
+  category?: string;
+  difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
 }
 
-export type EntityType = 'course' | 'module' | 'section'; // Ajout et exportation de EntityType
+export type EntityType = 'course' | 'module' | 'section';
 
-export const dummyCourses: Course[] = [
+const initialDummyCourses: Course[] = [
   {
     id: '1',
     title: "Introduction à l'IA",
@@ -59,7 +70,40 @@ export const dummyCourses: Course[] = [
           { title: "Introduction aux Réseaux de Neurones", content: "Les réseaux de neurones sont des modèles inspirés du cerveau humain, composés de couches de 'neurones' interconnectés. Chaque neurone reçoit des entrées, effectue un calcul et transmet une sortie. L'apprentissage se fait par ajustement des poids des connexions." },
           { title: "Deep Learning", content: "Le Deep Learning, une sous-catégorie du Machine Learning, utilise des réseaux de neurones profonds (avec de nombreuses couches) pour apprendre des représentations complexes des données. Cela a révolutionné des domaines comme la vision par ordinateur et le traitement du langage naturel." },
           { title: "Types de Réseaux", content: "Nous aborderons les réseaux de neurones convolutifs (CNN) pour l'image, les réseaux de neurones récurrents (RNN) pour les séquences, et les transformeurs pour le traitement du langage naturel." },
-          { title: "Quiz: Réseaux de Neurones", content: "Testez vos connaissances sur les réseaux de neurones.", type: "quiz" },
+          {
+            title: "Quiz: Réseaux de Neurones",
+            content: "Testez vos connaissances sur les réseaux de neurones.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel est le composant de base d'un réseau de neurones ?",
+                options: [
+                  { text: "Un transistor", isCorrect: false },
+                  { text: "Un neurone", isCorrect: true },
+                  { text: "Un bit", isCorrect: false },
+                  { text: "Un algorithme", isCorrect: false },
+                ],
+              },
+              {
+                question: "Quel type de réseau de neurones est le mieux adapté pour le traitement d'images ?",
+                options: [
+                  { text: "RNN (Réseau de Neurones Récurrent)", isCorrect: false },
+                  { text: "MLP (Perceptron Multi-Couches)", isCorrect: false },
+                  { text: "CNN (Réseau de Neurones Convolutif)", isCorrect: true },
+                  { text: "GAN (Réseau Antagoniste Génératif)", isCorrect: false },
+                ],
+              },
+              {
+                question: "Le Deep Learning est une sous-catégorie de quel domaine ?",
+                options: [
+                  { text: "La robotique", isCorrect: false },
+                  { text: "Le Machine Learning", isCorrect: true },
+                  { text: "La cryptographie", isCorrect: false },
+                  { text: "La science des données", isCorrect: false },
+                ],
+              },
+            ],
+          },
         ],
         isCompleted: false,
         level: 0
@@ -268,3 +312,43 @@ export const dummyCourses: Course[] = [
     skillsToAcquire: ["Collecte de données", "Analyse statistique", "Modélisation ML", "Visualisation"]
   },
 ];
+
+const LOCAL_STORAGE_KEY = 'academia_courses';
+
+// Fonction pour charger les cours depuis le localStorage
+export const loadCourses = (): Course[] => {
+  try {
+    const storedCourses = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (storedCourses) {
+      return JSON.parse(storedCourses);
+    }
+  } catch (error) {
+    console.error("Erreur lors du chargement des cours depuis le localStorage:", error);
+  }
+  // Si rien n'est trouvé ou s'il y a une erreur, initialiser avec les dummyCourses
+  return initialDummyCourses;
+};
+
+// Fonction pour sauvegarder les cours dans le localStorage
+export const saveCourses = (courses: Course[]) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(courses));
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde des cours dans le localStorage:", error);
+  }
+};
+
+// Variable exportée qui sera utilisée dans l'application
+export let dummyCourses: Course[] = loadCourses();
+
+// Fonction pour mettre à jour un cours spécifique et le sauvegarder
+export const updateCourseInStorage = (updatedCourse: Course) => {
+  dummyCourses = dummyCourses.map(c => c.id === updatedCourse.id ? updatedCourse : c);
+  saveCourses(dummyCourses);
+};
+
+// Fonction pour ajouter un nouveau cours
+export const addCourseToStorage = (newCourse: Course) => {
+  dummyCourses = [...dummyCourses, newCourse];
+  saveCourses(dummyCourses);
+};

@@ -6,12 +6,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext"; // Importation du hook useRole
+import { dummyCourses } from "@/lib/courseData"; // Import dummyCourses
 
 const Dashboard = () => {
   const { currentRole } = useRole(); // Utilisation du hook useRole
 
   const renderDashboardContent = () => {
     if (currentRole === 'student') {
+      const enrolledCourses = dummyCourses.filter(c => c.modules.some(m => m.isCompleted)); // Simple filter for "enrolled"
+      const completedCoursesCount = enrolledCourses.filter(c => c.modules.every(m => m.isCompleted)).length;
+      const totalModulesCompleted = dummyCourses.reduce((acc, course) => acc + course.modules.filter(m => m.isCompleted).length, 0);
+      const totalModules = dummyCourses.reduce((acc, course) => acc + course.modules.length, 0);
+      const overallProgress = totalModules > 0 ? Math.round((totalModulesCompleted / totalModules) * 100) : 0;
+
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -20,30 +27,37 @@ const Dashboard = () => {
               <CardDescription>Continuez votre apprentissage.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous avez 3 cours en cours. Reprenez là où vous en étiez !</p>
+              <p>Vous avez {enrolledCourses.length} cours en cours ou terminés.</p>
+              <p className="text-sm text-muted-foreground">Reprenez là où vous en étiez !</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Prochaines Leçons</CardTitle>
-              <CardDescription>Ce qui vous attend.</CardDescription>
+              <CardTitle>Cours Terminés</CardTitle>
+              <CardDescription>Votre succès jusqu'à présent.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Module 4: Algorithmes avancés - Disponible demain.</p>
+              <p>Vous avez terminé {completedCoursesCount} cours.</p>
+              <p className="text-sm text-muted-foreground">Continuez sur cette lancée !</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Performance Globale</CardTitle>
-              <CardDescription>Votre progression générale.</CardDescription>
+              <CardTitle>Progression Globale</CardTitle>
+              <CardDescription>Votre avancement général.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Score moyen : 85%</p>
+              <p className="text-2xl font-bold text-primary">{overallProgress}%</p>
+              <p className="text-sm text-muted-foreground">Modules terminés : {totalModulesCompleted} / {totalModules}</p>
             </CardContent>
           </Card>
         </div>
       );
     } else if (currentRole === 'creator') {
+      const createdCourses = dummyCourses; // Assuming all dummyCourses are created by this creator for demo
+      const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.isCompleted)).length; // Simple heuristic for 'published'
+      const totalStudents = createdCourses.reduce((acc, course) => acc + Math.floor(Math.random() * 200), 0); // Dummy student count
+
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -52,7 +66,8 @@ const Dashboard = () => {
               <CardDescription>Gérez vos contenus d'apprentissage.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous avez créé 5 cours. 2 sont en brouillon.</p>
+              <p>Vous avez créé {createdCourses.length} cours.</p>
+              <p className="text-sm text-muted-foreground">{publishedCoursesCount} sont publiés.</p>
             </CardContent>
           </Card>
           <Card>
@@ -61,7 +76,8 @@ const Dashboard = () => {
               <CardDescription>Vue d'ensemble de la progression.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>120 élèves inscrits. 75% de complétion moyenne.</p>
+              <p>{totalStudents} élèves inscrits au total.</p>
+              <p className="text-sm text-muted-foreground">Taux de complétion moyen : ~70% (estimation)</p>
             </CardContent>
           </Card>
           <Card>

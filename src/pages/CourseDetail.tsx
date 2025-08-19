@@ -11,11 +11,12 @@ import { Progress } from "@/components/ui/progress";
 import NotesSection from "@/components/NotesSection";
 import { generateNoteKey } from "@/lib/notes";
 import CourseModuleList from "@/components/CourseModuleList";
-import { dummyCourses, Course, Module, ModuleSection } from "@/lib/courseData"; // Importation depuis le nouveau fichier
+import { dummyCourses, Course, Module, ModuleSection, loadCourses } from "@/lib/courseData"; // Import loadCourses
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const [courses, setCourses] = useState<Course[]>(dummyCourses); // Utilisation de dummyCourses
+  // Charger les cours à chaque rendu pour s'assurer d'avoir la dernière version du localStorage
+  const courses = loadCourses();
   const course = courses.find(c => c.id === courseId);
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
 

@@ -4,18 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Course, Module, ModuleSection } from "@/lib/courseData"; // Importation depuis le nouveau fichier
+import { Course, Module, ModuleSection, loadCourses } from "@/lib/courseData"; // Import loadCourses
 
 interface CourseModuleListProps {
   course: Course;
 }
 
 const CourseModuleList = ({ course }: CourseModuleListProps) => {
+  // Charger la dernière version des cours pour s'assurer que l'état de complétion est à jour
+  const updatedCourses = loadCourses();
+  const currentCourse = updatedCourses.find(c => c.id === course.id) || course;
+
   // Regrouper les modules principaux avec leurs sous-modules
   const groupedModules: { mainModule: Module; subModules: Module[]; }[] = [];
   let currentMainModuleIndex = -1;
 
-  course.modules.forEach((module) => {
+  currentCourse.modules.forEach((module) => {
     if (module.level === 0) {
       groupedModules.push({ mainModule: module, subModules: [] });
       currentMainModuleIndex++;
@@ -27,8 +31,9 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {groupedModules.map((group, groupIndex) => {
-        const mainModuleOverallIndex = course.modules.indexOf(group.mainModule);
-        const isMainModuleAccessible = mainModuleOverallIndex === 0 || course.modules[mainModuleOverallIndex - 1]?.isCompleted;
+        const mainModuleOverallIndex = currentCourse.modules.indexOf(group.mainModule);
+        // Un module est accessible si c'est le premier ou si le précédent est complété
+        const isMainModuleAccessible = mainModuleOverallIndex === 0 || currentCourse.modules[mainModuleOverallIndex - 1]?.isCompleted;
 
         return (
           <Card
@@ -52,7 +57,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-between">
-              <Link to={`/courses/${course.id}/modules/${mainModuleOverallIndex}`}>
+              <Link to={`/courses/${currentCourse.id}/modules/${mainModuleOverallIndex}`}>
                 <Button className="w-full text-xs" disabled={!isMainModuleAccessible}>
                   {group.mainModule.isCompleted ? "Revoir le module" : "Commencer le module"}
                 </Button>
@@ -63,8 +68,8 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                   <h4 className="text-sm font-semibold mb-2 text-foreground">Sous-modules:</h4>
                   <div className="space-y-2">
                     {group.subModules.map((subModule) => {
-                      const subModuleOverallIndex = course.modules.indexOf(subModule);
-                      const isSubModuleAccessible = course.modules[subModuleOverallIndex - 1]?.isCompleted;
+                      const subModuleOverallIndex = currentCourse.modules.indexOf(subModule);
+                      const isSubModuleAccessible = currentCourse.modules[subModuleOverallIndex - 1]?.isCompleted;
 
                       return (
                         <Card
@@ -78,7 +83,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                             <span className="text-sm font-medium text-foreground">{subModule.title}</span>
                             {subModule.isCompleted && <CheckCircle className="h-4 w-4 text-green-500" />}
                           </div>
-                          <Link to={`/courses/${course.id}/modules/${subModuleOverallIndex}`}>
+                          <Link to={`/courses/${currentCourse.id}/modules/${subModuleOverallIndex}`}>
                             <Button variant="link" className="p-0 h-auto text-xs mt-1 text-primary hover:underline" disabled={!isSubModuleAccessible}>
                               {subModule.isCompleted ? "Revoir" : "Accéder"}
                             </Button>

@@ -18,23 +18,24 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { dummyCourses } from "@/lib/courseData"; // Import dummyCourses
 
 const Analytics = () => {
   const { currentRole } = useRole();
 
   // Données fictives pour les analytiques textuelles
   const studentAnalytics = {
-    overallProgress: "75%",
+    overallProgress: "75%", // Will be calculated
     strongestSubject: "Algorithmes",
     weakestSubject: "Bases de données",
-    completedCourses: 2,
+    completedCourses: 0, // Will be calculated
     hoursSpent: 45,
   };
 
   const creatorAnalytics = {
-    totalCourses: 5,
-    publishedCourses: 3,
-    totalStudents: 250,
+    totalCourses: 0, // Will be calculated
+    publishedCourses: 0, // Will be calculated
+    totalStudents: 0, // Will be calculated
     averageCompletionRate: "68%",
     mostPopularCourse: "Développement Web Fullstack",
   };
@@ -49,6 +50,22 @@ const Analytics = () => {
     ],
   };
 
+  // Calculate dynamic data for student role
+  if (currentRole === 'student') {
+    const completedCourses = dummyCourses.filter(c => c.modules.every(m => m.isCompleted));
+    studentAnalytics.completedCourses = completedCourses.length;
+    const totalModulesCompleted = dummyCourses.reduce((acc, course) => acc + course.modules.filter(m => m.isCompleted).length, 0);
+    const totalModules = dummyCourses.reduce((acc, course) => acc + course.modules.length, 0);
+    studentAnalytics.overallProgress = totalModules > 0 ? `${Math.round((totalModulesCompleted / totalModules) * 100)}%` : "0%";
+  }
+
+  // Calculate dynamic data for creator role
+  if (currentRole === 'creator') {
+    creatorAnalytics.totalCourses = dummyCourses.length;
+    creatorAnalytics.publishedCourses = dummyCourses.filter(c => c.modules.some(m => m.isCompleted)).length; // Simple heuristic for 'published'
+    creatorAnalytics.totalStudents = dummyCourses.reduce((acc, course) => acc + Math.floor(Math.random() * 200), 0); // Dummy student count
+  }
+
   // Données fictives pour les graphiques
   const studentProgressData = [
     { name: 'Jan', progress: 30 },
@@ -58,12 +75,11 @@ const Analytics = () => {
     { name: 'Mai', progress: 80 },
   ];
 
-  const creatorCourseData = [
-    { name: 'IA', students: 120, completion: 70 },
-    { name: 'React', students: 80, completion: 65 },
-    { name: 'Algo', students: 150, completion: 85 },
-    { name: 'Design', students: 50, completion: 60 },
-  ];
+  const creatorCourseData = dummyCourses.map(course => ({
+    name: course.title.length > 10 ? course.title.substring(0, 10) + '...' : course.title,
+    students: Math.floor(Math.random() * 200), // Dummy data
+    completion: Math.floor(Math.random() * 100), // Dummy data
+  }));
 
   const tutorStudentPerformanceData = [
     { name: 'John', score: 75 },
@@ -142,7 +158,7 @@ const Analytics = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle>Vue d'ensemble des Cours</CardTitle>
+                <CardTitle>Vue d'overview des Cours</CardTitle>
                 <CardDescription>Statistiques générales de vos contenus.</CardDescription>
               </CardHeader>
               <CardContent>
