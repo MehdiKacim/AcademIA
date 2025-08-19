@@ -26,6 +26,7 @@ import {
   deleteData,
 } from "@/lib/localStorageUtils";
 import { showSuccess, showError } from "@/utils/toast";
+import { dummyStudents, saveStudents } from '@/lib/studentData'; // Importation corrigée
 
 const LOCAL_STORAGE_ESTABLISHMENTS_KEY = 'academia_establishments';
 const LOCAL_STORAGE_CLASSES_KEY = 'academia_classes';
@@ -37,7 +38,7 @@ const ClassManagement = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [students, setStudents] = useState<Student[]>([]); // Pour l'affichage des élèves
+  const [currentStudents, setCurrentStudents] = useState<Student[]>([]); // Utiliser un état local pour les élèves
 
   // États pour les formulaires d'ajout/édition
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
@@ -48,10 +49,7 @@ const ClassManagement = () => {
     setEstablishments(loadData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY, [{ id: 'est1', name: 'École Primaire Alpha' }]));
     setClasses(loadData<Class>(LOCAL_STORAGE_CLASSES_KEY, [{ id: 'class1', name: 'CE1 A', establishmentId: 'est1', studentIds: ['student1', 'student2'] }, { id: 'class2', name: 'CE2 B', establishmentId: 'est1', studentIds: ['student3'] }]));
     setCurricula(loadData<Curriculum>(LOCAL_STORAGE_CURRICULA_KEY, [{ id: 'cur1', name: 'Cursus Fondamental', courseIds: ['1', '2'] }]));
-    // Charger les élèves depuis studentData.ts (qui utilise déjà localStorageUtils)
-    // Pour l'instant, on les charge directement pour l'affichage
-    const { dummyStudents } = require('@/lib/studentData'); // Importation dynamique pour éviter les boucles de dépendance
-    setStudents(dummyStudents);
+    setCurrentStudents(dummyStudents); // Charger les élèves depuis la variable exportée
   }, []);
 
   const handleAddEstablishment = () => {
@@ -88,14 +86,11 @@ const ClassManagement = () => {
   const handleDeleteClass = (id: string) => {
     setClasses(prev => deleteData(LOCAL_STORAGE_CLASSES_KEY, id));
     // Mettre à jour les élèves qui étaient dans cette classe
-    const updatedStudents = students.map(student =>
+    const updatedStudents = currentStudents.map(student =>
       student.classId === id ? { ...student, classId: undefined } : student
     );
-    // Note: Pour une persistance complète des élèves, il faudrait appeler updateStudent pour chaque élève modifié
-    // Pour l'instant, on met à jour l'état local et on suppose que studentData.ts gère sa propre persistance
-    // (ce qui est le cas avec loadData/saveData)
-    // require('@/lib/studentData').saveStudents(updatedStudents); // Ceci serait nécessaire si on voulait persister ici
-    setStudents(updatedStudents);
+    saveStudents(updatedStudents); // Sauvegarder les élèves mis à jour
+    setCurrentStudents(updatedStudents); // Mettre à jour l'état local des élèves
     showSuccess("Classe supprimée !");
   };
 
