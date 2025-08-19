@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   Target,
   MessageCircleMore,
-  Menu, // Importation de l'icône Menu
+  // Menu, // Commenté pour le débogage
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
@@ -130,7 +130,7 @@ const Index = () => {
             onLinkClick={() => {}}
             trigger={
               <Button variant="outline" size="icon">
-                <Menu className="h-5 w-5" />
+                ☰ {/* Remplacé par un caractère de texte */}
               </Button>
             }
           >

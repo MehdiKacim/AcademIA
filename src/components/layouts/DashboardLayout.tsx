@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, Menu } from "lucide-react"; // Importation de l'icône Menu
+import { Home, BookOpen, PlusSquare, BarChart2, /* Menu */ } from "lucide-react"; // Importation de l'icône Menu
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -23,7 +23,7 @@ const DashboardLayout = () => {
             navItems={navItems}
             trigger={
               <Button variant="outline" size="icon">
-                <Menu className="h-5 w-5" />
+                ☰ {/* Remplacé par un caractère de texte */}
               </Button>
             }
           >
