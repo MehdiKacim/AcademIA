@@ -12,7 +12,8 @@ import Courses from "./pages/Courses";
 import CreateCourse from "./pages/CreateCourse";
 import Analytics from "./pages/Analytics";
 import { ThemeProvider } from "./components/theme-provider";
-import SplashScreen from "./components/SplashScreen"; // Importation du SplashScreen
+import SplashScreen from "./components/SplashScreen";
+import { RoleProvider } from "./contexts/RoleContext"; // Importation du RoleProvider
 
 const queryClient = new QueryClient();
 
@@ -31,10 +32,9 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                {/* Removed /login and /register routes as they are now modals */}
 
-                {/* Routes with Dashboard Layout */}
-                <Route element={<DashboardLayout />}>
+                {/* Routes with Dashboard Layout, wrapped by RoleProvider */}
+                <Route element={<RoleProvider><DashboardLayout /></RoleProvider>}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/create-course" element={<CreateCourse />} />

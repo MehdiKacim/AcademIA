@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings } from "lucide-react"; // Import des icônes nécessaires
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -13,17 +13,41 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; // Import des composants DropdownMenu
+} from "@/components/ui/dropdown-menu";
+import { useRole } from "@/contexts/RoleContext"; // Importation du hook useRole
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
+  const { currentRole, setRole } = useRole(); // Utilisation du hook useRole
 
-  const navItems = [
-    { to: "/dashboard", icon: Home, label: "Tableau de bord" },
-    { to: "/courses", icon: BookOpen, label: "Mes Cours" },
-    { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
-    { to: "/analytics", icon: BarChart2, label: "Progression" },
-  ];
+  // Définition des éléments de navigation par rôle
+  const getNavItems = () => {
+    const baseItems = [
+      { to: "/dashboard", icon: Home, label: "Tableau de bord" },
+    ];
+
+    if (currentRole === 'student') {
+      return [
+        ...baseItems,
+        { to: "/courses", icon: BookOpen, label: "Mes Cours" },
+      ];
+    } else if (currentRole === 'creator') {
+      return [
+        ...baseItems,
+        { to: "/courses", icon: BookOpen, label: "Mes Cours" },
+        { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
+        { to: "/analytics", icon: BarChart2, label: "Progression" },
+      ];
+    } else if (currentRole === 'tutor') {
+      return [
+        ...baseItems,
+        { to: "/analytics", icon: BarChart2, label: "Progression" },
+      ];
+    }
+    return baseItems; // Fallback
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
@@ -52,6 +76,36 @@ const DashboardLayout = () => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+          {/* Boutons de sélection de rôle */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                {currentRole === 'student' && <GraduationCap className="h-4 w-4" />}
+                {currentRole === 'creator' && <PenTool className="h-4 w-4" />}
+                {currentRole === 'tutor' && <Users className="h-4 w-4" />}
+                <span className="hidden sm:inline-block">
+                  {currentRole === 'student' ? 'Élève' : currentRole === 'creator' ? 'Créateur' : 'Tuteur'}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Changer de rôle</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setRole('student')}>
+                <GraduationCap className="mr-2 h-4 w-4" />
+                <span>Élève</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRole('creator')}>
+                <PenTool className="mr-2 h-4 w-4" />
+                <span>Créateur</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRole('tutor')}>
+                <Users className="mr-2 h-4 w-4" />
+                <span>Tuteur</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <ThemeToggle />
           {/* Menu déroulant pour les actions utilisateur */}
           <DropdownMenu>
