@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from 'react-router-dom';
-import dagre from 'dagre';
+import * as dagre from 'dagre'; // Correction ici: import * as dagre
 
 // Définition des types pour les données des modules
 interface Module {
