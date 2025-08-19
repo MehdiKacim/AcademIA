@@ -157,7 +157,7 @@ const ModuleDetail = () => {
         <ContextMenuTrigger asChild>
           <Card className={cn(
             "relative",
-            highlightedElementId === `module-${course.id}-${currentModuleIndex}` && "border-primary ring-2 ring-primary/50"
+            highlightedElementId === `module-${course.id}-${currentModuleIndex}` ? "bg-primary/10" : ""
           )}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -178,8 +178,8 @@ const ModuleDetail = () => {
                         <div
                           ref={el => sectionRefs.current[index] = el}
                           className={cn(
-                            "p-4 border rounded-md bg-muted/10 cursor-context-menu",
-                            highlightedElementId === `section-${course.id}-${currentModuleIndex}-${index}` && "border-primary ring-2 ring-primary/50"
+                            "p-4 border rounded-md cursor-context-menu",
+                            highlightedElementId === `section-${course.id}-${currentModuleIndex}-${index}` ? "bg-primary/10" : "bg-muted/10"
                           )}
                         >
                           <div className="flex items-center justify-between">

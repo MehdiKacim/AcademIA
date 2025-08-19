@@ -47,7 +47,7 @@ const AllNotes = () => {
               <ContextMenuTrigger asChild>
                 <Card className={cn(
                   "cursor-context-menu hover:shadow-md transition-shadow",
-                  highlightedNoteKey === noteGroup.key && "border-primary ring-2 ring-primary/50"
+                  highlightedNoteKey === noteGroup.key ? "bg-primary/10" : ""
                 )}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
