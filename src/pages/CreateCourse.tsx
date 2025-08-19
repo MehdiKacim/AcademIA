@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Course, addCourseToStorage, loadCourses, updateCourseInStorage, Module } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses, and Module type
-import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
+import { useParams, useNavigate } => "react-router-dom"; // Import useParams and useNavigate
 
 // Zod Schemas for validation
 const QuizOptionSchema = z.object({
@@ -532,7 +532,7 @@ const CreateCourse = () => {
                                       const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
                                       if (currentQuestions && currentQuestions[questionIndex]) {
                                         currentQuestions[questionIndex].options = currentQuestions[questionIndex].options || [];
-                                        currentQuestions[questionIndex].options?.push({ text: "", isCorrect: false });
+                                        currentQuestions[questionIndex].options.push({ text: "", isCorrect: false });
                                         form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                                       }
                                     }}
