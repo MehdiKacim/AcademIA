@@ -23,7 +23,7 @@ export interface Module {
   title: string;
   sections: ModuleSection[];
   isCompleted: boolean;
-  level?: number;
+  level: number; // Correction: 'level' est maintenant requis pour correspondre au schéma Zod
 }
 
 export interface Course {

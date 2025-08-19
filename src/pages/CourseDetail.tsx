@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, Send, Lock, CheckCircle } from "lucide-react";
-import { cn } => "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Badge } from "@/components/ui/badge";
