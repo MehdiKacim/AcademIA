@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRole } from "@/contexts/RoleContext";
-import AiAPersistentChat from "@/components/AiAPersistentChat"; // Importation du nouveau composant
+import AiAPersistentChat from "@/components/AiAPersistentChat";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
@@ -24,7 +24,6 @@ const DashboardLayout = () => {
   const getNavItems = () => {
     const baseItems = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
-      // Le lien AiA Chat est supprimé car le chat est maintenant flottant
     ];
 
     if (currentRole === 'student') {
@@ -138,11 +137,11 @@ const DashboardLayout = () => {
           </DropdownMenu>
         </div>
       </header>
-      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-16 sm:pt-20", isMobile && "pb-20")}>
+      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-20 sm:pt-24", isMobile && "pb-20")}>
         <Outlet />
       </main>
       <BottomNavigationBar navItems={navItems} />
-      <AiAPersistentChat /> {/* Intégration du composant de chat flottant */}
+      <AiAPersistentChat />
     </div>
   );
 };

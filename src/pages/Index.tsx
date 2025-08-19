@@ -15,8 +15,8 @@ import {
   Target,
   MessageCircleMore,
   Home,
-  LogIn, // Import de l'icône LogIn
-  UserPlus, // Import de l'icône UserPlus
+  LogIn,
+  UserPlus,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -156,7 +156,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20", isMobile && "pb-20")}>
+      <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-20 sm:pt-24", isMobile && "pb-20")}>
         <section
           id="accueil"
           ref={sectionRefs.accueil}
