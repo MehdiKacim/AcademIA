@@ -10,7 +10,7 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
-import NotesSection from "@/components/NotesSection"; // Utilisation de NotesSection
+import NotesSection from "@/components/NotesSection";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -31,9 +31,8 @@ const ModuleDetail = () => {
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
-  const [refreshNotesSection, setRefreshNotesSection] = useState(0); // Pour forcer le rafraîchissement des NotesSection
+  const [refreshNotesSection, setRefreshNotesSection] = useState(0);
 
-  // Références pour chaque section afin de pouvoir y faire défiler la vue
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -50,7 +49,6 @@ const ModuleDetail = () => {
     };
   }, [courseId, moduleIndex, course, module, setCourseContext, setModuleContext]);
 
-  // Fonction pour faire défiler la vue vers une section spécifique
   const scrollToSection = useCallback((sectionIdx: number) => {
     if (sectionRefs.current[sectionIdx]) {
       sectionRefs.current[sectionIdx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -102,6 +100,7 @@ const ModuleDetail = () => {
           }
         : c
     );
+    // Mettre à jour dummyCourses directement (pour la démo)
     Object.assign(dummyCourses, updatedCourses);
 
     showSuccess(`Module "${module.title}" marqué comme terminé !`);
@@ -126,8 +125,16 @@ const ModuleDetail = () => {
     setIsQuickNoteDialogOpen(true);
   };
 
+  const handleOpenModuleNoteDialog = () => {
+    setCurrentNoteContext({
+      key: generateNoteKey('module', course.id, currentModuleIndex),
+      title: module.title,
+    });
+    setIsQuickNoteDialogOpen(true);
+  };
+
   const handleNoteAdded = useCallback(() => {
-    setRefreshNotesSection(prev => prev + 1); // Incrémente pour forcer le rafraîchissement des NotesSection
+    setRefreshNotesSection(prev => prev + 1);
   }, []);
 
   const totalModules = course.modules.length;
@@ -160,7 +167,7 @@ const ModuleDetail = () => {
         <CardContent>
           {module.sections.map((section, index) => {
             return (
-              <div key={index} className="mb-6"> {/* Wrapper pour la section et ses notes */}
+              <div key={index} className="mb-6">
                 <ContextMenu>
                   <ContextMenuTrigger className="block w-full">
                     <div
@@ -194,23 +201,22 @@ const ModuleDetail = () => {
                       <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
                     </div>
                   </ContextMenuTrigger>
-                  <ContextMenuContent className="w-64">
-                    <ContextMenuItem onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
-                      <NotebookText className="mr-2 h-4 w-4" /> Ajouter une note rapide
+                  <ContextMenuContent className="w-80 p-0">
+                    <ContextMenuItem className="p-2" onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide
                     </ContextMenuItem>
-                    <ContextMenuItem onClick={() => handleAskAiaAboutSection(section.title)}>
+                    <ContextMenuItem className="p-2" onClick={() => handleAskAiaAboutSection(section.title)}>
                       <Bot className="mr-2 h-4 w-4" /> Demander à AiA
                     </ContextMenuItem>
+                    <div className="border-t border-border mt-2 pt-2">
+                      <NotesSection
+                        noteKey={generateNoteKey('section', course.id, currentModuleIndex, index)}
+                        title={section.title}
+                        refreshKey={refreshNotesSection}
+                      />
+                    </div>
                   </ContextMenuContent>
                 </ContextMenu>
-                {/* Notes Section pour cette section spécifique */}
-                <div className="mt-4">
-                  <NotesSection
-                    noteKey={generateNoteKey('section', course.id, currentModuleIndex, index)}
-                    title={section.title}
-                    refreshKey={refreshNotesSection}
-                  />
-                </div>
               </div>
             );
           })}
@@ -242,13 +248,30 @@ const ModuleDetail = () => {
         </CardContent>
       </Card>
 
-      {/* Notes Section pour le module entier (si nécessaire, sinon supprimer) */}
+      {/* Notes Section pour le module entier (via ContextMenu) */}
       <div className="mt-8 pt-8 border-t border-border">
-        <NotesSection
-          noteKey={generateNoteKey('module', course.id, currentModuleIndex)}
-          title={module.title}
-          refreshKey={refreshNotesSection}
-        />
+        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+          <NotebookText className="h-6 w-6 text-primary" /> Notes du module
+        </h2>
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <Button variant="outline" className="w-full justify-center py-4 text-lg">
+              <NotebookText className="h-5 w-5 mr-2" /> Clic droit pour gérer les notes du module
+            </Button>
+          </ContextMenuTrigger>
+          <ContextMenuContent className="w-80 p-0">
+            <ContextMenuItem className="p-2" onClick={handleOpenModuleNoteDialog}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide au module
+            </ContextMenuItem>
+            <div className="border-t border-border mt-2 pt-2">
+              <NotesSection
+                noteKey={generateNoteKey('module', course.id, currentModuleIndex)}
+                title={module.title}
+                refreshKey={refreshNotesSection}
+              />
+            </div>
+          </ContextMenuContent>
+        </ContextMenu>
       </div>
 
       {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
@@ -259,7 +282,7 @@ const ModuleDetail = () => {
         <Button
           size="lg"
           className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
-          onClick={() => handleOpenQuickNoteDialog(module.title, -1)} // -1 pour indiquer une note de module
+          onClick={handleOpenModuleNoteDialog}
         >
           <PlusCircle className="h-7 w-7" />
           <span className="sr-only">Ajouter une note rapide pour le module</span>

@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotebookText } from "lucide-react";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes";
-import NotesSection from "@/components/NotesSection"; // Importation de NotesSection
+import NotesSection from "@/components/NotesSection";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Button } from "@/components/ui/button";
 
 const AllNotes = () => {
   const [allNotes, setAllNotes] = useState<AggregatedNote[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0); // État pour forcer le rafraîchissement
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     setAllNotes(getAllNotesData());
-  }, [refreshKey]); // Dépendance à refreshKey
+  }, [refreshKey]);
 
   const handleNoteChange = () => {
-    // Cette fonction est appelée lorsque NotesSection ajoute, édite ou supprime une note.
-    // Elle force le rafraîchissement de la liste complète des notes.
     setRefreshKey(prev => prev + 1);
   };
 
@@ -25,7 +28,7 @@ const AllNotes = () => {
         Toutes mes notes
       </h1>
       <p className="text-lg text-muted-foreground">
-        Retrouvez ici toutes les notes que vous avez prises pour vos cours et modules.
+        Retrouvez ici toutes les notes que vous avez prises pour vos cours et modules. Clic droit sur une carte pour gérer les notes.
       </p>
 
       {allNotes.length === 0 ? (
@@ -36,14 +39,37 @@ const AllNotes = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1"> {/* Changé en 1 colonne pour mieux gérer les NotesSection */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {allNotes.map((noteGroup) => (
-            <NotesSection
-              key={noteGroup.key}
-              noteKey={noteGroup.key}
-              title={noteGroup.context}
-              refreshKey={refreshKey} // Passe le refreshKey pour que NotesSection se rafraîchisse
-            />
+            <ContextMenu key={noteGroup.key}>
+              <ContextMenuTrigger asChild>
+                <Card className="cursor-context-menu hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <NotebookText className="h-5 w-5 text-primary" /> {noteGroup.context}
+                    </CardTitle>
+                    <CardDescription>
+                      {noteGroup.notes.length} note(s)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground italic">
+                      {noteGroup.notes.length > 0 ? `Dernière note: "${noteGroup.notes[noteGroup.notes.length - 1].substring(0, 50)}..."` : "Aucune note."}
+                    </p>
+                    <Button variant="outline" className="mt-4 w-full">
+                      Voir les notes (Clic droit)
+                    </Button>
+                  </CardContent>
+                </Card>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-80 p-0">
+                <NotesSection
+                  noteKey={noteGroup.key}
+                  title={noteGroup.context}
+                  refreshKey={refreshKey}
+                />
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
         </div>
       )}
