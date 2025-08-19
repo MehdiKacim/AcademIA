@@ -20,6 +20,22 @@ const AllNotes = () => {
   const [selectedNoteGroupKey, setSelectedNoteGroupKey] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
+  // Memoize filtered notes to avoid re-calculation on every render
+  // Moved this declaration before useEffects that depend on it
+  const filteredNotes = useMemo(() => {
+    if (!searchQuery) {
+      return allNotes;
+    }
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return allNotes.filter(noteGroup => {
+      const contextMatch = noteGroup.context.toLowerCase().includes(lowerCaseQuery);
+      const notesContentMatch = noteGroup.notes.some(note =>
+        note.toLowerCase().includes(lowerCaseQuery)
+      );
+      return contextMatch || notesContentMatch;
+    });
+  }, [allNotes, searchQuery]);
+
   // Effect to load all notes and set initial selection on mount or full refresh
   useEffect(() => {
     const notes = getAllNotesData();
