@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText } from "lucide-react"; // Importation de NotebookText
+import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText } from "lucide-react";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
 import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { generateNoteKey, getNotes } from "@/lib/notes"; // Importation de getNotes
+import { generateNoteKey, getNotes } from "@/lib/notes";
 import NotesSection from "@/components/NotesSection";
 import {
   ContextMenu,
@@ -19,10 +19,12 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"; // Importation des composants Tooltip
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Nouvelle importation
 import { dummyCourses, Course, Module, ModuleSection } from "@/lib/courseData";
 
 const ModuleDetail = () => {
@@ -167,22 +169,10 @@ const ModuleDetail = () => {
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
                       {hasNotes && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <NotebookText className="h-5 w-5 text-primary cursor-pointer" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs p-2 text-sm">
-                            <p className="font-semibold mb-1">Vos notes pour cette section :</p>
-                            <ul className="list-disc pl-4 space-y-1">
-                              {sectionNotes.slice(0, 3).map((note, i) => ( // Afficher les 3 premières notes
-                                <li key={i}>{note.substring(0, 50)}{note.length > 50 ? '...' : ''}</li>
-                              ))}
-                              {sectionNotes.length > 3 && (
-                                <li>... et {sectionNotes.length - 3} de plus.</li>
-                              )}
-                            </ul>
-                          </TooltipContent>
-                        </Tooltip>
+                        <div className="flex items-center gap-2 text-primary">
+                          <NotebookText className="h-5 w-5" />
+                          <span className="text-sm font-medium">{sectionNotes.length} notes</span>
+                        </div>
                       )}
                     </div>
                     {section.type === 'video' && section.url ? (
@@ -207,6 +197,30 @@ const ModuleDetail = () => {
                       <p className="text-muted-foreground mt-2">{section.content}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
+
+                    {hasNotes && (
+                      <Accordion type="single" collapsible className="w-full mt-4">
+                        <AccordionItem value={`section-notes-${index}`}>
+                          <AccordionTrigger className="py-2 text-sm font-medium text-primary hover:no-underline">
+                            Voir mes notes pour cette section ({sectionNotes.length})
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-2 pb-0">
+                            <ScrollArea className="h-32 w-full rounded-md border p-2 bg-background/50">
+                              <ul className="list-disc pl-4 space-y-1 text-sm text-foreground">
+                                {sectionNotes.map((note, noteIdx) => (
+                                  <li key={noteIdx}>{note}</li>
+                                ))}
+                              </ul>
+                            </ScrollArea>
+                            <div className="text-right mt-2">
+                              <Link to="/all-notes" className="text-xs text-muted-foreground hover:underline">
+                                Gérer toutes mes notes
+                              </Link>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    )}
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-64">
@@ -252,15 +266,15 @@ const ModuleDetail = () => {
         <NotesSection noteKey={generateNoteKey('module', course.id, currentModuleIndex)} title={module.title} refreshKey={refreshNotesSection} />
       </section>
 
-      {/* Bouton flottant pour ajouter une note rapide (pour le module entier si besoin, ou peut être retiré si les notes par section suffisent) */}
+      {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
         "fixed z-40 p-4",
-        isMobile ? "bottom-20 left-4" : "bottom-4 left-4" // Positionnement ajusté pour mobile
+        isMobile ? "bottom-20 left-4" : "bottom-4 left-4"
       )}>
         <Button
           size="lg"
           className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
-          onClick={() => handleOpenQuickNoteDialog(module.title, -1)} // -1 pour indiquer une note de module
+          onClick={() => handleOpenQuickNoteDialog(module.title, -1)}
         >
           <PlusCircle className="h-7 w-7" />
           <span className="sr-only">Ajouter une note rapide pour le module</span>
