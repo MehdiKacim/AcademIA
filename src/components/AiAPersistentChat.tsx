@@ -35,13 +35,21 @@ const AiAPersistentChat = () => {
         setInput(initialChatMessage);
         setInitialChatMessage(null);
       }
-      scrollToBottom();
+      // Ajout d'un petit délai pour s'assurer que le DOM est mis à jour avant de défiler
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 100); 
+      return () => clearTimeout(timer);
     }
   }, [isChatOpen, isMinimized, initialChatMessage, setInitialChatMessage]);
 
   useEffect(() => {
     if (!isMinimized) {
-      scrollToBottom();
+      // Ajout d'un petit délai pour s'assurer que le DOM est mis à jour avant de défiler
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [messages, isMinimized]);
 

@@ -2,14 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookPen } from "lucide-react";
+import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText } from "lucide-react"; // Importation de NotebookText
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
 import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { generateNoteKey } from "@/lib/notes";
+import { generateNoteKey, getNotes } from "@/lib/notes"; // Importation de getNotes
 import NotesSection from "@/components/NotesSection";
 import {
   ContextMenu,
@@ -18,7 +18,12 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
-import { dummyCourses, Course, Module, ModuleSection } from "@/lib/courseData"; // Importation depuis le nouveau fichier
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Importation des composants Tooltip
+import { dummyCourses, Course, Module, ModuleSection } from "@/lib/courseData";
 
 const ModuleDetail = () => {
   const { courseId, moduleIndex } = useParams<{ courseId: string; moduleIndex: string }>();
@@ -26,7 +31,7 @@ const ModuleDetail = () => {
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
   const isMobile = useIsMobile();
 
-  const course = dummyCourses.find(c => c.id === courseId); // Utilisation de dummyCourses
+  const course = dummyCourses.find(c => c.id === courseId);
   const currentModuleIndex = parseInt(moduleIndex || '0', 10);
   const module = course?.modules[currentModuleIndex];
 
@@ -84,9 +89,7 @@ const ModuleDetail = () => {
   }
 
   const handleMarkModuleComplete = () => {
-    // Dans une vraie application, cela mettrait à jour l'état global ou la base de données
-    // Pour cette démo, nous allons simuler la mise à jour et rediriger
-    const updatedCourses = dummyCourses.map(c => // Utilisation de dummyCourses
+    const updatedCourses = dummyCourses.map(c =>
       c.id === courseId
         ? {
             ...c,
@@ -96,13 +99,10 @@ const ModuleDetail = () => {
           }
         : c
     );
-    // Mettre à jour les données fictives pour la prochaine fois (simple pour la démo)
-    // En production, cela serait géré par un état global ou une API
-    Object.assign(dummyCourses, updatedCourses); // Ceci est une astuce simple pour la démo, pas pour la production
+    Object.assign(dummyCourses, updatedCourses);
 
     showSuccess(`Module "${module.title}" marqué comme terminé !`);
 
-    // Naviguer vers le module suivant ou revenir au cours si c'est le dernier
     if (currentModuleIndex < course.modules.length - 1) {
       navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`);
     } else {
@@ -124,7 +124,7 @@ const ModuleDetail = () => {
   };
 
   const handleNoteAdded = useCallback(() => {
-    setRefreshNotesSection(prev => prev + 1); // Incrémente pour forcer le re-rendu de NotesSection
+    setRefreshNotesSection(prev => prev + 1);
   }, []);
 
   const totalModules = course.modules.length;
@@ -155,45 +155,71 @@ const ModuleDetail = () => {
           <Progress value={progressPercentage} className="w-full mt-2" />
         </CardHeader>
         <CardContent>
-          {module.sections.map((section, index) => (
-            <ContextMenu key={index}>
-              <ContextMenuTrigger className="block w-full">
-                <div className="mb-6 p-4 border rounded-md bg-muted/10 cursor-context-menu">
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">{section.title}</h3>
-                  {section.type === 'video' && section.url ? (
-                    <div className="relative w-full aspect-video mb-4 rounded-md overflow-hidden">
-                      <iframe
-                        src={section.url}
-                        title={section.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="absolute top-0 left-0 w-full h-full"
-                      ></iframe>
+          {module.sections.map((section, index) => {
+            const sectionNoteKey = generateNoteKey('section', course.id, currentModuleIndex, index);
+            const sectionNotes = getNotes(sectionNoteKey);
+            const hasNotes = sectionNotes.length > 0;
+
+            return (
+              <ContextMenu key={index}>
+                <ContextMenuTrigger className="block w-full">
+                  <div className="mb-6 p-4 border rounded-md bg-muted/10 cursor-context-menu">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
+                      {hasNotes && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <NotebookText className="h-5 w-5 text-primary cursor-pointer" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs p-2 text-sm">
+                            <p className="font-semibold mb-1">Vos notes pour cette section :</p>
+                            <ul className="list-disc pl-4 space-y-1">
+                              {sectionNotes.slice(0, 3).map((note, i) => ( // Afficher les 3 premières notes
+                                <li key={i}>{note.substring(0, 50)}{note.length > 50 ? '...' : ''}</li>
+                              ))}
+                              {sectionNotes.length > 3 && (
+                                <li>... et {sectionNotes.length - 3} de plus.</li>
+                              )}
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
-                  ) : section.type === 'image' && section.url ? (
-                    <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md mb-4" />
-                  ) : section.type === 'quiz' ? (
-                    <div className="p-4 bg-accent rounded-md text-accent-foreground flex flex-col items-center justify-center text-center">
-                      <p className="text-lg font-medium mb-2">Quiz : {section.title}</p>
-                      <p className="text-sm mb-4">{section.content}</p>
-                      <Button>Commencer le Quiz</Button>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">{section.content}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent className="w-64">
-                <ContextMenuItem onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
-                  <NotebookPen className="mr-2 h-4 w-4" /> Ajouter une note rapide
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => handleAskAiaAboutSection(section.title)}>
-                  <Bot className="mr-2 h-4 w-4" /> Demander à AiA
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
-          ))}
+                    {section.type === 'video' && section.url ? (
+                      <div className="relative w-full aspect-video my-4 rounded-md overflow-hidden">
+                        <iframe
+                          src={section.url}
+                          title={section.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="absolute top-0 left-0 w-full h-full"
+                        ></iframe>
+                      </div>
+                    ) : section.type === 'image' && section.url ? (
+                      <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md my-4" />
+                    ) : section.type === 'quiz' ? (
+                      <div className="p-4 bg-accent rounded-md text-accent-foreground flex flex-col items-center justify-center text-center my-4">
+                        <p className="text-lg font-medium mb-2">Quiz : {section.title}</p>
+                        <p className="text-sm mb-4">{section.content}</p>
+                        <Button>Commencer le Quiz</Button>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground mt-2">{section.content}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
+                  </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-64">
+                  <ContextMenuItem onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
+                    <NotebookText className="mr-2 h-4 w-4" /> Ajouter une note rapide
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => handleAskAiaAboutSection(section.title)}>
+                    <Bot className="mr-2 h-4 w-4" /> Demander à AiA
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            );
+          })}
           <div className="flex flex-wrap gap-4 justify-between items-center mt-6">
             <div className="flex gap-2">
               <Button
