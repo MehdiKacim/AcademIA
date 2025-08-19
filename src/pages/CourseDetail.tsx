@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { showSuccess, showError } from '@/utils/toast';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import CourseMindMap from "@/components/CourseMindMap"; // Import du nouveau composant
 
 interface Module {
   title: string;
@@ -145,47 +146,8 @@ const CourseDetail = () => {
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4">Modules du cours</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {course.modules.map((module, index) => {
-            const isModuleAccessible = index === 0 || course.modules[index - 1]?.isCompleted;
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className={cn(
-                  "relative",
-                  !isModuleAccessible && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                <Card className="h-full flex flex-col">
-                  <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-lg font-medium">
-                      {module.title}
-                    </CardTitle>
-                    {module.isCompleted ? (
-                      <CheckCircle className="h-6 w-6 text-green-500" />
-                    ) : (
-                      <Lock className="h-6 w-6 text-muted-foreground" />
-                    )}
-                  </CardHeader>
-                  <CardContent className="flex-grow flex flex-col justify-between">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {module.content.substring(0, 100)}...
-                    </p>
-                    <Link to={`/courses/${course.id}/modules/${index}`}>
-                      <Button className="w-full" disabled={!isModuleAccessible}>
-                        Accéder au module
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
+        <h2 className="text-2xl font-semibold mb-4">Parcours des modules</h2>
+        <CourseMindMap course={course} />
       </section>
 
       <section className="mt-12">
