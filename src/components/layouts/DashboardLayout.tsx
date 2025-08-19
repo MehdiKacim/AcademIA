@@ -16,7 +16,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center border-b backdrop-blur-lg bg-background/80">
         <Logo />
         {/* Desktop Navigation */}
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
@@ -39,7 +39,7 @@ const DashboardLayout = () => {
           ))}
         </nav>
         {/* Desktop Action Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4 ml-auto">
           <ThemeToggle />
           {/* Placeholder for logout button - in a real app, this would trigger auth logout */}
           <NavLink to="/">
@@ -48,7 +48,7 @@ const DashboardLayout = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-2">
+        <div className="md:hidden flex items-center gap-2 ml-auto">
           <MobileSheetNav navItems={navItems}>
             <ThemeToggle />
             <NavLink to="/" className="w-full">

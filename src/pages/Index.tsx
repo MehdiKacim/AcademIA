@@ -41,8 +41,8 @@ const itemVariants = {
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('accueil');
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModal] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
 
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -88,18 +88,18 @@ const Index = () => {
   };
 
   const openLoginModal = () => {
-    setIsRegisterModalOpen(false); // Close register if open
-    setIsLoginModalOpen(true);
+    setIsRegisterModal(false); // Close register if open
+    setIsLoginModal(true);
   };
 
-  const closeLoginModal = () => setIsLoginModalOpen(false);
+  const closeLoginModal = () => setIsLoginModal(false);
 
   const openRegisterModal = () => {
-    setIsLoginModalOpen(false); // Close login if open
-    setIsRegisterModalOpen(true);
+    setIsLoginModal(false); // Close login if open
+    setIsRegisterModal(true);
   };
 
-  const closeRegisterModal = () => setIsRegisterModalOpen(false);
+  const closeRegisterModal = () => setIsRegisterModal(false);
 
   const methodology = [
     {
@@ -138,7 +138,7 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center border-b backdrop-blur-lg bg-background/80">
         <Logo />
         {/* Desktop Navigation */}
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
@@ -156,7 +156,7 @@ const Index = () => {
           </Button>
         </nav>
         {/* Desktop Action Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4 ml-auto">
           <ThemeToggle />
           <Button variant="outline" onClick={openLoginModal}>
             Se connecter
@@ -164,7 +164,7 @@ const Index = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-2">
+        <div className="md:hidden flex items-center gap-2 ml-auto">
           <MobileSheetNav navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))} onLinkClick={() => {}}>
             <ThemeToggle />
             <Button variant="outline" className="w-full" onClick={() => { closeLoginModal(); openLoginModal(); }}>
