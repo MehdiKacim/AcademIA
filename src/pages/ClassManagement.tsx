@@ -142,7 +142,7 @@ const ClassManagement = () => {
 
   const handleDeleteStudent = (id: string) => {
     const updatedStudents = deleteStudent(id);
-    setCurrentStudents(updatedStudents as Student[]); // Assertion de type ici
+    setCurrentStudents(updatedStudents);
     showSuccess("Élève supprimé !");
   };
 

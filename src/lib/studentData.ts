@@ -98,27 +98,27 @@ const initialDummyStudents: Student[] = [
 export let dummyStudents: Student[] = loadData<Student>(LOCAL_STORAGE_STUDENTS_KEY, initialDummyStudents);
 
 // Sauvegarder les élèves dans le localStorage
-export const saveStudents = (students: Student[]) => {
+export const saveStudents = (students: Student[]): void => {
   saveData(LOCAL_STORAGE_STUDENTS_KEY, students);
   dummyStudents = students; // Mettre à jour la variable exportée
 };
 
 // Fonctions CRUD pour les élèves
-export const addStudent = (newStudent: Student) => {
+export const addStudent = (newStudent: Student): Student[] => {
   const updatedStudents = addData<Student>(LOCAL_STORAGE_STUDENTS_KEY, newStudent); // Spécifier le type
   dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
-export const updateStudent = (updatedStudent: Student) => {
+export const updateStudent = (updatedStudent: Student): Student[] => {
   const updatedStudents = updateData<Student>(LOCAL_STORAGE_STUDENTS_KEY, updatedStudent); // Spécifier le type
   dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
-export const deleteStudent = (studentId: string) => {
+export const deleteStudent = (studentId: string): Student[] => {
   const updatedStudents = deleteData<Student>(LOCAL_STORAGE_STUDENTS_KEY, studentId); // Spécifier le type
-  dummyStudents = updatedStudents as Student[]; // Assertion de type ici
+  dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
