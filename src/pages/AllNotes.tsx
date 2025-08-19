@@ -20,19 +20,18 @@ const AllNotes = () => {
   const [selectedNoteGroupKey, setSelectedNoteGroupKey] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
+  // Effect to load all notes and set initial selection
   useEffect(() => {
     const notes = getAllNotesData();
     setAllNotes(notes);
-    // Select the first note group by default if available and no group is selected yet
-    if (notes.length > 0 && !selectedNoteGroupKey) {
+    // If no note is selected, and there are notes, select the first one.
+    // This ensures a default selection on initial load or refresh.
+    if (notes.length > 0 && selectedNoteGroupKey === null) {
       setSelectedNoteGroupKey(notes[0].key);
     }
-  }, [refreshKey, selectedNoteGroupKey]);
+  }, [refreshKey]); // Only refreshKey as dependency for fetching notes
 
-  const handleNoteChange = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
+  // Memoize filtered notes to avoid re-calculation on every render
   const filteredNotes = useMemo(() => {
     if (!searchQuery) {
       return allNotes;
@@ -47,17 +46,37 @@ const AllNotes = () => {
     });
   }, [allNotes, searchQuery]);
 
-  const selectedNoteGroup = useMemo(() => {
-    return allNotes.find(group => group.key === selectedNoteGroupKey);
-  }, [allNotes, selectedNoteGroupKey]);
+  // Effect to manage selectedNoteGroupKey based on filteredNotes
+  useEffect(() => {
+    // If no note is selected but there are filtered notes, select the first filtered note.
+    if (selectedNoteGroupKey === null && filteredNotes.length > 0) {
+      setSelectedNoteGroupKey(filteredNotes[0].key);
+    } 
+    // If the currently selected note group is no longer in the filtered list,
+    // reset selection to the first filtered note or null if no filtered notes.
+    else if (selectedNoteGroupKey !== null && !filteredNotes.some(n => n.key === selectedNoteGroupKey)) {
+      setSelectedNoteGroupKey(filteredNotes.length > 0 ? filteredNotes[0].key : null);
+    }
+  }, [filteredNotes, selectedNoteGroupKey]); // Dependencies: filteredNotes and selectedNoteGroupKey
+
+  const handleNoteChange = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   const handleSelectNoteGroup = (key: string) => {
     setSelectedNoteGroupKey(key);
   };
 
   const handleBackToList = () => {
+    console.log("handleBackToList called. Before:", selectedNoteGroupKey);
     setSelectedNoteGroupKey(null);
+    // The state update is asynchronous, so the console.log below will show the old value
+    // console.log("handleBackToList called. After setting to null (will show old value):", selectedNoteGroupKey);
   };
+
+  const selectedNoteGroup = useMemo(() => {
+    return allNotes.find(group => group.key === selectedNoteGroupKey);
+  }, [allNotes, selectedNoteGroupKey]);
 
   return (
     <div className="space-y-8 h-[calc(100vh-120px)] flex flex-col">
@@ -128,12 +147,16 @@ const AllNotes = () => {
                   <Button variant="outline" onClick={handleBackToList} className="mb-4 w-fit">
                     <ArrowLeft className="h-4 w-4 mr-2" /> Retour à la liste
                   </Button>
-                  {selectedNoteGroup && (
+                  {selectedNoteGroup ? ( // Ensure selectedNoteGroup is not null before rendering NotesSection
                     <NotesSection
                       noteKey={selectedNoteGroup.key}
                       title={selectedNoteGroup.context}
                       refreshKey={refreshKey}
                     />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      Sélectionnez une note à gauche pour la visualiser.
+                    </div>
                   )}
                 </div>
               )}
