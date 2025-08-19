@@ -6,15 +6,15 @@ import { Bot, Send, Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import {
-  Accordion,
+  Accordion, // Gardé au cas où, mais non utilisé pour les modules ici
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { motion } from 'framer-motion';
 import { showSuccess, showError } from '@/utils/toast';
-import { Badge } from "@/components/ui/badge"; // Import du composant Badge
-import { Progress } from "@/components/ui/progress"; // Import du composant Progress
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface Module {
   title: string;
@@ -27,7 +27,7 @@ interface Course {
   title: string;
   description: string;
   modules: Module[];
-  skillsToAcquire: string[]; // Nouvelle propriété
+  skillsToAcquire: string[];
 }
 
 const initialDummyCourses: Course[] = [
@@ -146,7 +146,7 @@ const CourseDetail = () => {
 
       <section>
         <h2 className="text-2xl font-semibold mb-4">Modules du cours</h2>
-        <Accordion type="single" collapsible className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {course.modules.map((module, index) => {
             const isModuleAccessible = index === 0 || course.modules[index - 1]?.isCompleted;
             return (
@@ -155,39 +155,37 @@ const CourseDetail = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
+                className={cn(
+                  "relative",
+                  !isModuleAccessible && "opacity-50 cursor-not-allowed"
+                )}
               >
-                <Card className="mb-4">
-                  <AccordionItem value={`item-${index}`}>
-                    <AccordionTrigger className="flex items-center justify-between p-4 text-lg font-medium hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        {module.isCompleted ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <Lock className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        {module.title}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <CardContent className="p-4 pt-0">
-                        <p className="text-muted-foreground mb-4">
-                          {module.content.substring(0, 150)}...
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <Link to={`/courses/${course.id}/modules/${index}`}>
-                            <Button disabled={!isModuleAccessible}>
-                              Accéder au module
-                            </Button>
-                          </Link>
-                        </div>
-                      </CardContent>
-                    </AccordionContent>
-                  </AccordionItem>
+                <Card className="h-full flex flex-col">
+                  <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-medium">
+                      {module.title}
+                    </CardTitle>
+                    {module.isCompleted ? (
+                      <CheckCircle className="h-6 w-6 text-green-500" />
+                    ) : (
+                      <Lock className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </CardHeader>
+                  <CardContent className="flex-grow flex flex-col justify-between">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {module.content.substring(0, 100)}...
+                    </p>
+                    <Link to={`/courses/${course.id}/modules/${index}`}>
+                      <Button className="w-full" disabled={!isModuleAccessible}>
+                        Accéder au module
+                      </Button>
+                    </Link>
+                  </CardContent>
                 </Card>
               </motion.div>
             );
           })}
-        </Accordion>
+        </div>
       </section>
 
       <section className="mt-12">
