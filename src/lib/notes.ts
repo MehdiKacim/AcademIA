@@ -1,13 +1,17 @@
-export type EntityType = 'course' | 'module';
+export type EntityType = 'course' | 'module' | 'section'; // Ajout de 'section'
 
 /**
  * Génère une clé unique pour stocker les notes dans le localStorage.
- * @param entityType Le type d'entité (cours ou module).
+ * @param entityType Le type d'entité (cours, module ou section).
  * @param entityId L'ID du cours.
- * @param moduleIndex L'index du module (optionnel, pour les notes de module).
+ * @param moduleIndex L'index du module (optionnel, pour les notes de module ou section).
+ * @param sectionIndex L'index de la section (optionnel, pour les notes de section).
  * @returns La clé unique pour le localStorage.
  */
-export const generateNoteKey = (entityType: EntityType, entityId: string, moduleIndex?: number): string => {
+export const generateNoteKey = (entityType: EntityType, entityId: string, moduleIndex?: number, sectionIndex?: number): string => {
+  if (entityType === 'section' && moduleIndex !== undefined && sectionIndex !== undefined) {
+    return `notes_${entityType}_${entityId}_${moduleIndex}_${sectionIndex}`;
+  }
   if (entityType === 'module' && moduleIndex !== undefined) {
     return `notes_${entityType}_${entityId}_${moduleIndex}`;
   }
@@ -53,16 +57,17 @@ interface ParsedNoteKey {
   entityType: EntityType;
   entityId: string;
   moduleIndex?: number;
+  sectionIndex?: number; // Ajout de sectionIndex
 }
 
 export interface AggregatedNote {
   key: string;
-  context: string; // Ex: "Cours: Introduction à l'IA", "Module: Réseaux de Neurones (Cours: Introduction à l'IA)"
+  context: string; // Ex: "Cours: Introduction à l'IA", "Module: Réseaux de Neurones (Cours: Introduction à l'IA)", "Section: Définition et Histoire (Module: Qu'est-ce que l'IA? - Cours: Introduction à l'IA)"
   notes: string[];
 }
 
 /**
- * Analyse une clé de note pour extraire le type d'entité, l'ID et l'index du module.
+ * Analyse une clé de note pour extraire le type d'entité, l'ID et l'index du module/section.
  */
 const parseNoteKey = (key: string): ParsedNoteKey | null => {
   const parts = key.split('_');
@@ -71,9 +76,17 @@ const parseNoteKey = (key: string): ParsedNoteKey | null => {
   }
   const entityType = parts[1] as EntityType;
   const entityId = parts[2];
-  const moduleIndex = parts.length === 4 ? parseInt(parts[3], 10) : undefined;
+  let moduleIndex: number | undefined;
+  let sectionIndex: number | undefined;
 
-  return { entityType, entityId, moduleIndex };
+  if (entityType === 'module' && parts.length >= 4) {
+    moduleIndex = parseInt(parts[3], 10);
+  } else if (entityType === 'section' && parts.length >= 5) {
+    moduleIndex = parseInt(parts[3], 10);
+    sectionIndex = parseInt(parts[4], 10);
+  }
+
+  return { entityType, entityId, moduleIndex, sectionIndex };
 };
 
 /**
@@ -371,6 +384,14 @@ export const getAllNotesData = (): AggregatedNote[] => {
             const module = course.modules[parsedKey.moduleIndex];
             if (module) {
               context = `Module: ${module.title} (Cours: ${course.title})`;
+            }
+          } else if (parsedKey.entityType === 'section' && parsedKey.moduleIndex !== undefined && parsedKey.sectionIndex !== undefined) {
+            const module = course.modules[parsedKey.moduleIndex];
+            if (module) {
+              const section = module.sections[parsedKey.sectionIndex];
+              if (section) {
+                context = `Section: ${section.title} (Module: ${module.title} - Cours: ${course.title})`;
+              }
             }
           }
         }

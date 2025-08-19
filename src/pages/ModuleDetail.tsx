@@ -6,10 +6,10 @@ import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle } from "lucid
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
-import QuickNoteDialog from "@/components/QuickNoteDialog"; // Importation du nouveau composant
-import { cn } from "@/lib/utils"; // Importation de cn pour les classes conditionnelles
-import { useIsMobile } from "@/hooks/use-mobile"; // Importation du hook useIsMobile
-import { generateNoteKey } from "@/lib/notes"; // Garder pour QuickNoteDialog
+import QuickNoteDialog from "@/components/QuickNoteDialog";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { generateNoteKey } from "@/lib/notes";
 
 interface ModuleSection {
   title: string;
@@ -19,7 +19,7 @@ interface ModuleSection {
 
 interface Module {
   title: string;
-  sections: ModuleSection[]; // Remplacé 'content' par 'sections'
+  sections: ModuleSection[];
   isCompleted: boolean;
   level?: number;
 }
@@ -280,7 +280,7 @@ const ModuleDetail = () => {
   const module = course?.modules[currentModuleIndex];
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
-  // const [refreshNotesSection, setRefreshNotesSection] = useState(0); // Plus nécessaire si NotesSection est retiré
+  const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
 
   useEffect(() => {
     if (course && module) {
@@ -359,14 +359,21 @@ const ModuleDetail = () => {
     }
   };
 
-  const handleAskAiaAboutModule = () => {
-    openChat(`J'ai une question sur le module "${module.title}" du cours "${course.title}".`);
+  const handleAskAiaAboutSection = (sectionTitle: string) => {
+    openChat(`J'ai une question sur la section "${sectionTitle}" du module "${module.title}" du cours "${course.title}".`);
+  };
+
+  const handleOpenQuickNoteDialog = (sectionTitle: string, sectionIndex: number) => {
+    setCurrentNoteContext({
+      key: generateNoteKey('section', course.id, currentModuleIndex, sectionIndex),
+      title: sectionTitle,
+    });
+    setIsQuickNoteDialogOpen(true);
   };
 
   const handleNoteAdded = useCallback(() => {
-    // setRefreshNotesSection(prev => prev + 1); // Plus nécessaire si NotesSection est retiré
-    // La note rapide est ajoutée, mais comme la section n'est plus là, pas besoin de rafraîchir un composant spécifique.
-    // Les notes seront visibles dans la page 'Toutes mes notes'.
+    // La note rapide est ajoutée, les notes seront visibles dans la page 'Toutes mes notes'.
+    // Pas besoin de rafraîchir un composant spécifique ici.
   }, []);
 
   const totalModules = course.modules.length;
@@ -398,9 +405,25 @@ const ModuleDetail = () => {
         </CardHeader>
         <CardContent>
           {module.sections.map((section, index) => (
-            <div key={index} className="mb-6">
+            <div key={index} className="mb-6 p-4 border rounded-md bg-muted/10">
               <h3 className="text-xl font-semibold mb-2 text-foreground">{section.title}</h3>
               <p className="text-muted-foreground">{section.content}</p>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenQuickNoteDialog(section.title, index)}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" /> Note rapide
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleAskAiaAboutSection(section.title)}
+                >
+                  <Send className="h-4 w-4 mr-2" /> Demander à AiA
+                </Button>
+              </div>
             </div>
           ))}
           <div className="flex flex-wrap gap-4 justify-between items-center mt-6">
@@ -426,15 +449,12 @@ const ModuleDetail = () => {
                   <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
                 </Button>
               )}
-              <Button variant="secondary" onClick={handleAskAiaAboutModule}>
-                <Send className="h-4 w-4 mr-2" /> Demander à AiA
-              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Bouton flottant pour ajouter une note rapide */}
+      {/* Bouton flottant pour ajouter une note rapide (pour le module entier si besoin, ou peut être retiré si les notes par section suffisent) */}
       <div className={cn(
         "fixed z-40 p-4",
         isMobile ? "bottom-20 left-4" : "bottom-4 left-4" // Positionnement ajusté pour mobile
@@ -442,18 +462,18 @@ const ModuleDetail = () => {
         <Button
           size="lg"
           className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
-          onClick={() => setIsQuickNoteDialogOpen(true)}
+          onClick={() => handleOpenQuickNoteDialog(module.title, -1)} // -1 pour indiquer une note de module
         >
           <PlusCircle className="h-7 w-7" />
-          <span className="sr-only">Ajouter une note rapide</span>
+          <span className="sr-only">Ajouter une note rapide pour le module</span>
         </Button>
       </div>
 
       <QuickNoteDialog
         isOpen={isQuickNoteDialogOpen}
         onClose={() => setIsQuickNoteDialogOpen(false)}
-        noteKey={generateNoteKey('module', course.id, currentModuleIndex)}
-        contextTitle={module.title}
+        noteKey={currentNoteContext.key}
+        contextTitle={currentNoteContext.title}
         onNoteAdded={handleNoteAdded}
       />
     </div>
