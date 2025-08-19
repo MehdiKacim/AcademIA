@@ -5,9 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Module {
+interface ModuleSection {
   title: string;
   content: string;
+  type?: 'text' | 'quiz' | 'video';
+}
+
+interface Module {
+  title: string;
+  sections: ModuleSection[]; // Remplacé 'content' par 'sections'
   isCompleted: boolean;
   level?: number;
 }
@@ -62,7 +68,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                 )}
               </CardTitle>
               <CardDescription className="mb-4 text-sm">
-                {group.mainModule.content.substring(0, 100)}... {/* Tronquer le contenu */}
+                {group.mainModule.sections[0]?.content.substring(0, 100)}... {/* Tronquer le contenu de la première section */}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-between">

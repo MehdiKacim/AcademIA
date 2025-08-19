@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } => "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Correction ici
 import { PlusCircle, NotebookPen } from "lucide-react";
 import { getNotes, addNote } from "@/lib/notes";
 import { showSuccess, showError } from "@/utils/toast";
