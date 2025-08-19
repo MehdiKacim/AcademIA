@@ -1,10 +1,10 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2 } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2 } from "lucide-react"; // Suppression de l'importation de Menu
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
-import MobileSheetNav from "@/components/MobileSheetNav";
+import MobileSheetNav from "@/components/MobileSheetNav"; // Import MobileSheetNav
 
 const DashboardLayout = () => {
   const navItems = [
