@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   Target,
   MessageCircleMore,
-  // Menu, // Commenté pour le débogage
+  Menu, // Importation de l'icône Menu
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
@@ -128,10 +128,8 @@ const Index = () => {
           <MobileSheetNav
             navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))}
             onLinkClick={() => {}}
-            trigger={
-              <Button variant="outline" size="icon">
-                ☰ {/* Remplacé par un caractère de texte */}
-              </Button>
+            triggerContent={
+              <Menu className="h-5 w-5" /> // Passe l'icône comme contenu
             }
           >
             <ThemeToggle />

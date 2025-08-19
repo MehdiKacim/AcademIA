@@ -15,10 +15,10 @@ interface MobileSheetNavProps {
   navItems: NavItem[];
   onLinkClick?: () => void;
   children?: React.ReactNode;
-  trigger: React.ReactElement; // Changé de React.ReactNode à React.ReactElement
+  triggerContent: React.ReactNode; // Nouvelle prop pour le contenu du bouton déclencheur
 }
 
-const MobileSheetNav = ({ navItems, onLinkClick, children, trigger }: MobileSheetNavProps) => {
+const MobileSheetNav = ({ navItems, onLinkClick, children, triggerContent }: MobileSheetNavProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLinkClick = () => {
@@ -31,7 +31,9 @@ const MobileSheetNav = ({ navItems, onLinkClick, children, trigger }: MobileShee
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        {trigger} {/* Rend l'élément déclencheur passé en prop */}
+        <Button variant="outline" size="icon">
+          {triggerContent} {/* Utilise le contenu passé pour le bouton */}
+        </Button>
       </SheetTrigger>
       <SheetContent side="left" className="flex flex-col">
         <div className="p-4 border-b">
