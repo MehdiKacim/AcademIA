@@ -9,9 +9,9 @@ import { motion } from 'framer-motion';
 import { showSuccess, showError } from '@/utils/toast';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import ModuleFlowVisualizer from "@/components/ModuleFlowVisualizer";
 import NotesSection from "@/components/NotesSection";
 import { generateNoteKey } from "@/lib/notes";
+import CourseModuleList from "@/components/CourseModuleList"; // Nouvelle importation
 
 interface Module {
   title: string;
@@ -177,7 +177,7 @@ const CourseDetail = () => {
 
       <section>
         <h2 className="text-2xl font-semibold mb-4">Visualisation du parcours</h2>
-        <ModuleFlowVisualizer course={course} />
+        <CourseModuleList course={course} /> {/* Utilisation du nouveau composant */}
       </section>
 
       <section>
