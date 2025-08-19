@@ -9,10 +9,12 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"; // Import cn for conditional classnames
 
 const AllNotes = () => {
   const [allNotes, setAllNotes] = useState<AggregatedNote[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [highlightedNoteKey, setHighlightedNoteKey] = useState<string | null>(null); // Nouvel état pour la surbrillance
 
   useEffect(() => {
     setAllNotes(getAllNotesData());
@@ -41,9 +43,12 @@ const AllNotes = () => {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {allNotes.map((noteGroup) => (
-            <ContextMenu key={noteGroup.key}>
+            <ContextMenu key={noteGroup.key} onOpenChange={(open) => setHighlightedNoteKey(open ? noteGroup.key : null)}>
               <ContextMenuTrigger asChild>
-                <Card className="cursor-context-menu hover:shadow-md transition-shadow">
+                <Card className={cn(
+                  "cursor-context-menu hover:shadow-md transition-shadow",
+                  highlightedNoteKey === noteGroup.key && "border-primary ring-2 ring-primary/50"
+                )}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <NotebookText className="h-5 w-5 text-primary" /> {noteGroup.context}
