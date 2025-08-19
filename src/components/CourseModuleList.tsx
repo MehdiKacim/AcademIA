@@ -4,27 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface ModuleSection {
-  title: string;
-  content: string;
-  type?: 'text' | 'quiz' | 'video';
-}
-
-interface Module {
-  title: string;
-  sections: ModuleSection[]; // Remplacé 'content' par 'sections'
-  isCompleted: boolean;
-  level?: number;
-}
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  modules: Module[];
-  skillsToAcquire: string[];
-}
+import { Course, Module, ModuleSection } from "@/lib/courseData"; // Importation depuis le nouveau fichier
 
 interface CourseModuleListProps {
   course: Course;
