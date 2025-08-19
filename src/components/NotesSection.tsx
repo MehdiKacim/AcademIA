@@ -2,15 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, NotebookPen, Edit, Trash2, Save, XCircle } from "lucide-react";
+import { PlusCircle, NotebookPen, Edit, Trash2, Save, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { getNotes, addNote, updateNote, deleteNote } from "@/lib/notes";
 import { showSuccess, showError } from "@/utils/toast";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface NotesSectionProps {
   noteKey: string; // Clé unique pour le localStorage (ex: 'notes_course_1', 'notes_module_1_0')
@@ -34,6 +29,7 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
   const [newNote, setNewNote] = useState<string>('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState<string>('');
+  const [isNotesVisible, setIsNotesVisible] = useState(false); // Nouvel état pour la visibilité
 
   useEffect(() => {
     setNotes(getNotes(noteKey));
@@ -79,12 +75,18 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
   };
 
   return (
-    <Accordion type="single" collapsible defaultValue="notes-section" className="w-full">
-      <AccordionItem value="notes-section" className="border-b border-border">
-        <AccordionTrigger className="p-3 text-sm font-semibold flex items-center gap-2 hover:bg-muted/50 transition-colors rounded-md">
-          <NotebookPen className="h-4 w-4 text-primary" /> {title}
-        </AccordionTrigger>
-        <AccordionContent className="p-4 pt-0 space-y-3">
+    <div className="w-full border-t border-border pt-4 mt-4"> {/* Conteneur pour la section de notes */}
+      <Button
+        variant="ghost"
+        className="w-full justify-start p-2 text-sm font-semibold flex items-center gap-2 hover:bg-muted/50 transition-colors rounded-md"
+        onClick={() => setIsNotesVisible(!isNotesVisible)}
+      >
+        <NotebookPen className="h-4 w-4 text-primary" /> Notes pour {title}
+        {isNotesVisible ? <ChevronUp className="ml-auto h-4 w-4" /> : <ChevronDown className="ml-auto h-4 w-4" />}
+      </Button>
+
+      {isNotesVisible && (
+        <div className="p-4 pt-2 space-y-3">
           <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/20">
             {notes.length === 0 ? (
               <p className="text-muted-foreground text-xs">Aucune note pour le moment. Ajoutez-en une ci-dessous !</p>
@@ -160,9 +162,9 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une note
             </Button>
           </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+        </div>
+      )}
+    </div>
   );
 };
 
