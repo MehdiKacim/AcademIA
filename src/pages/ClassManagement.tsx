@@ -47,7 +47,8 @@ const ClassManagement = () => {
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [newClassName, setNewClassName] = useState('');
   const [newCurriculumName, setNewCurriculumName] = useState('');
-  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentFirstName, setNewStudentFirstName] = useState(''); // Changement
+  const [newStudentLastName, setNewStudentLastName] = useState('');   // Changement
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [selectedClassForStudent, setSelectedClassForStudent] = useState<string | undefined>(undefined);
 
@@ -116,11 +117,12 @@ const ClassManagement = () => {
   };
 
   const handleAddStudent = () => {
-    if (newStudentName.trim() && newStudentEmail.trim()) {
+    if (newStudentFirstName.trim() && newStudentLastName.trim() && newStudentEmail.trim()) { // Changement
       const newStudentId = `student${Date.now()}`;
       const newStu: Student = {
         id: newStudentId,
-        name: newStudentName.trim(),
+        firstName: newStudentFirstName.trim(), // Changement
+        lastName: newStudentLastName.trim(),   // Changement
         email: newStudentEmail.trim(),
         classId: selectedClassForStudent,
         establishmentId: selectedClassForStudent ? classes.find(c => c.id === selectedClassForStudent)?.establishmentId : undefined,
@@ -128,12 +130,13 @@ const ClassManagement = () => {
       };
       const updatedStudents = addStudent(newStu);
       setCurrentStudents(updatedStudents);
-      setNewStudentName('');
+      setNewStudentFirstName(''); // Changement
+      setNewStudentLastName('');   // Changement
       setNewStudentEmail('');
       setSelectedClassForStudent(undefined);
       showSuccess("Élève ajouté !");
     } else {
-      showError("Le nom et l'email de l'élève sont requis.");
+      showError("Le prénom, le nom et l'email de l'élève sont requis."); // Changement
     }
   };
 
@@ -193,11 +196,11 @@ const ClassManagement = () => {
   };
 
   const handleInviteStudentToCourse = (student: Student, courseTitle: string) => {
-    openChat(`Bonjour ${student.name}, je vous invite à découvrir le cours "${courseTitle}" !`);
+    openChat(`Bonjour ${student.firstName} ${student.lastName}, je vous invite à découvrir le cours "${courseTitle}" !`); // Changement
   };
 
   const handleSendMessageToStudent = (student: Student) => {
-    openChat(`Bonjour ${student.name}, j'ai une question ou un message pour vous.`);
+    openChat(`Bonjour ${student.firstName} ${student.lastName}, j'ai une question ou un message pour vous.`); // Changement
   };
 
   const handleViewStudentsInClass = (classId: string) => {
@@ -350,7 +353,7 @@ const ClassManagement = () => {
                   studentsInSelectedClass.map(student => (
                     <Card key={student.id} className="p-3 flex items-center justify-between">
                       <div>
-                        <p className="font-medium">{student.name}</p>
+                        <p className="font-medium">{student.firstName} {student.lastName}</p> {/* Changement */}
                         <p className="text-sm text-muted-foreground">{student.email}</p>
                       </div>
                       <div className="flex gap-2">
@@ -418,9 +421,14 @@ const ClassManagement = () => {
               <h3 className="text-lg font-semibold">Inviter un nouvel élève</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <Input
-                  placeholder="Nom de l'élève"
-                  value={newStudentName}
-                  onChange={(e) => setNewStudentName(e.target.value)}
+                  placeholder="Prénom de l'élève" // Changement
+                  value={newStudentFirstName}
+                  onChange={(e) => setNewStudentFirstName(e.target.value)}
+                />
+                <Input
+                  placeholder="Nom de l'élève" // Changement
+                  value={newStudentLastName}
+                  onChange={(e) => setNewStudentLastName(e.target.value)}
                 />
                 <Input
                   type="email"
@@ -451,7 +459,7 @@ const ClassManagement = () => {
                   currentStudents.map((student) => (
                     <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-grow">
-                        <p className="font-medium">{student.name}</p>
+                        <p className="font-medium">{student.firstName} {student.lastName}</p> {/* Changement */}
                         <p className="text-sm text-muted-foreground">{student.email}</p>
                         {student.classId && (
                           <p className="text-xs text-muted-foreground">

@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext"; // Importation du hook useRole
 import { loadCourses } from "@/lib/courseData"; // Import loadCourses
+import { dummyStudents } from "@/lib/studentData"; // Import dummyStudents
 
 const Dashboard = () => {
   const { currentRole } = useRole(); // Utilisation du hook useRole
@@ -93,6 +94,7 @@ const Dashboard = () => {
         </div>
       );
     } else if (currentRole === 'tutor') {
+      const supervisedStudents = dummyStudents.slice(0, 2); // Just taking first two for demo
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -101,7 +103,7 @@ const Dashboard = () => {
               <CardDescription>Suivez la progression de vos enfants/protégés.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous suivez 2 élèves. John et Jane.</p>
+              <p>Vous suivez {supervisedStudents.length} élèves : {supervisedStudents.map(s => `${s.firstName} ${s.lastName}`).join(', ')}.</p> {/* Changement */}
             </CardContent>
           </Card>
           <Card>
@@ -110,7 +112,7 @@ const Dashboard = () => {
               <CardDescription>Points nécessitant votre attention.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>John a des difficultés en algèbre. Jane excelle en géométrie.</p>
+              <p>{supervisedStudents[0]?.firstName} a des difficultés en algèbre. {supervisedStudents[1]?.firstName} excelle en géométrie.</p> {/* Changement */}
             </CardContent>
           </Card>
           <Card>
@@ -119,7 +121,7 @@ const Dashboard = () => {
               <CardDescription>Messages récents.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Nouveau message de l'enseignant de John.</p>
+              <p>Nouveau message de l'enseignant de {supervisedStudents[0]?.firstName}.</p> {/* Changement */}
             </CardContent>
           </Card>
         </div>

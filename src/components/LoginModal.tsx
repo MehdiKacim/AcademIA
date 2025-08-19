@@ -42,7 +42,7 @@ const LoginModal = ({ isOpen, onClose, onRegisterClick }: LoginModalProps) => {
       // Pour l'instant, nous ne validons pas le mot de passe.
       // Dans une vraie application, vous auriez une logique d'authentification backend ici.
       setRole('student'); // Définir le rôle sur 'student'
-      showSuccess(`Bienvenue, ${student.name} !`);
+      showSuccess(`Bienvenue, ${student.firstName} ${student.lastName} !`); // Utiliser prénom et nom
       navigate("/dashboard");
       onClose();
     } else {

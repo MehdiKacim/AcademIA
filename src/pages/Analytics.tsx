@@ -19,6 +19,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { loadCourses } from "@/lib/courseData"; // Import loadCourses
+import { dummyStudents } from "@/lib/studentData"; // Import dummyStudents
 
 const Analytics = () => {
   const { currentRole } = useRole();
@@ -42,12 +43,12 @@ const Analytics = () => {
   };
 
   const tutorAnalytics = {
-    supervisedStudents: 3,
+    supervisedStudents: dummyStudents.length, // Utiliser le nombre réel d'élèves fictifs
     studentsAtRisk: 1,
     averageStudentProgress: "72%",
     recentAlerts: [
-      "John Doe a des difficultés en algèbre.",
-      "Jane Smith a terminé le module 3 de Physique.",
+      `${dummyStudents[0]?.firstName} ${dummyStudents[0]?.lastName} a des difficultés en algèbre.`, // Changement
+      `${dummyStudents[1]?.firstName} ${dummyStudents[1]?.lastName} a terminé le module 3 de Physique.`, // Changement
     ],
   };
 
@@ -82,11 +83,10 @@ const Analytics = () => {
     completion: Math.floor(Math.random() * 100), // Dummy data
   }));
 
-  const tutorStudentPerformanceData = [
-    { name: 'John', score: 75 },
-    { name: 'Jane', score: 92 },
-    { name: 'Mike', score: 60 },
-  ];
+  const tutorStudentPerformanceData = dummyStudents.map(student => ({ // Utiliser les vrais élèves
+    name: `${student.firstName} ${student.lastName}`,
+    score: Math.floor(Math.random() * 40) + 60, // Scores aléatoires entre 60 et 100
+  }));
 
   const renderAnalyticsContent = () => {
     if (currentRole === 'student') {

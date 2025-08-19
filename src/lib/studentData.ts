@@ -6,7 +6,8 @@ const LOCAL_STORAGE_STUDENTS_KEY = 'academia_students';
 const initialDummyStudents: Student[] = [
   {
     id: 'student1',
-    name: 'Alice Dupont',
+    firstName: 'Alice', // Changement
+    lastName: 'Dupont', // Changement
     email: 'alice.dupont@example.com',
     classId: 'class1', // Exemple de lien vers une classe
     establishmentId: 'est1', // Exemple de lien vers un établissement
@@ -58,7 +59,8 @@ const initialDummyStudents: Student[] = [
   },
   {
     id: 'student2',
-    name: 'Bob Martin',
+    firstName: 'Bob', // Changement
+    lastName: 'Martin', // Changement
     email: 'bob.martin@example.com',
     classId: 'class1',
     establishmentId: 'est1',
@@ -83,7 +85,8 @@ const initialDummyStudents: Student[] = [
   },
   {
     id: 'student3',
-    name: 'Charlie Brown',
+    firstName: 'Charlie', // Changement
+    lastName: 'Brown', // Changement
     email: 'charlie.brown@example.com',
     classId: 'class2',
     establishmentId: 'est1',

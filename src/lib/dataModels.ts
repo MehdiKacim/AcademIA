@@ -23,7 +23,8 @@ export interface Curriculum {
 
 export interface Student {
   id: string;
-  name: string;
+  firstName: string; // Changement: prénom
+  lastName: string;  // Changement: nom de famille
   email: string;
   classId?: string; // Lien vers la classe de l'élève
   establishmentId?: string; // Lien vers l'établissement de l'élève
