@@ -6,7 +6,7 @@ import { Bot, Send, Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import {
-  Accordion, // Gardé au cas où, mais non utilisé pour les modules ici
+  Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
@@ -15,7 +15,6 @@ import { motion } from 'framer-motion';
 import { showSuccess, showError } from '@/utils/toast';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import CourseMindMap from "@/components/CourseMindMap"; // Import du nouveau composant
 
 interface Module {
   title: string;
@@ -146,8 +145,42 @@ const CourseDetail = () => {
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4">Parcours des modules</h2>
-        <CourseMindMap course={course} />
+        <h2 className="text-2xl font-semibold mb-4">Modules du cours</h2>
+        <Accordion type="single" collapsible className="w-full">
+          {course.modules.map((module, index) => {
+            const isAccessible = index === 0 || course.modules[index - 1]?.isCompleted;
+            return (
+              <AccordionItem key={index} value={`item-${index}`} className={cn(
+                "border rounded-md mb-2",
+                !isAccessible && "opacity-50 cursor-not-allowed"
+              )}>
+                <AccordionTrigger className="px-4 py-3 text-left hover:no-underline">
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-medium text-lg">{module.title}</span>
+                    {module.isCompleted ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Lock className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 pt-0">
+                  <p className="text-muted-foreground mb-4">{module.content}</p>
+                  <div className="flex gap-2">
+                    <Link to={`/courses/${course.id}/modules/${index}`}>
+                      <Button disabled={!isAccessible}>
+                        {module.isCompleted ? "Revoir le module" : "Commencer le module"}
+                      </Button>
+                    </Link>
+                    <Button variant="secondary" onClick={() => openChat(`J'ai une question sur le module "${module.title}" du cours "${course.title}".`)}>
+                      <Send className="h-4 w-4 mr-2" /> Demander à AiA
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
       </section>
 
       <section className="mt-12">
