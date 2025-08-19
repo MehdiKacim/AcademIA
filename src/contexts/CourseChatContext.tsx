@@ -3,9 +3,9 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 interface CourseChatContextType {
   currentCourseId: string | null;
   currentCourseTitle: string | null;
-  currentModuleTitle: string | null; // Nouveau: titre du module actuel
+  currentModuleTitle: string | null;
   setCourseContext: (id: string | null, title: string | null) => void;
-  setModuleContext: (title: string | null) => void; // Nouveau: fonction pour définir le module
+  setModuleContext: (title: string | null) => void;
   isChatOpen: boolean;
   openChat: (initialMessage?: string) => void;
   closeChat: () => void;
@@ -18,12 +18,14 @@ const CourseChatContext = createContext<CourseChatContextType | undefined>(undef
 export const CourseChatProvider = ({ children }: { children: ReactNode }) => {
   const [currentCourseId, setCurrentCourseId] = useState<string | null>(null);
   const [currentCourseTitle, setCurrentCourseTitle] = useState<string | null>(null);
-  const [currentModuleTitle, setCurrentModuleTitle] = useState<string | null>(null); // État pour le module
+  const [currentModuleTitle, setCurrentModuleTitle] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false); // Correctly declared here
+  const [initialChatMessage, setInitialChatMessage] = useState<string | null>(null);
 
   const setCourseContext = (id: string | null, title: string | null) => {
     setCurrentCourseId(id);
     setCurrentCourseTitle(title);
-    if (id === null) { // Si le cours est effacé, effacer aussi le module
+    if (id === null) {
       setCurrentModuleTitle(null);
     }
   };
@@ -36,23 +38,23 @@ export const CourseChatProvider = ({ children }: { children: ReactNode }) => {
     if (message) {
       setInitialChatMessage(message);
     } else {
-      setInitialChatMessage(null); // Clear previous message if no new one is provided
+      setInitialChatMessage(null);
     }
     setIsChatOpen(true);
   };
 
   const closeChat = () => {
     setIsChatOpen(false);
-    setInitialChatMessage(null); // Clear message when closing
+    setInitialChatMessage(null);
   };
 
   return (
     <CourseChatContext.Provider value={{
       currentCourseId,
       currentCourseTitle,
-      currentModuleTitle, // Ajout au contexte
+      currentModuleTitle,
       setCourseContext,
-      setModuleContext, // Ajout au contexte
+      setModuleContext,
       isChatOpen,
       openChat,
       closeChat,
