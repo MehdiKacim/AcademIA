@@ -164,161 +164,38 @@ const dummyCourses = [
   },
 ];
 
-const ModuleDetail = () => {
-  const { courseId, moduleIndex } = useParams<{ courseId: string; moduleIndex: string }>();
-  const navigate = useNavigate();
-  const { setCourseContext, setModuleContext, openChat } = useCourseChat();
+/**
+ * Retrieves all notes from localStorage and aggregates them with context.
+ */
+export const getAllNotesData = (): AggregatedNote[] => {
+  const allKeys = getAllNoteKeys();
+  const aggregatedNotes: AggregatedNote[] = [];
 
-  const course = initialDummyCourses.find(c => c.id === courseId);
-  const currentModuleIndex = parseInt(moduleIndex || '0', 10);
-  const module = course?.modules[currentModuleIndex];
+  allKeys.forEach(key => {
+    const parsedKey = parseNoteKey(key);
+    if (parsedKey) {
+      const notes = getNotes(key);
+      if (notes.length > 0) {
+        let context = '';
+        const course = dummyCourses.find(c => c.id === parsedKey.entityId);
 
-  useEffect(() => {
-    if (course && module) {
-      setCourseContext(course.id, course.title);
-      setModuleContext(module.title);
-    } else {
-      setCourseContext(null, null);
-      setModuleContext(null);
-    }
-    return () => {
-      setCourseContext(null, null);
-      setModuleContext(null);
-    };
-  }, [courseId, moduleIndex, course, module, setCourseContext, setModuleContext]);
-
-  if (!course || !module) {
-    return (
-      <div className="text-center py-20">
-        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-          Module non trouvé
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Le module que vous recherchez n'existe pas.
-        </p>
-        <Button onClick={() => navigate(`/courses/${courseId}`)} className="mt-4">
-          Retour au cours
-        </Button>
-      </div>
-    );
-  }
-
-  // Vérifier si le module est accessible (le précédent doit être complété)
-  const isModuleAccessible = currentModuleIndex === 0 || course.modules[currentModuleIndex - 1]?.isCompleted;
-
-  if (!isModuleAccessible) {
-    return (
-      <div className="text-center py-20">
-        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-          Module Verrouillé
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Veuillez compléter le module précédent pour accéder à celui-ci.
-        </p>
-        <Button onClick={() => navigate(`/courses/${courseId}`)} className="mt-4">
-          Retour au cours
-        </Button>
-      </div>
-    );
-  }
-
-  const handleMarkModuleComplete = () => {
-    // Dans une vraie application, cela mettrait à jour l'état global ou la base de données
-    // Pour cette démo, nous allons simuler la mise à jour et rediriger
-    const updatedCourses = initialDummyCourses.map(c =>
-      c.id === courseId
-        ? {
-            ...c,
-            modules: c.modules.map((mod, idx) =>
-              idx === currentModuleIndex ? { ...mod, isCompleted: true } : mod
-            ),
+        if (course) {
+          if (parsedKey.entityType === 'course') {
+            context = `Cours: ${course.title}`;
+          } else if (parsedKey.entityType === 'module' && parsedKey.moduleIndex !== undefined) {
+            const module = course.modules[parsedKey.moduleIndex];
+            if (module) {
+              context = `Module: ${module.title} (Cours: ${course.title})`;
+            }
           }
-        : c
-    );
-    // Mettre à jour les données fictives pour la prochaine fois (simple pour la démo)
-    // En production, cela serait géré par un état global ou une API
-    Object.assign(initialDummyCourses, updatedCourses); // Ceci est une astuce simple pour la démo, pas pour la production
+        }
 
-    showSuccess(`Module "${module.title}" marqué comme terminé !`);
-
-    // Naviguer vers le module suivant ou revenir au cours si c'est le dernier
-    if (currentModuleIndex < course.modules.length - 1) {
-      navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`);
-    } else {
-      showSuccess("Félicitations ! Vous avez terminé tous les modules de ce cours.");
-      navigate(`/courses/${courseId}`);
+        if (context) {
+          aggregatedNotes.push({ key, context, notes });
+        }
+      }
     }
-  };
+  });
 
-  const handleAskAiaAboutModule = () => {
-    openChat(`J'ai une question sur le module "${module.title}" du cours "${course.title}".`);
-  };
-
-  const totalModules = course.modules.length;
-  const completedModules = course.modules.filter(m => m.isCompleted).length;
-  const progressPercentage = Math.round((completedModules / totalModules) * 100);
-
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between mb-6">
-        <Button variant="outline" onClick={() => navigate(`/courses/${courseId}`)}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Retour au cours
-        </Button>
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-          {course.title}
-        </h1>
-        <div></div> {/* Placeholder for alignment */}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>{module.title}</span>
-            {module.isCompleted && <CheckCircle className="h-6 w-6 text-green-500" />}
-          </CardTitle>
-          <CardDescription>
-            Module {currentModuleIndex + 1} sur {totalModules}
-          </CardDescription>
-          <Progress value={progressPercentage} className="w-full mt-2" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-6">{module.content}</p>
-          <div className="flex flex-wrap gap-4 justify-between items-center">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/courses/${courseId}/modules/${currentModuleIndex - 1}`)}
-                disabled={currentModuleIndex === 0}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" /> Précédent
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`)}
-                disabled={currentModuleIndex === totalModules - 1 || !module.isCompleted}
-              >
-                Suivant <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              {!module.isCompleted && (
-                <Button onClick={handleMarkModuleComplete}>
-                  <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
-                </Button>
-              )}
-              <Button variant="secondary" onClick={handleAskAiaAboutModule}>
-                <Send className="h-4 w-4 mr-2" /> Demander à AiA
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <section>
-        <NotesSection noteKey={generateNoteKey('module', course.id, currentModuleIndex)} title={module.title} />
-      </section>
-    </div>
-  );
+  return aggregatedNotes;
 };
-
-export default ModuleDetail;
