@@ -10,7 +10,7 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
-import ModuleNotesDisplay from "@/components/ModuleNotesDisplay";
+import NotesSection from "@/components/NotesSection"; // Utilisation de NotesSection
 import {
   ContextMenu,
   ContextMenuContent,
@@ -31,7 +31,7 @@ const ModuleDetail = () => {
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
-  const [refreshNotesSection, setRefreshNotesSection] = useState(0);
+  const [refreshNotesSection, setRefreshNotesSection] = useState(0); // Pour forcer le rafraîchissement des NotesSection
 
   // Références pour chaque section afin de pouvoir y faire défiler la vue
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -127,7 +127,7 @@ const ModuleDetail = () => {
   };
 
   const handleNoteAdded = useCallback(() => {
-    setRefreshNotesSection(prev => prev + 1);
+    setRefreshNotesSection(prev => prev + 1); // Incrémente pour forcer le rafraîchissement des NotesSection
   }, []);
 
   const totalModules = course.modules.length;
@@ -160,48 +160,58 @@ const ModuleDetail = () => {
         <CardContent>
           {module.sections.map((section, index) => {
             return (
-              <ContextMenu key={index}>
-                <ContextMenuTrigger className="block w-full">
-                  <div
-                    ref={el => sectionRefs.current[index] = el}
-                    className="mb-6 p-4 border rounded-md bg-muted/10 cursor-context-menu"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
+              <div key={index} className="mb-6"> {/* Wrapper pour la section et ses notes */}
+                <ContextMenu>
+                  <ContextMenuTrigger className="block w-full">
+                    <div
+                      ref={el => sectionRefs.current[index] = el}
+                      className="p-4 border rounded-md bg-muted/10 cursor-context-menu"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
+                      </div>
+                      {section.type === 'video' && section.url ? (
+                        <div className="relative w-full aspect-video my-4 rounded-md overflow-hidden">
+                          <iframe
+                            src={section.url}
+                            title={section.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="absolute top-0 left-0 w-full h-full"
+                          ></iframe>
+                        </div>
+                      ) : section.type === 'image' && section.url ? (
+                        <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md my-4" />
+                      ) : section.type === 'quiz' ? (
+                        <div className="p-4 bg-accent rounded-md text-accent-foreground flex flex-col items-center justify-center text-center my-4">
+                          <p className="text-lg font-medium mb-2">Quiz : {section.title}</p>
+                          <p className="text-sm mb-4">{section.content}</p>
+                          <Button>Commencer le Quiz</Button>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground mt-2">{section.content}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
                     </div>
-                    {section.type === 'video' && section.url ? (
-                      <div className="relative w-full aspect-video my-4 rounded-md overflow-hidden">
-                        <iframe
-                          src={section.url}
-                          title={section.title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="absolute top-0 left-0 w-full h-full"
-                        ></iframe>
-                      </div>
-                    ) : section.type === 'image' && section.url ? (
-                      <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md my-4" />
-                    ) : section.type === 'quiz' ? (
-                      <div className="p-4 bg-accent rounded-md text-accent-foreground flex flex-col items-center justify-center text-center my-4">
-                        <p className="text-lg font-medium mb-2">Quiz : {section.title}</p>
-                        <p className="text-sm mb-4">{section.content}</p>
-                        <Button>Commencer le Quiz</Button>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground mt-2">{section.content}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
-                  </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="w-64">
-                  <ContextMenuItem onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
-                    <NotebookText className="mr-2 h-4 w-4" /> Ajouter une note rapide
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => handleAskAiaAboutSection(section.title)}>
-                    <Bot className="mr-2 h-4 w-4" /> Demander à AiA
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-64">
+                    <ContextMenuItem onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
+                      <NotebookText className="mr-2 h-4 w-4" /> Ajouter une note rapide
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => handleAskAiaAboutSection(section.title)}>
+                      <Bot className="mr-2 h-4 w-4" /> Demander à AiA
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
+                {/* Notes Section pour cette section spécifique */}
+                <div className="mt-4">
+                  <NotesSection
+                    noteKey={generateNoteKey('section', course.id, currentModuleIndex, index)}
+                    title={section.title}
+                    refreshKey={refreshNotesSection}
+                  />
+                </div>
+              </div>
             );
           })}
           <div className="flex flex-wrap gap-4 justify-between items-center mt-6">
@@ -229,20 +239,17 @@ const ModuleDetail = () => {
               )}
             </div>
           </div>
-
-          {/* Module Notes Display intégré DANS la carte du module */}
-          <div className="mt-8 pt-8 border-t border-border"> {/* Ajout d'un séparateur visuel */}
-            <ModuleNotesDisplay
-              courseId={courseId}
-              moduleIndex={currentModuleIndex}
-              refreshKey={refreshNotesSection}
-              onNoteChange={handleNoteAdded}
-              onAddNoteClick={handleOpenQuickNoteDialog}
-              onScrollToSection={scrollToSection}
-            />
-          </div>
         </CardContent>
       </Card>
+
+      {/* Notes Section pour le module entier (si nécessaire, sinon supprimer) */}
+      <div className="mt-8 pt-8 border-t border-border">
+        <NotesSection
+          noteKey={generateNoteKey('module', course.id, currentModuleIndex)}
+          title={module.title}
+          refreshKey={refreshNotesSection}
+        />
+      </div>
 
       {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
@@ -252,7 +259,7 @@ const ModuleDetail = () => {
         <Button
           size="lg"
           className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
-          onClick={() => handleOpenQuickNoteDialog(module.title, -1)}
+          onClick={() => handleOpenQuickNoteDialog(module.title, -1)} // -1 pour indiquer une note de module
         >
           <PlusCircle className="h-7 w-7" />
           <span className="sr-only">Ajouter une note rapide pour le module</span>
