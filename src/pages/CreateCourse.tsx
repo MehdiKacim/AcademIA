@@ -25,7 +25,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { Course, addCourseToStorage, loadCourses, updateCourseInStorage } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses
+import { Course, addCourseToStorage, loadCourses, updateCourseInStorage, Module } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses, and Module type
 import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
 
 // Zod Schemas for validation
@@ -176,7 +176,7 @@ const CreateCourse = () => {
       difficulty: values.difficulty,
       imageUrl: values.imageUrl || undefined,
       skillsToAcquire: values.skillsToAcquire.split(',').map(s => s.trim()),
-      modules: values.modules,
+      modules: values.modules as Module[], // Assertion de type ici
     };
 
     if (courseId) {
@@ -451,8 +451,10 @@ const CreateCourse = () => {
                                     size="sm"
                                     onClick={() => {
                                       const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
-                                      currentQuestions?.splice(questionIndex, 1);
-                                      form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                      if (currentQuestions && currentQuestions[questionIndex]) {
+                                        currentQuestions[questionIndex].options.splice(questionIndex, 1);
+                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                      }
                                     }}
                                   >
                                     <MinusCircle className="h-3 w-3" />

@@ -102,19 +102,19 @@ export const saveStudents = (students: Student[]) => {
 
 // Fonctions CRUD pour les élèves
 export const addStudent = (newStudent: Student) => {
-  const updatedStudents = addData(LOCAL_STORAGE_STUDENTS_KEY, newStudent);
+  const updatedStudents = addData<Student>(LOCAL_STORAGE_STUDENTS_KEY, newStudent); // Spécifier le type
   dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
 export const updateStudent = (updatedStudent: Student) => {
-  const updatedStudents = updateData(LOCAL_STORAGE_STUDENTS_KEY, updatedStudent);
+  const updatedStudents = updateData<Student>(LOCAL_STORAGE_STUDENTS_KEY, updatedStudent); // Spécifier le type
   dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
 export const deleteStudent = (studentId: string) => {
-  const updatedStudents = deleteData(LOCAL_STORAGE_STUDENTS_KEY, studentId);
+  const updatedStudents = deleteData<Student>(LOCAL_STORAGE_STUDENTS_KEY, studentId); // Spécifier le type
   dummyStudents = updatedStudents;
   return updatedStudents;
 };
