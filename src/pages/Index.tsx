@@ -18,6 +18,8 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
+import LoginModal from "@/components/LoginModal"; // Import LoginModal
+import RegisterModal from "@/components/RegisterModal"; // Import RegisterModal
 
 // Variants pour les animations de conteneur (staggering children)
 const containerVariants = {
@@ -38,6 +40,8 @@ const itemVariants = {
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('accueil');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -81,6 +85,20 @@ const Index = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     setActiveSection(id); // Update active state immediately on click
   };
+
+  const openLoginModal = () => {
+    setIsRegisterModalOpen(false); // Close register if open
+    setIsLoginModalOpen(true);
+  };
+
+  const closeLoginModal = () => setIsLoginModalOpen(false);
+
+  const openRegisterModal = () => {
+    setIsLoginModalOpen(false); // Close login if open
+    setIsRegisterModalOpen(true);
+  };
+
+  const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
   const methodology = [
     {
@@ -131,9 +149,9 @@ const Index = () => {
         </nav>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <Link to="/login">
-            <Button variant="outline">Se connecter</Button>
-          </Link>
+          <Button variant="outline" onClick={openLoginModal}>
+            Se connecter
+          </Button>
         </div>
       </header>
 
@@ -164,19 +182,16 @@ const Index = () => {
               chaque apprenant.
             </motion.p>
             <motion.div variants={itemVariants} className="flex gap-4 justify-center">
-              <Link to="/login">
-                <Button
-                  size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Commencer l'aventure
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="lg" variant="secondary">
-                  Créer un compte
-                </Button>
-              </Link>
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={openLoginModal}
+              >
+                Commencer l'aventure
+              </Button>
+              <Button size="lg" variant="secondary" onClick={openRegisterModal}>
+                Créer un compte
+              </Button>
             </motion.div>
           </div>
         </motion.section>
@@ -202,11 +217,9 @@ const Index = () => {
               <MessageCircleMore className="w-24 h-24 text-primary" />
             </motion.div>
             <motion.div variants={itemVariants}>
-              <Link to="/register">
-                <Button size="lg">
-                  Découvrir AiA
-                </Button>
-              </Link>
+              <Button size="lg" onClick={openRegisterModal}>
+                Découvrir AiA
+              </Button>
             </motion.div>
           </div>
         </motion.section>
@@ -252,6 +265,17 @@ const Index = () => {
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.
       </footer>
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={closeLoginModal}
+        onRegisterClick={openRegisterModal}
+      />
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={closeRegisterModal}
+        onLoginClick={openLoginModal}
+      />
     </div>
   );
 };
