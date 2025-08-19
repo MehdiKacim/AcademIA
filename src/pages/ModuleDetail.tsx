@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle } from "lucide-react";
+import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookPen } from "lucide-react";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
@@ -10,7 +10,14 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
-import NotesSection from "@/components/NotesSection"; // Réintégration de NotesSection
+import NotesSection from "@/components/NotesSection";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu"; // Importation des composants de menu contextuel
 
 interface ModuleSection {
   title: string;
@@ -406,26 +413,23 @@ const ModuleDetail = () => {
         </CardHeader>
         <CardContent>
           {module.sections.map((section, index) => (
-            <div key={index} className="mb-6 p-4 border rounded-md bg-muted/10">
-              <h3 className="text-xl font-semibold mb-2 text-foreground">{section.title}</h3>
-              <p className="text-muted-foreground">{section.content}</p>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleOpenQuickNoteDialog(section.title, index)}
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" /> Note rapide
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleAskAiaAboutSection(section.title)}
-                >
-                  <Send className="h-4 w-4 mr-2" /> Demander à AiA
-                </Button>
-              </div>
-            </div>
+            <ContextMenu key={index}>
+              <ContextMenuTrigger className="block w-full">
+                <div className="mb-6 p-4 border rounded-md bg-muted/10 cursor-context-menu">
+                  <h3 className="text-xl font-semibold mb-2 text-foreground">{section.title}</h3>
+                  <p className="text-muted-foreground">{section.content}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
+                </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-64">
+                <ContextMenuItem onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
+                  <NotebookPen className="mr-2 h-4 w-4" /> Ajouter une note rapide
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleAskAiaAboutSection(section.title)}>
+                  <Bot className="mr-2 h-4 w-4" /> Demander à AiA
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
           <div className="flex flex-wrap gap-4 justify-between items-center mt-6">
             <div className="flex gap-2">
