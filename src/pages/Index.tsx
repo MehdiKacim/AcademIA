@@ -15,11 +15,23 @@ import {
   MessageCircleMore,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { motion } from "framer-motion"; // Import framer-motion
+import { motion } from "framer-motion";
 
-const fadeInVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+// Variants pour les animations de conteneur (staggering children)
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1, // Décalage de 0.1s entre chaque enfant
+    },
+  },
+};
+
+// Variants pour les éléments individuels (fade-in et slide-up)
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
 const Index = () => {
@@ -64,30 +76,30 @@ const Index = () => {
         </nav>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center text-center p-4 pt-20"> {/* Added pt-20 to account for fixed header */}
+      <main className="flex-grow flex flex-col items-center justify-center text-center p-4 pt-20">
         <motion.section
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          variants={fadeInVariants}
+          variants={containerVariants}
           className="py-20"
         >
           <div className="relative">
             <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-50 animate-blob"></div>
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
-            <div className="flex justify-center mb-8">
+            <motion.div variants={itemVariants} className="flex justify-center mb-8">
               <Logo iconClassName="w-32 h-32" showText={false} />
-            </div>
-            <h2 className="text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+            </motion.div>
+            <motion.h2 variants={itemVariants} className="text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici
-            </h2>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               AcademIA transforme l'éducation avec des parcours personnalisés, un
               suivi intelligent et un tuteur IA pour libérer le potentiel de
               chaque apprenant.
-            </p>
-            <div className="flex gap-4 justify-center">
+            </motion.p>
+            <motion.div variants={itemVariants} className="flex gap-4 justify-center">
               <Link to="/login">
                 <Button
                   size="lg"
@@ -101,33 +113,35 @@ const Index = () => {
                   Créer un compte
                 </Button>
               </Link>
-            </div>
+            </motion.div>
           </div>
         </motion.section>
 
-        {/* AiA Bot Section - Moved up */}
+        {/* AiA Bot Section - Background changed and animations applied */}
         <motion.section
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          variants={fadeInVariants}
-          className="py-20 w-full bg-muted/20"
+          variants={containerVariants}
+          className="py-20 w-full border-y border-border/50" {/* Changed background */}
         >
           <div className="max-w-5xl mx-auto px-4 text-center">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4">
+            <motion.h3 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
               Votre Tuteur IA Personnel : AiA
-            </h3>
-            <p className="text-lg text-muted-foreground mb-12">
+            </motion.h3>
+            <motion.p variants={itemVariants} className="text-lg text-muted-foreground mb-12">
               AiA, l'intelligence artificielle d'AcademIA, est là pour vous guider. Elle identifie vos points faibles, adapte les leçons et vous offre un soutien personnalisé pour une progression optimale.
-            </p>
-            <div className="flex justify-center mb-8">
+            </motion.p>
+            <motion.div variants={itemVariants} className="flex justify-center mb-8">
               <MessageCircleMore className="w-24 h-24 text-primary" />
-            </div>
-            <Link to="/register">
-              <Button size="lg">
-                Découvrir AiA
-              </Button>
-            </Link>
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <Link to="/register">
+                <Button size="lg">
+                  Découvrir AiA
+                </Button>
+              </Link>
+            </motion.div>
           </div>
         </motion.section>
 
@@ -135,29 +149,34 @@ const Index = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          variants={fadeInVariants}
+          variants={containerVariants}
           className="py-20 w-full"
         >
-          <h3 className="text-3xl md:text-4xl font-bold mb-4">
+          <motion.h3 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
             Notre Méthodologie Révolutionnaire
-          </h3>
-          <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">
+          </motion.h3>
+          <motion.p variants={itemVariants} className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">
             Un parcours d'apprentissage unique, guidé par l'intelligence
             artificielle, pour une maîtrise complète.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-4">
+          </motion.p>
+          <motion.div
+            variants={containerVariants} // Apply container variants to the grid parent
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-4"
+          >
             {methodology.map((item, index) => (
-              <Card key={index} className="text-center">
-                <CardHeader>
-                  <div className="flex justify-center mb-4">{item.icon}</div>
-                  <CardTitle>{item.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{item.description}</p>
-                </CardContent>
-              </Card>
+              <motion.div key={index} variants={itemVariants}> {/* Make Card a motion.div */}
+                <Card className="text-center">
+                  <CardHeader>
+                    <div className="flex justify-center mb-4">{item.icon}</div>
+                    <CardTitle>{item.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{item.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </motion.section>
       </main>
 
