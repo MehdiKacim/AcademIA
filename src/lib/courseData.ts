@@ -18,6 +18,7 @@ export interface Course {
   description: string;
   modules: Module[];
   skillsToAcquire: string[];
+  imageUrl?: string; // Nouvelle propriété pour l'image du cours
 }
 
 export type EntityType = 'course' | 'module' | 'section'; // Ajout et exportation de EntityType
@@ -27,6 +28,7 @@ export const dummyCourses: Course[] = [
     id: '1',
     title: "Introduction à l'IA",
     description: "Découvrez les fondements de l'intelligence artificielle, ses applications et son impact sur le monde moderne.",
+    imageUrl: "https://images.unsplash.com/photo-1696258680345-f504585d7042?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     modules: [
       {
         title: "Module 1: Qu'est-ce que l'IA ?",
@@ -77,6 +79,7 @@ export const dummyCourses: Course[] = [
     id: '2',
     title: "React pour débutants",
     description: "Apprenez les fondamentaux de React, la bibliothèque JavaScript populaire pour construire des interfaces utilisateur interactives.",
+    imageUrl: "https://images.unsplash.com/photo-1633356122544-cd3608a92e8b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     modules: [
       {
         title: "Module 1: Les bases de React",
@@ -125,6 +128,7 @@ export const dummyCourses: Course[] = [
     id: '3',
     title: "Algorithmes Avancés",
     description: "Maîtrisez les structures de données complexes et les algorithmes efficaces pour résoudre des problèmes informatiques avancés.",
+    imageUrl: "https://images.unsplash.com/photo-1504384308090-c894fd248f53?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     modules: [
       {
         title: "Module 1: Structures de données avancées",
@@ -169,6 +173,7 @@ export const dummyCourses: Course[] = [
     id: '4',
     title: "Développement Web Fullstack",
     description: "Apprenez à construire des applications web complètes, du frontend au backend, avec les technologies modernes.",
+    imageUrl: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     modules: [
       {
         title: "Module 1: Introduction au Web",
@@ -217,6 +222,7 @@ export const dummyCourses: Course[] = [
     id: '5',
     title: "Fondamentaux de la Science des Données",
     description: "Explorez les concepts clés de la science des données, de la collecte à l'analyse et la visualisation.",
+    imageUrl: "https://images.unsplash.com/photo-1551288259-cd778e75d97b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     modules: [
       {
         title: "Module 1: Introduction aux Données",

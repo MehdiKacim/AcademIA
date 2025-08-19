@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Edit, Trash2, Save, XCircle } from "lucide-react";
@@ -16,6 +15,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import SimpleMdeReact from "react-simplemde-editor";
+import "easymde/dist/easymde.min.css"; // Import the EasyMDE CSS
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
 
 interface NotesSectionProps {
   noteKey: string; // Clé unique pour le localStorage (ex: 'notes_course_1', 'notes_module_1_0')
@@ -81,18 +84,25 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
         ) : (
           <div className="space-y-2">
             {notes.map((note, index) => (
-              <div key={index} className="p-2 bg-background rounded-md shadow-sm text-xs text-foreground flex justify-between items-center">
+              <div key={index} className="p-2 bg-background rounded-md shadow-sm text-xs text-foreground flex justify-between items-start">
                 {editingIndex === index ? (
-                  <Textarea
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="flex-grow mr-2 text-xs"
-                    rows={2}
-                  />
+                  <div className="flex-grow mr-2 w-full">
+                    <SimpleMdeReact
+                      value={editedContent}
+                      onChange={setEditedContent}
+                      options={{
+                        spellChecker: false,
+                        toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"],
+                        status: false,
+                      }}
+                    />
+                  </div>
                 ) : (
-                  <span className="flex-grow">{note}</span>
+                  <div className="prose prose-sm dark:prose-invert flex-grow mr-2 max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{note}</ReactMarkdown>
+                  </div>
                 )}
-                <div className="flex gap-1 ml-2">
+                <div className="flex gap-1 ml-2 flex-shrink-0">
                   {editingIndex === index ? (
                     <>
                       <Button variant="ghost" size="icon" onClick={() => handleSaveEdit(index)}>
@@ -139,12 +149,15 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
         )}
       </ScrollArea>
       <div className="flex flex-col gap-2">
-        <Textarea
-          placeholder="Écrivez votre nouvelle note ici..."
+        <SimpleMdeReact
           value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          rows={3}
-          className="text-xs"
+          onChange={setNewNote}
+          options={{
+            spellChecker: false,
+            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"],
+            status: false,
+            placeholder: "Écrivez votre nouvelle note ici...",
+          }}
         />
         <Button onClick={handleAddNote} disabled={!newNote.trim()} size="sm">
           <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une note

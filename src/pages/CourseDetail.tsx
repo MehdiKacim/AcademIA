@@ -57,6 +57,13 @@ const CourseDetail = () => {
 
   return (
     <div className="space-y-8">
+      {course.imageUrl && (
+        <img
+          src={course.imageUrl}
+          alt={`Image pour le cours ${course.title}`}
+          className="w-full h-64 object-cover rounded-lg mb-8 shadow-md"
+        />
+      )}
       <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         {course.title}
       </h1>
