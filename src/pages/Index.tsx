@@ -14,14 +14,14 @@ import {
   ShieldCheck,
   Target,
   MessageCircleMore,
-  Home, // Ajout de l'icône Home pour la navigation d'accueil
+  Home,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
-import BottomNavigationBar from "@/components/BottomNavigationBar"; // Import du nouveau composant
-import { useIsMobile } from "@/hooks/use-mobile"; // Import du hook
+import BottomNavigationBar from "@/components/BottomNavigationBar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
@@ -121,7 +121,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background overflow-x-hidden"> {/* Ajout de overflow-x-hidden */}
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
@@ -257,7 +257,7 @@ const Index = () => {
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
       />
-      <BottomNavigationBar navItems={indexNavItems} /> {/* Ajout de la barre de navigation inférieure */}
+      <BottomNavigationBar navItems={indexNavItems} />
     </div>
   );
 };

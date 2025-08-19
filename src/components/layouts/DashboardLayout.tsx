@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
-import BottomNavigationBar from "@/components/BottomNavigationBar"; // Import du nouveau composant
-import { useIsMobile } from "@/hooks/use-mobile"; // Import du hook
+import BottomNavigationBar from "@/components/BottomNavigationBar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
@@ -18,7 +18,7 @@ const DashboardLayout = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40">
+    <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden"> {/* Ajout de overflow-x-hidden */}
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo />
         {/* Navigation pour les écrans non mobiles */}
@@ -53,7 +53,7 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-16 sm:pt-20", isMobile && "pb-20")}>
         <Outlet />
       </main>
-      <BottomNavigationBar navItems={navItems} /> {/* Ajout de la barre de navigation inférieure */}
+      <BottomNavigationBar navItems={navItems} />
     </div>
   );
 };
