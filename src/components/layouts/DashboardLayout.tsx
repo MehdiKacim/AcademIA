@@ -1,10 +1,9 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, Menu } from "lucide-react"; // Importation de l'icône Menu
+import { Home, BookOpen, PlusSquare, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
-import MobileSheetNav from "@/components/MobileSheetNav"; // Import MobileSheetNav
 
 const DashboardLayout = () => {
   const navItems = [
@@ -16,32 +15,16 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
-      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
-        {/* Mobile Navigation - Logo as trigger */}
-        <div className="md:hidden flex items-center gap-2">
-          <MobileSheetNav
-            navItems={navItems}
-            triggerContent={
-              <Menu className="h-5 w-5" /> // Passe l'icône comme contenu
-            }
-          >
-            <ThemeToggle />
-            <NavLink to="/" className="w-full">
-              <Button variant="outline" className="w-full">Déconnexion</Button>
-            </NavLink>
-          </MobileSheetNav>
-        </div>
-
-        {/* Desktop Navigation - Logo is just a logo */}
-        <Logo className="hidden md:block" />
-        <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
+      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
+        <Logo /> {/* Le logo est toujours visible */}
+        <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center p-2 rounded-md text-sm font-medium",
+                  "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-accent hover:text-accent-foreground"
@@ -53,10 +36,8 @@ const DashboardLayout = () => {
             </NavLink>
           ))}
         </nav>
-        {/* Desktop Action Buttons */}
-        <div className="hidden md:flex items-center gap-4 ml-auto">
+        <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
-          {/* Placeholder for logout button - in a real app, this would trigger auth logout */}
           <NavLink to="/">
             <Button variant="outline">Déconnexion</Button>
           </NavLink>

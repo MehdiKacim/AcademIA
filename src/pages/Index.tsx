@@ -14,20 +14,17 @@ import {
   ShieldCheck,
   Target,
   MessageCircleMore,
-  Menu, // Importation de l'icône Menu
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { cn } from "@/lib/utils"; // Import cn for conditional class names
-import LoginModal from "@/components/LoginModal"; // Import LoginModal
-import RegisterModal from "@/components/RegisterModal"; // Import RegisterModal
-import MobileSheetNav from "@/components/MobileSheetNav"; // Import MobileSheetNav
+import { cn } from "@/lib/utils";
+import LoginModal from "@/components/LoginModal";
+import RegisterModal from "@/components/RegisterModal";
 
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
 
-  // Suppression de la logique activeSection et sectionRefs pour le moment
-  const [activeSection, setActiveSection] = useState('accueil'); // Gardé pour la classe active sur les boutons de navigation
+  const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
     aiaBot: useRef<HTMLDivElement>(null),
@@ -68,18 +65,18 @@ const Index = () => {
 
   const handleNavLinkClick = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    setActiveSection(id); // Update active state immediately on click
+    setActiveSection(id);
   };
 
   const openLoginModal = () => {
-    setIsRegisterModal(false); // Close register if open
+    setIsRegisterModal(false);
     setIsLoginModal(true);
   };
 
   const closeLoginModal = () => setIsLoginModal(false);
 
   const openRegisterModal = () => {
-    setIsLoginModal(false); // Close login if open
+    setIsLoginModal(false);
     setIsRegisterModal(true);
   };
 
@@ -112,74 +109,47 @@ const Index = () => {
     },
   ];
 
-  const indexNavItems = [
-    { to: "#accueil", label: "Accueil" },
-    { to: "#aiaBot", label: "AiA Bot" },
-    { to: "#methodologie", label: "Méthodologie" },
-  ];
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
-        {/* Mobile Navigation - Logo as trigger */}
-        <div className="md:hidden flex items-center gap-2">
-          <MobileSheetNav
-            navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))}
-            onLinkClick={() => {}}
-            triggerContent={
-              <Menu className="h-5 w-5" /> // Passe l'icône comme contenu
-            }
-          >
-            <ThemeToggle />
-            <Button variant="outline" className="w-full" onClick={() => { closeLoginModal(); openLoginModal(); }}>
-              Se connecter
-            </Button>
-            <Button className="w-full" onClick={() => { closeRegisterModal(); openRegisterModal(); }}>
-              Créer un compte
-            </Button>
-          </MobileSheetNav>
-        </div>
-
-        {/* Desktop Navigation - Logo is just a logo */}
-        <Logo className="hidden md:block" />
-        <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
+      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
+        <Logo /> {/* Le logo est toujours visible */}
+        <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
           <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
-            className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}>
             Accueil
           </Button>
           <Button variant="ghost" onClick={() => handleNavLinkClick('aiaBot')}
-            className={cn(activeSection === 'aiaBot' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            className={cn(activeSection === 'aiaBot' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}>
             AiA Bot
           </Button>
           <Button variant="ghost" onClick={() => handleNavLinkClick('methodologie')}
-            className={cn(activeSection === 'methodologie' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            className={cn(activeSection === 'methodologie' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}>
             Méthodologie
           </Button>
         </nav>
-        {/* Desktop Action Buttons */}
-        <div className="hidden md:flex items-center gap-4 ml-auto">
+        <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
           <Button variant="outline" onClick={openLoginModal}>
             Se connecter
+          </Button>
+          <Button onClick={openRegisterModal}>
+            Créer un compte
           </Button>
         </div>
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20">
-        {/* Section Accueil - Rendre toujours visible */}
         <section
           id="accueil"
           ref={sectionRefs.accueil}
           className="py-20 px-4 w-full"
         >
           <div className="relative">
-            {/* Blob animations pour une touche IA */}
             <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-50 animate-blob"></div>
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
-            {/* Suppression des balises motion. pour garantir la visibilité immédiate */}
             <div className="flex justify-center mb-8">
               <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} />
             </div>
@@ -206,7 +176,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Section AiA Bot */}
         <section
           id="aiaBot"
           ref={sectionRefs.aiaBot}
@@ -230,7 +199,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Section Méthodologie */}
         <section
           id="methodologie"
           ref={sectionRefs.methodologie}
