@@ -12,7 +12,6 @@ import {
   MessageSquareQuote,
   ShieldCheck,
   Target,
-  MessageCircleMore, // Added for AiA bot icon
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -113,35 +112,6 @@ const Index = () => {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </section>
-
-        {/* New AiA Bot Section */}
-        <section className="py-20 w-full bg-muted/20">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4">
-              Votre Tuteur IA Personnel : AiA
-            </h3>
-            <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">
-              AiA est votre compagnon d'apprentissage intelligent, conçu pour identifier vos points faibles et vous offrir un soutien personnalisé pour surmonter chaque défi.
-            </p>
-            <div className="flex justify-center">
-              <Card className="w-full max-w-md p-6 text-left">
-                <CardHeader className="flex flex-row items-center gap-4 p-0 pb-4">
-                  <MessageCircleMore className="w-12 h-12 text-primary" />
-                  <CardTitle className="text-2xl">Comment AiA vous aide</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                    <li>Analyse vos performances pour détecter les lacunes.</li>
-                    <li>Propose des exercices ciblés et des explications claires.</li>
-                    <li>Répond à vos questions en temps réel.</li>
-                    <li>S'adapte à votre style d'apprentissage pour une efficacité maximale.</li>
-                  </ul>
-                  <Button className="mt-6 w-full">Découvrir AiA</Button>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </section>
       </main>
