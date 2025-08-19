@@ -187,13 +187,10 @@ const Index = () => {
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20">
-        <motion.section
+        {/* Section Accueil - Rendre toujours visible */}
+        <section
           id="accueil"
           ref={sectionRefs.accueil}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={containerVariants}
           className="py-20 px-4 w-full"
         >
           <div className="relative">
@@ -201,18 +198,18 @@ const Index = () => {
             <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-50 animate-blob"></div>
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
-            <motion.div variants={itemVariants} className="flex justify-center mb-8">
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="flex justify-center mb-8">
               <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} />
             </motion.div>
-            <motion.h2 variants={itemVariants} className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+            <motion.h2 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici
             </motion.h2>
-            <motion.p variants={itemVariants} className="text-base md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            <motion.p initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="text-base md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               AcademIA transforme l'éducation avec des parcours personnalisés, un
               suivi intelligent et un tuteur IA pour libérer le potentiel de
               chaque apprenant.
             </motion.p>
-            <motion.div variants={itemVariants} className="flex gap-4 justify-center">
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="flex gap-4 justify-center">
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -225,7 +222,7 @@ const Index = () => {
               </Button>
             </motion.div>
           </div>
-        </motion.section>
+        </section>
 
         {/* Section AiA Bot */}
         <motion.section
