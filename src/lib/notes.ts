@@ -1,6 +1,5 @@
-import { dummyCourses, EntityType, ModuleSection, Module, Course } from "./courseData"; // Importation depuis le nouveau fichier
-
-export { EntityType }; // Exporter EntityType pour qu'il soit disponible
+import { dummyCourses, ModuleSection, Module, Course } from "./courseData";
+import type { EntityType } from "./courseData"; // Utilisation de 'import type' pour EntityType
 
 /**
  * Génère une clé unique pour stocker les notes dans le localStorage.
