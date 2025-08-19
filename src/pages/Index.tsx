@@ -12,6 +12,7 @@ import {
   MessageSquareQuote,
   ShieldCheck,
   Target,
+  MessageCircleMore, // New import for AiA bot icon
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -112,6 +113,26 @@ const Index = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </section>
+
+        {/* New AiA Bot Section */}
+        <section className="py-20 w-full bg-muted/20">
+          <div className="max-w-5xl mx-auto px-4 text-center">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4">
+              Votre Tuteur IA Personnel : AiA
+            </h3>
+            <p className="text-lg text-muted-foreground mb-12">
+              AiA, l'intelligence artificielle d'AcademIA, est là pour vous guider. Elle identifie vos points faibles, adapte les leçons et vous offre un soutien personnalisé pour une progression optimale.
+            </p>
+            <div className="flex justify-center mb-8">
+              <MessageCircleMore className="w-24 h-24 text-primary" />
+            </div>
+            <Link to="/register">
+              <Button size="lg">
+                Découvrir AiA
+              </Button>
+            </Link>
           </div>
         </section>
       </main>
