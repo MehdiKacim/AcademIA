@@ -67,6 +67,22 @@ const initialDummyCourses: Course[] = [
     ],
     skillsToAcquire: ["Maîtriser les structures de données", "Optimiser les algorithmes", "Résoudre des problèmes complexes", "Analyser les graphes"]
   },
+  {
+    id: '4',
+    title: "Développement Web Fullstack",
+    description: "Apprenez à construire des applications web complètes, du frontend au backend, avec les technologies modernes.",
+    modules: [
+      { title: "Module 1: Introduction au Web", content: "Historique, HTML, CSS, JavaScript.", isCompleted: true, level: 0 },
+      { title: "Module 2: Frontend avec React", content: "Composants, état, props.", isCompleted: false, level: 0 },
+      { title: "Module 2.1: Gestion des formulaires", content: "React Hook Form et validation.", isCompleted: false, level: 1 },
+      { title: "Module 2.2: Styles avec Tailwind CSS", content: "Utility-first CSS.", isCompleted: false, level: 1 },
+      { title: "Module 3: Backend avec Node.js", content: "Express.js, API REST.", isCompleted: false, level: 0 },
+      { title: "Module 3.1: Bases de données SQL", content: "PostgreSQL et ORM.", isCompleted: false, level: 1 },
+      { title: "Module 3.2: Authentification", content: "JWT et sessions.", isCompleted: false, level: 1 },
+      { title: "Module 4: Déploiement", content: "Hébergement et CI/CD.", isCompleted: false, level: 0 },
+    ],
+    skillsToAcquire: ["Développer Frontend", "Développer Backend", "Gérer les bases de données", "Déployer des applications"]
+  },
 ];
 
 const CourseDetail = () => {
