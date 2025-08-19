@@ -16,75 +16,59 @@ import {
   MessageCircleMore,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
 import LoginModal from "@/components/LoginModal"; // Import LoginModal
 import RegisterModal from "@/components/RegisterModal"; // Import RegisterModal
 import MobileSheetNav from "@/components/MobileSheetNav"; // Import MobileSheetNav
 
-// Variants pour les animations de conteneur (staggering children)
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15, // Décalage légèrement augmenté pour plus d'impact
-    },
-  },
-};
-
-// Variants pour les éléments individuels (fade-in et slide-up)
-const itemVariants = {
-  hidden: { opacity: 0, y: 50 }, // 'y' augmenté pour une animation plus prononcée
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }, // Durée légèrement augmentée
-};
-
 const Index = () => {
-  const [activeSection, setActiveSection] = useState('accueil');
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
 
-  const sectionRefs = {
-    accueil: useRef<HTMLDivElement>(null),
-    aiaBot: useRef<HTMLDivElement>(null),
-    methodologie: useRef<HTMLDivElement>(null),
-  };
+  // Suppression de la logique activeSection et sectionRefs pour le moment
+  // const [activeSection, setActiveSection] = useState('accueil');
+  // const sectionRefs = {
+  //   accueil: useRef<HTMLDivElement>(null),
+  //   aiaBot: useRef<HTMLDivElement>(null),
+  //   methodologie: useRef<HTMLDivElement>(null),
+  // };
 
-  useEffect(() => {
-    const observerOptions = {
-      root: null, // viewport
-      rootMargin: '-50% 0px -50% 0px', // Trigger when 50% of the section is in view
-      threshold: 0,
-    };
+  // Suppression de l'useEffect pour l'IntersectionObserver
+  // useEffect(() => {
+  //   const observerOptions = {
+  //     root: null, // viewport
+  //     rootMargin: '-50% 0px -50% 0px', // Trigger when 50% of the section is in view
+  //     threshold: 0,
+  //   };
 
-    const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
-        }
-      });
-    };
+  //   const observerCallback = (entries: IntersectionObserverEntry[]) => {
+  //     entries.forEach(entry => {
+  //       if (entry.isIntersecting) {
+  //         setActiveSection(entry.target.id);
+  //       }
+  //     });
+  //   };
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
+  //   const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-    Object.values(sectionRefs).forEach(ref => {
-      if (ref.current) {
-        observer.observe(ref.current);
-      }
-    });
+  //   Object.values(sectionRefs).forEach(ref => {
+  //     if (ref.current) {
+  //       observer.observe(ref.current);
+  //     }
+  //   });
 
-    return () => {
-      Object.values(sectionRefs).forEach(ref => {
-        if (ref.current) {
-          observer.unobserve(ref.current);
-        }
-      });
-    };
-  }, []);
+  //   return () => {
+  //     Object.values(sectionRefs).forEach(ref => {
+  //       if (ref.current) {
+  //         observer.unobserve(ref.current);
+  //       }
+  //     });
+  //   };
+  // }, []);
 
   const handleNavLinkClick = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    setActiveSection(id); // Update active state immediately on click
+    // setActiveSection(id); // Update active state immediately on click
   };
 
   const openLoginModal = () => {
@@ -165,15 +149,15 @@ const Index = () => {
         <Logo className="hidden md:block" />
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
-            className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            className={cn('text-muted-foreground hover:text-foreground')}> {/* Simplifié */}
             Accueil
           </Button>
           <Button variant="ghost" onClick={() => handleNavLinkClick('aiaBot')}
-            className={cn(activeSection === 'aiaBot' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            className={cn('text-muted-foreground hover:text-foreground')}> {/* Simplifié */}
             AiA Bot
           </Button>
           <Button variant="ghost" onClick={() => handleNavLinkClick('methodologie')}
-            className={cn(activeSection === 'methodologie' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            className={cn('text-muted-foreground hover:text-foreground')}> {/* Simplifié */}
             Méthodologie
           </Button>
         </nav>
@@ -190,7 +174,7 @@ const Index = () => {
         {/* Section Accueil - Rendre toujours visible */}
         <section
           id="accueil"
-          ref={sectionRefs.accueil}
+          // ref={sectionRefs.accueil} // Supprimé
           className="py-20 px-4 w-full"
         >
           <div className="relative">
@@ -226,56 +210,56 @@ const Index = () => {
         </section>
 
         {/* Section AiA Bot */}
-        <motion.section
+        <section
           id="aiaBot"
-          ref={sectionRefs.aiaBot}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={containerVariants}
+          // ref={sectionRefs.aiaBot} // Supprimé
+          // initial="hidden" // Supprimé
+          // whileInView="visible" // Supprimé
+          // viewport={{ once: true, amount: 0.3 }} // Supprimé
+          // variants={containerVariants} // Supprimé
           className="py-20 w-full border-y border-border/50 px-4"
         >
           <div className="max-w-5xl mx-auto text-center">
-            <motion.h3 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4"> {/* Converti en h3 */}
               Votre Tuteur IA Personnel : AiA
-            </motion.h3>
-            <motion.p variants={itemVariants} className="text-lg text-muted-foreground mb-12">
+            </h3>
+            <p className="text-lg text-muted-foreground mb-12"> {/* Converti en p */}
               AiA, l'intelligence artificielle d'AcademIA, est là pour vous guider. Elle identifie vos points faibles, adapte les leçons et vous offre un soutien personnalisé pour une progression optimale.
-            </motion.p>
-            <motion.div variants={itemVariants} className="flex justify-center mb-8">
+            </p>
+            <div className="flex justify-center mb-8"> {/* Converti en div */}
               <MessageCircleMore className="w-24 h-24 text-primary" />
-            </motion.div>
-            <motion.div variants={itemVariants}>
+            </div>
+            <div> {/* Converti en div */}
               <Button size="lg" onClick={openRegisterModal}>
                 Découvrir AiA
               </Button>
-            </motion.div>
+            </div>
           </div>
-        </motion.section>
+        </section>
 
         {/* Section Méthodologie */}
-        <motion.section
+        <section
           id="methodologie"
-          ref={sectionRefs.methodologie}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={containerVariants}
+          // ref={sectionRefs.methodologie} // Supprimé
+          // initial="hidden" // Supprimé
+          // whileInView="visible" // Supprimé
+          // viewport={{ once: true, amount: 0.3 }} // Supprimé
+          // variants={containerVariants} // Supprimé
           className="py-20 w-full px-4"
         >
-          <motion.h3 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
+          <h3 className="text-3xl md:text-4xl font-bold mb-4"> {/* Converti en h3 */}
             Notre Méthodologie Révolutionnaire
-          </motion.h3>
-          <motion.p variants={itemVariants} className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">
+          </h3>
+          <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto"> {/* Converti en p */}
             Un parcours d'apprentissage unique, guidé par l'intelligence
             artificielle, pour une maîtrise complète.
-          </motion.p>
-          <motion.div
-            variants={containerVariants}
+          </p>
+          <div
+            // variants={containerVariants} // Supprimé
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"
           >
             {methodology.map((item, index) => (
-              <motion.div key={index} variants={itemVariants}>
+              <div key={index}> {/* Converti en div */}
                 <Card className="text-center">
                   <CardHeader>
                     <div className="flex justify-center mb-4">{item.icon}</div>
@@ -285,10 +269,10 @@ const Index = () => {
                     <p className="text-muted-foreground">{item.description}</p>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
-        </motion.section>
+          </div>
+        </section>
       </main>
 
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
