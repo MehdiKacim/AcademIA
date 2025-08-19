@@ -9,6 +9,7 @@ interface Module {
   title: string;
   content: string;
   isCompleted: boolean;
+  level?: number; // Ajout de la propriété level
 }
 
 interface Course {
@@ -29,13 +30,15 @@ const ModuleFlowVisualizer = ({ course }: ModuleFlowVisualizerProps) => {
       {course.modules.map((module, index) => {
         const isAccessible = index === 0 || course.modules[index - 1]?.isCompleted;
         const isLastModule = index === course.modules.length - 1;
+        const indentationClass = module.level === 1 ? "pl-8" : ""; // Applique une indentation pour les sous-modules
 
         return (
           <React.Fragment key={index}>
             <Card className={cn(
               "w-full max-w-md shadow-lg transition-all duration-300 ease-in-out",
               !isAccessible && "opacity-50 cursor-not-allowed",
-              isAccessible && "hover:shadow-xl hover:scale-[1.01]"
+              isAccessible && "hover:shadow-xl hover:scale-[1.01]",
+              indentationClass // Applique la classe d'indentation
             )}>
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-lg font-medium">

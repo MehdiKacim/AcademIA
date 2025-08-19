@@ -5,24 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Bot, Send, Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { motion } from 'framer-motion';
 import { showSuccess, showError } from '@/utils/toast';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import ModuleFlowVisualizer from "@/components/ModuleFlowVisualizer";
-import NotesSection from "@/components/NotesSection"; // Nouvelle importation
-import { generateNoteKey } from "@/lib/notes"; // Nouvelle importation
+import NotesSection from "@/components/NotesSection";
+import { generateNoteKey } from "@/lib/notes";
 
 interface Module {
   title: string;
   content: string;
   isCompleted: boolean;
+  level?: number; // Ajout de la propriété level pour la hiérarchie visuelle
 }
 
 interface Course {
@@ -39,10 +34,12 @@ const initialDummyCourses: Course[] = [
     title: "Introduction à l'IA",
     description: "Découvrez les fondements de l'intelligence artificielle, ses applications et son impact sur le monde moderne.",
     modules: [
-      { title: "Module 1: Qu'est-ce que l'IA ?", content: "Définition, histoire et types d'IA.", isCompleted: true },
-      { title: "Module 2: Apprentissage Automatique", content: "Concepts de base du Machine Learning, supervisé et non supervisé.", isCompleted: false },
-      { title: "Module 3: Réseaux de Neurones", content: "Introduction aux réseaux de neurones et au Deep Learning.", isCompleted: false },
-      { title: "Module 4: Applications de l'IA", content: "Exemples concrets : vision par ordinateur, traitement du langage naturel.", isCompleted: false },
+      { title: "Module 1: Qu'est-ce que l'IA ?", content: "Définition, histoire et types d'IA.", isCompleted: true, level: 0 },
+      { title: "Module 2: Apprentissage Automatique (Intro)", content: "Concepts de base du Machine Learning.", isCompleted: false, level: 0 },
+      { title: "Module 2.1: Apprentissage Supervisé", content: "Détails sur les modèles supervisés.", isCompleted: false, level: 1 },
+      { title: "Module 2.2: Apprentissage Non-Supervisé", content: "Détails sur les modèles non-supervisés.", isCompleted: false, level: 1 },
+      { title: "Module 3: Réseaux de Neurones", content: "Introduction aux réseaux de neurones et au Deep Learning.", isCompleted: false, level: 0 },
+      { title: "Module 4: Applications de l'IA", content: "Exemples concrets : vision par ordinateur, traitement du langage naturel.", isCompleted: false, level: 0 },
     ],
     skillsToAcquire: ["Comprendre l'IA", "Maîtriser le ML", "Appliquer le Deep Learning", "Analyser les données"]
   },
@@ -51,10 +48,10 @@ const initialDummyCourses: Course[] = [
     title: "React pour débutants",
     description: "Apprenez les fondamentaux de React, la bibliothèque JavaScript populaire pour construire des interfaces utilisateur interactives.",
     modules: [
-      { title: "Module 1: Les bases de React", content: "Composants, JSX, props et état.", isCompleted: true },
-      { title: "Module 2: Hooks et gestion d'état", content: "useState, useEffect, useContext et Reducers.", isCompleted: true },
-      { title: "Module 3: Routage avec React Router", content: "Navigation entre les pages de votre application.", isCompleted: false },
-      { title: "Module 4: Requêtes API et cycle de vie", content: "Fetching de données et gestion des effets secondaires.", isCompleted: false },
+      { title: "Module 1: Les bases de React", content: "Composants, JSX, props et état.", isCompleted: true, level: 0 },
+      { title: "Module 2: Hooks et gestion d'état", content: "useState, useEffect, useContext et Reducers.", isCompleted: true, level: 0 },
+      { title: "Module 3: Routage avec React Router", content: "Navigation entre les pages de votre application.", isCompleted: false, level: 0 },
+      { title: "Module 4: Requêtes API et cycle de vie", content: "Fetching de données et gestion des effets secondaires.", isCompleted: false, level: 0 },
     ],
     skillsToAcquire: ["Développer avec React", "Gérer l'état", "Naviguer avec React Router", "Intégrer des APIs"]
   },
@@ -63,10 +60,10 @@ const initialDummyCourses: Course[] = [
     title: "Algorithmes Avancés",
     description: "Maîtrisez les structures de données complexes et les algorithmes efficaces pour résoudre des problèmes informatiques avancés.",
     modules: [
-      { title: "Module 1: Structures de données avancées", content: "Arbres, graphes, tables de hachage.", isCompleted: false },
-      { title: "Module 2: Algorithmes de tri et de recherche", content: "Quicksort, Mergesort, recherche binaire.", isCompleted: false },
-      { title: "Module 3: Programmation dynamique", content: "Optimisation de problèmes complexes.", isCompleted: false },
-      { title: "Module 4: Algorithmes de graphes", content: "Dijkstra, BFS, DFS.", isCompleted: false },
+      { title: "Module 1: Structures de données avancées", content: "Arbres, graphes, tables de hachage.", isCompleted: false, level: 0 },
+      { title: "Module 2: Algorithmes de tri et de recherche", content: "Quicksort, Mergesort, recherche binaire.", isCompleted: false, level: 0 },
+      { title: "Module 3: Programmation dynamique", content: "Optimisation de problèmes complexes.", isCompleted: false, level: 0 },
+      { title: "Module 4: Algorithmes de graphes", content: "Dijkstra, BFS, DFS.", isCompleted: false, level: 0 },
     ],
     skillsToAcquire: ["Maîtriser les structures de données", "Optimiser les algorithmes", "Résoudre des problèmes complexes", "Analyser les graphes"]
   },
@@ -150,45 +147,6 @@ const CourseDetail = () => {
       <section>
         <h2 className="text-2xl font-semibold mb-4">Visualisation du parcours</h2>
         <ModuleFlowVisualizer course={course} />
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Modules du cours (Détails)</h2>
-        <Accordion type="single" collapsible className="w-full">
-          {course.modules.map((module, index) => {
-            const isAccessible = index === 0 || course.modules[index - 1]?.isCompleted;
-            return (
-              <AccordionItem key={index} value={`item-${index}`} className={cn(
-                "border rounded-md mb-2",
-                !isAccessible && "opacity-50 cursor-not-allowed"
-              )}>
-                <AccordionTrigger className="px-4 py-3 text-left hover:no-underline">
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-medium text-lg">{module.title}</span>
-                    {module.isCompleted ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <Lock className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-0">
-                  <p className="text-muted-foreground mb-4">{module.content}</p>
-                  <div className="flex gap-2">
-                    <Link to={`/courses/${course.id}/modules/${index}`}>
-                      <Button disabled={!isAccessible}>
-                        {module.isCompleted ? "Revoir le module" : "Commencer le module"}
-                      </Button>
-                    </Link>
-                    <Button variant="secondary" onClick={() => openChat(`J'ai une question sur le module "${module.title}" du cours "${course.title}".`)}>
-                      <Send className="h-4 w-4 mr-2" /> Demander à AiA
-                    </Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
       </section>
 
       <section>
