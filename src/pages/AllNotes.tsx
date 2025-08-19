@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { NotebookText, Search, ArrowLeft } from "lucide-react";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes";
@@ -20,8 +20,10 @@ const AllNotes = () => {
   const [selectedNoteGroupKey, setSelectedNoteGroupKey] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
+  // Ref to track if 'Retour à la liste' was just clicked
+  const isBackToListActionRef = useRef(false);
+
   // Memoize filtered notes to avoid re-calculation on every render
-  // Moved this declaration before useEffects that depend on it
   const filteredNotes = useMemo(() => {
     if (!searchQuery) {
       return allNotes;
@@ -41,24 +43,28 @@ const AllNotes = () => {
     const notes = getAllNotesData();
     setAllNotes(notes);
     // Only set initial selection if no selection has been made yet AND there are notes
+    // This runs on initial mount or when refreshKey changes
     if (selectedNoteGroupKey === null && notes.length > 0) {
       setSelectedNoteGroupKey(notes[0].key);
     }
   }, [refreshKey]); // This effect handles initial load and full refresh
 
-  // Effect to manage selectedNoteGroupKey based on filteredNotes
-  // This ensures that if the currently selected note is filtered out, the selection is cleared.
-  // It does NOT automatically re-select the first item if selectedNoteGroupKey is null,
-  // allowing the 'Retour à la liste' action to work.
+  // Effect to manage selectedNoteGroupKey based on filteredNotes and explicit actions
   useEffect(() => {
-    if (selectedNoteGroupKey !== null && !filteredNotes.some(n => n.key === selectedNoteGroupKey)) {
-      setSelectedNoteGroupKey(null); // Clear selection if current note is filtered out
+    // If 'Retour à la liste' was just clicked, prevent auto-selection for this render cycle
+    if (isBackToListActionRef.current) {
+      isBackToListActionRef.current = false; // Reset the flag
+      return; // Exit early to prevent re-selection
     }
-    // If no note is selected and there are filtered notes, select the first one.
+
+    // If the currently selected note group is no longer in the filtered list,
+    // reset selection to the first filtered note or null if no filtered notes.
+    if (selectedNoteGroupKey !== null && !filteredNotes.some(n => n.key === selectedNoteGroupKey)) {
+      setSelectedNoteGroupKey(filteredNotes.length > 0 ? filteredNotes[0].key : null);
+    }
+    // If no note is selected and there are filtered notes (and no search query), select the first one.
     // This handles cases where search results appear after a cleared selection,
-    // but only if the user hasn't explicitly cleared it via 'Retour à la liste'.
-    // This condition is crucial: it only auto-selects if there's no selection AND there are filtered notes.
-    // If selectedNoteGroupKey is null because of handleBackToList, this won't re-select immediately.
+    // or initial load if the first useEffect didn't catch it (less likely now).
     else if (selectedNoteGroupKey === null && filteredNotes.length > 0 && searchQuery === '') {
         setSelectedNoteGroupKey(filteredNotes[0].key);
     }
@@ -74,6 +80,7 @@ const AllNotes = () => {
 
   const handleBackToList = () => {
     setSelectedNoteGroupKey(null);
+    isBackToListActionRef.current = true; // Set the flag when back button is clicked
   };
 
   const selectedNoteGroup = useMemo(() => {
