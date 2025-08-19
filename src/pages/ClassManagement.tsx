@@ -142,7 +142,7 @@ const ClassManagement = () => {
 
   const handleDeleteStudent = (id: string) => {
     const updatedStudents = deleteStudent(id);
-    setCurrentStudents(updatedStudents);
+    setCurrentStudents(updatedStudents); // L'assertion de type n'est plus nécessaire ici
     showSuccess("Élève supprimé !");
   };
 

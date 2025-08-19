@@ -1,10 +1,10 @@
 export const loadData = <T>(key: string, defaultData: T[] = []): T[] => {
   try {
     const storedData = localStorage.getItem(key);
-    return storedData ? JSON.parse(storedData) as T[] : defaultData;
+    return storedData ? JSON.parse(storedData) as T[] : defaultData as T[]; // Explicitly cast defaultData to T[]
   } catch (error) {
     console.error(`Erreur lors du chargement des données pour la clé ${key} depuis le localStorage:`, error);
-    return defaultData;
+    return defaultData as T[]; // Explicitly cast defaultData to T[]
   }
 };
 
