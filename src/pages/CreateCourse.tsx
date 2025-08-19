@@ -92,7 +92,7 @@ const CourseSchema = z.object({
   description: z.string().min(1, "La description du cours est requise."),
   category: z.string().min(1, "La catégorie est requise."),
   difficulty: z.enum(["Débutant", "Intermédiaire", "Avancé"]),
-  imageUrl: z.string().url("L'URL de l'image du cours doit être valide.").optional().or(z.literal("")),
+  imageUrl: z.string().url("L'URL de l'image doit être valide.").optional().or(z.literal("")),
   skillsToAcquire: z.string().min(1, "Les compétences à acquérir sont requises (séparées par des virgules)."),
   modules: z.array(ModuleSchema).min(1, "Un cours doit avoir au moins un module."),
 });
