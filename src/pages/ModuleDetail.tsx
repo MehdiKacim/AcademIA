@@ -10,7 +10,7 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
-import ModuleNotesDisplay from "@/components/ModuleNotesDisplay"; // Nouvelle importation
+import ModuleNotesDisplay from "@/components/ModuleNotesDisplay";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -135,7 +135,7 @@ const ModuleDetail = () => {
   const progressPercentage = Math.round((completedModules / totalModules) * 100);
 
   return (
-    <div className="flex flex-col gap-8 max-w-screen-xl mx-auto"> {/* Mise en page simplifiée */}
+    <div className="flex flex-col gap-8 max-w-screen-xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <Button variant="outline" onClick={() => navigate(`/courses/${courseId}`)}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Retour au cours
@@ -228,19 +228,19 @@ const ModuleDetail = () => {
                 </Button>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Module Notes Display intégré dans la page */}
-        <ModuleNotesDisplay
-          courseId={courseId}
-          moduleIndex={currentModuleIndex}
-          refreshKey={refreshNotesSection}
-          onNoteChange={handleNoteAdded}
-          onAddNoteClick={handleOpenQuickNoteDialog}
-          onScrollToSection={scrollToSection}
-        />
-      </div>
+      {/* Module Notes Display intégré dans la page */}
+      <ModuleNotesDisplay
+        courseId={courseId}
+        moduleIndex={currentModuleIndex}
+        refreshKey={refreshNotesSection}
+        onNoteChange={handleNoteAdded}
+        onAddNoteClick={handleOpenQuickNoteDialog}
+        onScrollToSection={scrollToSection}
+      />
 
       {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(

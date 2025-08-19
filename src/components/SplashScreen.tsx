@@ -21,7 +21,7 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: "easeOut",
+        ease: "easeOut" as const, // Explicitly cast to literal type
         staggerChildren: 0.05,
       },
     },
