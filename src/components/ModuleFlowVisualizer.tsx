@@ -8,6 +8,7 @@ import ReactFlow, {
   addEdge,
   MarkerType,
   ReactFlowProvider,
+  Position, // Ajout de Position ici
 } from 'reactflow';
 import dagre from 'dagre';
 import CustomModuleNode from './CustomModuleNode';
