@@ -177,7 +177,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center text-center p-4 pt-20">
+      <main className="flex-grow flex flex-col items-center justify-center text-center pt-20">
         <motion.section
           id="accueil"
           ref={sectionRefs.accueil}
@@ -185,7 +185,7 @@ const Index = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={containerVariants}
-          className="py-20"
+          className="py-20 px-4 w-full"
         >
           <div className="relative">
             {/* Blob animations pour une touche IA */}
@@ -193,12 +193,12 @@ const Index = () => {
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
             <motion.div variants={itemVariants} className="flex justify-center mb-8">
-              <Logo iconClassName="w-40 h-40" showText={false} /> {/* Taille du logo augmentée */}
+              <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} /> {/* Taille du logo ajustée pour mobile */}
             </motion.div>
-            <motion.h2 variants={itemVariants} className="text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+            <motion.h2 variants={itemVariants} className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici
             </motion.h2>
-            <motion.p variants={itemVariants} className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            <motion.p variants={itemVariants} className="text-base md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               AcademIA transforme l'éducation avec des parcours personnalisés, un
               suivi intelligent et un tuteur IA pour libérer le potentiel de
               chaque apprenant.
@@ -226,9 +226,9 @@ const Index = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={containerVariants}
-          className="py-20 w-full border-y border-border/50"
+          className="py-20 w-full border-y border-border/50 px-4"
         >
-          <div className="max-w-5xl mx-auto px-4 text-center">
+          <div className="max-w-5xl mx-auto text-center">
             <motion.h3 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
               Votre Tuteur IA Personnel : AiA
             </motion.h3>
@@ -254,7 +254,7 @@ const Index = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={containerVariants}
-          className="py-20 w-full"
+          className="py-20 w-full px-4"
         >
           <motion.h3 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
             Notre Méthodologie Révolutionnaire
@@ -265,7 +265,7 @@ const Index = () => {
           </motion.p>
           <motion.div
             variants={containerVariants}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-4"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"
           >
             {methodology.map((item, index) => (
               <motion.div key={index} variants={itemVariants}>
