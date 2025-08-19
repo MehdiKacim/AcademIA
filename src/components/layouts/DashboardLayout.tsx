@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText } from "lucide-react"; // Importation de NotebookText
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School } from "lucide-react"; // Importation de NotebookText et School
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -40,6 +40,7 @@ const DashboardLayout = () => {
         ...baseItems,
         { to: "/courses", icon: BookOpen, label: "Mes Cours" },
         { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
+        { to: "/class-management", icon: School, label: "Gestion des Classes" }, // Nouveau lien
         { to: "/analytics", icon: BarChart2, label: "Progression" },
       ];
     } else if (currentRole === 'tutor') {

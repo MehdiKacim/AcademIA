@@ -13,7 +13,8 @@ import CreateCourse from "./pages/CreateCourse";
 import Analytics from "./pages/Analytics";
 import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
-import AllNotes from "./pages/AllNotes"; // Nouvelle importation
+import AllNotes from "./pages/AllNotes";
+import ClassManagement from "./pages/ClassManagement"; // Nouvelle importation
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -50,9 +51,10 @@ const App = () => {
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
                   <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} />
                   <Route path="/create-course" element={<CreateCourse />} />
-                  <Route path="/create-course/:courseId" element={<CreateCourse />} /> {/* Nouvelle route pour la modification */}
+                  <Route path="/create-course/:courseId" element={<CreateCourse />} />
                   <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/all-notes" element={<AllNotes />} /> {/* Nouvelle route */}
+                  <Route path="/all-notes" element={<AllNotes />} />
+                  <Route path="/class-management" element={<ClassManagement />} /> {/* Nouvelle route */}
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
