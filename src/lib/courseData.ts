@@ -694,6 +694,129 @@ const initialDummyCourses: Course[] = [
     ],
     skillsToAcquire: ["Collecte de données", "Analyse statistique", "Modélisation ML", "Visualisation"]
   },
+  {
+    id: '6',
+    title: "Programmation en C#",
+    description: "Apprenez les bases et les concepts avancés de la programmation en C#, un langage polyvalent pour le développement d'applications Windows, web et jeux.",
+    imageUrl: "https://images.unsplash.com/photo-1629904853893-c2c6677973ad?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    modules: [
+      {
+        title: "Module 1: Introduction à C# et .NET",
+        sections: [
+          { title: "Qu'est-ce que C# ?", content: "C# (prononcé C sharp) est un langage de programmation orienté objet développé par Microsoft. Il est largement utilisé pour créer des applications Windows, des applications web avec ASP.NET, des jeux avec Unity, et bien plus encore. Il fait partie de l'écosystème .NET.", isCompleted: false },
+          { title: "L'environnement .NET", content: "Le framework .NET est une plateforme de développement qui fournit un environnement d'exécution (CLR) et une vaste bibliothèque de classes (FCL) pour construire des applications. .NET Core est une version open-source et multiplateforme de .NET.", isCompleted: false },
+          {
+            title: "Quiz: Bases de C# et .NET",
+            content: "Testez vos connaissances sur l'introduction à C# et l'environnement .NET.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Qui a développé le langage C# ?",
+                options: [
+                  { text: "Google", isCorrect: false },
+                  { text: "Apple", isCorrect: false },
+                  { text: "Microsoft", isCorrect: true },
+                  { text: "Oracle", isCorrect: false },
+                ],
+              },
+              {
+                question: "C# est principalement utilisé pour quel type de développement ?",
+                options: [
+                  { text: "Développement mobile iOS", isCorrect: false },
+                  { text: "Développement de jeux avec Unity", isCorrect: true },
+                  { text: "Développement de scripts shell", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
+        ],
+        isCompleted: false,
+        level: 0
+      },
+      {
+        title: "Module 2: Syntaxe de base et types de données",
+        sections: [
+          { title: "Variables et Types", content: "Ce module couvre la syntaxe de base de C#, y compris la déclaration de variables, les types de données primitifs (int, float, bool, string) et la conversion de types. Vous apprendrez à écrire vos premières lignes de code C#.", isCompleted: false },
+          { title: "Opérateurs et Expressions", content: "Découvrez les opérateurs arithmétiques, de comparaison, logiques et d'affectation. Comprenez comment construire des expressions pour effectuer des calculs et des évaluations.", isCompleted: false },
+          {
+            title: "Quiz: Syntaxe et Types",
+            content: "Testez vos connaissances sur la syntaxe de base et les types de données en C#.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel mot-clé est utilisé pour déclarer une variable entière en C# ?",
+                options: [
+                  { text: "string", isCorrect: false },
+                  { text: "int", isCorrect: true },
+                  { text: "var", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 65,
+          },
+        ],
+        isCompleted: false,
+        level: 0
+      },
+      {
+        title: "Module 3: Structures de contrôle",
+        sections: [
+          { title: "Conditions (if, else if, else, switch)", content: "Apprenez à contrôler le flux d'exécution de votre programme avec les instructions conditionnelles. Vous utiliserez `if`, `else if`, `else` pour des décisions simples et `switch` pour des choix multiples.", isCompleted: false },
+          { title: "Boucles (for, while, do-while, foreach)", content: "Maîtrisez les différentes boucles pour répéter des blocs de code. `for` pour un nombre connu d'itérations, `while` et `do-while` pour des conditions, et `foreach` pour parcourir des collections.", isCompleted: false },
+          {
+            title: "Quiz: Structures de Contrôle",
+            content: "Testez vos connaissances sur les structures de contrôle en C#.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quelle boucle est la plus appropriée pour parcourir tous les éléments d'une liste ?",
+                options: [
+                  { text: "for", isCorrect: false },
+                  { text: "while", isCorrect: false },
+                  { text: "foreach", isCorrect: true },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
+        ],
+        isCompleted: false,
+        level: 0
+      },
+      {
+        title: "Module 4: Programmation Orientée Objet (POO)",
+        sections: [
+          { title: "Classes et Objets", content: "Introduction aux concepts fondamentaux de la POO en C#: classes, objets, propriétés, méthodes et constructeurs. Vous apprendrez à modéliser des entités du monde réel dans votre code.", isCompleted: false },
+          { title: "Héritage et Polymorphisme", content: "Explorez l'héritage pour créer des hiérarchies de classes et le polymorphisme pour traiter des objets de différentes classes de manière uniforme. Ces concepts sont clés pour un code réutilisable et extensible.", isCompleted: false },
+          { title: "Interfaces et Abstraction", content: "Comprenez les interfaces pour définir des contrats et l'abstraction pour masquer les détails d'implémentation. Ces principes améliorent la flexibilité et la maintenabilité de votre code.", isCompleted: false },
+          {
+            title: "Quiz: POO en C#",
+            content: "Testez vos connaissances sur la Programmation Orientée Objet en C#.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel principe de la POO permet à une classe d'hériter des propriétés et méthodes d'une autre classe ?",
+                options: [
+                  { text: "Polymorphisme", isCorrect: false },
+                  { text: "Encapsulation", isCorrect: false },
+                  { text: "Héritage", isCorrect: true },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 75,
+          },
+        ],
+        isCompleted: false,
+        level: 0
+      },
+    ],
+    skillsToAcquire: ["Programmation C#", "POO", ".NET Framework", "Développement d'applications"]
+  },
 ];
 
 const LOCAL_STORAGE_KEY = 'academia_courses';
