@@ -198,18 +198,19 @@ const Index = () => {
             <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-50 animate-blob"></div>
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
-            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="flex justify-center mb-8">
+            {/* Suppression des balises motion. pour garantir la visibilité immédiate */}
+            <div className="flex justify-center mb-8">
               <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} />
-            </motion.div>
-            <motion.h2 initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+            </div>
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici
-            </motion.h2>
-            <motion.p initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="text-base md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            </h2>
+            <p className="text-base md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               AcademIA transforme l'éducation avec des parcours personnalisés, un
               suivi intelligent et un tuteur IA pour libérer le potentiel de
               chaque apprenant.
-            </motion.p>
-            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="flex gap-4 justify-center">
+            </p>
+            <div className="flex gap-4 justify-center">
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -220,7 +221,7 @@ const Index = () => {
               <Button size="lg" variant="secondary" onClick={openRegisterModal}>
                 Créer un compte
               </Button>
-            </motion.div>
+            </div>
           </div>
         </section>
 
