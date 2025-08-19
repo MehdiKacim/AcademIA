@@ -1,11 +1,19 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2 } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings } from "lucide-react"; // Import des icônes nécessaires
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
 import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Import des composants DropdownMenu
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
@@ -18,7 +26,7 @@ const DashboardLayout = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden"> {/* Ajout de overflow-x-hidden */}
+    <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo />
         {/* Navigation pour les écrans non mobiles */}
@@ -45,9 +53,34 @@ const DashboardLayout = () => {
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
-          <NavLink to="/">
-            <Button variant="outline">Déconnexion</Button>
-          </NavLink>
+          {/* Menu déroulant pour les actions utilisateur */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <User className="h-5 w-5" />
+                <span className="sr-only">Menu utilisateur</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => console.log("Mon profil cliqué")}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Mon profil</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => console.log("Paramètres cliqués")}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Paramètres</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <NavLink to="/">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Déconnexion</span>
+                </NavLink>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-16 sm:pt-20", isMobile && "pb-20")}>
