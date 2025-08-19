@@ -47,7 +47,7 @@ const dummyCourses = [
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const course = dummyCourses.find(c => c.id === courseId);
-  const { setCourseContext, openChat } = useCourseChat(); // Use the new context hook
+  const { setCourseContext, setModuleContext, openChat } = useCourseChat(); // Use the new context hook
 
   // Set course context when component mounts or courseId changes
   useEffect(() => {
@@ -59,12 +59,21 @@ const CourseDetail = () => {
     // Clean up context when component unmounts
     return () => {
       setCourseContext(null, null);
+      setModuleContext(null); // Clear module context too
     };
-  }, [courseId, course, setCourseContext]);
+  }, [courseId, course, setCourseContext, setModuleContext]);
 
   const handleAskAiaAboutCourse = () => {
     if (course) {
+      setModuleContext(null); // Clear module context if asking about the whole course
       openChat(`J'ai une question sur le cours "${course.title}".`);
+    }
+  };
+
+  const handleAskAiaAboutModule = (moduleTitle: string) => {
+    if (course) {
+      setModuleContext(moduleTitle); // Set the specific module context
+      openChat(`J'ai une question sur le module "${moduleTitle}" du cours "${course.title}".`);
     }
   };
 
@@ -97,7 +106,13 @@ const CourseDetail = () => {
                 <CardTitle>{module.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{module.content}</p>
+                <p className="text-muted-foreground mb-4">{module.content}</p>
+                <Button
+                  variant="outline"
+                  onClick={() => handleAskAiaAboutModule(module.title)}
+                >
+                  <Send className="h-4 w-4 mr-2" /> Demander à AiA sur ce module
+                </Button>
               </CardContent>
             </Card>
           ))}

@@ -22,7 +22,7 @@ const AiAPersistentChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Use context for chat open state and initial message
-  const { currentCourseTitle, isChatOpen, openChat, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
+  const { currentCourseTitle, currentModuleTitle, isChatOpen, openChat, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
 
   const isMobile = useIsMobile();
 
@@ -38,18 +38,23 @@ const AiAPersistentChat = () => {
     }
   }, [isChatOpen, initialChatMessage, setInitialChatMessage]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = () => {
     if (input.trim()) {
-      // Prepend course context if available
-      const messageText = currentCourseTitle
-        ? `(Contexte: Cours "${currentCourseTitle}") ${input.trim()}`
-        : input.trim();
+      // Build context prefix
+      const contextParts = [];
+      if (currentCourseTitle) {
+        contextParts.push(`Cours "${currentCourseTitle}"`);
+      }
+      if (currentModuleTitle) {
+        contextParts.push(`Module "${currentModuleTitle}"`);
+      }
+      const contextPrefix = contextParts.length > 0 ? `(Contexte: ${contextParts.join(', ')}) ` : '';
 
-      const newMessage: Message = { id: messages.length + 1, sender: 'user', text: messageText };
+      const newMessage: Message = { id: messages.length + 1, sender: 'user', text: contextPrefix + input.trim() };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInput('');
 
@@ -117,15 +122,25 @@ const AiAPersistentChat = () => {
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap"> {/* Added flex-wrap for small screens */}
         {currentCourseTitle && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
-            className="whitespace-nowrap"
+            className="whitespace-nowrap text-xs"
           >
-            @{currentCourseTitle.split(' ')[0]}
+            @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
+          </Button>
+        )}
+        {currentModuleTitle && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
+            className="whitespace-nowrap text-xs"
+          >
+            @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
           </Button>
         )}
         <Input
@@ -145,7 +160,7 @@ const AiAPersistentChat = () => {
 
   if (isMobile) {
     return (
-      <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}> {/* Use isChatOpen from context */}
+      <Sheet open={isChatOpen} onOpenChange={openChat}> {/* Use isChatOpen from context */}
         <SheetTrigger asChild>
           <Button
             variant="default"
