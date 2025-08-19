@@ -12,9 +12,15 @@ import {
   MessageSquareQuote,
   ShieldCheck,
   Target,
-  MessageCircleMore, // New import for AiA bot icon
+  MessageCircleMore,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { motion } from "framer-motion"; // Import framer-motion
+
+const fadeInVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
 const Index = () => {
   const methodology = [
@@ -48,7 +54,7 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="p-4 flex justify-between items-center border-b">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center border-b backdrop-blur-lg bg-background/80">
         <Logo />
         <nav className="flex items-center gap-4">
           <ThemeToggle />
@@ -58,8 +64,14 @@ const Index = () => {
         </nav>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center text-center p-4">
-        <section className="py-20">
+      <main className="flex-grow flex flex-col items-center justify-center text-center p-4 pt-20"> {/* Added pt-20 to account for fixed header */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInVariants}
+          className="py-20"
+        >
           <div className="relative">
             <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-50 animate-blob"></div>
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
@@ -91,9 +103,41 @@ const Index = () => {
               </Link>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section className="py-20 w-full">
+        {/* AiA Bot Section - Moved up */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInVariants}
+          className="py-20 w-full bg-muted/20"
+        >
+          <div className="max-w-5xl mx-auto px-4 text-center">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4">
+              Votre Tuteur IA Personnel : AiA
+            </h3>
+            <p className="text-lg text-muted-foreground mb-12">
+              AiA, l'intelligence artificielle d'AcademIA, est là pour vous guider. Elle identifie vos points faibles, adapte les leçons et vous offre un soutien personnalisé pour une progression optimale.
+            </p>
+            <div className="flex justify-center mb-8">
+              <MessageCircleMore className="w-24 h-24 text-primary" />
+            </div>
+            <Link to="/register">
+              <Button size="lg">
+                Découvrir AiA
+              </Button>
+            </Link>
+          </div>
+        </motion.section>
+
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInVariants}
+          className="py-20 w-full"
+        >
           <h3 className="text-3xl md:text-4xl font-bold mb-4">
             Notre Méthodologie Révolutionnaire
           </h3>
@@ -114,27 +158,7 @@ const Index = () => {
               </Card>
             ))}
           </div>
-        </section>
-
-        {/* New AiA Bot Section */}
-        <section className="py-20 w-full bg-muted/20">
-          <div className="max-w-5xl mx-auto px-4 text-center">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4">
-              Votre Tuteur IA Personnel : AiA
-            </h3>
-            <p className="text-lg text-muted-foreground mb-12">
-              AiA, l'intelligence artificielle d'AcademIA, est là pour vous guider. Elle identifie vos points faibles, adapte les leçons et vous offre un soutien personnalisé pour une progression optimale.
-            </p>
-            <div className="flex justify-center mb-8">
-              <MessageCircleMore className="w-24 h-24 text-primary" />
-            </div>
-            <Link to="/register">
-              <Button size="lg">
-                Découvrir AiA
-              </Button>
-            </Link>
-          </div>
-        </section>
+        </motion.section>
       </main>
 
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
