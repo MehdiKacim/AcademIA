@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { Home, BookOpen, PlusSquare, BarChart2 } from "lucide-react";
-import { cn } => "@/lib/utils";
+import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
