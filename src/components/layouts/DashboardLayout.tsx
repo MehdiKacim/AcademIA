@@ -15,9 +15,9 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex flex-wrap items-center justify-between md:justify-start border-b backdrop-blur-lg bg-background/80">
         <Logo />
-        <nav className="flex-grow flex justify-center items-center gap-6">
+        <nav className="flex-grow flex justify-center items-center gap-2 sm:gap-4 md:gap-6 mt-2 md:mt-0 order-3 md:order-none w-full md:w-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -36,7 +36,7 @@ const DashboardLayout = () => {
             </NavLink>
           ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 order-2 md:order-none">
           <ThemeToggle />
           {/* Placeholder for logout button - in a real app, this would trigger auth logout */}
           <NavLink to="/">
