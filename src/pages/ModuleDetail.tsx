@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle } from "lucide-react";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
 import NotesSection from "@/components/NotesSection";
 import { generateNoteKey } from "@/lib/notes";
+import QuickNoteDialog from "@/components/QuickNoteDialog"; // Importation du nouveau composant
+import { cn } from "@/lib/utils"; // Importation de cn pour les classes conditionnelles
+import { useIsMobile } from "@/hooks/use-mobile"; // Importation du hook useIsMobile
 
 interface Module {
   title: string;
@@ -101,10 +104,14 @@ const ModuleDetail = () => {
   const { courseId, moduleIndex } = useParams<{ courseId: string; moduleIndex: string }>();
   const navigate = useNavigate();
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
+  const isMobile = useIsMobile();
 
   const course = initialDummyCourses.find(c => c.id === courseId);
   const currentModuleIndex = parseInt(moduleIndex || '0', 10);
   const module = course?.modules[currentModuleIndex];
+
+  const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
+  const [refreshNotesSection, setRefreshNotesSection] = useState(0); // État pour forcer le rafraîchissement
 
   useEffect(() => {
     if (course && module) {
@@ -187,6 +194,10 @@ const ModuleDetail = () => {
     openChat(`J'ai une question sur le module "${module.title}" du cours "${course.title}".`);
   };
 
+  const handleNoteAdded = useCallback(() => {
+    setRefreshNotesSection(prev => prev + 1); // Incrémente pour forcer le re-rendu de NotesSection
+  }, []);
+
   const totalModules = course.modules.length;
   const completedModules = course.modules.filter(m => m.isCompleted).length;
   const progressPercentage = Math.round((completedModules / totalModules) * 100);
@@ -248,8 +259,31 @@ const ModuleDetail = () => {
       </Card>
 
       <section>
-        <NotesSection noteKey={generateNoteKey('module', course.id, currentModuleIndex)} title={module.title} />
+        <NotesSection noteKey={generateNoteKey('module', course.id, currentModuleIndex)} title={module.title} refreshKey={refreshNotesSection} />
       </section>
+
+      {/* Bouton flottant pour ajouter une note rapide */}
+      <div className={cn(
+        "fixed z-40 p-4",
+        isMobile ? "bottom-20 left-4" : "bottom-4 left-4" // Positionnement ajusté pour mobile
+      )}>
+        <Button
+          size="lg"
+          className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
+          onClick={() => setIsQuickNoteDialogOpen(true)}
+        >
+          <PlusCircle className="h-7 w-7" />
+          <span className="sr-only">Ajouter une note rapide</span>
+        </Button>
+      </div>
+
+      <QuickNoteDialog
+        isOpen={isQuickNoteDialogOpen}
+        onClose={() => setIsQuickNoteDialogOpen(false)}
+        noteKey={generateNoteKey('module', course.id, currentModuleIndex)}
+        contextTitle={module.title}
+        onNoteAdded={handleNoteAdded}
+      />
     </div>
   );
 };

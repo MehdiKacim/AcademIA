@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } => "@/components/ui/scroll-area";
 import { PlusCircle, NotebookPen } from "lucide-react";
 import { getNotes, addNote } from "@/lib/notes";
 import { showSuccess, showError } from "@/utils/toast";
@@ -16,15 +16,16 @@ import {
 interface NotesSectionProps {
   noteKey: string; // Clé unique pour le localStorage (ex: 'notes_course_1', 'notes_module_1_0')
   title: string; // Titre de l'entité (cours ou module) pour l'affichage
+  refreshKey?: number; // Nouvelle prop pour forcer le rafraîchissement
 }
 
-const NotesSection = ({ noteKey, title }: NotesSectionProps) => {
+const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
   const [notes, setNotes] = useState<string[]>([]);
   const [newNote, setNewNote] = useState<string>('');
 
   useEffect(() => {
     setNotes(getNotes(noteKey));
-  }, [noteKey]);
+  }, [noteKey, refreshKey]); // Dépendance à refreshKey
 
   const handleAddNote = () => {
     if (newNote.trim()) {
@@ -39,7 +40,7 @@ const NotesSection = ({ noteKey, title }: NotesSectionProps) => {
 
   return (
     <Card>
-      <Accordion type="single" collapsible defaultValue="notes-section" className="w-full"> {/* Ajout de defaultValue */}
+      <Accordion type="single" collapsible defaultValue="notes-section" className="w-full">
         <AccordionItem value="notes-section">
           <AccordionTrigger className="p-6 text-lg font-semibold flex items-center gap-2">
             <NotebookPen className="h-6 w-6 text-primary" /> Mes notes pour "{title}"
