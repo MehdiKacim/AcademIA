@@ -24,15 +24,15 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1, // Décalage de 0.1s entre chaque enfant
+      staggerChildren: 0.15, // Décalage légèrement augmenté pour plus d'impact
     },
   },
 };
 
 // Variants pour les éléments individuels (fade-in et slide-up)
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 50 }, // 'y' augmenté pour une animation plus prononcée
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }, // Durée légèrement augmentée
 };
 
 const Index = () => {
@@ -86,11 +86,12 @@ const Index = () => {
           className="py-20"
         >
           <div className="relative">
+            {/* Blob animations pour une touche IA */}
             <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-50 animate-blob"></div>
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
             <motion.div variants={itemVariants} className="flex justify-center mb-8">
-              <Logo iconClassName="w-32 h-32" showText={false} />
+              <Logo iconClassName="w-40 h-40" showText={false} /> {/* Taille du logo augmentée */}
             </motion.div>
             <motion.h2 variants={itemVariants} className="text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici
@@ -118,7 +119,7 @@ const Index = () => {
           </div>
         </motion.section>
 
-        {/* AiA Bot Section - Background changed and animations applied */}
+        {/* Section AiA Bot */}
         <motion.section
           initial="hidden"
           whileInView="visible"
@@ -146,6 +147,7 @@ const Index = () => {
           </div>
         </motion.section>
 
+        {/* Section Méthodologie */}
         <motion.section
           initial="hidden"
           whileInView="visible"
