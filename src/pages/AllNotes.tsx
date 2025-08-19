@@ -3,13 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotebookText } from "lucide-react";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes";
+import NotesSection from "@/components/NotesSection"; // Importation de NotesSection
 
 const AllNotes = () => {
   const [allNotes, setAllNotes] = useState<AggregatedNote[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0); // État pour forcer le rafraîchissement
 
   useEffect(() => {
     setAllNotes(getAllNotesData());
-  }, []);
+  }, [refreshKey]); // Dépendance à refreshKey
+
+  const handleNoteChange = () => {
+    // Cette fonction est appelée lorsque NotesSection ajoute, édite ou supprime une note.
+    // Elle force le rafraîchissement de la liste complète des notes.
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <div className="space-y-8">
@@ -28,29 +36,14 @@ const AllNotes = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1"> {/* Changé en 1 colonne pour mieux gérer les NotesSection */}
           {allNotes.map((noteGroup) => (
-            <Card key={noteGroup.key}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <NotebookText className="h-5 w-5 text-primary" /> {noteGroup.context}
-                </CardTitle>
-                <CardDescription>
-                  {noteGroup.notes.length} note(s)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-40 w-full rounded-md border p-4 bg-muted/20">
-                  <div className="space-y-2">
-                    {noteGroup.notes.map((note, index) => (
-                      <div key={index} className="p-2 bg-background rounded-md shadow-sm text-sm text-foreground">
-                        {note}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <NotesSection
+              key={noteGroup.key}
+              noteKey={noteGroup.key}
+              title={noteGroup.context}
+              refreshKey={refreshKey} // Passe le refreshKey pour que NotesSection se rafraîchisse
+            />
           ))}
         </div>
       )}

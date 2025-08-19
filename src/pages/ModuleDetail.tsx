@@ -10,6 +10,7 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
+import NotesSection from "@/components/NotesSection"; // Réintégration de NotesSection
 
 interface ModuleSection {
   title: string;
@@ -281,6 +282,7 @@ const ModuleDetail = () => {
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
+  const [refreshNotesSection, setRefreshNotesSection] = useState(0); // État pour forcer le rafraîchissement
 
   useEffect(() => {
     if (course && module) {
@@ -372,8 +374,7 @@ const ModuleDetail = () => {
   };
 
   const handleNoteAdded = useCallback(() => {
-    // La note rapide est ajoutée, les notes seront visibles dans la page 'Toutes mes notes'.
-    // Pas besoin de rafraîchir un composant spécifique ici.
+    setRefreshNotesSection(prev => prev + 1); // Incrémente pour forcer le re-rendu de NotesSection
   }, []);
 
   const totalModules = course.modules.length;
@@ -453,6 +454,10 @@ const ModuleDetail = () => {
           </div>
         </CardContent>
       </Card>
+
+      <section>
+        <NotesSection noteKey={generateNoteKey('module', course.id, currentModuleIndex)} title={module.title} refreshKey={refreshNotesSection} />
+      </section>
 
       {/* Bouton flottant pour ajouter une note rapide (pour le module entier si besoin, ou peut être retiré si les notes par section suffisent) */}
       <div className={cn(

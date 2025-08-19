@@ -1,4 +1,4 @@
-export type EntityType = 'course' | 'module' | 'section'; // Ajout de 'section'
+export type EntityType = 'course' | 'module' | 'section';
 
 /**
  * Génère une clé unique pour stocker les notes dans le localStorage.
@@ -48,6 +48,49 @@ export const addNote = (key: string, note: string): string[] => {
   } catch (error) {
     console.error("Erreur lors de l'ajout de la note au localStorage:", error);
     return getNotes(key); // Retourne l'état actuel sans la nouvelle note si l'ajout échoue
+  }
+};
+
+/**
+ * Met à jour une note existante pour une clé donnée dans le localStorage.
+ * @param key La clé des notes.
+ * @param index L'index de la note à mettre à jour.
+ * @param newContent Le nouveau contenu de la note.
+ * @returns Le tableau mis à jour des notes.
+ */
+export const updateNote = (key: string, index: number, newContent: string): string[] => {
+  try {
+    const existingNotes = getNotes(key);
+    if (index >= 0 && index < existingNotes.length) {
+      existingNotes[index] = newContent;
+      localStorage.setItem(key, JSON.stringify(existingNotes));
+      return existingNotes;
+    }
+    return existingNotes; // Retourne l'état inchangé si l'index est invalide
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la note dans le localStorage:", error);
+    return getNotes(key);
+  }
+};
+
+/**
+ * Supprime une note pour une clé donnée dans le localStorage.
+ * @param key La clé des notes.
+ * @param index L'index de la note à supprimer.
+ * @returns Le tableau mis à jour des notes.
+ */
+export const deleteNote = (key: string, index: number): string[] => {
+  try {
+    const existingNotes = getNotes(key);
+    if (index >= 0 && index < existingNotes.length) {
+      const updatedNotes = existingNotes.filter((_, i) => i !== index);
+      localStorage.setItem(key, JSON.stringify(updatedNotes));
+      return updatedNotes;
+    }
+    return existingNotes; // Retourne l'état inchangé si l'index est invalide
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la note du localStorage:", error);
+    return getNotes(key);
   }
 };
 
