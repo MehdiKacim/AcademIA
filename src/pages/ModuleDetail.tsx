@@ -6,11 +6,10 @@ import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle } from "lucid
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
-import NotesSection from "@/components/NotesSection";
-import { generateNoteKey } from "@/lib/notes";
 import QuickNoteDialog from "@/components/QuickNoteDialog"; // Importation du nouveau composant
 import { cn } from "@/lib/utils"; // Importation de cn pour les classes conditionnelles
 import { useIsMobile } from "@/hooks/use-mobile"; // Importation du hook useIsMobile
+import { generateNoteKey } from "@/lib/notes"; // Garder pour QuickNoteDialog
 
 interface ModuleSection {
   title: string;
@@ -281,7 +280,7 @@ const ModuleDetail = () => {
   const module = course?.modules[currentModuleIndex];
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
-  const [refreshNotesSection, setRefreshNotesSection] = useState(0); // État pour forcer le rafraîchissement
+  // const [refreshNotesSection, setRefreshNotesSection] = useState(0); // Plus nécessaire si NotesSection est retiré
 
   useEffect(() => {
     if (course && module) {
@@ -365,7 +364,9 @@ const ModuleDetail = () => {
   };
 
   const handleNoteAdded = useCallback(() => {
-    setRefreshNotesSection(prev => prev + 1); // Incrémente pour forcer le re-rendu de NotesSection
+    // setRefreshNotesSection(prev => prev + 1); // Plus nécessaire si NotesSection est retiré
+    // La note rapide est ajoutée, mais comme la section n'est plus là, pas besoin de rafraîchir un composant spécifique.
+    // Les notes seront visibles dans la page 'Toutes mes notes'.
   }, []);
 
   const totalModules = course.modules.length;
@@ -432,10 +433,6 @@ const ModuleDetail = () => {
           </div>
         </CardContent>
       </Card>
-
-      <section>
-        <NotesSection noteKey={generateNoteKey('module', course.id, currentModuleIndex)} title={module.title} refreshKey={refreshNotesSection} />
-      </section>
 
       {/* Bouton flottant pour ajouter une note rapide */}
       <div className={cn(
