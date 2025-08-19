@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Logo from "@/components/Logo";
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils"; // Import cn for conditional class names
 
 // Variants pour les animations de conteneur (staggering children)
 const containerVariants = {
@@ -36,6 +37,51 @@ const itemVariants = {
 };
 
 const Index = () => {
+  const [activeSection, setActiveSection] = useState('accueil');
+
+  const sectionRefs = {
+    accueil: useRef<HTMLDivElement>(null),
+    aiaBot: useRef<HTMLDivElement>(null),
+    methodologie: useRef<HTMLDivElement>(null),
+  };
+
+  useEffect(() => {
+    const observerOptions = {
+      root: null, // viewport
+      rootMargin: '-50% 0px -50% 0px', // Trigger when 50% of the section is in view
+      threshold: 0,
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    Object.values(sectionRefs).forEach(ref => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
+
+    return () => {
+      Object.values(sectionRefs).forEach(ref => {
+        if (ref.current) {
+          observer.unobserve(ref.current);
+        }
+      });
+    };
+  }, []);
+
+  const handleNavLinkClick = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setActiveSection(id); // Update active state immediately on click
+  };
+
   const methodology = [
     {
       icon: <Target className="w-12 h-12 text-primary" />,
@@ -67,18 +113,34 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center border-b backdrop-blur-lg bg-background/80">
         <Logo />
-        <nav className="flex items-center gap-4">
+        <nav className="flex-grow flex justify-center items-center gap-6">
+          <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
+            className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            Accueil
+          </Button>
+          <Button variant="ghost" onClick={() => handleNavLinkClick('aiaBot')}
+            className={cn(activeSection === 'aiaBot' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            AiA Bot
+          </Button>
+          <Button variant="ghost" onClick={() => handleNavLinkClick('methodologie')}
+            className={cn(activeSection === 'methodologie' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
+            Méthodologie
+          </Button>
+        </nav>
+        <div className="flex items-center gap-4">
           <ThemeToggle />
           <Link to="/login">
             <Button variant="outline">Se connecter</Button>
           </Link>
-        </nav>
+        </div>
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-center text-center p-4 pt-20">
         <motion.section
+          id="accueil"
+          ref={sectionRefs.accueil}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -121,6 +183,8 @@ const Index = () => {
 
         {/* Section AiA Bot */}
         <motion.section
+          id="aiaBot"
+          ref={sectionRefs.aiaBot}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -149,6 +213,8 @@ const Index = () => {
 
         {/* Section Méthodologie */}
         <motion.section
+          id="methodologie"
+          ref={sectionRefs.methodologie}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
