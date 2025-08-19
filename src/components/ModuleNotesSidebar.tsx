@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit, Trash2, Save, XCircle, NotebookText } from "lucide-react";
-import { getNotes, updateNote, deleteNote, getAllNotesData, AggregatedNote } from "@/lib/notes";
+import { Edit, Trash2, Save, XCircle, NotebookText, PlusCircle } from "lucide-react";
+import { getNotes, updateNote, deleteNote, getAllNotesData, AggregatedNote, parseNoteKey } from "@/lib/notes";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,16 +26,25 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { dummyCourses } from "@/lib/courseData"; // Pour obtenir les titres de module/section
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Link } from "react-router-dom"; // Importation pour le lien "Gérer toutes les notes"
+import { dummyCourses } from "@/lib/courseData";
 
 interface ModuleNotesSidebarProps {
   courseId: string;
   moduleIndex: number;
-  refreshKey: number; // Pour déclencher un nouveau fetch lorsque des notes sont ajoutées/modifiées ailleurs
-  onNoteChange: () => void; // Callback pour notifier le parent des changements
+  refreshKey: number;
+  onNoteChange: () => void;
+  onAddNoteClick: (sectionTitle: string, sectionIndex: number) => void; // Callback pour ouvrir le dialog d'ajout de note
+  onScrollToSection: (sectionIndex: number) => void; // Callback pour faire défiler vers la section
 }
 
-const ModuleNotesSidebar = ({ courseId, moduleIndex, refreshKey, onNoteChange }: ModuleNotesSidebarProps) => {
+const ModuleNotesSidebar = ({ courseId, moduleIndex, refreshKey, onNoteChange, onAddNoteClick, onScrollToSection }: ModuleNotesSidebarProps) => {
   const [notesData, setNotesData] = useState<AggregatedNote[]>([]);
   const [editingNote, setEditingNote] = useState<{ key: string; index: number; content: string } | null>(null);
   const isMobile = useIsMobile();
@@ -43,10 +52,10 @@ const ModuleNotesSidebar = ({ courseId, moduleIndex, refreshKey, onNoteChange }:
   const fetchNotes = useCallback(() => {
     const allNotes = getAllNotesData();
     const filteredNotes = allNotes.filter(noteGroup => {
-      const keyParts = noteGroup.key.split('_');
-      const entityType = keyParts[1];
-      const entityId = keyParts[2];
-      const noteModuleIndex = parseInt(keyParts[3], 10);
+      const parsedKey = parseNoteKey(noteGroup.key);
+      if (!parsedKey) return false;
+
+      const { entityType, entityId, moduleIndex: noteModuleIndex } = parsedKey;
 
       // Filtrer pour n'inclure que les notes du cours et du module actuels
       if (entityId === courseId) {
@@ -97,77 +106,98 @@ const ModuleNotesSidebar = ({ courseId, moduleIndex, refreshKey, onNoteChange }:
             Aucune note pour ce module ou ses sections.
           </p>
         ) : (
-          notesData.map((noteGroup) => (
-            <Card key={noteGroup.key} className="bg-background/50 border-primary/10 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <NotebookText className="h-4 w-4 text-primary" />
-                  {noteGroup.context}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {noteGroup.notes.map((note, noteIdx) => (
-                  <div key={noteIdx} className="p-2 bg-muted/30 rounded-md text-sm text-foreground flex justify-between items-start">
-                    {editingNote?.key === noteGroup.key && editingNote?.index === noteIdx ? (
-                      <Textarea
-                        value={editingNote.content}
-                        onChange={(e) => setEditingNote(prev => prev ? { ...prev, content: e.target.value } : null)}
-                        className="flex-grow mr-2"
-                        rows={2}
-                      />
-                    ) : (
-                      <span className="flex-grow">{note}</span>
-                    )}
-                    <div className="flex gap-1 ml-2 flex-shrink-0">
-                      {editingNote?.key === noteGroup.key && editingNote?.index === noteIdx ? (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={() => handleSaveEdit(noteGroup.key, noteIdx)}>
-                            <Save className="h-4 w-4 text-green-500" />
-                            <span className="sr-only">Sauvegarder</span>
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            <span className="sr-only">Annuler</span>
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={() => setEditingNote({ key: noteGroup.key, index: noteIdx, content: note })}>
-                            <Edit className="h-4 w-4 text-blue-500" />
-                            <span className="sr-only">Éditer</span>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                                <span className="sr-only">Supprimer</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Cette action ne peut pas être annulée. Cela supprimera définitivement votre note.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteNote(noteGroup.key, noteIdx)}>Supprimer</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </>
-                      )}
+          <Accordion type="multiple" className="w-full">
+            {notesData.map((noteGroup) => {
+              const parsedKey = parseNoteKey(noteGroup.key);
+              const isSectionNote = parsedKey?.entityType === 'section';
+              const sectionIndex = isSectionNote ? parsedKey?.sectionIndex : -1; // -1 pour les notes de module
+
+              return (
+                <AccordionItem key={noteGroup.key} value={noteGroup.key} className="border-b border-primary/10">
+                  <AccordionTrigger className="flex items-center justify-between p-4 text-base font-semibold hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <NotebookText className="h-5 w-5 text-primary" />
+                      <span>{noteGroup.context} ({noteGroup.notes.length} notes)</span>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))
+                  </AccordionTrigger>
+                  <AccordionContent className="p-4 pt-0">
+                    <div className="space-y-2">
+                      {noteGroup.notes.map((note, noteIdx) => (
+                        <div
+                          key={noteIdx}
+                          className="p-2 bg-muted/30 rounded-md text-sm text-foreground flex justify-between items-start cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => isSectionNote && sectionIndex !== undefined && onScrollToSection(sectionIndex)}
+                        >
+                          <span className="flex-grow">{note}</span>
+                          <div className="flex gap-1 ml-2 flex-shrink-0">
+                            {editingNote?.key === noteGroup.key && editingNote?.index === noteIdx ? (
+                              <>
+                                <Button variant="ghost" size="icon" onClick={() => handleSaveEdit(noteGroup.key, noteIdx)}>
+                                  <Save className="h-4 w-4 text-green-500" />
+                                  <span className="sr-only">Sauvegarder</span>
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
+                                  <XCircle className="h-4 w-4 text-red-500" />
+                                  <span className="sr-only">Annuler</span>
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button variant="ghost" size="icon" onClick={() => setEditingNote({ key: noteGroup.key, index: noteIdx, content: note })}>
+                                  <Edit className="h-4 w-4 text-blue-500" />
+                                  <span className="sr-only">Éditer</span>
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Trash2 className="h-4 w-4 text-red-500" />
+                                      <span className="sr-only">Supprimer</span>
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Cette action ne peut pas être annulée. Cela supprimera définitivement votre note.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteNote(noteGroup.key, noteIdx)}>Supprimer</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onAddNoteClick(noteGroup.context.split(': ')[1].split(' (')[0], sectionIndex)}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-1" /> Ajouter une note
+                      </Button>
+                      <Link to="/all-notes">
+                        <Button variant="link" size="sm" className="p-0 h-auto text-xs text-muted-foreground hover:underline">
+                          Gérer toutes les notes
+                        </Button>
+                      </Link>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         )}
       </div>
     </ScrollArea>
   );
+
+  const moduleTitle = dummyCourses.find(c => c.id === courseId)?.modules[moduleIndex]?.title || "Module Inconnu";
 
   if (isMobile) {
     return (
@@ -175,7 +205,7 @@ const ModuleNotesSidebar = ({ courseId, moduleIndex, refreshKey, onNoteChange }:
         <SheetTrigger asChild>
           <Button
             size="lg"
-            className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow fixed bottom-20 right-20 z-40" // Position ajustée pour mobile
+            className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow fixed bottom-20 right-20 z-40"
           >
             <NotebookText className="h-7 w-7" />
             <span className="sr-only">Voir mes notes</span>
@@ -187,7 +217,7 @@ const ModuleNotesSidebar = ({ courseId, moduleIndex, refreshKey, onNoteChange }:
               <NotebookText className="h-6 w-6 text-primary" /> Mes Notes du Module
             </SheetTitle>
             <CardDescription>
-              Notes pour le module "{dummyCourses.find(c => c.id === courseId)?.modules[moduleIndex]?.title}"
+              Notes pour le module "{moduleTitle}"
             </CardDescription>
           </SheetHeader>
           <div className="flex-grow overflow-hidden">
@@ -205,10 +235,10 @@ const ModuleNotesSidebar = ({ courseId, moduleIndex, refreshKey, onNoteChange }:
           <NotebookText className="h-6 w-6 text-primary" /> Mes Notes du Module
         </CardTitle>
         <CardDescription>
-          Notes pour le module "{dummyCourses.find(c => c.id === courseId)?.modules[moduleIndex]?.title}"
+          Notes pour le module "{moduleTitle}"
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[calc(100%-6rem)] p-0"> {/* Ajuster la hauteur pour remplir la carte */}
+      <CardContent className="h-[calc(100%-6rem)] p-0">
         {renderNotesContent()}
       </CardContent>
     </Card>

@@ -1,5 +1,5 @@
 import { dummyCourses, ModuleSection, Module, Course } from "./courseData";
-import type { EntityType } from "./courseData"; // Utilisation de 'import type' pour EntityType
+import type { EntityType } from "./courseData";
 
 /**
  * Génère une clé unique pour stocker les notes dans le localStorage.
@@ -101,19 +101,19 @@ interface ParsedNoteKey {
   entityType: EntityType;
   entityId: string;
   moduleIndex?: number;
-  sectionIndex?: number; // Ajout de sectionIndex
+  sectionIndex?: number;
 }
 
 export interface AggregatedNote {
   key: string;
-  context: string; // Ex: "Cours: Introduction à l'IA", "Module: Réseaux de Neurones (Cours: Introduction à l'IA)", "Section: Définition et Histoire (Module: Qu'est-ce que l'IA? - Cours: Introduction à l'IA)"
+  context: string;
   notes: string[];
 }
 
 /**
  * Analyse une clé de note pour extraire le type d'entité, l'ID et l'index du module/section.
  */
-const parseNoteKey = (key: string): ParsedNoteKey | null => {
+export const parseNoteKey = (key: string): ParsedNoteKey | null => {
   const parts = key.split('_');
   if (parts[0] !== 'notes' || parts.length < 3) {
     return null;
@@ -158,7 +158,7 @@ export const getAllNotesData = (): AggregatedNote[] => {
     const parsedKey = parseNoteKey(key);
     if (parsedKey) {
       const notes = getNotes(key);
-      if (notes.length > 0) { // N'ajouter que si des notes existent
+      if (notes.length > 0) {
         let context = '';
         const course = dummyCourses.find(c => c.id === parsedKey.entityId);
 

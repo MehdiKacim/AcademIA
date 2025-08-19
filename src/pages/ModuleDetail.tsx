@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText } from "lucide-react"; // Ajout de NotebookText
+import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText } from "lucide-react";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
 import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { generateNoteKey, getNotes } from "@/lib/notes";
+import { generateNoteKey } from "@/lib/notes"; // getNotes et parseNoteKey ne sont plus nécessaires ici
 import ModuleNotesSidebar from "@/components/ModuleNotesSidebar";
 import {
   ContextMenu,
@@ -33,6 +33,9 @@ const ModuleDetail = () => {
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
   const [refreshNotesSection, setRefreshNotesSection] = useState(0);
 
+  // Références pour chaque section afin de pouvoir y faire défiler la vue
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   useEffect(() => {
     if (course && module) {
       setCourseContext(course.id, course.title);
@@ -46,6 +49,13 @@ const ModuleDetail = () => {
       setModuleContext(null);
     };
   }, [courseId, moduleIndex, course, module, setCourseContext, setModuleContext]);
+
+  // Fonction pour faire défiler la vue vers une section spécifique
+  const scrollToSection = useCallback((sectionIdx: number) => {
+    if (sectionRefs.current[sectionIdx]) {
+      sectionRefs.current[sectionIdx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
 
   if (!course || !module) {
     return (
@@ -108,10 +118,10 @@ const ModuleDetail = () => {
     openChat(`J'ai une question sur la section "${sectionTitle}" du module "${module.title}" du cours "${course.title}".`);
   };
 
-  const handleOpenQuickNoteDialog = (sectionTitle: string, sectionIndex: number) => {
+  const handleOpenQuickNoteDialog = (title: string, sectionIdx: number) => {
     setCurrentNoteContext({
-      key: generateNoteKey('section', course.id, currentModuleIndex, sectionIndex),
-      title: sectionTitle,
+      key: generateNoteKey('section', course.id, currentModuleIndex, sectionIdx),
+      title: title,
     });
     setIsQuickNoteDialogOpen(true);
   };
@@ -153,7 +163,10 @@ const ModuleDetail = () => {
               return (
                 <ContextMenu key={index}>
                   <ContextMenuTrigger className="block w-full">
-                    <div className="mb-6 p-4 border rounded-md bg-muted/10 cursor-context-menu">
+                    <div
+                      ref={el => sectionRefs.current[index] = el} // Assigner la référence à la section
+                      className="mb-6 p-4 border rounded-md bg-muted/10 cursor-context-menu"
+                    >
                       <div className="flex items-center justify-between">
                         <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
                       </div>
@@ -221,13 +234,17 @@ const ModuleDetail = () => {
         </Card>
       </div>
 
+      {/* Module Notes Sidebar */}
       <ModuleNotesSidebar
         courseId={courseId}
         moduleIndex={currentModuleIndex}
         refreshKey={refreshNotesSection}
         onNoteChange={handleNoteAdded}
+        onAddNoteClick={handleOpenQuickNoteDialog}
+        onScrollToSection={scrollToSection}
       />
 
+      {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
         "fixed z-40 p-4",
         isMobile ? "bottom-20 left-4" : "bottom-4 left-4"
@@ -235,7 +252,7 @@ const ModuleDetail = () => {
         <Button
           size="lg"
           className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
-          onClick={() => handleOpenQuickNoteDialog(module.title, -1)}
+          onClick={() => handleOpenQuickNoteDialog(module.title, -1)} // -1 pour indiquer une note de module
         >
           <PlusCircle className="h-7 w-7" />
           <span className="sr-only">Ajouter une note rapide pour le module</span>
