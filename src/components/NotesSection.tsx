@@ -15,10 +15,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import SimpleMdeReact from "react-simplemde-editor";
-import "easymde/dist/easymde.min.css"; // Import the EasyMDE CSS
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css'; // Import the Quill CSS
 
 interface NotesSectionProps {
   noteKey: string; // Clé unique pour le localStorage (ex: 'notes_course_1', 'notes_module_1_0')
@@ -37,8 +35,10 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
   }, [noteKey, refreshKey]);
 
   const handleAddNote = () => {
-    if (newNote.trim()) {
-      const updatedNotes = addNote(noteKey, newNote.trim());
+    // Check if the content is not just empty HTML tags (e.g., <p><br></p>)
+    const strippedNewNote = newNote.replace(/<[^>]*>/g, '').trim();
+    if (strippedNewNote) {
+      const updatedNotes = addNote(noteKey, newNote); // Save HTML content
       setNotes(updatedNotes);
       setNewNote('');
       showSuccess("Note ajoutée avec succès !");
@@ -53,8 +53,10 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
   };
 
   const handleSaveEdit = (index: number) => {
-    if (editedContent.trim()) {
-      const updatedNotes = updateNote(noteKey, index, editedContent.trim());
+    // Check if the content is not just empty HTML tags
+    const strippedEditedContent = editedContent.replace(/<[^>]*>/g, '').trim();
+    if (strippedEditedContent) {
+      const updatedNotes = updateNote(noteKey, index, editedContent); // Save HTML content
       setNotes(updatedNotes);
       setEditingIndex(null);
       setEditedContent('');
@@ -75,6 +77,25 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
     showSuccess("Note supprimée avec succès !");
   };
 
+  // Quill modules and formats for rich text editing
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike', 'blockquote',
+    'list', 'bullet', 'indent',
+    'link', 'image'
+  ];
+
   return (
     <div className="p-2 space-y-3">
       <h4 className="text-sm font-semibold text-foreground mb-2">Notes pour {title}</h4>
@@ -87,19 +108,20 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
               <div key={index} className="p-2 bg-background rounded-md shadow-sm text-xs text-foreground flex justify-between items-start">
                 {editingIndex === index ? (
                   <div className="flex-grow mr-2 w-full">
-                    <SimpleMdeReact
+                    <ReactQuill
+                      theme="snow"
                       value={editedContent}
                       onChange={setEditedContent}
-                      options={{
-                        spellChecker: false,
-                        toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"],
-                        status: false,
-                      }}
+                      modules={quillModules}
+                      formats={quillFormats}
+                      className="h-32 mb-10" // Adjust height for editor
                     />
                   </div>
                 ) : (
                   <div className="prose prose-sm dark:prose-invert flex-grow mr-2 max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{note}</ReactMarkdown>
+                    {/* WARNING: dangerouslySetInnerHTML can expose to XSS attacks if content is not sanitized. 
+                        For a production app, ensure server-side sanitization or use a library like DOMPurify. */}
+                    <div dangerouslySetInnerHTML={{ __html: note }} />
                   </div>
                 )}
                 <div className="flex gap-1 ml-2 flex-shrink-0">
@@ -149,17 +171,16 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
         )}
       </ScrollArea>
       <div className="flex flex-col gap-2">
-        <SimpleMdeReact
+        <ReactQuill
+          theme="snow"
           value={newNote}
           onChange={setNewNote}
-          options={{
-            spellChecker: false,
-            toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "guide"],
-            status: false,
-            placeholder: "Écrivez votre nouvelle note ici...",
-          }}
+          modules={quillModules}
+          formats={quillFormats}
+          className="h-32 mb-10" // Adjust height for editor
+          placeholder="Écrivez votre nouvelle note ici..."
         />
-        <Button onClick={handleAddNote} disabled={!newNote.trim()} size="sm">
+        <Button onClick={handleAddNote} disabled={!newNote.replace(/<[^>]*>/g, '').trim()} size="sm">
           <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une note
         </Button>
       </div>
