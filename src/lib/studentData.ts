@@ -118,7 +118,7 @@ export const updateStudent = (updatedStudent: Student) => {
 
 export const deleteStudent = (studentId: string) => {
   const updatedStudents = deleteData<Student>(LOCAL_STORAGE_STUDENTS_KEY, studentId); // Spécifier le type
-  dummyStudents = updatedStudents;
+  dummyStudents = updatedStudents as Student[]; // Assertion de type ici
   return updatedStudents;
 };
 
