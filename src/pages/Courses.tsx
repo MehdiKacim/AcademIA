@@ -13,9 +13,9 @@ const Courses = () => {
   const { currentRole } = useRole();
 
   const studentCourses = [
-    { id: 1, title: "Introduction à l'IA", description: "Les bases de l'intelligence artificielle.", progress: 50 },
-    { id: 2, title: "React pour débutants", description: "Apprenez les fondamentaux de React.", progress: 25 },
-    { id: 3, title: "Algorithmes Avancés", description: "Maîtrisez les structures de données complexes.", progress: 80 },
+    { id: '1', title: "Introduction à l'IA", description: "Les bases de l'intelligence artificielle.", progress: 50 },
+    { id: '2', title: "React pour débutants", description: "Apprenez les fondamentaux de React.", progress: 25 },
+    { id: '3', title: "Algorithmes Avancés", description: "Maîtrisez les structures de données complexes.", progress: 80 },
   ];
 
   const creatorCourses = [
@@ -43,7 +43,9 @@ const Courses = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">Progression: {course.progress}%</p>
-                  <Button variant="outline" className="mt-4 w-full">Continuer le cours</Button>
+                  <Link to={`/courses/${course.id}`} className="w-full">
+                    <Button variant="outline" className="mt-4 w-full">Continuer le cours</Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
