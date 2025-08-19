@@ -1,4 +1,4 @@
-import React from 'react'; // Ajout de cette ligne
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import Logo from "@/components/Logo";
@@ -124,7 +124,7 @@ const Index = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={containerVariants}
-          className="py-20 w-full border-y border-border/50" {/* Changed background */}
+          className="py-20 w-full border-y border-border/50"
         >
           <div className="max-w-5xl mx-auto px-4 text-center">
             <motion.h3 variants={itemVariants} className="text-3xl md:text-4xl font-bold mb-4">
@@ -161,11 +161,11 @@ const Index = () => {
             artificielle, pour une maîtrise complète.
           </motion.p>
           <motion.div
-            variants={containerVariants} // Apply container variants to the grid parent
+            variants={containerVariants}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-4"
           >
             {methodology.map((item, index) => (
-              <motion.div key={index} variants={itemVariants}> {/* Make Card a motion.div */}
+              <motion.div key={index} variants={itemVariants}>
                 <Card className="text-center">
                   <CardHeader>
                     <div className="flex justify-center mb-4">{item.icon}</div>
