@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, MessageCircleMore } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
+import { useCourseChat } from "@/contexts/CourseChatContext";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { currentRole, setRole } = useRole();
+  const { openChat } = useCourseChat();
 
   const getNavItems = () => {
     const baseItems = [
@@ -30,6 +32,7 @@ const DashboardLayout = () => {
       return [
         ...baseItems,
         { to: "/courses", icon: BookOpen, label: "Mes Cours" },
+        { onClick: openChat, icon: MessageCircleMore, label: "AiA Chat" },
       ];
     } else if (currentRole === 'creator') {
       return [
@@ -37,11 +40,13 @@ const DashboardLayout = () => {
         { to: "/courses", icon: BookOpen, label: "Mes Cours" },
         { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
         { to: "/analytics", icon: BarChart2, label: "Progression" },
+        { onClick: openChat, icon: MessageCircleMore, label: "AiA Chat" },
       ];
     } else if (currentRole === 'tutor') {
       return [
         ...baseItems,
         { to: "/analytics", icon: BarChart2, label: "Progression" },
+        { onClick: openChat, icon: MessageCircleMore, label: "AiA Chat" },
       ];
     }
     return baseItems;
@@ -56,7 +61,7 @@ const DashboardLayout = () => {
         {/* Navigation pour les écrans non mobiles */}
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {navItems.map((item) => (
+            {navItems.filter(item => item.to).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -73,6 +78,15 @@ const DashboardLayout = () => {
                 {item.label}
               </NavLink>
             ))}
+            {/* AiA Chat button for desktop */}
+            <Button
+              variant="ghost"
+              onClick={openChat}
+              className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+            >
+              <MessageCircleMore className="mr-2 h-4 w-4" />
+              AiA Chat
+            </Button>
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">

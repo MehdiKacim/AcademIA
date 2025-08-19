@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User as UserIcon, MessageCircleMore, X } from "lucide-react";
+import { Send, Bot, User as UserIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 
@@ -21,7 +22,7 @@ const AiAPersistentChat = () => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { currentCourseTitle, currentModuleTitle, isChatOpen, openChat, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
+  const { currentCourseTitle, currentModuleTitle, isChatOpen, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
 
   const isMobile = useIsMobile();
 
@@ -74,14 +75,6 @@ const AiAPersistentChat = () => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSendMessage();
-    }
-  };
-
-  const handleToggleChat = () => {
-    if (isChatOpen) {
-      closeChat();
-    } else {
-      openChat();
     }
   };
 
@@ -158,59 +151,32 @@ const AiAPersistentChat = () => {
     </div>
   );
 
-  if (isMobile) {
-    return (
-      <Sheet open={isChatOpen} onOpenChange={openChat}>
-        <SheetTrigger asChild>
-          <Button
-            variant="default"
-            size="icon"
-            className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg z-50"
-            aria-label="Ouvrir le chat AiA"
-            onClick={() => openChat()}
-          >
-            <MessageCircleMore className="h-7 w-7" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent className="flex flex-col w-full sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <Bot className="h-6 w-6 text-primary" /> Discuter avec AiA
-            </SheetTitle>
-          </SheetHeader>
-          {chatContent}
-        </SheetContent>
-      </Sheet>
-    );
+  if (!isChatOpen) {
+    return null; // Ne rien rendre si le chat n'est pas ouvert
   }
 
-  return (
-    <>
-      <Button
-        variant="default"
-        size="icon"
-        className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg z-50"
-        aria-label="Ouvrir le chat AiA"
-        onClick={handleToggleChat}
-      >
-        <MessageCircleMore className="h-7 w-7" />
-      </Button>
-
-      {isChatOpen && (
-        <div className="fixed bottom-20 right-4 w-80 h-[450px] bg-card border border-border rounded-lg shadow-xl flex flex-col z-50 animate-in slide-in-from-bottom-4 fade-in-0 duration-300">
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h3 className="flex items-center gap-2 text-lg font-semibold">
-              <Bot className="h-5 w-5 text-primary" /> Discuter avec AiA
-            </h3>
-            <Button variant="ghost" size="icon" onClick={closeChat} className="h-8 w-8">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Fermer le chat</span>
-            </Button>
-          </div>
-          {chatContent}
-        </div>
-      )}
-    </>
+  return isMobile ? (
+    <Sheet open={isChatOpen} onOpenChange={closeChat}>
+      <SheetContent className="flex flex-col w-full sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <Bot className="h-6 w-6 text-primary" /> Discuter avec AiA
+          </SheetTitle>
+        </SheetHeader>
+        {chatContent}
+      </SheetContent>
+    </Sheet>
+  ) : (
+    <Dialog open={isChatOpen} onOpenChange={closeChat}>
+      <DialogContent className="flex flex-col w-full max-w-2xl h-[80vh] p-0">
+        <DialogHeader className="p-4 border-b border-border">
+          <DialogTitle className="flex items-center gap-2">
+            <Bot className="h-6 w-6 text-primary" /> Discuter avec AiA
+          </DialogTitle>
+        </DialogHeader>
+        {chatContent}
+      </DialogContent>
+    </Dialog>
   );
 };
 
