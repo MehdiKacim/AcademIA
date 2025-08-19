@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2 } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, Menu } from "lucide-react"; // Importation de l'icône Menu
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -22,10 +22,9 @@ const DashboardLayout = () => {
           <MobileSheetNav
             navItems={navItems}
             trigger={
-              <Logo
-                iconClassName="w-10 h-10 cursor-pointer" // Rendre le logo plus grand et cliquable
-                textClassName="text-xl"
-              />
+              <Button variant="outline" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
             }
           >
             <ThemeToggle />

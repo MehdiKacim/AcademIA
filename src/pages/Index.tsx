@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Target,
   MessageCircleMore,
+  Menu, // Importation de l'icône Menu
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
@@ -26,49 +27,48 @@ const Index = () => {
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
 
   // Suppression de la logique activeSection et sectionRefs pour le moment
-  // const [activeSection, setActiveSection] = useState('accueil');
-  // const sectionRefs = {
-  //   accueil: useRef<HTMLDivElement>(null),
-  //   aiaBot: useRef<HTMLDivElement>(null),
-  //   methodologie: useRef<HTMLDivElement>(null),
-  // };
+  const [activeSection, setActiveSection] = useState('accueil'); // Gardé pour la classe active sur les boutons de navigation
+  const sectionRefs = {
+    accueil: useRef<HTMLDivElement>(null),
+    aiaBot: useRef<HTMLDivElement>(null),
+    methodologie: useRef<HTMLDivElement>(null),
+  };
 
-  // Suppression de l'useEffect pour l'IntersectionObserver
-  // useEffect(() => {
-  //   const observerOptions = {
-  //     root: null, // viewport
-  //     rootMargin: '-50% 0px -50% 0px', // Trigger when 50% of the section is in view
-  //     threshold: 0,
-  //   };
+  useEffect(() => {
+    const observerOptions = {
+      root: null, // viewport
+      rootMargin: '-50% 0px -50% 0px', // Trigger when 50% of the section is in view
+      threshold: 0,
+    };
 
-  //   const observerCallback = (entries: IntersectionObserverEntry[]) => {
-  //     entries.forEach(entry => {
-  //       if (entry.isIntersecting) {
-  //         setActiveSection(entry.target.id);
-  //       }
-  //     });
-  //   };
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
 
-  //   const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-  //   Object.values(sectionRefs).forEach(ref => {
-  //     if (ref.current) {
-  //       observer.observe(ref.current);
-  //     }
-  //   });
+    Object.values(sectionRefs).forEach(ref => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
 
-  //   return () => {
-  //     Object.values(sectionRefs).forEach(ref => {
-  //       if (ref.current) {
-  //         observer.unobserve(ref.current);
-  //       }
-  //     });
-  //   };
-  // }, []);
+    return () => {
+      Object.values(sectionRefs).forEach(ref => {
+        if (ref.current) {
+          observer.unobserve(ref.current);
+        }
+      });
+    };
+  }, []);
 
   const handleNavLinkClick = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    // setActiveSection(id); // Update active state immediately on click
+    setActiveSection(id); // Update active state immediately on click
   };
 
   const openLoginModal = () => {
@@ -129,10 +129,9 @@ const Index = () => {
             navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))}
             onLinkClick={() => {}}
             trigger={
-              <Logo
-                iconClassName="w-10 h-10 cursor-pointer" // Rendre le logo plus grand et cliquable
-                textClassName="text-xl"
-              />
+              <Button variant="outline" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
             }
           >
             <ThemeToggle />
@@ -149,15 +148,15 @@ const Index = () => {
         <Logo className="hidden md:block" />
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
-            className={cn('text-muted-foreground hover:text-foreground')}> {/* Simplifié */}
+            className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
             Accueil
           </Button>
           <Button variant="ghost" onClick={() => handleNavLinkClick('aiaBot')}
-            className={cn('text-muted-foreground hover:text-foreground')}> {/* Simplifié */}
+            className={cn(activeSection === 'aiaBot' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
             AiA Bot
           </Button>
           <Button variant="ghost" onClick={() => handleNavLinkClick('methodologie')}
-            className={cn('text-muted-foreground hover:text-foreground')}> {/* Simplifié */}
+            className={cn(activeSection === 'methodologie' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
             Méthodologie
           </Button>
         </nav>
@@ -174,7 +173,7 @@ const Index = () => {
         {/* Section Accueil - Rendre toujours visible */}
         <section
           id="accueil"
-          // ref={sectionRefs.accueil} // Supprimé
+          ref={sectionRefs.accueil}
           className="py-20 px-4 w-full"
         >
           <div className="relative">
@@ -212,24 +211,20 @@ const Index = () => {
         {/* Section AiA Bot */}
         <section
           id="aiaBot"
-          // ref={sectionRefs.aiaBot} // Supprimé
-          // initial="hidden" // Supprimé
-          // whileInView="visible" // Supprimé
-          // viewport={{ once: true, amount: 0.3 }} // Supprimé
-          // variants={containerVariants} // Supprimé
+          ref={sectionRefs.aiaBot}
           className="py-20 w-full border-y border-border/50 px-4"
         >
           <div className="max-w-5xl mx-auto text-center">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4"> {/* Converti en h3 */}
+            <h3 className="text-3xl md:text-4xl font-bold mb-4">
               Votre Tuteur IA Personnel : AiA
             </h3>
-            <p className="text-lg text-muted-foreground mb-12"> {/* Converti en p */}
+            <p className="text-lg text-muted-foreground mb-12">
               AiA, l'intelligence artificielle d'AcademIA, est là pour vous guider. Elle identifie vos points faibles, adapte les leçons et vous offre un soutien personnalisé pour une progression optimale.
             </p>
-            <div className="flex justify-center mb-8"> {/* Converti en div */}
+            <div className="flex justify-center mb-8">
               <MessageCircleMore className="w-24 h-24 text-primary" />
             </div>
-            <div> {/* Converti en div */}
+            <div>
               <Button size="lg" onClick={openRegisterModal}>
                 Découvrir AiA
               </Button>
@@ -240,26 +235,21 @@ const Index = () => {
         {/* Section Méthodologie */}
         <section
           id="methodologie"
-          // ref={sectionRefs.methodologie} // Supprimé
-          // initial="hidden" // Supprimé
-          // whileInView="visible" // Supprimé
-          // viewport={{ once: true, amount: 0.3 }} // Supprimé
-          // variants={containerVariants} // Supprimé
+          ref={sectionRefs.methodologie}
           className="py-20 w-full px-4"
         >
-          <h3 className="text-3xl md:text-4xl font-bold mb-4"> {/* Converti en h3 */}
+          <h3 className="text-3xl md:text-4xl font-bold mb-4">
             Notre Méthodologie Révolutionnaire
           </h3>
-          <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto"> {/* Converti en p */}
+          <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">
             Un parcours d'apprentissage unique, guidé par l'intelligence
             artificielle, pour une maîtrise complète.
           </p>
           <div
-            // variants={containerVariants} // Supprimé
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"
           >
             {methodology.map((item, index) => (
-              <div key={index}> {/* Converti en div */}
+              <div key={index}>
                 <Card className="text-center">
                   <CardHeader>
                     <div className="flex justify-center mb-4">{item.icon}</div>

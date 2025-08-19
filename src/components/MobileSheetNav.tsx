@@ -15,7 +15,7 @@ interface MobileSheetNavProps {
   navItems: NavItem[];
   onLinkClick?: () => void;
   children?: React.ReactNode;
-  trigger: React.ReactNode; // Nouveau prop pour l'élément déclencheur
+  trigger: React.ReactElement; // Changé de React.ReactNode à React.ReactElement
 }
 
 const MobileSheetNav = ({ navItems, onLinkClick, children, trigger }: MobileSheetNavProps) => {
