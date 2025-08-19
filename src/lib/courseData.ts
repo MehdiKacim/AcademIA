@@ -171,6 +171,23 @@ const initialDummyCourses: Course[] = [
           { title: "Vision par Ordinateur", content: "La vision par ordinateur permet aux machines de 'voir' et d'interpréter des images et des vidéos. Applications : reconnaissance faciale, détection d'objets, voitures autonomes, diagnostics médicaux par imagerie.", isCompleted: false },
           { title: "Traitement du Langage Naturel (NLP)", content: "Le NLP permet aux machines de comprendre, interpréter et générer du langage humain. Applications : assistants vocaux, traduction automatique, analyse de sentiments, chatbots.", isCompleted: false },
           { title: "Systèmes de Recommandation", content: "L'IA est utilisée pour recommander des produits, des films, de la musique, etc., en analysant les préférences et le comportement des utilisateurs. Exemples : Netflix, Amazon, Spotify.", isCompleted: false },
+          {
+            title: "Quiz: Applications de l'IA",
+            content: "Testez vos connaissances sur les applications de l'IA.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quelle application de l'IA permet aux machines de 'voir' ?",
+                options: [
+                  { text: "Traitement du Langage Naturel", isCorrect: false },
+                  { text: "Vision par Ordinateur", isCorrect: true },
+                  { text: "Systèmes de Recommandation", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -227,6 +244,23 @@ const initialDummyCourses: Course[] = [
           { title: "Introduction aux Hooks", content: "Les Hooks sont des fonctions qui vous permettent d'utiliser l'état et d'autres fonctionnalités de React sans écrire de classes. Ils ont été introduits dans React 16.8.", isCompleted: false },
           { title: "useState et useEffect", content: "`useState` est le Hook le plus fondamental pour ajouter l'état local à un composant fonctionnel. `useEffect` vous permet d'effectuer des effets secondaires (comme les requêtes de données, les abonnements ou la modification directe du DOM) dans les composants fonctionnels.", isCompleted: false },
           { title: "useContext et useReducer", content: "`useContext` permet de partager des données entre composants sans passer les props manuellement à chaque niveau. `useReducer` est une alternative à `useState` pour la gestion d'état plus complexe, souvent utilisée avec un `reducer` pour des logiques de transition d'état.", isCompleted: false },
+          {
+            title: "Quiz: Hooks React",
+            content: "Testez vos connaissances sur les Hooks React.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel Hook est utilisé pour ajouter l'état local à un composant fonctionnel ?",
+                options: [
+                  { text: "useEffect", isCorrect: false },
+                  { text: "useState", isCorrect: true },
+                  { text: "useContext", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -237,6 +271,23 @@ const initialDummyCourses: Course[] = [
           { title: "Principes du Routage Client-Side", content: "React Router est une bibliothèque standard pour le routage côté client dans les applications React. Elle permet de créer des applications à page unique (SPA) avec plusieurs vues, où l'URL change sans recharger la page entière.", isCompleted: false },
           { title: "Configuration des Routes", content: "Vous apprendrez à définir des routes en utilisant les composants `<BrowserRouter>`, `<Routes>` et `<Route>`, en associant des chemins d'URL à des composants React spécifiques.", isCompleted: false },
           { title: "Navigation Programmatic", content: "Utilisation du hook `useNavigate` pour la navigation programmatique, permettant de rediriger les utilisateurs après une action (ex: soumission de formulaire).", isCompleted: false },
+          {
+            title: "Quiz: React Router",
+            content: "Testez vos connaissances sur React Router.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel composant est utilisé pour définir une route dans React Router ?",
+                options: [
+                  { text: "<Link>", isCorrect: false },
+                  { text: "<Route>", isCorrect: true },
+                  { text: "<Navigate>", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 75,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -247,6 +298,23 @@ const initialDummyCourses: Course[] = [
           { title: "Fetching de Données avec useEffect", content: "Dans React, vous utilisez généralement `useEffect` pour effectuer des requêtes API lorsque le composant est monté ou lorsque certaines dépendances changent. Il est crucial de gérer les états de chargement et d'erreur.", isCompleted: false },
           { title: "Gestion des États de Chargement et d'Erreur", content: "Implémentation de logiques pour afficher des indicateurs de chargement et des messages d'erreur, améliorant l'expérience utilisateur lors des interactions asynchrones.", isCompleted: false },
           { title: "Nettoyage des Effets", content: "Apprenez à nettoyer les effets secondaires (ex: annuler des requêtes, désabonner des écouteurs) en retournant une fonction de nettoyage dans `useEffect` pour éviter les fuites de mémoire.", isCompleted: false },
+          {
+            title: "Quiz: API et Cycle de Vie",
+            content: "Testez vos connaissances sur les requêtes API et le cycle de vie des composants.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel Hook est couramment utilisé pour les requêtes API dans les composants fonctionnels ?",
+                options: [
+                  { text: "useState", isCorrect: false },
+                  { text: "useEffect", isCorrect: true },
+                  { text: "useCallback", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 60,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -300,6 +368,23 @@ const initialDummyCourses: Course[] = [
         sections: [
           { title: "Tris Efficaces", content: "Plongez dans les algorithmes de tri efficaces comme Quicksort, Mergesort et Heapsort, ainsi que les techniques de recherche avancées telles que la recherche binaire et la recherche par interpolation. Nous analyserons leur complexité temporelle et spatiale.", isCompleted: false },
           { title: "Recherche Avancée", content: "Au-delà de la recherche binaire, nous explorerons des techniques pour des structures de données spécifiques et des scénarios de recherche plus complexes.", isCompleted: false },
+          {
+            title: "Quiz: Tris et Recherche",
+            content: "Testez vos connaissances sur les algorithmes de tri et de recherche.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel algorithme de tri a une complexité moyenne de O(n log n) ?",
+                options: [
+                  { text: "Bubble Sort", isCorrect: false },
+                  { text: "Quick Sort", isCorrect: true },
+                  { text: "Selection Sort", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 65,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -309,6 +394,23 @@ const initialDummyCourses: Course[] = [
         sections: [
           { title: "Principes de la PD", content: "La programmation dynamique est une méthode puissante pour résoudre des problèmes complexes en les décomposant en sous-problèmes plus petits. Ce module vous enseignera les principes de la PD, y compris la mémorisation et la tabulation, à travers des exemples classiques.", isCompleted: false },
           { title: "Exemples Classiques", content: "Nous étudierons des problèmes comme la suite de Fibonacci, le problème du sac à dos, et le plus long sous-séquence commune pour illustrer l'application de la programmation dynamique.", isCompleted: false },
+          {
+            title: "Quiz: Programmation Dynamique",
+            content: "Testez vos connaissances sur la programmation dynamique.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel est l'un des principes clés de la programmation dynamique ?",
+                options: [
+                  { text: "Diviser pour régner", isCorrect: false },
+                  { text: "Mémorisation", isCorrect: true },
+                  { text: "Force brute", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -318,6 +420,23 @@ const initialDummyCourses: Course[] = [
         sections: [
           { title: "Parcours de Graphes", content: "Découvrez les algorithmes fondamentaux sur les graphes, essentiels pour la modélisation de réseaux et de relations. Nous couvrirons les parcours en largeur (BFS) et en profondeur (DFS).", isCompleted: false },
           { title: "Plus Courts Chemins et Arbres Couvrants", content: "Nous aborderons l'algorithme de Dijkstra pour les plus courts chemins et l'algorithme de Kruskal pour les arbres couvrants minimaux, avec des applications concrètes.", isCompleted: false },
+          {
+            title: "Quiz: Algorithmes de Graphes",
+            content: "Testez vos connaissances sur les algorithmes de graphes.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel algorithme trouve le plus court chemin dans un graphe pondéré ?",
+                options: [
+                  { text: "BFS", isCorrect: false },
+                  { text: "DFS", isCorrect: false },
+                  { text: "Dijkstra", isCorrect: true },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 75,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -373,6 +492,23 @@ const initialDummyCourses: Course[] = [
           { title: "Gestion de l'État avec Hooks", content: "Maîtrisez la gestion de l'état de votre application avec des hooks comme `useState` et `useEffect` pour créer des interfaces dynamiques et réactives.", isCompleted: false },
           { title: "Gestion des formulaires et Validation", content: "Maîtrisez la création et la validation de formulaires complexes en React. Ce sous-module se concentre sur l'utilisation de `React Hook Form` pour une gestion efficace des entrées utilisateur et `Zod` pour la validation de schéma, garantissant la robustesse de vos formulaires.", isCompleted: false },
           { title: "Styles avec Tailwind CSS", content: "Découvrez Tailwind CSS, un framework CSS utilitaire-first qui vous permet de construire des designs personnalisés directement dans votre balisage HTML. Apprenez à styliser rapidement et efficacement vos composants React sans quitter votre fichier JavaScript.", isCompleted: false },
+          {
+            title: "Quiz: Frontend React",
+            content: "Testez vos connaissances sur le développement frontend avec React.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel est le but principal de `useState` ?",
+                options: [
+                  { text: "Effectuer des effets secondaires", isCorrect: false },
+                  { text: "Ajouter l'état local à un composant fonctionnel", isCorrect: true },
+                  { text: "Optimiser les performances", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -383,6 +519,23 @@ const initialDummyCourses: Course[] = [
           { title: "API RESTful avec Express.js", content: "Passez au développement backend avec Node.js et Express.js. Ce module vous enseignera comment construire des API RESTful, gérer les requêtes HTTP, et structurer votre application côté serveur pour une performance optimale.", isCompleted: false },
           { title: "Bases de données SQL avec PostgreSQL", content: "Explorez les bases de données relationnelles avec PostgreSQL. Vous apprendrez les concepts SQL, la conception de schémas de base de données, et l'utilisation d'un ORM (Object-Relational Mapper) pour interagir avec votre base de données depuis Node.js.", isCompleted: false },
           { title: "Authentification et Sécurité", content: "Implémentez des systèmes d'authentification sécurisés pour vos applications web. Ce sous-module couvre les concepts de JWT (JSON Web Tokens), la gestion des sessions, et les meilleures pratiques pour protéger les routes et les données de vos utilisateurs.", isCompleted: false },
+          {
+            title: "Quiz: Backend Node.js",
+            content: "Testez vos connaissances sur le développement backend avec Node.js.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel framework est couramment utilisé pour construire des API RESTful avec Node.js ?",
+                options: [
+                  { text: "React", isCorrect: false },
+                  { text: "Express.js", isCorrect: true },
+                  { text: "Angular", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 65,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -393,6 +546,23 @@ const initialDummyCourses: Course[] = [
           { title: "Préparation pour la Production", content: "Ce module vous guide à travers le processus de déploiement de vos applications fullstack. Vous apprendrez à préparer votre code pour la production (optimisation, minification).", isCompleted: false },
           { title: "Plateformes d'Hébergement", content: "Choisissez des plateformes d'hébergement adaptées (comme Vercel ou Netlify pour le frontend, Heroku ou Render pour le backend) et comprenez leurs spécificités.", isCompleted: false },
           { title: "CI/CD et Monitoring", content: "Mettez en place des pipelines CI/CD (Intégration Continue/Déploiement Continu) pour des déploiements automatisés et des systèmes de monitoring pour assurer la performance continue et la maintenance de vos applications.", isCompleted: false },
+          {
+            title: "Quiz: Déploiement",
+            content: "Testez vos connaissances sur le déploiement et la maintenance.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Que signifie CI/CD ?",
+                options: [
+                  { text: "Code Integration / Code Delivery", isCorrect: false },
+                  { text: "Continuous Integration / Continuous Deployment", isCorrect: true },
+                  { text: "Client Interface / Cloud Deployment", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -448,6 +618,23 @@ const initialDummyCourses: Course[] = [
           { title: "Nettoyage et Transformation", content: "Ce module couvre également les étapes cruciales de nettoyage, de transformation et de gestion des données manquantes pour préparer vos ensembles de données à l'analyse.", isCompleted: false },
           { title: "Exploration des Données (EDA)", content: "L'EDA est une étape essentielle pour comprendre vos données. Ce sous-module vous enseignera comment utiliser des statistiques descriptives et des techniques de visualisation (histogrammes, nuages de points, boîtes à moustaches) pour découvrir des motifs, des anomalies et des relations.", isCompleted: false },
           { title: "Ingénierie des Caractéristiques", content: "L'ingénierie des caractéristiques est l'art de créer de nouvelles variables à partir de données brutes pour améliorer la performance des modèles. Ce module explore des techniques comme l'encodage catégoriel, la normalisation, la standardisation et la création de caractéristiques polynomiales.", isCompleted: false },
+          {
+            title: "Quiz: Préparation des Données",
+            content: "Testez vos connaissances sur la collecte et la préparation des données.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quelle est l'importance du nettoyage des données ?",
+                options: [
+                  { text: "Pour réduire la taille des fichiers", isCorrect: false },
+                  { text: "Pour améliorer la qualité et la fiabilité de l'analyse", isCorrect: true },
+                  { text: "Pour accélérer le chargement des données", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 60,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -457,6 +644,23 @@ const initialDummyCourses: Course[] = [
         sections: [
           { title: "Concepts de Modélisation", content: "Introduction aux concepts de la modélisation prédictive. Ce module couvre les algorithmes de régression (linéaire, logistique) et de classification (k-NN, arbres de décision), en expliquant comment construire et entraîner des modèles pour faire des prédictions.", isCompleted: false },
           { title: "Évaluation des Modèles", content: "Apprenez à évaluer la performance de vos modèles prédictifs. Ce sous-module aborde des métriques clés comme la précision, le rappel, le score F1, l'AUC-ROC, et les techniques pour détecter et prévenir le surapprentissage et le sous-apprentissage.", isCompleted: false },
+          {
+            title: "Quiz: Modélisation Prédictive",
+            content: "Testez vos connaissances sur la modélisation prédictive.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel type de problème la régression linéaire résout-elle ?",
+                options: [
+                  { text: "Classification", isCorrect: false },
+                  { text: "Prédiction de valeurs continues", isCorrect: true },
+                  { text: "Clustering", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 75,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -466,6 +670,23 @@ const initialDummyCourses: Course[] = [
         sections: [
           { title: "Mise en Production", content: "Ce module traite de la mise en production des modèles de science des données. Vous apprendrez à déployer vos modèles en tant qu'API et à les intégrer dans des applications existantes.", isCompleted: false },
           { title: "Monitoring et Maintenance", content: "Mettez en place des systèmes de monitoring pour assurer leur performance continue et leur maintenance, y compris la détection de la dérive des données et le réentraînement des modèles.", isCompleted: false },
+          {
+            title: "Quiz: Déploiement et Maintenance",
+            content: "Testez vos connaissances sur le déploiement et la maintenance des modèles.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Pourquoi est-il important de surveiller les modèles après le déploiement ?",
+                options: [
+                  { text: "Pour s'assurer qu'ils sont toujours pertinents et performants", isCorrect: true },
+                  { text: "Pour augmenter leur vitesse d'exécution", isCorrect: false },
+                  { text: "Pour réduire les coûts de calcul", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
         isCompleted: false,
         level: 0
