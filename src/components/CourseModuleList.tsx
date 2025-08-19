@@ -62,7 +62,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                 )}
               </CardTitle>
               <CardDescription className="mb-4 text-sm">
-                {group.mainModule.content.substring(0, 100)}...
+                {group.mainModule.content.substring(0, 100)}... {/* Tronquer le contenu */}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-between">

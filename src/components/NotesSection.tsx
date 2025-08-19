@@ -39,7 +39,7 @@ const NotesSection = ({ noteKey, title }: NotesSectionProps) => {
 
   return (
     <Card>
-      <Accordion type="single" collapsible className="w-full">
+      <Accordion type="single" collapsible defaultValue="notes-section" className="w-full"> {/* Ajout de defaultValue */}
         <AccordionItem value="notes-section">
           <AccordionTrigger className="p-6 text-lg font-semibold flex items-center gap-2">
             <NotebookPen className="h-6 w-6 text-primary" /> Mes notes pour "{title}"
