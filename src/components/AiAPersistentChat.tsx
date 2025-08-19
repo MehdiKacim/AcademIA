@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User as UserIcon, MessageCircleMore } from "lucide-react";
+import { Send, Bot, User as UserIcon, MessageCircleMore, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Message {
   id: number;
@@ -18,14 +19,15 @@ const AiAPersistentChat = () => {
   ]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState(false); // État pour contrôler la visibilité de la Sheet
+  const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    if (isOpen) { // Ne défile que si la Sheet est ouverte
+    if (isOpen) {
       scrollToBottom();
     }
   }, [messages, isOpen]);
@@ -54,8 +56,62 @@ const AiAPersistentChat = () => {
     }
   };
 
-  return (
-    <>
+  // Contenu commun du chat (messages + input)
+  const chatContent = (
+    <div className="flex-grow flex flex-col py-4">
+      <ScrollArea className="flex-grow p-4 border rounded-md mb-4">
+        <div className="flex flex-col gap-4">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={cn(
+                "flex items-start gap-3",
+                msg.sender === 'user' ? "justify-end" : "justify-start"
+              )}
+            >
+              {msg.sender === 'aia' && (
+                <div className="flex-shrink-0 p-2 rounded-full bg-primary text-primary-foreground">
+                  <Bot className="h-4 w-4" />
+                </div>
+              )}
+              <div
+                className={cn(
+                  "max-w-[70%] p-3 rounded-lg",
+                  msg.sender === 'user'
+                    ? "bg-primary text-primary-foreground rounded-br-none"
+                    : "bg-muted text-muted-foreground rounded-bl-none"
+                )}
+              >
+                {msg.text}
+              </div>
+              {msg.sender === 'user' && (
+                <div className="flex-shrink-0 p-2 rounded-full bg-secondary text-secondary-foreground">
+                  <UserIcon className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
+      <div className="flex gap-2">
+        <Input
+          placeholder="Écrivez votre message à AiA..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          className="flex-grow"
+        />
+        <Button onClick={handleSendMessage} disabled={!input.trim()}>
+          <Send className="h-5 w-5" />
+          <span className="sr-only">Envoyer</span>
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
@@ -73,58 +129,39 @@ const AiAPersistentChat = () => {
               <Bot className="h-6 w-6 text-primary" /> Discuter avec AiA
             </SheetTitle>
           </SheetHeader>
-          <div className="flex-grow flex flex-col py-4">
-            <ScrollArea className="flex-grow h-[calc(100vh-200px)] p-4 border rounded-md mb-4">
-              <div className="flex flex-col gap-4">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={cn(
-                      "flex items-start gap-3",
-                      msg.sender === 'user' ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    {msg.sender === 'aia' && (
-                      <div className="flex-shrink-0 p-2 rounded-full bg-primary text-primary-foreground">
-                        <Bot className="h-4 w-4" />
-                      </div>
-                    )}
-                    <div
-                      className={cn(
-                        "max-w-[70%] p-3 rounded-lg",
-                        msg.sender === 'user'
-                          ? "bg-primary text-primary-foreground rounded-br-none"
-                          : "bg-muted text-muted-foreground rounded-bl-none"
-                      )}
-                    >
-                      {msg.text}
-                    </div>
-                    {msg.sender === 'user' && (
-                      <div className="flex-shrink-0 p-2 rounded-full bg-secondary text-secondary-foreground">
-                        <UserIcon className="h-4 w-4" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Écrivez votre message à AiA..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="flex-grow"
-              />
-              <Button onClick={handleSendMessage} disabled={!input.trim()}>
-                <Send className="h-5 w-5" />
-                <span className="sr-only">Envoyer</span>
-              </Button>
-            </div>
-          </div>
+          {chatContent}
         </SheetContent>
       </Sheet>
+    );
+  }
+
+  // Version Desktop (panneau flottant non bloquant)
+  return (
+    <>
+      <Button
+        variant="default"
+        size="icon"
+        className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg z-50"
+        aria-label="Ouvrir le chat AiA"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <MessageCircleMore className="h-7 w-7" />
+      </Button>
+
+      {isOpen && (
+        <div className="fixed bottom-20 right-4 w-80 h-[450px] bg-card border border-border rounded-lg shadow-xl flex flex-col z-50 animate-in slide-in-from-bottom-4 fade-in-0 duration-300">
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+              <Bot className="h-5 w-5 text-primary" /> Discuter avec AiA
+            </h3>
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fermer le chat</span>
+            </Button>
+          </div>
+          {chatContent}
+        </div>
+      )}
     </>
   );
 };
