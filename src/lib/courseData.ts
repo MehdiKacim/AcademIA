@@ -19,6 +19,8 @@ export interface Course {
   modules: Module[];
   skillsToAcquire: string[];
   imageUrl?: string; // Nouvelle propriété pour l'image du cours
+  category?: string; // Ajouté pour correspondre au formulaire
+  difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé'; // Ajouté pour correspondre au formulaire
 }
 
 export type EntityType = 'course' | 'module' | 'section'; // Ajout et exportation de EntityType

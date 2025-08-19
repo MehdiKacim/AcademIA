@@ -25,7 +25,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { dummyCourses } from "@/lib/courseData"; // Import dummyCourses for demo purposes
+import { dummyCourses, Course } from "@/lib/courseData"; // Import Course interface
 
 // Zod Schemas for validation
 const ModuleSectionSchema = z.object({
@@ -83,12 +83,18 @@ const CreateCourse = () => {
   });
 
   const onSubmit = (values: z.infer<typeof CourseSchema>) => {
-    // For demo purposes, add to dummyCourses and log
-    const newCourse = {
-      ...values,
+    // Explicitly construct newCourse to match the Course interface
+    const newCourse: Course = {
       id: (dummyCourses.length + 1).toString(), // Simple ID generation
+      title: values.title,
+      description: values.description,
+      category: values.category, // Now included in Course interface
+      difficulty: values.difficulty, // Now included in Course interface
+      imageUrl: values.imageUrl || undefined, // Ensure empty string becomes undefined
       skillsToAcquire: values.skillsToAcquire.split(',').map(s => s.trim()),
+      modules: values.modules,
     };
+
     dummyCourses.push(newCourse); // Directly modifying for demo
     console.log("Nouveau cours créé:", newCourse);
     showSuccess("Cours créé avec succès !");
