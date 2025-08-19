@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Garder l'import pour d'autres usages si nécessaire
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -15,7 +15,7 @@ interface MobileSheetNavProps {
   navItems: NavItem[];
   onLinkClick?: () => void;
   children?: React.ReactNode;
-  triggerContent: React.ReactNode; // Nouvelle prop pour le contenu du bouton déclencheur
+  triggerContent: React.ReactNode; // Contenu du déclencheur
 }
 
 const MobileSheetNav = ({ navItems, onLinkClick, children, triggerContent }: MobileSheetNavProps) => {
@@ -31,9 +31,10 @@ const MobileSheetNav = ({ navItems, onLinkClick, children, triggerContent }: Mob
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon">
-          {triggerContent} {/* Utilise le contenu passé pour le bouton */}
-        </Button>
+        {/* Remplacé Button par un span avec les styles de bouton pour le débogage */}
+        <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10">
+          {triggerContent}
+        </span>
       </SheetTrigger>
       <SheetContent side="left" className="flex flex-col">
         <div className="p-4 border-b">
