@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Course, addCourseToStorage, loadCourses, updateCourseInStorage, Module } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses, and Module type
-import { useParams, useNavigate } => "react-router-dom"; // Import useParams and useNavigate
+import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
 
 // Zod Schemas for validation
 const QuizOptionSchema = z.object({
@@ -92,7 +92,7 @@ const CourseSchema = z.object({
   description: z.string().min(1, "La description du cours est requise."),
   category: z.string().min(1, "La catégorie est requise."),
   difficulty: z.enum(["Débutant", "Intermédiaire", "Avancé"]),
-  imageUrl: z.string().url("L'URL de l'image doit être valide.").optional().or(z.literal("")),
+  imageUrl: z.string().url("L'URL de l'image du cours doit être valide.").optional().or(z.literal("")),
   skillsToAcquire: z.string().min(1, "Les compétences à acquérir sont requises (séparées par des virgules)."),
   modules: z.array(ModuleSchema).min(1, "Un cours doit avoir au moins un module."),
 });
@@ -382,8 +382,8 @@ const CreateCourse = () => {
                               field.onChange(value);
                               // Reset URL and questions when type changes
                               form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.url`, '');
-                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, []);
-                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.passingScore`, undefined); // Reset passingScore
+                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, []);
+                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].passingScore`, undefined); // Reset passingScore
                             }} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
@@ -453,7 +453,7 @@ const CreateCourse = () => {
                                       const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
                                       if (currentQuestions && currentQuestions[questionIndex]) {
                                         currentQuestions[questionIndex].options.splice(questionIndex, 1);
-                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, currentQuestions);
                                       }
                                     }}
                                   >
@@ -515,7 +515,7 @@ const CreateCourse = () => {
                                           const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
                                           if (currentQuestions && currentQuestions[questionIndex]) {
                                             currentQuestions[questionIndex].options.splice(optionIndex, 1);
-                                            form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                            form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, currentQuestions);
                                           }
                                         }}
                                         disabled={form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`)?.length === 2}
@@ -532,8 +532,8 @@ const CreateCourse = () => {
                                       const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
                                       if (currentQuestions && currentQuestions[questionIndex]) {
                                         currentQuestions[questionIndex].options = currentQuestions[questionIndex].options || [];
-                                        currentQuestions[questionIndex].options.push({ text: "", isCorrect: false });
-                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                                        currentQuestions[questionIndex].options?.push({ text: "", isCorrect: false });
+                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, currentQuestions);
                                       }
                                     }}
                                   >
