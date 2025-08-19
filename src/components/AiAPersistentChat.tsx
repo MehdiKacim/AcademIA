@@ -6,7 +6,7 @@ import { Send, Bot, User as UserIcon, MessageCircleMore, X } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useCourseChat } from "@/contexts/CourseChatContext"; // New import
+import { useCourseChat } from "@/contexts/CourseChatContext";
 
 interface Message {
   id: number;
@@ -21,18 +21,21 @@ const AiAPersistentChat = () => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Use context for chat open state and initial message
   const { currentCourseTitle, currentModuleTitle, isChatOpen, openChat, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
 
   const isMobile = useIsMobile();
 
+  // Fonction pour faire défiler vers le bas
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   // Sync internal isOpen state with context's isChatOpen
   useEffect(() => {
     if (isChatOpen) {
-      // If chat is opened via context and there's an initial message, set it
       if (initialChatMessage) {
         setInput(initialChatMessage);
-        setInitialChatMessage(null); // Clear the initial message after setting it
+        setInitialChatMessage(null);
       }
       scrollToBottom();
     }
@@ -44,7 +47,6 @@ const AiAPersistentChat = () => {
 
   const handleSendMessage = () => {
     if (input.trim()) {
-      // Build context prefix
       const contextParts = [];
       if (currentCourseTitle) {
         contextParts.push(`Cours "${currentCourseTitle}"`);
@@ -58,7 +60,6 @@ const AiAPersistentChat = () => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInput('');
 
-      // Simuler la réponse d'AiA
       setTimeout(() => {
         const aiaResponse: Message = {
           id: messages.length + 2,
@@ -84,7 +85,6 @@ const AiAPersistentChat = () => {
     }
   };
 
-  // Contenu commun du chat (messages + input)
   const chatContent = (
     <div className="flex-grow flex flex-col py-4">
       <ScrollArea className="flex-grow p-4 border rounded-md mb-4">
@@ -122,7 +122,7 @@ const AiAPersistentChat = () => {
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
-      <div className="flex gap-2 flex-wrap"> {/* Added flex-wrap for small screens */}
+      <div className="flex gap-2 flex-wrap">
         {currentCourseTitle && (
           <Button
             variant="outline"
@@ -160,14 +160,14 @@ const AiAPersistentChat = () => {
 
   if (isMobile) {
     return (
-      <Sheet open={isChatOpen} onOpenChange={openChat}> {/* Use isChatOpen from context */}
+      <Sheet open={isChatOpen} onOpenChange={openChat}>
         <SheetTrigger asChild>
           <Button
             variant="default"
             size="icon"
             className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg z-50"
             aria-label="Ouvrir le chat AiA"
-            onClick={() => openChat()} // Use openChat from context
+            onClick={() => openChat()}
           >
             <MessageCircleMore className="h-7 w-7" />
           </Button>
@@ -184,7 +184,6 @@ const AiAPersistentChat = () => {
     );
   }
 
-  // Version Desktop (panneau flottant non bloquant)
   return (
     <>
       <Button
@@ -192,7 +191,7 @@ const AiAPersistentChat = () => {
         size="icon"
         className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg z-50"
         aria-label="Ouvrir le chat AiA"
-        onClick={handleToggleChat} // Use internal toggle
+        onClick={handleToggleChat}
       >
         <MessageCircleMore className="h-7 w-7" />
       </Button>
@@ -203,7 +202,7 @@ const AiAPersistentChat = () => {
             <h3 className="flex items-center gap-2 text-lg font-semibold">
               <Bot className="h-5 w-5 text-primary" /> Discuter avec AiA
             </h3>
-            <Button variant="ghost" size="icon" onClick={closeChat} className="h-8 w-8"> {/* Use closeChat from context */}
+            <Button variant="ghost" size="icon" onClick={closeChat} className="h-8 w-8">
               <X className="h-4 w-4" />
               <span className="sr-only">Fermer le chat</span>
             </Button>
