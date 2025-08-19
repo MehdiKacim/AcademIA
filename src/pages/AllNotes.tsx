@@ -20,44 +20,33 @@ const AllNotes = () => {
   const [selectedNoteGroupKey, setSelectedNoteGroupKey] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  // Effect to load all notes and set initial selection
+  // Effect to load all notes and set initial selection on mount or full refresh
   useEffect(() => {
     const notes = getAllNotesData();
     setAllNotes(notes);
-    // If no note is selected, and there are notes, select the first one.
-    // This ensures a default selection on initial load or refresh.
-    if (notes.length > 0 && selectedNoteGroupKey === null) {
+    // Only set initial selection if no selection has been made yet AND there are notes
+    if (selectedNoteGroupKey === null && notes.length > 0) {
       setSelectedNoteGroupKey(notes[0].key);
     }
-  }, [refreshKey]); // Only refreshKey as dependency for fetching notes
-
-  // Memoize filtered notes to avoid re-calculation on every render
-  const filteredNotes = useMemo(() => {
-    if (!searchQuery) {
-      return allNotes;
-    }
-    const lowerCaseQuery = searchQuery.toLowerCase();
-    return allNotes.filter(noteGroup => {
-      const contextMatch = noteGroup.context.toLowerCase().includes(lowerCaseQuery);
-      const notesContentMatch = noteGroup.notes.some(note =>
-        note.toLowerCase().includes(lowerCaseQuery)
-      );
-      return contextMatch || notesContentMatch;
-    });
-  }, [allNotes, searchQuery]);
+  }, [refreshKey]); // This effect handles initial load and full refresh
 
   // Effect to manage selectedNoteGroupKey based on filteredNotes
+  // This ensures that if the currently selected note is filtered out, the selection is cleared.
+  // It does NOT automatically re-select the first item if selectedNoteGroupKey is null,
+  // allowing the 'Retour à la liste' action to work.
   useEffect(() => {
-    // If no note is selected but there are filtered notes, select the first filtered note.
-    if (selectedNoteGroupKey === null && filteredNotes.length > 0) {
-      setSelectedNoteGroupKey(filteredNotes[0].key);
+    if (selectedNoteGroupKey !== null && !filteredNotes.some(n => n.key === selectedNoteGroupKey)) {
+      setSelectedNoteGroupKey(null); // Clear selection if current note is filtered out
     }
-    // If the currently selected note group is no longer in the filtered list,
-    // reset selection to the first filtered note or null if no filtered notes.
-    else if (selectedNoteGroupKey !== null && !filteredNotes.some(n => n.key === selectedNoteGroupKey)) {
-      setSelectedNoteGroupKey(filteredNotes.length > 0 ? filteredNotes[0].key : null);
+    // If no note is selected and there are filtered notes, select the first one.
+    // This handles cases where search results appear after a cleared selection,
+    // but only if the user hasn't explicitly cleared it via 'Retour à la liste'.
+    // This condition is crucial: it only auto-selects if there's no selection AND there are filtered notes.
+    // If selectedNoteGroupKey is null because of handleBackToList, this won't re-select immediately.
+    else if (selectedNoteGroupKey === null && filteredNotes.length > 0 && searchQuery === '') {
+        setSelectedNoteGroupKey(filteredNotes[0].key);
     }
-  }, [filteredNotes, selectedNoteGroupKey]); // Dependencies: filteredNotes and selectedNoteGroupKey
+  }, [filteredNotes, selectedNoteGroupKey, searchQuery]); // Dependencies: filteredNotes, selectedNoteGroupKey, searchQuery
 
   const handleNoteChange = () => {
     setRefreshKey(prev => prev + 1);
