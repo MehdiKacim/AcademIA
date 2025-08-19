@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
-import { Progress } from "@/components/ui/progress"; // Import du composant Progress
+import { Progress } from "@/components/ui/progress";
+import NotesSection from "@/components/NotesSection"; // Nouvelle importation
+import { generateNoteKey } from "@/lib/notes"; // Nouvelle importation
 
 interface Module {
   title: string;
@@ -52,10 +54,10 @@ const initialDummyCourses: Course[] = [
     title: "Algorithmes Avancés",
     description: "Maîtrisez les structures de données complexes et les algorithmes efficaces pour résoudre des problèmes informatiques avancés.",
     modules: [
-      { title: "Module 1: Structures de données avancées", content: "Arbres, graphes, tables de hachage. Les arbres sont des structures hiérarchiques, les graphes représentent des relations entre des entités, et les tables de hachage permettent un accès rapide aux données. Comprendre ces structures est fondamental pour concevoir des algorithmes efficaces.", isCompleted: false },
-      { title: "Module 2: Algorithmes de tri et de recherche", content: "Quicksort, Mergesort, recherche binaire. Le tri organise les données dans un ordre spécifique, tandis que la recherche permet de trouver des éléments. Quicksort et Mergesort sont des algorithmes de tri efficaces, et la recherche binaire est très rapide pour les données triées.", isCompleted: false },
-      { title: "Module 3: Programmation dynamique", content: "Optimisation de problèmes complexes. La programmation dynamique est une technique pour résoudre des problèmes complexes en les décomposant en sous-problèmes plus petits et en stockant les résultats pour éviter les calculs redondants. Elle est souvent utilisée pour l'optimisation.", isCompleted: false },
-      { title: "Module 4: Algorithmes de graphes", content: "Dijkstra, BFS, DFS. Les algorithmes de graphes sont utilisés pour naviguer et analyser des structures de graphes. Dijkstra trouve le chemin le plus court, BFS (Breadth-First Search) explore niveau par niveau, et DFS (Depth-First Search) explore en profondeur avant de revenir en arrière. Ils sont essentiels pour les réseaux, la logistique, etc.", isCompleted: false },
+      { title: "Module 1: Structures de données avancées", content: "Arbres, graphes, tables de hachage.", isCompleted: false },
+      { title: "Module 2: Algorithmes de tri et de recherche", content: "Quicksort, Mergesort, recherche binaire.", isCompleted: false },
+      { title: "Module 3: Programmation dynamique", content: "Optimisation de problèmes complexes.", isCompleted: false },
+      { title: "Module 4: Algorithmes de graphes", content: "Dijkstra, BFS, DFS.", isCompleted: false },
     ],
     skillsToAcquire: ["Maîtriser les structures de données", "Optimiser les algorithmes", "Résoudre des problèmes complexes", "Analyser les graphes"]
   },
@@ -210,6 +212,10 @@ const ModuleDetail = () => {
           </div>
         </CardContent>
       </Card>
+
+      <section>
+        <NotesSection noteKey={generateNoteKey('module', course.id, currentModuleIndex)} title={module.title} />
+      </section>
     </div>
   );
 };

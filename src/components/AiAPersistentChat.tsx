@@ -31,17 +31,18 @@ const AiAPersistentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Sync internal isOpen state with context's isChatOpen
+  // Sync initial message and scroll when chat opens
   useEffect(() => {
     if (isChatOpen) {
       if (initialChatMessage) {
         setInput(initialChatMessage);
-        setInitialChatMessage(null);
+        setInitialChatMessage(null); // Clear initial message after setting
       }
       scrollToBottom();
     }
   }, [isChatOpen, initialChatMessage, setInitialChatMessage]);
 
+  // Scroll to bottom whenever messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -150,10 +151,6 @@ const AiAPersistentChat = () => {
       </div>
     </div>
   );
-
-  if (!isChatOpen) {
-    return null; // Ne rien rendre si le chat n'est pas ouvert
-  }
 
   return isMobile ? (
     <Sheet open={isChatOpen} onOpenChange={closeChat}>

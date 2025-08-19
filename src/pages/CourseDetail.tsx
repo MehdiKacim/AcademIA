@@ -15,7 +15,9 @@ import { motion } from 'framer-motion';
 import { showSuccess, showError } from '@/utils/toast';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import ModuleFlowVisualizer from "@/components/ModuleFlowVisualizer"; // Nouvelle importation
+import ModuleFlowVisualizer from "@/components/ModuleFlowVisualizer";
+import NotesSection from "@/components/NotesSection"; // Nouvelle importation
+import { generateNoteKey } from "@/lib/notes"; // Nouvelle importation
 
 interface Module {
   title: string;
@@ -187,6 +189,10 @@ const CourseDetail = () => {
             );
           })}
         </Accordion>
+      </section>
+
+      <section>
+        <NotesSection noteKey={generateNoteKey('course', course.id)} title={course.title} />
       </section>
 
       <section className="mt-12">
