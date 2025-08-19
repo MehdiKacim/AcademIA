@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle } from "lucide-react";
+import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText } from "lucide-react"; // Ajout de NotebookText
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
@@ -10,7 +10,7 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey, getNotes } from "@/lib/notes";
-import ModuleNotesSidebar from "@/components/ModuleNotesSidebar"; // Nouvelle importation
+import ModuleNotesSidebar from "@/components/ModuleNotesSidebar";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -31,7 +31,7 @@ const ModuleDetail = () => {
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
-  const [refreshNotesSection, setRefreshNotesSection] = useState(0); // Utilisé pour rafraîchir le sidebar
+  const [refreshNotesSection, setRefreshNotesSection] = useState(0);
 
   useEffect(() => {
     if (course && module) {
@@ -63,7 +63,6 @@ const ModuleDetail = () => {
     );
   }
 
-  // Vérifier si le module est accessible (le précédent doit être complété)
   const isModuleAccessible = currentModuleIndex === 0 || course.modules[currentModuleIndex - 1]?.isCompleted;
 
   if (!isModuleAccessible) {
@@ -93,7 +92,6 @@ const ModuleDetail = () => {
           }
         : c
     );
-    // Mettre à jour directement dummyCourses pour que les changements soient persistants dans la démo
     Object.assign(dummyCourses, updatedCourses);
 
     showSuccess(`Module "${module.title}" marqué comme terminé !`);
@@ -119,7 +117,7 @@ const ModuleDetail = () => {
   };
 
   const handleNoteAdded = useCallback(() => {
-    setRefreshNotesSection(prev => prev + 1); // Incrémente pour forcer le rafraîchissement du sidebar
+    setRefreshNotesSection(prev => prev + 1);
   }, []);
 
   const totalModules = course.modules.length;
@@ -127,8 +125,8 @@ const ModuleDetail = () => {
   const progressPercentage = Math.round((completedModules / totalModules) * 100);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 max-w-screen-xl mx-auto"> {/* Ajuster la mise en page principale */}
-      <div className="flex-grow space-y-8"> {/* Zone de contenu principale */}
+    <div className="flex flex-col lg:flex-row gap-8 max-w-screen-xl mx-auto">
+      <div className="flex-grow space-y-8">
         <div className="flex items-center justify-between mb-6">
           <Button variant="outline" onClick={() => navigate(`/courses/${courseId}`)}>
             <ArrowLeft className="h-4 w-4 mr-2" /> Retour au cours
@@ -136,7 +134,7 @@ const ModuleDetail = () => {
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             {course.title}
           </h1>
-          <div></div> {/* Espace réservé pour l'alignement */}
+          <div></div>
         </div>
 
         <Card>
@@ -152,14 +150,12 @@ const ModuleDetail = () => {
           </CardHeader>
           <CardContent>
             {module.sections.map((section, index) => {
-              // Les notes de section seront gérées par le ModuleNotesSidebar
               return (
                 <ContextMenu key={index}>
                   <ContextMenuTrigger className="block w-full">
                     <div className="mb-6 p-4 border rounded-md bg-muted/10 cursor-context-menu">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
-                        {/* L'affichage du nombre de notes est maintenant dans le sidebar */}
                       </div>
                       {section.type === 'video' && section.url ? (
                         <div className="relative w-full aspect-video my-4 rounded-md overflow-hidden">
@@ -225,7 +221,6 @@ const ModuleDetail = () => {
         </Card>
       </div>
 
-      {/* Module Notes Sidebar */}
       <ModuleNotesSidebar
         courseId={courseId}
         moduleIndex={currentModuleIndex}
@@ -233,7 +228,6 @@ const ModuleDetail = () => {
         onNoteChange={handleNoteAdded}
       />
 
-      {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
         "fixed z-40 p-4",
         isMobile ? "bottom-20 left-4" : "bottom-4 left-4"
