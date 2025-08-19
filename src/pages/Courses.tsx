@@ -8,19 +8,25 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { dummyCourses } from "@/lib/courseData"; // Import dummyCourses (now loaded from localStorage)
+import { loadCourses } from "@/lib/courseData"; // Import loadCourses
 
 const Courses = () => {
   const { currentRole } = useRole();
+  const dummyCourses = loadCourses(); // Charger les cours depuis le localStorage
 
   // Filter courses based on role or display all for creators
   const getCoursesForRole = () => {
     if (currentRole === 'student') {
       // For students, show all courses (or could filter by enrolled courses if we had user data)
-      return dummyCourses.map(course => ({
-        ...course,
-        progress: Math.floor(Math.random() * 100), // Dummy progress for students
-      }));
+      return dummyCourses.map(course => {
+        const completedModules = course.modules.filter(m => m.isCompleted).length;
+        const totalModules = course.modules.length;
+        const progress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+        return {
+          ...course,
+          progress: progress,
+        };
+      });
     } else if (currentRole === 'creator') {
       // For creators, show all courses they created (or all for demo)
       return dummyCourses.map(course => ({

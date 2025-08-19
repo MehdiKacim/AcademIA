@@ -14,6 +14,9 @@ export interface ModuleSection {
   type?: 'text' | 'quiz' | 'video' | 'image';
   url?: string;
   questions?: QuizQuestion[]; // Pour les sections de type 'quiz'
+  isCompleted: boolean; // Nouvelle propriété pour la complétion de la section
+  passingScore?: number; // Nouvelle propriété pour le score de réussite du quiz
+  quizResult?: { score: number; total: number; passed: boolean }; // Pour stocker le dernier résultat du quiz
 }
 
 export interface Module {
@@ -46,20 +49,72 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 1: Qu'est-ce que l'IA ?",
         sections: [
-          { title: "Définition et Histoire", content: "L'intelligence artificielle (IA) est un domaine de l'informatique qui vise à créer des machines capables de simuler l'intelligence humaine. Cela inclut l'apprentissage, la résolution de problèmes, la reconnaissance de la parole et la prise de décision. Son histoire remonte aux années 1950 avec des pionniers comme Alan Turing. Aujourd'hui, l'IA se manifeste sous diverses formes, de l'IA faible (spécialisée) à l'IA forte (générale)." },
-          { title: "Types d'IA", content: "On distingue principalement l'IA faible (ANI - Artificial Narrow Intelligence), conçue pour une tâche spécifique (ex: reconnaissance faciale), et l'IA forte (AGI - Artificial General Intelligence), capable de comprendre, apprendre et appliquer l'intelligence à n'importe quel problème, comme un être humain. L'ASI (Artificial Super Intelligence) est une IA hypothétique surpassant l'intelligence humaine." },
-          { title: "Vidéo d'introduction à l'IA", content: "Regardez cette vidéo pour une introduction visuelle à l'IA.", type: "video", url: "https://www.youtube.com/embed/ad79nYk2keg" },
+          { title: "Définition et Histoire", content: "L'intelligence artificielle (IA) est un domaine de l'informatique qui vise à créer des machines capables de simuler l'intelligence humaine. Cela inclut l'apprentissage, la résolution de problèmes, la reconnaissance de la parole et la prise de décision. Son histoire remonte aux années 1950 avec des pionniers comme Alan Turing. Aujourd'hui, l'IA se manifeste sous diverses formes, de l'IA faible (spécialisée) à l'IA forte (générale).", isCompleted: true },
+          { title: "Types d'IA", content: "On distingue principalement l'IA faible (ANI - Artificial Narrow Intelligence), conçue pour une tâche spécifique (ex: reconnaissance faciale), et l'IA forte (AGI - Artificial General Intelligence), capable de comprendre, apprendre et appliquer l'intelligence à n'importe quel problème, comme un être humain. L'ASI (Artificial Super Intelligence) est une IA hypothétique surpassant l'intelligence humaine.", isCompleted: true },
+          { title: "Vidéo d'introduction à l'IA", content: "Regardez cette vidéo pour une introduction visuelle à l'IA.", type: "video", url: "https://www.youtube.com/embed/ad79nYk2keg", isCompleted: true },
+          {
+            title: "Quiz: Fondamentaux de l'IA",
+            content: "Testez vos connaissances sur les bases de l'IA.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel est le but principal de l'intelligence artificielle ?",
+                options: [
+                  { text: "Créer des robots humanoïdes", isCorrect: false },
+                  { text: "Simuler l'intelligence humaine dans les machines", isCorrect: true },
+                  { text: "Remplacer les humains dans toutes les tâches", isCorrect: false },
+                  { text: "Développer des jeux vidéo plus complexes", isCorrect: false },
+                ],
+              },
+              {
+                question: "Quelle est la différence entre l'IA faible et l'IA forte ?",
+                options: [
+                  { text: "L'IA faible est plus rapide que l'IA forte", isCorrect: false },
+                  { text: "L'IA faible est spécialisée, l'IA forte est générale", isCorrect: true },
+                  { text: "L'IA faible est pour les débutants, l'IA forte pour les experts", isCorrect: false },
+                  { text: "Il n'y a pas de différence, ce sont des synonymes", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70, // 70% pour réussir
+          },
         ],
-        isCompleted: true,
+        isCompleted: false,
         level: 0
       },
       {
         title: "Module 2: Apprentissage Automatique (Intro)",
         sections: [
-          { title: "Principes Fondamentaux", content: "Le Machine Learning est une branche de l'IA qui permet aux systèmes d'apprendre à partir de données sans être explicitement programmés. Ce module couvre les concepts fondamentaux, les types d'apprentissage (supervisé, non supervisé, par renforcement) et les algorithmes courants comme la régression linéaire et la classification." },
-          { title: "Apprentissage Supervisé", content: "L'apprentissage supervisé utilise des données étiquetées pour entraîner des modèles. Nous explorerons des algorithmes tels que les machines à vecteurs de support (SVM), les arbres de décision et les forêts aléatoires, ainsi que les métriques d'évaluation associées." },
-          { title: "Apprentissage Non-Supervisé", content: "L'apprentissage non supervisé trouve des motifs dans des données non étiquetées. Ce module aborde le clustering (K-means, DBSCAN) et la réduction de dimensionnalité (PCA), des techniques essentielles pour l'exploration de données." },
-          { title: "Image: Cycle de vie du ML", content: "Visualisez le cycle de vie typique d'un projet de Machine Learning.", type: "image", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Machine_Learning_Workflow.svg/1200px-Machine_Learning_Workflow.svg.png" },
+          { title: "Principes Fondamentaux", content: "Le Machine Learning est une branche de l'IA qui permet aux systèmes d'apprendre à partir de données sans être explicitement programmés. Ce module couvre les concepts fondamentaux, les types d'apprentissage (supervisé, non supervisé, par renforcement) et les algorithmes courants comme la régression linéaire et la classification.", isCompleted: false },
+          { title: "Apprentissage Supervisé", content: "L'apprentissage supervisé utilise des données étiquetées pour entraîner des modèles. Nous explorerons des algorithmes tels que les machines à vecteurs de support (SVM), les arbres de décision et les forêts aléatoires, ainsi que les métriques d'évaluation associées.", isCompleted: false },
+          { title: "Apprentissage Non-Supervisé", content: "L'apprentissage non supervisé trouve des motifs dans des données non étiquetées. Ce module aborde le clustering (K-means, DBSCAN) et la réduction de dimensionnalité (PCA), des techniques essentielles pour l'exploration de données.", isCompleted: false },
+          { title: "Image: Cycle de vie du ML", content: "Visualisez le cycle de vie typique d'un projet de Machine Learning.", type: "image", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Machine_Learning_Workflow.svg/1200px-Machine_Learning_Workflow.svg.png", isCompleted: false },
+          {
+            title: "Quiz: Types de Machine Learning",
+            content: "Testez vos connaissances sur les différents types d'apprentissage automatique.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel type d'apprentissage utilise des données étiquetées ?",
+                options: [
+                  { text: "Apprentissage non supervisé", isCorrect: false },
+                  { text: "Apprentissage par renforcement", isCorrect: false },
+                  { text: "Apprentissage supervisé", isCorrect: true },
+                ],
+              },
+              {
+                question: "Le clustering est une technique de quel type d'apprentissage ?",
+                options: [
+                  { text: "Apprentissage supervisé", isCorrect: false },
+                  { text: "Apprentissage non supervisé", isCorrect: true },
+                  { text: "Apprentissage par renforcement", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 60,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -67,9 +122,9 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 3: Réseaux de Neurones et Deep Learning",
         sections: [
-          { title: "Introduction aux Réseaux de Neurones", content: "Les réseaux de neurones sont des modèles inspirés du cerveau humain, composés de couches de 'neurones' interconnectés. Chaque neurone reçoit des entrées, effectue un calcul et transmet une sortie. L'apprentissage se fait par ajustement des poids des connexions." },
-          { title: "Deep Learning", content: "Le Deep Learning, une sous-catégorie du Machine Learning, utilise des réseaux de neurones profonds (avec de nombreuses couches) pour apprendre des représentations complexes des données. Cela a révolutionné des domaines comme la vision par ordinateur et le traitement du langage naturel." },
-          { title: "Types de Réseaux", content: "Nous aborderons les réseaux de neurones convolutifs (CNN) pour l'image, les réseaux de neurones récurrents (RNN) pour les séquences, et les transformeurs pour le traitement du langage naturel." },
+          { title: "Introduction aux Réseaux de Neurones", content: "Les réseaux de neurones sont des modèles inspirés du cerveau humain, composés de couches de 'neurones' interconnectés. Chaque neurone reçoit des entrées, effectue un calcul et transmet une sortie. L'apprentissage se fait par ajustement des poids des connexions.", isCompleted: false },
+          { title: "Deep Learning", content: "Le Deep Learning, une sous-catégorie du Machine Learning, utilise des réseaux de neurones profonds (avec de nombreuses couches) pour apprendre des représentations complexes des données. Cela a révolutionné des domaines comme la vision par ordinateur et le traitement du langage naturel.", isCompleted: false },
+          { title: "Types de Réseaux", content: "Nous aborderons les réseaux de neurones convolutifs (CNN) pour l'image, les réseaux de neurones récurrents (RNN) pour les séquences, et les transformeurs pour le traitement du langage naturel.", isCompleted: false },
           {
             title: "Quiz: Réseaux de Neurones",
             content: "Testez vos connaissances sur les réseaux de neurones.",
@@ -103,6 +158,8 @@ const initialDummyCourses: Course[] = [
                 ],
               },
             ],
+            isCompleted: false,
+            passingScore: 75,
           },
         ],
         isCompleted: false,
@@ -111,9 +168,9 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 4: Applications de l'IA",
         sections: [
-          { title: "Vision par Ordinateur", content: "La vision par ordinateur permet aux machines de 'voir' et d'interpréter des images et des vidéos. Applications : reconnaissance faciale, détection d'objets, voitures autonomes, diagnostics médicaux par imagerie." },
-          { title: "Traitement du Langage Naturel (NLP)", content: "Le NLP permet aux machines de comprendre, interpréter et générer du langage humain. Applications : assistants vocaux, traduction automatique, analyse de sentiments, chatbots." },
-          { title: "Systèmes de Recommandation", content: "L'IA est utilisée pour recommander des produits, des films, de la musique, etc., en analysant les préférences et le comportement des utilisateurs. Exemples : Netflix, Amazon, Spotify." },
+          { title: "Vision par Ordinateur", content: "La vision par ordinateur permet aux machines de 'voir' et d'interpréter des images et des vidéos. Applications : reconnaissance faciale, détection d'objets, voitures autonomes, diagnostics médicaux par imagerie.", isCompleted: false },
+          { title: "Traitement du Langage Naturel (NLP)", content: "Le NLP permet aux machines de comprendre, interpréter et générer du langage humain. Applications : assistants vocaux, traduction automatique, analyse de sentiments, chatbots.", isCompleted: false },
+          { title: "Systèmes de Recommandation", content: "L'IA est utilisée pour recommander des produits, des films, de la musique, etc., en analysant les préférences et le comportement des utilisateurs. Exemples : Netflix, Amazon, Spotify.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -130,29 +187,56 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 1: Les bases de React",
         sections: [
-          { title: "Qu'est-ce que React ?", content: "React est une bibliothèque JavaScript déclarative, efficace et flexible pour construire des interfaces utilisateur. Elle permet de créer des composants UI réutilisables." },
-          { title: "Composants et JSX", content: "Les composants sont les blocs de construction fondamentaux de React. JSX est une extension syntaxique qui permet d'écrire du HTML-like code directement dans JavaScript, facilitant la création d'éléments React." },
-          { title: "Props et État", content: "Les props (propriétés) sont des données passées des composants parents aux enfants, rendant les composants réutilisables. L'état gère les données internes d'un composant qui peuvent changer au fil du temps, déclenchant un re-rendu de l'UI." },
+          { title: "Qu'est-ce que React ?", content: "React est une bibliothèque JavaScript déclarative, efficace et flexible pour construire des interfaces utilisateur. Elle permet de créer des composants UI réutilisables.", isCompleted: true },
+          { title: "Composants et JSX", content: "Les composants sont les blocs de construction fondamentaux de React. JSX est une extension syntaxique qui permet d'écrire du HTML-like code directement dans JavaScript, facilitant la création d'éléments React.", isCompleted: true },
+          { title: "Props et État", content: "Les props (propriétés) sont des données passées des composants parents aux enfants, rendant les composants réutilisables. L'état gère les données internes d'un composant qui peuvent changer au fil du temps, déclenchant un re-rendu de l'UI.", isCompleted: true },
+          {
+            title: "Quiz: Bases de React",
+            content: "Testez vos connaissances sur les concepts fondamentaux de React.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel est le rôle principal de JSX en React ?",
+                options: [
+                  { text: "Gérer l'état des composants", isCorrect: false },
+                  { text: "Écrire du HTML directement dans JavaScript", isCorrect: true },
+                  { text: "Effectuer des requêtes API", isCorrect: false },
+                  { text: "Définir le style des composants", isCorrect: false },
+                ],
+              },
+              {
+                question: "Comment passe-t-on des données d'un composant parent à un composant enfant ?",
+                options: [
+                  { text: "Via l'état (state)", isCorrect: false },
+                  { text: "Via les props (properties)", isCorrect: true },
+                  { text: "Via des variables globales", isCorrect: false },
+                  { text: "Via des événements", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 65,
+          },
         ],
-        isCompleted: true,
+        isCompleted: false,
         level: 0
       },
       {
         title: "Module 2: Hooks et gestion d'état",
         sections: [
-          { title: "Introduction aux Hooks", content: "Les Hooks sont des fonctions qui vous permettent d'utiliser l'état et d'autres fonctionnalités de React sans écrire de classes. Ils ont été introduits dans React 16.8." },
-          { title: "useState et useEffect", content: "`useState` est le Hook le plus fondamental pour ajouter l'état local à un composant fonctionnel. `useEffect` vous permet d'effectuer des effets secondaires (comme les requêtes de données, les abonnements ou la modification directe du DOM) dans les composants fonctionnels." },
-          { title: "useContext et useReducer", content: "`useContext` permet de partager des données entre composants sans passer les props manuellement à chaque niveau. `useReducer` est une alternative à `useState` pour la gestion d'état plus complexe, souvent utilisée avec un `reducer` pour des logiques de transition d'état." },
+          { title: "Introduction aux Hooks", content: "Les Hooks sont des fonctions qui vous permettent d'utiliser l'état et d'autres fonctionnalités de React sans écrire de classes. Ils ont été introduits dans React 16.8.", isCompleted: false },
+          { title: "useState et useEffect", content: "`useState` est le Hook le plus fondamental pour ajouter l'état local à un composant fonctionnel. `useEffect` vous permet d'effectuer des effets secondaires (comme les requêtes de données, les abonnements ou la modification directe du DOM) dans les composants fonctionnels.", isCompleted: false },
+          { title: "useContext et useReducer", content: "`useContext` permet de partager des données entre composants sans passer les props manuellement à chaque niveau. `useReducer` est une alternative à `useState` pour la gestion d'état plus complexe, souvent utilisée avec un `reducer` pour des logiques de transition d'état.", isCompleted: false },
         ],
-        isCompleted: true,
+        isCompleted: false,
         level: 0
       },
       {
         title: "Module 3: Routage avec React Router",
         sections: [
-          { title: "Principes du Routage Client-Side", content: "React Router est une bibliothèque standard pour le routage côté client dans les applications React. Elle permet de créer des applications à page unique (SPA) avec plusieurs vues, où l'URL change sans recharger la page entière." },
-          { title: "Configuration des Routes", content: "Vous apprendrez à définir des routes en utilisant les composants `<BrowserRouter>`, `<Routes>` et `<Route>`, en associant des chemins d'URL à des composants React spécifiques." },
-          { title: "Navigation Programmatic", content: "Utilisation du hook `useNavigate` pour la navigation programmatique, permettant de rediriger les utilisateurs après une action (ex: soumission de formulaire)." },
+          { title: "Principes du Routage Client-Side", content: "React Router est une bibliothèque standard pour le routage côté client dans les applications React. Elle permet de créer des applications à page unique (SPA) avec plusieurs vues, où l'URL change sans recharger la page entière.", isCompleted: false },
+          { title: "Configuration des Routes", content: "Vous apprendrez à définir des routes en utilisant les composants `<BrowserRouter>`, `<Routes>` et `<Route>`, en associant des chemins d'URL à des composants React spécifiques.", isCompleted: false },
+          { title: "Navigation Programmatic", content: "Utilisation du hook `useNavigate` pour la navigation programmatique, permettant de rediriger les utilisateurs après une action (ex: soumission de formulaire).", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -160,9 +244,9 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 4: Requêtes API et cycle de vie",
         sections: [
-          { title: "Fetching de Données avec useEffect", content: "Dans React, vous utilisez généralement `useEffect` pour effectuer des requêtes API lorsque le composant est monté ou lorsque certaines dépendances changent. Il est crucial de gérer les états de chargement et d'erreur." },
-          { title: "Gestion des États de Chargement et d'Erreur", content: "Implémentation de logiques pour afficher des indicateurs de chargement et des messages d'erreur, améliorant l'expérience utilisateur lors des interactions asynchrones." },
-          { title: "Nettoyage des Effets", content: "Apprenez à nettoyer les effets secondaires (ex: annuler des requêtes, désabonner des écouteurs) en retournant une fonction de nettoyage dans `useEffect` pour éviter les fuites de mémoire." },
+          { title: "Fetching de Données avec useEffect", content: "Dans React, vous utilisez généralement `useEffect` pour effectuer des requêtes API lorsque le composant est monté ou lorsque certaines dépendances changent. Il est crucial de gérer les états de chargement et d'erreur.", isCompleted: false },
+          { title: "Gestion des États de Chargement et d'Erreur", content: "Implémentation de logiques pour afficher des indicateurs de chargement et des messages d'erreur, améliorant l'expérience utilisateur lors des interactions asynchrones.", isCompleted: false },
+          { title: "Nettoyage des Effets", content: "Apprenez à nettoyer les effets secondaires (ex: annuler des requêtes, désabonner des écouteurs) en retournant une fonction de nettoyage dans `useEffect` pour éviter les fuites de mémoire.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -179,8 +263,34 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 1: Structures de données avancées",
         sections: [
-          { title: "Arbres et Graphes", content: "Ce module explore les structures de données complexes telles que les arbres (binaires, AVL, B-trees), les graphes (représentations, parcours) et les tables de hachage. Comprendre leur fonctionnement est crucial pour optimiser les performances de vos applications." },
-          { title: "Tables de Hachage", content: "Les tables de hachage offrent un accès rapide aux données. Nous étudierons leur fonctionnement interne, les collisions et les stratégies de résolution, ainsi que leurs applications pratiques." },
+          { title: "Arbres et Graphes", content: "Ce module explore les structures de données complexes telles que les arbres (binaires, AVL, B-trees), les graphes (représentations, parcours) et les tables de hachage. Comprendre leur fonctionnement est crucial pour optimiser les performances de vos applications.", isCompleted: false },
+          { title: "Tables de Hachage", content: "Les tables de hachage offrent un accès rapide aux données. Nous étudierons leur fonctionnement interne, les collisions et les stratégies de résolution, ainsi que leurs applications pratiques.", isCompleted: false },
+          {
+            title: "Quiz: Structures de Données",
+            content: "Testez vos connaissances sur les structures de données avancées.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quelle structure de données est la plus efficace pour la recherche rapide d'éléments ?",
+                options: [
+                  { text: "Liste chaînée", isCorrect: false },
+                  { text: "Table de hachage", isCorrect: true },
+                  { text: "Pile (Stack)", isCorrect: false },
+                  { text: "File (Queue)", isCorrect: false },
+                ],
+              },
+              {
+                question: "Un arbre binaire de recherche (BST) garantit-il toujours un temps de recherche O(log n) ?",
+                options: [
+                  { text: "Oui, toujours", isCorrect: false },
+                  { text: "Non, seulement s'il est équilibré", isCorrect: true },
+                  { text: "Non, c'est toujours O(n)", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
         isCompleted: false,
         level: 0
@@ -188,8 +298,8 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 2: Algorithmes de tri et de recherche",
         sections: [
-          { title: "Tris Efficaces", content: "Plongez dans les algorithmes de tri efficaces comme Quicksort, Mergesort et Heapsort, ainsi que les techniques de recherche avancées telles que la recherche binaire et la recherche par interpolation. Nous analyserons leur complexité temporelle et spatiale." },
-          { title: "Recherche Avancée", content: "Au-delà de la recherche binaire, nous explorerons des techniques pour des structures de données spécifiques et des scénarios de recherche plus complexes." },
+          { title: "Tris Efficaces", content: "Plongez dans les algorithmes de tri efficaces comme Quicksort, Mergesort et Heapsort, ainsi que les techniques de recherche avancées telles que la recherche binaire et la recherche par interpolation. Nous analyserons leur complexité temporelle et spatiale.", isCompleted: false },
+          { title: "Recherche Avancée", content: "Au-delà de la recherche binaire, nous explorerons des techniques pour des structures de données spécifiques et des scénarios de recherche plus complexes.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -197,8 +307,8 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 3: Programmation dynamique",
         sections: [
-          { title: "Principes de la PD", content: "La programmation dynamique est une méthode puissante pour résoudre des problèmes complexes en les décomposant en sous-problèmes plus petits. Ce module vous enseignera les principes de la PD, y compris la mémorisation et la tabulation, à travers des exemples classiques." },
-          { title: "Exemples Classiques", content: "Nous étudierons des problèmes comme la suite de Fibonacci, le problème du sac à dos, et le plus long sous-séquence commune pour illustrer l'application de la programmation dynamique." },
+          { title: "Principes de la PD", content: "La programmation dynamique est une méthode puissante pour résoudre des problèmes complexes en les décomposant en sous-problèmes plus petits. Ce module vous enseignera les principes de la PD, y compris la mémorisation et la tabulation, à travers des exemples classiques.", isCompleted: false },
+          { title: "Exemples Classiques", content: "Nous étudierons des problèmes comme la suite de Fibonacci, le problème du sac à dos, et le plus long sous-séquence commune pour illustrer l'application de la programmation dynamique.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -206,8 +316,8 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 4: Algorithmes de graphes",
         sections: [
-          { title: "Parcours de Graphes", content: "Découvrez les algorithmes fondamentaux sur les graphes, essentiels pour la modélisation de réseaux et de relations. Nous couvrirons les parcours en largeur (BFS) et en profondeur (DFS)." },
-          { title: "Plus Courts Chemins et Arbres Couvrants", content: "Nous aborderons l'algorithme de Dijkstra pour les plus courts chemins et l'algorithme de Kruskal pour les arbres couvrants minimaux, avec des applications concrètes." },
+          { title: "Parcours de Graphes", content: "Découvrez les algorithmes fondamentaux sur les graphes, essentiels pour la modélisation de réseaux et de relations. Nous couvrirons les parcours en largeur (BFS) et en profondeur (DFS).", isCompleted: false },
+          { title: "Plus Courts Chemins et Arbres Couvrants", content: "Nous aborderons l'algorithme de Dijkstra pour les plus courts chemins et l'algorithme de Kruskal pour les arbres couvrants minimaux, avec des applications concrètes.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -224,19 +334,45 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 1: Introduction au Web",
         sections: [
-          { title: "Historique et Fondamentaux", content: "Ce module couvre l'historique du web, les principes fondamentaux de HTML pour la structure, CSS pour le style, et JavaScript pour l'interactivité. Vous comprendrez comment ces trois piliers fonctionnent ensemble pour créer des pages web dynamiques." },
-          { title: "Fonctionnement Client-Serveur", content: "Comprenez comment les navigateurs (clients) interagissent avec les serveurs web pour récupérer et afficher le contenu, y compris les requêtes HTTP et les réponses." },
+          { title: "Historique et Fondamentaux", content: "Ce module couvre l'historique du web, les principes fondamentaux de HTML pour la structure, CSS pour le style, et JavaScript pour l'interactivité. Vous comprendrez comment ces trois piliers fonctionnent ensemble pour créer des pages web dynamiques.", isCompleted: true },
+          { title: "Fonctionnement Client-Serveur", content: "Comprenez comment les navigateurs (clients) interagissent avec les serveurs web pour récupérer et afficher le contenu, y compris les requêtes HTTP et les réponses.", isCompleted: true },
+          {
+            title: "Quiz: Fondamentaux du Web",
+            content: "Testez vos connaissances sur l'introduction au développement web.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quel langage est utilisé pour structurer le contenu d'une page web ?",
+                options: [
+                  { text: "CSS", isCorrect: false },
+                  { text: "JavaScript", isCorrect: false },
+                  { text: "HTML", isCorrect: true },
+                ],
+              },
+              {
+                question: "Quel protocole est principalement utilisé pour la communication entre client et serveur sur le web ?",
+                options: [
+                  { text: "FTP", isCorrect: false },
+                  { text: "SMTP", isCorrect: false },
+                  { text: "HTTP", isCorrect: true },
+                  { text: "TCP", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 80,
+          },
         ],
-        isCompleted: true,
+        isCompleted: false,
         level: 0
       },
       {
         title: "Module 2: Frontend avec React",
         sections: [
-          { title: "Composants et Props", content: "Plongez dans le développement frontend avec React. Vous apprendrez à créer des composants réutilisables et à utiliser les props pour la communication entre composants." },
-          { title: "Gestion de l'État avec Hooks", content: "Maîtrisez la gestion de l'état de votre application avec des hooks comme `useState` et `useEffect` pour créer des interfaces dynamiques et réactives." },
-          { title: "Gestion des formulaires et Validation", content: "Maîtrisez la création et la validation de formulaires complexes en React. Ce sous-module se concentre sur l'utilisation de `React Hook Form` pour une gestion efficace des entrées utilisateur et `Zod` pour la validation de schéma, garantissant la robustesse de vos formulaires." },
-          { title: "Styles avec Tailwind CSS", content: "Découvrez Tailwind CSS, un framework CSS utilitaire-first qui vous permet de construire des designs personnalisés directement dans votre balisage HTML. Apprenez à styliser rapidement et efficacement vos composants React sans quitter votre fichier JavaScript." },
+          { title: "Composants et Props", content: "Plongez dans le développement frontend avec React. Vous apprendrez à créer des composants réutilisables et à utiliser les props pour la communication entre composants.", isCompleted: false },
+          { title: "Gestion de l'État avec Hooks", content: "Maîtrisez la gestion de l'état de votre application avec des hooks comme `useState` et `useEffect` pour créer des interfaces dynamiques et réactives.", isCompleted: false },
+          { title: "Gestion des formulaires et Validation", content: "Maîtrisez la création et la validation de formulaires complexes en React. Ce sous-module se concentre sur l'utilisation de `React Hook Form` pour une gestion efficace des entrées utilisateur et `Zod` pour la validation de schéma, garantissant la robustesse de vos formulaires.", isCompleted: false },
+          { title: "Styles avec Tailwind CSS", content: "Découvrez Tailwind CSS, un framework CSS utilitaire-first qui vous permet de construire des designs personnalisés directement dans votre balisage HTML. Apprenez à styliser rapidement et efficacement vos composants React sans quitter votre fichier JavaScript.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -244,9 +380,9 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 3: Backend avec Node.js",
         sections: [
-          { title: "API RESTful avec Express.js", content: "Passez au développement backend avec Node.js et Express.js. Ce module vous enseignera comment construire des API RESTful, gérer les requêtes HTTP, et structurer votre application côté serveur pour une performance optimale." },
-          { title: "Bases de données SQL avec PostgreSQL", content: "Explorez les bases de données relationnelles avec PostgreSQL. Vous apprendrez les concepts SQL, la conception de schémas de base de données, et l'utilisation d'un ORM (Object-Relational Mapper) pour interagir avec votre base de données depuis Node.js." },
-          { title: "Authentification et Sécurité", content: "Implémentez des systèmes d'authentification sécurisés pour vos applications web. Ce sous-module couvre les concepts de JWT (JSON Web Tokens), la gestion des sessions, et les meilleures pratiques pour protéger les routes et les données de vos utilisateurs." },
+          { title: "API RESTful avec Express.js", content: "Passez au développement backend avec Node.js et Express.js. Ce module vous enseignera comment construire des API RESTful, gérer les requêtes HTTP, et structurer votre application côté serveur pour une performance optimale.", isCompleted: false },
+          { title: "Bases de données SQL avec PostgreSQL", content: "Explorez les bases de données relationnelles avec PostgreSQL. Vous apprendrez les concepts SQL, la conception de schémas de base de données, et l'utilisation d'un ORM (Object-Relational Mapper) pour interagir avec votre base de données depuis Node.js.", isCompleted: false },
+          { title: "Authentification et Sécurité", content: "Implémentez des systèmes d'authentification sécurisés pour vos applications web. Ce sous-module couvre les concepts de JWT (JSON Web Tokens), la gestion des sessions, et les meilleures pratiques pour protéger les routes et les données de vos utilisateurs.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -254,9 +390,9 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 4: Déploiement et Maintenance",
         sections: [
-          { title: "Préparation pour la Production", content: "Ce module vous guide à travers le processus de déploiement de vos applications fullstack. Vous apprendrez à préparer votre code pour la production (optimisation, minification)." },
-          { title: "Plateformes d'Hébergement", content: "Choisissez des plateformes d'hébergement adaptées (comme Vercel ou Netlify pour le frontend, Heroku ou Render pour le backend) et comprenez leurs spécificités." },
-          { title: "CI/CD et Monitoring", content: "Mettez en place des pipelines CI/CD (Intégration Continue/Déploiement Continu) pour des déploiements automatisés et des systèmes de monitoring pour assurer la performance continue et la maintenance de vos applications." },
+          { title: "Préparation pour la Production", content: "Ce module vous guide à travers le processus de déploiement de vos applications fullstack. Vous apprendrez à préparer votre code pour la production (optimisation, minification).", isCompleted: false },
+          { title: "Plateformes d'Hébergement", content: "Choisissez des plateformes d'hébergement adaptées (comme Vercel ou Netlify pour le frontend, Heroku ou Render pour le backend) et comprenez leurs spécificités.", isCompleted: false },
+          { title: "CI/CD et Monitoring", content: "Mettez en place des pipelines CI/CD (Intégration Continue/Déploiement Continu) pour des déploiements automatisés et des systèmes de monitoring pour assurer la performance continue et la maintenance de vos applications.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -273,19 +409,45 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 1: Introduction aux Données",
         sections: [
-          { title: "Définition et Rôle", content: "Ce module définit la science des données, son rôle croissant dans l'industrie, et les compétences clés requises. Vous comprendrez le cycle de vie des données, de la collecte à l'interprétation." },
-          { title: "Éthique des Données", content: "L'importance de l'éthique des données, de la confidentialité et de la partialité dans les algorithmes d'IA." },
+          { title: "Définition et Rôle", content: "Ce module définit la science des données, son rôle croissant dans l'industrie, et les compétences clés requises. Vous comprendrez le cycle de vie des données, de la collecte à l'interprétation.", isCompleted: true },
+          { title: "Éthique des Données", content: "L'importance de l'éthique des données, de la confidentialité et de la partialité dans les algorithmes d'IA.", isCompleted: true },
+          {
+            title: "Quiz: Introduction à la Science des Données",
+            content: "Testez vos connaissances sur les concepts fondamentaux de la science des données.",
+            type: "quiz",
+            questions: [
+              {
+                question: "Quelle est la première étape du cycle de vie des données ?",
+                options: [
+                  { text: "Analyse", isCorrect: false },
+                  { text: "Visualisation", isCorrect: false },
+                  { text: "Collecte", isCorrect: true },
+                  { text: "Modélisation", isCorrect: false },
+                ],
+              },
+              {
+                question: "Pourquoi l'éthique est-elle importante en science des données ?",
+                options: [
+                  { text: "Pour rendre les modèles plus rapides", isCorrect: false },
+                  { text: "Pour assurer la confidentialité et éviter les biais", isCorrect: true },
+                  { text: "Pour réduire les coûts de stockage", isCorrect: false },
+                ],
+              },
+            ],
+            isCompleted: false,
+            passingScore: 70,
+          },
         ],
-        isCompleted: true,
+        isCompleted: false,
         level: 0
       },
       {
         title: "Module 2: Collecte et Préparation des Données",
         sections: [
-          { title: "Techniques de Collecte", content: "Apprenez les techniques de collecte de données à partir de diverses sources (API, bases de données, web scraping)." },
-          { title: "Nettoyage et Transformation", content: "Ce module couvre également les étapes cruciales de nettoyage, de transformation et de gestion des données manquantes pour préparer vos ensembles de données à l'analyse." },
-          { title: "Exploration des Données (EDA)", content: "L'EDA est une étape essentielle pour comprendre vos données. Ce sous-module vous enseignera comment utiliser des statistiques descriptives et des techniques de visualisation (histogrammes, nuages de points, boîtes à moustaches) pour découvrir des motifs, des anomalies et des relations." },
-          { title: "Ingénierie des Caractéristiques", content: "L'ingénierie des caractéristiques est l'art de créer de nouvelles variables à partir de données brutes pour améliorer la performance des modèles. Ce module explore des techniques comme l'encodage catégoriel, la normalisation, la standardisation et la création de caractéristiques polynomiales." },
+          { title: "Techniques de Collecte", content: "Apprenez les techniques de collecte de données à partir de diverses sources (API, bases de données, web scraping).", isCompleted: false },
+          { title: "Nettoyage et Transformation", content: "Ce module couvre également les étapes cruciales de nettoyage, de transformation et de gestion des données manquantes pour préparer vos ensembles de données à l'analyse.", isCompleted: false },
+          { title: "Exploration des Données (EDA)", content: "L'EDA est une étape essentielle pour comprendre vos données. Ce sous-module vous enseignera comment utiliser des statistiques descriptives et des techniques de visualisation (histogrammes, nuages de points, boîtes à moustaches) pour découvrir des motifs, des anomalies et des relations.", isCompleted: false },
+          { title: "Ingénierie des Caractéristiques", content: "L'ingénierie des caractéristiques est l'art de créer de nouvelles variables à partir de données brutes pour améliorer la performance des modèles. Ce module explore des techniques comme l'encodage catégoriel, la normalisation, la standardisation et la création de caractéristiques polynomiales.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -293,8 +455,8 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 3: Modélisation Prédictive",
         sections: [
-          { title: "Concepts de Modélisation", content: "Introduction aux concepts de la modélisation prédictive. Ce module couvre les algorithmes de régression (linéaire, logistique) et de classification (k-NN, arbres de décision), en expliquant comment construire et entraîner des modèles pour faire des prédictions." },
-          { title: "Évaluation des Modèles", content: "Apprenez à évaluer la performance de vos modèles prédictifs. Ce sous-module aborde des métriques clés comme la précision, le rappel, le score F1, l'AUC-ROC, et les techniques pour détecter et prévenir le surapprentissage et le sous-apprentissage." },
+          { title: "Concepts de Modélisation", content: "Introduction aux concepts de la modélisation prédictive. Ce module couvre les algorithmes de régression (linéaire, logistique) et de classification (k-NN, arbres de décision), en expliquant comment construire et entraîner des modèles pour faire des prédictions.", isCompleted: false },
+          { title: "Évaluation des Modèles", content: "Apprenez à évaluer la performance de vos modèles prédictifs. Ce sous-module aborde des métriques clés comme la précision, le rappel, le score F1, l'AUC-ROC, et les techniques pour détecter et prévenir le surapprentissage et le sous-apprentissage.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0
@@ -302,8 +464,8 @@ const initialDummyCourses: Course[] = [
       {
         title: "Module 4: Déploiement et Maintien",
         sections: [
-          { title: "Mise en Production", content: "Ce module traite de la mise en production des modèles de science des données. Vous apprendrez à déployer vos modèles en tant qu'API et à les intégrer dans des applications existantes." },
-          { title: "Monitoring et Maintenance", content: "Mettez en place des systèmes de monitoring pour assurer leur performance continue et leur maintenance, y compris la détection de la dérive des données et le réentraînement des modèles." },
+          { title: "Mise en Production", content: "Ce module traite de la mise en production des modèles de science des données. Vous apprendrez à déployer vos modèles en tant qu'API et à les intégrer dans des applications existantes.", isCompleted: false },
+          { title: "Monitoring et Maintenance", content: "Mettez en place des systèmes de monitoring pour assurer leur performance continue et leur maintenance, y compris la détection de la dérive des données et le réentraînement des modèles.", isCompleted: false },
         ],
         isCompleted: false,
         level: 0

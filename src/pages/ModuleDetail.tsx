@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText } from "lucide-react";
+import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText, HelpCircle } from "lucide-react";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
@@ -11,13 +11,14 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
 import NotesSection from "@/components/NotesSection";
+import { Badge } from "@/components/ui/badge";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { dummyCourses, Course, Module, ModuleSection, updateCourseInStorage } from "@/lib/courseData"; // Import updateCourseInStorage
+import { dummyCourses, Course, Module, ModuleSection, updateCourseInStorage, loadCourses } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses
 import QuizComponent from "@/components/QuizComponent"; // Import QuizComponent
 
 const ModuleDetail = () => {
@@ -26,8 +27,10 @@ const ModuleDetail = () => {
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
   const isMobile = useIsMobile();
 
-  // Utiliser une copie mutable de dummyCourses pour les mises à jour locales
-  const [currentCourses, setCurrentCourses] = useState<Course[]>(dummyCourses);
+  // Charger les cours depuis le stockage local pour s'assurer d'avoir la dernière version
+  const [currentCourses, setCurrentCourses] = useState<Course[]>(loadCourses());
+
+  // Trouver le cours et le module basés sur les paramètres d'URL
   const course = currentCourses.find(c => c.id === courseId);
   const currentModuleIndex = parseInt(moduleIndex || '0', 10);
   const module = course?.modules[currentModuleIndex];
@@ -42,8 +45,8 @@ const ModuleDetail = () => {
 
   // Recharger les cours depuis le stockage local si dummyCourses change (par exemple, après une création de cours)
   useEffect(() => {
-    setCurrentCourses(dummyCourses);
-  }, [dummyCourses]);
+    setCurrentCourses(loadCourses());
+  }, [dummyCourses]); // Dépendance à dummyCourses pour recharger si un cours est créé/modifié ailleurs
 
   useEffect(() => {
     if (course && module) {
@@ -81,6 +84,7 @@ const ModuleDetail = () => {
     );
   }
 
+  // Vérifier si le module actuel est accessible (le précédent est complété ou c'est le premier)
   const isModuleAccessible = currentModuleIndex === 0 || course.modules[currentModuleIndex - 1]?.isCompleted;
 
   if (!isModuleAccessible) {
@@ -99,7 +103,40 @@ const ModuleDetail = () => {
     );
   }
 
+  // Fonction pour marquer une section comme complétée
+  const markSectionComplete = (sectionIdx: number, quizResult?: { score: number; total: number; passed: boolean }) => {
+    const updatedCourse = { ...course };
+    const updatedModule = { ...module };
+    updatedModule.sections = updatedModule.sections.map((sec, idx) => {
+      if (idx === sectionIdx) {
+        return {
+          ...sec,
+          isCompleted: true,
+          quizResult: quizResult || sec.quizResult, // Conserver ou mettre à jour le résultat du quiz
+        };
+      }
+      return sec;
+    });
+
+    // Mettre à jour le module dans le cours
+    updatedCourse.modules = updatedCourse.modules.map((mod, idx) =>
+      idx === currentModuleIndex ? updatedModule : mod
+    );
+
+    updateCourseInStorage(updatedCourse); // Sauvegarder dans le localStorage
+    setCurrentCourses(loadCourses()); // Recharger l'état local pour refléter les changements
+    showSuccess(`Section "${updatedModule.sections[sectionIdx].title}" marquée comme terminée !`);
+  };
+
   const handleMarkModuleComplete = () => {
+    // Vérifier si toutes les sections du module sont complétées
+    const allSectionsCompleted = module.sections.every(section => section.isCompleted);
+
+    if (!allSectionsCompleted) {
+      showError("Veuillez compléter toutes les sections de ce module avant de le marquer comme terminé.");
+      return;
+    }
+
     const updatedCourse = {
       ...course,
       modules: course.modules.map((mod, idx) =>
@@ -107,7 +144,7 @@ const ModuleDetail = () => {
       ),
     };
     updateCourseInStorage(updatedCourse); // Sauvegarder dans le localStorage
-    setCurrentCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c)); // Mettre à jour l'état local
+    setCurrentCourses(loadCourses()); // Recharger l'état local
 
     showSuccess(`Module "${module.title}" marqué comme terminé !`);
 
@@ -119,13 +156,30 @@ const ModuleDetail = () => {
     }
   };
 
-  const handleQuizComplete = (score: number, total: number) => {
-    if (score / total >= 0.7) { // Exemple: 70% pour réussir le quiz
+  const handleQuizComplete = (score: number, total: number, passed: boolean, sectionIdx: number) => {
+    if (passed) {
       showSuccess(`Quiz terminé ! Votre score : ${score}/${total}. Vous avez réussi !`);
-      // Optionnel: marquer la section comme complétée si nécessaire, ou le module entier
-      // Pour l'instant, le quiz ne marque pas la section comme complétée, mais le module entier.
+      markSectionComplete(sectionIdx, { score, total, passed });
     } else {
       showError(`Quiz terminé ! Votre score : ${score}/${total}. Vous n'avez pas atteint le seuil de réussite.`);
+      // Ne pas marquer la section comme complétée si le quiz est échoué
+      // Mais stocker le résultat pour l'affichage
+      const updatedCourse = { ...course };
+      const updatedModule = { ...module };
+      updatedModule.sections = updatedModule.sections.map((sec, idx) => {
+        if (idx === sectionIdx) {
+          return {
+            ...sec,
+            quizResult: { score, total, passed },
+          };
+        }
+        return sec;
+      });
+      updatedCourse.modules = updatedCourse.modules.map((mod, idx) =>
+        idx === currentModuleIndex ? updatedModule : mod
+      );
+      updateCourseInStorage(updatedCourse);
+      setCurrentCourses(loadCourses());
     }
   };
 
@@ -158,6 +212,9 @@ const ModuleDetail = () => {
 
   const moduleNoteKey = generateNoteKey('module', course.id, currentModuleIndex);
 
+  // Vérifier si toutes les sections du module sont complétées pour activer le bouton "Marquer comme terminé"
+  const allSectionsInModuleCompleted = module.sections.every(section => section.isCompleted);
+
   return (
     <div className="flex flex-col gap-8 max-w-screen-xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -189,6 +246,9 @@ const ModuleDetail = () => {
             <CardContent>
               {module.sections.map((section, index) => {
                 const sectionNoteKey = generateNoteKey('section', course.id, currentModuleIndex, index);
+                // Une section est accessible si elle est la première ou si la précédente est complétée
+                const isSectionAccessible = index === 0 || module.sections[index - 1]?.isCompleted;
+
                 return (
                   <div key={index} className="mb-6">
                     <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `section-${course.id}-${currentModuleIndex}-${index}` : null)}>
@@ -197,32 +257,62 @@ const ModuleDetail = () => {
                           ref={el => sectionRefs.current[index] = el}
                           className={cn(
                             "p-4 border rounded-md cursor-context-menu",
-                            highlightedElementId === `section-${course.id}-${currentModuleIndex}-${index}` ? "bg-primary/10" : "bg-muted/10"
+                            highlightedElementId === `section-${course.id}-${currentModuleIndex}-${index}` ? "bg-primary/10" : "bg-muted/10",
+                            !isSectionAccessible && "opacity-50 cursor-not-allowed", // Visuellement bloqué
+                            section.type === 'quiz' && "border-dashed border-primary/50 bg-primary/5" // Style pour les quiz
                           )}
                         >
                           <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
+                            <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                              {section.type === 'quiz' && <HelpCircle className="h-5 w-5 text-primary" />}
+                              <span>{section.title}</span>
+                              {section.isCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
+                            </h3>
+                            {section.quizResult && (
+                              <Badge variant={section.quizResult.passed ? "default" : "destructive"} className="text-sm">
+                                {section.quizResult.score}/{section.quizResult.total} ({((section.quizResult.score / section.quizResult.total) * 100).toFixed(0)}%) {section.quizResult.passed ? 'Réussi' : 'Échoué'}
+                              </Badge>
+                            )}
                           </div>
-                          {section.type === 'video' && section.url ? (
-                            <div className="relative w-full aspect-video my-4 rounded-md overflow-hidden">
-                              <iframe
-                                src={section.url}
-                                title={section.title}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="absolute top-0 left-0 w-full h-full"
-                              ></iframe>
-                            </div>
-                          ) : section.type === 'image' && section.url ? (
-                            <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md my-4" />
-                          ) : section.type === 'quiz' && section.questions ? (
-                            <div className="my-4">
-                              <QuizComponent questions={section.questions} onQuizComplete={handleQuizComplete} />
-                            </div>
+                          {!isSectionAccessible ? (
+                            <p className="text-muted-foreground mt-2">Veuillez compléter la section précédente pour accéder à celle-ci.</p>
                           ) : (
-                            <p className="text-muted-foreground mt-2">{section.content}</p>
+                            <>
+                              {section.type === 'video' && section.url ? (
+                                <div className="relative w-full aspect-video my-4 rounded-md overflow-hidden">
+                                  <iframe
+                                    src={section.url}
+                                    title={section.title}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    className="absolute top-0 left-0 w-full h-full"
+                                  ></iframe>
+                                </div>
+                              ) : section.type === 'image' && section.url ? (
+                                <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md my-4" />
+                              ) : section.type === 'quiz' && section.questions ? (
+                                <div className="my-4">
+                                  <QuizComponent
+                                    questions={section.questions}
+                                    passingScore={section.passingScore || 0} // Passer le passingScore
+                                    onQuizComplete={(score, total, passed) => handleQuizComplete(score, total, passed, index)}
+                                  />
+                                </div>
+                              ) : (
+                                <p className="text-muted-foreground mt-2">{section.content}</p>
+                              )}
+                              {!section.isCompleted && section.type !== 'quiz' && ( // Bouton "Marquer comme lu" pour les sections non-quiz
+                                <Button
+                                  onClick={() => markSectionComplete(index)}
+                                  className="mt-4"
+                                  size="sm"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme lu
+                                </Button>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
+                            </>
                           )}
-                          <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
                         </div>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-auto p-1">
@@ -266,7 +356,7 @@ const ModuleDetail = () => {
                 </div>
                 <div className="flex gap-2">
                   {!module.isCompleted && (
-                    <Button onClick={handleMarkModuleComplete}>
+                    <Button onClick={handleMarkModuleComplete} disabled={!allSectionsInModuleCompleted}>
                       <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
                     </Button>
                   )}

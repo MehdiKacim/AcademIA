@@ -9,16 +9,18 @@ import { cn } from "@/lib/utils";
 
 interface QuizComponentProps {
   questions: QuizQuestion[];
-  onQuizComplete: (score: number, total: number) => void;
+  passingScore: number; // Nouveau: score de réussite en pourcentage
+  onQuizComplete: (score: number, total: number, passed: boolean) => void; // Nouveau: passe si réussi
 }
 
-const QuizComponent = ({ questions, onQuizComplete }: QuizComponentProps) => {
+const QuizComponent = ({ questions, passingScore, onQuizComplete }: QuizComponentProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizPassed, setQuizPassed] = useState(false); // Nouveau: état pour savoir si le quiz est réussi
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -53,8 +55,11 @@ const QuizComponent = ({ questions, onQuizComplete }: QuizComponentProps) => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1);
     } else {
+      const finalScorePercentage = (score / questions.length) * 100;
+      const passed = finalScorePercentage >= passingScore;
+      setQuizPassed(passed);
       setQuizCompleted(true);
-      onQuizComplete(score, questions.length);
+      onQuizComplete(score, questions.length, passed);
     }
   };
 
@@ -65,16 +70,22 @@ const QuizComponent = ({ questions, onQuizComplete }: QuizComponentProps) => {
     setShowResult(false);
     setFeedback(null);
     setQuizCompleted(false);
+    setQuizPassed(false);
   };
 
   if (quizCompleted) {
     return (
       <Card className="p-6 text-center">
-        <CardTitle className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-          Quiz Terminé !
+        <CardTitle className={cn(
+          "text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan",
+          quizPassed ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+        )}>
+          Quiz Terminé ! {quizPassed ? "Réussi !" : "Échoué."}
         </CardTitle>
         <CardDescription className="text-lg text-muted-foreground mb-6">
-          Votre score : {score} / {questions.length}
+          Votre score : {score} / {questions.length} ({((score / questions.length) * 100).toFixed(0)}%)
+          <br />
+          Score requis pour réussir : {passingScore}%
         </CardDescription>
         <Button onClick={handleRestartQuiz}>
           <RefreshCw className="h-4 w-4 mr-2" /> Recommencer le Quiz

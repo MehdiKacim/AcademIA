@@ -6,10 +6,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext"; // Importation du hook useRole
-import { dummyCourses } from "@/lib/courseData"; // Import dummyCourses
+import { loadCourses } from "@/lib/courseData"; // Import loadCourses
 
 const Dashboard = () => {
   const { currentRole } = useRole(); // Utilisation du hook useRole
+  const dummyCourses = loadCourses(); // Charger les cours depuis le localStorage
 
   const renderDashboardContent = () => {
     if (currentRole === 'student') {
@@ -73,7 +74,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Statistiques des Élèves</CardTitle>
-              <CardDescription>Vue d'ensemble de la progression.</CardDescription>
+              <CardDescription>Vue d'overview de la progression.</CardDescription>
             </CardHeader>
             <CardContent>
               <p>{totalStudents} élèves inscrits au total.</p>

@@ -18,10 +18,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { dummyCourses } from "@/lib/courseData"; // Import dummyCourses
+import { loadCourses } from "@/lib/courseData"; // Import loadCourses
 
 const Analytics = () => {
   const { currentRole } = useRole();
+  const dummyCourses = loadCourses(); // Charger les cours depuis le localStorage
 
   // Données fictives pour les analytiques textuelles
   const studentAnalytics = {
