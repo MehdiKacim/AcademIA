@@ -139,8 +139,30 @@ const Index = () => {
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
-        <Logo className="min-w-0" /> {/* Ajout de min-w-0 */}
-        {/* Desktop Navigation */}
+        {/* Mobile Navigation - Logo as trigger */}
+        <div className="md:hidden flex items-center gap-2">
+          <MobileSheetNav
+            navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))}
+            onLinkClick={() => {}}
+            trigger={
+              <Logo
+                iconClassName="w-10 h-10 cursor-pointer" // Rendre le logo plus grand et cliquable
+                textClassName="text-xl"
+              />
+            }
+          >
+            <ThemeToggle />
+            <Button variant="outline" className="w-full" onClick={() => { closeLoginModal(); openLoginModal(); }}>
+              Se connecter
+            </Button>
+            <Button className="w-full" onClick={() => { closeRegisterModal(); openRegisterModal(); }}>
+              Créer un compte
+            </Button>
+          </MobileSheetNav>
+        </div>
+
+        {/* Desktop Navigation - Logo is just a logo */}
+        <Logo className="hidden md:block" />
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
             className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
@@ -162,22 +184,9 @@ const Index = () => {
             Se connecter
           </Button>
         </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-2 ml-auto min-w-0"> {/* Ajout de min-w-0 */}
-          <MobileSheetNav navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))} onLinkClick={() => {}}>
-            <ThemeToggle />
-            <Button variant="outline" className="w-full" onClick={() => { closeLoginModal(); openLoginModal(); }}>
-              Se connecter
-            </Button>
-            <Button className="w-full" onClick={() => { closeRegisterModal(); openRegisterModal(); }}>
-              Créer un compte
-            </Button>
-          </MobileSheetNav>
-        </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20"> {/* Ajustement du padding supérieur */}
+      <main className="flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20">
         <motion.section
           id="accueil"
           ref={sectionRefs.accueil}
@@ -193,7 +202,7 @@ const Index = () => {
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
             <motion.div variants={itemVariants} className="flex justify-center mb-8">
-              <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} /> {/* Taille du logo ajustée pour mobile */}
+              <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} />
             </motion.div>
             <motion.h2 variants={itemVariants} className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici

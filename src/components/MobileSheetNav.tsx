@@ -1,24 +1,24 @@
 import React, { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 
 interface NavItem {
   to: string;
-  icon?: React.ElementType; // Icon is optional for Index page nav
+  icon?: React.ElementType;
   label: string;
 }
 
 interface MobileSheetNavProps {
   navItems: NavItem[];
   onLinkClick?: () => void;
-  children?: React.ReactNode; // For additional content like ThemeToggle, auth buttons
+  children?: React.ReactNode;
+  trigger: React.ReactNode; // Nouveau prop pour l'élément déclencheur
 }
 
-const MobileSheetNav = ({ navItems, onLinkClick, children }: MobileSheetNavProps) => {
+const MobileSheetNav = ({ navItems, onLinkClick, children, trigger }: MobileSheetNavProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLinkClick = () => {
@@ -31,10 +31,7 @@ const MobileSheetNav = ({ navItems, onLinkClick, children }: MobileSheetNavProps
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="md:hidden">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle navigation menu</span>
-        </Button>
+        {trigger} {/* Rend l'élément déclencheur passé en prop */}
       </SheetTrigger>
       <SheetContent side="left" className="flex flex-col">
         <div className="p-4 border-b">

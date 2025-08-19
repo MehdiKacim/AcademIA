@@ -17,8 +17,26 @@ const DashboardLayout = () => {
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
-        <Logo className="min-w-0" /> {/* Ajout de min-w-0 */}
-        {/* Desktop Navigation */}
+        {/* Mobile Navigation - Logo as trigger */}
+        <div className="md:hidden flex items-center gap-2">
+          <MobileSheetNav
+            navItems={navItems}
+            trigger={
+              <Logo
+                iconClassName="w-10 h-10 cursor-pointer" // Rendre le logo plus grand et cliquable
+                textClassName="text-xl"
+              />
+            }
+          >
+            <ThemeToggle />
+            <NavLink to="/" className="w-full">
+              <Button variant="outline" className="w-full">Déconnexion</Button>
+            </NavLink>
+          </MobileSheetNav>
+        </div>
+
+        {/* Desktop Navigation - Logo is just a logo */}
+        <Logo className="hidden md:block" />
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           {navItems.map((item) => (
             <NavLink
@@ -46,18 +64,8 @@ const DashboardLayout = () => {
             <Button variant="outline">Déconnexion</Button>
           </NavLink>
         </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-2 ml-auto min-w-0"> {/* Ajout de min-w-0 */}
-          <MobileSheetNav navItems={navItems}>
-            <ThemeToggle />
-            <NavLink to="/" className="w-full">
-              <Button variant="outline" className="w-full">Déconnexion</Button>
-            </NavLink>
-          </MobileSheetNav>
-        </div>
       </header>
-      <main className="flex-grow p-4 sm:p-6 md:p-8 pt-16 sm:pt-20"> {/* Ajustement du padding supérieur */}
+      <main className="flex-grow p-4 sm:p-6 md:p-8 pt-16 sm:pt-20">
         <Outlet />
       </main>
     </div>
