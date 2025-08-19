@@ -137,7 +137,7 @@ const DashboardLayout = () => {
           </DropdownMenu>
         </div>
       </header>
-      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-20 sm:pt-24", isMobile && "pb-20")}>
+      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
       <BottomNavigationBar navItems={navItems} />

@@ -2,22 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Keep Input for potential future use or if it's used elsewhere
-import { Textarea } from "@/components/ui/textarea"; // Keep Textarea for potential future use or if it's used elsewhere
-import { Bot, Send } from "lucide-react";
+import { Bot, Send, Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCourseChat } from "@/contexts/CourseChatContext"; // New import
+import { useCourseChat } from "@/contexts/CourseChatContext";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { motion } from 'framer-motion';
+import { showSuccess, showError } from '@/utils/toast'; // Import toast utilities
 
-const dummyCourses = [
+interface Module {
+  title: string;
+  content: string;
+  isCompleted: boolean;
+}
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  modules: Module[];
+}
+
+const initialDummyCourses: Course[] = [
   {
     id: '1',
     title: "Introduction à l'IA",
     description: "Découvrez les fondements de l'intelligence artificielle, ses applications et son impact sur le monde moderne.",
     modules: [
-      { title: "Module 1: Qu'est-ce que l'IA ?", content: "Définition, histoire et types d'IA." },
-      { title: "Module 2: Apprentissage Automatique", content: "Concepts de base du Machine Learning, supervisé et non supervisé." },
-      { title: "Module 3: Réseaux de Neurones", content: "Introduction aux réseaux de neurones et au Deep Learning." },
-      { title: "Module 4: Applications de l'IA", content: "Exemples concrets : vision par ordinateur, traitement du langage naturel." },
+      { title: "Module 1: Qu'est-ce que l'IA ?", content: "Définition, histoire et types d'IA.", isCompleted: true },
+      { title: "Module 2: Apprentissage Automatique", content: "Concepts de base du Machine Learning, supervisé et non supervisé.", isCompleted: false },
+      { title: "Module 3: Réseaux de Neurones", content: "Introduction aux réseaux de neurones et au Deep Learning.", isCompleted: false },
+      { title: "Module 4: Applications de l'IA", content: "Exemples concrets : vision par ordinateur, traitement du langage naturel.", isCompleted: false },
     ],
   },
   {
@@ -25,10 +44,10 @@ const dummyCourses = [
     title: "React pour débutants",
     description: "Apprenez les fondamentaux de React, la bibliothèque JavaScript populaire pour construire des interfaces utilisateur interactives.",
     modules: [
-      { title: "Module 1: Les bases de React", content: "Composants, JSX, props et état." },
-      { title: "Module 2: Hooks et gestion d'état", content: "useState, useEffect, useContext et Reducers." },
-      { title: "Module 3: Routage avec React Router", content: "Navigation entre les pages de votre application." },
-      { title: "Module 4: Requêtes API et cycle de vie", content: "Fetching de données et gestion des effets secondaires." },
+      { title: "Module 1: Les bases de React", content: "Composants, JSX, props et état.", isCompleted: true },
+      { title: "Module 2: Hooks et gestion d'état", content: "useState, useEffect, useContext et Reducers.", isCompleted: true },
+      { title: "Module 3: Routage avec React Router", content: "Navigation entre les pages de votre application.", isCompleted: false },
+      { title: "Module 4: Requêtes API et cycle de vie", content: "Fetching de données et gestion des effets secondaires.", isCompleted: false },
     ],
   },
   {
@@ -36,45 +55,64 @@ const dummyCourses = [
     title: "Algorithmes Avancés",
     description: "Maîtrisez les structures de données complexes et les algorithmes efficaces pour résoudre des problèmes informatiques avancés.",
     modules: [
-      { title: "Module 1: Structures de données avancées", content: "Arbres, graphes, tables de hachage." },
-      { title: "Module 2: Algorithmes de tri et de recherche", content: "Quicksort, Mergesort, recherche binaire." },
-      { title: "Module 3: Programmation dynamique", content: "Optimisation de problèmes complexes." },
-      { title: "Module 4: Algorithmes de graphes", content: "Dijkstra, BFS, DFS." },
+      { title: "Module 1: Structures de données avancées", content: "Arbres, graphes, tables de hachage.", isCompleted: false },
+      { title: "Module 2: Algorithmes de tri et de recherche", content: "Quicksort, Mergesort, recherche binaire.", isCompleted: false },
+      { title: "Module 3: Programmation dynamique", content: "Optimisation de problèmes complexes.", isCompleted: false },
+      { title: "Module 4: Algorithmes de graphes", content: "Dijkstra, BFS, DFS.", isCompleted: false },
     ],
   },
 ];
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const course = dummyCourses.find(c => c.id === courseId);
-  const { setCourseContext, setModuleContext, openChat } = useCourseChat(); // Use the new context hook
+  const [courses, setCourses] = useState<Course[]>(initialDummyCourses);
+  const course = courses.find(c => c.id === courseId);
+  const { setCourseContext, setModuleContext, openChat } = useCourseChat();
 
-  // Set course context when component mounts or courseId changes
   useEffect(() => {
     if (course) {
       setCourseContext(course.id, course.title);
     } else {
-      setCourseContext(null, null); // Clear context if course not found
+      setCourseContext(null, null);
     }
-    // Clean up context when component unmounts
     return () => {
       setCourseContext(null, null);
-      setModuleContext(null); // Clear module context too
+      setModuleContext(null);
     };
   }, [courseId, course, setCourseContext, setModuleContext]);
 
   const handleAskAiaAboutCourse = () => {
     if (course) {
-      setModuleContext(null); // Clear module context if asking about the whole course
+      setModuleContext(null);
       openChat(`J'ai une question sur le cours "${course.title}".`);
     }
   };
 
-  const handleAskAiaAboutModule = (moduleTitle: string) => {
+  const handleAskAiaAboutModule = (moduleTitle: string, isCompleted: boolean) => {
+    if (!isCompleted) {
+      showError("Ce module est verrouillé. Veuillez le compléter d'abord.");
+      return;
+    }
     if (course) {
-      setModuleContext(moduleTitle); // Set the specific module context
+      setModuleContext(moduleTitle);
       openChat(`J'ai une question sur le module "${moduleTitle}" du cours "${course.title}".`);
     }
+  };
+
+  const handleMarkModuleComplete = (moduleId: string, moduleIndex: number) => {
+    setCourses(prevCourses =>
+      prevCourses.map(c =>
+        c.id === moduleId
+          ? {
+              ...c,
+              modules: c.modules.map((mod, idx) =>
+                idx === moduleIndex ? { ...mod, isCompleted: true } : mod
+              ),
+            }
+          : c
+      )
+    );
+    showSuccess(`Module "${course?.modules[moduleIndex].title}" marqué comme terminé !`);
   };
 
   if (!course) {
@@ -99,24 +137,53 @@ const CourseDetail = () => {
 
       <section>
         <h2 className="text-2xl font-semibold mb-4">Modules du cours</h2>
-        <div className="grid gap-4">
+        <Accordion type="single" collapsible className="w-full">
           {course.modules.map((module, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardTitle>{module.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">{module.content}</p>
-                <Button
-                  variant="outline"
-                  onClick={() => handleAskAiaAboutModule(module.title)}
-                >
-                  <Send className="h-4 w-4 mr-2" /> Demander à AiA sur ce module
-                </Button>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <Card className="mb-4">
+                <AccordionItem value={`item-${index}`}>
+                  <AccordionTrigger className="flex items-center justify-between p-4 text-lg font-medium hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      {module.isCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Lock className="h-5 w-5 text-muted-foreground" />
+                      )}
+                      {module.title}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CardContent className="p-4 pt-0">
+                      <p className="text-muted-foreground mb-4">{module.content}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => handleAskAiaAboutModule(module.title, module.isCompleted)}
+                          disabled={!module.isCompleted}
+                        >
+                          <Send className="h-4 w-4 mr-2" /> Demander à AiA sur ce module
+                        </Button>
+                        {!module.isCompleted && (
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleMarkModuleComplete(course.id, index)}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </AccordionContent>
+                </AccordionItem>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </Accordion>
       </section>
 
       <section className="mt-12">
