@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { Home, BookOpen, PlusSquare, BarChart2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } => "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,8 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
-      <header className="fixed top-0 left-0 right-0 z-50 px-3 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
-        <Logo />
+      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
+        <Logo className="min-w-0" /> {/* Ajout de min-w-0 */}
         {/* Desktop Navigation */}
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           {navItems.map((item) => (
@@ -48,7 +48,7 @@ const DashboardLayout = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-2 ml-auto">
+        <div className="md:hidden flex items-center gap-2 ml-auto min-w-0"> {/* Ajout de min-w-0 */}
           <MobileSheetNav navItems={navItems}>
             <ThemeToggle />
             <NavLink to="/" className="w-full">
@@ -57,7 +57,7 @@ const DashboardLayout = () => {
           </MobileSheetNav>
         </div>
       </header>
-      <main className="flex-grow p-4 sm:p-6 md:p-8 pt-20"> {/* Added pt-20 to account for fixed header */}
+      <main className="flex-grow p-4 sm:p-6 md:p-8 pt-16 sm:pt-20"> {/* Ajustement du padding supérieur */}
         <Outlet />
       </main>
     </div>

@@ -138,8 +138,8 @@ const Index = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 px-3 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
-        <Logo />
+      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center border-b backdrop-blur-lg bg-background/80">
+        <Logo className="min-w-0" /> {/* Ajout de min-w-0 */}
         {/* Desktop Navigation */}
         <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
@@ -164,7 +164,7 @@ const Index = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-2 ml-auto">
+        <div className="md:hidden flex items-center gap-2 ml-auto min-w-0"> {/* Ajout de min-w-0 */}
           <MobileSheetNav navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))} onLinkClick={() => {}}>
             <ThemeToggle />
             <Button variant="outline" className="w-full" onClick={() => { closeLoginModal(); openLoginModal(); }}>
@@ -177,7 +177,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center text-center pt-20">
+      <main className="flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20"> {/* Ajustement du padding supérieur */}
         <motion.section
           id="accueil"
           ref={sectionRefs.accueil}
