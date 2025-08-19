@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail } from "lucide-react";
 import {
   Establishment,
   Class,
@@ -26,7 +26,8 @@ import {
   deleteData,
 } from "@/lib/localStorageUtils";
 import { showSuccess, showError } from "@/utils/toast";
-import { dummyStudents, saveStudents } from '@/lib/studentData'; // Importation corrigée
+import { dummyStudents, saveStudents, addStudent, deleteStudent, updateStudent } from '@/lib/studentData'; // Importation des fonctions CRUD pour les élèves
+import { useCourseChat } from '@/contexts/CourseChatContext'; // Pour envoyer des messages à AiA
 
 const LOCAL_STORAGE_ESTABLISHMENTS_KEY = 'academia_establishments';
 const LOCAL_STORAGE_CLASSES_KEY = 'academia_classes';
@@ -34,16 +35,21 @@ const LOCAL_STORAGE_CURRICULA_KEY = 'academia_curricula';
 
 const ClassManagement = () => {
   const { currentRole } = useRole();
+  const { openChat } = useCourseChat();
 
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [currentStudents, setCurrentStudents] = useState<Student[]>([]); // Utiliser un état local pour les élèves
+  const [currentStudents, setCurrentStudents] = useState<Student[]>([]);
 
   // États pour les formulaires d'ajout/édition
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [newClassName, setNewClassName] = useState('');
   const [newCurriculumName, setNewCurriculumName] = useState('');
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [selectedClassForStudent, setSelectedClassForStudent] = useState<string | undefined>(undefined);
+
 
   useEffect(() => {
     setEstablishments(loadData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY, [{ id: 'est1', name: 'École Primaire Alpha' }]));
@@ -111,6 +117,94 @@ const ClassManagement = () => {
     showSuccess("Cursus supprimé !");
   };
 
+  const handleAddStudent = () => {
+    if (newStudentName.trim() && newStudentEmail.trim()) {
+      const newStudentId = `student${Date.now()}`;
+      const newStu: Student = {
+        id: newStudentId,
+        name: newStudentName.trim(),
+        email: newStudentEmail.trim(),
+        classId: selectedClassForStudent,
+        establishmentId: selectedClassForStudent ? classes.find(c => c.id === selectedClassForStudent)?.establishmentId : undefined,
+        enrolledCoursesProgress: [],
+      };
+      const updatedStudents = addStudent(newStu); // Utilise la fonction addStudent de studentData.ts
+      setCurrentStudents(updatedStudents);
+      setNewStudentName('');
+      setNewStudentEmail('');
+      setSelectedClassForStudent(undefined);
+      showSuccess("Élève ajouté !");
+    } else {
+      showError("Le nom et l'email de l'élève sont requis.");
+    }
+  };
+
+  const handleDeleteStudent = (id: string) => {
+    const updatedStudents = deleteStudent(id); // Utilise la fonction deleteStudent de studentData.ts
+    setCurrentStudents(updatedStudents);
+    showSuccess("Élève supprimé !");
+  };
+
+  const handleAssignStudentToClass = (studentId: string, classId: string) => {
+    const studentToUpdate = currentStudents.find(s => s.id === studentId);
+    if (studentToUpdate) {
+      const updatedStudent = {
+        ...studentToUpdate,
+        classId: classId,
+        establishmentId: classes.find(c => c.id === classId)?.establishmentId,
+      };
+      const updatedStudents = updateStudent(updatedStudent); // Utilise la fonction updateStudent
+      setCurrentStudents(updatedStudents);
+
+      // Mettre à jour la liste des élèves dans la classe
+      const updatedClasses = classes.map(cls => {
+        if (cls.id === classId && !cls.studentIds.includes(studentId)) {
+          return { ...cls, studentIds: [...cls.studentIds, studentId] };
+        }
+        // Si l'élève était dans une autre classe, le retirer de cette classe
+        if (cls.id !== classId && cls.studentIds.includes(studentId)) {
+          return { ...cls, studentIds: cls.studentIds.filter(id => id !== studentId) };
+        }
+        return cls;
+      });
+      saveData(LOCAL_STORAGE_CLASSES_KEY, updatedClasses);
+      setClasses(updatedClasses);
+      showSuccess(`Élève affecté à la classe !`);
+    }
+  };
+
+  const handleRemoveStudentFromClass = (studentId: string, classId: string) => {
+    const studentToUpdate = currentStudents.find(s => s.id === studentId);
+    if (studentToUpdate) {
+      const updatedStudent = {
+        ...studentToUpdate,
+        classId: undefined,
+        establishmentId: undefined,
+      };
+      const updatedStudents = updateStudent(updatedStudent);
+      setCurrentStudents(updatedStudents);
+
+      const updatedClasses = classes.map(cls => {
+        if (cls.id === classId) {
+          return { ...cls, studentIds: cls.studentIds.filter(id => id !== studentId) };
+        }
+        return cls;
+      });
+      saveData(LOCAL_STORAGE_CLASSES_KEY, updatedClasses);
+      setClasses(updatedClasses);
+      showSuccess(`Élève retiré de la classe !`);
+    }
+  };
+
+  const handleInviteStudentToCourse = (student: Student, courseTitle: string) => {
+    openChat(`Bonjour ${student.name}, je vous invite à découvrir le cours "${courseTitle}" !`);
+  };
+
+  const handleSendMessageToStudent = (student: Student) => {
+    openChat(`Bonjour ${student.name}, j'ai une question ou un message pour vous.`);
+  };
+
+
   if (currentRole !== 'creator') {
     return (
       <div className="text-center py-20">
@@ -134,7 +228,7 @@ const ClassManagement = () => {
       </p>
 
       <Tabs defaultValue="establishments" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4"> {/* Augmenté à 4 colonnes */}
           <TabsTrigger value="establishments">
             <School className="h-4 w-4 mr-2" /> Établissements
           </TabsTrigger>
@@ -143,6 +237,9 @@ const ClassManagement = () => {
           </TabsTrigger>
           <TabsTrigger value="curricula">
             <BookOpen className="h-4 w-4 mr-2" /> Cursus
+          </TabsTrigger>
+          <TabsTrigger value="students"> {/* Nouvel onglet Élèves */}
+            <GraduationCap className="h-4 w-4 mr-2" /> Élèves
           </TabsTrigger>
         </TabsList>
 
@@ -212,6 +309,7 @@ const ClassManagement = () => {
                         <div key={cls.id} className="flex items-center justify-between p-3 border rounded-md bg-muted/20">
                           <span>{cls.name} ({cls.studentIds.length} élèves)</span>
                           <div className="flex gap-2">
+                            {/* Bouton pour gérer les élèves de la classe (à implémenter plus tard) */}
                             <Button variant="outline" size="sm" onClick={() => console.log('Gérer élèves de la classe', cls.id)}>
                               <GraduationCap className="h-4 w-4 mr-1" /> Élèves
                             </Button>
@@ -266,6 +364,95 @@ const ClassManagement = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="students" className="mt-4"> {/* Contenu du nouvel onglet Élèves */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Gérer les Élèves</CardTitle>
+              <CardDescription>Invitez de nouveaux élèves et gérez leurs affectations.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <h3 className="text-lg font-semibold">Inviter un nouvel élève</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <Input
+                  placeholder="Nom de l'élève"
+                  value={newStudentName}
+                  onChange={(e) => setNewStudentName(e.target.value)}
+                />
+                <Input
+                  type="email"
+                  placeholder="Email de l'élève"
+                  value={newStudentEmail}
+                  onChange={(e) => setNewStudentEmail(e.target.value)}
+                />
+                {/* Sélecteur de classe pour le nouvel élève */}
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={selectedClassForStudent || ''}
+                  onChange={(e) => setSelectedClassForStudent(e.target.value || undefined)}
+                >
+                  <option value="">-- Choisir une classe (optionnel) --</option>
+                  {classes.map(cls => (
+                    <option key={cls.id} value={cls.id}>{cls.name} ({establishments.find(e => e.id === cls.establishmentId)?.name})</option>
+                  ))}
+                </select>
+              </div>
+              <Button onClick={handleAddStudent} className="w-full">
+                <PlusCircle className="h-4 w-4 mr-2" /> Inviter l'élève
+              </Button>
+
+              <h3 className="text-lg font-semibold mt-6">Liste des élèves</h3>
+              <div className="space-y-2">
+                {currentStudents.length === 0 ? (
+                  <p className="text-muted-foreground">Aucun élève enregistré pour le moment.</p>
+                ) : (
+                  currentStudents.map((student) => (
+                    <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex-grow">
+                        <p className="font-medium">{student.name}</p>
+                        <p className="text-sm text-muted-foreground">{student.email}</p>
+                        {student.classId && (
+                          <p className="text-xs text-muted-foreground">
+                            Classe: {classes.find(cls => cls.id === student.classId)?.name}
+                            {student.establishmentId && ` (${establishments.find(est => est.id === student.establishmentId)?.name})`}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                        {/* Affecter/Retirer de la classe */}
+                        {student.classId ? (
+                          <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(student.id, student.classId!)}>
+                            <Users className="h-4 w-4 mr-1" /> Retirer de la classe
+                          </Button>
+                        ) : (
+                          <select
+                            className="flex h-9 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value="" // Valeur vide pour forcer la sélection
+                            onChange={(e) => handleAssignStudentToClass(student.id, e.target.value)}
+                          >
+                            <option value="">Affecter à une classe</option>
+                            {classes.map(cls => (
+                              <option key={cls.id} value={cls.id}>{cls.name} ({establishments.find(e => e.id === cls.establishmentId)?.name})</option>
+                            ))}
+                          </select>
+                        )}
+
+                        {/* Envoyer un message */}
+                        <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
+                          <Mail className="h-4 w-4 mr-1" /> Message
+                        </Button>
+                        {/* Supprimer l'élève */}
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(student.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
