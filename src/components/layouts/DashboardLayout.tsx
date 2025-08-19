@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText } from "lucide-react"; // Importation de NotebookText
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -17,23 +17,23 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import FloatingAiAChatButton from "@/components/FloatingAiAChatButton"; // Nouvelle importation
+import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { currentRole, setRole } = useRole();
-  const { openChat } = useCourseChat(); // Garder openChat pour le bouton flottant
+  const { openChat } = useCourseChat();
 
   const getNavItems = () => {
     const baseItems = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
+      { to: "/all-notes", icon: NotebookText, label: "Mes Notes" }, // Ajout du lien vers toutes les notes
     ];
 
     if (currentRole === 'student') {
       return [
         ...baseItems,
         { to: "/courses", icon: BookOpen, label: "Mes Cours" },
-        // { onClick: openChat, icon: MessageCircleMore, label: "AiA Chat" }, // Supprimé
       ];
     } else if (currentRole === 'creator') {
       return [
@@ -41,13 +41,11 @@ const DashboardLayout = () => {
         { to: "/courses", icon: BookOpen, label: "Mes Cours" },
         { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
         { to: "/analytics", icon: BarChart2, label: "Progression" },
-        // { onClick: openChat, icon: MessageCircleMore, label: "AiA Chat" }, // Supprimé
       ];
     } else if (currentRole === 'tutor') {
       return [
         ...baseItems,
         { to: "/analytics", icon: BarChart2, label: "Progression" },
-        // { onClick: openChat, icon: MessageCircleMore, label: "AiA Chat" }, // Supprimé
       ];
     }
     return baseItems;
@@ -79,7 +77,6 @@ const DashboardLayout = () => {
                 {item.label}
               </NavLink>
             ))}
-            {/* AiA Chat button for desktop - Supprimé ici */}
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
@@ -149,7 +146,7 @@ const DashboardLayout = () => {
       </main>
       <BottomNavigationBar navItems={navItems} />
       <AiAPersistentChat />
-      <FloatingAiAChatButton /> {/* Ajout du nouveau bouton flottant */}
+      <FloatingAiAChatButton />
     </div>
   );
 };
