@@ -20,6 +20,8 @@ export interface Course {
   skillsToAcquire: string[];
 }
 
+export type EntityType = 'course' | 'module' | 'section'; // Ajout et exportation de EntityType
+
 export const dummyCourses: Course[] = [
   {
     id: '1',
@@ -137,7 +139,7 @@ export const dummyCourses: Course[] = [
         title: "Module 2: Algorithmes de tri et de recherche",
         sections: [
           { title: "Tris Efficaces", content: "Plongez dans les algorithmes de tri efficaces comme Quicksort, Mergesort et Heapsort, ainsi que les techniques de recherche avancées telles que la recherche binaire et la recherche par interpolation. Nous analyserons leur complexité temporelle et spatiale." },
-          { title: "Recherche Avancée", content: "Au-delà de la recherche binaires, nous explorerons des techniques pour des structures de données spécifiques et des scénarios de recherche plus complexes." },
+          { title: "Recherche Avancée", content: "Au-delà de la recherche binaire, nous explorerons des techniques pour des structures de données spécifiques et des scénarios de recherche plus complexes." },
         ],
         isCompleted: false,
         level: 0
