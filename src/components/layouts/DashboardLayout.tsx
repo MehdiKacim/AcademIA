@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
+import MobileSheetNav from "@/components/MobileSheetNav"; // Import MobileSheetNav
 
 const DashboardLayout = () => {
   const navItems = [
@@ -15,9 +16,10 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex flex-wrap items-center justify-between md:justify-start border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo />
-        <nav className="flex-grow flex justify-center items-center gap-2 sm:gap-4 md:gap-6 mt-2 md:mt-0 order-3 md:order-none w-full md:w-auto">
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -36,12 +38,23 @@ const DashboardLayout = () => {
             </NavLink>
           ))}
         </nav>
-        <div className="flex items-center gap-2 sm:gap-4 order-2 md:order-none">
+        {/* Desktop Action Buttons */}
+        <div className="hidden md:flex items-center gap-4">
           <ThemeToggle />
           {/* Placeholder for logout button - in a real app, this would trigger auth logout */}
           <NavLink to="/">
             <Button variant="outline">Déconnexion</Button>
           </NavLink>
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden flex items-center gap-2">
+          <MobileSheetNav navItems={navItems}>
+            <ThemeToggle />
+            <NavLink to="/" className="w-full">
+              <Button variant="outline" className="w-full">Déconnexion</Button>
+            </NavLink>
+          </MobileSheetNav>
         </div>
       </header>
       <main className="flex-grow p-4 sm:p-6 md:p-8 pt-20"> {/* Added pt-20 to account for fixed header */}

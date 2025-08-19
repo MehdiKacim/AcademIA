@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
 import LoginModal from "@/components/LoginModal"; // Import LoginModal
 import RegisterModal from "@/components/RegisterModal"; // Import RegisterModal
+import MobileSheetNav from "@/components/MobileSheetNav"; // Import MobileSheetNav
 
 // Variants pour les animations de conteneur (staggering children)
 const containerVariants = {
@@ -127,13 +128,20 @@ const Index = () => {
     },
   ];
 
+  const indexNavItems = [
+    { to: "#accueil", label: "Accueil" },
+    { to: "#aiaBot", label: "AiA Bot" },
+    { to: "#methodologie", label: "Méthodologie" },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex flex-wrap items-center justify-between md:justify-start border-b backdrop-blur-lg bg-background/80">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo />
-        <nav className="flex-grow flex justify-center items-center gap-2 sm:gap-4 md:gap-6 mt-2 md:mt-0 order-3 md:order-none w-full md:w-auto">
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex flex-grow justify-center items-center gap-6">
           <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
             className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground')}>
             Accueil
@@ -147,11 +155,25 @@ const Index = () => {
             Méthodologie
           </Button>
         </nav>
-        <div className="flex items-center gap-2 sm:gap-4 order-2 md:order-none">
+        {/* Desktop Action Buttons */}
+        <div className="hidden md:flex items-center gap-4">
           <ThemeToggle />
           <Button variant="outline" onClick={openLoginModal}>
             Se connecter
           </Button>
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden flex items-center gap-2">
+          <MobileSheetNav navItems={indexNavItems.map(item => ({...item, to: item.to.substring(1)}))} onLinkClick={() => {}}>
+            <ThemeToggle />
+            <Button variant="outline" className="w-full" onClick={() => { closeLoginModal(); openLoginModal(); }}>
+              Se connecter
+            </Button>
+            <Button className="w-full" onClick={() => { closeRegisterModal(); openRegisterModal(); }}>
+              Créer un compte
+            </Button>
+          </MobileSheetNav>
         </div>
       </header>
 
