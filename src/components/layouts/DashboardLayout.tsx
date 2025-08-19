@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, Bot } from "lucide-react"; // Import de l'icône Bot
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -14,16 +14,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRole } from "@/contexts/RoleContext"; // Importation du hook useRole
+import { useRole } from "@/contexts/RoleContext";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
-  const { currentRole, setRole } = useRole(); // Utilisation du hook useRole
+  const { currentRole, setRole } = useRole();
 
-  // Définition des éléments de navigation par rôle
   const getNavItems = () => {
     const baseItems = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
+      { to: "/aia-chat", icon: Bot, label: "AiA Chat" }, // Ajout du lien AiA Chat
     ];
 
     if (currentRole === 'student') {
@@ -44,7 +44,7 @@ const DashboardLayout = () => {
         { to: "/analytics", icon: BarChart2, label: "Progression" },
       ];
     }
-    return baseItems; // Fallback
+    return baseItems;
   };
 
   const navItems = getNavItems();

@@ -11,9 +11,10 @@ import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CreateCourse from "./pages/CreateCourse";
 import Analytics from "./pages/Analytics";
+import AiAChat from "./pages/AiAChat"; // Importation du composant AiAChat
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
-import { RoleProvider } from "./contexts/RoleContext"; // Importation du RoleProvider
+import { RoleProvider } from "./contexts/RoleContext";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => {
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/create-course" element={<CreateCourse />} />
                   <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/aia-chat" element={<AiAChat />} /> {/* Nouvelle route pour AiAChat */}
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
