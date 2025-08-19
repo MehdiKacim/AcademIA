@@ -10,7 +10,7 @@ import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
-import NotesPopover from "@/components/NotesPopover";
+import NotesSection from "@/components/NotesSection"; // Import NotesSection directly
 import {
   ContextMenu,
   ContextMenuContent,
@@ -33,7 +33,7 @@ const ModuleDetail = () => {
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
   const [refreshNotesSection, setRefreshNotesSection] = useState(0);
   const [highlightedElementId, setHighlightedElementId] = useState<string | null>(null);
-  const [openPopoverKey, setOpenPopoverKey] = useState<string | null>(null);
+  const [visibleNotesKey, setVisibleNotesKey] = useState<string | null>(null); // State to control which NotesSection is visible
 
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -159,7 +159,7 @@ const ModuleDetail = () => {
       <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `module-${course.id}-${currentModuleIndex}` : null)}>
         <ContextMenuTrigger asChild>
           <Card className={cn(
-            "relative", // Ensure relative positioning for absolute children
+            "relative",
             highlightedElementId === `module-${course.id}-${currentModuleIndex}` ? "bg-primary/10" : ""
           )}>
             <CardHeader>
@@ -171,25 +171,12 @@ const ModuleDetail = () => {
                 Module {currentModuleIndex + 1} sur {totalModules}
               </CardDescription>
               <Progress value={progressPercentage} className="w-full mt-2" />
-              {/* Hidden trigger for module notes popover, positioned relative to CardHeader */}
-              <NotesPopover
-                noteKey={moduleNoteKey}
-                title={module.title}
-                isOpen={openPopoverKey === moduleNoteKey}
-                onOpenChange={(open) => setOpenPopoverKey(open ? moduleNoteKey : null)}
-                refreshKey={refreshNotesSection}
-                side="bottom" // Position below the trigger
-                align="end" // Align to the end (right) of the trigger
-              >
-                {/* This hidden button acts as the PopoverTrigger */}
-                <Button className="sr-only absolute top-0 right-0 w-0 h-0"></Button>
-              </NotesPopover>
             </CardHeader>
             <CardContent>
               {module.sections.map((section, index) => {
                 const sectionNoteKey = generateNoteKey('section', course.id, currentModuleIndex, index);
                 return (
-                  <div key={index} className="mb-6 relative"> {/* Add relative positioning here */}
+                  <div key={index} className="mb-6">
                     <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `section-${course.id}-${currentModuleIndex}-${index}` : null)}>
                       <ContextMenuTrigger className="block w-full">
                         <div
@@ -227,8 +214,8 @@ const ModuleDetail = () => {
                         </div>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-auto p-1">
-                        <ContextMenuItem className="p-2" onClick={() => setOpenPopoverKey(openPopoverKey === sectionNoteKey ? null : sectionNoteKey)}>
-                          <NotebookText className="mr-2 h-4 w-4" /> {openPopoverKey === sectionNoteKey ? 'Masquer les notes' : 'Afficher les notes'}
+                        <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === sectionNoteKey ? null : sectionNoteKey)}>
+                          <NotebookText className="mr-2 h-4 w-4" /> {visibleNotesKey === sectionNoteKey ? 'Masquer les notes' : 'Afficher les notes'}
                         </ContextMenuItem>
                         <ContextMenuItem className="p-2" onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
                           <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide
@@ -238,19 +225,13 @@ const ModuleDetail = () => {
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
-                    {/* Notes Popover for each section, positioned relative to the section's div */}
-                    <NotesPopover
-                      noteKey={sectionNoteKey}
-                      title={section.title}
-                      isOpen={openPopoverKey === sectionNoteKey}
-                      onOpenChange={(open) => setOpenPopoverKey(open ? sectionNoteKey : null)}
-                      refreshKey={refreshNotesSection}
-                      side="right" // Position to the right of the trigger
-                      align="start" // Align to the start of the trigger
-                    >
-                      {/* This hidden button acts as the PopoverTrigger */}
-                      <Button className="sr-only absolute top-0 right-0 w-0 h-0"></Button>
-                    </NotesPopover>
+                    {visibleNotesKey === sectionNoteKey && (
+                      <NotesSection
+                        noteKey={sectionNoteKey}
+                        title={section.title}
+                        refreshKey={refreshNotesSection}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -283,8 +264,8 @@ const ModuleDetail = () => {
           </Card>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-auto p-1">
-          <ContextMenuItem className="p-2" onClick={() => setOpenPopoverKey(openPopoverKey === moduleNoteKey ? null : moduleNoteKey)}>
-            <NotebookText className="mr-2 h-4 w-4" /> {openPopoverKey === moduleNoteKey ? 'Masquer les notes du module' : 'Afficher les notes du module'}
+          <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === moduleNoteKey ? null : moduleNoteKey)}>
+            <NotebookText className="mr-2 h-4 w-4" /> {visibleNotesKey === moduleNoteKey ? 'Masquer les notes du module' : 'Afficher les notes du module'}
           </ContextMenuItem>
           <ContextMenuItem className="p-2" onClick={() => handleOpenQuickNoteDialog(module.title)}>
             <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide au module
@@ -294,6 +275,14 @@ const ModuleDetail = () => {
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+
+      {visibleNotesKey === moduleNoteKey && (
+        <NotesSection
+          noteKey={moduleNoteKey}
+          title={module.title}
+          refreshKey={refreshNotesSection}
+        />
+      )}
 
       {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
