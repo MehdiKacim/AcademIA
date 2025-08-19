@@ -11,8 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CreateCourse from "./pages/CreateCourse";
 import Analytics from "./pages/Analytics";
-import AiAChat from "./pages/AiAChat";
-import CourseDetail from "./pages/CourseDetail"; // Importation du composant CourseDetail
+import CourseDetail from "./pages/CourseDetail";
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -39,10 +38,10 @@ const App = () => {
                 <Route element={<RoleProvider><DashboardLayout /></RoleProvider>}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/courses" element={<Courses />} />
-                  <Route path="/courses/:courseId" element={<CourseDetail />} /> {/* Nouvelle route pour CourseDetail */}
+                  <Route path="/courses/:courseId" element={<CourseDetail />} />
                   <Route path="/create-course" element={<CreateCourse />} />
                   <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/aia-chat" element={<AiAChat />} />
+                  {/* La route /aia-chat est supprimée car le chat est maintenant flottant */}
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

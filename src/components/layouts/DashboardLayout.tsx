@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, Bot } from "lucide-react"; // Import de l'icône Bot
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRole } from "@/contexts/RoleContext";
+import AiAPersistentChat from "@/components/AiAPersistentChat"; // Importation du nouveau composant
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
@@ -23,7 +24,7 @@ const DashboardLayout = () => {
   const getNavItems = () => {
     const baseItems = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
-      { to: "/aia-chat", icon: Bot, label: "AiA Chat" }, // Ajout du lien AiA Chat
+      // Le lien AiA Chat est supprimé car le chat est maintenant flottant
     ];
 
     if (currentRole === 'student') {
@@ -141,6 +142,7 @@ const DashboardLayout = () => {
         <Outlet />
       </main>
       <BottomNavigationBar navItems={navItems} />
+      <AiAPersistentChat /> {/* Intégration du composant de chat flottant */}
     </div>
   );
 };
