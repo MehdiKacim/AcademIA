@@ -14,11 +14,14 @@ import {
   ShieldCheck,
   Target,
   MessageCircleMore,
+  Home, // Ajout de l'icône Home pour la navigation d'accueil
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
+import BottomNavigationBar from "@/components/BottomNavigationBar"; // Import du nouveau composant
+import { useIsMobile } from "@/hooks/use-mobile"; // Import du hook
 
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
@@ -109,26 +112,35 @@ const Index = () => {
     },
   ];
 
+  const isMobile = useIsMobile();
+
+  const indexNavItems = [
+    { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil' },
+    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => handleNavLinkClick('aiaBot'), isActive: activeSection === 'aiaBot' },
+    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => handleNavLinkClick('methodologie'), isActive: activeSection === 'methodologie' },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
-        <Logo /> {/* Le logo est toujours visible */}
-        <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-          <Button variant="ghost" onClick={() => handleNavLinkClick('accueil')}
-            className={cn(activeSection === 'accueil' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}>
-            Accueil
-          </Button>
-          <Button variant="ghost" onClick={() => handleNavLinkClick('aiaBot')}
-            className={cn(activeSection === 'aiaBot' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}>
-            AiA Bot
-          </Button>
-          <Button variant="ghost" onClick={() => handleNavLinkClick('methodologie')}
-            className={cn(activeSection === 'methodologie' ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}>
-            Méthodologie
-          </Button>
-        </nav>
+        <Logo />
+        {/* Navigation pour les écrans non mobiles */}
+        {!isMobile && (
+          <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
+            {indexNavItems.map((item) => (
+              <Button
+                key={item.label}
+                variant="ghost"
+                onClick={item.onClick}
+                className={cn(item.isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </nav>
+        )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
           <Button variant="outline" onClick={openLoginModal}>
@@ -140,7 +152,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20">
+      <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-16 sm:pt-20", isMobile && "pb-20")}>
         <section
           id="accueil"
           ref={sectionRefs.accueil}
@@ -245,6 +257,7 @@ const Index = () => {
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
       />
+      <BottomNavigationBar navItems={indexNavItems} /> {/* Ajout de la barre de navigation inférieure */}
     </div>
   );
 };
