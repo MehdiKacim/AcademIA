@@ -98,7 +98,7 @@ const ModuleNotesDisplay = ({ courseId, moduleIndex, refreshKey, onNoteChange, o
             <NotebookText className="h-6 w-6 text-primary" /> Mes notes pour "{moduleTitle}"
           </AccordionTrigger>
           <AccordionContent className="p-6 pt-0 space-y-4">
-            <ScrollArea className="h-full w-full"> {/* ScrollArea should wrap the content inside AccordionContent */}
+            <ScrollArea className="h-full w-full max-h-[400px]"> {/* Ajout de max-h */}
               {notesData.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
                   Aucune note pour ce module ou ses sections.

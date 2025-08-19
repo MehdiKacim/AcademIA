@@ -229,18 +229,20 @@ const ModuleDetail = () => {
               )}
             </div>
           </div>
+
+          {/* Module Notes Display intégré DANS la carte du module */}
+          <div className="mt-8 pt-8 border-t border-border"> {/* Ajout d'un séparateur visuel */}
+            <ModuleNotesDisplay
+              courseId={courseId}
+              moduleIndex={currentModuleIndex}
+              refreshKey={refreshNotesSection}
+              onNoteChange={handleNoteAdded}
+              onAddNoteClick={handleOpenQuickNoteDialog}
+              onScrollToSection={scrollToSection}
+            />
+          </div>
         </CardContent>
       </Card>
-
-      {/* Module Notes Display intégré dans la page */}
-      <ModuleNotesDisplay
-        courseId={courseId}
-        moduleIndex={currentModuleIndex}
-        refreshKey={refreshNotesSection}
-        onNoteChange={handleNoteAdded}
-        onAddNoteClick={handleOpenQuickNoteDialog}
-        onScrollToSection={scrollToSection}
-      />
 
       {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
