@@ -74,10 +74,21 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
         // Display main navigation items
         <>
           {displayedNavItems.map((item) => (
-            item.type === 'link' && item.to ? (
+            // Check if it's a top-level trigger (like 'Cours' itself)
+            item.type === 'trigger' && item.label === 'Cours' ? (
+              <Button
+                key={item.label}
+                variant="ghost"
+                onClick={() => setCurrentMobileNavLevel('courses')}
+                className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+              >
+                <item.icon className="h-5 w-5 mb-1" />
+                {item.label}
+              </Button>
+            ) : ( // Otherwise, assume it's a direct link (either top-level or a sub-item)
               <NavLink
                 key={item.to}
-                to={item.to}
+                to={item.to!} // 'to' is guaranteed for direct links
                 className={({ isActive }) =>
                   cn(
                     "flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors",
@@ -90,17 +101,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
                 <item.icon className="h-5 w-5 mb-1" />
                 {item.label}
               </NavLink>
-            ) : item.type === 'trigger' && item.label === 'Cours' ? ( // Special handling for 'Cours' trigger
-              <Button
-                key={item.label}
-                variant="ghost"
-                onClick={() => setCurrentMobileNavLevel('courses')}
-                className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
-              >
-                <item.icon className="h-5 w-5 mb-1" />
-                {item.label}
-              </Button>
-            ) : null
+            )
           ))}
           {/* Dedicated Global Search Button for mobile, always visible */}
           <Button
