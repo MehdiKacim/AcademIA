@@ -1,4 +1,4 @@
-Name: Android Build Debug AcademIA
+name: Android Build Debug AcademIA
 
 on:
   push:
