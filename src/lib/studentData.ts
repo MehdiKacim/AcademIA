@@ -1,192 +1,172 @@
-import { Student, User, CreatorProfile, TutorProfile } from "./dataModels";
-import { loadData, saveData, addData, updateData, deleteData } from "./localStorageUtils";
+import { Profile, User, StudentCourseProgress } from "./dataModels"; // Import Profile and StudentCourseProgress
+import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 
-// Local Storage Keys
-const LOCAL_STORAGE_USERS_KEY = 'academia_users';
-const LOCAL_STORAGE_STUDENTS_KEY = 'academia_students';
-const LOCAL_STORAGE_CREATOR_PROFILES_KEY = 'academia_creator_profiles';
-const LOCAL_STORAGE_TUTOR_PROFILES_KEY = 'academia_tutor_profiles';
+// --- User & Profile Management (Supabase) ---
 
-// --- User Management ---
-export const loadUsers = (): User[] => {
-  return loadData<User>(LOCAL_STORAGE_USERS_KEY);
+// Note: User authentication (signup, login) will be handled by Supabase Auth directly.
+// This file will focus on managing the 'profiles' table and related data.
+
+export const getProfileById = async (id: string): Promise<Profile | null> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error) {
+    console.error("Error fetching profile by ID:", error);
+    return null;
+  }
+  return data;
 };
 
-export const saveUsers = (users: User[]) => {
-  saveData(LOCAL_STORAGE_USERS_KEY, users);
-  dummyUsers = users;
+export const getProfileByUsername = async (username: string): Promise<Profile | null> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('username', username)
+    .single();
+  if (error) {
+    // console.error("Error fetching profile by username:", error); // Log only if needed for debugging
+    return null;
+  }
+  return data;
 };
 
-export const addUser = (newUser: User) => {
-  const updatedUsers = addData<User>(LOCAL_STORAGE_USERS_KEY, newUser);
-  dummyUsers = updatedUsers;
-  return updatedUsers;
+export const getProfileByEmail = async (email: string): Promise<Profile | null> => {
+  // For security, direct email lookup on profiles table is not recommended as email is in auth.users
+  // Instead, you'd typically get the user from auth.users first, then their profile by ID.
+  // For now, we'll simulate by checking if a profile exists with that email (less secure for direct lookup)
+  // In a real app, you'd use auth.getUser() or similar.
+  const { data: users, error: userError } = await supabase.auth.admin.listUsers();
+  if (userError) {
+    console.error("Error listing users for email lookup:", userError);
+    return null;
+  }
+  const foundUser = users.users.find(u => u.email === email);
+  if (foundUser) {
+    return getProfileById(foundUser.id);
+  }
+  return null;
 };
 
-export const updateUser = (updatedUser: User) => {
-  const updatedUsers = updateData<User>(LOCAL_STORAGE_USERS_KEY, updatedUser);
-  dummyUsers = updatedUsers;
-  return updatedUsers;
+export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<Profile | null> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updatedProfile)
+    .eq('id', updatedProfile.id)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error updating profile:", error);
+    throw error;
+  }
+  return data;
 };
 
-export const deleteUser = (userId: string) => {
-  const updatedUsers = deleteData<User>(LOCAL_STORAGE_USERS_KEY, userId);
-  dummyUsers = updatedUsers;
-  return updatedUsers;
+export const deleteProfile = async (profileId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', profileId);
+  if (error) {
+    console.error("Error deleting profile:", error);
+    throw error;
+  }
 };
 
-export const getUserById = (id: string): User | undefined => {
-  return dummyUsers.find(user => user.id === id);
+export const getAllProfiles = async (): Promise<Profile[]> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*');
+  if (error) {
+    console.error("Error fetching all profiles:", error);
+    return [];
+  }
+  return data;
 };
 
-export const getUserByUsername = (username: string): User | undefined => {
-  return dummyUsers.find(user => user.username.toLowerCase() === username.toLowerCase());
+// --- Student Course Progress Management (Supabase) ---
+export const getStudentCourseProgress = async (userId: string, courseId: string): Promise<StudentCourseProgress | null> => {
+  const { data, error } = await supabase
+    .from('student_course_progress')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .single();
+  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error("Error fetching student course progress:", error);
+    return null;
+  }
+  return data;
 };
 
-export const getUserByEmail = (email: string): User | undefined => {
-  return dummyUsers.find(user => user.email.toLowerCase() === email.toLowerCase());
+export const upsertStudentCourseProgress = async (progress: StudentCourseProgress): Promise<StudentCourseProgress | null> => {
+  const { data, error } = await supabase
+    .from('student_course_progress')
+    .upsert(progress)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error upserting student course progress:", error);
+    throw error;
+  }
+  return data;
 };
 
-// New utility functions to get user full name, username, and email by userId
-export const getUserFullName = (userId: string): string => {
-  const user = getUserById(userId);
-  return user ? `${user.firstName} ${user.lastName}` : 'N/A';
+export const getAllStudentCourseProgress = async (): Promise<StudentCourseProgress[]> => {
+  const { data, error } = await supabase
+    .from('student_course_progress')
+    .select('*');
+  if (error) {
+    console.error("Error fetching all student course progress:", error);
+    return [];
+  }
+  return data;
 };
 
-export const getUserUsername = (userId: string): string => {
-  const user = getUserById(userId);
-  return user ? user.username : 'N/A';
+// Utility functions (will need to fetch user data from auth.users or profiles table)
+export const getUserFullName = async (userId: string): Promise<string> => {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('first_name, last_name')
+    .eq('id', userId)
+    .single();
+  if (error || !profile) {
+    console.error("Error fetching user full name:", error);
+    return 'N/A';
+  }
+  return `${profile.first_name} ${profile.last_name}`;
 };
 
-export const getUserEmail = (userId: string): string => {
-  const user = getUserById(userId);
-  return user ? user.email : 'N/A';
+export const getUserUsername = async (userId: string): Promise<string> => {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('username')
+    .eq('id', userId)
+    .single();
+  if (error || !profile) {
+    console.error("Error fetching user username:", error);
+    return 'N/A';
+  }
+  return profile.username;
 };
 
-
-// --- Student Profile Management ---
-export const loadStudents = (): Student[] => {
-  return loadData<Student>(LOCAL_STORAGE_STUDENTS_KEY);
+export const getUserEmail = async (userId: string): Promise<string> => {
+  const { data: user, error } = await supabase.auth.admin.getUserById(userId);
+  if (error || !user?.user) {
+    console.error("Error fetching user email:", error);
+    return 'N/A';
+  }
+  return user.user.email || 'N/A';
 };
 
-export const saveStudents = (students: Student[]) => {
-  saveData(LOCAL_STORAGE_STUDENTS_KEY, students);
-  dummyStudents = students;
+// Reset functions (for development/testing)
+export const resetProfiles = async () => {
+  const { error } = await supabase.from('profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except a dummy ID if needed
+  if (error) console.error("Error resetting profiles:", error);
 };
 
-export const addStudentProfile = (newStudent: Student) => {
-  const updatedStudents = addData<Student>(LOCAL_STORAGE_STUDENTS_KEY, newStudent);
-  dummyStudents = updatedStudents;
-  return updatedStudents;
-};
-
-export const updateStudentProfile = (updatedStudent: Student) => {
-  const updatedStudents = updateData<Student>(LOCAL_STORAGE_STUDENTS_KEY, updatedStudent);
-  dummyStudents = updatedStudents;
-  return updatedStudents;
-};
-
-export const deleteStudentProfile = (studentId: string) => {
-  const updatedStudents = deleteData<Student>(LOCAL_STORAGE_STUDENTS_KEY, studentId);
-  dummyStudents = updatedStudents;
-  return updatedStudents;
-};
-
-export const getStudentProfileByUserId = (userId: string): Student | undefined => {
-  return dummyStudents.find(student => student.userId === userId);
-};
-
-// --- Creator Profile Management ---
-export const loadCreatorProfiles = (): CreatorProfile[] => {
-  return loadData<CreatorProfile>(LOCAL_STORAGE_CREATOR_PROFILES_KEY);
-};
-
-export const saveCreatorProfiles = (profiles: CreatorProfile[]) => {
-  saveData(LOCAL_STORAGE_CREATOR_PROFILES_KEY, profiles);
-  dummyCreatorProfiles = profiles;
-};
-
-export const addCreatorProfile = (newProfile: CreatorProfile) => {
-  const updatedProfiles = addData<CreatorProfile>(LOCAL_STORAGE_CREATOR_PROFILES_KEY, newProfile);
-  dummyCreatorProfiles = updatedProfiles;
-  return updatedProfiles;
-};
-
-export const updateCreatorProfile = (updatedProfile: CreatorProfile) => {
-  const updatedProfiles = updateData<CreatorProfile>(LOCAL_STORAGE_CREATOR_PROFILES_KEY, updatedProfile);
-  dummyCreatorProfiles = updatedProfiles;
-  return updatedProfiles;
-};
-
-export const deleteCreatorProfile = (profileId: string) => {
-  const updatedProfiles = deleteData<CreatorProfile>(LOCAL_STORAGE_CREATOR_PROFILES_KEY, profileId);
-  dummyCreatorProfiles = updatedProfiles;
-  return updatedProfiles;
-};
-
-export const getCreatorProfileByUserId = (userId: string): CreatorProfile | undefined => {
-  return dummyCreatorProfiles.find(profile => profile.userId === userId);
-};
-
-// --- Tutor Profile Management ---
-export const loadTutorProfiles = (): TutorProfile[] => {
-  return loadData<TutorProfile>(LOCAL_STORAGE_TUTOR_PROFILES_KEY);
-};
-
-export const saveTutorProfiles = (profiles: TutorProfile[]) => {
-  saveData(LOCAL_STORAGE_TUTOR_PROFILES_KEY, profiles);
-  dummyTutorProfiles = profiles;
-};
-
-export const addTutorProfile = (newProfile: TutorProfile) => {
-  const updatedProfiles = addData<TutorProfile>(LOCAL_STORAGE_TUTOR_PROFILES_KEY, newProfile);
-  dummyTutorProfiles = updatedProfiles;
-  return updatedProfiles;
-};
-
-export const updateTutorProfile = (updatedProfile: TutorProfile) => {
-  const updatedProfiles = updateData<TutorProfile>(LOCAL_STORAGE_TUTOR_PROFILES_KEY, updatedProfile);
-  dummyTutorProfiles = updatedProfiles;
-  return updatedProfiles;
-};
-
-export const deleteTutorProfile = (profileId: string) => {
-  const updatedProfiles = deleteData<TutorProfile>(LOCAL_STORAGE_TUTOR_PROFILES_KEY, profileId);
-  dummyTutorProfiles = updatedProfiles;
-  return updatedProfiles;
-};
-
-export const getTutorProfileByUserId = (userId: string): TutorProfile | undefined => {
-  return dummyTutorProfiles.find(profile => profile.userId === userId);
-};
-
-// In-memory variables (will be loaded from localStorage on app start)
-export let dummyUsers: User[] = loadUsers();
-export let dummyStudents: Student[] = loadStudents();
-export let dummyCreatorProfiles: CreatorProfile[] = loadCreatorProfiles();
-export let dummyTutorProfiles: TutorProfile[] = loadTutorProfiles();
-
-// Reset functions for all data types
-export const resetUsers = () => {
-  localStorage.removeItem(LOCAL_STORAGE_USERS_KEY);
-  dummyUsers = [];
-  saveUsers(dummyUsers);
-};
-
-export const resetStudentProfiles = () => {
-  localStorage.removeItem(LOCAL_STORAGE_STUDENTS_KEY);
-  dummyStudents = [];
-  saveStudents(dummyStudents);
-};
-
-export const resetCreatorProfiles = () => {
-  localStorage.removeItem(LOCAL_STORAGE_CREATOR_PROFILES_KEY);
-  dummyCreatorProfiles = [];
-  saveCreatorProfiles(dummyCreatorProfiles);
-};
-
-export const resetTutorProfiles = () => {
-  localStorage.removeItem(LOCAL_STORAGE_TUTOR_PROFILES_KEY);
-  dummyTutorProfiles = [];
-  saveTutorProfiles(dummyTutorProfiles);
+export const resetStudentCourseProgress = async () => {
+  const { error } = await supabase.from('student_course_progress').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error("Error resetting student course progress:", error);
 };
