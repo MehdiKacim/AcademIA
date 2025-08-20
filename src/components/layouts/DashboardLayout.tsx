@@ -31,13 +31,13 @@ const DashboardLayout = () => {
   const getNavItems = () => {
     const baseItems = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
-      { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
     ];
 
     if (currentRole === 'student') {
       return [
         ...baseItems,
         { to: "/courses", icon: BookOpen, label: "Mes Cours" },
+        { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
       ];
     } else if (currentRole === 'creator') {
       return [
@@ -45,12 +45,13 @@ const DashboardLayout = () => {
         { to: "/courses", icon: BookOpen, label: "Mes Cours" },
         { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
         { to: "/class-management", icon: School, label: "Gestion des Classes" },
-        { to: "/analytics", icon: BarChart2, label: "Progression" },
+        // Analytics for creator will be integrated into Class Management
       ];
     } else if (currentRole === 'tutor') {
       return [
         ...baseItems,
         { to: "/analytics", icon: BarChart2, label: "Progression" },
+        { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
       ];
     }
     return baseItems;

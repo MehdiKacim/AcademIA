@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail, ArrowLeft, Search, UserCheck, UserX, Loader2, LayoutList } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail, ArrowLeft, Search, UserCheck, UserX, Loader2, LayoutList, BarChart2 } from "lucide-react";
 import {
   Establishment,
   Class,
@@ -36,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection"; // Import the new component
 
 const LOCAL_STORAGE_ESTABLISHMENTS_KEY = 'academia_establishments';
 const LOCAL_STORAGE_CLASSES_KEY = 'academia_classes';
@@ -353,8 +354,8 @@ const ClassManagement = () => {
           <TabsTrigger value="classes">
             <Users className="h-4 w-4 mr-2" /> Classes
           </TabsTrigger>
-          <TabsTrigger value="students">
-            <GraduationCap className="h-4 w-4 mr-2" /> Élèves
+          <TabsTrigger value="analytics"> {/* New tab for Analytics */}
+            <BarChart2 className="h-4 w-4 mr-2" /> Analytiques
           </TabsTrigger>
         </TabsList>
 
@@ -578,6 +579,11 @@ const ClassManagement = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* --- Analytiques Tab (for Creator) --- */}
+        <TabsContent value="analytics" className="mt-4">
+          <CreatorAnalyticsSection />
         </TabsContent>
 
         {/* --- Élèves Tab --- */}

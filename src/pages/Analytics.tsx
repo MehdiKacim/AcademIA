@@ -34,14 +34,6 @@ const Analytics = () => {
     hoursSpent: 45,
   };
 
-  const creatorAnalytics = {
-    totalCourses: 0, // Will be calculated
-    publishedCourses: 0, // Will be calculated
-    totalStudents: 0, // Will be calculated
-    averageCompletionRate: "68%",
-    mostPopularCourse: "Développement Web Fullstack",
-  };
-
   const tutorAnalytics = {
     supervisedStudents: dummyStudents.length, // Utiliser le nombre réel d'élèves fictifs
     studentsAtRisk: 1,
@@ -61,13 +53,6 @@ const Analytics = () => {
     studentAnalytics.overallProgress = totalModules > 0 ? `${Math.round((totalModulesCompleted / totalModules) * 100)}%` : "0%";
   }
 
-  // Calculate dynamic data for creator role
-  if (currentRole === 'creator') {
-    creatorAnalytics.totalCourses = dummyCourses.length;
-    creatorAnalytics.publishedCourses = dummyCourses.filter(c => c.modules.some(m => m.isCompleted)).length; // Simple heuristic for 'published'
-    creatorAnalytics.totalStudents = dummyCourses.reduce((acc, course) => acc + Math.floor(Math.random() * 200), 0); // Dummy student count
-  }
-
   // Données fictives pour les graphiques
   const studentProgressData = [
     { name: 'Jan', progress: 30 },
@@ -76,12 +61,6 @@ const Analytics = () => {
     { name: 'Avr', progress: 75 },
     { name: 'Mai', progress: 80 },
   ];
-
-  const creatorCourseData = dummyCourses.map(course => ({
-    name: course.title.length > 10 ? course.title.substring(0, 10) + '...' : course.title,
-    students: Math.floor(Math.random() * 200), // Dummy data
-    completion: Math.floor(Math.random() * 100), // Dummy data
-  }));
 
   const tutorStudentPerformanceData = dummyStudents.map(student => ({ // Utiliser les vrais élèves
     name: `${student.firstName} ${student.lastName}`,
@@ -153,70 +132,8 @@ const Analytics = () => {
         </>
       );
     } else if (currentRole === 'creator') {
-      return (
-        <>
-          <p className="text-lg text-muted-foreground mb-8">Obtenez des informations détaillées sur la performance de vos cours et l'engagement des élèves.</p>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Vue d'overview des Cours</CardTitle>
-                <CardDescription>Statistiques générales de vos contenus.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-primary">{creatorAnalytics.totalCourses}</p>
-                <p className="text-sm text-muted-foreground">Cours publiés : {creatorAnalytics.publishedCourses}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Statistiques des Élèves</CardTitle>
-                <CardDescription>Engagement et progression des apprenants.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-primary">{creatorAnalytics.totalStudents}</p>
-                <p className="text-sm text-muted-foreground">Élèves inscrits</p>
-                <p className="text-sm text-muted-foreground">Taux de complétion moyen : {creatorAnalytics.averageCompletionRate}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Cours Populaire</CardTitle>
-                <CardDescription>Votre cours le plus performant.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg font-semibold">{creatorAnalytics.mostPopularCourse}</p>
-                <p className="text-sm text-muted-foreground">Continuez à créer du contenu de qualité !</p>
-              </CardContent>
-            </Card>
-            <Card className="lg:col-span-3">
-              <CardHeader>
-                <CardTitle>Performance des Cours</CardTitle>
-                <CardDescription>Nombre d'élèves et taux de complétion par cours.</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={creatorCourseData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                    <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
-                    <YAxis stroke="hsl(var(--foreground))" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        borderColor: 'hsl(var(--border))',
-                        borderRadius: '0.5rem',
-                      }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
-                    />
-                    <Legend />
-                    <Bar dataKey="students" fill="hsl(var(--primary))" name="Élèves Inscrits" />
-                    <Bar dataKey="completion" fill="hsl(var(--secondary))" name="Taux de Complétion (%)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      );
+      // This content is now moved to CreatorAnalyticsSection.tsx
+      return null;
     } else if (currentRole === 'tutor') {
       return (
         <>
