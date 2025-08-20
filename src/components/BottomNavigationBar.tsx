@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react"; // Import Search icon if still needed for other purposes, otherwise remove
+import { Search } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -15,21 +15,19 @@ interface NavItem {
 
 interface BottomNavigationBarProps {
   navItems: NavItem[];
+  onOpenGlobalSearch: () => void; // New prop for opening global search
 }
 
-const BottomNavigationBar = ({ navItems }: BottomNavigationBarProps) => {
+const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
 
   if (!isMobile) {
     return null; // Ne pas afficher sur les écrans non mobiles
   }
 
-  // Filter out the global search item if it exists, as it's now a dialog
-  const filteredNavItems = navItems.filter(item => item.to !== "/global-search");
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 p-2 shadow-lg md:hidden">
-      {filteredNavItems.map((item) => (
+      {navItems.map((item) => (
         item.to ? (
           <NavLink
             key={item.label}
@@ -63,6 +61,15 @@ const BottomNavigationBar = ({ navItems }: BottomNavigationBarProps) => {
           </Button>
         )
       ))}
+      {/* Dedicated Global Search Button for mobile */}
+      <Button
+        variant="ghost"
+        onClick={onOpenGlobalSearch}
+        className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+      >
+        <Search className="h-5 w-5 mb-1" />
+        Recherche
+      </Button>
     </div>
   );
 };

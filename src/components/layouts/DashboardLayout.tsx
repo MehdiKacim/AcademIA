@@ -18,14 +18,14 @@ import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
-import GlobalSearchOverlay from "@/components/GlobalSearchOverlay"; // Import the new overlay component
-import React, { useState } from "react"; // Import useState
+import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
+import React, { useState } from "react";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { currentRole, setRole } = useRole();
   const { openChat } = useCourseChat();
-  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false); // State for search overlay
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
 
   const getNavItems = () => {
     const baseItems = [
@@ -84,11 +84,13 @@ const DashboardLayout = () => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {/* Global Search Button */}
-          <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Recherche globale</span>
-          </Button>
+          {/* Global Search Button (Desktop only) */}
+          {!isMobile && (
+            <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
+              <Search className="h-5 w-5" />
+              <span className="sr-only">Recherche globale</span>
+            </Button>
+          )}
 
           {/* Boutons de sélection de rôle */}
           <DropdownMenu>
@@ -154,7 +156,7 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
-      <BottomNavigationBar navItems={navItems} />
+      <BottomNavigationBar navItems={navItems} onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)} />
       <AiAPersistentChat />
       <FloatingAiAChatButton />
       <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />
