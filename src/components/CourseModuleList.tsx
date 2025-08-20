@@ -22,7 +22,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-8 py-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 py-8 w-full max-w-screen-xl mx-auto">
       {currentCourse.modules.map((module, index) => {
         const isCompleted = module.isCompleted;
         const accessible = isModuleAccessible(index, currentCourse.modules);
@@ -34,7 +34,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
           <React.Fragment key={module.title}>
             <Card
               className={cn(
-                "relative w-full max-w-md p-6 text-center shadow-xl transition-all duration-300 ease-in-out",
+                "relative w-full p-6 text-center shadow-xl transition-all duration-300 ease-in-out",
                 accessible ? "border-primary/50 bg-background hover:shadow-2xl" : "border-dashed border-muted-foreground/30 bg-muted/10 opacity-70 cursor-not-allowed",
                 isCompleted && "border-green-500 ring-2 ring-green-500/50"
               )}
@@ -67,17 +67,18 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                   </Button>
                 </Link>
 
-                {/* Section pour l'affichage vertical des sections */}
+                {/* Section pour l'affichage des sections du module */}
                 <div className="mt-6">
                   <h4 className="text-lg font-semibold mb-3 text-left">Sections du module:</h4>
-                  <div className="flex flex-col items-center space-y-4"> {/* Ajout de items-center pour centrer les flèches */}
+                  <div className="flex flex-row space-x-4 overflow-x-auto pb-4 scrollbar-hide md:flex-col md:space-y-4 md:space-x-0 md:overflow-x-visible md:pb-0 md:items-center"> {/* Responsive layout for sections */}
                     {module.sections.map((section, sectionIndex) => (
                       <React.Fragment key={sectionIndex}>
-                        <div className="relative w-full"> {/* Ajout d'un wrapper pour la flèche */}
+                        <div className="relative">
                           <Link
                             to={`/courses/${currentCourse.id}/modules/${index}#section-${sectionIndex}`}
                             className={cn(
                               "block p-4 border rounded-lg text-center flex flex-col items-center justify-center transition-all duration-200",
+                              "w-40 flex-shrink-0 md:w-full", // Fixed width for mobile, full width for desktop
                               section.isCompleted ? "border-green-500 bg-green-50/20" : "border-muted-foreground/30 bg-muted/10",
                               !accessible && "opacity-50 cursor-not-allowed pointer-events-none"
                             )}
@@ -91,7 +92,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                           </Link>
                         </div>
                         {sectionIndex < module.sections.length - 1 && (
-                          <div className="relative w-1 h-8 bg-border flex items-center justify-center">
+                          <div className="hidden md:flex relative w-1 h-8 bg-border items-center justify-center"> {/* Only show on desktop */}
                             <ArrowDown className={cn(
                               "h-4 w-4 absolute text-border",
                               section.isCompleted ? "text-primary animate-bounce" : "text-muted-foreground"
@@ -104,15 +105,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                 </div>
               </CardContent>
             </Card>
-
-            {index < currentCourse.modules.length - 1 && (
-              <div className="relative w-1 h-16 bg-border flex items-center justify-center">
-                <ArrowDown className={cn(
-                  "h-6 w-6 absolute text-border",
-                  accessible && isCompleted ? "text-primary animate-bounce" : "text-muted-foreground"
-                )} />
-              </div>
-            )}
+            {/* Suppression de la flèche entre les modules, car ils sont maintenant en grille */}
           </React.Fragment>
         );
       })}
