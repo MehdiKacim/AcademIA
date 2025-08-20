@@ -59,6 +59,10 @@ const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
     { month: 'Mai', activeStudents: 160, newEnrollments: 18 },
   ];
 
+  const topPerformingCourses = courses.slice(0, 3).map(c => c.title); // Dummy
+  const coursesWithHighestDropOff = courses.slice(3, 5).map(c => c.title); // Dummy
+
+
   if (view === 'overview') {
     return (
       <>
@@ -232,6 +236,40 @@ const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
                   <Line type="monotone" dataKey="newEnrollments" stroke="hsl(var(--secondary))" name="Nouvelles Inscriptions" />
                 </LineChart>
               </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Cours les Plus Performants</CardTitle>
+              <CardDescription>Les cours avec les meilleurs taux de complétion.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                {topPerformingCourses.length === 0 ? (
+                  <li>Aucun cours performant à afficher.</li>
+                ) : (
+                  topPerformingCourses.map((courseTitle, index) => (
+                    <li key={index}>{courseTitle}</li>
+                  ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Cours avec le Plus de Décrochage</CardTitle>
+              <CardDescription>Identifiez les cours où les élèves ont tendance à abandonner.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                {coursesWithHighestDropOff.length === 0 ? (
+                  <li>Aucun cours avec un taux de décrochage élevé à afficher.</li>
+                ) : (
+                  coursesWithHighestDropOff.map((courseTitle, index) => (
+                    <li key={index}>{courseTitle}</li>
+                  ))
+                )}
+              </ul>
             </CardContent>
           </Card>
         </div>

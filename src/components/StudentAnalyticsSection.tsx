@@ -55,14 +55,16 @@ const StudentAnalyticsSection = ({ studentProfile, courses, view }: StudentAnaly
 
   // Dummy data for AiA engagement
   const aiaEngagementData = [
-    { month: 'Jan', interactions: 10 },
-    { month: 'Fév', interactions: 15 },
-    { month: 'Mar', interactions: 22 },
-    { month: 'Avr', interactions: 18 },
-    { month: 'Mai', interactions: 25 },
+    { month: 'Jan', interactions: 10, avgLength: 2.5, satisfaction: 4.2 },
+    { month: 'Fév', interactions: 15, avgLength: 3.1, satisfaction: 4.5 },
+    { month: 'Mar', interactions: 22, avgLength: 2.8, satisfaction: 4.0 },
+    { month: 'Avr', interactions: 18, avgLength: 3.5, satisfaction: 4.7 },
+    { month: 'Mai', interactions: 25, avgLength: 3.0, satisfaction: 4.3 },
   ];
   const totalAiaInteractions = aiaEngagementData.reduce((sum, data) => sum + data.interactions, 0);
   const mostAskedTopics = ["Concepts de base", "Débogage", "Meilleures pratiques"];
+  const avgInteractionLength = (aiaEngagementData.reduce((sum, data) => sum + data.avgLength, 0) / aiaEngagementData.length).toFixed(1);
+  const avgSatisfaction = (aiaEngagementData.reduce((sum, data) => sum + data.satisfaction, 0) / aiaEngagementData.length).toFixed(1);
 
 
   const studentProgressData = [
@@ -248,6 +250,26 @@ const StudentAnalyticsSection = ({ studentProfile, courses, view }: StudentAnaly
                   <Line type="monotone" dataKey="interactions" stroke="hsl(var(--primary))" name="Interactions" />
                 </LineChart>
               </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Durée Moyenne d'Interaction</CardTitle>
+              <CardDescription>Temps moyen passé par interaction avec AiA.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{avgInteractionLength} min</p>
+              <p className="text-sm text-muted-foreground">Par session de chat.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Score de Satisfaction AiA</CardTitle>
+              <CardDescription>Votre satisfaction globale avec l'aide d'AiA.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{avgSatisfaction} / 5</p>
+              <p className="text-sm text-muted-foreground">Basé sur vos retours implicites.</p>
             </CardContent>
           </Card>
         </div>

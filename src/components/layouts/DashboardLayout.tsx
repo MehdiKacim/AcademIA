@@ -45,6 +45,8 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // currentNavLevel is now primarily used for mobile navigation's sub-levels
+  // For desktop, we'll use a more direct path-based active state
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
 
   const handleLogout = () => {
@@ -53,35 +55,18 @@ const DashboardLayout = () => {
   };
 
   useEffect(() => {
-    // Determine currentNavLevel based on the new direct paths
-    if (currentRole === 'creator') {
-      if (location.pathname === '/courses' || location.pathname.startsWith('/create-course')) {
-        setCurrentNavLevel('courses');
-      } else if (location.pathname.startsWith('/establishments') || location.pathname.startsWith('/curricula') || location.pathname.startsWith('/classes') || location.pathname.startsWith('/students')) {
-        setCurrentNavLevel('administration');
-      } else if (location.pathname.startsWith('/analytics')) {
-        setCurrentNavLevel('creator-analytics');
-      } else {
-        setCurrentNavLevel(null);
-      }
-    } else if (currentRole === 'tutor') {
-      if (location.pathname.startsWith('/classes') || location.pathname.startsWith('/students')) {
-        setCurrentNavLevel('user-management');
-      } else if (location.pathname.startsWith('/analytics')) {
-        setCurrentNavLevel('tutor-analytics');
-      } else {
-        setCurrentNavLevel(null);
-      }
-    } else if (currentRole === 'student') {
-      if (location.pathname.startsWith('/analytics')) {
-        setCurrentNavLevel('student-analytics');
-      } else {
-        setCurrentNavLevel(null);
-      }
+    // Reset currentNavLevel when path changes, unless it's a sub-path of an active trigger
+    const mainItems = getMainNavItems();
+    const foundParent = mainItems.find(item => 
+      item.type === 'trigger' && item.items?.some(subItem => subItem.to && location.pathname.startsWith(subItem.to))
+    );
+    if (foundParent) {
+      setCurrentNavLevel(foundParent.label.toLowerCase().replace(/\s/g, '-'));
     } else {
       setCurrentNavLevel(null);
     }
   }, [location.pathname, currentRole]);
+
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const isModifierPressed = event.ctrlKey || event.metaKey;
@@ -118,7 +103,7 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('student-analytics'),
+          onClick: () => setCurrentNavLevel('analytiques'), // Set generic 'analytiques' for parent
           items: [
             { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
             { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
@@ -133,7 +118,7 @@ const DashboardLayout = () => {
           icon: BookOpen,
           label: "Cours",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('courses'),
+          onClick: () => setCurrentNavLevel('cours'),
           items: [
             { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
             { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
@@ -155,7 +140,7 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('creator-analytics'),
+          onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
             { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
@@ -170,7 +155,7 @@ const DashboardLayout = () => {
           icon: Users,
           label: "Gestion des Utilisateurs",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('user-management'),
+          onClick: () => setCurrentNavLevel('gestion-des-utilisateurs'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
@@ -180,7 +165,7 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('tutor-analytics'),
+          onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
             { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
@@ -192,47 +177,27 @@ const DashboardLayout = () => {
     return baseItems;
   };
 
+  // Helper to determine if a parent trigger button should be active
+  const getIsParentTriggerActive = (item: NavItem): boolean => {
+    if (item.type !== 'trigger' || !item.items) return false;
+
+    // Check if the current path starts with any of the sub-items' 'to' paths
+    return item.items.some(subItem => subItem.to && location.pathname.startsWith(subItem.to));
+  };
+
   const navItemsToDisplayForDesktop = () => {
-    if (currentNavLevel === 'courses' && currentRole === 'creator') {
+    // If a specific sub-level is active (e.g., 'analytiques'), display its items
+    const mainItems = getMainNavItems();
+    const activeParent = mainItems.find(item => item.type === 'trigger' && item.label.toLowerCase().replace(/\s/g, '-') === currentNavLevel);
+
+    if (activeParent && activeParent.items) {
       return [
         { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
-        { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
-      ];
-    } else if (currentNavLevel === 'administration' && currentRole === 'creator') {
-      return [
-        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        { to: "/establishments", label: "Établissements", icon: School, type: 'link' },
-        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
-        { to: "/classes", label: "Classes", icon: Users, type: 'link' },
-        { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
-      ];
-    } else if (currentNavLevel === 'user-management' && currentRole === 'tutor') {
-      return [
-        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
-        { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
-      ];
-    } else if (currentNavLevel === 'student-analytics' && currentRole === 'student') {
-      const analyticsItems = getMainNavItems().find(item => item.label === 'Analytiques')?.items;
-      return [
-        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        ...(analyticsItems || []),
-      ];
-    } else if (currentNavLevel === 'creator-analytics' && currentRole === 'creator') {
-      const analyticsItems = getMainNavItems().find(item => item.label === 'Analytiques')?.items;
-      return [
-        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        ...(analyticsItems || []),
-      ];
-    } else if (currentNavLevel === 'tutor-analytics' && currentRole === 'tutor') {
-      const analyticsItems = getMainNavItems().find(item => item.label === 'Analytiques')?.items;
-      return [
-        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        ...(analyticsItems || []),
+        ...activeParent.items,
       ];
     }
-    return getMainNavItems();
+    // Otherwise, display the main navigation items
+    return mainItems;
   };
 
 
@@ -243,8 +208,10 @@ const DashboardLayout = () => {
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {navItemsToDisplayForDesktop().map((item) => {
-              const isCurrentPathActive = item.to && location.pathname.startsWith(item.to);
-              const isTriggerActive = item.type === 'trigger' && currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-'); // Normalize label for comparison
+              // Determine if a link is active
+              const isLinkActive = item.to && location.pathname.startsWith(item.to);
+              // Determine if a trigger is active (itself or one of its children)
+              const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
 
               return item.type === 'link' && item.to ? (
                 <NavLink
@@ -269,7 +236,7 @@ const DashboardLayout = () => {
                   onClick={item.onClick}
                   className={cn(
                     "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                    isTriggerActive || isCurrentPathActive // Check if trigger itself is active or if a sub-path is active
+                    isTriggerActive // Use the new helper for trigger active state
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-accent hover:text-accent-foreground"
                   )}

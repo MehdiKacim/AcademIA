@@ -38,9 +38,9 @@ const TutorAnalyticsSection = ({ studentProfiles, users, classes, curricula, vie
   const averageStudentProgress = "72%"; // Placeholder
 
   const recentAlerts = [
-    { id: 1, studentName: getUserFullName(supervisedStudents[0]?.userId || ''), description: `a des difficultés en algèbre.`, type: 'warning' },
-    { id: 2, studentName: getUserFullName(supervisedStudents[1]?.userId || ''), description: `a terminé le module 3 de Physique.`, type: 'info' },
-    { id: 3, studentName: getUserFullName(supervisedStudents[2]?.userId || ''), description: `n'a pas accédé au cours de Mathématiques depuis 3 jours.`, type: 'warning' },
+    { id: 1, studentName: getUserFullName(supervisedStudents[0]?.userId || ''), description: `a échoué au quiz "Variables" du cours "Introduction à la Programmation".`, type: 'warning', recommendation: 'Recommander de revoir la section "Déclaration de Variables" et de poser des questions à AiA.' },
+    { id: 2, studentName: getUserFullName(supervisedStudents[1]?.userId || ''), description: `n'a pas accédé au cours "Algorithmes Avancés" depuis 5 jours.`, type: 'warning', recommendation: 'Envoyer un message de rappel personnalisé pour l\'encourager à reprendre.' },
+    { id: 3, studentName: getUserFullName(supervisedStudents[2]?.userId || ''), description: `a terminé le module "Physique Quantique" avec un score parfait.`, type: 'info', recommendation: 'Féliciter l\'élève et proposer des défis supplémentaires.' },
   ].filter(alert => alert.studentName !== 'N/A'); // Filter out alerts for non-existent users
 
   const tutorStudentPerformanceData = supervisedStudents.map(student => ({
@@ -161,6 +161,7 @@ const TutorAnalyticsSection = ({ studentProfiles, users, classes, curricula, vie
                   recentAlerts.map((alert) => (
                     <li key={alert.id} className={alert.type === 'warning' ? 'text-red-500' : 'text-blue-500'}>
                       **{alert.studentName}** {alert.description}
+                      {alert.recommendation && <span className="block text-xs italic mt-1">Recommandation: {alert.recommendation}</span>}
                     </li>
                   ))
                 )}
