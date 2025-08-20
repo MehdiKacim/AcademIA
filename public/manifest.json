@@ -1,7 +1,7 @@
 {
   "name": "AcademIA",
   "short_name": "AcademIA",
-  "description": "L'avenir de l'apprentissage est ici.",
+  "description": "L'avenir de l'apprentissage est ici. Votre tuteur IA personnel.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
