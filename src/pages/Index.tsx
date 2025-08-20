@@ -17,8 +17,7 @@ import {
   Home,
   LogIn,
   UserPlus,
-  Download, // New icon for install
-  Android, // Import Android icon
+  Download, // Use Download icon for APK as well
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -268,7 +267,7 @@ const Index = () => {
               {showApkDownloadButton && ( // New APK download button
                 <a href="/path/to/your/app.apk" download="AcademIA.apk">
                   <Button size="lg" variant="outline">
-                    <Android className="h-5 w-5 mr-2" /> Télécharger l'APK (Android)
+                    <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android)
                   </Button>
                 </a>
               )}
