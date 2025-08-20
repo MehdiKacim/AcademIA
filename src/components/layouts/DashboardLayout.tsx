@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -18,7 +18,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"; // Import Tooltip components
+} from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import { useCourseChat } from "@/contexts/CourseChatContext";
@@ -30,10 +30,10 @@ import React, { useState, useEffect, useCallback } from "react";
 interface NavItem {
   icon: React.ElementType;
   label: string;
-  to?: string; // For actual route links
-  onClick?: () => void; // For navigation level triggers
-  type: 'link' | 'trigger'; // Explicitly define type
-  items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[]; // Sub-items for dropdown/trigger, explicitly typed as 'link'
+  to?: string;
+  onClick?: () => void;
+  type: 'link' | 'trigger';
+  items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[];
 }
 
 const DashboardLayout = () => {
@@ -53,11 +53,17 @@ const DashboardLayout = () => {
   };
 
   useEffect(() => {
-    // This effect is primarily for desktop navigation highlighting
-    // For mobile, BottomNavigationBar manages its own level
     if (currentRole === 'creator') {
-      if (location.pathname === '/courses' || location.pathname === '/create-course') {
+      if (location.pathname === '/courses' || location.pathname.startsWith('/create-course')) {
         setCurrentNavLevel('courses');
+      } else if (location.pathname.startsWith('/class-management')) {
+        setCurrentNavLevel('class-management');
+      } else {
+        setCurrentNavLevel(null);
+      }
+    } else if (currentRole === 'tutor') {
+      if (location.pathname.startsWith('/class-management')) {
+        setCurrentNavLevel('class-management');
       } else {
         setCurrentNavLevel(null);
       }
@@ -105,34 +111,69 @@ const DashboardLayout = () => {
           icon: BookOpen,
           label: "Cours",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('courses'), // This is for desktop menu behavior
+          onClick: () => setCurrentNavLevel('courses'),
           items: [
             { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
             { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
           ],
         },
-        { to: "/class-management", icon: School, label: "Gestion des Classes", type: 'link' },
+        {
+          icon: School,
+          label: "Gestion des Classes",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('class-management'),
+          items: [
+            { to: "/class-management?tab=establishments", label: "Établissements", icon: School, type: 'link' },
+            { to: "/class-management?tab=curricula", label: "Cursus", icon: LayoutList, type: 'link' },
+            { to: "/class-management?tab=classes", label: "Classes", icon: Users, type: 'link' },
+            { to: "/class-management?tab=students", label: "Élèves", icon: GraduationCap, type: 'link' },
+          ],
+        },
         { to: "/analytics", icon: BarChart2, label: "Analytiques", type: 'link' },
       ];
     } else if (currentRole === 'tutor') {
       return [
         ...baseItems,
-        { to: "/class-management", icon: School, label: "Gestion des Élèves", type: 'link' },
+        {
+          icon: Users,
+          label: "Gestion des Élèves",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('class-management'),
+          items: [
+            { to: "/class-management?tab=classes", label: "Mes Classes", icon: Users, type: 'link' },
+            { to: "/class-management?tab=students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
+          ],
+        },
         { to: "/analytics", icon: BarChart2, label: "Suivi des Élèves", type: 'link' },
       ];
     }
     return baseItems;
   };
 
-  // This function is now primarily for desktop rendering logic,
-  // as BottomNavigationBar handles its own sub-menu display based on the full navItems structure.
-  const navItemsToDisplayForDesktop = currentNavLevel === 'courses' && currentRole === 'creator'
-    ? [
+  const navItemsToDisplayForDesktop = () => {
+    if (currentNavLevel === 'courses' && currentRole === 'creator') {
+      return [
         { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
         { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
         { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
-      ]
-    : getMainNavItems();
+      ];
+    } else if (currentNavLevel === 'class-management' && (currentRole === 'creator' || currentRole === 'tutor')) {
+      const classManagementItems = currentRole === 'creator' ? [
+        { to: "/class-management?tab=establishments", label: "Établissements", icon: School, type: 'link' },
+        { to: "/class-management?tab=curricula", label: "Cursus", icon: LayoutList, type: 'link' },
+        { to: "/class-management?tab=classes", label: "Classes", icon: Users, type: 'link' },
+        { to: "/class-management?tab=students", label: "Élèves", icon: GraduationCap, type: 'link' },
+      ] : [ // For tutor role
+        { to: "/class-management?tab=classes", label: "Mes Classes", icon: Users, type: 'link' },
+        { to: "/class-management?tab=students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
+      ];
+      return [
+        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
+        ...classManagementItems,
+      ];
+    }
+    return getMainNavItems();
+  };
 
 
   return (
@@ -141,7 +182,7 @@ const DashboardLayout = () => {
         <Logo />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {navItemsToDisplayForDesktop.map((item) => (
+            {navItemsToDisplayForDesktop().map((item) => (
               item.type === 'link' && item.to ? (
                 <NavLink
                   key={item.to}
@@ -218,7 +259,6 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
-      {/* Pass the full hierarchical navItems to BottomNavigationBar */}
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUser ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUser} />
       {currentUser && <AiAPersistentChat />}
       {currentUser && <FloatingAiAChatButton />}

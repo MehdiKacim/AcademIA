@@ -18,7 +18,7 @@ import {
   Curriculum,
   Student,
   User,
-  CreatorProfile, // Import CreatorProfile
+  CreatorProfile,
 } from "@/lib/dataModels";
 import {
   loadData,
@@ -36,8 +36,8 @@ import {
   deleteStudentProfile,
   getUserByUsername,
   getUserById,
-  loadCreatorProfiles, // Import loadCreatorProfiles
-  updateCreatorProfile, // Import updateCreatorProfile
+  loadCreatorProfiles,
+  updateCreatorProfile,
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -56,6 +56,7 @@ import {
   addClassToStorage,
   deleteClassFromStorage,
 } from '@/lib/courseData';
+import { useSearchParams } from 'react-router-dom'; // Import useSearchParams
 
 // Shadcn UI components for autocomplete
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -67,14 +68,18 @@ import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 const ClassManagement = () => {
   const { currentUser, currentRole } = useRole();
   const { openChat } = useCourseChat();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Determine the active tab from URL, default to 'establishments'
+  const activeTab = searchParams.get('tab') || 'establishments';
 
   // Main states for data
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [users, setUsers] = useState<User[]>([]); // All users
-  const [studentProfiles, setStudentProfiles] = useState<Student[]>([]); // All student profiles
-  const [creatorProfiles, setCreatorProfiles] = useState<CreatorProfile[]>([]); // All creator profiles
+  const [users, setUsers] = useState<User[]>([]);
+  const [studentProfiles, setStudentProfiles] = useState<Student[]>([]);
+  const [creatorProfiles, setCreatorProfiles] = useState<CreatorProfile[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
 
   // States for add/edit forms
@@ -86,7 +91,7 @@ const ClassManagement = () => {
 
   // States for student assignment (autocomplete)
   const [usernameToAssign, setUsernameToAssign] = useState('');
-  const [foundUserForAssignment, setFoundUserForAssignment] = useState<User | null>(null); // Found User, not Student
+  const [foundUserForAssignment, setFoundUserForAssignment] = useState<User | null>(null);
   const [classToAssign, setClassToAssign] = useState<string | undefined>(undefined);
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,7 +113,7 @@ const ClassManagement = () => {
     setClasses(loadClasses());
     setUsers(loadUsers());
     setStudentProfiles(loadStudents());
-    setCreatorProfiles(loadCreatorProfiles()); // Load creator profiles
+    setCreatorProfiles(loadCreatorProfiles());
     setAllCourses(loadCourses());
   }, []);
 
@@ -255,7 +260,7 @@ const ClassManagement = () => {
         name: formattedClassName,
         curriculumId: newClassCurriculumId,
         studentIds: [],
-        creatorIds: currentUser ? [currentUser.id] : [], // Associate current creator with the class
+        creatorIds: currentUser ? [currentUser.id] : [],
       };
       setClasses(addClassToStorage(newCls));
       setNewClassName('');
@@ -366,10 +371,6 @@ const ClassManagement = () => {
     saveClasses(updatedClasses);
     setClasses(updatedClasses);
 
-    // Optionally, delete the associated User account if no other profiles are linked
-    // For simplicity, we'll just delete the student profile for now.
-    // In a real app, you'd have more complex logic for user account deletion.
-
     showSuccess("Élève supprimé !");
   };
 
@@ -401,7 +402,7 @@ const ClassManagement = () => {
   const filteredUsersForDropdown = usernameToAssign.trim() === ''
     ? []
     : users.filter(u =>
-        u.role === 'student' && // Only show users with student role
+        u.role === 'student' &&
         (u.username.toLowerCase().includes(usernameToAssign.toLowerCase()) ||
         u.firstName.toLowerCase().includes(usernameToAssign.toLowerCase()) ||
         u.lastName.toLowerCase().includes(usernameToAssign.toLowerCase()))
@@ -409,7 +410,7 @@ const ClassManagement = () => {
 
   const filteredStudentProfiles = studentProfiles.filter(student => {
     const user = getUserById(student.userId);
-    if (!user) return false; // Should not happen if data is consistent
+    if (!user) return false;
     const lowerCaseQuery = studentSearchQuery.toLowerCase();
     return user.firstName.toLowerCase().includes(lowerCaseQuery) ||
            user.lastName.toLowerCase().includes(lowerCaseQuery) ||
@@ -417,14 +418,14 @@ const ClassManagement = () => {
            user.email.toLowerCase().includes(lowerCaseQuery);
   });
 
-  if (currentRole !== 'creator') {
+  if (currentRole !== 'creator' && currentRole !== 'tutor') {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) peuvent accéder à cette page pour gérer les classes.
+          Seuls les créateurs (professeurs) et les tuteurs peuvent accéder à cette page pour gérer les classes.
         </p>
       </div>
     );
@@ -433,20 +434,24 @@ const ClassManagement = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Établissements et Classes
+        {currentRole === 'creator' ? 'Gestion des Établissements et Classes' : 'Gestion des Élèves'}
       </h1>
       <p className="text-lg text-muted-foreground">
-        En tant que professeur, gérez vos établissements, classes, cursus et élèves.
+        {currentRole === 'creator' ? 'En tant que professeur, gérez vos établissements, classes, cursus et élèves.' : 'En tant que tuteur, gérez vos élèves et leurs classes.'}
       </p>
 
-      <Tabs defaultValue="establishments" className="w-full">
+      <Tabs defaultValue={activeTab} onValueChange={(value) => setSearchParams({ tab: value })} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="establishments">
-            <School className="h-4 w-4 mr-2" /> Établissements
-          </TabsTrigger>
-          <TabsTrigger value="curricula">
-            <LayoutList className="h-4 w-4 mr-2" /> Cursus
-          </TabsTrigger>
+          {currentRole === 'creator' && (
+            <>
+              <TabsTrigger value="establishments">
+                <School className="h-4 w-4 mr-2" /> Établissements
+              </TabsTrigger>
+              <TabsTrigger value="curricula">
+                <LayoutList className="h-4 w-4 mr-2" /> Cursus
+              </TabsTrigger>
+            </>
+          )}
           <TabsTrigger value="classes">
             <Users className="h-4 w-4 mr-2" /> Classes
           </TabsTrigger>
@@ -455,126 +460,130 @@ const ClassManagement = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* --- Établissements Tab --- */}
-        <TabsContent value="establishments" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gérer les Établissements</CardTitle>
-              <CardDescription>Ajoutez, modifiez ou supprimez des établissements.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Nom du nouvel établissement"
-                  value={newEstablishmentName}
-                  onChange={(e) => setNewEstablishmentName(e.target.value)}
-                />
-                <Button onClick={handleAddEstablishment}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {establishments.length === 0 ? (
-                  <p className="text-muted-foreground">Aucun établissement créé.</p>
-                ) : (
-                  establishments.map((est) => (
-                    <Card key={est.id} className="p-3 border rounded-md">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{est.name}</span>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => console.log('Modifier établissement', est.id)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+        {/* --- Établissements Tab (Creator Only) --- */}
+        {currentRole === 'creator' && (
+          <TabsContent value="establishments" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gérer les Établissements</CardTitle>
+                <CardDescription>Ajoutez, modifiez ou supprimez des établissements.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nom du nouvel établissement"
+                    value={newEstablishmentName}
+                    onChange={(e) => setNewEstablishmentName(e.target.value)}
+                  />
+                  <Button onClick={handleAddEstablishment}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {establishments.length === 0 ? (
+                    <p className="text-muted-foreground">Aucun établissement créé.</p>
+                  ) : (
+                    establishments.map((est) => (
+                      <Card key={est.id} className="p-3 border rounded-md">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{est.name}</span>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => console.log('Modifier établissement', est.id)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        {curricula.filter(c => c.establishmentId === est.id).length} cursus
-                        {creatorProfiles.filter(cp => cp.establishmentIds.includes(est.id)).length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            Professeurs associés: {creatorProfiles.filter(cp => cp.establishmentIds.includes(est.id)).map(cp => getUserFullName(cp.userId)).join(', ')}
-                          </p>
-                        )}
-                      </div>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          {curricula.filter(c => c.establishmentId === est.id).length} cursus
+                          {creatorProfiles.filter(cp => cp.establishmentIds.includes(est.id)).length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Professeurs associés: {creatorProfiles.filter(cp => cp.establishmentIds.includes(est.id)).map(cp => getUserFullName(cp.userId)).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
-        {/* --- Cursus Tab --- */}
-        <TabsContent value="curricula" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gérer les Cursus Scolaires</CardTitle>
-              <CardDescription>Créez et gérez des ensembles de cours pour vos classes, liés à un établissement.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="new-curriculum-name">Nom du nouveau cursus</Label>
-                <Input
-                  id="new-curriculum-name"
-                  placeholder="Ex: Cursus Scientifique"
-                  value={newCurriculumName}
-                  onChange={(e) => setNewCurriculumName(e.target.value)}
-                />
-                <Label htmlFor="curriculum-establishment">Établissement</Label>
-                <Select value={newCurriculumEstablishmentId} onValueChange={setNewCurriculumEstablishmentId}>
-                  <SelectTrigger id="curriculum-establishment">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {establishments.map(est => (
-                      <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleAddCurriculum} disabled={!newCurriculumName.trim() || !newCurriculumEstablishmentId}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Cursus
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {establishments.length === 0 ? (
-                  <p className="text-muted-foreground">Veuillez d'abord créer un établissement pour ajouter des cursus.</p>
-                ) : (
-                  establishments.map(est => (
-                    <Card key={est.id} className="p-4 space-y-3 bg-muted/20">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <School className="h-5 w-5 text-primary" /> Cursus de {est.name}
-                      </h3>
-                      <div className="space-y-2 pl-4 border-l">
-                        {curricula.filter(cur => cur.establishmentId === est.id).length === 0 ? (
-                          <p className="text-muted-foreground text-sm">Aucun cursus pour cet établissement.</p>
-                        ) : (
-                          curricula.filter(cur => cur.establishmentId === est.id).map(cur => (
-                            <div key={cur.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
-                              <span>{cur.name} ({cur.courseIds.length} cours, {classes.filter(cls => cls.curriculumId === cur.id).length} classes)</span>
-                              <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleOpenManageCoursesModal(cur)}>
-                                  <BookOpen className="h-4 w-4 mr-1" /> Gérer Cours
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => console.log('Modifier cursus', cur.id)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteCurriculum(cur.id)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+        {/* --- Cursus Tab (Creator Only) --- */}
+        {currentRole === 'creator' && (
+          <TabsContent value="curricula" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gérer les Cursus Scolaires</CardTitle>
+                <CardDescription>Créez et gérez des ensembles de cours pour vos classes, liés à un établissement.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="new-curriculum-name">Nom du nouveau cursus</Label>
+                  <Input
+                    id="new-curriculum-name"
+                    placeholder="Ex: Cursus Scientifique"
+                    value={newCurriculumName}
+                    onChange={(e) => setNewCurriculumName(e.target.value)}
+                  />
+                  <Label htmlFor="curriculum-establishment">Établissement</Label>
+                  <Select value={newCurriculumEstablishmentId} onValueChange={setNewCurriculumEstablishmentId}>
+                    <SelectTrigger id="curriculum-establishment">
+                      <SelectValue placeholder="Sélectionner un établissement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {establishments.map(est => (
+                        <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleAddCurriculum} disabled={!newCurriculumName.trim() || !newCurriculumEstablishmentId}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Cursus
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {establishments.length === 0 ? (
+                    <p className="text-muted-foreground">Veuillez d'abord créer un établissement pour ajouter des cursus.</p>
+                  ) : (
+                    establishments.map(est => (
+                      <Card key={est.id} className="p-4 space-y-3 bg-muted/20">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <School className="h-5 w-5 text-primary" /> Cursus de {est.name}
+                        </h3>
+                        <div className="space-y-2 pl-4 border-l">
+                          {curricula.filter(cur => cur.establishmentId === est.id).length === 0 ? (
+                            <p className="text-muted-foreground text-sm">Aucun cursus pour cet établissement.</p>
+                          ) : (
+                            curricula.filter(cur => cur.establishmentId === est.id).map(cur => (
+                              <div key={cur.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
+                                <span>{cur.name} ({cur.courseIds.length} cours, {classes.filter(cls => cls.curriculumId === cur.id).length} classes)</span>
+                                <div className="flex gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => handleOpenManageCoursesModal(cur)}>
+                                    <BookOpen className="h-4 w-4 mr-1" /> Gérer Cours
+                                  </Button>
+                                  <Button variant="outline" size="sm" onClick={() => console.log('Modifier cursus', cur.id)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="destructive" size="sm" onClick={() => handleDeleteCurriculum(cur.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                            ))
+                          )}
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* --- Classes Tab --- */}
         <TabsContent value="classes" className="mt-4">
@@ -584,34 +593,38 @@ const ClassManagement = () => {
               <CardDescription>Ajoutez, modifiez ou supprimez des classes, liées à un cursus.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="new-class-name">Nom de la nouvelle classe</Label>
-                <Input
-                  id="new-class-name"
-                  placeholder="Ex: 1ère Scientifique A"
-                  value={newClassName}
-                  onChange={(e) => setNewClassName(e.target.value)}
-                />
-                <Label htmlFor="class-curriculum">Cursus</Label>
-                <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
-                  <SelectTrigger id="class-curriculum">
-                    <SelectValue placeholder="Sélectionner un cursus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {curricula.map(cur => (
-                      <SelectItem key={cur.id} value={cur.id}>
-                        {cur.name} ({getEstablishmentName(cur.establishmentId)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Classe
-                </Button>
-              </div>
+              {currentRole === 'creator' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="new-class-name">Nom de la nouvelle classe</Label>
+                  <Input
+                    id="new-class-name"
+                    placeholder="Ex: 1ère Scientifique A"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                  />
+                  <Label htmlFor="class-curriculum">Cursus</Label>
+                  <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
+                    <SelectTrigger id="class-curriculum">
+                      <SelectValue placeholder="Sélectionner un cursus" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {curricula.map(cur => (
+                        <SelectItem key={cur.id} value={cur.id}>
+                          {cur.name} ({getEstablishmentName(cur.establishmentId)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Classe
+                  </Button>
+                </div>
+              )}
               <div className="space-y-2">
-                {curricula.length === 0 ? (
+                {curricula.length === 0 && currentRole === 'creator' ? (
                   <p className="text-muted-foreground">Veuillez d'abord créer un cursus pour ajouter des classes.</p>
+                ) : classes.length === 0 ? (
+                  <p className="text-muted-foreground">Aucune classe créée.</p>
                 ) : (
                   curricula.map(cur => (
                     <Card key={cur.id} className="p-4 space-y-3 bg-muted/20">
@@ -629,12 +642,16 @@ const ClassManagement = () => {
                                 <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
                                   <GraduationCap className="h-4 w-4 mr-1" /> Élèves
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={() => console.log('Modifier classe', cls.id)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                {currentRole === 'creator' && (
+                                  <>
+                                    <Button variant="outline" size="sm" onClick={() => console.log('Modifier classe', cls.id)}>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)}>
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
                               </div>
                               {cls.creatorIds.length > 0 && (
                                 <p className="text-xs text-muted-foreground mt-1">
@@ -686,13 +703,14 @@ const ClassManagement = () => {
             </Card>
           )}
 
-          {/* Creator Analytics Section moved here */}
-          <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-              Analytiques des Cours et Classes
-            </h2>
-            <CreatorAnalyticsSection />
-          </div>
+          {currentRole === 'creator' && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+                Analytiques des Cours et Classes
+              </h2>
+              <CreatorAnalyticsSection />
+            </div>
+          )}
         </TabsContent>
 
         {/* --- Élèves Tab --- */}
