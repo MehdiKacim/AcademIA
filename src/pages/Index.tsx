@@ -24,10 +24,12 @@ import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
 import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import GlobalSearchOverlay from "@/components/GlobalSearchOverlay"; // Import GlobalSearchOverlay
 
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
+  const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false); // New state for global search
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -261,7 +263,8 @@ const Index = () => {
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
       />
-      <BottomNavigationBar navItems={indexNavItems} />
+      <BottomNavigationBar navItems={indexNavItems} onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)} />
+      <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />
     </div>
   );
 };

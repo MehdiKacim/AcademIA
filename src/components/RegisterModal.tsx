@@ -114,7 +114,6 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
       username: username.trim(),
       email: email.trim(),
       classId: undefined,
-      establishmentId: undefined,
       enrolledCoursesProgress: [],
     };
 

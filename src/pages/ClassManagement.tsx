@@ -1,4 +1,3 @@
-Curriculum -> Class hierarchy with improved student assignment.">
 import React, { useState, useEffect, useRef } from 'react';
 import { useRole } from "@/contexts/RoleContext";
 import {
