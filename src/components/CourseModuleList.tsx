@@ -70,26 +70,35 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                 {/* Section pour l'affichage vertical des sections */}
                 <div className="mt-6">
                   <h4 className="text-lg font-semibold mb-3 text-left">Sections du module:</h4>
-                  <div className="flex flex-col space-y-4"> {/* Changé pour affichage vertical */}
+                  <div className="flex flex-col items-center space-y-4"> {/* Ajout de items-center pour centrer les flèches */}
                     {module.sections.map((section, sectionIndex) => (
-                      <div key={sectionIndex} className="relative">
-                        <Link
-                          to={`/courses/${currentCourse.id}/modules/${index}#section-${sectionIndex}`}
-                          className={cn(
-                            "block p-4 border rounded-lg text-center flex flex-col items-center justify-center transition-all duration-200", // Supprimé w-40 h-32
-                            section.isCompleted ? "border-green-500 bg-green-50/20" : "border-muted-foreground/30 bg-muted/10",
-                            !accessible && "opacity-50 cursor-not-allowed pointer-events-none"
-                          )}
-                        >
-                          {section.type === 'text' && <FileText className="h-6 w-6 mb-2 text-primary" />}
-                          {section.type === 'video' && <Video className="h-6 w-6 mb-2 text-primary" />}
-                          {section.type === 'image' && <ImageIcon className="h-6 w-6 mb-2 text-primary" />}
-                          {section.type === 'quiz' && <HelpCircle className="h-6 w-6 mb-2 text-primary" />}
-                          <p className="text-sm font-medium line-clamp-2">{section.title}</p>
-                          {section.isCompleted && <CheckCircle className="h-4 w-4 text-green-500 mt-1" />}
-                        </Link>
-                        {/* Suppression de la ligne de connexion horizontale */}
-                      </div>
+                      <React.Fragment key={sectionIndex}>
+                        <div className="relative w-full"> {/* Ajout d'un wrapper pour la flèche */}
+                          <Link
+                            to={`/courses/${currentCourse.id}/modules/${index}#section-${sectionIndex}`}
+                            className={cn(
+                              "block p-4 border rounded-lg text-center flex flex-col items-center justify-center transition-all duration-200",
+                              section.isCompleted ? "border-green-500 bg-green-50/20" : "border-muted-foreground/30 bg-muted/10",
+                              !accessible && "opacity-50 cursor-not-allowed pointer-events-none"
+                            )}
+                          >
+                            {section.type === 'text' && <FileText className="h-6 w-6 mb-2 text-primary" />}
+                            {section.type === 'video' && <Video className="h-6 w-6 mb-2 text-primary" />}
+                            {section.type === 'image' && <ImageIcon className="h-6 w-6 mb-2 text-primary" />}
+                            {section.type === 'quiz' && <HelpCircle className="h-6 w-6 mb-2 text-primary" />}
+                            <p className="text-sm font-medium line-clamp-2">{section.title}</p>
+                            {section.isCompleted && <CheckCircle className="h-4 w-4 text-green-500 mt-1" />}
+                          </Link>
+                        </div>
+                        {sectionIndex < module.sections.length - 1 && (
+                          <div className="relative w-1 h-8 bg-border flex items-center justify-center">
+                            <ArrowDown className={cn(
+                              "h-4 w-4 absolute text-border",
+                              section.isCompleted ? "text-primary animate-bounce" : "text-muted-foreground"
+                            )} />
+                          </div>
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
