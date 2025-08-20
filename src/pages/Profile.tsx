@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -8,15 +8,24 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { loadCourses } from "@/lib/courseData";
-import { dummyStudents } from "@/lib/studentData";
-import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle } from "lucide-react";
+import { dummyStudents, updateStudent } from "@/lib/studentData"; // Import updateStudent
+import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Link } from "react-router-dom";
+import EditProfileDialog from "@/components/EditProfileDialog"; // Import the new dialog
+import { Student } from "@/lib/dataModels"; // Import Student type
 
 const Profile = () => {
   const { currentRole } = useRole();
   const courses = loadCourses();
-  // For demo purposes, we'll assume a default user for each role.
-  // In a real app, this would come from an authenticated user context.
-  const currentUser = dummyStudents[0]; // Assuming Alice is our default student for now
+  const [currentUser, setCurrentUser] = useState<Student>(dummyStudents[0]); // Use state to allow updates
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+
+  const handleUpdateUser = (updatedUser: Student) => {
+    const newStudents = updateStudent(updatedUser); // Update in localStorage and dummyStudents array
+    setCurrentUser(newStudents.find(s => s.id === updatedUser.id) || updatedUser); // Update local state
+  };
 
   const renderProfileContent = () => {
     if (!currentUser) {
@@ -33,23 +42,34 @@ const Profile = () => {
     }
 
     if (currentRole === 'student') {
-      const enrolledCourses = courses.filter(c => c.modules.some(m => m.isCompleted));
+      const enrolledCourses = courses.filter(c => currentUser.enrolledCoursesProgress.some(ec => ec.courseId === c.id));
       const completedCoursesCount = enrolledCourses.filter(c => c.modules.every(m => m.isCompleted)).length;
       const totalModulesCompleted = courses.reduce((acc, course) => acc + course.modules.filter(m => m.isCompleted).length, 0);
       const totalModules = courses.reduce((acc, course) => acc + course.modules.length, 0);
       const overallProgress = totalModules > 0 ? Math.round((totalModulesCompleted / totalModules) * 100) : 0;
 
+      const recentActivities = [
+        { id: 1, type: "completed", description: `Terminé le module "Qu'est-ce que l'IA ?" du cours "Introduction à l'IA"`, date: "2 jours ago" },
+        { id: 2, type: "started", description: `Commencé le cours "React pour débutants"`, date: "1 semaine ago" },
+        { id: 3, type: "note", description: `Ajouté une note à la section "Props et État"`, date: "3 jours ago" },
+      ];
+
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="lg:col-span-3">
-            <CardHeader className="flex flex-row items-center space-x-4">
-              <User className="h-12 w-12 text-primary" />
-              <div>
-                <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
-                <CardDescription className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="h-4 w-4" /> {currentUser.email}
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+              <div className="flex items-center space-x-4">
+                <User className="h-12 w-12 text-primary" />
+                <div>
+                  <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" /> {currentUser.email}
+                  </CardDescription>
+                </div>
               </div>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+                <Edit className="h-4 w-4 mr-2" /> Modifier le profil
+              </Button>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">Rôle actuel: Élève</p>
@@ -63,7 +83,8 @@ const Profile = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{overallProgress}%</p>
-              <p className="text-sm text-muted-foreground">Modules terminés : {totalModulesCompleted} / {totalModules}</p>
+              <Progress value={overallProgress} className="w-full mt-2" />
+              <p className="text-sm text-muted-foreground mt-2">Modules terminés : {totalModulesCompleted} / {totalModules}</p>
             </CardContent>
           </Card>
           <Card>
@@ -72,22 +93,30 @@ const Profile = () => {
               <CardDescription>Votre succès jusqu'à présent.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous avez terminé {completedCoursesCount} cours.</p>
-              <p className="text-sm text-muted-foreground">Continuez sur cette lancée !</p>
+              <p className="text-2xl font-bold text-primary">{completedCoursesCount}</p>
+              <p className="text-sm text-muted-foreground">Cours terminés sur {enrolledCourses.length} inscrits.</p>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground mt-4">
+                {enrolledCourses.filter(c => c.modules.every(m => m.isCompleted)).slice(0, 3).map(course => (
+                  <li key={course.id}>{course.title} <CheckCircle className="inline h-3 w-3 text-green-500 ml-1" /></li>
+                ))}
+                {completedCoursesCount === 0 && <li>Aucun cours terminé.</li>}
+              </ul>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Cours en Cours</CardTitle>
-              <CardDescription>Les cours sur lesquels vous travaillez.</CardDescription>
+              <CardTitle>Activité Récente</CardTitle>
+              <CardDescription>Vos dernières actions sur la plateforme.</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                {enrolledCourses.slice(0, 3).map(course => ( // Show first 3 enrolled courses
-                  <li key={course.id}>{course.title}</li>
+              <ul className="space-y-2">
+                {recentActivities.map(activity => (
+                  <li key={activity.id} className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4 mr-2 text-primary" />
+                    <span>{activity.description}</span>
+                    <span className="ml-auto text-xs italic">{activity.date}</span>
+                  </li>
                 ))}
-                {enrolledCourses.length > 3 && <li>...et {enrolledCourses.length - 3} autres.</li>}
-                {enrolledCourses.length === 0 && <li>Aucun cours en cours.</li>}
               </ul>
             </CardContent>
           </Card>
@@ -98,17 +127,29 @@ const Profile = () => {
       const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.isCompleted)).length;
       const totalStudents = createdCourses.reduce((acc, course) => acc + Math.floor(Math.random() * 200), 0);
 
+      const topCourses = createdCourses.sort((a, b) => (b.modules.filter(m => m.isCompleted).length / b.modules.length) - (a.modules.filter(m => m.isCompleted).length / a.modules.length)).slice(0, 3);
+      const recentActivities = [
+        { id: 1, type: "created", description: `Créé le cours "Développement Web Fullstack"`, date: "5 jours ago" },
+        { id: 2, type: "updated", description: `Mis à jour le module 2 de "Algorithmes Avancés"`, date: "2 jours ago" },
+        { id: 3, type: "published", description: `Publié le cours "Programmation en C#"`, date: "1 semaine ago" },
+      ];
+
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="lg:col-span-3">
-            <CardHeader className="flex flex-row items-center space-x-4">
-              <PenTool className="h-12 w-12 text-primary" />
-              <div>
-                <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
-                <CardDescription className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="h-4 w-4" /> {currentUser.email}
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+              <div className="flex items-center space-x-4">
+                <PenTool className="h-12 w-12 text-primary" />
+                <div>
+                  <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" /> {currentUser.email}
+                  </CardDescription>
+                </div>
               </div>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+                <Edit className="h-4 w-4 mr-2" /> Modifier le profil
+              </Button>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">Rôle actuel: Créateur</p>
@@ -142,10 +183,31 @@ const Profile = () => {
             </CardHeader>
             <CardContent>
               <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                {createdCourses.slice(0, 3).map(course => ( // Show first 3 courses
-                  <li key={course.id}>{course.title}</li>
+                {topCourses.map(course => (
+                  <li key={course.id}>
+                    <Link to={`/courses/${course.id}`} className="hover:underline text-primary">
+                      {course.title}
+                    </Link>
+                  </li>
                 ))}
                 {createdCourses.length === 0 && <li>Aucun cours créé.</li>}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Activité Récente</CardTitle>
+              <CardDescription>Vos dernières actions en tant que créateur.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {recentActivities.map(activity => (
+                  <li key={activity.id} className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4 mr-2 text-primary" />
+                    <span>{activity.description}</span>
+                    <span className="ml-auto text-xs italic">{activity.date}</span>
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -155,17 +217,27 @@ const Profile = () => {
       const supervisedStudents = dummyStudents.slice(0, 2); // Taking first two for demo
       const studentsAtRisk = supervisedStudents.filter(s => s.enrolledCoursesProgress.some(ec => ec.modulesProgress.some(mp => mp.sectionsProgress.some(sp => sp.quizResult && !sp.quizResult.passed)))).length;
 
+      const recentAlerts = [
+        { id: 1, student: supervisedStudents[0]?.firstName, description: `a des difficultés en algèbre.`, date: "1 jour ago" },
+        { id: 2, student: supervisedStudents[1]?.firstName, description: `a terminé le module 3 de Physique.`, date: "3 jours ago" },
+      ];
+
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="lg:col-span-3">
-            <CardHeader className="flex flex-row items-center space-x-4">
-              <Users className="h-12 w-12 text-primary" />
-              <div>
-                <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
-                <CardDescription className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="h-4 w-4" /> {currentUser.email}
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+              <div className="flex items-center space-x-4">
+                <Users className="h-12 w-12 text-primary" />
+                <div>
+                  <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" /> {currentUser.email}
+                  </CardDescription>
+                </div>
               </div>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+                <Edit className="h-4 w-4 mr-2" /> Modifier le profil
+              </Button>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">Rôle actuel: Tuteur</p>
@@ -202,9 +274,14 @@ const Profile = () => {
               <CardDescription>Informations importantes sur vos élèves.</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                <li>{supervisedStudents[0]?.firstName} a des difficultés en algèbre.</li>
-                <li>{supervisedStudents[1]?.firstName} a terminé le module 3 de Physique.</li>
+              <ul className="space-y-2">
+                {recentAlerts.map(alert => (
+                  <li key={alert.id} className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4 mr-2 text-primary" />
+                    <span>{alert.student} {alert.description}</span>
+                    <span className="ml-auto text-xs italic">{alert.date}</span>
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -220,6 +297,13 @@ const Profile = () => {
         Mon Profil
       </h1>
       {renderProfileContent()}
+
+      <EditProfileDialog
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        currentUser={currentUser}
+        onSave={handleUpdateUser}
+      />
     </div>
   );
 };
