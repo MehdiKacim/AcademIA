@@ -354,8 +354,8 @@ const ClassManagement = () => {
           <TabsTrigger value="classes">
             <Users className="h-4 w-4 mr-2" /> Classes
           </TabsTrigger>
-          <TabsTrigger value="analytics"> {/* New tab for Analytics */}
-            <BarChart2 className="h-4 w-4 mr-2" /> Analytiques
+          <TabsTrigger value="students">
+            <GraduationCap className="h-4 w-4 mr-2" /> Élèves
           </TabsTrigger>
         </TabsList>
 
@@ -579,11 +579,14 @@ const ClassManagement = () => {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
 
-        {/* --- Analytiques Tab (for Creator) --- */}
-        <TabsContent value="analytics" className="mt-4">
-          <CreatorAnalyticsSection />
+          {/* Creator Analytics Section moved here */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+              Analytiques des Cours et Classes
+            </h2>
+            <CreatorAnalyticsSection />
+          </div>
         </TabsContent>
 
         {/* --- Élèves Tab --- */}
@@ -592,7 +595,7 @@ const ClassManagement = () => {
             <CardHeader>
               <CardTitle>Gérer les Élèves</CardTitle>
               <CardDescription>Recherchez des élèves par nom d'utilisateur et affectez-les à des classes.</CardDescription>
-            </CardHeader>
+            </CardDescription>
             <CardContent className="space-y-4">
               <h3 className="text-lg font-semibold">Affecter un élève à une classe</h3>
               <div className="relative">
