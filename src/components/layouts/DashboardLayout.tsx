@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom"; // Import useNavigate
 import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -26,6 +26,7 @@ const DashboardLayout = () => {
   const { currentRole, setRole } = useRole();
   const { openChat } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const getNavItems = () => {
     const baseItems = [
@@ -134,24 +135,18 @@ const DashboardLayout = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <NavLink to="/profile">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Mon profil</span>
-                </NavLink>
+              <DropdownMenuItem onClick={() => navigate("/profile")}> {/* Use navigate */}
+                <User className="mr-2 h-4 w-4" />
+                <span>Mon profil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild> {/* Changed to NavLink */}
-                <NavLink to="/settings"> {/* Link to the new Settings page */}
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Paramètres</span>
-                </NavLink>
+              <DropdownMenuItem onClick={() => navigate("/settings")}> {/* Use navigate */}
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Paramètres</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <NavLink to="/">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Déconnexion</span>
-                </NavLink>
+              <DropdownMenuItem onClick={() => navigate("/")}> {/* Use navigate */}
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Déconnexion</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
