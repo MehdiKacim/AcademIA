@@ -2,12 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Search, NotebookText, BookOpen, Layers, FileText, X } from "lucide-react";
+import { Search, NotebookText, BookOpen, Layers, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes";
 import { loadCourses, Course, Module, ModuleSection } from "@/lib/courseData";
 import { Link } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface SearchResult {
   type: 'note' | 'course' | 'module' | 'section';
@@ -18,12 +17,11 @@ interface SearchResult {
   icon: React.ElementType;
 }
 
-interface GlobalSearchDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface GlobalSearchContentProps {
+  onResultClick?: () => void; // Callback to close the popover when a result is clicked
 }
 
-const GlobalSearchDialog = ({ isOpen, onClose }: GlobalSearchDialogProps) => {
+const GlobalSearchContent = ({ onResultClick }: GlobalSearchContentProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
@@ -116,85 +114,69 @@ const GlobalSearchDialog = ({ isOpen, onClose }: GlobalSearchDialogProps) => {
   }, [searchResults]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] h-[90vh] flex flex-col p-6">
-        <DialogHeader className="flex flex-row items-center justify-between pb-4">
-          <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-            Recherche Globale
-          </DialogTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-            <span className="sr-only">Fermer la recherche</span>
-          </Button>
-        </DialogHeader>
+    <div className="p-4 space-y-4 w-[400px]"> {/* Fixed width for the popover content */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher dans tout AcademIA..."
+          className="pl-10 h-10"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleSearch();
+            }
+          }}
+        />
+        <Button
+          onClick={handleSearch}
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 px-3"
+          disabled={!searchQuery.trim()}
+        >
+          Go
+        </Button>
+      </div>
 
-        <div className="relative mb-6 p-2 bg-card border rounded-xl shadow-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher dans tout AcademIA..."
-            className="pl-12 h-14 text-base rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-transparent"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleSearch();
-              }
-            }}
-          />
-          <Button
-            onClick={handleSearch}
-            className="absolute right-4 top-1/2 -translate-y-1/2 h-10 px-4"
-            disabled={!searchQuery.trim()}
-          >
-            Rechercher
-          </Button>
-        </div>
+      <div className="max-h-[300px] overflow-y-auto pr-2"> {/* Max height for scrollable results */}
+        {searchQuery.trim() && searchResults.length === 0 ? (
+          <p className="text-muted-foreground text-center text-sm py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
+        ) : (
+          Object.keys(groupedResults).map(type => {
+            const resultsOfType = groupedResults[type as keyof typeof groupedResults];
+            if (resultsOfType.length === 0) return null;
 
-        <div className="flex-grow overflow-y-auto pr-2">
-          {searchQuery.trim() && searchResults.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
-          ) : (
-            Object.keys(groupedResults).map(type => {
-              const resultsOfType = groupedResults[type as keyof typeof groupedResults];
-              if (resultsOfType.length === 0) return null;
+            const typeTitle = {
+              note: "Notes",
+              course: "Cours",
+              module: "Modules",
+              section: "Sections",
+            }[type];
 
-              const typeTitle = {
-                note: "Notes",
-                course: "Cours",
-                module: "Modules",
-                section: "Sections",
-              }[type];
-
-              return (
-                <div key={type} className="space-y-4 mb-6">
-                  <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-                    {typeTitle}
-                  </h2>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {resultsOfType.map(result => (
-                      <Link to={result.link} key={result.id} onClick={onClose}> {/* Close dialog on link click */}
-                        <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
-                          <CardHeader className="flex-row items-center gap-3 pb-2">
-                            <result.icon className="h-5 w-5 text-primary" />
-                            <CardTitle className="text-lg">{result.title}</CardTitle>
-                          </CardHeader>
-                          <CardContent className="flex-grow">
-                            <CardDescription className="text-sm line-clamp-3">
-                              {result.description}
-                            </CardDescription>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
+            return (
+              <div key={type} className="space-y-2 mb-4">
+                <h3 className="text-md font-semibold text-primary">
+                  {typeTitle}
+                </h3>
+                <div className="grid gap-2">
+                  {resultsOfType.map(result => (
+                    <Link to={result.link} key={result.id} onClick={onResultClick}>
+                      <Card className="flex items-center p-2 hover:bg-accent hover:text-accent-foreground transition-colors">
+                        <result.icon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <div className="flex-grow">
+                          <p className="font-medium text-sm line-clamp-1">{result.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{result.description}</p>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
                 </div>
-              );
-            })
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 };
 
-export default GlobalSearchDialog;
+export default GlobalSearchContent;

@@ -14,24 +14,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"; // Import Popover components
 import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
-import GlobalSearchDialog from "@/components/GlobalSearchDialog"; // Import the new dialog component
+import GlobalSearchContent from "@/components/GlobalSearchContent"; // Import the new content component
 import React, { useState } from "react"; // Import useState
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { currentRole, setRole } = useRole();
   const { openChat } = useCourseChat();
-  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false); // State for search dialog
+  const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false); // State for search popover
 
   const getNavItems = () => {
     const baseItems = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
       { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
-      // Removed direct link to /global-search
     ];
 
     if (currentRole === 'student') {
@@ -85,11 +89,18 @@ const DashboardLayout = () => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {/* Global Search Button */}
-          <Button variant="outline" size="icon" onClick={() => setIsSearchDialogOpen(true)}>
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Recherche globale</span>
-          </Button>
+          {/* Global Search Popover */}
+          <Popover open={isSearchPopoverOpen} onOpenChange={setIsSearchPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Recherche globale</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[450px] p-0" align="end"> {/* Adjust width and padding */}
+              <GlobalSearchContent onResultClick={() => setIsSearchPopoverOpen(false)} />
+            </PopoverContent>
+          </Popover>
 
           {/* Boutons de sélection de rôle */}
           <DropdownMenu>
@@ -158,7 +169,6 @@ const DashboardLayout = () => {
       <BottomNavigationBar navItems={navItems} />
       <AiAPersistentChat />
       <FloatingAiAChatButton />
-      <GlobalSearchDialog isOpen={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} />
     </div>
   );
 };
