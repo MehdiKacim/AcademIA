@@ -187,10 +187,10 @@ const Courses = () => {
         {currentRole === 'student' ? 'Mes Cours' : currentRole === 'creator' ? 'Gestion des Cours' : 'Cours des Élèves'}
       </h1>
       <div className="relative mb-6 max-w-md mx-auto">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
           placeholder="Rechercher un cours..."
-          className="pl-9"
+          className="pl-10 h-12 text-base rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:ring-offset-2"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
