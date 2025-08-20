@@ -14,13 +14,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Import Tooltip components
 import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
-import DataModelModal from "@/components/DataModelModal"; // Import the new DataModelModal
-import React, { useState, useEffect, useCallback } from "react"; // Import useCallback
+import DataModelModal from "@/components/DataModelModal";
+import React, { useState, useEffect, useCallback } from "react";
 
 interface NavItem {
   icon: React.ElementType;
@@ -28,7 +33,7 @@ interface NavItem {
   to?: string; // For actual route links
   onClick?: () => void; // For navigation level triggers
   type: 'link' | 'trigger'; // Explicitly define type
-  items?: { to: string; label: string; icon?: React.ElementType }[]; // Sub-items for dropdown/trigger
+  items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[]; // Sub-items for dropdown/trigger, explicitly typed as 'link'
 }
 
 const DashboardLayout = () => {
@@ -36,11 +41,10 @@ const DashboardLayout = () => {
   const { currentUser, currentRole, setCurrentUser } = useRole();
   const { openChat } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false); // New state for data model modal
+  const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State to manage the current navigation level (e.g., null for main, 'courses' for sub-level)
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
 
   const handleLogout = () => {
@@ -48,7 +52,6 @@ const DashboardLayout = () => {
     navigate("/");
   };
 
-  // Effect to synchronize nav level with URL changes
   useEffect(() => {
     if (currentRole === 'creator') {
       if (location.pathname === '/courses' || location.pathname === '/create-course') {
@@ -57,32 +60,30 @@ const DashboardLayout = () => {
         setCurrentNavLevel(null);
       }
     } else {
-      setCurrentNavLevel(null); // Reset for other roles
+      setCurrentNavLevel(null);
     }
   }, [location.pathname, currentRole]);
 
-  // Keyboard shortcut handler
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
     const isModifierPressed = event.ctrlKey || event.metaKey;
 
-    if (currentUser) { // Only active when logged in
+    if (currentUser) {
       if (isModifierPressed && event.key === 'f') {
-        event.preventDefault(); // Prevent browser's default search
+        event.preventDefault();
         setIsSearchOverlayOpen(true);
       } else if (isModifierPressed && event.key === 'm') {
-        event.preventDefault(); // Prevent any default browser behavior
+        event.preventDefault();
         setIsDataModelModalOpen(true);
       }
     }
-  }, [currentUser]); // Re-create handler if currentUser changes
+  }, [currentUser]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleKeyDown]); // Depend on handleKeyDown
+  }, [handleKeyDown]);
 
   const getMainNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
@@ -98,15 +99,14 @@ const DashboardLayout = () => {
     } else if (currentRole === 'creator') {
       return [
         ...baseItems,
-        // This is now a trigger to change the nav level
         {
           icon: BookOpen,
           label: "Cours",
           type: 'trigger',
           onClick: () => setCurrentNavLevel('courses'),
           items: [
-            { to: "/courses", label: "Mes Cours", icon: BookOpen },
-            { to: "/create-course", label: "Créer un cours", icon: PlusSquare },
+            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' }, // Explicitly set type
+            { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' }, // Explicitly set type
           ],
         },
         { to: "/class-management", icon: School, label: "Gestion des Classes", type: 'link' },
@@ -125,10 +125,9 @@ const DashboardLayout = () => {
   const getCoursesSubNavItems = (): NavItem[] => [
     { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
     { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
-    { to: "/create-course", label: "Créer un cours", icon: PlusSquare },
+    { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
   ];
 
-  // Determine which set of items to display in the header
   const navItemsToDisplay = currentNavLevel === 'courses' && currentRole === 'creator'
     ? getCoursesSubNavItems()
     : getMainNavItems();
@@ -138,7 +137,6 @@ const DashboardLayout = () => {
     <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo />
-        {/* Navigation pour les écrans non mobiles */}
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {navItemsToDisplay.map((item) => (
@@ -173,16 +171,21 @@ const DashboardLayout = () => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {/* Global Search Button (Desktop only) - Conditional on currentUser */}
           {!isMobile && currentUser && (
-            <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Recherche globale</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
+                  <Search className="h-5 w-5" />
+                  <span className="sr-only">Recherche globale</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Recherche (Ctrl + F)</p>
+              </TooltipContent>
+            </Tooltip>
           )}
 
           <ThemeToggle />
-          {/* Menu déroulant pour les actions utilisateur */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -213,11 +216,8 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
-      {/* Pass currentUser to BottomNavigationBar */}
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUser ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUser} />
-      {/* GlobalSearchOverlay - Conditional on currentUser */}
       {currentUser && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
-      {/* DataModelModal - Conditional on currentUser */}
       {currentUser && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
     </div>
   );

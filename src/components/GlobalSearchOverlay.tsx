@@ -50,8 +50,11 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
 
       const results: SearchResult[] = [];
 
+      // Load current courses for search context
+      const currentCourses = loadCourses();
+
       // Search Notes
-      const allNotes = getAllNotesData();
+      const allNotes = getAllNotesData(currentCourses); // Pass courses to get context
       allNotes.forEach(noteGroup => {
         if (noteGroup.context.toLowerCase().includes(query) ||
             noteGroup.notes.some(note => note.toLowerCase().includes(query))) {
@@ -67,8 +70,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
       });
 
       // Search Courses, Modules, and Sections
-      const allCourses = loadCourses();
-      allCourses.forEach(course => {
+      currentCourses.forEach(course => {
         // Search Courses
         if (course.title.toLowerCase().includes(query) ||
             course.description.toLowerCase().includes(query) ||
@@ -121,6 +123,25 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
     };
   }, [searchQuery]); // Dependency array: re-run effect when searchQuery changes
 
+  // Effect for Escape key to close the overlay
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+    } else {
+      document.removeEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
+
   const groupedResults = useMemo(() => {
     const groups: { [key: string]: SearchResult[] } = {
       note: [],
@@ -142,10 +163,10 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed inset-x-0 top-[68px] z-[999] bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8 h-[calc(100vh-68px)]" // Adjusted height
+          className="fixed inset-x-0 top-[68px] z-[999] bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8 h-[calc(100vh-68px)]"
         >
-          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full"> {/* Ensure inner content takes full height */}
-            <div className="flex items-center gap-4 flex-shrink-0"> {/* Prevent shrinking */}
+          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full">
+            <div className="flex items-center gap-4 flex-shrink-0">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
                 <Input
@@ -154,9 +175,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                   className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  // Removed onKeyPress as search is now debounced
                 />
-                {/* Removed explicit search button as search is debounced */}
               </div>
               <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
                 <X className="h-6 w-6" />
@@ -164,7 +183,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
               </Button>
             </div>
 
-            <div className="flex-grow overflow-y-auto pr-2"> {/* Adjusted max-height to flex-grow */}
+            <div className="flex-grow overflow-y-auto pr-2">
               {searchQuery.trim() && searchResults.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
               ) : (
