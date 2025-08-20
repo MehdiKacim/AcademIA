@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser } from "lucide-react";
+import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code } from "lucide-react"; // Import Code icon
 import { ThemeToggle } from "@/components/theme-toggle"; // Import ThemeToggle
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
 import { clearAllAppData } from "@/lib/dataReset"; // Import the new utility
+import { Link } from 'react-router-dom'; // Import Link
 
 const Settings = () => {
   const [language, setLanguage] = useState('fr');
@@ -126,6 +127,11 @@ const Settings = () => {
           <Button variant="outline" onClick={() => showSuccess("Fonctionnalité de changement de mot de passe à implémenter.")}>
             Changer le mot de passe
           </Button>
+          <Link to="/data-model"> {/* Link to the new DataModelViewer page */}
+            <Button variant="outline" className="flex items-center gap-2">
+              <Code className="h-4 w-4" /> Voir le modèle de données
+            </Button>
+          </Link>
           <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2">
             <Eraser className="h-4 w-4" /> Réinitialiser toutes les données
           </Button>

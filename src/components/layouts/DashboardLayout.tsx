@@ -33,28 +33,18 @@ const DashboardLayout = () => {
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
     ];
 
-    if (currentRole === 'student') {
-      return [
-        ...baseItems,
-        { to: "/courses", icon: BookOpen, label: "Mes Cours" },
-        { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
-      ];
-    } else if (currentRole === 'creator') {
-      return [
-        ...baseItems,
-        { to: "/courses", icon: BookOpen, label: "Mes Cours" },
-        { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
-        { to: "/class-management", icon: School, label: "Gestion des Classes" },
-        // Analytics for creator will be integrated into Class Management
-      ];
-    } else if (currentRole === 'tutor') {
-      return [
-        ...baseItems,
-        { to: "/analytics", icon: BarChart2, label: "Progression" },
-        { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
-      ];
-    }
-    return baseItems;
+    // Since role selection is removed, we'll default to student view for navigation
+    // In a real app, authentication would determine the role.
+    return [
+      ...baseItems,
+      { to: "/courses", icon: BookOpen, label: "Mes Cours" },
+      { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
+      // For creator/tutor specific pages, they would need to be accessed via direct URL or
+      // a different authentication flow. For now, we simplify the nav.
+      { to: "/create-course", icon: PlusSquare, label: "Créer un cours" }, // Keep for creator access
+      { to: "/class-management", icon: School, label: "Gestion des Classes" }, // Keep for creator access
+      { to: "/analytics", icon: BarChart2, label: "Progression" }, // Keep for tutor access
+    ];
   };
 
   const navItems = getNavItems();
@@ -94,35 +84,7 @@ const DashboardLayout = () => {
             </Button>
           )}
 
-          {/* Boutons de sélection de rôle */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                {currentRole === 'student' && <GraduationCap className="h-4 w-4" />}
-                {currentRole === 'creator' && <PenTool className="h-4 w-4" />}
-                {currentRole === 'tutor' && <Users className="h-4 w-4" />}
-                <span className="hidden sm:inline-block">
-                  {currentRole === 'student' ? 'Élève' : currentRole === 'creator' ? 'Créateur' : 'Tuteur'}
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Changer de rôle</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setRole('student')}>
-                <GraduationCap className="mr-2 h-4 w-4" />
-                <span>Élève</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRole('creator')}>
-                <PenTool className="mr-2 h-4 w-4" />
-                <span>Créateur</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRole('tutor')}>
-                <Users className="mr-2 h-4 w-4" />
-                <span>Tuteur</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Role selection dropdown removed */}
 
           <ThemeToggle />
           {/* Menu déroulant pour les actions utilisateur */}

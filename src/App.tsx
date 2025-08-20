@@ -16,7 +16,8 @@ import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
 import ClassManagement from "./pages/ClassManagement";
 import Profile from "./pages/Profile";
-import Settings from "./pages/Settings"; // Import the new Settings component
+import Settings from "./pages/Settings";
+import DataModelViewer from "./pages/DataModelViewer"; // Import the new DataModelViewer
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -67,7 +68,8 @@ const App = () => {
                   <Route path="/all-notes" element={<AllNotes />} />
                   <Route path="/class-management" element={<ClassManagement />} />
                   <Route path="/profile" element={<Profile />} />
-                  <Route path="/settings" element={<Settings />} /> {/* Add the new Settings route */}
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/data-model" element={<DataModelViewer />} /> {/* Add the new DataModelViewer route */}
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
