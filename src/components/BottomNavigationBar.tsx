@@ -21,10 +21,8 @@ interface BottomNavigationBarProps {
 
 const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
-  // This state will now ONLY be controlled by user clicks within the bottom bar
+  const location = useLocation();
   const [currentMobileNavLevel, setCurrentMobileNavLevel] = useState<string | null>(null);
-
-  // Removed useEffect that was causing the issue
 
   if (!isMobile) {
     return null; // Do not display on non-mobile screens
@@ -33,37 +31,38 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
   const coursesTriggerItem = navItems.find(item => item.label === 'Cours' && item.type === 'trigger');
   const coursesSubItems = coursesTriggerItem?.items || [];
 
-  // Determine which items to actually display in the bar
-  const itemsToRender = currentMobileNavLevel === 'courses'
-    ? [
-        {
-          icon: ArrowLeft,
-          label: "Retour",
-          type: 'trigger',
-          onClick: () => setCurrentMobileNavLevel(null), // Explicitly close sub-menu
-        },
-        ...coursesSubItems,
-      ]
-    : navItems;
+  // Determine which items to display
+  let itemsToDisplayInBar: NavItem[] = [];
+
+  if (currentMobileNavLevel === 'courses') {
+    // Display 'Retour' and sub-menu items
+    itemsToDisplayInBar = [
+      {
+        icon: ArrowLeft,
+        label: "Retour",
+        type: 'trigger',
+        onClick: () => setCurrentMobileNavLevel(null),
+      },
+      ...coursesSubItems,
+    ];
+  } else {
+    // Display main navigation items, but handle the 'Cours' trigger specifically
+    itemsToDisplayInBar = navItems.map(item => {
+      if (item.type === 'trigger' && item.label === 'Cours') {
+        // This is the main 'Cours' button that opens the sub-menu
+        return {
+          ...item, // Keep original properties
+          onClick: () => setCurrentMobileNavLevel('courses'), // Override onClick to open sub-menu
+          to: undefined, // Ensure it's not treated as a link
+        };
+      }
+      return item; // Other main nav items (links)
+    });
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 p-2 shadow-lg md:hidden">
-      {itemsToRender.map((item) => {
-        // Special handling for the 'Cours' trigger in the main level
-        if (item.type === 'trigger' && item.label === 'Cours') {
-          return (
-            <Button
-              key={item.label}
-              variant="ghost"
-              onClick={() => setCurrentMobileNavLevel('courses')} // Update internal state
-              className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
-            >
-              <item.icon className="h-5 w-5 mb-1" />
-              {item.label}
-            </Button>
-          );
-        }
-        // Render as NavLink if it's a 'link' type with a 'to' prop
+      {itemsToDisplayInBar.map((item) => { // Use itemsToDisplayInBar here
         if (item.type === 'link' && item.to) {
           return (
             <NavLink
@@ -83,11 +82,11 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
             </NavLink>
           );
         }
-        // Render as a Button if it's a 'trigger' type with an 'onClick' prop (excluding the 'Cours' trigger already handled)
+        // This covers 'Retour' and the main 'Cours' trigger (if it's in itemsToDisplayInBar)
         if (item.type === 'trigger' && item.onClick) {
           return (
             <Button
-              key={item.label}
+              key={item.label} // Use item.label as key, should be unique for these cases
               variant="ghost"
               onClick={item.onClick}
               className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
@@ -97,7 +96,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
             </Button>
           );
         }
-        return null; // Don't render items that don't fit the criteria
+        return null;
       })}
 
       {/* Dedicated Global Search Button for mobile, always visible */}
