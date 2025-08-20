@@ -1,5 +1,5 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search } from "lucide-react";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -19,14 +19,14 @@ import AiAPersistentChat from "@/components/AiAPersistentChat";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface NavItem {
-  to?: string;
   icon: React.ElementType;
   label: string;
-  type?: 'link' | 'dropdown'; // Keep type for potential future use, but won't use 'dropdown' for Courses
-  items?: { to: string; label: string; icon?: React.ElementType }[];
+  to?: string; // For actual route links
+  onClick?: () => void; // For navigation level triggers
+  type: 'link' | 'trigger'; // Explicitly define type
 }
 
 const DashboardLayout = () => {
@@ -35,13 +35,30 @@ const DashboardLayout = () => {
   const { openChat } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // State to manage the current navigation level (e.g., null for main, 'courses' for sub-level)
+  const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
 
   const handleLogout = () => {
     setCurrentUser(null);
     navigate("/");
   };
 
-  const getNavItems = (): NavItem[] => {
+  // Effect to synchronize nav level with URL changes
+  useEffect(() => {
+    if (currentRole === 'creator') {
+      if (location.pathname === '/courses' || location.pathname === '/create-course') {
+        setCurrentNavLevel('courses');
+      } else {
+        setCurrentNavLevel(null);
+      }
+    } else {
+      setCurrentNavLevel(null); // Reset for other roles
+    }
+  }, [location.pathname, currentRole]);
+
+  const getMainNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord", type: 'link' },
     ];
@@ -53,11 +70,10 @@ const DashboardLayout = () => {
         { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link' },
       ];
     } else if (currentRole === 'creator') {
-      // Reverted to separate links for simplicity, as requested
       return [
         ...baseItems,
-        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
-        { to: "/create-course", icon: PlusSquare, label: "Créer un cours", type: 'link' },
+        // This is now a trigger to change the nav level
+        { icon: BookOpen, label: "Cours", type: 'trigger', onClick: () => setCurrentNavLevel('courses') },
         { to: "/class-management", icon: School, label: "Gestion des Classes", type: 'link' },
         { to: "/analytics", icon: BarChart2, label: "Analytiques", type: 'link' },
       ];
@@ -71,18 +87,30 @@ const DashboardLayout = () => {
     return baseItems;
   };
 
-  const navItems = getNavItems();
+  const getCoursesSubNavItems = (): NavItem[] => [
+    { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
+    { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
+    { to: "/create-course", icon: PlusSquare, label: "Créer un cours", type: 'link' },
+  ];
 
-  // For BottomNavigationBar, we need a flat list of links
-  const bottomNavItems = navItems.flatMap(item => {
+  // Determine which set of items to display in the header
+  const navItemsToDisplay = currentNavLevel === 'courses' && currentRole === 'creator'
+    ? getCoursesSubNavItems()
+    : getMainNavItems();
+
+  // For BottomNavigationBar, we need a flat list of all relevant links for the current role
+  // This ensures all primary actions are accessible on mobile without complex nested menus.
+  const bottomNavItems = getMainNavItems().flatMap(item => {
     if (item.type === 'link' && item.to) {
       return [{ to: item.to, icon: item.icon, label: item.label }];
-    } else if (item.type === 'dropdown' && item.items) {
-      // For mobile, keep them as separate links for simplicity
-      return item.items.map(subItem => ({ to: subItem.to, icon: subItem.icon || item.icon, label: subItem.label }));
+    }
+    // If it's the 'Courses' trigger for a creator, explicitly add its sub-items as separate links
+    if (item.label === "Cours" && item.type === 'trigger' && currentRole === 'creator') {
+      return getCoursesSubNavItems().filter(subItem => subItem.to); // Only actual links
     }
     return [];
   });
+
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
@@ -91,7 +119,7 @@ const DashboardLayout = () => {
         {/* Navigation pour les écrans non mobiles */}
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {navItems.map((item) => (
+            {navItemsToDisplay.map((item) => (
               item.type === 'link' && item.to ? (
                 <NavLink
                   key={item.to}
@@ -108,28 +136,16 @@ const DashboardLayout = () => {
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
                 </NavLink>
-              ) : item.type === 'dropdown' && item.items ? (
-                <DropdownMenu key={item.label}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {item.items.map((subItem) => (
-                      <DropdownMenuItem key={subItem.to} onClick={() => navigate(subItem.to)}>
-                        {subItem.icon && <subItem.icon className="mr-2 h-4 w-4" />}
-                        <span>{subItem.label}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              ) : item.type === 'trigger' && item.onClick ? (
+                <Button
+                  key={item.label}
+                  variant="ghost"
+                  onClick={item.onClick}
+                  className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                </Button>
               ) : null
             ))}
           </nav>
