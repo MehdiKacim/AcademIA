@@ -23,28 +23,43 @@ import React, { useState } from "react";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
-  const { currentRole, setRole } = useRole();
+  const { currentUser, currentRole, setCurrentUser } = useRole(); // Get currentUser and setCurrentUser
   const { openChat } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate
+
+  const handleLogout = () => {
+    setCurrentUser(null); // Clear current user from context
+    navigate("/"); // Redirect to home page
+  };
 
   const getNavItems = () => {
     const baseItems = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord" },
     ];
 
-    // Since role selection is removed, we'll default to student view for navigation
-    // In a real app, authentication would determine the role.
-    return [
-      ...baseItems,
-      { to: "/courses", icon: BookOpen, label: "Mes Cours" },
-      { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
-      // For creator/tutor specific pages, they would need to be accessed via direct URL or
-      // a different authentication flow. For now, we simplify the nav.
-      { to: "/create-course", icon: PlusSquare, label: "Créer un cours" }, // Keep for creator access
-      { to: "/class-management", icon: School, label: "Gestion des Classes" }, // Keep for creator access
-      { to: "/analytics", icon: BarChart2, label: "Progression" }, // Keep for tutor access
-    ];
+    if (currentRole === 'student') {
+      return [
+        ...baseItems,
+        { to: "/courses", icon: BookOpen, label: "Mes Cours" },
+        { to: "/all-notes", icon: NotebookText, label: "Mes Notes" },
+      ];
+    } else if (currentRole === 'creator') {
+      return [
+        ...baseItems,
+        { to: "/courses", icon: BookOpen, label: "Mes Cours" }, // Creators can also view courses
+        { to: "/create-course", icon: PlusSquare, label: "Créer un cours" },
+        { to: "/class-management", icon: School, label: "Gestion des Classes" },
+        { to: "/analytics", icon: BarChart2, label: "Analytiques" },
+      ];
+    } else if (currentRole === 'tutor') {
+      return [
+        ...baseItems,
+        { to: "/class-management", icon: School, label: "Gestion des Élèves" }, // Tutors manage students
+        { to: "/analytics", icon: BarChart2, label: "Suivi des Élèves" },
+      ];
+    }
+    return baseItems; // Default for unauthenticated or unknown role
   };
 
   const navItems = getNavItems();
@@ -107,7 +122,7 @@ const DashboardLayout = () => {
                 <span>Paramètres</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/")}> {/* Use navigate */}
+              <DropdownMenuItem onClick={handleLogout}> {/* Use handleLogout */}
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Déconnexion</span>
               </DropdownMenuItem>
