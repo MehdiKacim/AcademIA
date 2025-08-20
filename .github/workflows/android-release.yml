@@ -8,6 +8,8 @@ on:
 jobs:
   build_android:
     runs-on: ubuntu-latest # Exécute le job sur une machine virtuelle Ubuntu
+    permissions:
+      contents: write # Ajoute les permissions d'écriture pour le GITHUB_TOKEN
 
     steps:
       - name: Checkout code
