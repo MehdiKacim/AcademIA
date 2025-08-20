@@ -11,7 +11,7 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   type?: 'link' | 'trigger'; // 'trigger' for items that open a sub-menu
-  items?: { to: string; label: string; icon?: React.ElementType }[]; // Sub-items for dropdown/trigger
+  items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[]; // Sub-items for dropdown/trigger
   onClick?: () => void; // Added for generic trigger items
 }
 
@@ -24,47 +24,46 @@ interface BottomNavigationBarProps {
 const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  const [currentMobileNavLevel, setCurrentMobileNavLevel] = useState<string | null>(null);
+  const [currentMobileNavLevel, setCurrentMobileNavLevel] = useState<string | null>(null); // Stores the label of the active parent trigger, e.g., 'Cours'
 
   if (!isMobile) {
     return null; // Do not display on non-mobile screens
   }
 
-  const coursesTriggerItem = navItems.find(item => item.label === 'Cours' && item.type === 'trigger');
-  const coursesSubItems = coursesTriggerItem?.items || [];
+  // Find the currently active parent trigger item based on currentMobileNavLevel
+  const activeParentTrigger = navItems.find(item => item.label === currentMobileNavLevel && item.type === 'trigger');
 
-  // Determine which items to display
-  let itemsToDisplayInBar: NavItem[] = [];
+  let itemsToRender: NavItem[] = [];
 
-  if (currentMobileNavLevel === 'courses') {
-    // Display 'Retour' and sub-menu items
-    itemsToDisplayInBar = [
+  if (activeParentTrigger && activeParentTrigger.items) {
+    // If a parent trigger is active, show its sub-items and a "Retour" button
+    itemsToRender = [
       {
         icon: ArrowLeft,
         label: "Retour",
         type: 'trigger',
         onClick: () => setCurrentMobileNavLevel(null),
       },
-      ...coursesSubItems,
+      ...activeParentTrigger.items.map(subItem => ({ ...subItem, type: 'link' })), // Ensure sub-items are treated as links
     ];
   } else {
-    // Display main navigation items, but handle the 'Cours' trigger specifically
-    itemsToDisplayInBar = navItems.map(item => {
-      if (item.type === 'trigger' && item.label === 'Cours') {
-        // This is the main 'Cours' button that opens the sub-menu
+    // Otherwise, show the main navigation items
+    itemsToRender = navItems.map(item => {
+      if (item.type === 'trigger' && item.items) {
+        // For a trigger item, override its onClick to set the mobile nav level
         return {
-          ...item, // Keep original properties
-          onClick: () => setCurrentMobileNavLevel('courses'), // Override onClick to open sub-menu
+          ...item,
+          onClick: () => setCurrentMobileNavLevel(item.label), // Set the label as the active level
           to: undefined, // Ensure it's not treated as a link
         };
       }
-      return item; // Other main nav items (links)
+      return item; // Regular link items
     });
   }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 p-2 shadow-lg md:hidden">
-      {itemsToDisplayInBar.map((item) => { // Use itemsToDisplayInBar here
+      {itemsToRender.map((item) => {
         if (item.type === 'link' && item.to) {
           return (
             <NavLink
@@ -84,11 +83,10 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
             </NavLink>
           );
         }
-        // This covers 'Retour' and the main 'Cours' trigger (if it's in itemsToDisplayInBar)
         if (item.type === 'trigger' && item.onClick) {
           return (
             <Button
-              key={item.label} // Use item.label as key, should be unique for these cases
+              key={item.label}
               variant="ghost"
               onClick={item.onClick}
               className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
@@ -102,7 +100,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
       })}
 
       {/* Dedicated Global Search Button for mobile, conditional on onOpenGlobalSearch prop */}
-      {onOpenGlobalSearch && (
+      {onOpenGlobalSearch && !activeParentTrigger && ( // Only show search if not in a sub-menu
         <Button
           variant="ghost"
           onClick={onOpenGlobalSearch}

@@ -53,6 +53,8 @@ const DashboardLayout = () => {
   };
 
   useEffect(() => {
+    // This effect is primarily for desktop navigation highlighting
+    // For mobile, BottomNavigationBar manages its own level
     if (currentRole === 'creator') {
       if (location.pathname === '/courses' || location.pathname === '/create-course') {
         setCurrentNavLevel('courses');
@@ -103,10 +105,10 @@ const DashboardLayout = () => {
           icon: BookOpen,
           label: "Cours",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('courses'),
+          onClick: () => setCurrentNavLevel('courses'), // This is for desktop menu behavior
           items: [
-            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' }, // Explicitly set type
-            { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' }, // Explicitly set type
+            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
+            { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
           ],
         },
         { to: "/class-management", icon: School, label: "Gestion des Classes", type: 'link' },
@@ -122,14 +124,14 @@ const DashboardLayout = () => {
     return baseItems;
   };
 
-  const getCoursesSubNavItems = (): NavItem[] => [
-    { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-    { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
-    { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
-  ];
-
-  const navItemsToDisplay = currentNavLevel === 'courses' && currentRole === 'creator'
-    ? getCoursesSubNavItems()
+  // This function is now primarily for desktop rendering logic,
+  // as BottomNavigationBar handles its own sub-menu display based on the full navItems structure.
+  const navItemsToDisplayForDesktop = currentNavLevel === 'courses' && currentRole === 'creator'
+    ? [
+        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
+        { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
+        { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
+      ]
     : getMainNavItems();
 
 
@@ -139,7 +141,7 @@ const DashboardLayout = () => {
         <Logo />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {navItemsToDisplay.map((item) => (
+            {navItemsToDisplayForDesktop.map((item) => (
               item.type === 'link' && item.to ? (
                 <NavLink
                   key={item.to}
@@ -216,7 +218,10 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
+      {/* Pass the full hierarchical navItems to BottomNavigationBar */}
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUser ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUser} />
+      {currentUser && <AiAPersistentChat />}
+      {currentUser && <FloatingAiAChatButton />}
       {currentUser && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {currentUser && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
     </div>
