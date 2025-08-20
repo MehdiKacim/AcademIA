@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness } from "lucide-react"; // Added BriefcaseBusiness for Administration
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig } from "lucide-react"; // Added BriefcaseBusiness for Administration and new analytics icons
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -59,12 +59,22 @@ const DashboardLayout = () => {
         setCurrentNavLevel('courses');
       } else if (location.pathname.startsWith('/establishments') || location.pathname.startsWith('/curricula') || location.pathname.startsWith('/classes') || location.pathname.startsWith('/students')) {
         setCurrentNavLevel('administration');
+      } else if (location.pathname.startsWith('/analytics')) {
+        setCurrentNavLevel('creator-analytics');
       } else {
         setCurrentNavLevel(null);
       }
     } else if (currentRole === 'tutor') {
       if (location.pathname.startsWith('/classes') || location.pathname.startsWith('/students')) {
         setCurrentNavLevel('user-management');
+      } else if (location.pathname.startsWith('/analytics')) {
+        setCurrentNavLevel('tutor-analytics');
+      } else {
+        setCurrentNavLevel(null);
+      }
+    } else if (currentRole === 'student') {
+      if (location.pathname.startsWith('/analytics')) {
+        setCurrentNavLevel('student-analytics');
       } else {
         setCurrentNavLevel(null);
       }
@@ -104,6 +114,17 @@ const DashboardLayout = () => {
         ...baseItems,
         { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
         { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link' },
+        {
+          icon: BarChart2,
+          label: "Analytiques",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('student-analytics'),
+          items: [
+            { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
+            { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
+            { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link' },
+          ],
+        },
       ];
     } else if (currentRole === 'creator') {
       return [
@@ -130,7 +151,17 @@ const DashboardLayout = () => {
             { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
           ],
         },
-        { to: "/analytics", icon: BarChart2, label: "Analytiques", type: 'link' },
+        {
+          icon: BarChart2,
+          label: "Analytiques",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('creator-analytics'),
+          items: [
+            { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
+            { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
+            { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link' },
+          ],
+        },
       ];
     } else if (currentRole === 'tutor') {
       return [
@@ -145,7 +176,17 @@ const DashboardLayout = () => {
             { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
           ],
         },
-        { to: "/analytics", icon: BarChart2, label: "Suivi des Élèves", type: 'link' },
+        {
+          icon: BarChart2,
+          label: "Analytiques",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('tutor-analytics'),
+          items: [
+            { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
+            { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
+            { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChartBig, type: 'link' },
+          ],
+        },
       ];
     }
     return baseItems;
@@ -171,6 +212,24 @@ const DashboardLayout = () => {
         { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
         { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
         { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
+      ];
+    } else if (currentNavLevel === 'student-analytics' && currentRole === 'student') {
+      const analyticsItems = getMainNavItems().find(item => item.label === 'Analytiques')?.items;
+      return [
+        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
+        ...(analyticsItems || []),
+      ];
+    } else if (currentNavLevel === 'creator-analytics' && currentRole === 'creator') {
+      const analyticsItems = getMainNavItems().find(item => item.label === 'Analytiques')?.items;
+      return [
+        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
+        ...(analyticsItems || []),
+      ];
+    } else if (currentNavLevel === 'tutor-analytics' && currentRole === 'tutor') {
+      const analyticsItems = getMainNavItems().find(item => item.label === 'Analytiques')?.items;
+      return [
+        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
+        ...(analyticsItems || []),
       ];
     }
     return getMainNavItems();
