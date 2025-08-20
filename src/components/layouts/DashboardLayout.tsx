@@ -30,7 +30,7 @@ import React, { useState, useEffect, useCallback } from "react";
 interface NavItem {
   icon: React.ElementType;
   label: string;
-  to?: string;
+  to?: string; // Optional for trigger items
   onClick?: () => void;
   type: 'link' | 'trigger';
   items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[];
@@ -45,8 +45,6 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // currentNavLevel is now primarily used for mobile navigation's sub-levels
-  // For desktop, we'll use a more direct path-based active state
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
 
   const handleLogout = () => {
@@ -55,17 +53,20 @@ const DashboardLayout = () => {
   };
 
   useEffect(() => {
-    // Reset currentNavLevel when path changes, unless it's a sub-path of an active trigger
-    const mainItems = getMainNavItems();
-    const foundParent = mainItems.find(item => 
-      item.type === 'trigger' && item.items?.some(subItem => subItem.to && location.pathname.startsWith(subItem.to))
-    );
-    if (foundParent) {
-      setCurrentNavLevel(foundParent.label.toLowerCase().replace(/\s/g, '-'));
-    } else {
-      setCurrentNavLevel(null);
+    const mainItems = getMainNavItems(); // Get items based on current role
+    let foundParentLabel: string | null = null;
+
+    // Iterate through main items to find if current path belongs to any sub-menu
+    for (const item of mainItems) {
+      if (item.type === 'trigger' && item.items) {
+        if (item.items.some(subItem => subItem.to && location.pathname.startsWith(subItem.to))) {
+          foundParentLabel = item.label.toLowerCase().replace(/\s/g, '-');
+          break; // Found the parent, no need to check further
+        }
+      }
     }
-  }, [location.pathname, currentRole]);
+    setCurrentNavLevel(foundParentLabel);
+  }, [location.pathname, currentRole]); // Re-run if path or role changes
 
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -103,7 +104,8 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('analytiques'), // Set generic 'analytiques' for parent
+          // No 'to' for trigger parents
+          onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
             { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
@@ -118,9 +120,10 @@ const DashboardLayout = () => {
           icon: BookOpen,
           label: "Cours",
           type: 'trigger',
+          // No 'to' for trigger parents
           onClick: () => setCurrentNavLevel('cours'),
           items: [
-            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
+            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' }, // This is now a sub-item
             { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
           ],
         },
@@ -128,6 +131,7 @@ const DashboardLayout = () => {
           icon: BriefcaseBusiness,
           label: "Administration",
           type: 'trigger',
+          // No 'to' for trigger parents
           onClick: () => setCurrentNavLevel('administration'),
           items: [
             { to: "/establishments", label: "Établissements", icon: School, type: 'link' },
@@ -140,6 +144,7 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
+          // No 'to' for trigger parents
           onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
@@ -155,6 +160,7 @@ const DashboardLayout = () => {
           icon: Users,
           label: "Gestion des Utilisateurs",
           type: 'trigger',
+          // No 'to' for trigger parents
           onClick: () => setCurrentNavLevel('gestion-des-utilisateurs'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
@@ -165,6 +171,7 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
+          // No 'to' for trigger parents
           onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
@@ -208,10 +215,13 @@ const DashboardLayout = () => {
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {navItemsToDisplayForDesktop().map((item) => {
-              // Determine if a link is active
-              const isLinkActive = item.to && location.pathname.startsWith(item.to);
-              // Determine if a trigger is active (itself or one of its children)
-              const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
+              // Determine if a trigger is active (for Button)
+              // A trigger is active if its sub-menu is currently displayed (currentNavLevel matches its label)
+              // OR if the current path is a child of this trigger (meaning one of its sub-items is active)
+              const isTriggerActive = item.type === 'trigger' && (
+                currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-') || // This trigger's sub-menu is explicitly open
+                getIsParentTriggerActive(item) // One of its children's routes is active
+              );
 
               return item.type === 'link' && item.to ? (
                 <NavLink
@@ -220,7 +230,7 @@ const DashboardLayout = () => {
                   className={({ isActive }) =>
                     cn(
                       "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isActive
+                      isActive // NavLink's own isActive
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-accent hover:text-accent-foreground"
                     )
@@ -236,7 +246,7 @@ const DashboardLayout = () => {
                   onClick={item.onClick}
                   className={cn(
                     "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                    isTriggerActive // Use the new helper for trigger active state
+                    isTriggerActive // Use the combined logic for trigger active state
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-accent hover:text-accent-foreground"
                   )}
