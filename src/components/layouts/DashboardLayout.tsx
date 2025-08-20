@@ -27,6 +27,7 @@ interface NavItem {
   to?: string; // For actual route links
   onClick?: () => void; // For navigation level triggers
   type: 'link' | 'trigger'; // Explicitly define type
+  items?: { to: string; label: string; icon?: React.ElementType }[]; // Sub-items for dropdown/trigger
 }
 
 const DashboardLayout = () => {
@@ -73,7 +74,16 @@ const DashboardLayout = () => {
       return [
         ...baseItems,
         // This is now a trigger to change the nav level
-        { icon: BookOpen, label: "Cours", type: 'trigger', onClick: () => setCurrentNavLevel('courses') },
+        {
+          icon: BookOpen,
+          label: "Cours",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('courses'),
+          items: [
+            { to: "/courses", label: "Mes Cours", icon: BookOpen },
+            { to: "/create-course", label: "Créer un cours", icon: PlusSquare },
+          ],
+        },
         { to: "/class-management", icon: School, label: "Gestion des Classes", type: 'link' },
         { to: "/analytics", icon: BarChart2, label: "Analytiques", type: 'link' },
       ];
@@ -98,18 +108,8 @@ const DashboardLayout = () => {
     ? getCoursesSubNavItems()
     : getMainNavItems();
 
-  // For BottomNavigationBar, we need a flat list of all relevant links for the current role
-  // This ensures all primary actions are accessible on mobile without complex nested menus.
-  const bottomNavItems = getMainNavItems().flatMap(item => {
-    if (item.type === 'link' && item.to) {
-      return [{ to: item.to, icon: item.icon, label: item.label }];
-    }
-    // If it's the 'Courses' trigger for a creator, explicitly add its sub-items as separate links
-    if (item.label === "Cours" && item.type === 'trigger' && currentRole === 'creator') {
-      return getCoursesSubNavItems().filter(subItem => subItem.to); // Only actual links
-    }
-    return [];
-  });
+  // For BottomNavigationBar, we now pass the full hierarchical structure
+  const bottomNavItems = getMainNavItems();
 
 
   return (
