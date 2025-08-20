@@ -1,48 +1,105 @@
-const CACHE_NAME = 'academia-cache-v1';
-const urlsToCache = [
+const CACHE_NAME = 'academia-cache-v2'; // Increment cache version
+const OFFLINE_URL = '/offline.html'; // New offline page
+
+// Assets to precache on install
+const urlsToPrecache = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/globals.css',
-  // Add other critical assets here if needed, e.g., images, fonts
+  OFFLINE_URL,
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
+  // Note: Dynamic asset paths (like /assets/index-XXXX.js) cannot be hardcoded here.
+  // They will be handled by the runtime caching strategy below.
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('[Service Worker] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        console.log('[Service Worker] Pre-caching essential assets.');
+        return cache.addAll(urlsToPrecache);
+      })
+      .catch(error => {
+        console.error('[Service Worker] Pre-caching failed:', error);
       })
   );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-  );
+  self.skipWaiting(); // Activate new service worker immediately
 });
 
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
+  console.log('[Service Worker] Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    }).then(() => {
+      console.log('[Service Worker] Activation complete. Claiming clients.');
+      return self.clients.claim(); // Take control of all clients immediately
     })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Strategy for navigation requests (HTML pages)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // If network request is successful, cache and return response
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try to get from cache, otherwise fallback to offline page
+          return caches.match(event.request)
+            .then(response => response || caches.match(OFFLINE_URL));
+        })
+    );
+    return;
+  }
+
+  // Strategy for other requests (CSS, JS, images, etc.) - Cache First, then Network
+  event.respondWith(
+    caches.match(event.request)
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          // If found in cache, return cached version
+          return cachedResponse;
+        }
+        // Otherwise, fetch from network, cache, and return
+        return fetch(event.request)
+          .then(response => {
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+            return response;
+          })
+          .catch(error => {
+            console.error('[Service Worker] Fetch failed for:', event.request.url, error);
+            // You could return a fallback image or other asset here for specific types
+            // For now, just re-throw or return a rejected promise
+            throw error;
+          });
+      })
   );
 });
