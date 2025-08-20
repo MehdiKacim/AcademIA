@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'; // Ajout de useLocation
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText, HelpCircle } from "lucide-react";
@@ -7,7 +7,7 @@ import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
 import QuickNoteDialog from "@/components/QuickNoteDialog";
-import { cn } from "@/lib/utils";
+import { cn } "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
 import NotesSection from "@/components/NotesSection";
@@ -26,6 +26,7 @@ const ModuleDetail = () => {
   const navigate = useNavigate();
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
   const isMobile = useIsMobile();
+  const location = useLocation(); // Obtenir l'objet location
 
   // Charger les cours depuis le stockage local pour s'assurer d'avoir la dernière version
   const [currentCourses, setCurrentCourses] = useState<Course[]>(loadCourses());
@@ -61,6 +62,19 @@ const ModuleDetail = () => {
       setModuleContext(null);
     };
   }, [courseId, moduleIndex, course, module, setCourseContext, setModuleContext]);
+
+  // Nouveau useEffect pour le défilement vers la section
+  useEffect(() => {
+    if (location.hash) {
+      const sectionId = location.hash.substring(1); // Supprimer le '#'
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Optionnel: supprimer le hash de l'URL après le défilement pour un URL plus propre
+        // navigate(location.pathname, { replace: true });
+      }
+    }
+  }, [location.hash, location.pathname]); // Exécuter lorsque le hash ou le chemin change
 
   const scrollToSection = useCallback((sectionIdx: number) => {
     if (sectionRefs.current[sectionIdx]) {
@@ -254,6 +268,7 @@ const ModuleDetail = () => {
                     <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `section-${course.id}-${currentModuleIndex}-${index}` : null)}>
                       <ContextMenuTrigger className="block w-full">
                         <div
+                          id={`section-${index}`} {/* Ajout de l'ID pour le défilement */}
                           ref={el => sectionRefs.current[index] = el}
                           className={cn(
                             "p-4 border rounded-md cursor-context-menu",

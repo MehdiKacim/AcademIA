@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, CheckCircle, ArrowDown, BookOpen } from "lucide-react"; // Ajout de BookOpen
+import { Lock, CheckCircle, ArrowDown, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react"; // Ajout de FileText, Video, HelpCircle, ImageIcon
 import { cn } from "@/lib/utils";
 import { Course, Module, loadCourses } from "@/lib/courseData"; // Import loadCourses and Module
 
@@ -42,6 +42,13 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                 isCompleted && "border-green-500 ring-2 ring-green-500/50"
               )}
             >
+              {currentCourse.imageUrl && (
+                <img
+                  src={currentCourse.imageUrl}
+                  alt={`Image pour le cours ${currentCourse.title}`}
+                  className="w-full h-32 object-cover rounded-md mb-4"
+                />
+              )}
               <CardHeader className="p-0 mb-4">
                 <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
                   {accessible ? (
@@ -62,6 +69,36 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                     {accessible ? (isCompleted ? "Revoir le module" : "Commencer le module") : "Verrouillé"}
                   </Button>
                 </Link>
+
+                {/* Nouvelle section pour l'affichage horizontal des sections */}
+                <div className="mt-6">
+                  <h4 className="text-lg font-semibold mb-3 text-left">Sections du module:</h4>
+                  <div className="flex overflow-x-auto pb-4 space-x-4 scrollbar-hide">
+                    {module.sections.map((section, sectionIndex) => (
+                      <div key={sectionIndex} className="relative flex-shrink-0">
+                        <Link
+                          to={`/courses/${currentCourse.id}/modules/${index}#section-${sectionIndex}`}
+                          className={cn(
+                            "block p-4 border rounded-lg text-center w-40 h-32 flex flex-col items-center justify-center transition-all duration-200",
+                            section.isCompleted ? "border-green-500 bg-green-50/20" : "border-muted-foreground/30 bg-muted/10",
+                            !accessible && "opacity-50 cursor-not-allowed pointer-events-none" // Désactiver si le module n'est pas accessible
+                          )}
+                        >
+                          {section.type === 'text' && <FileText className="h-6 w-6 mb-2 text-primary" />}
+                          {section.type === 'video' && <Video className="h-6 w-6 mb-2 text-primary" />}
+                          {section.type === 'image' && <ImageIcon className="h-6 w-6 mb-2 text-primary" />}
+                          {section.type === 'quiz' && <HelpCircle className="h-6 w-6 mb-2 text-primary" />}
+                          <p className="text-sm font-medium line-clamp-2">{section.title}</p>
+                          {section.isCompleted && <CheckCircle className="h-4 w-4 text-green-500 mt-1" />}
+                        </Link>
+                        {/* Ligne de connexion à la section suivante */}
+                        {sectionIndex < module.sections.length - 1 && (
+                          <div className="absolute top-1/2 right-[-20px] w-10 h-0.5 bg-border -translate-y-1/2"></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
