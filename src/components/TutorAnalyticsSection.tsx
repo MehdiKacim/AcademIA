@@ -21,6 +21,8 @@ import {
 import { Profile, Class, Curriculum, StudentCourseProgress } from "@/lib/dataModels";
 import { getUserFullName } from "@/lib/studentData";
 import { loadClasses, loadCurricula } from "@/lib/courseData"; // Import loadClasses, loadCurricula
+import { Button } from "@/components/ui/button"; // Import Button
+import { Mail } from "lucide-react"; // Import Mail icon
 
 interface TutorAnalyticsSectionProps {
   allProfiles: Profile[];
@@ -30,9 +32,10 @@ interface TutorAnalyticsSectionProps {
   view: string | null;
   selectedClassId?: string;
   selectedCurriculumId?: string;
+  onSendMessageToUser: (userId: string) => void; // New prop for sending message
 }
 
-const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allClasses, allCurricula, view, selectedClassId, selectedCurriculumId }: TutorAnalyticsSectionProps) => {
+const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allClasses, allCurricula, view, selectedClassId, selectedCurriculumId, onSendMessageToUser }: TutorAnalyticsSectionProps) => {
   const getClassName = (id?: string) => allClasses.find(c => c.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => allCurricula.find(c => c.id === id)?.name || 'N/A';
 
@@ -189,6 +192,11 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
                     <li key={alert.id} className={alert.type === 'warning' ? 'text-red-500' : 'text-blue-500'}>
                       **{alert.studentId ? `${allProfiles.find(p => p.id === alert.studentId)?.first_name} ${allProfiles.find(p => p.id === alert.studentId)?.last_name}` : 'N/A'}** {alert.description}
                       {alert.recommendation && <span className="block text-xs italic mt-1">Recommandation: {alert.recommendation}</span>}
+                      {alert.studentId && (
+                        <Button variant="ghost" size="sm" className="ml-2" onClick={() => onSendMessageToUser(alert.studentId)}>
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      )}
                     </li>
                   ))
                 )}

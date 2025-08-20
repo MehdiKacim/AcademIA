@@ -7,107 +7,39 @@ import { getAllProfiles } from "@/lib/studentData";
 import { useRole } from "@/contexts/RoleContext";
 import { Profile } from '@/lib/dataModels';
 import { cn } from "@/lib/utils";
-import { MessageSquare, Mail, FileText } from "lucide-react";
+import { MessageSquare, Mail, FileText, Paperclip } from "lucide-react"; // Import Paperclip
 
 interface MessageListProps {
+  recentMessages: Message[]; // Now received as prop
+  allProfiles: Profile[]; // Now received as prop
   onSelectContact: (contact: Profile, initialCourseId?: string, initialCourseTitle?: string) => void;
   selectedContactId: string | null;
   onUnreadCountChange: (count: number) => void;
 }
 
-const MessageList = ({ onSelectContact, selectedContactId, onUnreadCountChange }: MessageListProps) => {
+const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedContactId, onUnreadCountChange }: MessageListProps) => {
   const { currentUserProfile } = useRole();
-  const [recentMessages, setRecentMessages] = useState<Message[]>([]);
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(new Map());
 
   const currentUserId = currentUserProfile?.id;
 
+  // Calculate unread counts whenever recentMessages or currentUserId changes
   useEffect(() => {
-    const fetchData = async () => {
-      if (!currentUserId) return;
-      const profiles = await getAllProfiles();
-      setAllProfiles(profiles);
-      const messages = await getRecentConversations(currentUserId);
-      setRecentMessages(messages);
+    if (!currentUserId) return;
 
-      const totalUnread = await getUnreadMessageCount(currentUserId);
-      onUnreadCountChange(totalUnread);
-
-      const counts = new Map<string, number>();
-      for (const msg of messages) {
-        if (msg.receiver_id === currentUserId && !msg.is_read) {
-          const senderId = msg.sender_id;
-          counts.set(senderId, (counts.get(senderId) || 0) + 1);
-        }
+    const counts = new Map<string, number>();
+    let totalUnread = 0;
+    for (const msg of recentMessages) {
+      if (msg.receiver_id === currentUserId && !msg.is_read) {
+        const senderId = msg.sender_id;
+        counts.set(senderId, (counts.get(senderId) || 0) + 1);
+        totalUnread++;
       }
-      setUnreadCounts(counts);
-    };
+    }
+    setUnreadCounts(counts);
+    onUnreadCountChange(totalUnread);
+  }, [recentMessages, currentUserId, onUnreadCountChange]);
 
-    fetchData();
-
-    // Set up real-time listener for new messages to update the list and unread counts
-    const channel = supabase
-      .channel(`messages_list_${currentUserId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${currentUserId}`
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          setRecentMessages(prev => {
-            const existingIndex = prev.findIndex(msg =>
-              (msg.sender_id === newMessage.sender_id && msg.receiver_id === newMessage.receiver_id) ||
-              (msg.sender_id === newMessage.receiver_id && msg.receiver_id === newMessage.sender_id)
-            );
-            if (existingIndex > -1) {
-              const updated = [...prev];
-              updated[existingIndex] = newMessage;
-              return updated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-            }
-            return [newMessage, ...prev].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          });
-          setUnreadCounts(prev => {
-            const newCounts = new Map(prev);
-            newCounts.set(newMessage.sender_id, (newCounts.get(newMessage.sender_id) || 0) + 1);
-            return newCounts;
-          });
-          onUnreadCountChange((prev) => prev + 1); // Increment total unread count
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${currentUserId}`
-        },
-        (payload) => {
-          const updatedMessage = payload.new as Message;
-          if (updatedMessage.is_read) {
-            setUnreadCounts(prev => {
-              const newCounts = new Map(prev);
-              const senderId = updatedMessage.sender_id;
-              if (newCounts.has(senderId) && newCounts.get(senderId)! > 0) {
-                newCounts.set(senderId, newCounts.get(senderId)! - 1);
-              }
-              return newCounts;
-            });
-            onUnreadCountChange((prev) => prev - 1); // Decrement total unread count
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUserId, onUnreadCountChange]);
 
   const getContactProfile = (message: Message) => {
     const contactId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;

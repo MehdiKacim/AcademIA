@@ -28,6 +28,7 @@ import DataModelModal from "@/components/DataModelModal";
 import React, { useState, useEffect, useCallback } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData"; // Import getUnreadMessageCount
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
+import { Message } from "@/lib/dataModels"; // Import Message type
 
 interface NavItem {
   icon: React.ElementType;

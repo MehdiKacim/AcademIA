@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { useSearchParams } from "react-router-dom"; // Import useSearchParams
+import { useSearchParams, useNavigate } from "react-router-dom"; // Import useSearchParams and useNavigate
 import { loadCourses, loadEstablishments, loadCurricula, loadClasses } from "@/lib/courseData";
 import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supabase functions
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
@@ -21,6 +21,7 @@ const Analytics = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
@@ -78,6 +79,10 @@ const Analytics = () => {
 
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
+  const handleSendMessageToUser = (userId: string) => {
+    navigate(`/messages?contactId=${userId}`);
+  };
+
   const renderAnalyticsContent = () => {
     if (currentRole === 'student') {
       const studentProfile = allProfiles.find(p => p.id === currentUserProfile.id && p.role === 'student');
@@ -117,6 +122,7 @@ const Analytics = () => {
           view={view}
           selectedClassId={selectedClassId}
           selectedCurriculumId={selectedCurriculumId}
+          onSendMessageToUser={handleSendMessageToUser} // Pass the new prop
         />
       );
     }

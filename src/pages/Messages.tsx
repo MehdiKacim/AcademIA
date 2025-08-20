@@ -9,13 +9,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
-import { Profile } from '@/lib/dataModels';
+import { Profile, Message } from '@/lib/dataModels'; // Import Message type
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from '@/utils/toast';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getRecentConversations, getUnreadMessageCount } from "@/lib/messageData"; // Import messageData functions
+import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
 
 const Messages = () => {
   const { currentUserProfile, isLoadingUser } = useRole();
@@ -25,16 +27,68 @@ const Messages = () => {
 
   const [selectedContact, setSelectedContact] = useState<Profile | null>(null);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+  const [recentMessages, setRecentMessages] = useState<Message[]>([]); // State for recent messages
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [initialCourseContext, setInitialCourseContext] = useState<{ id?: string; title?: string }>({});
 
+  const currentUserId = currentUserProfile?.id;
+
+  const fetchAllData = async () => {
+    if (!currentUserId) return;
+
+    const profiles = await getAllProfiles();
+    setAllProfiles(profiles.filter(p => p.id !== currentUserId)); // Exclude current user
+
+    const messages = await getRecentConversations(currentUserId);
+    setRecentMessages(messages);
+
+    const totalUnread = await getUnreadMessageCount(currentUserId);
+    setUnreadMessageCount(totalUnread);
+  };
+
   useEffect(() => {
-    const fetchProfiles = async () => {
-      const profiles = await getAllProfiles();
-      setAllProfiles(profiles.filter(p => p.id !== currentUserProfile?.id)); // Exclude current user
+    fetchAllData();
+
+    // Set up real-time listener for new messages to update the list and unread counts
+    let channel: any;
+    if (currentUserId) {
+      channel = supabase
+        .channel(`messages_page_${currentUserId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `receiver_id=eq.${currentUserId}`
+          },
+          (payload) => {
+            // Re-fetch all data to ensure consistency and correct unread counts
+            fetchAllData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'messages',
+            filter: `receiver_id=eq.${currentUserId}`
+          },
+          (payload) => {
+            // Re-fetch all data to ensure consistency and correct unread counts
+            fetchAllData();
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
-    fetchProfiles();
-  }, [currentUserProfile]);
+  }, [currentUserId]); // Depend on currentUserId
 
   useEffect(() => {
     // Check for query parameters to pre-select a contact
@@ -59,10 +113,6 @@ const Messages = () => {
     navigate(`/messages?contactId=${contact.id}${courseId ? `&courseId=${courseId}` : ''}${courseTitle ? `&courseTitle=${courseTitle}` : ''}`, { replace: true });
   };
 
-  const handleUnreadCountChange = (count: number) => {
-    setUnreadMessageCount(count);
-  };
-
   const handleNewConversation = (profileId: string) => {
     const contact = allProfiles.find(p => p.id === profileId);
     if (contact) {
@@ -71,6 +121,22 @@ const Messages = () => {
       showError("Profil introuvable pour démarrer une nouvelle conversation.");
     }
   };
+
+  // Filter contacts for new chat: all profiles except current user and those already in recent conversations
+  const availableContactsForNewChat = useMemo(() => {
+    if (!currentUserProfile) return [];
+
+    const contactsInRecentConversations = new Set(
+      recentMessages.map(msg =>
+        msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
+      )
+    );
+
+    return allProfiles.filter(profile =>
+      profile.id !== currentUserProfile.id && // Exclude self
+      !contactsInRecentConversations.has(profile.id) // Exclude contacts already in recent conversations
+    );
+  }, [allProfiles, currentUserProfile, recentMessages]);
 
   if (isLoadingUser) {
     return (
@@ -98,14 +164,6 @@ const Messages = () => {
     );
   }
 
-  const availableContactsForNewChat = useMemo(() => {
-    // Filter out current user and contacts already in recent conversations
-    const recentContactIds = new Set(
-      allProfiles.filter(p => p.id !== currentUserProfile.id).map(p => p.id)
-    );
-    return allProfiles.filter(p => p.id !== currentUserProfile.id && recentContactIds.has(p.id));
-  }, [allProfiles, currentUserProfile]);
-
   return (
     <div className="space-y-8 h-[calc(100vh-120px)] flex flex-col">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -126,15 +184,25 @@ const Messages = () => {
                     <SelectValue placeholder="Sélectionner un contact" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableContactsForNewChat.map(profile => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.first_name} {profile.last_name} (@{profile.username})
-                      </SelectItem>
-                    ))}
+                    {availableContactsForNewChat.length === 0 ? (
+                      <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
+                    ) : (
+                      availableContactsForNewChat.map(profile => (
+                        <SelectItem key={profile.id} value={profile.id}>
+                          {profile.first_name} {profile.last_name} (@{profile.username})
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-              <MessageList onSelectContact={handleSelectContact} selectedContactId={selectedContact?.id || null} onUnreadCountChange={handleUnreadCountChange} />
+              <MessageList
+                recentMessages={recentMessages} // Pass recentMessages
+                allProfiles={allProfiles} // Pass allProfiles
+                onSelectContact={handleSelectContact}
+                selectedContactId={selectedContact?.id || null}
+                onUnreadCountChange={setUnreadMessageCount} // Update unread count in parent
+              />
             </>
           ) : (
             <div className="flex flex-col flex-grow">
@@ -143,10 +211,7 @@ const Messages = () => {
               </Button>
               <ChatInterface
                 contact={selectedContact}
-                onMessageSent={() => {
-                  // Re-fetch recent messages to update list and unread counts
-                  // This will be handled by the MessageList's internal useEffect
-                }}
+                onMessageSent={fetchAllData} // Trigger re-fetch of all data
                 initialCourseId={initialCourseContext.id}
                 initialCourseTitle={initialCourseContext.title}
               />
@@ -164,15 +229,25 @@ const Messages = () => {
                     <SelectValue placeholder="Sélectionner un contact" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableContactsForNewChat.map(profile => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.first_name} {profile.last_name} (@{profile.username})
-                      </SelectItem>
-                    ))}
+                    {availableContactsForNewChat.length === 0 ? (
+                      <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
+                    ) : (
+                      availableContactsForNewChat.map(profile => (
+                        <SelectItem key={profile.id} value={profile.id}>
+                          {profile.first_name} {profile.last_name} (@{profile.username})
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-              <MessageList onSelectContact={handleSelectContact} selectedContactId={selectedContact?.id || null} onUnreadCountChange={handleUnreadCountChange} />
+              <MessageList
+                recentMessages={recentMessages} // Pass recentMessages
+                allProfiles={allProfiles} // Pass allProfiles
+                onSelectContact={handleSelectContact}
+                selectedContactId={selectedContact?.id || null}
+                onUnreadCountChange={setUnreadMessageCount} // Update unread count in parent
+              />
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
@@ -180,10 +255,7 @@ const Messages = () => {
             {selectedContact ? (
               <ChatInterface
                 contact={selectedContact}
-                onMessageSent={() => {
-                  // Re-fetch recent messages to update list and unread counts
-                  // This will be handled by the MessageList's internal useEffect
-                }}
+                onMessageSent={fetchAllData} // Trigger re-fetch of all data
                 initialCourseId={initialCourseContext.id}
                 initialCourseTitle={initialCourseContext.title}
               />

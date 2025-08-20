@@ -13,7 +13,7 @@ import { Profile, Course, StudentCourseProgress } from "@/lib/dataModels"; // Im
 import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavigate
 import EditProfileDialog from "@/components/EditProfileDialog";
 import { showSuccess, showError } from '@/utils/toast';
 
@@ -22,6 +22,7 @@ const Profile = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +47,10 @@ const Profile = () => {
       console.error("Error updating profile:", error);
       showError(`Erreur lors de la mise à jour du profil: ${error.message}`);
     }
+  };
+
+  const handleSendMessageToUser = (userId: string) => {
+    navigate(`/messages?contactId=${userId}`);
   };
 
   if (isLoadingUser) {
@@ -316,7 +321,12 @@ const Profile = () => {
             <CardContent>
               <ul className="list-disc pl-5 text-sm text-muted-foreground">
                 {supervisedStudents.map(student => (
-                  <li key={student.user_id}>{getUserFullName(student.user_id)}: {Math.floor(Math.random() * 100)}% de progression moyenne</li>
+                  <li key={student.user_id}>
+                    {getUserFullName(student.user_id)}: {Math.floor(Math.random() * 100)}% de progression moyenne
+                    <Button variant="ghost" size="sm" className="ml-2" onClick={() => handleSendMessageToUser(student.user_id)}>
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  </li>
                 ))}
                 {supervisedStudents.length === 0 && <li>Aucun élève supervisé.</li>}
               </ul>
