@@ -123,10 +123,10 @@ const DashboardLayout = () => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('administration'), // Updated nav level name
           items: [
-            { to: "/class-management?tab=establishments", label: "Établissements", icon: School, type: 'link' },
-            { to: "/class-management?tab=curricula", label: "Cursus", icon: LayoutList, type: 'link' },
-            { to: "/class-management?tab=classes", label: "Classes", icon: Users, type: 'link' },
-            { to: "/class-management?tab=students", label: "Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/class-management", label: "Établissements", icon: School, type: 'link' }, // Removed ?tab=
+            { to: "/class-management", label: "Cursus", icon: LayoutList, type: 'link' }, // Removed ?tab=
+            { to: "/class-management", label: "Classes", icon: Users, type: 'link' }, // Removed ?tab=
+            { to: "/class-management", label: "Élèves", icon: GraduationCap, type: 'link' }, // Removed ?tab=
           ],
         },
         { to: "/analytics", icon: BarChart2, label: "Analytiques", type: 'link' },
@@ -140,8 +140,8 @@ const DashboardLayout = () => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('user-management'), // Updated nav level name
           items: [
-            { to: "/class-management?tab=classes", label: "Mes Classes", icon: Users, type: 'link' },
-            { to: "/class-management?tab=students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/class-management", label: "Mes Classes", icon: Users, type: 'link' }, // Removed ?tab=
+            { to: "/class-management", label: "Tous les Élèves", icon: GraduationCap, type: 'link' }, // Removed ?tab=
           ],
         },
         { to: "/analytics", icon: BarChart2, label: "Suivi des Élèves", type: 'link' },
@@ -160,16 +160,16 @@ const DashboardLayout = () => {
     } else if (currentNavLevel === 'administration' && currentRole === 'creator') { // Updated nav level name
       return [
         { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        { to: "/class-management?tab=establishments", label: "Établissements", icon: School, type: 'link' },
-        { to: "/class-management?tab=curricula", label: "Cursus", icon: LayoutList, type: 'link' },
-        { to: "/class-management?tab=classes", label: "Classes", icon: Users, type: 'link' },
-        { to: "/class-management?tab=students", label: "Élèves", icon: GraduationCap, type: 'link' },
+        { to: "/class-management", label: "Établissements", icon: School, type: 'link' }, // Simplified link
+        { to: "/class-management", label: "Cursus", icon: LayoutList, type: 'link' }, // Simplified link
+        { to: "/class-management", label: "Classes", icon: Users, type: 'link' }, // Simplified link
+        { to: "/class-management", label: "Élèves", icon: GraduationCap, type: 'link' }, // Simplified link
       ];
     } else if (currentNavLevel === 'user-management' && currentRole === 'tutor') { // Updated nav level name
       return [
         { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        { to: "/class-management?tab=classes", label: "Mes Classes", icon: Users, type: 'link' },
-        { to: "/class-management?tab=students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
+        { to: "/class-management", label: "Mes Classes", icon: Users, type: 'link' }, // Simplified link
+        { to: "/class-management", label: "Tous les Élèves", icon: GraduationCap, type: 'link' }, // Simplified link
       ];
     }
     return getMainNavItems();
