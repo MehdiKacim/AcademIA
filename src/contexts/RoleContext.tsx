@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Profile } from '@/lib/dataModels'; // Import Profile interface
 import { updateProfile } from '@/lib/studentData'; // Import updateProfile
 
+
 interface RoleContextType {
   currentUserProfile: Profile | null;
   setCurrentUserProfile: (profile: Profile | null) => void;
