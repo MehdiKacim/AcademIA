@@ -40,75 +40,81 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
   const coursesTriggerItem = navItems.find(item => item.label === 'Cours' && item.type === 'trigger');
   const coursesSubItems = coursesTriggerItem?.items || [];
 
-  // Determine which items to actually display in the bar
-  const itemsToDisplayInBar = currentMobileNavLevel === 'courses' ? coursesSubItems : navItems;
+  // Helper function to render a single nav item
+  const renderNavItem = (item: NavItem) => {
+    if (item.type === 'link' && item.to) {
+      return (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) =>
+            cn(
+              "flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors",
+              isActive
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )
+          }
+        >
+          <item.icon className="h-5 w-5 mb-1" />
+          {item.label}
+        </NavLink>
+      );
+    }
+    // This handles the 'Cours' trigger for creators, and also Index page scroll triggers
+    if (item.type === 'trigger' && item.onClick) {
+      return (
+        <Button
+          key={item.label}
+          variant="ghost"
+          onClick={item.onClick}
+          className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+        >
+          <item.icon className="h-5 w-5 mb-1" />
+          {item.label}
+        </Button>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 p-2 shadow-lg md:hidden">
-      {currentMobileNavLevel === 'courses' && (
-        // Always show 'Retour' button when in a sub-level
-        <Button
-          variant="ghost"
-          onClick={() => setCurrentMobileNavLevel(null)} // This is correct for 'Retour'
-          className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-5 w-5 mb-1" />
-          Retour
-        </Button>
+      {currentMobileNavLevel === 'courses' ? (
+        // Display back button and sub-items for 'Courses'
+        <>
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentMobileNavLevel(null)}
+            className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-5 w-5 mb-1" />
+            Retour
+          </Button>
+          {coursesSubItems.map(renderNavItem)}
+        </>
+      ) : (
+        // Display main navigation items
+        <>
+          {navItems.map((item) => {
+            // Special handling for the 'Cours' trigger in the main level
+            if (item.type === 'trigger' && item.label === 'Cours') {
+              return (
+                <Button
+                  key={item.label}
+                  variant="ghost"
+                  onClick={() => setCurrentMobileNavLevel('courses')}
+                  className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+                >
+                  <item.icon className="h-5 w-5 mb-1" />
+                  {item.label}
+                </Button>
+              );
+            }
+            return renderNavItem(item); // Render other main items
+          })}
+        </>
       )}
-
-      {itemsToDisplayInBar.map((item) => {
-        // Render as NavLink if it's a 'link' type with a 'to' prop
-        if (item.type === 'link' && item.to) {
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )
-              }
-            >
-              <item.icon className="h-5 w-5 mb-1" />
-              {item.label}
-            </NavLink>
-          );
-        }
-        // Render as a Button if it's a 'trigger' type with an 'onClick' prop
-        // Special handling for 'Cours' to update internal state
-        if (item.type === 'trigger' && item.label === 'Cours') {
-          return (
-            <Button
-              key={item.label}
-              variant="ghost"
-              onClick={() => setCurrentMobileNavLevel('courses')} // Update internal state
-              className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
-            >
-              <item.icon className="h-5 w-5 mb-1" />
-              {item.label}
-            </Button>
-          );
-        }
-        // Generic trigger for other cases (like Index page scroll)
-        if (item.type === 'trigger' && item.onClick) {
-          return (
-            <Button
-              key={item.label}
-              variant="ghost"
-              onClick={item.onClick} // Use the onClick provided by the item
-              className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
-            >
-              <item.icon className="h-5 w-5 mb-1" />
-              {item.label}
-            </Button>
-          );
-        }
-        return null; // Don't render items that don't fit the criteria
-      })}
 
       {/* Dedicated Global Search Button for mobile, always visible */}
       <Button
