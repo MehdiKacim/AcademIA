@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,35 +21,26 @@ interface BottomNavigationBarProps {
 
 const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
-  const location = useLocation();
+  // This state will now ONLY be controlled by user clicks within the bottom bar
   const [currentMobileNavLevel, setCurrentMobileNavLevel] = useState<string | null>(null);
 
-  // Reset nav level if user navigates away from a sub-level path
-  useEffect(() => {
-    const isCoursesPath = location.pathname.startsWith('/courses') || location.pathname.startsWith('/create-course');
-    if (!isCoursesPath && currentMobileNavLevel === 'courses') {
-      setCurrentMobileNavLevel(null);
-    }
-  }, [location.pathname, currentMobileNavLevel]);
+  // Removed useEffect that was causing the issue
 
   if (!isMobile) {
     return null; // Do not display on non-mobile screens
   }
 
-  // Find the 'Cours' trigger item to get its sub-items
   const coursesTriggerItem = navItems.find(item => item.label === 'Cours' && item.type === 'trigger');
   const coursesSubItems = coursesTriggerItem?.items || [];
 
   // Determine which items to actually display in the bar
-  // If 'courses' sub-level is active, show 'Retour' and coursesSubItems
-  // Otherwise, show main navItems
   const itemsToRender = currentMobileNavLevel === 'courses'
     ? [
         {
           icon: ArrowLeft,
           label: "Retour",
           type: 'trigger',
-          onClick: () => setCurrentMobileNavLevel(null),
+          onClick: () => setCurrentMobileNavLevel(null), // Explicitly close sub-menu
         },
         ...coursesSubItems,
       ]
