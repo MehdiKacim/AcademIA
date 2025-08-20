@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react"; // Import Search icon if still needed for other purposes, otherwise remove
 
 interface NavItem {
   label: string;
@@ -23,9 +24,12 @@ const BottomNavigationBar = ({ navItems }: BottomNavigationBarProps) => {
     return null; // Ne pas afficher sur les écrans non mobiles
   }
 
+  // Filter out the global search item if it exists, as it's now a dialog
+  const filteredNavItems = navItems.filter(item => item.to !== "/global-search");
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 p-2 shadow-lg md:hidden">
-      {navItems.map((item) => (
+      {filteredNavItems.map((item) => (
         item.to ? (
           <NavLink
             key={item.label}
