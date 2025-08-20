@@ -595,7 +595,7 @@ const ClassManagement = () => {
             <CardHeader>
               <CardTitle>Gérer les Élèves</CardTitle>
               <CardDescription>Recherchez des élèves par nom d'utilisateur et affectez-les à des classes.</CardDescription>
-            </CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4">
               <h3 className="text-lg font-semibold">Affecter un élève à une classe</h3>
               <div className="relative">
