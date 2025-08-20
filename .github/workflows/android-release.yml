@@ -1,0 +1,86 @@
+name: Android Release CI/CD
+
+on:
+  push:
+    branches:
+      - main # Déclenche le workflow à chaque push sur la branche 'main'
+
+jobs:
+  build_android:
+    runs-on: ubuntu-latest # Exécute le job sur une machine virtuelle Ubuntu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Clone le code du dépôt
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Utilise Node.js version 20
+
+      - name: Install npm dependencies
+        run: npm install # Installe les dépendances Node.js
+
+      - name: Build web app
+        run: npm run build # Construit l'application web React (crée le dossier 'dist')
+
+      - name: Install Capacitor CLI
+        run: npm install -g @capacitor/cli # Installe l'outil CLI de Capacitor globalement
+
+      - name: Sync Capacitor web assets to Android
+        run: npx cap sync android # Copie les assets web dans le projet Android
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # Distribution Java recommandée
+          java-version: '17' # Version de Java (doit correspondre à compileSdkVersion dans build.gradle)
+
+      - name: Decode Keystore and Create key.properties
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "Décodage du keystore..."
+          echo $KEYSTORE_BASE64 | base64 --decode > android/app/release-key.jks
+          echo "Keystore décodé."
+
+          echo "Création de key.properties..."
+          echo "storeFile=release-key.jks" > android/key.properties
+          echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+          echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+          echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+          echo "key.properties créé."
+
+      - name: Build Android Release APK
+        run: cd android && ./gradlew assembleRelease # Construit l'APK de release
+
+      - name: Find APK file
+        id: find_apk
+        run: |
+          # Trouve le chemin de l'APK généré
+          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "APK trouvé à : $APK_PATH"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT # Rend le chemin de l'APK disponible pour les étapes suivantes
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-apk # Nom de l'artefact
+          path: ${{ steps.find_apk.outputs.apk_path }} # Chemin de l'APK à uploader
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/heads/main') # Crée une release uniquement si le push est sur la branche 'main'
+        with:
+          files: ${{ steps.find_apk.outputs.apk_path }} # Attache l'APK à la release
+          name: Release ${{ github.ref_name }}-${{ github.run_number }} # Nom de la release (ex: Release main-1)
+          tag_name: v${{ github.run_number }} # Nom du tag (ex: v1, v2)
+          body: | # Description de la release
+            Release APK Android automatisée.
+            Numéro de build: ${{ github.run_number }}
+            Commit: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token fourni automatiquement par GitHub pour l'authentification
