@@ -15,7 +15,8 @@ import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
 import ClassManagement from "./pages/ClassManagement";
-import Profile from "./pages/Profile"; // Import the new Profile component
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings"; // Import the new Settings component
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -65,7 +66,8 @@ const App = () => {
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/all-notes" element={<AllNotes />} />
                   <Route path="/class-management" element={<ClassManagement />} />
-                  <Route path="/profile" element={<Profile />} /> {/* Add the new Profile route */}
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings" element={<Settings />} /> {/* Add the new Settings route */}
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

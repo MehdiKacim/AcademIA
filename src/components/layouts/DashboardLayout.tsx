@@ -135,14 +135,16 @@ const DashboardLayout = () => {
               <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <NavLink to="/profile"> {/* Updated to link to the new Profile page */}
+                <NavLink to="/profile">
                   <User className="mr-2 h-4 w-4" />
                   <span>Mon profil</span>
                 </NavLink>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => console.log("Paramètres cliqués")}>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Paramètres</span>
+              <DropdownMenuItem asChild> {/* Changed to NavLink */}
+                <NavLink to="/settings"> {/* Link to the new Settings page */}
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Paramètres</span>
+                </NavLink>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
