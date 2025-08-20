@@ -2,25 +2,22 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, CheckCircle, ArrowDown, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react"; // Ajout de FileText, Video, HelpCircle, ImageIcon
+import { Lock, CheckCircle, ArrowDown, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Course, Module, loadCourses } from "@/lib/courseData"; // Import loadCourses and Module
+import { Course, Module, loadCourses } from "@/lib/courseData";
 
 interface CourseModuleListProps {
   course: Course;
 }
 
 const CourseModuleList = ({ course }: CourseModuleListProps) => {
-  // Charger la dernière version des cours pour s'assurer que l'état de complétion est à jour
   const updatedCourses = loadCourses();
   const currentCourse = updatedCourses.find(c => c.id === course.id) || course;
 
-  // Fonction pour vérifier si un module est accessible
   const isModuleAccessible = (moduleIndex: number, modules: Module[]) => {
     if (moduleIndex === 0) {
-      return true; // Le premier module est toujours accessible
+      return true;
     }
-    // Un module est accessible si le module précédent est complété
     return modules[moduleIndex - 1]?.isCompleted;
   };
 
@@ -70,18 +67,18 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                   </Button>
                 </Link>
 
-                {/* Nouvelle section pour l'affichage horizontal des sections */}
+                {/* Section pour l'affichage vertical des sections */}
                 <div className="mt-6">
                   <h4 className="text-lg font-semibold mb-3 text-left">Sections du module:</h4>
-                  <div className="flex overflow-x-auto pb-4 space-x-4 scrollbar-hide">
+                  <div className="flex flex-col space-y-4"> {/* Changé pour affichage vertical */}
                     {module.sections.map((section, sectionIndex) => (
-                      <div key={sectionIndex} className="relative flex-shrink-0">
+                      <div key={sectionIndex} className="relative">
                         <Link
                           to={`/courses/${currentCourse.id}/modules/${index}#section-${sectionIndex}`}
                           className={cn(
-                            "block p-4 border rounded-lg text-center w-40 h-32 flex flex-col items-center justify-center transition-all duration-200",
+                            "block p-4 border rounded-lg text-center flex flex-col items-center justify-center transition-all duration-200", // Supprimé w-40 h-32
                             section.isCompleted ? "border-green-500 bg-green-50/20" : "border-muted-foreground/30 bg-muted/10",
-                            !accessible && "opacity-50 cursor-not-allowed pointer-events-none" // Désactiver si le module n'est pas accessible
+                            !accessible && "opacity-50 cursor-not-allowed pointer-events-none"
                           )}
                         >
                           {section.type === 'text' && <FileText className="h-6 w-6 mb-2 text-primary" />}
@@ -91,10 +88,7 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                           <p className="text-sm font-medium line-clamp-2">{section.title}</p>
                           {section.isCompleted && <CheckCircle className="h-4 w-4 text-green-500 mt-1" />}
                         </Link>
-                        {/* Ligne de connexion à la section suivante */}
-                        {sectionIndex < module.sections.length - 1 && (
-                          <div className="absolute top-1/2 right-[-20px] w-10 h-0.5 bg-border -translate-y-1/2"></div>
-                        )}
+                        {/* Suppression de la ligne de connexion horizontale */}
                       </div>
                     ))}
                   </div>
