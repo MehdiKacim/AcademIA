@@ -1,66 +1,61 @@
 export interface User {
-  id: string;
+  id: string; // This will be the Supabase auth.users ID
   email: string;
+  // No username, firstName, lastName, role here as they are in Profile
+}
+
+export interface Profile {
+  id: string; // Same as User.id from auth.users
+  first_name: string;
+  last_name: string;
   username: string;
-  passwordHash: string; // In a real app, this would be a hashed password
   role: 'student' | 'creator' | 'tutor';
+  class_id?: string; // Only for students, nullable
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Establishment {
   id: string;
   name: string;
   address?: string;
-  contactEmail?: string;
+  contact_email?: string;
+  created_at?: string;
 }
 
 export interface Curriculum {
   id: string;
   name: string;
   description?: string;
-  establishmentId: string; // Lien vers l'établissement parent
-  courseIds: string[]; // Liste des IDs des cours inclus dans ce cursus
+  establishment_id: string; // Link to parent establishment
+  course_ids: string[]; // List of IDs of courses included in this curriculum
+  created_at?: string;
 }
 
 export interface Class {
   id: string;
   name: string;
-  curriculumId: string; // Lien vers le cursus parent
-  studentIds: string[]; // Liste des IDs des élèves dans cette classe
-  creatorIds: string[]; // New: List of User IDs (creators/teachers) associated with this class
+  curriculum_id: string; // Link to parent curriculum
+  creator_ids: string[]; // List of User IDs (creators/teachers) associated with this class
+  created_at?: string;
 }
 
-export interface Student {
-  id: string; // This will be the student's profile ID, distinct from userId
-  userId: string; // Link to the User account
-  firstName: string;
-  lastName: string;
-  classId?: string; // Link to the class of the student
-  enrolledCoursesProgress: {
-    courseId: string;
-    isCompleted: boolean;
-    modulesProgress: {
-      moduleIndex: number;
-      isCompleted: boolean;
-      sectionsProgress: {
-        sectionIndex: number;
-        isCompleted: boolean;
-        quizResult?: { score: number; total: number; passed: boolean };
-      }[];
+export interface StudentCourseProgress {
+  id: string; // Unique ID for this progress entry
+  user_id: string; // Link to the User account (and Profile)
+  course_id: string;
+  is_completed: boolean;
+  modules_progress: {
+    module_index: number;
+    is_completed: boolean;
+    sections_progress: {
+      section_index: number;
+      is_completed: boolean;
+      quiz_result?: { score: number; total: number; passed: boolean };
     }[];
   }[];
-}
-
-export interface CreatorProfile {
-  id: string; // Creator profile ID
-  userId: string; // Link to the User account
-  establishmentIds: string[]; // New: List of Establishment IDs this creator is associated with
-  // Add any specific creator fields here, e.g., bio, expertise
-}
-
-export interface TutorProfile {
-  id: string; // Tutor profile ID
-  userId: string; // Link to the User account
-  // Add any specific tutor fields here, e.g., subjects, availability
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface QuizOption {
@@ -78,10 +73,10 @@ export interface ModuleSection {
   content: string;
   type?: 'text' | 'quiz' | 'video' | 'image';
   url?: string;
-  questions?: QuizQuestion[]; // Pour les sections de type 'quiz'
-  isCompleted: boolean; // Nouvelle propriété pour la complétion de la section
-  passingScore?: number; // Nouvelle propriété pour le score de réussite du quiz
-  quizResult?: { score: number; total: number; passed: boolean }; // Pour stocker le dernier résultat du quiz
+  questions?: QuizQuestion[]; // For 'quiz' sections
+  isCompleted: boolean; // New property for section completion
+  passingScore?: number; // New property for quiz passing score
+  quizResult?: { score: number; total: number; passed: boolean }; // To store the last quiz result
 }
 
 export interface Module {
@@ -96,8 +91,18 @@ export interface Course {
   title: string;
   description: string;
   modules: Module[];
-  skillsToAcquire: string[];
-  imageUrl?: string;
+  skills_to_acquire: string[];
+  image_url?: string;
   category?: string;
   difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
+  created_at?: string;
+}
+
+export interface Note {
+  id: string;
+  user_id: string;
+  note_key: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
 }
