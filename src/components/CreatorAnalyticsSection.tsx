@@ -18,49 +18,83 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { loadCourses } from "@/lib/courseData";
-import { loadStudents } from "@/lib/studentData"; // Import loadStudents
-import { Course } from '@/lib/dataModels';
+import { loadCourses, loadClasses, loadCurricula } from "@/lib/courseData"; // Import loadClasses, loadCurricula
+import { loadStudents } from "@/lib/studentData";
+import { Course, Student, Class, Curriculum } from '@/lib/dataModels';
 
 interface CreatorAnalyticsSectionProps {
-  view: string | null; // Added view prop
+  view: string | null;
+  selectedClassId?: string;
+  selectedCurriculumId?: string;
 }
 
-const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
-  const courses = loadCourses();
-  const students = loadStudents(); // Load all student profiles
+const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId }: CreatorAnalyticsSectionProps) => {
+  const allCourses = loadCourses();
+  const allStudents = loadStudents();
+  const allClasses = loadClasses();
+  const allCurricula = loadCurricula();
+
+  // Filter courses based on selected curriculum
+  const filteredCourses = React.useMemo(() => {
+    if (selectedCurriculumId && selectedCurriculumId !== 'all') {
+      const curriculum = allCurricula.find(c => c.id === selectedCurriculumId);
+      if (curriculum) {
+        return allCourses.filter(course => curriculum.courseIds.includes(course.id));
+      }
+    }
+    return allCourses;
+  }, [allCourses, allCurricula, selectedCurriculumId]);
+
+  // Filter students based on selected class or curriculum
+  const filteredStudents = React.useMemo(() => {
+    if (selectedClassId && selectedClassId !== 'all') {
+      const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
+      if (selectedClass) {
+        return allStudents.filter(student => student.classId === selectedClass.id);
+      }
+    } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
+      const classesInCurriculum = allClasses.filter(cls => cls.curriculumId === selectedCurriculumId);
+      const studentIdsInCurriculum = new Set(classesInCurriculum.flatMap(cls => cls.studentIds));
+      return allStudents.filter(student => studentIdsInCurriculum.has(student.id));
+    }
+    return allStudents;
+  }, [allStudents, allClasses, selectedClassId, selectedCurriculumId]);
 
   // Dummy data for creator analytics
   const creatorAnalytics = {
-    totalCourses: courses.length,
-    publishedCourses: courses.filter(c => c.modules.some(m => m.isCompleted)).length, // Simple heuristic for 'published'
-    totalStudents: students.length, // Total students in the system
-    averageCourseRating: 4.5, // Dummy rating
-    newEnrollmentsLastMonth: 25, // Dummy
-    averageSessionDuration: "45 min", // Dummy
+    totalCourses: filteredCourses.length,
+    publishedCourses: filteredCourses.filter(c => c.modules.some(m => m.isCompleted)).length,
+    totalStudents: filteredStudents.length,
+    averageCourseRating: 4.5,
+    newEnrollmentsLastMonth: Math.floor(Math.random() * 10) + 5, // Adjusted for filtered data
+    averageSessionDuration: "45 min",
   };
 
-  const creatorCoursePerformanceData = courses.map(course => {
+  const creatorCoursePerformanceData = filteredCourses.map(course => {
     const totalModules = course.modules.length;
-    const completedModules = course.modules.filter(m => m.isCompleted).length; // Assuming isCompleted is set for creator's view
+    const completedModules = course.modules.filter(m => m.isCompleted).length;
     const completionRate = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+    const courseStudents = filteredStudents.filter(s => s.enrolledCoursesProgress.some(ec => ec.courseId === course.id));
+    const avgQuizScore = courseStudents.length > 0 ? (courseStudents.reduce((sum, s) => sum + s.enrolledCoursesProgress.find(ec => ec.courseId === course.id)?.modulesProgress.reduce((modSum, mp) => modSum + mp.sectionsProgress.reduce((secSum, sp) => secSum + (sp.quizResult?.score || 0), 0), 0) || 0, 0) / courseStudents.length).toFixed(1) : 'N/A';
+
     return {
       name: course.title.length > 15 ? course.title.substring(0, 12) + '...' : course.title,
       completion: completionRate,
-      studentsEnrolled: Math.floor(Math.random() * 200) + 50, // Dummy data
+      studentsEnrolled: courseStudents.length,
+      avgQuizScore: parseFloat(avgQuizScore.toString()),
     };
   });
 
   const studentEngagementData = [
-    { month: 'Jan', activeStudents: 120, newEnrollments: 15 },
-    { month: 'Fév', activeStudents: 150, newEnrollments: 20 },
-    { month: 'Mar', activeStudents: 130, newEnrollments: 10 },
-    { month: 'Avr', activeStudents: 180, newEnrollments: 25 },
-    { month: 'Mai', activeStudents: 160, newEnrollments: 18 },
+    { month: 'Jan', activeStudents: Math.floor(filteredStudents.length * 0.6), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Fév', activeStudents: Math.floor(filteredStudents.length * 0.7), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Mar', activeStudents: Math.floor(filteredStudents.length * 0.65), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Avr', activeStudents: Math.floor(filteredStudents.length * 0.75), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Mai', activeStudents: Math.floor(filteredStudents.length * 0.7), newEnrollments: Math.floor(Math.random() * 5) + 1 },
   ];
 
-  const topPerformingCourses = courses.slice(0, 3).map(c => c.title); // Dummy
-  const coursesWithHighestDropOff = courses.slice(3, 5).map(c => c.title); // Dummy
+  const topPerformingCourses = creatorCoursePerformanceData.sort((a, b) => b.completion - a.completion).slice(0, 3).map(c => c.name);
+  const coursesWithHighestDropOff = creatorCoursePerformanceData.sort((a, b) => a.completion - b.completion).slice(0, 3).map(c => c.name);
 
 
   if (view === 'overview') {
@@ -133,47 +167,47 @@ const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
       <>
         <p className="text-lg text-muted-foreground mb-8">Analyse détaillée de la complétion et des scores par cours.</p>
         <div className="grid gap-6">
-          {courses.map(course => {
-            const totalModules = course.modules.length;
-            const completedModules = course.modules.filter(m => m.isCompleted).length;
-            const completionRate = totalModules > 0 ? ((completedModules / totalModules) * 100).toFixed(0) : 0;
-            const courseStudents = students.filter(s => s.enrolledCoursesProgress.some(ec => ec.courseId === course.id));
-            const avgQuizScore = courseStudents.length > 0 ? (courseStudents.reduce((sum, s) => sum + s.enrolledCoursesProgress.find(ec => ec.courseId === course.id)?.modulesProgress.reduce((modSum, mp) => modSum + mp.sectionsProgress.reduce((secSum, sp) => secSum + (sp.quizResult?.score || 0), 0), 0) || 0, 0) / courseStudents.length).toFixed(1) : 'N/A';
+          {filteredCourses.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour les filtres sélectionnés.</p>
+          ) : (
+            filteredCourses.map(course => {
+              const courseStats = creatorCoursePerformanceData.find(data => data.name.startsWith(course.title.substring(0, 12)));
+              if (!courseStats) return null; // Should not happen if data is correctly generated
 
-            return (
-              <Card key={course.id}>
-                <CardHeader>
-                  <CardTitle>{course.title}</CardTitle>
-                  <CardDescription>Statistiques détaillées pour ce cours.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Taux de complétion du cours: <span className="font-semibold text-primary">{completionRate}%</span></p>
-                    <p className="text-sm text-muted-foreground">Élèves inscrits: <span className="font-semibold text-primary">{courseStudents.length}</span></p>
-                    <p className="text-sm text-muted-foreground">Score moyen aux quiz: <span className="font-semibold text-primary">{avgQuizScore}%</span></p>
-                  </div>
-                  <div className="h-40">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[{ name: 'Complétion', value: parseFloat(completionRate.toString()) }, { name: 'Score Quiz', value: parseFloat(avgQuizScore.toString()) }]}>
-                        <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
-                        <YAxis stroke="hsl(var(--foreground))" domain={[0, 100]} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            borderColor: 'hsl(var(--border))',
-                            borderRadius: '0.5rem',
-                          }}
-                          itemStyle={{ color: 'hsl(var(--foreground))' }}
-                        />
-                        <Bar dataKey="value" fill="hsl(var(--primary))" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-          {courses.length === 0 && <p className="text-muted-foreground text-center py-4">Aucun cours créé pour afficher les performances.</p>}
+              return (
+                <Card key={course.id}>
+                  <CardHeader>
+                    <CardTitle>{course.title}</CardTitle>
+                    <CardDescription>Statistiques détaillées pour ce cours.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Taux de complétion du cours: <span className="font-semibold text-primary">{courseStats.completion}%</span></p>
+                      <p className="text-sm text-muted-foreground">Élèves inscrits: <span className="font-semibold text-primary">{courseStats.studentsEnrolled}</span></p>
+                      <p className="text-sm text-muted-foreground">Score moyen aux quiz: <span className="font-semibold text-primary">{courseStats.avgQuizScore}%</span></p>
+                    </div>
+                    <div className="h-40">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={[{ name: 'Complétion', value: courseStats.completion }, { name: 'Score Quiz', value: courseStats.avgQuizScore }]}>
+                          <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
+                          <YAxis stroke="hsl(var(--foreground))" domain={[0, 100]} />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              borderColor: 'hsl(var(--border))',
+                              borderRadius: '0.5rem',
+                            }}
+                            itemStyle={{ color: 'hsl(var(--foreground))' }}
+                          />
+                          <Bar dataKey="value" fill="hsl(var(--primary))" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
       </>
     );
@@ -188,8 +222,8 @@ const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
               <CardDescription>Nombre d'élèves actifs cette semaine.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{Math.floor(students.length * 0.7)}</p>
-              <p className="text-sm text-muted-foreground">sur {students.length} élèves inscrits.</p>
+              <p className="text-2xl font-bold text-primary">{Math.floor(filteredStudents.length * 0.7)}</p>
+              <p className="text-sm text-muted-foreground">sur {filteredStudents.length} élèves inscrits.</p>
             </CardContent>
           </Card>
           <Card>
@@ -246,7 +280,7 @@ const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
             <CardContent>
               <ul className="list-disc pl-5 text-sm text-muted-foreground">
                 {topPerformingCourses.length === 0 ? (
-                  <li>Aucun cours performant à afficher.</li>
+                  <li>Aucun cours performant à afficher pour les filtres sélectionnés.</li>
                 ) : (
                   topPerformingCourses.map((courseTitle, index) => (
                     <li key={index}>{courseTitle}</li>
@@ -263,7 +297,7 @@ const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
             <CardContent>
               <ul className="list-disc pl-5 text-sm text-muted-foreground">
                 {coursesWithHighestDropOff.length === 0 ? (
-                  <li>Aucun cours avec un taux de décrochage élevé à afficher.</li>
+                  <li>Aucun cours avec un taux de décrochage élevé à afficher pour les filtres sélectionnés.</li>
                 ) : (
                   coursesWithHighestDropOff.map((courseTitle, index) => (
                     <li key={index}>{courseTitle}</li>
@@ -277,7 +311,7 @@ const CreatorAnalyticsSection = ({ view }: CreatorAnalyticsSectionProps) => {
     );
   }
 
-  return null; // Should not happen if view is always one of the cases
+  return null;
 };
 
 export default CreatorAnalyticsSection;
