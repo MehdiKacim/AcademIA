@@ -9,6 +9,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { loadCourses } from "@/lib/courseData"; // Import loadCourses
+import CourseProgressionView from "@/components/CourseProgressionView"; // Import the new component
 
 const Courses = () => {
   const { currentRole } = useRole();
@@ -51,22 +52,7 @@ const Courses = () => {
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Voici les cours auxquels vous êtes inscrit(e) et votre progression.</p>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {coursesToDisplay.map((course: any) => ( // Use 'any' for simplicity due to mixed types
-              <Card key={course.id}>
-                <CardHeader>
-                  <CardTitle>{course.title}</CardTitle>
-                  <CardDescription>{course.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">Progression: {course.progress}%</p>
-                  <Link to={`/courses/${course.id}`} className="w-full">
-                    <Button variant="outline" className="mt-4 w-full">Continuer le cours</Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <CourseProgressionView courses={dummyCourses} /> {/* Use the new component here */}
         </>
       );
     } else if (currentRole === 'creator') {
