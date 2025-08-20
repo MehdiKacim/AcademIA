@@ -26,6 +26,14 @@ import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay"; // Import GlobalSearchOverlay
 
+interface IndexNavItem { // Define a specific interface for Index page nav items
+  label: string;
+  icon: React.ElementType;
+  onClick: () => void;
+  isActive: boolean;
+  type: 'trigger'; // Explicitly define as trigger
+}
+
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
@@ -118,10 +126,10 @@ const Index = () => {
 
   const isMobile = useIsMobile();
 
-  const indexNavItems = [
-    { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil' },
-    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => handleNavLinkClick('aiaBot'), isActive: activeSection === 'aiaBot' },
-    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => handleNavLinkClick('methodologie'), isActive: activeSection === 'methodologie' },
+  const indexNavItems: IndexNavItem[] = [
+    { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil', type: 'trigger' },
+    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => handleNavLinkClick('aiaBot'), isActive: activeSection === 'aiaBot', type: 'trigger' },
+    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => handleNavLinkClick('methodologie'), isActive: activeSection === 'methodologie', type: 'trigger' },
   ];
 
   return (
