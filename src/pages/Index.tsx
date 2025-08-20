@@ -274,7 +274,7 @@ const Index = () => {
         onLoginClick={openLoginModal}
       />
       {/* Pass currentUser to BottomNavigationBar, and remove onOpenGlobalSearch as it's not needed here */}
-      <BottomNavigationBar navItems={indexNavItems} onOpenGlobalSearch={() => {}} currentUser={currentUser} />
+      <BottomNavigationBar navItems={indexNavItems} currentUser={currentUser} />
       {/* GlobalSearchOverlay is now only rendered in DashboardLayout */}
     </div>
   );

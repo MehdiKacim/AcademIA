@@ -17,7 +17,7 @@ interface NavItem {
 
 interface BottomNavigationBarProps {
   navItems: NavItem[]; // This now receives the full hierarchical structure
-  onOpenGlobalSearch: () => void;
+  onOpenGlobalSearch?: () => void; // Made optional
   currentUser: any; // Accept currentUser prop
 }
 
@@ -101,8 +101,8 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
         return null;
       })}
 
-      {/* Dedicated Global Search Button for mobile, conditional on currentUser */}
-      {currentUser && (
+      {/* Dedicated Global Search Button for mobile, conditional on onOpenGlobalSearch prop */}
+      {onOpenGlobalSearch && (
         <Button
           variant="ghost"
           onClick={onOpenGlobalSearch}
