@@ -28,9 +28,10 @@ interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginClick: () => void;
+  onEmailConfirmationRequired: () => void; // New prop
 }
 
-const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) => {
+const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequired }: RegisterModalProps) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -160,9 +161,10 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
       console.error("Signup error:", error);
       showError(`Erreur d'inscription: ${error.message}`);
     } else if (data.user) {
+      // User created, but session might not be immediate if email confirmation is required
       showSuccess("Compte créé avec succès ! Veuillez vérifier votre email pour confirmer votre inscription.");
-      onClose();
-      onLoginClick();
+      onClose(); // Close the modal
+      onEmailConfirmationRequired(); // Trigger the new callback
     }
   };
 

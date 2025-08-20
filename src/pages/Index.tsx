@@ -18,6 +18,8 @@ import {
   LogIn,
   UserPlus,
   Download, // Use Download icon for APK as well
+  MailCheck, // New icon for email confirmation
+  X, // New icon for closing message
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -33,7 +35,8 @@ const Index = () => {
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
-  const [showApkDownloadButton, setShowApkDownloadButton] = useState(false); // New state for APK button
+  const [showApkDownloadButton, setShowApkDownloadButton] = useState(false);
+  const [showEmailConfirmationMessage, setShowEmailConfirmationMessage] = useState(false); // New state for email confirmation message
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -44,7 +47,7 @@ const Index = () => {
 
   const { currentUser } = useRole();
   const navigate = useNavigate();
-  const isMobile = useIsMobile(); // Get isMobile status
+  const isMobile = useIsMobile();
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -120,8 +123,6 @@ const Index = () => {
 
   // Set APK download button visibility based on isMobile
   useEffect(() => {
-    // We can't reliably detect Android vs iOS from browser, so we'll show it on any mobile device
-    // and add a note that it's for Android.
     setShowApkDownloadButton(isMobile);
   }, [isMobile]);
 
@@ -131,11 +132,10 @@ const Index = () => {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt.');
-        // The 'appinstalled' event will handle showing success toast and hiding button
       } else {
         console.log('User dismissed the install prompt.');
         showError("Installation annulée.");
-        setDeferredPrompt(null); // Prompt can only be used once
+        setDeferredPrompt(null);
         setShowInstallButton(false);
       }
     }
@@ -149,6 +149,7 @@ const Index = () => {
   const openLoginModal = () => {
     setIsRegisterModal(false);
     setIsLoginModal(true);
+    setShowEmailConfirmationMessage(false); // Hide message if user tries to log in
   };
 
   const closeLoginModal = () => setIsLoginModal(false);
@@ -156,9 +157,14 @@ const Index = () => {
   const openRegisterModal = () => {
     setIsLoginModal(false);
     setIsRegisterModal(true);
+    setShowEmailConfirmationMessage(false); // Hide message if user tries to register again
   };
 
   const closeRegisterModal = () => setIsRegisterModal(false);
+
+  const handleEmailConfirmationRequired = () => {
+    setShowEmailConfirmationMessage(true);
+  };
 
   const methodology = [
     {
@@ -187,7 +193,7 @@ const Index = () => {
     },
   ];
 
-  const indexNavItems: any[] = [ // Changed to any[] for simplicity with onClick
+  const indexNavItems: any[] = [
     { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil', type: 'trigger' },
     { label: "AiA Bot", icon: MessageCircleMore, onClick: () => handleNavLinkClick('aiaBot'), isActive: activeSection === 'aiaBot', type: 'trigger' },
     { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => handleNavLinkClick('methodologie'), isActive: activeSection === 'methodologie', type: 'trigger' },
@@ -199,7 +205,6 @@ const Index = () => {
 
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo />
-        {/* Navigation pour les écrans non mobiles */}
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {indexNavItems.map((item) => (
@@ -228,6 +233,21 @@ const Index = () => {
       </header>
 
       <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-24 md:pt-32", isMobile && "pb-20")}>
+        {showEmailConfirmationMessage && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md p-4 bg-blue-100 border border-blue-400 text-blue-800 rounded-lg shadow-md flex items-center justify-between animate-in fade-in-0 zoom-in-95 duration-300">
+            <div className="flex items-center gap-2">
+              <MailCheck className="h-5 w-5" />
+              <p className="text-sm font-medium">
+                Un e-mail de confirmation a été envoyé. Veuillez vérifier votre boîte de réception (et vos spams) pour activer votre compte.
+              </p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setShowEmailConfirmationMessage(false)}>
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fermer</span>
+            </Button>
+          </div>
+        )}
+
         <section
           id="accueil"
           ref={sectionRefs.accueil}
@@ -264,8 +284,8 @@ const Index = () => {
                   <Download className="h-5 w-5 mr-2" /> Installer l'application
                 </Button>
               )}
-              {showApkDownloadButton && ( // New APK download button
-                <a href="/downloads/AcademIA.apk" download="AcademIA.apk"> {/* Updated path */}
+              {showApkDownloadButton && (
+                <a href="/downloads/AcademIA.apk" download="AcademIA.apk">
                   <Button size="lg" variant="outline">
                     <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android)
                   </Button>
@@ -343,6 +363,7 @@ const Index = () => {
         isOpen={isRegisterModalOpen}
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
+        onEmailConfirmationRequired={handleEmailConfirmationRequired} // Pass the new handler
       />
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUser} />
     </div>
