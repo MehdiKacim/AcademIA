@@ -17,11 +17,12 @@ import AllNotes from "./pages/AllNotes";
 import ClassManagement from "./pages/ClassManagement";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
-import DataModelViewer from "./pages/DataModelViewer"; // Import the new DataModelViewer
+import DataModelViewer from "./pages/DataModelViewer";
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
 import { CourseChatProvider } from "./contexts/CourseChatContext";
+import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 
 const queryClient = new QueryClient();
 
@@ -39,40 +40,42 @@ const App = () => {
           ) : (
             <BrowserRouter>
               <Routes>
-                {/* Envelopper la route de la page d'accueil avec les fournisseurs de contexte */}
+                {/* Public route for the landing page */}
                 <Route element={
                   <RoleProvider>
                     <CourseChatProvider>
-                      <Outlet /> {/* Outlet rend le composant enfant (Index) */}
+                      <Outlet />
                     </CourseChatProvider>
                   </RoleProvider>
                 }>
                   <Route path="/" element={<Index />} />
                 </Route>
 
-                {/* Routes with Dashboard Layout, wrapped by RoleProvider and CourseChatProvider */}
+                {/* Protected routes requiring authentication */}
                 <Route element={
                   <RoleProvider>
                     <CourseChatProvider>
-                      <DashboardLayout />
+                      <ProtectedRoute /> {/* All child routes require login */}
                     </CourseChatProvider>
                   </RoleProvider>
                 }>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/courses" element={<Courses />} />
-                  <Route path="/courses/:courseId" element={<CourseDetail />} />
-                  <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} />
-                  <Route path="/create-course" element={<CreateCourse />} />
-                  <Route path="/create-course/:courseId" element={<CreateCourse />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/all-notes" element={<AllNotes />} />
-                  <Route path="/class-management" element={<ClassManagement />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/data-model" element={<DataModelViewer />} /> {/* Add the new DataModelViewer route */}
+                  <Route element={<DashboardLayout />}>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/courses" element={<Courses />} />
+                    <Route path="/courses/:courseId" element={<CourseDetail />} />
+                    <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} />
+                    <Route path="/create-course" element={<CreateCourse />} />
+                    <Route path="/create-course/:courseId" element={<CreateCourse />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/all-notes" element={<AllNotes />} />
+                    <Route path="/class-management" element={<ClassManagement />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/data-model" element={<DataModelViewer />} />
+                  </Route>
                 </Route>
 
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                {/* Catch-all route for 404 Not Found */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
