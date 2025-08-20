@@ -39,80 +39,87 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
     }
   }, [isOpen]);
 
-  const handleSearch = () => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) {
-      setSearchResults([]);
-      return;
-    }
-
-    const results: SearchResult[] = [];
-
-    // Search Notes
-    const allNotes = getAllNotesData();
-    allNotes.forEach(noteGroup => {
-      if (noteGroup.context.toLowerCase().includes(query) ||
-          noteGroup.notes.some(note => note.toLowerCase().includes(query))) {
-        results.push({
-          type: 'note',
-          id: noteGroup.key,
-          title: `Note: ${noteGroup.context}`,
-          description: noteGroup.notes.join(' | ').substring(0, 150) + (noteGroup.notes.join(' | ').length > 150 ? '...' : ''),
-          link: `/all-notes?select=${noteGroup.key}`,
-          icon: NotebookText,
-        });
-      }
-    });
-
-    // Search Courses, Modules, and Sections
-    const allCourses = loadCourses();
-    allCourses.forEach(course => {
-      // Search Courses
-      if (course.title.toLowerCase().includes(query) ||
-          course.description.toLowerCase().includes(query) ||
-          course.skillsToAcquire.some(skill => skill.toLowerCase().includes(query))) {
-        results.push({
-          type: 'course',
-          id: course.id,
-          title: `Cours: ${course.title}`,
-          description: course.description.substring(0, 150) + (course.description.length > 150 ? '...' : ''),
-          link: `/courses/${course.id}`,
-          icon: BookOpen,
-        });
+  // Debounced search effect
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) {
+        setSearchResults([]);
+        return;
       }
 
-      // Search Modules within courses
-      course.modules.forEach((module, moduleIndex) => {
-        if (module.title.toLowerCase().includes(query)) {
+      const results: SearchResult[] = [];
+
+      // Search Notes
+      const allNotes = getAllNotesData();
+      allNotes.forEach(noteGroup => {
+        if (noteGroup.context.toLowerCase().includes(query) ||
+            noteGroup.notes.some(note => note.toLowerCase().includes(query))) {
           results.push({
-            type: 'module',
-            id: `${course.id}-${moduleIndex}`,
-            title: `Module: ${module.title} (Cours: ${course.title})`,
-            description: module.sections[0]?.content.substring(0, 150) + (module.sections[0]?.content.length > 150 ? '...' : ''),
-            link: `/courses/${course.id}/modules/${moduleIndex}`,
-            icon: Layers,
+            type: 'note',
+            id: noteGroup.key,
+            title: `Note: ${noteGroup.context}`,
+            description: noteGroup.notes.join(' | ').substring(0, 150) + (noteGroup.notes.join(' | ').length > 150 ? '...' : ''),
+            link: `/all-notes?select=${noteGroup.key}`,
+            icon: NotebookText,
+          });
+        }
+      });
+
+      // Search Courses, Modules, and Sections
+      const allCourses = loadCourses();
+      allCourses.forEach(course => {
+        // Search Courses
+        if (course.title.toLowerCase().includes(query) ||
+            course.description.toLowerCase().includes(query) ||
+            course.skillsToAcquire.some(skill => skill.toLowerCase().includes(query))) {
+          results.push({
+            type: 'course',
+            id: course.id,
+            title: `Cours: ${course.title}`,
+            description: course.description.substring(0, 150) + (course.description.length > 150 ? '...' : ''),
+            link: `/courses/${course.id}`,
+            icon: BookOpen,
           });
         }
 
-        // Search Sections within modules
-        module.sections.forEach((section, sectionIndex) => {
-          if (section.title.toLowerCase().includes(query) ||
-              section.content.toLowerCase().includes(query)) {
+        // Search Modules within courses
+        course.modules.forEach((module, moduleIndex) => {
+          if (module.title.toLowerCase().includes(query)) {
             results.push({
-              type: 'section',
-              id: `${course.id}-${moduleIndex}-${sectionIndex}`,
-              title: `Section: ${section.title} (Module: ${module.title}, Cours: ${course.title})`,
-              description: section.content.substring(0, 150) + (section.content.length > 150 ? '...' : ''),
-              link: `/courses/${course.id}/modules/${moduleIndex}#section-${sectionIndex}`,
-              icon: FileText,
+              type: 'module',
+              id: `${course.id}-${moduleIndex}`,
+              title: `Module: ${module.title} (Cours: ${course.title})`,
+              description: module.sections[0]?.content.substring(0, 150) + (module.sections[0]?.content.length > 150 ? '...' : ''),
+              link: `/courses/${course.id}/modules/${moduleIndex}`,
+              icon: Layers,
             });
           }
+
+          // Search Sections within modules
+          module.sections.forEach((section, sectionIndex) => {
+            if (section.title.toLowerCase().includes(query) ||
+                section.content.toLowerCase().includes(query)) {
+              results.push({
+                type: 'section',
+                id: `${course.id}-${moduleIndex}-${sectionIndex}`,
+                title: `Section: ${section.title} (Module: ${module.title}, Cours: ${course.title})`,
+                description: section.content.substring(0, 150) + (section.content.length > 150 ? '...' : ''),
+                link: `/courses/${course.id}/modules/${moduleIndex}#section-${sectionIndex}`,
+                icon: FileText,
+              });
+            }
+          });
         });
       });
-    });
 
-    setSearchResults(results);
-  };
+      setSearchResults(results);
+    }, 300); // Debounce delay of 300ms
+
+    return () => {
+      clearTimeout(handler); // Cleanup on unmount or if searchQuery changes again
+    };
+  }, [searchQuery]); // Dependency array: re-run effect when searchQuery changes
 
   const groupedResults = useMemo(() => {
     const groups: { [key: string]: SearchResult[] } = {
@@ -135,10 +142,10 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed inset-x-0 top-20 z-[999] bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8"
+          className="fixed inset-x-0 top-20 z-[999] bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8 h-[calc(100vh-80px)]" // Adjusted height
         >
-          <div className="max-w-4xl mx-auto flex flex-col gap-4">
-            <div className="flex items-center gap-4">
+          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full"> {/* Ensure inner content takes full height */}
+            <div className="flex items-center gap-4 flex-shrink-0"> {/* Prevent shrinking */}
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
                 <Input
@@ -147,19 +154,9 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                   className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSearch();
-                    }
-                  }}
+                  // Removed onKeyPress as search is now debounced
                 />
-                <Button
-                  onClick={handleSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4"
-                  disabled={!searchQuery.trim()}
-                >
-                  Rechercher
-                </Button>
+                {/* Removed explicit search button as search is debounced */}
               </div>
               <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
                 <X className="h-6 w-6" />
@@ -167,7 +164,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
               </Button>
             </div>
 
-            <div className="max-h-[calc(100vh-10rem)] overflow-y-auto pr-2"> {/* Adjusted max-height */}
+            <div className="flex-grow overflow-y-auto pr-2"> {/* Adjusted max-height to flex-grow */}
               {searchQuery.trim() && searchResults.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
               ) : (
