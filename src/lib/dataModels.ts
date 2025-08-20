@@ -11,6 +11,7 @@ export interface Profile {
   username: string;
   role: 'student' | 'creator' | 'tutor';
   class_id?: string; // Only for students, nullable
+  theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
   created_at?: string;
   updated_at?: string;
 }

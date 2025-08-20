@@ -3,16 +3,28 @@
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useRole } from "@/contexts/RoleContext"; // Import useRole
 
 import { Button } from "@/components/ui/button"
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
+  const { currentUserProfile, updateUserTheme } = useRole();
+
+  // Sync theme from user profile to next-themes when profile loads
+  React.useEffect(() => {
+    if (currentUserProfile?.theme && currentUserProfile.theme !== theme) {
+      setTheme(currentUserProfile.theme);
+    }
+  }, [currentUserProfile?.theme, theme, setTheme]);
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
-    console.log("Theme toggled to:", newTheme); // Added for debugging
+    if (currentUserProfile) {
+      updateUserTheme(newTheme); // Save to Supabase
+    }
+    console.log("Theme toggled to:", newTheme);
   }
 
   return (

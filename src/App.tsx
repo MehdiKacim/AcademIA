@@ -23,45 +23,47 @@ import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
-import { RoleProvider } from "./contexts/RoleContext";
+import { RoleProvider, useRole } from "./contexts/RoleContext"; // Import useRole
 import { CourseChatProvider } from "./contexts/CourseChatContext";
 import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 
 const queryClient = new QueryClient();
 
-const App = () => {
+// A wrapper component to get the theme from useRole and pass it to ThemeProvider
+const AppWithThemeProvider = () => {
+  const { currentUserProfile, isLoadingUser } = useRole();
   const [showSplash, setShowSplash] = useState(true);
 
+  // Determine the initial theme based on user profile or system preference
+  const initialTheme = currentUserProfile?.theme || "system";
+
+  React.useEffect(() => {
+    // Only hide splash screen once user loading is complete
+    if (!isLoadingUser) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 3000); // Affiche le splash screen pendant 3 secondes
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingUser]);
+
+
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme" attribute="class">
+    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="class">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          {showSplash ? (
+          {showSplash || isLoadingUser ? ( // Show splash if loading user or splash is active
             <SplashScreen onComplete={() => setShowSplash(false)} />
           ) : (
             <BrowserRouter>
               <Routes>
                 {/* Public route for the landing page */}
-                <Route element={
-                  <RoleProvider>
-                    <CourseChatProvider>
-                      <Outlet />
-                    </CourseChatProvider>
-                  </RoleProvider>
-                }>
-                  <Route path="/" element={<Index />} />
-                </Route>
+                <Route path="/" element={<Index />} />
 
                 {/* Protected routes requiring authentication */}
-                <Route element={
-                  <RoleProvider>
-                    <CourseChatProvider>
-                      <ProtectedRoute /> {/* All child routes require login */}
-                    </CourseChatProvider>
-                  </RoleProvider>
-                }>
+                <Route element={<ProtectedRoute />}> {/* All child routes require login */}
                   <Route element={<DashboardLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/courses" element={<Courses />} />
@@ -92,5 +94,13 @@ const App = () => {
     </ThemeProvider>
   );
 };
+
+const App = () => (
+  <RoleProvider>
+    <CourseChatProvider>
+      <AppWithThemeProvider />
+    </CourseChatProvider>
+  </RoleProvider>
+);
 
 export default App;

@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from '@/lib/dataModels'; // Import Profile interface
+import { updateProfile } from '@/lib/studentData'; // Import updateProfile
 
 interface RoleContextType {
   currentUserProfile: Profile | null;
   setCurrentUserProfile: (profile: Profile | null) => void;
   currentRole: 'student' | 'creator' | 'tutor' | null;
   isLoadingUser: boolean; // New loading state
+  updateUserTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>; // New function to update theme
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
@@ -56,10 +58,23 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const updateUserTheme = async (theme: 'light' | 'dark' | 'system') => {
+    if (currentUserProfile) {
+      try {
+        const updatedProfile = await updateProfile({ id: currentUserProfile.id, theme });
+        if (updatedProfile) {
+          setCurrentUserProfile(updatedProfile);
+        }
+      } catch (error) {
+        console.error("Error updating user theme:", error);
+      }
+    }
+  };
+
   const currentRole = currentUserProfile ? currentUserProfile.role : null;
 
   return (
-    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser }}>
+    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme }}>
       {children}
     </RoleContext.Provider>
   );
