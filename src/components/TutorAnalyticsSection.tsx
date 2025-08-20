@@ -18,61 +18,59 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-import { Student, User, Class, Curriculum } from "@/lib/dataModels";
+import { Profile, Class, Curriculum, StudentCourseProgress } from "@/lib/dataModels";
 import { getUserFullName } from "@/lib/studentData";
 import { loadClasses, loadCurricula } from "@/lib/courseData"; // Import loadClasses, loadCurricula
 
 interface TutorAnalyticsSectionProps {
-  studentProfiles: Student[];
-  users: User[];
-  classes: Class[];
-  curricula: Curriculum[];
+  allProfiles: Profile[];
+  allStudentCourseProgresses: StudentCourseProgress[];
+  allClasses: Class[];
+  allCurricula: Curriculum[];
   view: string | null;
   selectedClassId?: string;
   selectedCurriculumId?: string;
 }
 
-const TutorAnalyticsSection = ({ studentProfiles, users, classes, curricula, view, selectedClassId, selectedCurriculumId }: TutorAnalyticsSectionProps) => {
-  const allClasses = loadClasses();
-  const allCurricula = loadCurricula();
-
+const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allClasses, allCurricula, view, selectedClassId, selectedCurriculumId }: TutorAnalyticsSectionProps) => {
   const getClassName = (id?: string) => allClasses.find(c => c.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => allCurricula.find(c => c.id === id)?.name || 'N/A';
 
   // Filter students based on selected class or curriculum
-  const filteredStudents = React.useMemo(() => {
+  const filteredStudentProfiles = React.useMemo(() => {
+    let students = allProfiles.filter(p => p.role === 'student');
     if (selectedClassId && selectedClassId !== 'all') {
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
-        return studentProfiles.filter(student => student.classId === selectedClass.id);
+        return students.filter(student => student.class_id === selectedClass.id);
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
-      const classesInCurriculum = allClasses.filter(cls => cls.curriculumId === selectedCurriculumId);
-      const studentIdsInCurriculum = new Set(classesInCurriculum.flatMap(cls => cls.studentIds));
-      return studentProfiles.filter(student => studentIdsInCurriculum.has(student.id));
+      const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
+      const studentIdsInCurriculum = new Set(classesInCurriculum.flatMap(cls => allProfiles.filter(p => p.class_id === cls.id && p.role === 'student').map(p => p.id)));
+      return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
-    return studentProfiles;
-  }, [studentProfiles, allClasses, selectedClassId, selectedCurriculumId]);
+    return students;
+  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId]);
 
-  const supervisedStudents = filteredStudents.slice(0, 5); // Taking first 5 for demo from filtered set
-  const studentsAtRisk = supervisedStudents.filter(s => s.enrolledCoursesProgress.some(ec => ec.modulesProgress.some(mp => mp.sectionsProgress.some(sp => sp.quizResult && !sp.quizResult.passed)))).length;
+  const supervisedStudents = filteredStudentProfiles.slice(0, 5); // Taking first 5 for demo from filtered set
+  const studentsAtRisk = supervisedStudents.filter(s => allStudentCourseProgresses.some(scp => scp.user_id === s.id && scp.modules_progress.some(mp => mp.sections_progress.some(sp => sp.quiz_result && !sp.quiz_result.passed)))).length;
   const averageStudentProgress = supervisedStudents.length > 0 ? `${Math.floor(Math.random() * 20) + 70}%` : "N/A"; // Placeholder, adjusted for filtered count
 
   const recentAlerts = [
-    { id: 1, studentName: getUserFullName(supervisedStudents[0]?.userId || ''), description: `a échoué au quiz "Variables" du cours "Introduction à la Programmation".`, type: 'warning', recommendation: 'Recommander de revoir la section "Déclaration de Variables" et de poser des questions à AiA.' },
-    { id: 2, studentName: getUserFullName(supervisedStudents[1]?.userId || ''), description: `n'a pas accédé au cours "Algorithmes Avancés" depuis 5 jours.`, type: 'warning', recommendation: 'Envoyer un message de rappel personnalisé pour l\'encourager à reprendre.' },
-    { id: 3, studentName: getUserFullName(supervisedStudents[2]?.userId || ''), description: `a terminé le module "Physique Quantique" avec un score parfait.`, type: 'info', recommendation: 'Féliciter l\'élève et proposer des défis supplémentaires.' },
-  ].filter(alert => alert.studentName !== 'N/A' && supervisedStudents.some(s => getUserFullName(s.userId) === alert.studentName)); // Filter out alerts for non-existent users or students not in filtered list
+    { id: 1, studentId: supervisedStudents[0]?.id || '', description: `a échoué au quiz "Variables" du cours "Introduction à la Programmation".`, type: 'warning', recommendation: 'Recommander de revoir la section "Déclaration de Variables" et de poser des questions à AiA.' },
+    { id: 2, studentId: supervisedStudents[1]?.id || '', description: `n'a pas accédé au cours "Algorithmes Avancés" depuis 5 jours.`, type: 'warning', recommendation: 'Envoyer un message de rappel personnalisé pour l\'encourager à reprendre.' },
+    { id: 3, studentId: supervisedStudents[2]?.id || '', description: `a terminé le module "Physique Quantique" avec un score parfait.`, type: 'info', recommendation: 'Féliciter l\'élève et proposer des défis supplémentaires.' },
+  ].filter(alert => alert.studentId && supervisedStudents.some(s => s.id === alert.studentId)); // Filter out alerts for non-existent users or students not in filtered list
 
   const tutorStudentPerformanceData = supervisedStudents.map(student => ({
-    name: getUserFullName(student.userId),
+    name: `${student.first_name} ${student.last_name}`,
     score: Math.floor(Math.random() * 40) + 60, // Random scores between 60 and 100
   }));
 
   // Filter classes based on selected curriculum
   const filteredClasses = React.useMemo(() => {
     if (selectedCurriculumId && selectedCurriculumId !== 'all') {
-      return allClasses.filter(cls => cls.curriculumId === selectedCurriculumId);
+      return allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
     }
     return allClasses;
   }, [allClasses, selectedCurriculumId]);
@@ -80,16 +78,16 @@ const TutorAnalyticsSection = ({ studentProfiles, users, classes, curricula, vie
   const classPerformanceData = filteredClasses.map(cls => ({
     name: cls.name,
     avgProgress: Math.floor(Math.random() * 20) + 70, // Dummy average progress
-    studentsCount: cls.studentIds.filter(studentId => filteredStudents.some(s => s.id === studentId)).length, // Count students only from filtered set
+    studentsCount: allProfiles.filter(p => p.class_id === cls.id && filteredStudentProfiles.some(fs => fs.id === p.id)).length, // Count students only from filtered set
   }));
 
   // Dummy data for individual student progress trends (adjusting names to match filtered students)
   const individualStudentProgressTrends = [
-    { name: 'Jan', [getUserFullName(supervisedStudents[0]?.userId || 'Alice')]: 65, [getUserFullName(supervisedStudents[1]?.userId || 'Bob')]: 70 },
-    { name: 'Fév', [getUserFullName(supervisedStudents[0]?.userId || 'Alice')]: 70, [getUserFullName(supervisedStudents[1]?.userId || 'Bob')]: 75 },
-    { name: 'Mar', [getUserFullName(supervisedStudents[0]?.userId || 'Alice')]: 75, [getUserFullName(supervisedStudents[1]?.userId || 'Bob')]: 80 },
-    { name: 'Avr', [getUserFullName(supervisedStudents[0]?.userId || 'Alice')]: 80, [getUserFullName(supervisedStudents[1]?.userId || 'Bob')]: 85 },
-    { name: 'Mai', [getUserFullName(supervisedStudents[0]?.userId || 'Alice')]: 85, [getUserFullName(supervisedStudents[1]?.userId || 'Bob')]: 90 },
+    { name: 'Jan', [supervisedStudents[0]?.first_name || 'Alice']: 65, [supervisedStudents[1]?.first_name || 'Bob']: 70 },
+    { name: 'Fév', [supervisedStudents[0]?.first_name || 'Alice']: 70, [supervisedStudents[1]?.first_name || 'Bob']: 75 },
+    { name: 'Mar', [supervisedStudents[0]?.first_name || 'Alice']: 75, [supervisedStudents[1]?.first_name || 'Bob']: 80 },
+    { name: 'Avr', [supervisedStudents[0]?.first_name || 'Alice']: 80, [supervisedStudents[1]?.first_name || 'Bob']: 85 },
+    { name: 'Mai', [supervisedStudents[0]?.first_name || 'Alice']: 85, [supervisedStudents[1]?.first_name || 'Bob']: 90 },
   ];
 
 
@@ -111,7 +109,7 @@ const TutorAnalyticsSection = ({ studentProfiles, users, classes, curricula, vie
           <Card>
             <CardHeader>
               <CardTitle>Progression Moyenne</CardTitle>
-              <CardDescription>Vue d'ensemble de l'avancement de vos élèves.</CardDescription>
+              <CardDescription>Vue d'overview de l'avancement de vos élèves.</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{averageStudentProgress}</p>
@@ -163,8 +161,8 @@ const TutorAnalyticsSection = ({ studentProfiles, users, classes, curricula, vie
                     itemStyle={{ color: 'hsl(var(--foreground))' }}
                   />
                   <Legend />
-                  {supervisedStudents[0] && <Line type="monotone" dataKey={getUserFullName(supervisedStudents[0].userId)} stroke="hsl(var(--primary))" name={getUserFullName(supervisedStudents[0].userId)} />}
-                  {supervisedStudents[1] && <Line type="monotone" dataKey={getUserFullName(supervisedStudents[1].userId)} stroke="hsl(var(--secondary))" name={getUserFullName(supervisedStudents[1].userId)} />}
+                  {supervisedStudents[0] && <Line type="monotone" dataKey={`${supervisedStudents[0].first_name}`} stroke="hsl(var(--primary))" name={`${supervisedStudents[0].first_name} ${supervisedStudents[0].last_name}`} />}
+                  {supervisedStudents[1] && <Line type="monotone" dataKey={`${supervisedStudents[1].first_name}`} stroke="hsl(var(--secondary))" name={`${supervisedStudents[1].first_name} ${supervisedStudents[1].last_name}`} />}
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -189,7 +187,7 @@ const TutorAnalyticsSection = ({ studentProfiles, users, classes, curricula, vie
                 ) : (
                   recentAlerts.map((alert) => (
                     <li key={alert.id} className={alert.type === 'warning' ? 'text-red-500' : 'text-blue-500'}>
-                      **{alert.studentName}** {alert.description}
+                      **{alert.studentId ? `${allProfiles.find(p => p.id === alert.studentId)?.first_name} ${allProfiles.find(p => p.id === alert.studentId)?.last_name}` : 'N/A'}** {alert.description}
                       {alert.recommendation && <span className="block text-xs italic mt-1">Recommandation: {alert.recommendation}</span>}
                     </li>
                   ))

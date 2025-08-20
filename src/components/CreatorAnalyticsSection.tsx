@@ -18,53 +18,53 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { loadCourses, loadClasses, loadCurricula } from "@/lib/courseData"; // Import loadClasses, loadCurricula
-import { loadStudents } from "@/lib/studentData";
-import { Course, Student, Class, Curriculum } from '@/lib/dataModels';
+import { Course, Profile, Class, Curriculum, StudentCourseProgress } from '@/lib/dataModels';
 
 interface CreatorAnalyticsSectionProps {
   view: string | null;
   selectedClassId?: string;
   selectedCurriculumId?: string;
+  allCourses: Course[];
+  allProfiles: Profile[];
+  allStudentCourseProgresses: StudentCourseProgress[];
+  allClasses: Class[];
+  allCurricula: Curriculum[];
 }
 
-const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId }: CreatorAnalyticsSectionProps) => {
-  const allCourses = loadCourses();
-  const allStudents = loadStudents();
-  const allClasses = loadClasses();
-  const allCurricula = loadCurricula();
+const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => {
 
   // Filter courses based on selected curriculum
   const filteredCourses = React.useMemo(() => {
     if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const curriculum = allCurricula.find(c => c.id === selectedCurriculumId);
       if (curriculum) {
-        return allCourses.filter(course => curriculum.courseIds.includes(course.id));
+        return allCourses.filter(course => curriculum.course_ids.includes(course.id));
       }
     }
     return allCourses;
   }, [allCourses, allCurricula, selectedCurriculumId]);
 
   // Filter students based on selected class or curriculum
-  const filteredStudents = React.useMemo(() => {
+  const filteredStudentProfiles = React.useMemo(() => {
+    let students = allProfiles.filter(p => p.role === 'student');
     if (selectedClassId && selectedClassId !== 'all') {
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
-        return allStudents.filter(student => student.classId === selectedClass.id);
+        return students.filter(student => student.class_id === selectedClass.id);
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
-      const classesInCurriculum = allClasses.filter(cls => cls.curriculumId === selectedCurriculumId);
-      const studentIdsInCurriculum = new Set(classesInCurriculum.flatMap(cls => cls.studentIds));
-      return allStudents.filter(student => studentIdsInCurriculum.has(student.id));
+      const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
+      const studentIdsInCurriculum = new Set(classesInCurriculum.flatMap(cls => allProfiles.filter(p => p.class_id === cls.id && p.role === 'student').map(p => p.id)));
+      return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
-    return allStudents;
-  }, [allStudents, allClasses, selectedClassId, selectedCurriculumId]);
+    return students;
+  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId]);
 
   // Dummy data for creator analytics
   const creatorAnalytics = {
     totalCourses: filteredCourses.length,
     publishedCourses: filteredCourses.filter(c => c.modules.some(m => m.isCompleted)).length,
-    totalStudents: filteredStudents.length,
+    totalStudents: filteredStudentProfiles.length,
     averageCourseRating: 4.5,
     newEnrollmentsLastMonth: Math.floor(Math.random() * 10) + 5, // Adjusted for filtered data
     averageSessionDuration: "45 min",
@@ -74,23 +74,32 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId }
     const totalModules = course.modules.length;
     const completedModules = course.modules.filter(m => m.isCompleted).length;
     const completionRate = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
-    const courseStudents = filteredStudents.filter(s => s.enrolledCoursesProgress.some(ec => ec.courseId === course.id));
-    const avgQuizScore = courseStudents.length > 0 ? (courseStudents.reduce((sum, s) => sum + s.enrolledCoursesProgress.find(ec => ec.courseId === course.id)?.modulesProgress.reduce((modSum, mp) => modSum + mp.sectionsProgress.reduce((secSum, sp) => secSum + (sp.quizResult?.score || 0), 0), 0) || 0, 0) / courseStudents.length).toFixed(1) : 'N/A';
+    
+    const courseStudentProgresses = allStudentCourseProgresses.filter(scp => 
+      scp.course_id === course.id && filteredStudentProfiles.some(p => p.id === scp.user_id)
+    );
+    
+    const courseStudentsCount = courseStudentProgresses.length;
+
+    const avgQuizScore = courseStudentProgresses.length > 0 ? (courseStudentProgresses.reduce((sum, scp) => 
+      sum + scp.modules_progress.reduce((modSum, mp) => 
+        modSum + mp.sections_progress.reduce((secSum, sp) => 
+          secSum + (sp.quiz_result?.score || 0), 0), 0), 0) / courseStudentProgresses.length).toFixed(1) : 'N/A';
 
     return {
       name: course.title.length > 15 ? course.title.substring(0, 12) + '...' : course.title,
       completion: completionRate,
-      studentsEnrolled: courseStudents.length,
+      studentsEnrolled: courseStudentsCount,
       avgQuizScore: parseFloat(avgQuizScore.toString()),
     };
   });
 
   const studentEngagementData = [
-    { month: 'Jan', activeStudents: Math.floor(filteredStudents.length * 0.6), newEnrollments: Math.floor(Math.random() * 5) + 1 },
-    { month: 'Fév', activeStudents: Math.floor(filteredStudents.length * 0.7), newEnrollments: Math.floor(Math.random() * 5) + 1 },
-    { month: 'Mar', activeStudents: Math.floor(filteredStudents.length * 0.65), newEnrollments: Math.floor(Math.random() * 5) + 1 },
-    { month: 'Avr', activeStudents: Math.floor(filteredStudents.length * 0.75), newEnrollments: Math.floor(Math.random() * 5) + 1 },
-    { month: 'Mai', activeStudents: Math.floor(filteredStudents.length * 0.7), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Jan', activeStudents: Math.floor(filteredStudentProfiles.length * 0.6), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Fév', activeStudents: Math.floor(filteredStudentProfiles.length * 0.7), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Mar', activeStudents: Math.floor(filteredStudentProfiles.length * 0.65), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Avr', activeStudents: Math.floor(filteredStudentProfiles.length * 0.75), newEnrollments: Math.floor(Math.random() * 5) + 1 },
+    { month: 'Mai', activeStudents: Math.floor(filteredStudentProfiles.length * 0.7), newEnrollments: Math.floor(Math.random() * 5) + 1 },
   ];
 
   const topPerformingCourses = creatorCoursePerformanceData.sort((a, b) => b.completion - a.completion).slice(0, 3).map(c => c.name);
@@ -222,8 +231,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId }
               <CardDescription>Nombre d'élèves actifs cette semaine.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{Math.floor(filteredStudents.length * 0.7)}</p>
-              <p className="text-sm text-muted-foreground">sur {filteredStudents.length} élèves inscrits.</p>
+              <p className="text-2xl font-bold text-primary">{Math.floor(filteredStudentProfiles.length * 0.7)}</p>
+              <p className="text-sm text-muted-foreground">sur {filteredStudentProfiles.length} élèves inscrits.</p>
             </CardContent>
           </Card>
           <Card>
