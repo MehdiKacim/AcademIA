@@ -6,8 +6,8 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig(() => ({
   server: {
-    host: "0.0.0.0", // Changed from "::" to "0.0.0.0" for broader compatibility
-    port: 8080,
+    host: "0.0.0.0",
+    port: 80, // Port mis à jour à 80
     https: true,
   },
   plugins: [
