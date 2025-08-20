@@ -866,7 +866,7 @@ const initialDummyCurricula: Curriculum[] = [
 const LOCAL_STORAGE_COURSES_KEY = 'academia_courses';
 const LOCAL_STORAGE_CURRICULA_KEY = 'academia_curricula';
 
-// Fonction pour charger les cours depuis le localStorage
+// Fonction pour charger les cours depuis le localStorage ou utiliser les données initiales
 export const loadCourses = (): Course[] => {
   try {
     const storedCourses: Course[] = localStorage.getItem(LOCAL_STORAGE_COURSES_KEY)
@@ -878,7 +878,24 @@ export const loadCourses = (): Course[] => {
     storedCourses.forEach(storedCourse => {
       const existingInitialCourse = combinedCourses.find(c => c.id === storedCourse.id);
       if (existingInitialCourse) {
-        Object.assign(existingInitialCourse, storedCourse);
+        // Merge properties, but ensure modules and sections are handled correctly
+        Object.assign(existingInitialCourse, {
+          ...storedCourse,
+          modules: storedCourse.modules.map((storedModule, modIdx) => {
+            const existingModule = existingInitialCourse.modules[modIdx];
+            if (existingModule) {
+              return {
+                ...existingModule,
+                ...storedModule,
+                sections: storedModule.sections.map((storedSection, secIdx) => {
+                  const existingSection = existingModule.sections[secIdx];
+                  return existingSection ? { ...existingSection, ...storedSection } : storedSection;
+                })
+              };
+            }
+            return storedModule;
+          })
+        });
       } else {
         combinedCourses.push(storedCourse);
       }
@@ -895,12 +912,13 @@ export const loadCourses = (): Course[] => {
 export const saveCourses = (courses: Course[]) => {
   try {
     localStorage.setItem(LOCAL_STORAGE_COURSES_KEY, JSON.stringify(courses));
+    dummyCourses = courses; // Mettre à jour la variable exportée en mémoire
   } catch (error) {
     console.error("Erreur lors de la sauvegarde des cours dans le localStorage:", error);
   }
 };
 
-// Fonction pour charger les cursus depuis le localStorage
+// Fonction pour charger les cursus depuis le localStorage ou utiliser les données initiales
 export const loadCurricula = (): Curriculum[] => {
   try {
     const storedCurricula: Curriculum[] = localStorage.getItem(LOCAL_STORAGE_CURRICULA_KEY)
@@ -929,12 +947,13 @@ export const loadCurricula = (): Curriculum[] => {
 export const saveCurricula = (curricula: Curriculum[]) => {
   try {
     localStorage.setItem(LOCAL_STORAGE_CURRICULA_KEY, JSON.stringify(curricula));
+    dummyCurricula = curricula; // Mettre à jour la variable exportée en mémoire
   } catch (error) {
     console.error("Erreur lors de la sauvegarde des cursus dans le localStorage:", error);
   }
 };
 
-// Variable exportée qui sera utilisée dans l'application
+// Variables exportées qui seront utilisées dans l'application
 export let dummyCourses: Course[] = loadCourses();
 export let dummyCurricula: Curriculum[] = loadCurricula();
 
@@ -964,4 +983,15 @@ export const updateCurriculumInStorage = (updatedCurriculum: Curriculum) => {
 export const deleteCurriculumFromStorage = (curriculumId: string) => {
   dummyCurricula = dummyCurricula.filter(c => c.id !== curriculumId);
   saveCurricula(dummyCurricula);
+};
+
+// Nouvelles fonctions de réinitialisation pour les données de cours et de cursus
+export const resetCourses = () => {
+  localStorage.removeItem(LOCAL_STORAGE_COURSES_KEY);
+  dummyCourses = loadCourses(); // Recharger les données par défaut en mémoire
+};
+
+export const resetCurricula = () => {
+  localStorage.removeItem(LOCAL_STORAGE_CURRICULA_KEY);
+  dummyCurricula = loadCurricula(); // Recharger les données par défaut en mémoire
 };

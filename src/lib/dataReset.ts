@@ -1,16 +1,7 @@
+import { resetCourses, resetCurricula } from "./courseData";
+import { resetStudents } from "./studentData";
+
 export const clearAllAppData = () => {
-  const keysToClear = [
-    'academia_courses',
-    'academia_curricula',
-    'academia_establishments',
-    'academia_classes',
-    'academia_students',
-  ];
-
-  keysToClear.forEach(key => {
-    localStorage.removeItem(key);
-  });
-
   // Clear all notes (keys starting with 'notes_')
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -18,4 +9,9 @@ export const clearAllAppData = () => {
       localStorage.removeItem(key);
     }
   }
+
+  // Call specific reset functions for each data type
+  resetCourses();
+  resetCurricula();
+  resetStudents();
 };

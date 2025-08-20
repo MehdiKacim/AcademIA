@@ -94,13 +94,18 @@ const initialDummyStudents: Student[] = [
   },
 ];
 
+// Fonction pour charger les élèves depuis le localStorage ou utiliser les données initiales
+export const loadStudents = (): Student[] => {
+  return loadData<Student>(LOCAL_STORAGE_STUDENTS_KEY, initialDummyStudents);
+};
+
 // Charger les élèves existants ou utiliser les élèves par défaut
-export let dummyStudents: Student[] = loadData<Student>(LOCAL_STORAGE_STUDENTS_KEY, initialDummyStudents);
+export let dummyStudents: Student[] = loadStudents();
 
 // Sauvegarder les élèves dans le localStorage
 export const saveStudents = (students: Student[]) => {
   saveData(LOCAL_STORAGE_STUDENTS_KEY, students);
-  dummyStudents = students; // Mettre à jour la variable exportée
+  dummyStudents = students; // Mettre à jour la variable exportée en mémoire
 };
 
 // Fonctions CRUD pour les élèves
@@ -124,4 +129,10 @@ export const deleteStudent = (studentId: string) => {
 
 export const getStudentById = (id: string): Student | undefined => {
   return dummyStudents.find(student => student.id === id);
+};
+
+// Nouvelle fonction de réinitialisation pour les données d'élèves
+export const resetStudents = () => {
+  localStorage.removeItem(LOCAL_STORAGE_STUDENTS_KEY);
+  dummyStudents = loadStudents(); // Recharger les données par défaut en mémoire
 };

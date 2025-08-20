@@ -24,8 +24,7 @@ const Settings = () => {
     if (window.confirm("Êtes-vous sûr de vouloir effacer TOUTES les données de l'application ? Cette action est irréversible.")) {
       clearAllAppData();
       showSuccess("Toutes les données ont été effacées ! Veuillez rafraîchir la page.");
-      // Optionally, you might want to force a page reload here to reflect changes immediately
-      // window.location.reload();
+      window.location.reload(); // Force a full page reload to re-initialize all data
     }
   };
 
