@@ -722,7 +722,7 @@ const initialDummyCourses: Course[] = [
         title: "Module 1: Introduction à C# et .NET",
         sections: [
           { title: "Qu'est-ce que C# ?", content: "C# (prononcé C sharp) est un langage de programmation orienté objet développé par Microsoft. Il est largement utilisé pour créer des applications Windows, des applications web avec ASP.NET, des jeux avec Unity, et bien plus encore. Il fait partie de l'écosystème .NET.", isCompleted: false },
-          { title: "L'environnement .NET", content: "Le framework .NET est une plateforme de développement qui fournit un environnement d'exécution (CLR) et une vaste bibliothèque de classes (FCL) pour construire des applications. .NET Core est une version open-source et multiplateforme de .NET.", isCompleted: false },
+          { title: "L'environnement .NET", content: "Le framework .NET est une plateforme de développement qui fournit un environnement d'exécution (CLR) et une vaste bibliothèque de classes (FCL) pour construire des applications. .NET Core est une version open-source et multiplatforme de .NET.", isCompleted: false },
           {
             title: "Quiz: Bases de C# et .NET",
             content: "Testez vos connaissances sur l'introduction à C# et l'environnement .NET.",
@@ -873,16 +873,22 @@ export const loadCourses = (): Course[] => {
       ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_COURSES_KEY)!)
       : [];
 
-    const combinedCourses: Course[] = [...initialDummyCourses];
+    // If no stored courses, return initial dummy courses
+    if (storedCourses.length === 0) {
+      return [...initialDummyCourses];
+    }
 
+    // Otherwise, combine stored courses with initial ones, prioritizing stored data
+    const combinedCoursesMap = new Map<string, Course>();
+    initialDummyCourses.forEach(course => combinedCoursesMap.set(course.id, { ...course }));
     storedCourses.forEach(storedCourse => {
-      const existingInitialCourse = combinedCourses.find(c => c.id === storedCourse.id);
-      if (existingInitialCourse) {
-        // Merge properties, but ensure modules and sections are handled correctly
-        Object.assign(existingInitialCourse, {
+      const existingCourse = combinedCoursesMap.get(storedCourse.id);
+      if (existingCourse) {
+        // Merge properties, ensuring modules and sections are handled correctly
+        Object.assign(existingCourse, {
           ...storedCourse,
           modules: storedCourse.modules.map((storedModule, modIdx) => {
-            const existingModule = existingInitialCourse.modules[modIdx];
+            const existingModule = existingCourse.modules[modIdx];
             if (existingModule) {
               return {
                 ...existingModule,
@@ -897,14 +903,14 @@ export const loadCourses = (): Course[] => {
           })
         });
       } else {
-        combinedCourses.push(storedCourse);
+        combinedCoursesMap.set(storedCourse.id, storedCourse);
       }
     });
 
-    return combinedCourses;
+    return Array.from(combinedCoursesMap.values());
   } catch (error) {
     console.error("Erreur lors du chargement des cours depuis le localStorage:", error);
-    return initialDummyCourses; // Revenir aux cours initiaux en cas d'erreur
+    return [...initialDummyCourses]; // Revenir aux cours initiaux en cas d'erreur
   }
 };
 
@@ -925,21 +931,27 @@ export const loadCurricula = (): Curriculum[] => {
       ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_CURRICULA_KEY)!)
       : [];
 
-    const combinedCurricula: Curriculum[] = [...initialDummyCurricula];
+    // If no stored curricula, return initial dummy curricula
+    if (storedCurricula.length === 0) {
+      return [...initialDummyCurricula];
+    }
 
+    // Otherwise, combine stored curricula with initial ones, prioritizing stored data
+    const combinedCurriculaMap = new Map<string, Curriculum>();
+    initialDummyCurricula.forEach(curriculum => combinedCurriculaMap.set(curriculum.id, { ...curriculum }));
     storedCurricula.forEach(storedCurriculum => {
-      const existingInitialCurriculum = combinedCurricula.find(c => c.id === storedCurriculum.id);
-      if (existingInitialCurriculum) {
-        Object.assign(existingInitialCurriculum, storedCurriculum);
+      const existingCurriculum = combinedCurriculaMap.get(storedCurriculum.id);
+      if (existingCurriculum) {
+        Object.assign(existingCurriculum, storedCurriculum);
       } else {
-        combinedCurricula.push(storedCurriculum);
+        combinedCurriculaMap.set(storedCurriculum.id, storedCurriculum);
       }
     });
 
-    return combinedCurricula;
+    return Array.from(combinedCurriculaMap.values());
   } catch (error) {
     console.error("Erreur lors du chargement des cursus depuis le localStorage:", error);
-    return initialDummyCurricula; // Revenir aux cursus initiaux en cas d'erreur
+    return [...initialDummyCurricula]; // Revenir aux cursus initiaux en cas d'erreur
   }
 };
 
@@ -988,10 +1000,12 @@ export const deleteCurriculumFromStorage = (curriculumId: string) => {
 // Nouvelles fonctions de réinitialisation pour les données de cours et de cursus
 export const resetCourses = () => {
   localStorage.removeItem(LOCAL_STORAGE_COURSES_KEY);
-  dummyCourses = loadCourses(); // Recharger les données par défaut en mémoire
+  dummyCourses = [...initialDummyCourses]; // Réinitialiser avec les données initiales en dur
+  saveCourses(dummyCourses); // Sauvegarder l'état réinitialisé
 };
 
 export const resetCurricula = () => {
   localStorage.removeItem(LOCAL_STORAGE_CURRICULA_KEY);
-  dummyCurricula = loadCurricula(); // Recharger les données par défaut en mémoire
+  dummyCurricula = [...initialDummyCurricula]; // Réinitialiser avec les données initiales en dur
+  saveCurricula(dummyCurricula); // Sauvegarder l'état réinitialisé
 };

@@ -96,7 +96,16 @@ const initialDummyStudents: Student[] = [
 
 // Fonction pour charger les élèves depuis le localStorage ou utiliser les données initiales
 export const loadStudents = (): Student[] => {
-  return loadData<Student>(LOCAL_STORAGE_STUDENTS_KEY, initialDummyStudents);
+  const storedStudents = localStorage.getItem(LOCAL_STORAGE_STUDENTS_KEY);
+  if (storedStudents) {
+    try {
+      return JSON.parse(storedStudents) as Student[];
+    } catch (error) {
+      console.error("Erreur lors du parsing des élèves depuis le localStorage:", error);
+      return [...initialDummyStudents]; // Fallback to initial on parse error
+    }
+  }
+  return [...initialDummyStudents]; // Return initial dummy students if nothing in localStorage
 };
 
 // Charger les élèves existants ou utiliser les élèves par défaut
@@ -134,5 +143,6 @@ export const getStudentById = (id: string): Student | undefined => {
 // Nouvelle fonction de réinitialisation pour les données d'élèves
 export const resetStudents = () => {
   localStorage.removeItem(LOCAL_STORAGE_STUDENTS_KEY);
-  dummyStudents = loadStudents(); // Recharger les données par défaut en mémoire
+  dummyStudents = [...initialDummyStudents]; // Réinitialiser avec les données initiales en dur
+  saveStudents(dummyStudents); // Sauvegarder l'état réinitialisé
 };
