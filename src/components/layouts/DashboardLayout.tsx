@@ -53,20 +53,22 @@ const DashboardLayout = () => {
   };
 
   useEffect(() => {
-    const mainItems = getMainNavItems(); // Get items based on current role
+    const mainItems = getMainNavItems();
     let foundParentLabel: string | null = null;
 
     // Iterate through main items to find if current path belongs to any sub-menu
     for (const item of mainItems) {
       if (item.type === 'trigger' && item.items) {
-        if (item.items.some(subItem => subItem.to && location.pathname.startsWith(subItem.to.split('?')[0]))) { // Modified here
+        // Check if any sub-item's full path (including query) matches the current full path
+        const currentFullPath = location.pathname + location.search;
+        if (item.items.some(subItem => subItem.to && currentFullPath.startsWith(subItem.to))) {
           foundParentLabel = item.label.toLowerCase().replace(/\s/g, '-');
-          break; // Found the parent, no need to check further
+          break;
         }
       }
     }
     setCurrentNavLevel(foundParentLabel);
-  }, [location.pathname, currentRole]); // Re-run if path or role changes
+  }, [location.pathname, location.search, currentRole]); // Add location.search to dependencies
 
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -188,12 +190,13 @@ const DashboardLayout = () => {
   const getIsParentTriggerActive = (item: NavItem): boolean => {
     if (item.type !== 'trigger' || !item.items) return false;
 
-    // Check if the current path (without query params) matches the base path of any sub-item
-    const currentBasePath = location.pathname;
+    // Check if the current full path (pathname + search) matches any sub-item's full path
+    const currentFullPath = location.pathname + location.search;
+
     return item.items.some(subItem => {
       if (subItem.to) {
-        const subItemBasePath = subItem.to.split('?')[0]; // Extract base path
-        return currentBasePath.startsWith(subItemBasePath);
+        // Check if the current full path starts with the sub-item's 'to' path (including query if present)
+        return currentFullPath.startsWith(subItem.to);
       }
       return false;
     });
@@ -223,15 +226,18 @@ const DashboardLayout = () => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {navItemsToDisplayForDesktop().map((item) => {
               // Determine if a link is active
-              const isLinkActive = item.to && location.pathname.startsWith(item.to.split('?')[0]); // Modified here for direct links
+              const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
               // Determine if a trigger is active (itself or one of its children)
-              const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
+              const isTriggerActive = item.type === 'trigger' && (
+                currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-') || // This trigger's sub-menu is explicitly open
+                getIsParentTriggerActive(item) // One of its children's routes is active
+              );
 
               return item.type === 'link' && item.to ? (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={({ isActive }) =>
+                  className={() =>
                     cn(
                       "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
                       isLinkActive // Use the new isLinkActive logic
