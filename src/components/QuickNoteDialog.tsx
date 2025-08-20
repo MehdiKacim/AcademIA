@@ -13,6 +13,8 @@ import { PlusCircle } from "lucide-react";
 import { addNote } from "@/lib/notes"; // Import addNote from Supabase-based notes.ts
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
+import ReactQuill from 'react-quill'; // Import ReactQuill
+import 'react-quill/dist/quill.snow.css'; // Import Quill CSS
 
 interface QuickNoteDialogProps {
   isOpen: boolean;
@@ -31,7 +33,8 @@ const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }
       showError("Vous devez être connecté pour ajouter une note.");
       return;
     }
-    if (noteContent.trim()) {
+    const strippedNoteContent = noteContent.replace(/<[^>]*>/g, '').trim();
+    if (strippedNoteContent) {
       try {
         await addNote(currentUserProfile.id, noteKey, noteContent.trim());
         setNoteContent('');
@@ -47,6 +50,25 @@ const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }
     }
   };
 
+  // Quill modules and formats for rich text editing
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }],
+      ['link', 'image', 'code-block'],
+      ['clean']
+    ],
+  };
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike', 'blockquote',
+    'list', 'bullet', 'indent',
+    'link', 'image', 'code-block'
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -57,15 +79,18 @@ const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Textarea
-            placeholder="Votre note ici..."
+          <ReactQuill
+            theme="snow"
             value={noteContent}
-            onChange={(e) => setNoteContent(e.target.value)}
-            rows={5}
+            onChange={setNoteContent}
+            modules={quillModules}
+            formats={quillFormats}
+            className="h-auto min-h-[100px] max-h-[200px] overflow-y-auto mb-10" // Adjusted height
+            placeholder="Votre note ici..."
           />
         </div>
         <DialogFooter>
-          <Button onClick={handleAddNote} disabled={!noteContent.trim()}>
+          <Button onClick={handleAddNote} disabled={!noteContent.replace(/<[^>]*>/g, '').trim()}>
             <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la note
           </Button>
         </DialogFooter>

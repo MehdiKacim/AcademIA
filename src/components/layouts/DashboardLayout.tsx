@@ -38,7 +38,7 @@ interface NavItem {
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
-  const { currentUser, currentRole, setCurrentUser } = useRole();
+  const { currentUser, currentRole, setCurrentUser, signOut } = useRole(); // Destructure signOut
   const { openChat } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
@@ -47,8 +47,8 @@ const DashboardLayout = () => {
 
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => { // Make it async
+    await signOut(); // Call the signOut function from context
     navigate("/");
   };
 

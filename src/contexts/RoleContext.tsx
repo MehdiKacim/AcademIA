@@ -9,11 +9,12 @@ interface RoleContextType {
   currentRole: 'student' | 'creator' | 'tutor' | null;
   isLoadingUser: boolean; // New loading state
   updateUserTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>; // New function to update theme
+  signOut: () => Promise<void>; // Add signOut function
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
-export const RoleProvider = ({ children }: { children: ReactNode }) => {
+export const RoleProvider = ({ children }: { ReactNode }) => {
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Initialize as true
 
@@ -71,10 +72,23 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const handleSignOut = async () => {
+    setIsLoadingUser(true); // Set loading state while signing out
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+      // Optionally show an error toast
+    } else {
+      setCurrentUserProfile(null); // Clear profile on successful sign out
+      // The onAuthStateChange listener will also catch this and update state
+    }
+    setIsLoadingUser(false); // Reset loading state
+  };
+
   const currentRole = currentUserProfile ? currentUserProfile.role : null;
 
   return (
-    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme }}>
+    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut }}>
       {children}
     </RoleContext.Provider>
   );

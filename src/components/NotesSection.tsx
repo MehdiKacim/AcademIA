@@ -137,7 +137,7 @@ const NotesSection = ({ noteKey, title, userId, refreshKey }: NotesSectionProps)
                       onChange={setEditedContent}
                       modules={quillModules}
                       formats={quillFormats}
-                      className="h-32 mb-10" // Adjust height for editor
+                      className="h-auto min-h-[100px] max-h-[200px] overflow-y-auto mb-10" // Adjusted height
                     />
                   </div>
                 ) : (
@@ -200,7 +200,7 @@ const NotesSection = ({ noteKey, title, userId, refreshKey }: NotesSectionProps)
           onChange={setNewNote}
           modules={quillModules}
           formats={quillFormats}
-          className="h-32 mb-10" // Adjust height for editor
+          className="h-auto min-h-[100px] max-h-[200px] overflow-y-auto mb-10" // Adjusted height
           placeholder="Écrivez votre nouvelle note ici..."
         />
         <Button onClick={handleAddNote} disabled={!newNote.replace(/<[^>]*>/g, '').trim()} size="sm">
