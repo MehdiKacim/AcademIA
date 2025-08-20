@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, CheckCircle, ArrowDown } from "lucide-react";
+import { Lock, CheckCircle, ArrowDown, BookOpen } from "lucide-react"; // Ajout de BookOpen
 import { cn } from "@/lib/utils";
 import { Course } from "@/lib/courseData";
 
