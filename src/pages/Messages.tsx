@@ -1,10 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "@/components/ui/resizable";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import MessageList from "@/components/MessageList";
@@ -18,6 +12,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getRecentConversations, getUnreadMessageCount } from "@/lib/messageData"; // Import messageData functions
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
+import { cn } from '@/lib/utils'; // Import cn for conditional styling
 
 const Messages = () => {
   const { currentUserProfile, isLoadingUser } = useRole();
@@ -173,101 +168,65 @@ const Messages = () => {
         Communiquez avec les autres utilisateurs de la plateforme.
       </p>
 
-      {isMobile ? (
-        <div className="flex flex-col flex-grow">
-          {!selectedContact ? (
-            <>
-              <div className="mb-4">
-                <Label htmlFor="new-chat-select">Démarrer une nouvelle conversation</Label>
-                <Select onValueChange={handleNewConversation}>
-                  <SelectTrigger id="new-chat-select">
-                    <SelectValue placeholder="Sélectionner un contact" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableContactsForNewChat.length === 0 ? (
-                      <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
-                    ) : (
-                      availableContactsForNewChat.map(profile => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {profile.first_name} {profile.last_name} (@{profile.username})
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <MessageList
-                recentMessages={recentMessages} // Pass recentMessages
-                allProfiles={allProfiles} // Pass allProfiles
-                onSelectContact={handleSelectContact}
-                selectedContactId={selectedContact?.id || null}
-                onUnreadCountChange={setUnreadMessageCount} // Update unread count in parent
-              />
-            </>
+      <div className="flex flex-col flex-grow md:flex-row md:gap-4">
+        {/* Left Panel (Message List) */}
+        <div className={cn(
+          "flex flex-col",
+          isMobile ? (selectedContact ? "hidden" : "flex-grow") : "w-full md:w-1/3 flex-shrink-0"
+        )}>
+          <div className="p-4 border-b border-border">
+            <Label htmlFor="new-chat-select-desktop">Démarrer une nouvelle conversation</Label>
+            <Select onValueChange={handleNewConversation}>
+              <SelectTrigger id="new-chat-select-desktop">
+                <SelectValue placeholder="Sélectionner un contact" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableContactsForNewChat.length === 0 ? (
+                  <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
+                ) : (
+                  availableContactsForNewChat.map(profile => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      {profile.first_name} {profile.last_name} (@{profile.username})
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          <MessageList
+            recentMessages={recentMessages} // Pass recentMessages
+            allProfiles={allProfiles} // Pass allProfiles
+            onSelectContact={handleSelectContact}
+            selectedContactId={selectedContact?.id || null}
+            onUnreadCountChange={setUnreadMessageCount} // Update unread count in parent
+          />
+        </div>
+
+        {/* Right Panel (Chat Interface) */}
+        <div className={cn(
+          "flex flex-col",
+          isMobile ? (selectedContact ? "flex-grow" : "hidden") : "w-full md:w-2/3 flex-grow"
+        )}>
+          {isMobile && selectedContact && (
+            <Button variant="outline" onClick={() => setSelectedContact(null)} className="mb-4 w-fit">
+              <ArrowLeft className="h-4 w-4 mr-2" /> Retour aux conversations
+            </Button>
+          )}
+          {selectedContact ? (
+            <ChatInterface
+              contact={selectedContact}
+              onMessageSent={fetchAllData} // Trigger re-fetch of all data
+              initialCourseId={initialCourseContext.id}
+              initialCourseTitle={initialCourseContext.title}
+            />
           ) : (
-            <div className="flex flex-col flex-grow">
-              <Button variant="outline" onClick={() => setSelectedContact(null)} className="mb-4 w-fit">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Retour aux conversations
-              </Button>
-              <ChatInterface
-                contact={selectedContact}
-                onMessageSent={fetchAllData} // Trigger re-fetch of all data
-                initialCourseId={initialCourseContext.id}
-                initialCourseTitle={initialCourseContext.title}
-              />
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              <MessageSquare className="h-12 w-12 mr-4 text-primary" />
+              Sélectionnez une conversation {isMobile ? '' : 'à gauche'} ou démarrez-en une nouvelle.
             </div>
           )}
         </div>
-      ) : (
-        <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border">
-          <ResizablePanel defaultSize={30} minSize={25}>
-            <div className="flex flex-col h-full">
-              <div className="p-4 border-b border-border">
-                <Label htmlFor="new-chat-select-desktop">Démarrer une nouvelle conversation</Label>
-                <Select onValueChange={handleNewConversation}>
-                  <SelectTrigger id="new-chat-select-desktop">
-                    <SelectValue placeholder="Sélectionner un contact" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableContactsForNewChat.length === 0 ? (
-                      <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
-                    ) : (
-                      availableContactsForNewChat.map(profile => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {profile.first_name} {profile.last_name} (@{profile.username})
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <MessageList
-                recentMessages={recentMessages} // Pass recentMessages
-                allProfiles={allProfiles} // Pass allProfiles
-                onSelectContact={handleSelectContact}
-                selectedContactId={selectedContact?.id || null}
-                onUnreadCountChange={setUnreadMessageCount} // Update unread count in parent
-              />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={70} minSize={35}>
-            {selectedContact ? (
-              <ChatInterface
-                contact={selectedContact}
-                onMessageSent={fetchAllData} // Trigger re-fetch of all data
-                initialCourseId={initialCourseContext.id}
-                initialCourseTitle={initialCourseContext.title}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                <MessageSquare className="h-12 w-12 mr-4 text-primary" />
-                Sélectionnez une conversation ou démarrez-en une nouvelle.
-              </div>
-            )}
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      )}
+      </div>
     </div>
   );
 };
