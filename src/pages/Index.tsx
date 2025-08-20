@@ -45,16 +45,16 @@ const Index = () => {
     methodologie: useRef<HTMLDivElement>(null),
   };
 
-  const { currentUser } = useRole();
+  const { currentUserProfile } = useRole(); // Correctly destructure currentUserProfile
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   // Redirect if user is already logged in
   useEffect(() => {
-    if (currentUser) {
+    if (currentUserProfile) { // Use currentUserProfile here
       navigate("/dashboard");
     }
-  }, [currentUser, navigate]);
+  }, [currentUserProfile, navigate]);
 
   useEffect(() => {
     const observerOptions = {
@@ -365,7 +365,7 @@ const Index = () => {
         onLoginClick={openLoginModal}
         onEmailConfirmationRequired={handleEmailConfirmationRequired} // Pass the new handler
       />
-      <BottomNavigationBar navItems={indexNavItems} currentUser={currentUser} />
+      <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />
     </div>
   );
 };
