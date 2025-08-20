@@ -14,7 +14,10 @@ import Analytics from "./pages/Analytics";
 import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
-import ClassManagement from "./pages/ClassManagement";
+import EstablishmentManagementPage from "./pages/EstablishmentManagementPage"; // New import
+import CurriculumManagementPage from "./pages/CurriculumManagementPage";   // New import
+import ClassManagementPage from "./pages/ClassManagementPage";             // New import
+import StudentManagementPage from "./pages/StudentManagementPage";         // New import
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
@@ -68,7 +71,11 @@ const App = () => {
                     <Route path="/create-course/:courseId" element={<CreateCourse />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/all-notes" element={<AllNotes />} />
-                    <Route path="/class-management" element={<ClassManagement />} />
+                    {/* New routes for management pages */}
+                    <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                    <Route path="/curricula" element={<CurriculumManagementPage />} />
+                    <Route path="/classes" element={<ClassManagementPage />} />
+                    <Route path="/students" element={<StudentManagementPage />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/data-model" element={<DataModelViewer />} />
