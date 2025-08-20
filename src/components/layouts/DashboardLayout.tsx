@@ -25,7 +25,7 @@ interface NavItem {
   to?: string;
   icon: React.ElementType;
   label: string;
-  type?: 'link' | 'dropdown';
+  type?: 'link' | 'dropdown'; // Keep type for potential future use, but won't use 'dropdown' for Courses
   items?: { to: string; label: string; icon?: React.ElementType }[];
 }
 
@@ -53,17 +53,11 @@ const DashboardLayout = () => {
         { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link' },
       ];
     } else if (currentRole === 'creator') {
+      // Reverted to separate links for simplicity, as requested
       return [
         ...baseItems,
-        {
-          type: 'dropdown',
-          icon: BookOpen,
-          label: "Cours",
-          items: [
-            { to: "/courses", label: "Mes Cours", icon: BookOpen },
-            { to: "/create-course", label: "Créer un cours", icon: PlusSquare },
-          ],
-        },
+        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
+        { to: "/create-course", icon: PlusSquare, label: "Créer un cours", type: 'link' },
         { to: "/class-management", icon: School, label: "Gestion des Classes", type: 'link' },
         { to: "/analytics", icon: BarChart2, label: "Analytiques", type: 'link' },
       ];
