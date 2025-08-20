@@ -19,7 +19,8 @@ import AiAPersistentChat from "@/components/AiAPersistentChat";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
-import React, { useState, useEffect } from "react";
+import DataModelModal from "@/components/DataModelModal"; // Import the new DataModelModal
+import React, { useState, useEffect, useCallback } from "react"; // Import useCallback
 
 interface NavItem {
   icon: React.ElementType;
@@ -35,6 +36,7 @@ const DashboardLayout = () => {
   const { currentUser, currentRole, setCurrentUser } = useRole();
   const { openChat } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false); // New state for data model modal
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -58,6 +60,29 @@ const DashboardLayout = () => {
       setCurrentNavLevel(null); // Reset for other roles
     }
   }, [location.pathname, currentRole]);
+
+  // Keyboard shortcut handler
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
+    const isModifierPressed = event.ctrlKey || event.metaKey;
+
+    if (currentUser) { // Only active when logged in
+      if (isModifierPressed && event.key === 'f') {
+        event.preventDefault(); // Prevent browser's default search
+        setIsSearchOverlayOpen(true);
+      } else if (isModifierPressed && event.key === 'm') {
+        event.preventDefault(); // Prevent any default browser behavior
+        setIsDataModelModalOpen(true);
+      }
+    }
+  }, [currentUser]); // Re-create handler if currentUser changes
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]); // Depend on handleKeyDown
 
   const getMainNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
@@ -189,9 +214,11 @@ const DashboardLayout = () => {
         <Outlet />
       </main>
       {/* Pass currentUser to BottomNavigationBar */}
-      <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)} currentUser={currentUser} />
+      <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUser ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUser} />
       {/* GlobalSearchOverlay - Conditional on currentUser */}
       {currentUser && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
+      {/* DataModelModal - Conditional on currentUser */}
+      {currentUser && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
     </div>
   );
 };
