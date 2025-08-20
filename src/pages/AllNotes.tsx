@@ -12,13 +12,15 @@ import {
 } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "react-router-dom"; // Import useLocation
 
 const AllNotes = () => {
   const [allNotes, setAllNotes] = useState<AggregatedNote[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Keep searchQuery state for internal filtering if needed, but remove input
   const [selectedNoteGroupKey, setSelectedNoteGroupKey] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const location = useLocation(); // Get location object
 
   // Ref to track if 'Retour à la liste' was just clicked
   const isBackToListActionRef = useRef(false);
@@ -42,12 +44,18 @@ const AllNotes = () => {
   useEffect(() => {
     const notes = getAllNotesData();
     setAllNotes(notes);
-    // Only set initial selection if no selection has been made yet AND there are notes
-    // This runs on initial mount or when refreshKey changes
-    if (selectedNoteGroupKey === null && notes.length > 0) {
+
+    const queryParams = new URLSearchParams(location.search);
+    const selectKey = queryParams.get('select');
+
+    if (selectKey && notes.some(n => n.key === selectKey)) {
+      setSelectedNoteGroupKey(selectKey);
+    } else if (notes.length > 0) {
       setSelectedNoteGroupKey(notes[0].key);
+    } else {
+      setSelectedNoteGroupKey(null);
     }
-  }, [refreshKey]); // This effect handles initial load and full refresh
+  }, [refreshKey, location.search]); // Add location.search to dependencies
 
   // Effect to manage selectedNoteGroupKey based on filteredNotes and explicit actions
   useEffect(() => {
@@ -109,15 +117,7 @@ const AllNotes = () => {
             <div className="flex flex-col flex-grow">
               {!selectedNoteGroupKey ? (
                 <>
-                  <div className="relative mb-4 w-full max-w-md mx-auto">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Rechercher dans les notes..."
-                      className="pl-9 text-center"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
+                  {/* Removed search input for mobile */}
                   <div className="flex-grow overflow-y-auto pb-4">
                     {filteredNotes.length === 0 ? (
                       <p className="text-muted-foreground text-center py-4">Aucune note trouvée pour votre recherche.</p>
@@ -174,15 +174,7 @@ const AllNotes = () => {
             <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border">
               <ResizablePanel defaultSize={35} minSize={25}>
                 <div className="flex flex-col h-full p-4">
-                  <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Rechercher dans les notes..."
-                      className="pl-9"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
+                  {/* Removed search input for desktop */}
                   <div className="flex-grow overflow-y-auto pr-2">
                     {filteredNotes.length === 0 ? (
                       <p className="text-muted-foreground text-center py-4">Aucune note trouvée pour votre recherche.</p>
