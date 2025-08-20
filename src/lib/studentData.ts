@@ -8,6 +8,7 @@ const initialDummyStudents: Student[] = [
     id: 'student1',
     firstName: 'Alice', // Changement
     lastName: 'Dupont', // Changement
+    username: 'alice_d', // Ajout du username
     email: 'alice.dupont@example.com',
     classId: 'class1', // Exemple de lien vers une classe
     establishmentId: 'est1', // Exemple de lien vers un établissement
@@ -61,6 +62,7 @@ const initialDummyStudents: Student[] = [
     id: 'student2',
     firstName: 'Bob', // Changement
     lastName: 'Martin', // Changement
+    username: 'bob_m', // Ajout du username
     email: 'bob.martin@example.com',
     classId: 'class1',
     establishmentId: 'est1',
@@ -87,6 +89,7 @@ const initialDummyStudents: Student[] = [
     id: 'student3',
     firstName: 'Charlie', // Changement
     lastName: 'Brown', // Changement
+    username: 'charlie_b', // Ajout du username
     email: 'charlie.brown@example.com',
     classId: 'class2',
     establishmentId: 'est1',

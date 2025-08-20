@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail, ArrowLeft } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail, ArrowLeft, Search } from "lucide-react";
 import {
   Establishment,
   Class,
@@ -42,13 +42,15 @@ const ClassManagement = () => {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [currentStudents, setCurrentStudents] = useState<Student[]>([]);
   const [selectedClassIdForStudents, setSelectedClassIdForStudents] = useState<string | null>(null);
+  const [studentSearchQuery, setStudentSearchQuery] = useState(''); // Nouveau: état pour la recherche d'élèves
 
   // États pour les formulaires d'ajout/édition
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [newClassName, setNewClassName] = useState('');
   const [newCurriculumName, setNewCurriculumName] = useState('');
-  const [newStudentFirstName, setNewStudentFirstName] = useState(''); // Changement
-  const [newStudentLastName, setNewStudentLastName] = useState('');   // Changement
+  const [newStudentFirstName, setNewStudentFirstName] = useState('');
+  const [newStudentLastName, setNewStudentLastName] = useState('');
+  const [newStudentUsername, setNewStudentUsername] = useState(''); // Nouveau: pour le username
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [selectedClassForStudent, setSelectedClassForStudent] = useState<string | undefined>(undefined);
 
@@ -117,12 +119,22 @@ const ClassManagement = () => {
   };
 
   const handleAddStudent = () => {
-    if (newStudentFirstName.trim() && newStudentLastName.trim() && newStudentEmail.trim()) { // Changement
+    if (newStudentFirstName.trim() && newStudentLastName.trim() && newStudentUsername.trim() && newStudentEmail.trim()) { // Changement
+      if (currentStudents.some(s => s.username === newStudentUsername.trim())) {
+        showError("Ce nom d'utilisateur est déjà pris.");
+        return;
+      }
+      if (currentStudents.some(s => s.email === newStudentEmail.trim())) {
+        showError("Cet email est déjà utilisé.");
+        return;
+      }
+
       const newStudentId = `student${Date.now()}`;
       const newStu: Student = {
         id: newStudentId,
-        firstName: newStudentFirstName.trim(), // Changement
-        lastName: newStudentLastName.trim(),   // Changement
+        firstName: newStudentFirstName.trim(),
+        lastName: newStudentLastName.trim(),
+        username: newStudentUsername.trim(), // Ajout du username
         email: newStudentEmail.trim(),
         classId: selectedClassForStudent,
         establishmentId: selectedClassForStudent ? classes.find(c => c.id === selectedClassForStudent)?.establishmentId : undefined,
@@ -130,19 +142,20 @@ const ClassManagement = () => {
       };
       const updatedStudents = addStudent(newStu);
       setCurrentStudents(updatedStudents);
-      setNewStudentFirstName(''); // Changement
-      setNewStudentLastName('');   // Changement
+      setNewStudentFirstName('');
+      setNewStudentLastName('');
+      setNewStudentUsername(''); // Réinitialisation
       setNewStudentEmail('');
       setSelectedClassForStudent(undefined);
       showSuccess("Élève ajouté !");
     } else {
-      showError("Le prénom, le nom et l'email de l'élève sont requis."); // Changement
+      showError("Le prénom, le nom, le nom d'utilisateur et l'email de l'élève sont requis."); // Changement
     }
   };
 
   const handleDeleteStudent = (id: string) => {
     const updatedStudents = deleteStudent(id);
-    setCurrentStudents(updatedStudents); // L'assertion de type n'est plus nécessaire ici
+    setCurrentStudents(updatedStudents);
     showSuccess("Élève supprimé !");
   };
 
@@ -196,11 +209,11 @@ const ClassManagement = () => {
   };
 
   const handleInviteStudentToCourse = (student: Student, courseTitle: string) => {
-    openChat(`Bonjour ${student.firstName} ${student.lastName}, je vous invite à découvrir le cours "${courseTitle}" !`); // Changement
+    openChat(`Bonjour ${student.firstName} ${student.lastName}, je vous invite à découvrir le cours "${courseTitle}" !`);
   };
 
   const handleSendMessageToStudent = (student: Student) => {
-    openChat(`Bonjour ${student.firstName} ${student.lastName}, j'ai une question ou un message pour vous.`); // Changement
+    openChat(`Bonjour ${student.firstName} ${student.lastName}, j'ai une question ou un message pour vous.`);
   };
 
   const handleViewStudentsInClass = (classId: string) => {
@@ -213,6 +226,13 @@ const ClassManagement = () => {
 
   const selectedClass = selectedClassIdForStudents ? classes.find(cls => cls.id === selectedClassIdForStudents) : null;
   const studentsInSelectedClass = selectedClass ? currentStudents.filter(student => student.classId === selectedClass.id) : [];
+
+  const filteredStudents = currentStudents.filter(student =>
+    student.firstName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+    student.lastName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+    student.username.toLowerCase().includes(studentSearchQuery.toLowerCase().replace('@', '')) || // Recherche par username
+    student.email.toLowerCase().includes(studentSearchQuery.toLowerCase())
+  );
 
   if (currentRole !== 'creator') {
     return (
@@ -353,7 +373,7 @@ const ClassManagement = () => {
                   studentsInSelectedClass.map(student => (
                     <Card key={student.id} className="p-3 flex items-center justify-between">
                       <div>
-                        <p className="font-medium">{student.firstName} {student.lastName}</p> {/* Changement */}
+                        <p className="font-medium">{student.firstName} {student.lastName} (@{student.username})</p> {/* Affichage du username */}
                         <p className="text-sm text-muted-foreground">{student.email}</p>
                       </div>
                       <div className="flex gap-2">
@@ -419,16 +439,21 @@ const ClassManagement = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <h3 className="text-lg font-semibold">Inviter un nouvel élève</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 <Input
-                  placeholder="Prénom de l'élève" // Changement
+                  placeholder="Prénom de l'élève"
                   value={newStudentFirstName}
                   onChange={(e) => setNewStudentFirstName(e.target.value)}
                 />
                 <Input
-                  placeholder="Nom de l'élève" // Changement
+                  placeholder="Nom de l'élève"
                   value={newStudentLastName}
                   onChange={(e) => setNewStudentLastName(e.target.value)}
+                />
+                <Input
+                  placeholder="Nom d'utilisateur (ex: john_doe)" // Nouveau champ
+                  value={newStudentUsername}
+                  onChange={(e) => setNewStudentUsername(e.target.value)}
                 />
                 <Input
                   type="email"
@@ -452,14 +477,23 @@ const ClassManagement = () => {
               </Button>
 
               <h3 className="text-lg font-semibold mt-6">Liste des élèves</h3>
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par nom, email ou @username..."
+                  className="pl-10"
+                  value={studentSearchQuery}
+                  onChange={(e) => setStudentSearchQuery(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
-                {currentStudents.length === 0 ? (
-                  <p className="text-muted-foreground">Aucun élève enregistré pour le moment.</p>
+                {filteredStudents.length === 0 ? (
+                  <p className="text-muted-foreground">Aucun élève trouvé pour votre recherche.</p>
                 ) : (
-                  currentStudents.map((student) => (
+                  filteredStudents.map((student) => (
                     <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-grow">
-                        <p className="font-medium">{student.firstName} {student.lastName}</p> {/* Changement */}
+                        <p className="font-medium">{student.firstName} {student.lastName} <span className="text-sm text-muted-foreground">(@{student.username})</span></p> {/* Affichage du username */}
                         <p className="text-sm text-muted-foreground">{student.email}</p>
                         {student.classId && (
                           <p className="text-xs text-muted-foreground">

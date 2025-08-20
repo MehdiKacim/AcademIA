@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +18,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { addStudent, dummyStudents } from "@/lib/studentData"; // Import addStudent and dummyStudents
+import { showSuccess, showError } from "@/utils/toast";
+import { Student } from "@/lib/dataModels"; // Import Student type
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -26,19 +29,45 @@ interface RegisterModalProps {
 }
 
 const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) => {
-  // Ajout des états pour le prénom et le nom
-  const [firstName, setFirstName] = React.useState('');
-  const [lastName, setLastName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState(''); // Nouveau: état pour le username
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleRegister = () => {
-    // Ici, vous implémenteriez la logique d'inscription réelle.
-    // Pour l'instant, nous nous contentons de fermer le modal.
-    console.log("Inscription avec:", { firstName, lastName, email, password });
+    if (!firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim()) {
+      showError("Tous les champs sont requis.");
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      showError("Veuillez entrer une adresse email valide.");
+      return;
+    }
+    if (dummyStudents.some(s => s.email === email)) {
+      showError("Cet email est déjà utilisé.");
+      return;
+    }
+    if (dummyStudents.some(s => s.username === username)) {
+      showError("Ce nom d'utilisateur est déjà pris.");
+      return;
+    }
+
+    const newStudent: Student = {
+      id: `student${Date.now()}`,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      username: username.trim(), // Sauvegarde du username
+      email: email.trim(),
+      classId: undefined,
+      establishmentId: undefined,
+      enrolledCoursesProgress: [],
+    };
+
+    addStudent(newStudent); // Ajout du nouvel élève
+    showSuccess("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
     onClose();
-    // Idéalement, après une inscription réussie, vous pourriez ouvrir le modal de connexion
-    // ou rediriger l'utilisateur.
+    onLoginClick(); // Rediriger vers le modal de connexion
   };
 
   return (
@@ -59,6 +88,10 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
             <div className="grid gap-2">
               <Label htmlFor="lastName">Nom</Label>
               <Input id="lastName" type="text" placeholder="Doe" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="username">Nom d'utilisateur</Label>
+              <Input id="username" type="text" placeholder="john_doe" required value={username} onChange={(e) => setUsername(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>

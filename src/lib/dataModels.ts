@@ -25,6 +25,7 @@ export interface Student {
   id: string;
   firstName: string; // Changement: prénom
   lastName: string;  // Changement: nom de famille
+  username: string; // Nouveau: nom d'utilisateur unique
   email: string;
   classId?: string; // Lien vers la classe de l'élève
   establishmentId?: string; // Lien vers l'établissement de l'élève
