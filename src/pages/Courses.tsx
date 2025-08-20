@@ -186,11 +186,11 @@ const Courses = () => {
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         {currentRole === 'student' ? 'Mes Cours' : currentRole === 'creator' ? 'Gestion des Cours' : 'Cours des Élèves'}
       </h1>
-      <div className="relative mb-6 max-w-md mx-auto p-2 bg-card border rounded-xl shadow-md"> {/* Added bg-card, border, rounded-xl, shadow-md, p-2 */}
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" /> {/* Increased icon size and adjusted left padding */}
+      <div className="relative mb-6 max-w-md mx-auto p-2 bg-card border rounded-xl shadow-md">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
         <Input
           placeholder="Rechercher un cours..."
-          className="pl-12 h-14 text-base rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-transparent" {/* Adjusted pl, h, removed shadow, border, bg */}
+          className="pl-12 h-14 text-base rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-transparent"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
