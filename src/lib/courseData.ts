@@ -3,11 +3,72 @@ import { supabase } from "@/integrations/supabase/client"; // Import Supabase cl
 
 export type EntityType = 'course' | 'module' | 'section';
 
+/**
+ * Récupère les IDs des cours accessibles pour un élève en fonction de sa classe et de son cursus.
+ * @param studentProfileId L'ID du profil de l'élève.
+ * @returns Un tableau de promesses résolues en IDs de cours accessibles.
+ */
+export const getAccessibleCourseIdsForStudent = async (studentProfileId: string): Promise<string[]> => {
+  // 1. Get the student's profile to find their class_id
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('class_id')
+    .eq('id', studentProfileId)
+    .single();
+
+  if (profileError || !profile?.class_id) {
+    // console.warn("Student not assigned to a class or profile not found, no courses accessible.");
+    return [];
+  }
+
+  const classId = profile.class_id;
+
+  // 2. Get the class to find its curriculum_id
+  const { data: classData, error: classError } = await supabase
+    .from('classes')
+    .select('curriculum_id')
+    .eq('id', classId)
+    .single();
+
+  if (classError || !classData?.curriculum_id) {
+    console.error("Error fetching class or curriculum_id for student:", classError);
+    return [];
+  }
+
+  const curriculumId = classData.curriculum_id;
+
+  // 3. Get the curriculum to find its course_ids
+  const { data: curriculumData, error: curriculumError } = await supabase
+    .from('curricula')
+    .select('course_ids')
+    .eq('id', curriculumId)
+    .single();
+
+  if (curriculumError || !curriculumData?.course_ids) {
+    console.error("Error fetching curriculum or course_ids for class:", curriculumError);
+    return [];
+  }
+
+  return curriculumData.course_ids;
+};
+
+
 // --- Course Management ---
-export const loadCourses = async (): Promise<Course[]> => {
-  const { data, error } = await supabase
-    .from('courses')
-    .select('*');
+export const loadCourses = async (userId?: string, userRole?: 'student' | 'creator' | 'tutor'): Promise<Course[]> => {
+  let query = supabase.from('courses').select('*');
+
+  if (userRole === 'student' && userId) {
+    const accessibleCourseIds = await getAccessibleCourseIdsForStudent(userId);
+    if (accessibleCourseIds.length === 0) {
+      return []; // No courses accessible for this student
+    }
+    query = query.in('id', accessibleCourseIds);
+  }
+  // For creators and tutors, they can see all courses (or courses they created/are associated with)
+  // For now, we'll let them see all courses, as RLS policies handle creation/update permissions.
+
+  const { data, error } = await query;
+
   if (error) {
     console.error("Error loading courses:", error);
     return [];

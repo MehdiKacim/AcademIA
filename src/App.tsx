@@ -21,6 +21,7 @@ import StudentManagementPage from "./pages/StudentManagementPage";         // Ne
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
+import Messages from "./pages/Messages"; // New import for Messages page
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext"; // Import useRole
@@ -137,6 +138,7 @@ const AppWithThemeProvider = () => {
                     <Route path="/create-course/:courseId" element={<CreateCourse />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/all-notes" element={<AllNotes />} />
+                    <Route path="/messages" element={<Messages />} /> {/* New Messages route */}
                     {/* New routes for management pages */}
                     <Route path="/establishments" element={<EstablishmentManagementPage />} />
                     <Route path="/curricula" element={<CurriculumManagementPage />} />

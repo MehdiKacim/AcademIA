@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, MessageSquare } from "lucide-react"; // Import MessageSquare
 import { useRole } from "@/contexts/RoleContext"; // Import useRole
 
 interface NavItem {
@@ -13,6 +13,7 @@ interface NavItem {
   type?: 'link' | 'trigger'; // 'trigger' for items that open a sub-menu
   items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[]; // Sub-items for dropdown/trigger
   onClick?: () => void; // Added for generic trigger items
+  badge?: number; // New: for unread message count
 }
 
 interface BottomNavigationBarProps {
@@ -71,7 +72,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors",
+                  "flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors relative", // Added relative for badge positioning
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -80,6 +81,11 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
             >
               <item.icon className="h-5 w-5 mb-1" />
               {item.label}
+              {item.badge !== undefined && item.badge > 0 && (
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                  {item.badge}
+                </span>
+              )}
             </NavLink>
           );
         }

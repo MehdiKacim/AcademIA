@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, Send, Lock, CheckCircle } from "lucide-react";
@@ -11,26 +11,41 @@ import { Progress } from "@/components/ui/progress";
 import NotesSection from "@/components/NotesSection";
 import { generateNoteKey } from "@/lib/notes";
 import CourseModuleList from "@/components/CourseModuleList";
-import { loadCourses, Course, Module, ModuleSection } from "@/lib/courseData"; // Import loadCourses
+import { loadCourses, Course, Module, ModuleSection, getAccessibleCourseIdsForStudent } from "@/lib/courseData"; // Import loadCourses and getAccessibleCourseIdsForStudent
 import { useRole } from '@/contexts/RoleContext';
 import { getStudentCourseProgress, upsertStudentCourseProgress } from '@/lib/studentData';
 import { StudentCourseProgress as StudentCourseProgressType } from '@/lib/dataModels'; // Import the type
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgress, setStudentCourseProgress] = useState<StudentCourseProgressType | null>(null);
+  const [isCourseAccessible, setIsCourseAccessible] = useState(false); // New state for course accessibility
 
   useEffect(() => {
     const fetchData = async () => {
-      const loadedCourses = await loadCourses();
-      setCourses(loadedCourses);
+      // Load all courses first to find the specific course
+      const allLoadedCourses = await loadCourses();
+      setCourses(allLoadedCourses);
+
+      const foundCourse = allLoadedCourses.find(c => c.id === courseId);
+
       if (currentUserProfile && currentRole === 'student' && courseId) {
-        const progress = await getStudentCourseProgress(currentUserProfile.id, courseId);
-        setStudentCourseProgress(progress);
+        const accessibleIds = await getAccessibleCourseIdsForStudent(currentUserProfile.id);
+        const accessible = accessibleIds.includes(courseId);
+        setIsCourseAccessible(accessible);
+
+        if (accessible) {
+          const progress = await getStudentCourseProgress(currentUserProfile.id, courseId);
+          setStudentCourseProgress(progress);
+        }
+      } else {
+        // For non-students (creators/tutors) or if no user, assume accessible if course exists
+        setIsCourseAccessible(!!foundCourse);
       }
     };
     fetchData();
@@ -83,12 +98,28 @@ const CourseDetail = () => {
     );
   }
 
+  if (currentRole === 'student' && !isCourseAccessible) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Accès au cours refusé
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Ce cours n'est pas accessible pour votre classe ou votre rôle.
+        </p>
+        <Button onClick={() => navigate("/courses")} className="mt-4">
+          Retour à la liste des cours
+        </Button>
+      </div>
+    );
+  }
+
   // Calculate progress based on current user's student profile
   let progressPercentage = 0;
   let completedModules = 0;
   const totalModules = course.modules.length;
 
-  if (currentUserProfile && currentRole === 'student') {
+  if (currentUserProfile && currentRole === 'student' && isCourseAccessible) {
     if (!studentCourseProgress) {
       // If student is not enrolled, enroll them automatically
       const newCourseProgress: StudentCourseProgressType = {

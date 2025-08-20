@@ -30,10 +30,12 @@ import {
 import { getAllProfiles, updateProfile, getUserFullName, getUserUsername, getUserEmail } from '@/lib/studentData'; // Import Supabase functions
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const ClassManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
+  const navigate = useNavigate();
   
   // Main states for data
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
@@ -133,9 +135,8 @@ const ClassManagementPage = () => {
     }
   };
 
-  const handleSendMessageToStudent = async (studentProfile: Profile) => {
-    const userFullName = await getUserFullName(studentProfile.id);
-    openChat(`Bonjour ${userFullName}, j'ai une question ou un message pour vous.`);
+  const handleSendMessageToStudent = (studentProfile: Profile) => {
+    navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
   const handleViewStudentsInClass = (classId: string) => {

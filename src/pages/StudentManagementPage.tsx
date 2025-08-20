@@ -35,10 +35,13 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from '@/contexts/RoleContext';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const StudentManagementPage = () => {
   const { currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
+  const navigate = useNavigate();
+
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState(loadCurricula());
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // All profiles
@@ -196,9 +199,8 @@ const StudentManagementPage = () => {
     }
   };
 
-  const handleSendMessageToStudent = async (studentProfile: Profile) => {
-    const userFullName = await getUserFullName(studentProfile.id);
-    openChat(`Bonjour ${userFullName}, j'ai une question ou un message pour vous.`);
+  const handleSendMessageToStudent = (studentProfile: Profile) => {
+    navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
   const filteredUsersForDropdown = usernameToAssign.trim() === ''

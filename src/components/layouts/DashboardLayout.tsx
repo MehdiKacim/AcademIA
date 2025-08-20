@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig } from "lucide-react"; // Added BriefcaseBusiness for Administration and new analytics icons
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare } from "lucide-react"; // Added MessageSquare
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -26,6 +26,8 @@ import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import DataModelModal from "@/components/DataModelModal";
 import React, { useState, useEffect, useCallback } from "react";
+import { getUnreadMessageCount } from "@/lib/messageData"; // Import getUnreadMessageCount
+import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
 
 interface NavItem {
   icon: React.ElementType;
@@ -34,14 +36,16 @@ interface NavItem {
   onClick?: () => void;
   type: 'link' | 'trigger';
   items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[];
+  badge?: number; // New: for unread message count
 }
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
-  const { currentUser, currentRole, setCurrentUser, signOut } = useRole(); // Destructure signOut
+  const { currentUserProfile, currentRole, signOut } = useRole(); // Destructure signOut
   const { openChat } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0); // State for unread messages
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -74,7 +78,7 @@ const DashboardLayout = () => {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const isModifierPressed = event.ctrlKey || event.metaKey;
 
-    if (currentUser) {
+    if (currentUserProfile) { // Use currentUserProfile
       if (isModifierPressed && event.key === 'f') {
         event.preventDefault();
         setIsSearchOverlayOpen(true);
@@ -83,7 +87,7 @@ const DashboardLayout = () => {
         setIsDataModelModalOpen(true);
       }
     }
-  }, [currentUser]);
+  }, [currentUserProfile]); // Depend on currentUserProfile
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -92,9 +96,62 @@ const DashboardLayout = () => {
     };
   }, [handleKeyDown]);
 
+  // Fetch unread message count and set up real-time listener
+  useEffect(() => {
+    let channel: any;
+    const fetchUnreadCount = async () => {
+      if (currentUserProfile?.id) {
+        const count = await getUnreadMessageCount(currentUserProfile.id);
+        setUnreadMessages(count);
+
+        // Set up real-time listener for new messages
+        channel = supabase
+          .channel(`unread_messages_${currentUserProfile.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'messages',
+              filter: `receiver_id=eq.${currentUserProfile.id}`
+            },
+            (payload) => {
+              setUnreadMessages(prev => prev + 1);
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'messages',
+              filter: `receiver_id=eq.${currentUserProfile.id}`
+            },
+            (payload) => {
+              const updatedMessage = payload.new as Message;
+              if (updatedMessage.is_read) {
+                setUnreadMessages(prev => Math.max(0, prev - 1)); // Ensure count doesn't go below zero
+              }
+            }
+          )
+          .subscribe();
+      }
+    };
+
+    fetchUnreadCount();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [currentUserProfile?.id]);
+
+
   const getMainNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Tableau de bord", type: 'link' },
+      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages }, // Add messages link with badge
     ];
 
     if (currentRole === 'student') {
@@ -248,6 +305,11 @@ const DashboardLayout = () => {
                 >
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                      {item.badge}
+                    </span>
+                  )}
                 </NavLink>
               ) : item.type === 'trigger' && item.onClick ? (
                 <Button
@@ -269,7 +331,7 @@ const DashboardLayout = () => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {!isMobile && currentUser && (
+          {!isMobile && currentUserProfile && ( // Use currentUserProfile
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
@@ -314,11 +376,11 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
-      <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUser ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUser} />
-      {currentUser && <AiAPersistentChat />}
-      {currentUser && <FloatingAiAChatButton />}
-      {currentUser && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
-      {currentUser && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
+      <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} />
+      {currentUserProfile && <AiAPersistentChat />}
+      {currentUserProfile && <FloatingAiAChatButton />}
+      {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
+      {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
     </div>
   );
 };

@@ -107,3 +107,14 @@ export interface Note {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  course_id?: string; // Optional: context of the message
+  content: string;
+  file_url?: string; // URL to the attachment in Supabase Storage
+  is_read: boolean;
+  created_at: string;
+}

@@ -23,13 +23,14 @@ const Courses = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const loadedCourses = await loadCourses();
+      // Pass userId and userRole to loadCourses for filtering
+      const loadedCourses = await loadCourses(currentUserProfile?.id, currentRole);
       setCourses(loadedCourses);
       const loadedProgresses = await getAllStudentCourseProgress();
       setStudentCourseProgresses(loadedProgresses);
     };
     fetchData();
-  }, [currentUserProfile]); // Re-fetch if user profile changes
+  }, [currentUserProfile, currentRole]); // Re-fetch if user profile or role changes
 
   const getCoursesForRole = useMemo(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
@@ -87,11 +88,23 @@ const Courses = () => {
 
   const renderCoursesContent = () => {
     if (currentRole === 'student') {
+      if (!currentUserProfile?.class_id) {
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+              Cours non accessibles
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Vous n'êtes pas encore affecté à une classe. Veuillez contacter votre administrateur.
+            </p>
+          </div>
+        );
+      }
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Voici les cours disponibles. Cliquez sur un cours pour voir sa progression par modules.</p>
           {coursesToDisplay.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche.</p>
+            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche ou accessible via votre classe.</p>
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => {
