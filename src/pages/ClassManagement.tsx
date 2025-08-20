@@ -182,7 +182,13 @@ const ClassManagement = () => {
   // --- Class Management ---
   const handleAddClass = () => {
     if (newClassName.trim() && newClassCurriculumId) {
-      const newCls: Class = { id: `class${Date.now()}`, name: newClassName.trim(), curriculumId: newClassCurriculumId, studentIds: [] };
+      const selectedCurriculum = curricula.find(c => c.id === newClassCurriculumId);
+      if (!selectedCurriculum) {
+        showError("Cursus sélectionné introuvable.");
+        return;
+      }
+      const formattedClassName = `${selectedCurriculum.name}-${newClassName.trim()}`;
+      const newCls: Class = { id: `class${Date.now()}`, name: formattedClassName, curriculumId: newClassCurriculumId, studentIds: [] };
       setClasses(prev => addData(LOCAL_STORAGE_CLASSES_KEY, newCls));
       setNewClassName('');
       setNewClassCurriculumId(undefined);
