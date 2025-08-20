@@ -9,7 +9,8 @@ import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { loadCourses } from "@/lib/courseData"; // Import loadCourses
-import CourseProgressionView from "@/components/CourseProgressionView"; // Import the new component
+import { BookOpen, Lock, CheckCircle } from "lucide-react"; // Import icons
+import { cn } from "@/lib/utils"; // Import cn
 
 const Courses = () => {
   const { currentRole } = useRole();
@@ -51,8 +52,56 @@ const Courses = () => {
     if (currentRole === 'student') {
       return (
         <>
-          <p className="text-lg text-muted-foreground mb-8">Voici les cours auxquels vous êtes inscrit(e) et votre progression.</p>
-          <CourseProgressionView courses={dummyCourses} /> {/* Use the new component here */}
+          <p className="text-lg text-muted-foreground mb-8">Voici les cours disponibles. Cliquez sur un cours pour voir sa progression par modules.</p>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {dummyCourses.map((course) => {
+              const isCompleted = course.modules.every(m => m.isCompleted);
+              const completedModulesCount = course.modules.filter(m => m.isCompleted).length;
+              const totalModulesCount = course.modules.length;
+              const progressPercentage = totalModulesCount > 0 ? Math.round((completedModulesCount / totalModulesCount) * 100) : 0;
+
+              return (
+                <Card
+                  key={course.id}
+                  className={cn(
+                    "flex flex-col shadow-lg transition-all duration-300 ease-in-out",
+                    isCompleted && "border-green-500 ring-2 ring-green-500/50"
+                  )}
+                >
+                  {course.imageUrl && (
+                    <img
+                      src={course.imageUrl}
+                      alt={`Image pour le cours ${course.title}`}
+                      className="w-full h-40 object-cover rounded-t-lg"
+                    />
+                  )}
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{course.title}</span>
+                      {isCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <BookOpen className="h-5 w-5 text-primary" />
+                      )}
+                    </CardTitle>
+                    <CardDescription className="mb-2 text-sm">
+                      {course.description.substring(0, 100)}...
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-grow flex flex-col justify-between">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Progression: {progressPercentage}% ({completedModulesCount}/{totalModulesCount} modules)
+                    </p>
+                    <Link to={`/courses/${course.id}`}>
+                      <Button className="w-full">
+                        {isCompleted ? "Revoir le cours" : "Commencer le cours"}
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </>
       );
     } else if (currentRole === 'creator') {

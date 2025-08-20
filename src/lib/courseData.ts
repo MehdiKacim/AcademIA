@@ -35,7 +35,7 @@ export interface Course {
   imageUrl?: string;
   category?: string;
   difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
-  prerequisiteCourseId?: string; // Nouveau: ID du cours prérequis pour débloquer celui-ci
+  // prerequisiteCourseId?: string; // Supprimé car la progression est au niveau des modules
 }
 
 export type EntityType = 'course' | 'module' | 'section';
@@ -201,7 +201,6 @@ const initialDummyCourses: Course[] = [
     title: "React pour débutants",
     description: "Apprenez les fondamentaux de React, la bibliothèque JavaScript populaire pour construire des interfaces utilisateur interactives.",
     imageUrl: "https://images.unsplash.com/photo-1633356122544-cd3608a92e8b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prerequisiteCourseId: '1', // Ce cours nécessite le cours '1'
     modules: [
       {
         title: "Module 1: Les bases de React",
@@ -329,7 +328,6 @@ const initialDummyCourses: Course[] = [
     title: "Algorithmes Avancés",
     description: "Maîtrisez les structures de données complexes et les algorithmes efficaces pour résoudre des problèmes informatiques avancés.",
     imageUrl: "https://images.unsplash.com/photo-1504384308090-c894fd248f53?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prerequisiteCourseId: '2', // Ce cours nécessite le cours '2'
     modules: [
       {
         title: "Module 1: Structures de données avancées",
@@ -452,7 +450,6 @@ const initialDummyCourses: Course[] = [
     title: "Développement Web Fullstack",
     description: "Apprenez à construire des applications web complètes, du frontend au backend, avec les technologies modernes.",
     imageUrl: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prerequisiteCourseId: '3', // Ce cours nécessite le cours '3'
     modules: [
       {
         title: "Module 1: Introduction au Web",
@@ -579,7 +576,6 @@ const initialDummyCourses: Course[] = [
     title: "Fondamentaux de la Science des Données",
     description: "Explorez les concepts clés de la science des données, de la collecte à l'analyse et la visualisation.",
     imageUrl: "https://images.unsplash.com/photo-1551288259-cd778e75d97b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prerequisiteCourseId: '4', // Ce cours nécessite le cours '4'
     modules: [
       {
         title: "Module 1: Introduction aux Données",
@@ -704,7 +700,6 @@ const initialDummyCourses: Course[] = [
     title: "Programmation en C#",
     description: "Apprenez les bases et les concepts avancés de la programmation en C#, un langage polyvalent pour le développement d'applications Windows, web et jeux.",
     imageUrl: "https://images.unsplash.com/photo-1629904853893-c2c6677973ad?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    prerequisiteCourseId: '5', // Ce cours nécessite le cours '5'
     modules: [
       {
         title: "Module 1: Introduction à C# et .NET",
