@@ -177,10 +177,10 @@ const Profile = () => {
       );
     } else if (currentRole === 'creator') {
       const createdCourses = courses; // Assuming all courses are created by this creator for demo
-      const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.isCompleted)).length;
+      const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.sections.some(s => s.content))).length; // Check if any section has content as a proxy for 'published'
       const totalStudents = studentCourseProgresses.length; // Total students with any progress
 
-      const topCourses = createdCourses.sort((a, b) => (b.modules.filter(m => m.isCompleted).length / b.modules.length) - (a.modules.filter(m => m.isCompleted).length / a.modules.length)).slice(0, 3);
+      const topCourses = createdCourses.sort((a, b) => (b.modules.length > 0 ? b.modules.reduce((acc, m) => acc + m.sections.length, 0) : 0) - (a.modules.length > 0 ? a.modules.reduce((acc, m) => acc + m.sections.length, 0) : 0)).slice(0, 3); // Sort by number of sections
       const recentActivities = [
         { id: 1, type: "created", description: `Créé le cours "Développement Web Fullstack"`, date: "5 jours ago" },
         { id: 2, type: "updated", description: `Mis à jour le module 2 de "Algorithmes Avancés"`, date: "2 jours ago" },
@@ -275,7 +275,7 @@ const Profile = () => {
 
       const recentAlerts = [
         { id: 1, studentId: supervisedStudents[0]?.user_id, description: `a des difficultés en algèbre.`, date: "1 jour ago" },
-        { id: 2, studentId: supervisedStudents[1]?.user_id, description: `a terminé le module 3 de Physique.`, date: "3 jours ago" },
+        { id: 2, studentId: supervisedStudents[1]?.user_id, description: `n'a pas accédé au cours "Algorithmes Avancés" depuis 5 jours.`, date: "3 jours ago" },
       ].filter(alert => alert.studentId && studentCourseProgresses.some(s => s.user_id === alert.studentId)); // Filter out alerts for non-existent users or students not in filtered list
 
       return (
@@ -316,13 +316,14 @@ const Profile = () => {
           <Card>
             <CardHeader>
               <CardTitle>Progression des Élèves</CardTitle>
-              <CardDescription>Vue d'ensemble de l'avancement de vos élèves.</CardDescription>
+              <CardDescription>Vue d'overview de l'avancement de vos élèves.</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="list-disc pl-5 text-sm text-muted-foreground">
                 {supervisedStudents.map(student => (
                   <li key={student.user_id}>
-                    {getUserFullName(student.user_id)}: {Math.floor(Math.random() * 100)}% de progression moyenne
+                    {/* Resolve full name asynchronously */}
+                    <ResolveUserName userId={student.user_id} />: {Math.floor(Math.random() * 100)}% de progression moyenne
                     <Button variant="ghost" size="sm" className="ml-2" onClick={() => handleSendMessageToUser(student.user_id)}>
                       <Mail className="h-4 w-4" />
                     </Button>
@@ -342,7 +343,7 @@ const Profile = () => {
                 {recentAlerts.map(alert => (
                   <li key={alert.id} className="flex items-center text-sm text-muted-foreground">
                     <Clock className="h-4 w-4 mr-2 text-primary" />
-                    <span>{getUserFullName(alert.studentId)} {alert.description}</span>
+                    <span><ResolveUserName userId={alert.studentId} /> {alert.description}</span>
                     <span className="ml-auto text-xs italic">{alert.date}</span>
                   </li>
                 ))}
@@ -372,6 +373,19 @@ const Profile = () => {
       )}
     </div>
   );
+};
+
+// Helper component to resolve user name asynchronously
+const ResolveUserName = ({ userId }: { userId: string }) => {
+  const [userName, setUserName] = useState('Chargement...');
+  useEffect(() => {
+    const fetchName = async () => {
+      const name = await getUserFullName(userId);
+      setUserName(name);
+    };
+    fetchName();
+  }, [userId]);
+  return <>{userName}</>;
 };
 
 export default Profile;

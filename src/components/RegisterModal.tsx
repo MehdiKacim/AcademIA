@@ -100,9 +100,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      // Check if email exists in auth.users table
-      const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      const isTaken = users?.some(user => user.email === currentEmail);
+      const isTaken = await getProfileByEmail(currentEmail);
       setEmailAvailable(!isTaken);
       setEmailCheckLoading(false);
     }, 500);
@@ -153,6 +151,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
           last_name: lastName.trim(),
           username: username.trim(),
           role: role,
+          email: email.trim(), // Pass email to metadata for handle_new_user trigger
         },
       },
     });

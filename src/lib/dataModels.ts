@@ -9,6 +9,7 @@ export interface Profile {
   first_name: string;
   last_name: string;
   username: string;
+  email: string; // Added email to Profile interface
   role: 'student' | 'creator' | 'tutor';
   class_id?: string; // Only for students, nullable
   theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
@@ -75,7 +76,6 @@ export interface ModuleSection {
   type?: 'text' | 'quiz' | 'video' | 'image';
   url?: string;
   questions?: QuizQuestion[]; // For 'quiz' sections
-  isCompleted: boolean; // New property for section completion
   passingScore?: number; // New property for quiz passing score
   quizResult?: { score: number; total: number; passed: boolean }; // To store the last quiz result
 }
@@ -83,8 +83,6 @@ export interface ModuleSection {
 export interface Module {
   title: string;
   sections: ModuleSection[];
-  isCompleted: boolean;
-  level: number;
 }
 
 export interface Course {
@@ -117,4 +115,22 @@ export interface Message {
   file_url?: string; // URL to the attachment in Supabase Storage
   is_read: boolean;
   created_at: string;
+}
+
+// New interfaces for global search
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  location?: string;
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  file_url: string;
+  description?: string;
+  uploaded_at: string;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock } from "lucide-react";
+import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock, NotebookText } from "lucide-react"; // Import NotebookText
 
 const DataModelContent = () => {
   const dataModels = {
@@ -25,6 +25,7 @@ interface Profile {
   first_name: string;
   last_name: string;
   username: string;
+  email: string; // Email added to profile
   role: 'student' | 'creator' | 'tutor';
   class_id?: string; // UUID, pour les étudiants, référence public.classes(id)
   theme?: 'light' | 'dark' | 'system'; // Préférence de thème de l'utilisateur
@@ -106,8 +107,6 @@ interface StudentCourseProgress {
 interface Module {
   title: string;
   sections: ModuleSection[];
-  isCompleted: boolean;
-  level: number;
 }
     `,
     "ModuleSection (Nested in Module)": `
@@ -117,7 +116,6 @@ interface ModuleSection {
   type?: 'text' | 'quiz' | 'video' | 'image';
   url?: string; // Pour les types 'video' ou 'image'
   questions?: QuizQuestion[]; // Pour le type 'quiz'
-  isCompleted: boolean;
   passingScore?: number; // Pour le type 'quiz'
   quizResult?: { score: number; total: number; passed: boolean }; // Résultat du dernier quiz
 }
@@ -132,6 +130,25 @@ interface QuizQuestion {
 interface QuizOption {
   text: string;
   isCorrect: boolean;
+}
+    `,
+    "Event (Global Search)": `
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  location?: string;
+}
+    `,
+    "Document (Global Search)": `
+interface Document {
+  id: string;
+  title: string;
+  file_url: string;
+  description?: string;
+  uploaded_at: string;
 }
     `,
   };

@@ -11,7 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import NotesSection from "@/components/NotesSection";
 import { generateNoteKey } from "@/lib/notes";
 import CourseModuleList from "@/components/CourseModuleList";
-import { loadCourses, Course, Module, ModuleSection, getAccessibleCourseIdsForStudent } from "@/lib/courseData"; // Import loadCourses and getAccessibleCourseIdsForStudent
+import { loadCourses, getAccessibleCourseIdsForStudent } from "@/lib/courseData"; // Import loadCourses and getAccessibleCourseIdsForStudent
+import { Course, Module, ModuleSection } from "@/lib/dataModels"; // Corrected import path
 import { useRole } from '@/contexts/RoleContext';
 import { getStudentCourseProgress, upsertStudentCourseProgress } from '@/lib/studentData';
 import { StudentCourseProgress as StudentCourseProgressType } from '@/lib/dataModels'; // Import the type

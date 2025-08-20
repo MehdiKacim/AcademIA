@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle, ArrowRight, RefreshCw } from "lucide-react";
-import { QuizQuestion } from "@/lib/courseData";
+import { QuizQuestion } from "@/lib/dataModels"; // Corrected import path
 import { cn } from "@/lib/utils";
 
 interface QuizComponentProps {

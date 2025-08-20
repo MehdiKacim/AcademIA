@@ -43,7 +43,7 @@ const StudentManagementPage = () => {
   const navigate = useNavigate();
 
   const [classes, setClasses] = useState<Class[]>([]);
-  const [curricula, setCurricula] = useState(loadCurricula());
+  const [curricula, setCurricula] = useState<Curriculum[]>([]); // Explicitly type as Curriculum[]
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // All profiles
 
   // States for student assignment (autocomplete)
@@ -121,7 +121,9 @@ const StudentManagementPage = () => {
       if (foundUserForAssignment.class_id) {
         const oldClass = classes.find(cls => cls.id === foundUserForAssignment.class_id);
         if (oldClass) {
-          const updatedOldClass = { ...oldClass, student_ids: oldClass.creator_ids.filter(id => id !== foundUserForAssignment.id) }; // Assuming student_ids is creator_ids for now
+          // Note: Assuming creator_ids is used for students in class for now.
+          // In a real app, you'd have a dedicated student_ids array or a join table.
+          const updatedOldClass = { ...oldClass, creator_ids: oldClass.creator_ids.filter(id => id !== foundUserForAssignment.id) };
           await updateClassInStorage(updatedOldClass);
         }
       }
@@ -129,7 +131,8 @@ const StudentManagementPage = () => {
       // Add to new class
       const newClass = classes.find(cls => cls.id === classToAssign);
       if (newClass) {
-        const updatedNewClass = { ...newClass, student_ids: [...(newClass.creator_ids || []), foundUserForAssignment.id] }; // Assuming student_ids is creator_ids for now
+        // Note: Assuming creator_ids is used for students in class for now.
+        const updatedNewClass = { ...newClass, creator_ids: [...(newClass.creator_ids || []), foundUserForAssignment.id] };
         await updateClassInStorage(updatedNewClass);
       }
 
@@ -164,7 +167,8 @@ const StudentManagementPage = () => {
 
         const targetClass = classes.find(cls => cls.id === classId);
         if (targetClass) {
-          const updatedTargetClass = { ...targetClass, student_ids: targetClass.creator_ids.filter(id => id !== studentProfileId) }; // Assuming student_ids is creator_ids for now
+          // Note: Assuming creator_ids is used for students in class for now.
+          const updatedTargetClass = { ...targetClass, creator_ids: targetClass.creator_ids.filter(id => id !== studentProfileId) };
           await updateClassInStorage(updatedTargetClass);
         }
         setClasses(await loadClasses()); // Re-fetch classes to update student counts
@@ -185,7 +189,8 @@ const StudentManagementPage = () => {
       if (studentProfileToDelete.class_id) {
         const targetClass = classes.find(cls => cls.id === studentProfileToDelete.class_id);
         if (targetClass) {
-          const updatedTargetClass = { ...targetClass, student_ids: targetClass.creator_ids.filter(id => id !== studentProfileId) }; // Assuming student_ids is creator_ids for now
+          // Note: Assuming creator_ids is used for students in class for now.
+          const updatedTargetClass = { ...targetClass, creator_ids: targetClass.creator_ids.filter(id => id !== studentProfileId) };
           await updateClassInStorage(updatedTargetClass);
         }
       }
@@ -218,7 +223,7 @@ const StudentManagementPage = () => {
     return profile.first_name.toLowerCase().includes(lowerCaseQuery) ||
            profile.last_name.toLowerCase().includes(lowerCaseQuery) ||
            profile.username.toLowerCase().includes(lowerCaseQuery.replace('@', '')) ||
-           profile.email.toLowerCase().includes(lowerCaseQuery); // Email is not directly on profile, need to fetch from auth.users
+           profile.email.toLowerCase().includes(lowerCaseQuery);
   });
 
   if (isLoadingUser) {
@@ -330,9 +335,9 @@ const StudentManagementPage = () => {
             <div className="p-3 border rounded-md bg-muted/20 space-y-2">
               <div className="flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-green-500" />
-                <p className="font-medium">Élève sélectionné : {foundUserForAssignment.first_name} {foundUserForAssignment.last_name} <span className="text-sm text-muted-foreground">(@{foundUserForAssignment.username})</span></p>
+                <p className="font-medium">{foundUserForAssignment.first_name} {foundUserForAssignment.last_name} <span className="text-sm text-muted-foreground">(@{foundUserForAssignment.username})</span></p>
               </div>
-              <p className="text-sm text-muted-foreground">Email : {getUserEmail(foundUserForAssignment.id)}</p>
+              <p className="text-sm text-muted-foreground">Email : {foundUserForAssignment.email}</p>
               {foundUserForAssignment.class_id && (
                 <p className="text-sm text-muted-foreground">Actuellement dans : {getClassName(foundUserForAssignment.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === foundUserForAssignment.class_id)?.curriculum_id)})</p>
               )}
@@ -374,7 +379,7 @@ const StudentManagementPage = () => {
                 <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
                     <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
-                    <p className="text-sm text-muted-foreground">{getUserEmail(profile.id)}</p>
+                    <p className="text-sm text-muted-foreground">{profile.email}</p>
                     {profile.class_id && (
                       <p className="text-xs text-muted-foreground">
                         Classe: {getClassName(profile.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === profile.class_id)?.curriculum_id)})
@@ -399,7 +404,8 @@ const StudentManagementPage = () => {
                                 setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
                                 const targetClass = classes.find(cls => cls.id === classId);
                                 if (targetClass) {
-                                  const updatedTargetClass = { ...targetClass, student_ids: [...(targetClass.creator_ids || []), profile.id] }; // Assuming student_ids is creator_ids for now
+                                  // Note: Assuming creator_ids is used for students in class for now.
+                                  const updatedTargetClass = { ...targetClass, creator_ids: [...(targetClass.creator_ids || []), profile.id] };
                                   await updateClassInStorage(updatedTargetClass);
                                 }
                                 setClasses(await loadClasses()); // Re-fetch classes to update student counts

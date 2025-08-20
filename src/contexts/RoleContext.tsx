@@ -14,7 +14,7 @@ interface RoleContextType {
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
-export const RoleProvider = ({ children }: { ReactNode }) => {
+export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Initialize as true
 

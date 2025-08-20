@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/popover";
 import NotesSection from "@/components/NotesSection";
 import { PopoverContentProps } from '@radix-ui/react-popover';
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface NotesPopoverProps {
   noteKey: string;
@@ -19,13 +20,19 @@ interface NotesPopoverProps {
 }
 
 const NotesPopover = ({ noteKey, title, isOpen, onOpenChange, refreshKey, children, side = "right", align = "start" }: NotesPopoverProps) => {
+  const { currentUserProfile } = useRole(); // Get current user profile
+
+  if (!currentUserProfile) {
+    return null; // Or render a placeholder if user is not logged in
+  }
+
   return (
     <Popover open={isOpen} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         {children}
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" side={side} align={align}> {/* Pass side and align */}
-        <NotesSection noteKey={noteKey} title={title} refreshKey={refreshKey} />
+        <NotesSection noteKey={noteKey} title={title} userId={currentUserProfile.id} refreshKey={refreshKey} />
       </PopoverContent>
     </Popover>
   );

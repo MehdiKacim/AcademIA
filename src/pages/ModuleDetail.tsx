@@ -18,7 +18,8 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Course, Module, ModuleSection, loadCourses } from "@/lib/courseData";
+import { Course, Module, ModuleSection } from "@/lib/dataModels"; // Corrected import path
+import { loadCourses } from "@/lib/courseData"; // Keep loadCourses from courseData
 import { useRole } from '@/contexts/RoleContext';
 import { getStudentCourseProgress, upsertStudentCourseProgress } from '@/lib/studentData';
 import QuizComponent from "@/components/QuizComponent";

@@ -256,7 +256,10 @@ const ClassManagementPage = () => {
                           </div>
                           {cls.creator_ids.length > 0 && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              Professeurs: {cls.creator_ids.map(creatorId => getUserFullName(creatorId)).join(', ')}
+                              Professeurs: {cls.creator_ids.map(creatorId => {
+                                const creatorProfile = allProfiles.find(p => p.id === creatorId);
+                                return creatorProfile ? `${creatorProfile.first_name} ${creatorProfile.last_name}` : 'N/A';
+                              }).join(', ')}
                             </p>
                           )}
                         </div>
@@ -286,8 +289,8 @@ const ClassManagementPage = () => {
               studentsInSelectedClass.map(student => (
                 <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
-                    <p className="font-medium">{getUserFullName(student.id)} <span className="text-sm text-muted-foreground">(@{getUserUsername(student.id)})</span></p>
-                    <p className="text-sm text-muted-foreground">{getUserEmail(student.id)}</p>
+                    <p className="font-medium">{student.first_name} {student.last_name} <span className="text-sm text-muted-foreground">(@{student.username})</span></p>
+                    <p className="text-sm text-muted-foreground">{student.email}</p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>

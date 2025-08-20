@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Lock, CheckCircle, ArrowDown, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Course, Module } from "@/lib/courseData";
+import { Course, Module } from "@/lib/dataModels"; // Corrected import path
 import { StudentCourseProgress } from '@/lib/dataModels'; // Import StudentCourseProgress type
 
 interface CourseModuleListProps {

@@ -8,7 +8,7 @@ import { useRole } from "@/contexts/RoleContext"; // Import useRole
 
 interface NavItem {
   to?: string;
-  icon: React.ElementType;
+  icon?: React.ElementType; // Made optional
   label: string;
   type?: 'link' | 'trigger'; // 'trigger' for items that open a sub-menu
   items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[]; // Sub-items for dropdown/trigger
@@ -79,7 +79,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
                 )
               }
             >
-              <item.icon className="h-4 w-4 mb-1" />
+              {item.icon && <item.icon className="h-4 w-4 mb-1" />}
               {item.label}
               {item.badge !== undefined && item.badge > 0 && (
                 <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
@@ -97,7 +97,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
               onClick={item.onClick}
               className="flex flex-col items-center py-1 px-1 rounded-md text-[0.65rem] font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[70px]"
             >
-              <item.icon className="h-4 w-4 mb-1" />
+              {item.icon && <item.icon className="h-4 w-4 mb-1" />}
               {item.label}
             </Button>
           );
