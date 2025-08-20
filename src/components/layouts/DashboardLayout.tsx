@@ -100,16 +100,13 @@ const DashboardLayout = () => {
   const getCoursesSubNavItems = (): NavItem[] => [
     { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
     { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
-    { to: "/create-course", icon: PlusSquare, label: "Créer un cours", type: 'link' },
+    { to: "/create-course", label: "Créer un cours", icon: PlusSquare },
   ];
 
   // Determine which set of items to display in the header
   const navItemsToDisplay = currentNavLevel === 'courses' && currentRole === 'creator'
     ? getCoursesSubNavItems()
     : getMainNavItems();
-
-  // For BottomNavigationBar, we now pass the full hierarchical structure
-  const bottomNavItems = getMainNavItems();
 
 
   return (
@@ -151,8 +148,8 @@ const DashboardLayout = () => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {/* Global Search Button (Desktop only) */}
-          {!isMobile && (
+          {/* Global Search Button (Desktop only) - Conditional on currentUser */}
+          {!isMobile && currentUser && (
             <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
               <Search className="h-5 w-5" />
               <span className="sr-only">Recherche globale</span>
@@ -191,10 +188,10 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
-      <BottomNavigationBar navItems={bottomNavItems} onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)} />
-      <AiAPersistentChat />
-      <FloatingAiAChatButton />
-      <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />
+      {/* Pass currentUser to BottomNavigationBar */}
+      <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)} currentUser={currentUser} />
+      {/* GlobalSearchOverlay - Conditional on currentUser */}
+      {currentUser && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
     </div>
   );
 };

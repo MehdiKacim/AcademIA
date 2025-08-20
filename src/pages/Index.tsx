@@ -24,7 +24,7 @@ import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
 import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import GlobalSearchOverlay from "@/components/GlobalSearchOverlay"; // Import GlobalSearchOverlay
+import { useRole } from "@/contexts/RoleContext"; // Import useRole
 
 interface IndexNavItem { // Define a specific interface for Index page nav items
   label: string;
@@ -37,7 +37,7 @@ interface IndexNavItem { // Define a specific interface for Index page nav items
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
-  const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false); // New state for global search
+  // Removed isGlobalSearchOverlayOpen state
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -45,6 +45,8 @@ const Index = () => {
     aiaBot: useRef<HTMLDivElement>(null),
     methodologie: useRef<HTMLDivElement>(null),
   };
+
+  const { currentUser } = useRole(); // Get currentUser from context
 
   useEffect(() => {
     const observerOptions = {
@@ -271,8 +273,9 @@ const Index = () => {
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
       />
-      <BottomNavigationBar navItems={indexNavItems} onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)} />
-      <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />
+      {/* Pass currentUser to BottomNavigationBar, and remove onOpenGlobalSearch as it's not needed here */}
+      <BottomNavigationBar navItems={indexNavItems} onOpenGlobalSearch={() => {}} currentUser={currentUser} />
+      {/* GlobalSearchOverlay is now only rendered in DashboardLayout */}
     </div>
   );
 };

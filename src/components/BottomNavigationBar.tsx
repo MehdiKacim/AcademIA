@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowLeft } from "lucide-react";
+import { useRole } from "@/contexts/RoleContext"; // Import useRole
 
 interface NavItem {
   to?: string;
@@ -17,9 +18,10 @@ interface NavItem {
 interface BottomNavigationBarProps {
   navItems: NavItem[]; // This now receives the full hierarchical structure
   onOpenGlobalSearch: () => void;
+  currentUser: any; // Accept currentUser prop
 }
 
-const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationBarProps) => {
+const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [currentMobileNavLevel, setCurrentMobileNavLevel] = useState<string | null>(null);
@@ -99,15 +101,17 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
         return null;
       })}
 
-      {/* Dedicated Global Search Button for mobile, always visible */}
-      <Button
-        variant="ghost"
-        onClick={onOpenGlobalSearch}
-        className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
-      >
-        <Search className="h-5 w-5 mb-1" />
-        Recherche
-      </Button>
+      {/* Dedicated Global Search Button for mobile, conditional on currentUser */}
+      {currentUser && (
+        <Button
+          variant="ghost"
+          onClick={onOpenGlobalSearch}
+          className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+        >
+          <Search className="h-5 w-5 mb-1" />
+          Recherche
+        </Button>
+      )}
     </div>
   );
 };
