@@ -63,7 +63,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 p-2 shadow-lg md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center border-t backdrop-blur-lg bg-background/80 p-2 shadow-lg md:hidden overflow-x-auto flex-nowrap">
       {itemsToRender.map((item) => {
         if (item.type === 'link' && item.to) {
           return (
@@ -72,7 +72,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors relative", // Added relative for badge positioning
+                  "flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 min-w-[70px]",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -95,7 +95,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
               key={item.label}
               variant="ghost"
               onClick={item.onClick}
-              className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+              className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[70px]"
             >
               <item.icon className="h-5 w-5 mb-1" />
               {item.label}
@@ -110,7 +110,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
         <Button
           variant="ghost"
           onClick={onOpenGlobalSearch}
-          className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+          className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[70px]"
         >
           <Search className="h-5 w-5 mb-1" />
           Recherche
