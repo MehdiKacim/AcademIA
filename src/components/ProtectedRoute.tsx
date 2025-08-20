@@ -7,9 +7,14 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
-  const { currentUser, currentRole } = useRole();
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
 
-  if (!currentUser) {
+  if (isLoadingUser) {
+    // Optionally render a loading spinner or null while user status is being determined
+    return null; // Or a loading component if you want to show something
+  }
+
+  if (!currentUserProfile) {
     // User is not logged in, redirect to the home page
     return <Navigate to="/" replace />;
   }

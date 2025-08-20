@@ -18,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRole } from "@/contexts/RoleContext";
 import { getProfileByUsername, getProfileByEmail } from "@/lib/studentData"; // Import profile lookup functions
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
@@ -32,8 +31,8 @@ interface LoginModalProps {
 const LoginModal = ({ isOpen, onClose, onRegisterClick }: LoginModalProps) => {
   const [email, setEmail] = useState(""); // Supabase uses email for login
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-  const { setCurrentUserProfile } = useRole();
+  // const navigate = useNavigate(); // No longer needed for direct navigation
+  // const { setCurrentUserProfile } = useRole(); // No longer needed for direct profile setting
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -45,17 +44,11 @@ const LoginModal = ({ isOpen, onClose, onRegisterClick }: LoginModalProps) => {
       console.error("Login error:", error);
       showError(`Erreur de connexion: ${error.message}`);
     } else if (data.user) {
-      // Fetch profile after successful login
-      const profile = await getProfileByUsername(data.user.user_metadata.username); // Assuming username is in user_metadata
-      if (profile) {
-        setCurrentUserProfile(profile);
-        showSuccess(`Bienvenue, ${profile.username} !`);
-        navigate("/dashboard");
-        onClose();
-      } else {
-        showError("Profil utilisateur introuvable après connexion.");
-        await supabase.auth.signOut(); // Log out if profile not found
-      }
+      // User successfully signed in. The RoleContext's onAuthStateChange listener
+      // will now detect this and fetch the profile.
+      // We no longer need to manually set the profile or navigate here.
+      showSuccess(`Connexion réussie !`);
+      onClose(); // Just close the modal. The ProtectedRoute will handle access.
     }
   };
 
