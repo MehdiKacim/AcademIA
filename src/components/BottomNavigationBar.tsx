@@ -49,7 +49,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
         // Always show 'Retour' button when in a sub-level
         <Button
           variant="ghost"
-          onClick={() => setCurrentMobileNavLevel(null)}
+          onClick={() => setCurrentMobileNavLevel(null)} // This is correct for 'Retour'
           className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-5 w-5 mb-1" />
@@ -79,10 +79,25 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch }: BottomNavigationB
           );
         }
         // Render as a Button if it's a 'trigger' type with an 'onClick' prop
+        // Special handling for 'Cours' to update internal state
+        if (item.type === 'trigger' && item.label === 'Cours') {
+          return (
+            <Button
+              key={item.label}
+              variant="ghost"
+              onClick={() => setCurrentMobileNavLevel('courses')} // Update internal state
+              className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
+            >
+              <item.icon className="h-5 w-5 mb-1" />
+              {item.label}
+            </Button>
+          );
+        }
+        // Generic trigger for other cases (like Index page scroll)
         if (item.type === 'trigger' && item.onClick) {
           return (
             <Button
-              key={item.label} // Use label as key for buttons without 'to'
+              key={item.label}
               variant="ghost"
               onClick={item.onClick} // Use the onClick provided by the item
               className="flex flex-col items-center p-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground"
