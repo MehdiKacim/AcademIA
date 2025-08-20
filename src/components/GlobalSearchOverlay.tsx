@@ -135,7 +135,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed inset-x-0 top-0 z-[1000] bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8"
+          className="fixed inset-x-0 top-20 z-[999] bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8"
         >
           <div className="max-w-4xl mx-auto flex flex-col gap-4">
             <div className="flex items-center gap-4">
@@ -167,7 +167,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
               </Button>
             </div>
 
-            <div className="max-h-[calc(100vh-180px)] overflow-y-auto pr-2">
+            <div className="max-h-[calc(100vh-10rem)] overflow-y-auto pr-2"> {/* Adjusted max-height */}
               {searchQuery.trim() && searchResults.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
               ) : (
