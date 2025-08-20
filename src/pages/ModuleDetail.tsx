@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'; // Ajout de useLocation
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText, HelpCircle } from "lucide-react";
@@ -7,7 +7,7 @@ import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
 import QuickNoteDialog from "@/components/QuickNoteDialog";
-import { cn } "@/lib/utils";
+import { cn } from "@/lib/utils"; // Correction: Ajout de 'from'
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
 import NotesSection from "@/components/NotesSection";
@@ -18,20 +18,18 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { dummyCourses, Course, Module, ModuleSection, updateCourseInStorage, loadCourses } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses
-import QuizComponent from "@/components/QuizComponent"; // Import QuizComponent
+import { dummyCourses, Course, Module, ModuleSection, updateCourseInStorage, loadCourses } from "@/lib/courseData";
+import QuizComponent from "@/components/QuizComponent";
 
 const ModuleDetail = () => {
   const { courseId, moduleIndex } = useParams<{ courseId: string; moduleIndex: string }>();
   const navigate = useNavigate();
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
   const isMobile = useIsMobile();
-  const location = useLocation(); // Obtenir l'objet location
+  const location = useLocation();
 
-  // Charger les cours depuis le stockage local pour s'assurer d'avoir la dernière version
   const [currentCourses, setCurrentCourses] = useState<Course[]>(loadCourses());
 
-  // Trouver le cours et le module basés sur les paramètres d'URL
   const course = currentCourses.find(c => c.id === courseId);
   const currentModuleIndex = parseInt(moduleIndex || '0', 10);
   const module = course?.modules[currentModuleIndex];
@@ -44,10 +42,9 @@ const ModuleDetail = () => {
 
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Recharger les cours depuis le stockage local si dummyCourses change (par exemple, après une création de cours)
   useEffect(() => {
     setCurrentCourses(loadCourses());
-  }, [dummyCourses]); // Dépendance à dummyCourses pour recharger si un cours est créé/modifié ailleurs
+  }, [dummyCourses]);
 
   useEffect(() => {
     if (course && module) {
@@ -63,18 +60,15 @@ const ModuleDetail = () => {
     };
   }, [courseId, moduleIndex, course, module, setCourseContext, setModuleContext]);
 
-  // Nouveau useEffect pour le défilement vers la section
   useEffect(() => {
     if (location.hash) {
-      const sectionId = location.hash.substring(1); // Supprimer le '#'
+      const sectionId = location.hash.substring(1);
       const element = document.getElementById(sectionId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Optionnel: supprimer le hash de l'URL après le défilement pour un URL plus propre
-        // navigate(location.pathname, { replace: true });
       }
     }
-  }, [location.hash, location.pathname]); // Exécuter lorsque le hash ou le chemin change
+  }, [location.hash, location.pathname]);
 
   const scrollToSection = useCallback((sectionIdx: number) => {
     if (sectionRefs.current[sectionIdx]) {
@@ -98,7 +92,6 @@ const ModuleDetail = () => {
     );
   }
 
-  // Vérifier si le module actuel est accessible (le précédent est complété ou c'est le premier)
   const isModuleAccessible = currentModuleIndex === 0 || course.modules[currentModuleIndex - 1]?.isCompleted;
 
   if (!isModuleAccessible) {
@@ -117,7 +110,6 @@ const ModuleDetail = () => {
     );
   }
 
-  // Fonction pour marquer une section comme complétée
   const markSectionComplete = (sectionIdx: number, quizResult?: { score: number; total: number; passed: boolean }) => {
     const updatedCourse = { ...course };
     const updatedModule = { ...module };
@@ -126,24 +118,22 @@ const ModuleDetail = () => {
         return {
           ...sec,
           isCompleted: true,
-          quizResult: quizResult || sec.quizResult, // Conserver ou mettre à jour le résultat du quiz
+          quizResult: quizResult || sec.quizResult,
         };
       }
       return sec;
     });
 
-    // Mettre à jour le module dans le cours
     updatedCourse.modules = updatedCourse.modules.map((mod, idx) =>
       idx === currentModuleIndex ? updatedModule : mod
     );
 
-    updateCourseInStorage(updatedCourse); // Sauvegarder dans le localStorage
-    setCurrentCourses(loadCourses()); // Recharger l'état local pour refléter les changements
+    updateCourseInStorage(updatedCourse);
+    setCurrentCourses(loadCourses());
     showSuccess(`Section "${updatedModule.sections[sectionIdx].title}" marquée comme terminée !`);
   };
 
   const handleMarkModuleComplete = () => {
-    // Vérifier si toutes les sections du module sont complétées
     const allSectionsCompleted = module.sections.every(section => section.isCompleted);
 
     if (!allSectionsCompleted) {
@@ -157,8 +147,8 @@ const ModuleDetail = () => {
         idx === currentModuleIndex ? { ...mod, isCompleted: true } : mod
       ),
     };
-    updateCourseInStorage(updatedCourse); // Sauvegarder dans le localStorage
-    setCurrentCourses(loadCourses()); // Recharger l'état local
+    updateCourseInStorage(updatedCourse);
+    setCurrentCourses(loadCourses());
 
     showSuccess(`Module "${module.title}" marqué comme terminé !`);
 
@@ -176,8 +166,6 @@ const ModuleDetail = () => {
       markSectionComplete(sectionIdx, { score, total, passed });
     } else {
       showError(`Quiz terminé ! Votre score : ${score}/${total}. Vous n'avez pas atteint le seuil de réussite.`);
-      // Ne pas marquer la section comme complétée si le quiz est échoué
-      // Mais stocker le résultat pour l'affichage
       const updatedCourse = { ...course };
       const updatedModule = { ...module };
       updatedModule.sections = updatedModule.sections.map((sec, idx) => {
@@ -226,7 +214,6 @@ const ModuleDetail = () => {
 
   const moduleNoteKey = generateNoteKey('module', course.id, currentModuleIndex);
 
-  // Vérifier si toutes les sections du module sont complétées pour activer le bouton "Marquer comme terminé"
   const allSectionsInModuleCompleted = module.sections.every(section => section.isCompleted);
 
   return (
@@ -260,7 +247,6 @@ const ModuleDetail = () => {
             <CardContent>
               {module.sections.map((section, index) => {
                 const sectionNoteKey = generateNoteKey('section', course.id, currentModuleIndex, index);
-                // Une section est accessible si elle est la première ou si la précédente est complétée
                 const isSectionAccessible = index === 0 || module.sections[index - 1]?.isCompleted;
 
                 return (
@@ -268,13 +254,13 @@ const ModuleDetail = () => {
                     <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `section-${course.id}-${currentModuleIndex}-${index}` : null)}>
                       <ContextMenuTrigger className="block w-full">
                         <div
-                          id={`section-${index}`} {/* Ajout de l'ID pour le défilement */}
+                          id={`section-${index}`} // Ajout de l'ID pour le défilement
                           ref={el => sectionRefs.current[index] = el}
                           className={cn(
                             "p-4 border rounded-md cursor-context-menu",
                             highlightedElementId === `section-${course.id}-${currentModuleIndex}-${index}` ? "bg-primary/10" : "bg-muted/10",
-                            !isSectionAccessible && "opacity-50 cursor-not-allowed", // Visuellement bloqué
-                            section.type === 'quiz' && "border-dashed border-primary/50 bg-primary/5" // Style pour les quiz
+                            !isSectionAccessible && "opacity-50 cursor-not-allowed",
+                            section.type === 'quiz' && "border-dashed border-primary/50 bg-primary/5"
                           )}
                         >
                           <div className="flex items-center justify-between">
@@ -309,14 +295,14 @@ const ModuleDetail = () => {
                                 <div className="my-4">
                                   <QuizComponent
                                     questions={section.questions}
-                                    passingScore={section.passingScore || 0} // Passer le passingScore
+                                    passingScore={section.passingScore || 0}
                                     onQuizComplete={(score, total, passed) => handleQuizComplete(score, total, passed, index)}
                                   />
                                 </div>
                               ) : (
                                 <p className="text-muted-foreground mt-2">{section.content}</p>
                               )}
-                              {!section.isCompleted && section.type !== 'quiz' && ( // Bouton "Marquer comme lu" pour les sections non-quiz
+                              {!section.isCompleted && section.type !== 'quiz' && (
                                 <Button
                                   onClick={() => markSectionComplete(index)}
                                   className="mt-4"
@@ -401,7 +387,6 @@ const ModuleDetail = () => {
         />
       )}
 
-      {/* Bouton flottant pour ajouter une note rapide pour le module entier */}
       <div className={cn(
         "fixed z-40 p-4",
         isMobile ? "bottom-20 left-4" : "bottom-4 left-4"
