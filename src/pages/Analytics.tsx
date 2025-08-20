@@ -18,39 +18,80 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { loadCourses } from "@/lib/courseData"; // Import loadCourses
-import { dummyStudents } from "@/lib/studentData"; // Import dummyStudents
+import { loadCourses, loadEstablishments, loadCurricula, loadClasses } from "@/lib/courseData";
+import { loadUsers, loadStudents, loadCreatorProfiles, loadTutorProfiles, getStudentProfileByUserId } from "@/lib/studentData";
+import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 
 const Analytics = () => {
-  const { currentRole } = useRole();
-  const dummyCourses = loadCourses(); // Charger les cours depuis le localStorage
+  const { currentUser, currentRole } = useRole();
+  const courses = loadCourses();
+  const users = loadUsers();
+  const studentProfiles = loadStudents();
+
+  // Helper to get full name from userId
+  const getUserFullName = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    return user ? `${user.firstName} ${user.lastName}` : 'N/A';
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Accès Restreint
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez vous connecter pour accéder aux analytiques.
+        </p>
+      </div>
+    );
+  }
 
   // Données fictives pour les analytiques textuelles
   const studentAnalytics = {
-    overallProgress: "75%", // Will be calculated
-    strongestSubject: "Algorithmes",
-    weakestSubject: "Bases de données",
-    completedCourses: 0, // Will be calculated
-    hoursSpent: 45,
+    overallProgress: "0%",
+    strongestSubject: "N/A",
+    weakestSubject: "N/A",
+    completedCourses: 0,
+    hoursSpent: 0,
   };
 
   const tutorAnalytics = {
-    supervisedStudents: dummyStudents.length, // Utiliser le nombre réel d'élèves fictifs
-    studentsAtRisk: 1,
-    averageStudentProgress: "72%",
-    recentAlerts: [
-      `${dummyStudents[0]?.firstName} ${dummyStudents[0]?.lastName} a des difficultés en algèbre.`, // Changement
-      `${dummyStudents[1]?.firstName} ${dummyStudents[1]?.lastName} a terminé le module 3 de Physique.`, // Changement
-    ],
+    supervisedStudents: studentProfiles.length,
+    studentsAtRisk: 0,
+    averageStudentProgress: "0%",
+    recentAlerts: [],
   };
 
   // Calculate dynamic data for student role
   if (currentRole === 'student') {
-    const completedCourses = dummyCourses.filter(c => c.modules.every(m => m.isCompleted));
-    studentAnalytics.completedCourses = completedCourses.length;
-    const totalModulesCompleted = dummyCourses.reduce((acc, course) => acc + course.modules.filter(m => m.isCompleted).length, 0);
-    const totalModules = dummyCourses.reduce((acc, course) => acc + course.modules.length, 0);
-    studentAnalytics.overallProgress = totalModules > 0 ? `${Math.round((totalModulesCompleted / totalModules) * 100)}%` : "0%";
+    const studentProfile = getStudentProfileByUserId(currentUser.id);
+    if (studentProfile) {
+      const completedCourses = courses.filter(c => {
+        const progress = studentProfile.enrolledCoursesProgress.find(ec => ec.courseId === c.id);
+        return progress && progress.modulesProgress.every(m => m.isCompleted);
+      });
+      studentAnalytics.completedCourses = completedCourses.length;
+
+      const totalModulesCompleted = studentProfile.enrolledCoursesProgress.reduce((acc, courseProgress) =>
+        acc + courseProgress.modulesProgress.filter(m => m.isCompleted).length, 0
+      );
+      const totalModulesAvailable = courses.reduce((acc, course) => acc + course.modules.length, 0);
+      studentAnalytics.overallProgress = totalModulesAvailable > 0 ? `${Math.round((totalModulesCompleted / totalModulesAvailable) * 100)}%` : "0%";
+
+      // Dummy data for strongest/weakest subject and hours spent
+      studentAnalytics.strongestSubject = "Algorithmes";
+      studentAnalytics.weakestSubject = "Bases de données";
+      studentAnalytics.hoursSpent = 45;
+    }
+  } else if (currentRole === 'tutor') {
+    // Dummy data for tutor analytics
+    tutorAnalytics.studentsAtRisk = studentProfiles.filter(s => s.enrolledCoursesProgress.some(ec => ec.modulesProgress.some(mp => mp.sectionsProgress.some(sp => sp.quizResult && !sp.quizResult.passed)))).length;
+    tutorAnalytics.averageStudentProgress = "72%"; // Placeholder
+    tutorAnalytics.recentAlerts = [
+      `${getUserFullName(studentProfiles[0]?.userId)} a des difficultés en algèbre.`,
+      `${getUserFullName(studentProfiles[1]?.userId)} a terminé le module 3 de Physique.`,
+    ].filter(Boolean); // Filter out undefined if studentProfiles are empty
   }
 
   // Données fictives pour les graphiques
@@ -62,8 +103,8 @@ const Analytics = () => {
     { name: 'Mai', progress: 80 },
   ];
 
-  const tutorStudentPerformanceData = dummyStudents.map(student => ({ // Utiliser les vrais élèves
-    name: `${student.firstName} ${student.lastName}`,
+  const tutorStudentPerformanceData = studentProfiles.map(student => ({
+    name: getUserFullName(student.userId),
     score: Math.floor(Math.random() * 40) + 60, // Scores aléatoires entre 60 et 100
   }));
 
@@ -132,8 +173,9 @@ const Analytics = () => {
         </>
       );
     } else if (currentRole === 'creator') {
-      // This content is now moved to CreatorAnalyticsSection.tsx
-      return null;
+      return (
+        <CreatorAnalyticsSection />
+      );
     } else if (currentRole === 'tutor') {
       return (
         <>

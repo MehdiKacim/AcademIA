@@ -1,6 +1,5 @@
-import { dummyCourses, ModuleSection, Module, Course } from "./courseData";
-import type { EntityType } from "./courseData";
-
+import { Course } from "./dataModels"; // Import Course interface
+import { loadCourses } from "./courseData"; // Import loadCourses
 /**
  * Génère une clé unique pour stocker les notes dans le localStorage.
  * @param entityType Le type d'entité (cours, module ou section).
@@ -110,6 +109,8 @@ export interface AggregatedNote {
   notes: string[];
 }
 
+type EntityType = 'course' | 'module' | 'section'; // Re-declare or import if not already globally available
+
 /**
  * Analyse une clé de note pour extraire le type d'entité, l'ID et l'index du module/section.
  */
@@ -149,8 +150,9 @@ export const getAllNoteKeys = (): string[] => {
 
 /**
  * Retrieves all notes from localStorage and aggregates them with context.
+ * @param courses The list of all courses to resolve context titles.
  */
-export const getAllNotesData = (): AggregatedNote[] => {
+export const getAllNotesData = (courses: Course[]): AggregatedNote[] => {
   const allKeys = getAllNoteKeys();
   const aggregatedNotes: AggregatedNote[] = [];
 
@@ -160,7 +162,7 @@ export const getAllNotesData = (): AggregatedNote[] => {
       const notes = getNotes(key);
       if (notes.length > 0) {
         let context = '';
-        const course = dummyCourses.find(c => c.id === parsedKey.entityId);
+        const course = courses.find(c => c.id === parsedKey.entityId);
 
         if (course) {
           if (parsedKey.entityType === 'course') {

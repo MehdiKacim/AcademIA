@@ -11,30 +11,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
-import { Student } from "@/lib/dataModels"; // Import Student type
+import { User } from "@/lib/dataModels"; // Import User type
 
 interface EditProfileDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  currentUser: Student;
-  onSave: (updatedUser: Student) => void;
+  currentUser: User; // Now expects a User object
+  onSave: (updatedUser: User) => void;
 }
 
 const EditProfileDialog = ({ isOpen, onClose, currentUser, onSave }: EditProfileDialogProps) => {
-  const [firstName, setFirstName] = useState(currentUser.firstName);
-  const [lastName, setLastName] = useState(currentUser.lastName);
+  const [firstName, setFirstName] = useState(currentUser.firstName || ''); // Add firstName
+  const [lastName, setLastName] = useState(currentUser.lastName || '');   // Add lastName
+  const [username, setUsername] = useState(currentUser.username);
   const [email, setEmail] = useState(currentUser.email);
 
   useEffect(() => {
-    if (isOpen) {
-      setFirstName(currentUser.firstName);
-      setLastName(currentUser.lastName);
+    if (isOpen && currentUser) {
+      setFirstName(currentUser.firstName || '');
+      setLastName(currentUser.lastName || '');
+      setUsername(currentUser.username);
       setEmail(currentUser.email);
     }
   }, [isOpen, currentUser]);
 
   const handleSave = () => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !username.trim() || !email.trim()) {
       showError("Tous les champs sont requis.");
       return;
     }
@@ -43,10 +45,11 @@ const EditProfileDialog = ({ isOpen, onClose, currentUser, onSave }: EditProfile
       return;
     }
 
-    const updatedUser: Student = {
+    const updatedUser: User = {
       ...currentUser,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      username: username.trim(),
       email: email.trim(),
     };
     onSave(updatedUser);
@@ -83,6 +86,17 @@ const EditProfileDialog = ({ isOpen, onClose, currentUser, onSave }: EditProfile
               id="lastName"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="username" className="text-right">
+              Nom d'utilisateur
+            </Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="col-span-3"
             />
           </div>

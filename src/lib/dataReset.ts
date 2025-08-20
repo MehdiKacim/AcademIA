@@ -1,5 +1,5 @@
-import { resetCourses, resetCurricula } from "./courseData";
-import { resetStudents } from "./studentData";
+import { resetCourses, resetCurricula, resetEstablishments, resetClasses } from "./courseData";
+import { resetUsers, resetStudentProfiles, resetCreatorProfiles, resetTutorProfiles } from "./studentData";
 
 export const clearAllAppData = () => {
   // Clear all notes (keys starting with 'notes_')
@@ -13,5 +13,10 @@ export const clearAllAppData = () => {
   // Call specific reset functions for each data type
   resetCourses();
   resetCurricula();
-  resetStudents();
+  resetEstablishments();
+  resetClasses();
+  resetUsers();
+  resetStudentProfiles();
+  resetCreatorProfiles();
+  resetTutorProfiles();
 };

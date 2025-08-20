@@ -18,21 +18,29 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { dummyCourses, Course, Module, ModuleSection, updateCourseInStorage, loadCourses } from "@/lib/courseData";
+import { Course, Module, ModuleSection, loadCourses, updateCourseInStorage } from "@/lib/courseData";
+import { useRole } from '@/contexts/RoleContext';
+import { loadStudents, getStudentProfileByUserId, updateStudentProfile } from '@/lib/studentData';
 import QuizComponent from "@/components/QuizComponent";
 
 const ModuleDetail = () => {
   const { courseId, moduleIndex } = useParams<{ courseId: string; moduleIndex: string }>();
   const navigate = useNavigate();
+  const { currentUser, currentRole } = useRole();
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  const [currentCourses, setCurrentCourses] = useState<Course[]>(loadCourses());
+  const [courses, setCourses] = useState<Course[]>(loadCourses());
+  const [studentProfiles, setStudentProfiles] = useState(loadStudents());
 
-  const course = currentCourses.find(c => c.id === courseId);
+  const course = courses.find(c => c.id === courseId);
   const currentModuleIndex = parseInt(moduleIndex || '0', 10);
   const module = course?.modules[currentModuleIndex];
+
+  const studentProfile = currentUser && currentRole === 'student' ? getStudentProfileByUserId(currentUser.id) : undefined;
+  const courseProgress = studentProfile?.enrolledCoursesProgress.find(cp => cp.courseId === courseId);
+  const moduleProgress = courseProgress?.modulesProgress.find(mp => mp.moduleIndex === currentModuleIndex);
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
@@ -43,8 +51,9 @@ const ModuleDetail = () => {
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    setCurrentCourses(loadCourses());
-  }, [dummyCourses]);
+    setCourses(loadCourses());
+    setStudentProfiles(loadStudents());
+  }, [courseId, moduleIndex]); // Re-load if courseId or moduleIndex changes
 
   useEffect(() => {
     if (course && module) {
@@ -59,17 +68,6 @@ const ModuleDetail = () => {
       setModuleContext(null);
     };
   }, [courseId, moduleIndex, course, module, setCourseContext, setModuleContext]);
-
-  // Ancien useEffect pour le défilement automatique, maintenant supprimé
-  // useEffect(() => {
-  //   if (location.hash) {
-  //     const sectionId = location.hash.substring(1);
-  //     const element = document.getElementById(sectionId);
-  //     if (element) {
-  //       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  //     }
-  //   }
-  // }, [location.hash, location.pathname]);
 
   const scrollToSection = useCallback((sectionIdx: number) => {
     if (sectionRefs.current[sectionIdx]) {
@@ -93,7 +91,10 @@ const ModuleDetail = () => {
     );
   }
 
-  const isModuleAccessible = currentModuleIndex === 0 || course.modules[currentModuleIndex - 1]?.isCompleted;
+  // Determine module accessibility based on student progress
+  const isModuleAccessible = currentRole === 'student'
+    ? (courseProgress?.modulesProgress.find(mp => mp.moduleIndex === currentModuleIndex - 1)?.isCompleted || currentModuleIndex === 0)
+    : true; // Always accessible for non-students (creators/tutors)
 
   if (!isModuleAccessible) {
     return (
@@ -112,9 +113,12 @@ const ModuleDetail = () => {
   }
 
   const markSectionComplete = (sectionIdx: number, quizResult?: { score: number; total: number; passed: boolean }) => {
-    const updatedCourse = { ...course };
-    const updatedModule = { ...module };
-    updatedModule.sections = updatedModule.sections.map((sec, idx) => {
+    if (!studentProfile || !courseProgress || !moduleProgress) {
+      showError("Impossible de marquer la section comme terminée. Profil étudiant non trouvé.");
+      return;
+    }
+
+    const updatedSectionsProgress = moduleProgress.sectionsProgress.map((sec, idx) => {
       if (idx === sectionIdx) {
         return {
           ...sec,
@@ -125,31 +129,66 @@ const ModuleDetail = () => {
       return sec;
     });
 
-    updatedCourse.modules = updatedCourse.modules.map((mod, idx) =>
-      idx === currentModuleIndex ? updatedModule : mod
+    const updatedModuleProgress = {
+      ...moduleProgress,
+      sectionsProgress: updatedSectionsProgress,
+    };
+
+    const updatedModulesProgress = courseProgress.modulesProgress.map((mod, idx) =>
+      idx === currentModuleIndex ? updatedModuleProgress : mod
     );
 
-    updateCourseInStorage(updatedCourse);
-    setCurrentCourses(loadCourses());
-    showSuccess(`Section "${updatedModule.sections[sectionIdx].title}" marquée comme terminée !`);
+    const updatedCourseProgress = {
+      ...courseProgress,
+      modulesProgress: updatedModulesProgress,
+    };
+
+    const updatedStudentProfile = {
+      ...studentProfile,
+      enrolledCoursesProgress: studentProfile.enrolledCoursesProgress.map(cp =>
+        cp.courseId === courseId ? updatedCourseProgress : cp
+      ),
+    };
+
+    updateStudentProfile(updatedStudentProfile);
+    setStudentProfiles(loadStudents()); // Refresh local state
+    showSuccess(`Section "${module.sections[sectionIdx].title}" marquée comme terminée !`);
   };
 
   const handleMarkModuleComplete = () => {
-    const allSectionsCompleted = module.sections.every(section => section.isCompleted);
+    if (!studentProfile || !courseProgress || !moduleProgress) {
+      showError("Impossible de marquer le module comme terminé. Profil étudiant non trouvé.");
+      return;
+    }
+
+    const allSectionsCompleted = moduleProgress.sectionsProgress.every(section => section.isCompleted);
 
     if (!allSectionsCompleted) {
       showError("Veuillez compléter toutes les sections de ce module avant de le marquer comme terminé.");
       return;
     }
 
-    const updatedCourse = {
-      ...course,
-      modules: course.modules.map((mod, idx) =>
-        idx === currentModuleIndex ? { ...mod, isCompleted: true } : mod
+    const updatedModuleProgress = { ...moduleProgress, isCompleted: true };
+
+    const updatedModulesProgress = courseProgress.modulesProgress.map((mod, idx) =>
+      idx === currentModuleIndex ? updatedModuleProgress : mod
+    );
+
+    const updatedCourseProgress = {
+      ...courseProgress,
+      modulesProgress: updatedModulesProgress,
+      isCompleted: updatedModulesProgress.every(mp => mp.isCompleted), // Mark course complete if all modules are
+    };
+
+    const updatedStudentProfile = {
+      ...studentProfile,
+      enrolledCoursesProgress: studentProfile.enrolledCoursesProgress.map(cp =>
+        cp.courseId === courseId ? updatedCourseProgress : cp
       ),
     };
-    updateCourseInStorage(updatedCourse);
-    setCurrentCourses(loadCourses());
+
+    updateStudentProfile(updatedStudentProfile);
+    setStudentProfiles(loadStudents()); // Refresh local state
 
     showSuccess(`Module "${module.title}" marqué comme terminé !`);
 
@@ -167,9 +206,10 @@ const ModuleDetail = () => {
       markSectionComplete(sectionIdx, { score, total, passed });
     } else {
       showError(`Quiz terminé ! Votre score : ${score}/${total}. Vous n'avez pas atteint le seuil de réussite.`);
-      const updatedCourse = { ...course };
-      const updatedModule = { ...module };
-      updatedModule.sections = updatedModule.sections.map((sec, idx) => {
+      // Update quiz result without marking section complete if failed
+      if (!studentProfile || !courseProgress || !moduleProgress) return;
+
+      const updatedSectionsProgress = moduleProgress.sectionsProgress.map((sec, idx) => {
         if (idx === sectionIdx) {
           return {
             ...sec,
@@ -178,11 +218,29 @@ const ModuleDetail = () => {
         }
         return sec;
       });
-      updatedCourse.modules = updatedCourse.modules.map((mod, idx) =>
-        idx === currentModuleIndex ? updatedModule : mod
+
+      const updatedModuleProgress = {
+        ...moduleProgress,
+        sectionsProgress: updatedSectionsProgress,
+      };
+
+      const updatedModulesProgress = courseProgress.modulesProgress.map((mod, idx) =>
+        idx === currentModuleIndex ? updatedModuleProgress : mod
       );
-      updateCourseInStorage(updatedCourse);
-      setCurrentCourses(loadCourses());
+
+      const updatedCourseProgress = {
+        ...courseProgress,
+        modulesProgress: updatedModulesProgress,
+      };
+
+      const updatedStudentProfile = {
+        ...studentProfile,
+        enrolledCoursesProgress: studentProfile.enrolledCoursesProgress.map(cp =>
+          cp.courseId === courseId ? updatedCourseProgress : cp
+        ),
+      };
+      updateStudentProfile(updatedStudentProfile);
+      setStudentProfiles(loadStudents()); // Refresh local state
     }
   };
 
@@ -209,13 +267,19 @@ const ModuleDetail = () => {
     setRefreshNotesSection(prev => prev + 1);
   }, []);
 
-  const totalModules = course.modules.length;
-  const completedModules = course.modules.filter(m => m.isCompleted).length;
-  const progressPercentage = Math.round((completedModules / totalModules) * 100);
+  // Calculate module progress for display
+  let moduleDisplayProgress = 0;
+  let moduleDisplayCompletedSections = 0;
+  const totalSectionsInModule = module.sections.length;
+
+  if (moduleProgress) {
+    moduleDisplayCompletedSections = moduleProgress.sectionsProgress.filter(s => s.isCompleted).length;
+    moduleDisplayProgress = totalSectionsInModule > 0 ? Math.round((moduleDisplayCompletedSections / totalSectionsInModule) * 100) : 0;
+  }
 
   const moduleNoteKey = generateNoteKey('module', course.id, currentModuleIndex);
 
-  const allSectionsInModuleCompleted = module.sections.every(section => section.isCompleted);
+  const allSectionsInModuleCompleted = moduleProgress?.sectionsProgress.every(section => section.isCompleted) || false;
 
   return (
     <div className="flex flex-col gap-8 max-w-screen-xl mx-auto">
@@ -238,17 +302,21 @@ const ModuleDetail = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{module.title}</span>
-                {module.isCompleted && <CheckCircle className="h-6 w-6 text-green-500" />}
+                {moduleProgress?.isCompleted && <CheckCircle className="h-6 w-6 text-green-500" />}
               </CardTitle>
               <CardDescription>
-                Module {currentModuleIndex + 1} sur {totalModules}
+                Module {currentModuleIndex + 1} sur {course.modules.length}
               </CardDescription>
-              <Progress value={progressPercentage} className="w-full mt-2" />
+              <Progress value={moduleDisplayProgress} className="w-full mt-2" />
             </CardHeader>
             <CardContent>
               {module.sections.map((section, index) => {
                 const sectionNoteKey = generateNoteKey('section', course.id, currentModuleIndex, index);
-                const isSectionAccessible = index === 0 || module.sections[index - 1]?.isCompleted;
+                const sectionProgress = moduleProgress?.sectionsProgress.find(sp => sp.sectionIndex === index);
+                const isSectionCompleted = sectionProgress?.isCompleted || false;
+                const quizResult = sectionProgress?.quizResult;
+
+                const isSectionAccessible = index === 0 || (moduleProgress?.sectionsProgress.find(sp => sp.sectionIndex === index - 1)?.isCompleted || false);
 
                 return (
                   <div key={index} className="mb-6">
@@ -268,11 +336,11 @@ const ModuleDetail = () => {
                             <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                               {section.type === 'quiz' && <HelpCircle className="h-5 w-5 text-primary" />}
                               <span>{section.title}</span>
-                              {section.isCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
+                              {isSectionCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
                             </h3>
-                            {section.quizResult && (
-                              <Badge variant={section.quizResult.passed ? "default" : "destructive"} className="text-sm">
-                                {section.quizResult.score}/{section.quizResult.total} ({((section.quizResult.score / section.quizResult.total) * 100).toFixed(0)}%) {section.quizResult.passed ? 'Réussi' : 'Échoué'}
+                            {quizResult && (
+                              <Badge variant={quizResult.passed ? "default" : "destructive"} className="text-sm">
+                                {quizResult.score}/{quizResult.total} ({((quizResult.score / quizResult.total) * 100).toFixed(0)}%) {quizResult.passed ? 'Réussi' : 'Échoué'}
                               </Badge>
                             )}
                           </div>
@@ -303,7 +371,7 @@ const ModuleDetail = () => {
                               ) : (
                                 <p className="text-muted-foreground mt-2">{section.content}</p>
                               )}
-                              {!section.isCompleted && section.type !== 'quiz' && (
+                              {!isSectionCompleted && section.type !== 'quiz' && (
                                 <Button
                                   onClick={() => markSectionComplete(index)}
                                   className="mt-4"
@@ -351,13 +419,13 @@ const ModuleDetail = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`)}
-                    disabled={currentModuleIndex === totalModules - 1 || !module.isCompleted}
+                    disabled={currentModuleIndex === course.modules.length - 1 || !moduleProgress?.isCompleted}
                   >
                     Suivant <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
                 <div className="flex gap-2">
-                  {!module.isCompleted && (
+                  {!moduleProgress?.isCompleted && (
                     <Button onClick={handleMarkModuleComplete} disabled={!allSectionsInModuleCompleted}>
                       <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
                     </Button>

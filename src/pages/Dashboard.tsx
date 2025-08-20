@@ -5,21 +5,57 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useRole } from "@/contexts/RoleContext"; // Importation du hook useRole
-import { loadCourses } from "@/lib/courseData"; // Import loadCourses
-import { dummyStudents } from "@/lib/studentData"; // Import dummyStudents
+import { useRole } from "@/contexts/RoleContext";
+import { loadCourses } from "@/lib/courseData";
+import { loadStudents, loadCreatorProfiles, loadTutorProfiles, getStudentProfileByUserId } from "@/lib/studentData"; // Import new data loaders
 
 const Dashboard = () => {
-  const { currentRole } = useRole(); // Utilisation du hook useRole
-  const dummyCourses = loadCourses(); // Charger les cours depuis le localStorage
+  const { currentUser, currentRole } = useRole();
+  const courses = loadCourses();
+  const students = loadStudents(); // Load all student profiles
+  const creatorProfiles = loadCreatorProfiles();
+  const tutorProfiles = loadTutorProfiles();
 
   const renderDashboardContent = () => {
+    if (!currentUser) {
+      return (
+        <div className="text-center py-20">
+          <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+            Accès Restreint
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Veuillez vous connecter pour accéder au tableau de bord.
+          </p>
+        </div>
+      );
+    }
+
     if (currentRole === 'student') {
-      const enrolledCourses = dummyCourses.filter(c => c.modules.some(m => m.isCompleted)); // Simple filter for "enrolled"
-      const completedCoursesCount = enrolledCourses.filter(c => c.modules.every(m => m.isCompleted)).length;
-      const totalModulesCompleted = dummyCourses.reduce((acc, course) => acc + course.modules.filter(m => m.isCompleted).length, 0);
-      const totalModules = dummyCourses.reduce((acc, course) => acc + course.modules.length, 0);
-      const overallProgress = totalModules > 0 ? Math.round((totalModulesCompleted / totalModules) * 100) : 0;
+      const studentProfile = getStudentProfileByUserId(currentUser.id);
+      if (!studentProfile) {
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+              Profil Étudiant Introuvable
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Votre profil étudiant n'a pas pu être chargé.
+            </p>
+          </div>
+        );
+      }
+
+      const enrolledCourses = courses.filter(c => studentProfile.enrolledCoursesProgress.some(ec => ec.courseId === c.id));
+      const completedCoursesCount = enrolledCourses.filter(c => {
+        const progress = studentProfile.enrolledCoursesProgress.find(ec => ec.courseId === c.id);
+        return progress && progress.modulesProgress.every(m => m.isCompleted);
+      }).length;
+
+      const totalModulesCompleted = studentProfile.enrolledCoursesProgress.reduce((acc, courseProgress) =>
+        acc + courseProgress.modulesProgress.filter(m => m.isCompleted).length, 0
+      );
+      const totalModulesAvailable = courses.reduce((acc, course) => acc + course.modules.length, 0);
+      const overallProgress = totalModulesAvailable > 0 ? Math.round((totalModulesCompleted / totalModulesAvailable) * 100) : 0;
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -50,15 +86,15 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{overallProgress}%</p>
-              <p className="text-sm text-muted-foreground">Modules terminés : {totalModulesCompleted} / {totalModules}</p>
+              <p className="text-sm text-muted-foreground">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
             </CardContent>
           </Card>
         </div>
       );
     } else if (currentRole === 'creator') {
-      const createdCourses = dummyCourses; // Assuming all dummyCourses are created by this creator for demo
+      const createdCourses = courses; // Assuming all courses are created by this creator for demo
       const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.isCompleted)).length; // Simple heuristic for 'published'
-      const totalStudents = createdCourses.reduce((acc, course) => acc + Math.floor(Math.random() * 200), 0); // Dummy student count
+      const totalStudents = students.length; // Total students in the system
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -94,7 +130,7 @@ const Dashboard = () => {
         </div>
       );
     } else if (currentRole === 'tutor') {
-      const supervisedStudents = dummyStudents.slice(0, 2); // Just taking first two for demo
+      const supervisedStudents = students.slice(0, 2); // Just taking first two for demo
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -103,7 +139,7 @@ const Dashboard = () => {
               <CardDescription>Suivez la progression de vos enfants/protégés.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous suivez {supervisedStudents.length} élèves : {supervisedStudents.map(s => `${s.firstName} ${s.lastName}`).join(', ')}.</p> {/* Changement */}
+              <p>Vous suivez {supervisedStudents.length} élèves : {supervisedStudents.map(s => `${s.firstName} ${s.lastName}`).join(', ')}.</p>
             </CardContent>
           </Card>
           <Card>
@@ -112,7 +148,7 @@ const Dashboard = () => {
               <CardDescription>Points nécessitant votre attention.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>{supervisedStudents[0]?.firstName} a des difficultés en algèbre. {supervisedStudents[1]?.firstName} excelle en géométrie.</p> {/* Changement */}
+              <p>{supervisedStudents[0]?.firstName} a des difficultés en algèbre. {supervisedStudents[1]?.firstName} excelle en géométrie.</p>
             </CardContent>
           </Card>
           <Card>
@@ -121,7 +157,7 @@ const Dashboard = () => {
               <CardDescription>Messages récents.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Nouveau message de l'enseignant de {supervisedStudents[0]?.firstName}.</p> {/* Changement */}
+              <p>Nouveau message de l'enseignant de {supervisedStudents[0]?.firstName}.</p>
             </CardContent>
           </Card>
         </div>

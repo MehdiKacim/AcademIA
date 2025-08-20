@@ -19,20 +19,21 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { loadCourses } from "@/lib/courseData";
-import { dummyStudents } from "@/lib/studentData";
+import { loadStudents } from "@/lib/studentData"; // Import loadStudents
 
 const CreatorAnalyticsSection = () => {
-  const dummyCourses = loadCourses();
+  const courses = loadCourses();
+  const students = loadStudents(); // Load all student profiles
 
   const creatorAnalytics = {
-    totalCourses: dummyCourses.length,
-    publishedCourses: dummyCourses.filter(c => c.modules.some(m => m.isCompleted)).length, // Simple heuristic for 'published'
-    totalStudents: dummyCourses.reduce((acc, course) => acc + Math.floor(Math.random() * 200), 0), // Dummy student count
+    totalCourses: courses.length,
+    publishedCourses: courses.filter(c => c.modules.some(m => m.isCompleted)).length, // Simple heuristic for 'published'
+    totalStudents: students.length, // Total students in the system
     averageCompletionRate: "68%", // Placeholder
     mostPopularCourse: "Développement Web Fullstack", // Placeholder
   };
 
-  const creatorCourseData = dummyCourses.map(course => ({
+  const creatorCourseData = courses.map(course => ({
     name: course.title.length > 10 ? course.title.substring(0, 10) + '...' : course.title,
     students: Math.floor(Math.random() * 200), // Dummy data
     completion: Math.floor(Math.random() * 100), // Dummy data

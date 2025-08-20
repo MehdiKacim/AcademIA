@@ -1,144 +1,154 @@
-export interface QuizOption {
-  text: string;
-  isCorrect: boolean;
-}
-
-export interface QuizQuestion {
-  question: string;
-  options: QuizOption[];
-}
-
-export interface ModuleSection {
-  title: string;
-  content: string;
-  type?: 'text' | 'quiz' | 'video' | 'image';
-  url?: string;
-  questions?: QuizQuestion[]; // Pour les sections de type 'quiz'
-  isCompleted: boolean; // Nouvelle propriété pour la complétion de la section
-  passingScore?: number; // Nouvelle propriété pour le score de réussite du quiz
-  quizResult?: { score: number; total: number; passed: boolean }; // Pour stocker le dernier résultat du quiz
-}
-
-export interface Module {
-  title: string;
-  sections: ModuleSection[];
-  isCompleted: boolean;
-  level: number; // Correction: 'level' est maintenant requis pour correspondre au schéma Zod
-}
-
-export interface Course {
-  id: string;
-  title: string;
-  description: string;
-  modules: Module[];
-  skillsToAcquire: string[];
-  imageUrl?: string;
-  category?: string;
-  difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
-}
-
-export interface Curriculum {
-  id: string;
-  name: string;
-  description?: string;
-  establishmentId: string; // Lien vers l'établissement parent
-  courseIds: string[]; // Liste des IDs des cours inclus dans ce cursus
-}
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class } from "./dataModels";
+import { loadData, saveData, addData, updateData, deleteData } from "./localStorageUtils";
 
 export type EntityType = 'course' | 'module' | 'section';
 
-// Removed initialDummyCourses and initialDummyCurricula
-
+// Local Storage Keys
 const LOCAL_STORAGE_COURSES_KEY = 'academia_courses';
 const LOCAL_STORAGE_CURRICULA_KEY = 'academia_curricula';
+const LOCAL_STORAGE_ESTABLISHMENTS_KEY = 'academia_establishments';
+const LOCAL_STORAGE_CLASSES_KEY = 'academia_classes';
 
-// Fonction pour charger les cours depuis le localStorage ou retourner un tableau vide
+// --- Course Management ---
 export const loadCourses = (): Course[] => {
-  try {
-    const storedCourses: Course[] = localStorage.getItem(LOCAL_STORAGE_COURSES_KEY)
-      ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_COURSES_KEY)!)
-      : [];
-    return storedCourses;
-  } catch (error) {
-    console.error("Erreur lors du chargement des cours depuis le localStorage:", error);
-    return []; // Retourner un tableau vide en cas d'erreur
-  }
+  return loadData<Course>(LOCAL_STORAGE_COURSES_KEY);
 };
 
-// Fonction pour sauvegarder les cours dans le localStorage
 export const saveCourses = (courses: Course[]) => {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_COURSES_KEY, JSON.stringify(courses));
-    dummyCourses = courses; // Mettre à jour la variable exportée en mémoire
-  } catch (error) {
-    console.error("Erreur lors de la sauvegarde des cours dans le localStorage:", error);
-  }
+  saveData(LOCAL_STORAGE_COURSES_KEY, courses);
+  dummyCourses = courses;
 };
 
-// Fonction pour charger les cursus depuis le localStorage ou retourner un tableau vide
-export const loadCurricula = (): Curriculum[] => {
-  try {
-    const storedCurricula: Curriculum[] = localStorage.getItem(LOCAL_STORAGE_CURRICULA_KEY)
-      ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_CURRICULA_KEY)!)
-      : [];
-    return storedCurricula;
-  } catch (error) {
-    console.error("Erreur lors du chargement des cursus depuis le localStorage:", error);
-    return []; // Retourner un tableau vide en cas d'erreur
-  }
-};
-
-// Fonction pour sauvegarder les cursus dans le localStorage
-export const saveCurricula = (curricula: Curriculum[]) => {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_CURRICULA_KEY, JSON.stringify(curricula));
-    dummyCurricula = curricula; // Mettre à jour la variable exportée en mémoire
-  } catch (error) {
-    console.error("Erreur lors de la sauvegarde des cursus dans le localStorage:", error);
-  }
-};
-
-// Variables exportées qui seront utilisées dans l'application
-export let dummyCourses: Course[] = loadCourses();
-export let dummyCurricula: Curriculum[] = loadCurricula();
-
-// Fonction pour mettre à jour un cours spécifique et le sauvegarder
-export const updateCourseInStorage = (updatedCourse: Course) => {
-  dummyCourses = dummyCourses.map(c => c.id === updatedCourse.id ? updatedCourse : c);
-  saveCourses(dummyCourses);
-};
-
-// Fonction pour ajouter un nouveau cours
 export const addCourseToStorage = (newCourse: Course) => {
-  dummyCourses = [...dummyCourses, newCourse];
-  saveCourses(dummyCourses);
+  const updatedCourses = addData<Course>(LOCAL_STORAGE_COURSES_KEY, newCourse);
+  dummyCourses = updatedCourses;
+  return updatedCourses;
 };
 
-// Fonctions pour les cursus
+export const updateCourseInStorage = (updatedCourse: Course) => {
+  const updatedCourses = updateData<Course>(LOCAL_STORAGE_COURSES_KEY, updatedCourse);
+  dummyCourses = updatedCourses;
+  return updatedCourses;
+};
+
+export const deleteCourseFromStorage = (courseId: string) => {
+  const updatedCourses = deleteData<Course>(LOCAL_STORAGE_COURSES_KEY, courseId);
+  dummyCourses = updatedCourses;
+  return updatedCourses;
+};
+
+// --- Curriculum Management ---
+export const loadCurricula = (): Curriculum[] => {
+  return loadData<Curriculum>(LOCAL_STORAGE_CURRICULA_KEY);
+};
+
+export const saveCurricula = (curricula: Curriculum[]) => {
+  saveData(LOCAL_STORAGE_CURRICULA_KEY, curricula);
+  dummyCurricula = curricula;
+};
+
 export const addCurriculumToStorage = (newCurriculum: Curriculum) => {
-  dummyCurricula = [...dummyCurricula, newCurriculum];
-  saveCurricula(dummyCurricula);
+  const updatedCurricula = addData<Curriculum>(LOCAL_STORAGE_CURRICULA_KEY, newCurriculum);
+  dummyCurricula = updatedCurricula;
+  return updatedCurricula;
 };
 
 export const updateCurriculumInStorage = (updatedCurriculum: Curriculum) => {
-  dummyCurricula = dummyCurricula.map(c => c.id === updatedCurriculum.id ? updatedCurriculum : c);
-  saveCurricula(dummyCurricula);
+  const updatedCurricula = updateData<Curriculum>(LOCAL_STORAGE_CURRICULA_KEY, updatedCurriculum);
+  dummyCurricula = updatedCurricula;
+  return updatedCurricula;
 };
 
 export const deleteCurriculumFromStorage = (curriculumId: string) => {
-  dummyCurricula = dummyCurricula.filter(c => c.id !== curriculumId);
-  saveCurricula(dummyCurricula);
+  const updatedCurricula = deleteData<Curriculum>(LOCAL_STORAGE_CURRICULA_KEY, curriculumId);
+  dummyCurricula = updatedCurricula;
+  return updatedCurricula;
 };
 
-// Nouvelles fonctions de réinitialisation pour les données de cours et de cursus
+// --- Establishment Management ---
+export const loadEstablishments = (): Establishment[] => {
+  return loadData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY);
+};
+
+export const saveEstablishments = (establishments: Establishment[]) => {
+  saveData(LOCAL_STORAGE_ESTABLISHMENTS_KEY, establishments);
+  dummyEstablishments = establishments;
+};
+
+export const addEstablishmentToStorage = (newEstablishment: Establishment) => {
+  const updatedEstablishments = addData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY, newEstablishment);
+  dummyEstablishments = updatedEstablishments;
+  return updatedEstablishments;
+};
+
+export const updateEstablishmentInStorage = (updatedEstablishment: Establishment) => {
+  const updatedEstablishments = updateData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY, updatedEstablishment);
+  dummyEstablishments = updatedEstablishments;
+  return updatedEstablishments;
+};
+
+export const deleteEstablishmentFromStorage = (establishmentId: string) => {
+  const updatedEstablishments = deleteData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY, establishmentId);
+  dummyEstablishments = updatedEstablishments;
+  return updatedEstablishments;
+};
+
+// --- Class Management ---
+export const loadClasses = (): Class[] => {
+  return loadData<Class>(LOCAL_STORAGE_CLASSES_KEY);
+};
+
+export const saveClasses = (classes: Class[]) => {
+  saveData(LOCAL_STORAGE_CLASSES_KEY, classes);
+  dummyClasses = classes;
+};
+
+export const addClassToStorage = (newClass: Class) => {
+  const updatedClasses = addData<Class>(LOCAL_STORAGE_CLASSES_KEY, newClass);
+  dummyClasses = updatedClasses;
+  return updatedClasses;
+};
+
+export const updateClassInStorage = (updatedClass: Class) => {
+  const updatedClasses = updateData<Class>(LOCAL_STORAGE_CLASSES_KEY, updatedClass);
+  dummyClasses = updatedClasses;
+  return updatedClasses;
+};
+
+export const deleteClassFromStorage = (classId: string) => {
+  const updatedClasses = deleteData<Class>(LOCAL_STORAGE_CLASSES_KEY, classId);
+  dummyClasses = updatedClasses;
+  return updatedClasses;
+};
+
+
+// In-memory variables (will be loaded from localStorage on app start)
+export let dummyCourses: Course[] = loadCourses();
+export let dummyCurricula: Curriculum[] = loadCurricula();
+export let dummyEstablishments: Establishment[] = loadEstablishments();
+export let dummyClasses: Class[] = loadClasses();
+
+// Reset functions for all data types
 export const resetCourses = () => {
   localStorage.removeItem(LOCAL_STORAGE_COURSES_KEY);
-  dummyCourses = []; // Réinitialiser avec un tableau vide
-  saveCourses(dummyCourses); // Sauvegarder l'état réinitialisé
+  dummyCourses = [];
+  saveCourses(dummyCourses);
 };
 
 export const resetCurricula = () => {
   localStorage.removeItem(LOCAL_STORAGE_CURRICULA_KEY);
-  dummyCurricula = []; // Réinitialiser avec un tableau vide
-  saveCurricula(dummyCurricula); // Sauvegarder l'état réinitialisé
+  dummyCurricula = [];
+  saveCurricula(dummyCurricula);
+};
+
+export const resetEstablishments = () => {
+  localStorage.removeItem(LOCAL_STORAGE_ESTABLISHMENTS_KEY);
+  dummyEstablishments = [];
+  saveEstablishments(dummyEstablishments);
+};
+
+export const resetClasses = () => {
+  localStorage.removeItem(LOCAL_STORAGE_CLASSES_KEY);
+  dummyClasses = [];
+  saveClasses(dummyClasses);
 };

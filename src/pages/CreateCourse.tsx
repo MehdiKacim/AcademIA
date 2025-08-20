@@ -15,7 +15,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Form, // <-- Ajout de l'importation de Form
+  Form,
   FormControl,
   FormField,
   FormItem,
@@ -25,8 +25,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { Course, addCourseToStorage, loadCourses, updateCourseInStorage, Module } from "@/lib/courseData"; // Import updateCourseInStorage and loadCourses, and Module type
-import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
+import { Course, addCourseToStorage, loadCourses, updateCourseInStorage, Module } from "@/lib/courseData";
+import { useParams, useNavigate } from "react-router-dom";
 
 // Zod Schemas for validation
 const QuizOptionSchema = z.object({
@@ -99,7 +99,7 @@ const CourseSchema = z.object({
 
 const CreateCourse = () => {
   const { currentRole } = useRole();
-  const { courseId } = useParams<{ courseId: string }>(); // Récupérer l'ID du cours depuis l'URL
+  const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof CourseSchema>>({
@@ -129,24 +129,22 @@ const CreateCourse = () => {
     name: "modules",
   });
 
-  // Charger les données du cours si courseId est présent
   useEffect(() => {
     if (courseId) {
       const courses = loadCourses();
       const courseToEdit = courses.find(c => c.id === courseId);
       if (courseToEdit) {
-        // Convertir skillsToAcquire de tableau à chaîne pour le formulaire
         const formattedCourse = {
           ...courseToEdit,
           skillsToAcquire: courseToEdit.skillsToAcquire.join(', '),
         };
-        form.reset(formattedCourse); // Remplir le formulaire avec les données du cours
+        form.reset(formattedCourse);
       } else {
         showError("Cours non trouvé pour la modification.");
-        navigate("/create-course"); // Rediriger vers la page de création si le cours n'existe pas
+        navigate("/create-course");
       }
     } else {
-      form.reset({ // Réinitialiser le formulaire pour la création d'un nouveau cours
+      form.reset({
         title: "",
         description: "",
         category: "",
@@ -165,18 +163,18 @@ const CreateCourse = () => {
         ],
       });
     }
-  }, [courseId, form, navigate]); // Dépendances pour recharger si l'ID du cours change
+  }, [courseId, form, navigate]);
 
   const onSubmit = (values: z.infer<typeof CourseSchema>) => {
     const courseData: Course = {
-      id: courseId || (loadCourses().length + 1).toString(), // Utiliser l'ID existant ou en générer un nouveau
+      id: courseId || `course${Date.now()}`, // Generate unique ID if new course
       title: values.title,
       description: values.description,
       category: values.category,
       difficulty: values.difficulty,
       imageUrl: values.imageUrl || undefined,
       skillsToAcquire: values.skillsToAcquire.split(',').map(s => s.trim()),
-      modules: values.modules as Module[], // Assertion de type ici
+      modules: values.modules as Module[],
     };
 
     if (courseId) {
@@ -186,7 +184,7 @@ const CreateCourse = () => {
       addCourseToStorage(courseData);
       showSuccess("Cours créé avec succès !");
     }
-    navigate("/courses"); // Rediriger vers la liste des cours après soumission
+    navigate("/courses");
   };
 
   if (currentRole !== 'creator') {

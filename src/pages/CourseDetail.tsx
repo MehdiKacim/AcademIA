@@ -11,14 +11,25 @@ import { Progress } from "@/components/ui/progress";
 import NotesSection from "@/components/NotesSection";
 import { generateNoteKey } from "@/lib/notes";
 import CourseModuleList from "@/components/CourseModuleList";
-import { dummyCourses, Course, Module, ModuleSection, loadCourses } from "@/lib/courseData"; // Import loadCourses
+import { loadCourses, Course, Module, ModuleSection } from "@/lib/courseData"; // Import loadCourses
+import { useRole } from '@/contexts/RoleContext';
+import { loadStudents, getStudentProfileByUserId, updateStudentProfile } from '@/lib/studentData';
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  // Charger les cours à chaque rendu pour s'assurer d'avoir la dernière version du localStorage
-  const courses = loadCourses();
-  const course = courses.find(c => c.id === courseId);
+  const { currentUser, currentRole } = useRole();
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
+
+  const [courses, setCourses] = useState<Course[]>(loadCourses());
+  const [studentProfiles, setStudentProfiles] = useState(loadStudents());
+
+  const course = courses.find(c => c.id === courseId);
+  const studentProfile = currentUser && currentRole === 'student' ? getStudentProfileByUserId(currentUser.id) : undefined;
+
+  useEffect(() => {
+    setCourses(loadCourses());
+    setStudentProfiles(loadStudents());
+  }, [courseId]); // Re-load if courseId changes
 
   useEffect(() => {
     if (course) {
@@ -52,9 +63,39 @@ const CourseDetail = () => {
     );
   }
 
+  // Calculate progress based on current user's student profile
+  let progressPercentage = 0;
+  let completedModules = 0;
   const totalModules = course.modules.length;
-  const completedModules = course.modules.filter(m => m.isCompleted).length;
-  const progressPercentage = Math.round((completedModules / totalModules) * 100);
+
+  if (studentProfile) {
+    const courseProgress = studentProfile.enrolledCoursesProgress.find(cp => cp.courseId === course.id);
+    if (courseProgress) {
+      completedModules = courseProgress.modulesProgress.filter(m => m.isCompleted).length;
+      progressPercentage = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+    } else {
+      // If student is not enrolled, enroll them automatically
+      const newCourseProgress = {
+        courseId: course.id,
+        isCompleted: false,
+        modulesProgress: course.modules.map((_, index) => ({
+          moduleIndex: index,
+          isCompleted: false,
+          sectionsProgress: course.modules[index].sections.map((_, secIndex) => ({
+            sectionIndex: secIndex,
+            isCompleted: false,
+          })),
+        })),
+      };
+      const updatedStudentProfile = {
+        ...studentProfile,
+        enrolledCoursesProgress: [...studentProfile.enrolledCoursesProgress, newCourseProgress],
+      };
+      updateStudentProfile(updatedStudentProfile);
+      setStudentProfiles(loadStudents()); // Refresh local state
+      showSuccess(`Vous êtes maintenant inscrit au cours "${course.title}" !`);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -98,7 +139,7 @@ const CourseDetail = () => {
 
       <section>
         <h2 className="text-2xl font-semibold mb-4">Visualisation du parcours</h2>
-        <CourseModuleList course={course} />
+        <CourseModuleList course={course} studentProfile={studentProfile} />
       </section>
 
       <section>

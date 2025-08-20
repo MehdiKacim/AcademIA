@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -8,45 +8,90 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { loadCourses } from "@/lib/courseData";
-import { dummyStudents, updateStudent } from "@/lib/studentData"; // Import updateStudent
+import { loadStudents, updateStudentProfile, loadUsers, updateUser, getStudentProfileByUserId } from "@/lib/studentData";
 import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
-import EditProfileDialog from "@/components/EditProfileDialog"; // Import the new dialog
+import EditProfileDialog from "@/components/EditProfileDialog";
 import { Student } from "@/lib/dataModels"; // Import Student type
 
 const Profile = () => {
-  const { currentRole } = useRole();
+  const { currentUser, currentRole, setCurrentUser } = useRole();
   const courses = loadCourses();
-  const [currentUser, setCurrentUser] = useState<Student>(dummyStudents[0]); // Use state to allow updates
+  const allStudents = loadStudents(); // Load all student profiles
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
-  const handleUpdateUser = (updatedUser: Student) => {
-    const newStudents = updateStudent(updatedUser); // Update in localStorage and dummyStudents array
-    setCurrentUser(newStudents.find(s => s.id === updatedUser.id) || updatedUser); // Update local state
+  // State for the specific profile (student, creator, tutor)
+  const [studentProfile, setStudentProfile] = useState<Student | undefined>(undefined);
+
+  useEffect(() => {
+    if (currentUser && currentRole === 'student') {
+      setStudentProfile(getStudentProfileByUserId(currentUser.id));
+    } else {
+      setStudentProfile(undefined);
+    }
+  }, [currentUser, currentRole, allStudents]); // Re-run if currentUser or allStudents change
+
+  const handleUpdateUser = (updatedUser: User) => {
+    updateUser(updatedUser); // Update the User object
+    setCurrentUser(updatedUser); // Update the user in context
+    showSuccess("Profil utilisateur mis à jour !");
+
+    // If it's a student, also update their student profile's first/last name
+    if (updatedUser.role === 'student') {
+      const currentStudentProfile = getStudentProfileByUserId(updatedUser.id);
+      if (currentStudentProfile) {
+        const updatedStudent = {
+          ...currentStudentProfile,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+        };
+        updateStudentProfile(updatedStudent);
+        setStudentProfile(updatedStudent); // Update local student profile state
+      }
+    }
   };
 
-  const renderProfileContent = () => {
-    if (!currentUser) {
-      return (
-        <div className="text-center py-20">
-          <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-            Profil non trouvé
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Veuillez vous connecter pour voir votre profil.
-          </p>
-        </div>
-      );
-    }
+  if (!currentUser) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Profil non trouvé
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez vous connecter pour voir votre profil.
+        </p>
+      </div>
+    );
+  }
 
+  const renderProfileContent = () => {
     if (currentRole === 'student') {
-      const enrolledCourses = courses.filter(c => currentUser.enrolledCoursesProgress.some(ec => ec.courseId === c.id));
-      const completedCoursesCount = enrolledCourses.filter(c => c.modules.every(m => m.isCompleted)).length;
-      const totalModulesCompleted = courses.reduce((acc, course) => acc + course.modules.filter(m => m.isCompleted).length, 0);
-      const totalModules = courses.reduce((acc, course) => acc + course.modules.length, 0);
-      const overallProgress = totalModules > 0 ? Math.round((totalModulesCompleted / totalModules) * 100) : 0;
+      if (!studentProfile) {
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+              Profil Étudiant Introuvable
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Votre profil étudiant n'a pas pu être chargé.
+            </p>
+          </div>
+        );
+      }
+
+      const enrolledCourses = courses.filter(c => studentProfile.enrolledCoursesProgress.some(ec => ec.courseId === c.id));
+      const completedCoursesCount = enrolledCourses.filter(c => {
+        const progress = studentProfile.enrolledCoursesProgress.find(ec => ec.courseId === c.id);
+        return progress && progress.modulesProgress.every(m => m.isCompleted);
+      }).length;
+
+      const totalModulesCompleted = studentProfile.enrolledCoursesProgress.reduce((acc, courseProgress) =>
+        acc + courseProgress.modulesProgress.filter(m => m.isCompleted).length, 0
+      );
+      const totalModulesAvailable = courses.reduce((acc, course) => acc + course.modules.length, 0);
+      const overallProgress = totalModulesAvailable > 0 ? Math.round((totalModulesCompleted / totalModulesAvailable) * 100) : 0;
 
       const recentActivities = [
         { id: 1, type: "completed", description: `Terminé le module "Qu'est-ce que l'IA ?" du cours "Introduction à l'IA"`, date: "2 jours ago" },
@@ -64,6 +109,9 @@ const Profile = () => {
                   <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" /> {currentUser.email}
+                  </CardDescription>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    @{currentUser.username}
                   </CardDescription>
                 </div>
               </div>
@@ -84,7 +132,7 @@ const Profile = () => {
             <CardContent>
               <p className="text-2xl font-bold text-primary">{overallProgress}%</p>
               <Progress value={overallProgress} className="w-full mt-2" />
-              <p className="text-sm text-muted-foreground mt-2">Modules terminés : {totalModulesCompleted} / {totalModules}</p>
+              <p className="text-sm text-muted-foreground mt-2">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
             </CardContent>
           </Card>
           <Card>
@@ -96,7 +144,10 @@ const Profile = () => {
               <p className="text-2xl font-bold text-primary">{completedCoursesCount}</p>
               <p className="text-sm text-muted-foreground">Cours terminés sur {enrolledCourses.length} inscrits.</p>
               <ul className="list-disc pl-5 text-sm text-muted-foreground mt-4">
-                {enrolledCourses.filter(c => c.modules.every(m => m.isCompleted)).slice(0, 3).map(course => (
+                {enrolledCourses.filter(c => {
+                  const progress = studentProfile.enrolledCoursesProgress.find(ec => ec.courseId === c.id);
+                  return progress && progress.modulesProgress.every(m => m.isCompleted);
+                }).slice(0, 3).map(course => (
                   <li key={course.id}>{course.title} <CheckCircle className="inline h-3 w-3 text-green-500 ml-1" /></li>
                 ))}
                 {completedCoursesCount === 0 && <li>Aucun cours terminé.</li>}
@@ -123,9 +174,9 @@ const Profile = () => {
         </div>
       );
     } else if (currentRole === 'creator') {
-      const createdCourses = courses; // Assuming all dummyCourses are created by this creator for demo
+      const createdCourses = courses; // Assuming all courses are created by this creator for demo
       const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.isCompleted)).length;
-      const totalStudents = createdCourses.reduce((acc, course) => acc + Math.floor(Math.random() * 200), 0);
+      const totalStudents = allStudents.length; // Total students in the system
 
       const topCourses = createdCourses.sort((a, b) => (b.modules.filter(m => m.isCompleted).length / b.modules.length) - (a.modules.filter(m => m.isCompleted).length / a.modules.length)).slice(0, 3);
       const recentActivities = [
@@ -144,6 +195,9 @@ const Profile = () => {
                   <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" /> {currentUser.email}
+                  </CardDescription>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    @{currentUser.username}
                   </CardDescription>
                 </div>
               </div>
@@ -214,7 +268,7 @@ const Profile = () => {
         </div>
       );
     } else if (currentRole === 'tutor') {
-      const supervisedStudents = dummyStudents.slice(0, 2); // Taking first two for demo
+      const supervisedStudents = allStudents.slice(0, 2); // Taking first two for demo
       const studentsAtRisk = supervisedStudents.filter(s => s.enrolledCoursesProgress.some(ec => ec.modulesProgress.some(mp => mp.sectionsProgress.some(sp => sp.quizResult && !sp.quizResult.passed)))).length;
 
       const recentAlerts = [
@@ -232,6 +286,9 @@ const Profile = () => {
                   <CardTitle className="text-3xl">{currentUser.firstName} {currentUser.lastName}</CardTitle>
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     <Mail className="h-4 w-4" /> {currentUser.email}
+                  </CardDescription>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    @{currentUser.username}
                   </CardDescription>
                 </div>
               </div>
@@ -298,12 +355,14 @@ const Profile = () => {
       </h1>
       {renderProfileContent()}
 
-      <EditProfileDialog
-        isOpen={isEditProfileModalOpen}
-        onClose={() => setIsEditProfileModalOpen(false)}
-        currentUser={currentUser}
-        onSave={handleUpdateUser}
-      />
+      {currentUser && (
+        <EditProfileDialog
+          isOpen={isEditProfileModalOpen}
+          onClose={() => setIsEditProfileModalOpen(false)}
+          currentUser={currentUser}
+          onSave={handleUpdateUser}
+        />
+      )}
     </div>
   );
 };

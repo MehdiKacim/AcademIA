@@ -12,20 +12,19 @@ import {
 } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "react-router-dom"; // Import useLocation
+import { useLocation } from "react-router-dom";
+import { loadCourses } from '@/lib/courseData'; // Import loadCourses
 
 const AllNotes = () => {
   const [allNotes, setAllNotes] = useState<AggregatedNote[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [searchQuery, setSearchQuery] = useState(''); // Keep searchQuery state for internal filtering if needed, but remove input
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedNoteGroupKey, setSelectedNoteGroupKey] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  const location = useLocation(); // Get location object
+  const location = useLocation();
 
-  // Ref to track if 'Retour à la liste' was just clicked
   const isBackToListActionRef = useRef(false);
 
-  // Memoize filtered notes to avoid re-calculation on every render
   const filteredNotes = useMemo(() => {
     if (!searchQuery) {
       return allNotes;
@@ -40,9 +39,9 @@ const AllNotes = () => {
     });
   }, [allNotes, searchQuery]);
 
-  // Effect to load all notes and set initial selection on mount or full refresh
   useEffect(() => {
-    const notes = getAllNotesData();
+    // Pass loadCourses to getAllNotesData to ensure it uses current data
+    const notes = getAllNotesData(loadCourses());
     setAllNotes(notes);
 
     const queryParams = new URLSearchParams(location.search);
@@ -55,28 +54,21 @@ const AllNotes = () => {
     } else {
       setSelectedNoteGroupKey(null);
     }
-  }, [refreshKey, location.search]); // Add location.search to dependencies
+  }, [refreshKey, location.search]);
 
-  // Effect to manage selectedNoteGroupKey based on filteredNotes and explicit actions
   useEffect(() => {
-    // If 'Retour à la liste' was just clicked, prevent auto-selection for this render cycle
     if (isBackToListActionRef.current) {
-      isBackToListActionRef.current = false; // Reset the flag
-      return; // Exit early to prevent re-selection
+      isBackToListActionRef.current = false;
+      return;
     }
 
-    // If the currently selected note group is no longer in the filtered list,
-    // reset selection to the first filtered note or null if no filtered notes.
     if (selectedNoteGroupKey !== null && !filteredNotes.some(n => n.key === selectedNoteGroupKey)) {
       setSelectedNoteGroupKey(filteredNotes.length > 0 ? filteredNotes[0].key : null);
     }
-    // If no note is selected and there are filtered notes (and no search query), select the first one.
-    // This handles cases where search results appear after a cleared selection,
-    // or initial load if the first useEffect didn't catch it (less likely now).
     else if (selectedNoteGroupKey === null && filteredNotes.length > 0 && searchQuery === '') {
         setSelectedNoteGroupKey(filteredNotes[0].key);
     }
-  }, [filteredNotes, selectedNoteGroupKey, searchQuery]); // Dependencies: filteredNotes, selectedNoteGroupKey, searchQuery
+  }, [filteredNotes, selectedNoteGroupKey, searchQuery]);
 
   const handleNoteChange = () => {
     setRefreshKey(prev => prev + 1);
@@ -88,7 +80,7 @@ const AllNotes = () => {
 
   const handleBackToList = () => {
     setSelectedNoteGroupKey(null);
-    isBackToListActionRef.current = true; // Set the flag when back button is clicked
+    isBackToListActionRef.current = true;
   };
 
   const selectedNoteGroup = useMemo(() => {
@@ -117,7 +109,6 @@ const AllNotes = () => {
             <div className="flex flex-col flex-grow">
               {!selectedNoteGroupKey ? (
                 <>
-                  {/* Removed search input for mobile */}
                   <div className="flex-grow overflow-y-auto pb-4">
                     {filteredNotes.length === 0 ? (
                       <p className="text-muted-foreground text-center py-4">Aucune note trouvée pour votre recherche.</p>
@@ -174,7 +165,6 @@ const AllNotes = () => {
             <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border">
               <ResizablePanel defaultSize={35} minSize={25}>
                 <div className="flex flex-col h-full p-4">
-                  {/* Removed search input for desktop */}
                   <div className="flex-grow overflow-y-auto pr-2">
                     {filteredNotes.length === 0 ? (
                       <p className="text-muted-foreground text-center py-4">Aucune note trouvée pour votre recherche.</p>

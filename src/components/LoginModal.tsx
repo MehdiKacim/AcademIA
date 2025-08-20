@@ -10,18 +10,17 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom"; // Utiliser useNavigate au lieu de Link direct
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { useRole } from "@/contexts/RoleContext"; // Importer useRole
-import { dummyStudents } from "@/lib/studentData"; // Importer les élèves fictifs
-import { showError, showSuccess } from "@/utils/toast"; // Importer les toasts
+import { useRole } from "@/contexts/RoleContext";
+import { getUserByEmail, getUserByUsername } from "@/lib/studentData"; // Import user lookup functions
+import { showError, showSuccess } from "@/utils/toast";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -30,23 +29,24 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ isOpen, onClose, onRegisterClick }: LoginModalProps) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // Pour l'instant, le mot de passe n'est pas validé
+  const [identifier, setIdentifier] = useState(""); // Can be email or username
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { setRole } = useRole();
+  const { setCurrentUser } = useRole();
 
   const handleLogin = () => {
-    const student = dummyStudents.find(s => s.email === email);
+    const userByEmail = getUserByEmail(identifier);
+    const userByUsername = getUserByUsername(identifier);
 
-    if (student) {
-      // Pour l'instant, nous ne validons pas le mot de passe.
-      // Dans une vraie application, vous auriez une logique d'authentification backend ici.
-      setRole('student'); // Définir le rôle sur 'student'
-      showSuccess(`Bienvenue, ${student.firstName} ${student.lastName} !`); // Utiliser prénom et nom
+    const user = userByEmail || userByUsername;
+
+    if (user && user.passwordHash === password) { // For demo, passwordHash is plain password
+      setCurrentUser(user);
+      showSuccess(`Bienvenue, ${user.username} !`);
       navigate("/dashboard");
       onClose();
     } else {
-      showError("Email ou mot de passe incorrect.");
+      showError("Identifiant ou mot de passe incorrect.");
     }
   };
 
@@ -62,14 +62,14 @@ const LoginModal = ({ isOpen, onClose, onRegisterClick }: LoginModalProps) => {
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="identifier">Email ou Nom d'utilisateur</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
+                id="identifier"
+                type="text"
+                placeholder="m@example.com ou mon_pseudo"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
