@@ -105,7 +105,17 @@ const CourseModuleList = ({ course }: CourseModuleListProps) => {
                 </div>
               </CardContent>
             </Card>
-            {/* Suppression de la flèche entre les modules, car ils sont maintenant en grille */}
+            {/* Flèche entre les modules, visible uniquement sur mobile (quand la grille est une seule colonne) */}
+            {index < currentCourse.modules.length - 1 && (
+              <div className="md:hidden relative w-full flex justify-center py-4"> {/* Visible only on mobile */}
+                <div className="relative w-1 h-16 bg-border flex items-center justify-center">
+                  <ArrowDown className={cn(
+                    "h-6 w-6 absolute text-border",
+                    accessible && isCompleted ? "text-primary animate-bounce" : "text-muted-foreground"
+                  )} />
+                </div>
+              </div>
+            )}
           </React.Fragment>
         );
       })}
