@@ -17,11 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { addUser, getUserByUsername, getUserByEmail, addStudentProfile } from "@/lib/studentData";
+import { getProfileByUsername, getProfileByEmail } from "@/lib/studentData"; // Import profile lookup functions
 import { showSuccess, showError } from "@/utils/toast";
-import { User, Student } from "@/lib/dataModels";
+import { Profile } from "@/lib/dataModels";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
     }
   }, [isOpen]);
 
-  const checkUsernameAvailability = (currentUsername: string) => {
+  const checkUsernameAvailability = async (currentUsername: string) => {
     if (currentUsername.trim() === '') {
       setUsernameAvailable(null);
       setUsernameCheckLoading(false);
@@ -76,14 +77,14 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    debounceTimeoutRef.current = setTimeout(() => {
-      const isTaken = getUserByUsername(currentUsername);
+    debounceTimeoutRef.current = setTimeout(async () => {
+      const isTaken = await getProfileByUsername(currentUsername);
       setUsernameAvailable(!isTaken);
       setUsernameCheckLoading(false);
     }, 500);
   };
 
-  const checkEmailAvailability = (currentEmail: string) => {
+  const checkEmailAvailability = async (currentEmail: string) => {
     if (currentEmail.trim() === '' || !/\S+@\S+\.\S+/.test(currentEmail)) {
       setEmailAvailable(null);
       setEmailCheckLoading(false);
@@ -97,8 +98,10 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    debounceTimeoutRef.current = setTimeout(() => {
-      const isTaken = getUserByEmail(currentEmail);
+    debounceTimeoutRef.current = setTimeout(async () => {
+      // Check if email exists in auth.users table
+      const { data: { users }, error } = await supabase.auth.admin.listUsers();
+      const isTaken = users?.some(user => user.email === currentEmail);
       setEmailAvailable(!isTaken);
       setEmailCheckLoading(false);
     }, 500);
@@ -116,7 +119,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
     checkEmailAvailability(newEmail);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim()) {
       showError("Tous les champs sont requis.");
       return;
@@ -139,34 +142,28 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
       return;
     }
 
-    const newUser: User = {
-      id: `user${Date.now()}`,
-      firstName: firstName.trim(), // Add firstName to User
-      lastName: lastName.trim(),   // Add lastName to User
-      username: username.trim(),
+    // Supabase signup
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
-      passwordHash: password.trim(), // For demo, storing plain password
-      role: role,
-    };
+      password: password.trim(),
+      options: {
+        data: {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          username: username.trim(),
+          role: role,
+        },
+      },
+    });
 
-    addUser(newUser);
-
-    // Create associated profile based on role
-    if (role === 'student') {
-      const newStudentProfile: Student = {
-        id: `studentProfile${Date.now()}`,
-        userId: newUser.id,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        enrolledCoursesProgress: [],
-      };
-      addStudentProfile(newStudentProfile);
+    if (error) {
+      console.error("Signup error:", error);
+      showError(`Erreur d'inscription: ${error.message}`);
+    } else if (data.user) {
+      showSuccess("Compte créé avec succès ! Veuillez vérifier votre email pour confirmer votre inscription.");
+      onClose();
+      onLoginClick();
     }
-    // Add logic for CreatorProfile and TutorProfile if needed later
-
-    showSuccess("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
-    onClose();
-    onLoginClick();
   };
 
   const isRegisterButtonDisabled = !firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim() || usernameCheckLoading || usernameAvailable === false || emailCheckLoading || emailAvailable === false || usernameAvailable === null || emailAvailable === null;

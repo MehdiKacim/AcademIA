@@ -15,7 +15,8 @@ import {
   Class,
   Curriculum,
   Establishment,
-  Student,
+  Profile, // Import Profile
+  StudentCourseProgress, // Import StudentCourseProgress
 } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -24,21 +25,21 @@ import {
   deleteClassFromStorage,
   loadCurricula,
   loadEstablishments,
-  saveClasses,
+  updateClassInStorage, // Import updateClassInStorage
 } from '@/lib/courseData';
-import { loadStudents, saveStudents, updateStudentProfile, getUserFullName, getUserUsername, getUserEmail } from '@/lib/studentData';
+import { getAllProfiles, updateProfile, getUserFullName, getUserUsername, getUserEmail } from '@/lib/studentData'; // Import Supabase functions
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ClassManagementPage = () => {
-  const { currentUser, currentRole } = useRole();
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   
   // Main states for data
-  const [establishments, setEstablishments] = useState(loadEstablishments());
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [studentProfiles, setStudentProfiles] = useState<Student[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // All profiles, including students
 
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
@@ -49,10 +50,13 @@ const ClassManagementPage = () => {
 
   // Load initial data
   useEffect(() => {
-    setEstablishments(loadEstablishments());
-    setCurricula(loadCurricula());
-    setClasses(loadClasses());
-    setStudentProfiles(loadStudents());
+    const fetchData = async () => {
+      setEstablishments(await loadEstablishments());
+      setCurricula(await loadCurricula());
+      setClasses(await loadClasses());
+      setAllProfiles(await getAllProfiles()); // Load all profiles
+    };
+    fetchData();
   }, []);
 
   // Helper functions to get names from IDs
@@ -60,7 +64,11 @@ const ClassManagementPage = () => {
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   
   // --- Class Management ---
-  const handleAddClass = () => {
+  const handleAddClass = async () => {
+    if (!currentUserProfile) {
+      showError("Vous devez être connecté pour ajouter une classe.");
+      return;
+    }
     if (newClassName.trim() && newClassCurriculumId) {
       const selectedCurriculum = curricula.find(c => c.id === newClassCurriculumId);
       if (!selectedCurriculum) {
@@ -69,59 +77,65 @@ const ClassManagementPage = () => {
       }
       const formattedClassName = `${selectedCurriculum.name}-${newClassName.trim()}`;
       const newCls: Class = {
-        id: `class${Date.now()}`,
+        id: '', // Supabase will generate
         name: formattedClassName,
-        curriculumId: newClassCurriculumId,
-        studentIds: [],
-        creatorIds: currentUser ? [currentUser.id] : [],
+        curriculum_id: newClassCurriculumId,
+        creator_ids: [currentUserProfile.id], // Assign current creator
       };
-      setClasses(addClassToStorage(newCls));
-      setNewClassName('');
-      setNewClassCurriculumId(undefined);
-      showSuccess("Classe ajoutée !");
+      try {
+        const addedClass = await addClassToStorage(newCls);
+        if (addedClass) {
+          setClasses(await loadClasses()); // Re-fetch to get the new list
+          setNewClassName('');
+          setNewClassCurriculumId(undefined);
+          showSuccess("Classe ajoutée !");
+        } else {
+          showError("Échec de l'ajout de la classe.");
+        }
+      } catch (error: any) {
+        console.error("Error adding class:", error);
+        showError(`Erreur lors de l'ajout de la classe: ${error.message}`);
+      }
     } else {
       showError("Le nom de la classe et le cursus sont requis.");
     }
   };
 
-  const handleDeleteClass = (id: string) => {
-    setClasses(deleteClassFromStorage(id));
-    // Remove classId from associated student profiles
-    const updatedStudentProfiles = studentProfiles.map(student =>
-      student.classId === id ? { ...student, classId: undefined } : student
-    );
-    saveStudents(updatedStudentProfiles);
-    setStudentProfiles(updatedStudentProfiles);
-    showSuccess("Classe supprimée !");
+  const handleDeleteClass = async (id: string) => {
+    try {
+      await deleteClassFromStorage(id);
+      setClasses(await loadClasses()); // Re-fetch to get the updated list
+      // Remove class_id from associated student profiles
+      const studentsInClass = allProfiles.filter(p => p.role === 'student' && p.class_id === id);
+      for (const studentProfile of studentsInClass) {
+        await updateProfile({ id: studentProfile.id, class_id: null }); // Set class_id to null
+      }
+      setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+      showSuccess("Classe supprimée !");
+    } catch (error: any) {
+      console.error("Error deleting class:", error);
+      showError(`Erreur lors de la suppression de la classe: ${error.message}`);
+    }
   };
 
-  const handleRemoveStudentFromClass = (studentProfileId: string, classId: string) => {
-    const studentToUpdate = studentProfiles.find(s => s.id === studentProfileId);
+  const handleRemoveStudentFromClass = async (studentProfileId: string, classId: string) => {
+    const studentToUpdate = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
     if (studentToUpdate) {
-      const updatedStudent = {
-        ...studentToUpdate,
-        classId: undefined,
-      };
-      setStudentProfiles(updateStudentProfile(updatedStudent));
-
-      const updatedClasses = classes.map(cls => {
-        if (cls.id === classId) {
-          return { ...cls, studentIds: cls.studentIds.filter(id => id !== studentProfileId) };
-        }
-        return cls;
-      });
-      saveClasses(updatedClasses);
-      setClasses(updatedClasses);
-      showSuccess(`Élève retiré de la classe !`);
+      try {
+        await updateProfile({ id: studentToUpdate.id, class_id: null }); // Set class_id to null
+        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+        setClasses(await loadClasses()); // Re-fetch classes to update student counts
+        showSuccess(`Élève retiré de la classe !`);
+      } catch (error: any) {
+        console.error("Error removing student from class:", error);
+        showError(`Erreur lors du retrait de l'élève: ${error.message}`);
+      }
     }
   };
 
-  const handleSendMessageToStudent = (studentProfile: Student) => {
-    // Assuming studentProfile has userId, we need to get the full User object to access firstName/lastName
-    const user = studentProfiles.find(s => s.id === studentProfile.id); 
-    if (user) {
-      openChat(`Bonjour ${user.firstName} ${user.lastName}, j'ai une question ou un message pour vous.`);
-    }
+  const handleSendMessageToStudent = async (studentProfile: Profile) => {
+    const userFullName = await getUserFullName(studentProfile.id);
+    openChat(`Bonjour ${userFullName}, j'ai une question ou un message pour vous.`);
   };
 
   const handleViewStudentsInClass = (classId: string) => {
@@ -133,7 +147,20 @@ const ClassManagementPage = () => {
   };
 
   const selectedClass = selectedClassIdForStudents ? classes.find(cls => cls.id === selectedClassIdForStudents) : null;
-  const studentsInSelectedClass = selectedClass ? studentProfiles.filter(student => student.classId === selectedClass.id) : [];
+  const studentsInSelectedClass = selectedClass ? allProfiles.filter(profile => profile.role === 'student' && profile.class_id === selectedClass.id) : [];
+
+  if (isLoadingUser) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Chargement...
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez patienter.
+        </p>
+      </div>
+    );
+  }
 
   if (currentRole !== 'creator' && currentRole !== 'tutor') {
     return (
@@ -183,7 +210,7 @@ const ClassManagementPage = () => {
                 <SelectContent>
                   {curricula.map(cur => (
                     <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name} ({getEstablishmentName(cur.establishmentId)})
+                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -202,15 +229,15 @@ const ClassManagementPage = () => {
               curricula.map(cur => (
                 <Card key={cur.id} className="p-4 space-y-3 bg-muted/20">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <LayoutList className="h-5 w-5 text-primary" /> Classes du cursus "{cur.name}" ({getEstablishmentName(cur.establishmentId)})
+                    <LayoutList className="h-5 w-5 text-primary" /> Classes du cursus "{cur.name}" ({getEstablishmentName(cur.establishment_id)})
                   </h3>
                   <div className="space-y-2 pl-4 border-l">
-                    {classes.filter(cls => cls.curriculumId === cur.id).length === 0 ? (
+                    {classes.filter(cls => cls.curriculum_id === cur.id).length === 0 ? (
                       <p className="text-muted-foreground text-sm">Aucune classe pour ce cursus.</p>
                     ) : (
-                      classes.filter(cls => cls.curriculumId === cur.id).map(cls => (
+                      classes.filter(cls => cls.curriculum_id === cur.id).map(cls => (
                         <div key={cls.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
-                          <span>{cls.name} ({cls.studentIds.length} élèves)</span>
+                          <span>{cls.name} ({allProfiles.filter(p => p.class_id === cls.id).length} élèves)</span>
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
                               <GraduationCap className="h-4 w-4 mr-1" /> Élèves
@@ -226,9 +253,9 @@ const ClassManagementPage = () => {
                               </>
                             )}
                           </div>
-                          {cls.creatorIds.length > 0 && (
+                          {cls.creator_ids.length > 0 && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              Professeurs: {cls.creatorIds.map(creatorId => getUserFullName(creatorId)).join(', ')}
+                              Professeurs: {cls.creator_ids.map(creatorId => getUserFullName(creatorId)).join(', ')}
                             </p>
                           )}
                         </div>
@@ -258,8 +285,8 @@ const ClassManagementPage = () => {
               studentsInSelectedClass.map(student => (
                 <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
-                    <p className="font-medium">{getUserFullName(student.userId)} <span className="text-sm text-muted-foreground">(@{getUserUsername(student.userId)})</span></p>
-                    <p className="text-sm text-muted-foreground">{getUserEmail(student.userId)}</p>
+                    <p className="font-medium">{getUserFullName(student.id)} <span className="text-sm text-muted-foreground">(@{getUserUsername(student.id)})</span></p>
+                    <p className="text-sm text-muted-foreground">{getUserEmail(student.id)}</p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>

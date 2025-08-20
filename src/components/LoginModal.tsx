@@ -19,8 +19,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRole } from "@/contexts/RoleContext";
-import { getUserByEmail, getUserByUsername } from "@/lib/studentData"; // Import user lookup functions
+import { getProfileByUsername, getProfileByEmail } from "@/lib/studentData"; // Import profile lookup functions
 import { showError, showSuccess } from "@/utils/toast";
+import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -29,24 +30,32 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ isOpen, onClose, onRegisterClick }: LoginModalProps) => {
-  const [identifier, setIdentifier] = useState(""); // Can be email or username
+  const [email, setEmail] = useState(""); // Supabase uses email for login
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { setCurrentUser } = useRole();
+  const { setCurrentUserProfile } = useRole();
 
-  const handleLogin = () => {
-    const userByEmail = getUserByEmail(identifier);
-    const userByUsername = getUserByUsername(identifier);
+  const handleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password.trim(),
+    });
 
-    const user = userByEmail || userByUsername;
-
-    if (user && user.passwordHash === password) { // For demo, passwordHash is plain password
-      setCurrentUser(user);
-      showSuccess(`Bienvenue, ${user.username} !`);
-      navigate("/dashboard");
-      onClose();
-    } else {
-      showError("Identifiant ou mot de passe incorrect.");
+    if (error) {
+      console.error("Login error:", error);
+      showError(`Erreur de connexion: ${error.message}`);
+    } else if (data.user) {
+      // Fetch profile after successful login
+      const profile = await getProfileByUsername(data.user.user_metadata.username); // Assuming username is in user_metadata
+      if (profile) {
+        setCurrentUserProfile(profile);
+        showSuccess(`Bienvenue, ${profile.username} !`);
+        navigate("/dashboard");
+        onClose();
+      } else {
+        showError("Profil utilisateur introuvable après connexion.");
+        await supabase.auth.signOut(); // Log out if profile not found
+      }
     }
   };
 
@@ -62,14 +71,14 @@ const LoginModal = ({ isOpen, onClose, onRegisterClick }: LoginModalProps) => {
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="identifier">Email ou Nom d'utilisateur</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="identifier"
-                type="text"
-                placeholder="m@example.com ou mon_pseudo"
+                id="email"
+                type="email"
+                placeholder="m@example.com"
                 required
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">

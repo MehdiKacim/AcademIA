@@ -11,31 +11,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
-import { User } from "@/lib/dataModels"; // Import User type
+import { Profile } from "@/lib/dataModels"; // Import Profile interface
+import { updateProfile } from "@/lib/studentData"; // Import updateProfile
+import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 
 interface EditProfileDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  currentUser: User; // Now expects a User object
-  onSave: (updatedUser: User) => void;
+  currentUserProfile: Profile; // Now expects a Profile object
+  onSave: (updatedProfile: Profile) => void;
 }
 
-const EditProfileDialog = ({ isOpen, onClose, currentUser, onSave }: EditProfileDialogProps) => {
-  const [firstName, setFirstName] = useState(currentUser.firstName || ''); // Add firstName
-  const [lastName, setLastName] = useState(currentUser.lastName || '');   // Add lastName
-  const [username, setUsername] = useState(currentUser.username);
-  const [email, setEmail] = useState(currentUser.email);
+const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: EditProfileDialogProps) => {
+  const [firstName, setFirstName] = useState(currentUserProfile.first_name || '');
+  const [lastName, setLastName] = useState(currentUserProfile.last_name || '');
+  const [username, setUsername] = useState(currentUserProfile.username);
+  const [email, setEmail] = useState(''); // Email is from auth.users, not directly in profile
 
   useEffect(() => {
-    if (isOpen && currentUser) {
-      setFirstName(currentUser.firstName || '');
-      setLastName(currentUser.lastName || '');
-      setUsername(currentUser.username);
-      setEmail(currentUser.email);
+    if (isOpen && currentUserProfile) {
+      setFirstName(currentUserProfile.first_name || '');
+      setLastName(currentUserProfile.last_name || '');
+      setUsername(currentUserProfile.username);
+      // Fetch email from auth.users
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          setEmail(user.email || '');
+        }
+      });
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUserProfile]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim() || !username.trim() || !email.trim()) {
       showError("Tous les champs sont requis.");
       return;
@@ -45,16 +52,37 @@ const EditProfileDialog = ({ isOpen, onClose, currentUser, onSave }: EditProfile
       return;
     }
 
-    const updatedUser: User = {
-      ...currentUser,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      username: username.trim(),
-      email: email.trim(),
-    };
-    onSave(updatedUser);
-    showSuccess("Profil mis à jour avec succès !");
-    onClose();
+    try {
+      // Update profile table
+      const updatedProfileData: Partial<Profile> = {
+        id: currentUserProfile.id,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        username: username.trim(),
+      };
+      const savedProfile = await updateProfile(updatedProfileData);
+
+      // Update auth.users email if changed
+      if (email.trim() !== (await supabase.auth.getUser()).data.user?.email) {
+        const { error: emailUpdateError } = await supabase.auth.updateUser({ email: email.trim() });
+        if (emailUpdateError) {
+          console.error("Error updating user email:", emailUpdateError);
+          showError(`Erreur lors de la mise à jour de l'email: ${emailUpdateError.message}`);
+          return;
+        }
+      }
+
+      if (savedProfile) {
+        onSave(savedProfile); // Pass the updated profile back to the parent
+        showSuccess("Profil mis à jour avec succès !");
+        onClose();
+      } else {
+        showError("Échec de la mise à jour du profil.");
+      }
+    } catch (error: any) {
+      console.error("Error saving profile:", error);
+      showError(`Erreur lors de la sauvegarde du profil: ${error.message}`);
+    }
   };
 
   return (

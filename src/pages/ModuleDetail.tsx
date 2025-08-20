@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import QuickNoteDialog from "@/components/QuickNoteDialog";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { generateNoteKey } from "@/lib/notes";
+import { generateNoteKey, getNotes, addNote, updateNote, deleteNote } from "@/lib/notes"; // Import notes functions
 import NotesSection from "@/components/NotesSection";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,29 +18,28 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Course, Module, ModuleSection, loadCourses, updateCourseInStorage } from "@/lib/courseData";
+import { Course, Module, ModuleSection, loadCourses } from "@/lib/courseData";
 import { useRole } from '@/contexts/RoleContext';
-import { loadStudents, getStudentProfileByUserId, updateStudentProfile } from '@/lib/studentData';
+import { getStudentCourseProgress, upsertStudentCourseProgress } from '@/lib/studentData';
 import QuizComponent from "@/components/QuizComponent";
+import { StudentCourseProgress as StudentCourseProgressType } from '@/lib/dataModels'; // Import the type
 
 const ModuleDetail = () => {
   const { courseId, moduleIndex } = useParams<{ courseId: string; moduleIndex: string }>();
   const navigate = useNavigate();
-  const { currentUser, currentRole } = useRole();
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { setCourseContext, setModuleContext, openChat } = useCourseChat();
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  const [courses, setCourses] = useState<Course[]>(loadCourses());
-  const [studentProfiles, setStudentProfiles] = useState(loadStudents());
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [studentCourseProgress, setStudentCourseProgress] = useState<StudentCourseProgressType | null>(null);
 
-  const course = courses.find(c => c.id === courseId);
   const currentModuleIndex = parseInt(moduleIndex || '0', 10);
+  const course = courses.find(c => c.id === courseId);
   const module = course?.modules[currentModuleIndex];
 
-  const studentProfile = currentUser && currentRole === 'student' ? getStudentProfileByUserId(currentUser.id) : undefined;
-  const courseProgress = studentProfile?.enrolledCoursesProgress.find(cp => cp.courseId === courseId);
-  const moduleProgress = courseProgress?.modulesProgress.find(mp => mp.moduleIndex === currentModuleIndex);
+  const moduleProgress = studentCourseProgress?.modules_progress.find(mp => mp.module_index === currentModuleIndex);
 
   const [isQuickNoteDialogOpen, setIsQuickNoteDialogOpen] = useState(false);
   const [currentNoteContext, setCurrentNoteContext] = useState({ key: '', title: '' });
@@ -51,9 +50,16 @@ const ModuleDetail = () => {
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    setCourses(loadCourses());
-    setStudentProfiles(loadStudents());
-  }, [courseId, moduleIndex]); // Re-load if courseId or moduleIndex changes
+    const fetchData = async () => {
+      const loadedCourses = await loadCourses();
+      setCourses(loadedCourses);
+      if (currentUserProfile && currentRole === 'student' && courseId) {
+        const progress = await getStudentCourseProgress(currentUserProfile.id, courseId);
+        setStudentCourseProgress(progress);
+      }
+    };
+    fetchData();
+  }, [courseId, moduleIndex, currentUserProfile, currentRole]); // Re-fetch if courseId or moduleIndex changes
 
   useEffect(() => {
     if (course && module) {
@@ -75,6 +81,19 @@ const ModuleDetail = () => {
     }
   }, []);
 
+  if (isLoadingUser) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Chargement du module...
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez patienter.
+        </p>
+      </div>
+    );
+  }
+
   if (!course || !module) {
     return (
       <div className="text-center py-20">
@@ -93,7 +112,7 @@ const ModuleDetail = () => {
 
   // Determine module accessibility based on student progress
   const isModuleAccessible = currentRole === 'student'
-    ? (courseProgress?.modulesProgress.find(mp => mp.moduleIndex === currentModuleIndex - 1)?.isCompleted || currentModuleIndex === 0)
+    ? (studentCourseProgress?.modules_progress.find(mp => mp.module_index === currentModuleIndex - 1)?.is_completed || currentModuleIndex === 0)
     : true; // Always accessible for non-students (creators/tutors)
 
   if (!isModuleAccessible) {
@@ -112,18 +131,18 @@ const ModuleDetail = () => {
     );
   }
 
-  const markSectionComplete = (sectionIdx: number, quizResult?: { score: number; total: number; passed: boolean }) => {
-    if (!studentProfile || !courseProgress || !moduleProgress) {
-      showError("Impossible de marquer la section comme terminée. Profil étudiant non trouvé.");
+  const markSectionComplete = async (sectionIdx: number, quizResult?: { score: number; total: number; passed: boolean }) => {
+    if (!currentUserProfile || !studentCourseProgress || !moduleProgress) {
+      showError("Impossible de marquer la section comme terminée. Profil étudiant non trouvé ou progression non chargée.");
       return;
     }
 
-    const updatedSectionsProgress = moduleProgress.sectionsProgress.map((sec, idx) => {
+    const updatedSectionsProgress = moduleProgress.sections_progress.map((sec, idx) => {
       if (idx === sectionIdx) {
         return {
           ...sec,
-          isCompleted: true,
-          quizResult: quizResult || sec.quizResult,
+          is_completed: true, // Use is_completed
+          quiz_result: quizResult || sec.quiz_result, // Use quiz_result
         };
       }
       return sec;
@@ -131,89 +150,98 @@ const ModuleDetail = () => {
 
     const updatedModuleProgress = {
       ...moduleProgress,
-      sectionsProgress: updatedSectionsProgress,
+      sections_progress: updatedSectionsProgress, // Use sections_progress
     };
 
-    const updatedModulesProgress = courseProgress.modulesProgress.map((mod, idx) =>
+    const updatedModulesProgress = studentCourseProgress.modules_progress.map((mod, idx) =>
       idx === currentModuleIndex ? updatedModuleProgress : mod
     );
 
-    const updatedCourseProgress = {
-      ...courseProgress,
-      modulesProgress: updatedModulesProgress,
+    const updatedCourseProgress: StudentCourseProgressType = {
+      ...studentCourseProgress,
+      modules_progress: updatedModulesProgress, // Use modules_progress
+      is_completed: updatedModulesProgress.every(mp => mp.is_completed), // Use is_completed
     };
 
-    const updatedStudentProfile = {
-      ...studentProfile,
-      enrolledCoursesProgress: studentProfile.enrolledCoursesProgress.map(cp =>
-        cp.courseId === courseId ? updatedCourseProgress : cp
-      ),
-    };
-
-    updateStudentProfile(updatedStudentProfile);
-    setStudentProfiles(loadStudents()); // Refresh local state
-    showSuccess(`Section "${module.sections[sectionIdx].title}" marquée comme terminée !`);
+    try {
+      const savedProgress = await upsertStudentCourseProgress(updatedCourseProgress);
+      if (savedProgress) {
+        setStudentCourseProgress(savedProgress);
+        showSuccess(`Section "${module.sections[sectionIdx].title}" marquée comme terminée !`);
+      } else {
+        showError("Échec de la mise à jour de la progression de la section.");
+      }
+    } catch (error: any) {
+      console.error("Error marking section complete:", error);
+      showError(`Erreur lors de la mise à jour de la progression: ${error.message}`);
+    }
   };
 
-  const handleMarkModuleComplete = () => {
-    if (!studentProfile || !courseProgress || !moduleProgress) {
-      showError("Impossible de marquer le module comme terminé. Profil étudiant non trouvé.");
+  const handleMarkModuleComplete = async () => {
+    if (!currentUserProfile || !studentCourseProgress || !moduleProgress) {
+      showError("Impossible de marquer le module comme terminé. Profil étudiant non trouvé ou progression non chargée.");
       return;
     }
 
-    const allSectionsCompleted = moduleProgress.sectionsProgress.every(section => section.isCompleted);
+    const allSectionsCompleted = moduleProgress.sections_progress.every(section => section.is_completed);
 
     if (!allSectionsCompleted) {
       showError("Veuillez compléter toutes les sections de ce module avant de le marquer comme terminé.");
       return;
     }
 
-    const updatedModuleProgress = { ...moduleProgress, isCompleted: true };
+    const updatedModuleProgress = { ...moduleProgress, is_completed: true }; // Use is_completed
 
-    const updatedModulesProgress = courseProgress.modulesProgress.map((mod, idx) =>
+    const updatedModulesProgress = studentCourseProgress.modules_progress.map((mod, idx) =>
       idx === currentModuleIndex ? updatedModuleProgress : mod
     );
 
-    const updatedCourseProgress = {
-      ...courseProgress,
-      modulesProgress: updatedModulesProgress,
-      isCompleted: updatedModulesProgress.every(mp => mp.isCompleted), // Mark course complete if all modules are
+    const updatedCourseProgress: StudentCourseProgressType = {
+      ...studentCourseProgress,
+      modules_progress: updatedModulesProgress, // Use modules_progress
+      is_completed: updatedModulesProgress.every(mp => mp.is_completed), // Use is_completed
     };
 
-    const updatedStudentProfile = {
-      ...studentProfile,
-      enrolledCoursesProgress: studentProfile.enrolledCoursesProgress.map(cp =>
-        cp.courseId === courseId ? updatedCourseProgress : cp
-      ),
-    };
+    try {
+      const savedProgress = await upsertStudentCourseProgress(updatedCourseProgress);
+      if (savedProgress) {
+        setStudentCourseProgress(savedProgress);
+        showSuccess(`Module "${module.title}" marqué comme terminé !`);
 
-    updateStudentProfile(updatedStudentProfile);
-    setStudentProfiles(loadStudents()); // Refresh local state
-
-    showSuccess(`Module "${module.title}" marqué comme terminé !`);
-
-    if (currentModuleIndex < course.modules.length - 1) {
-      navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`);
-    } else {
-      showSuccess("Félicitations ! Vous avez terminé tous les modules de ce cours.");
-      navigate(`/courses/${courseId}`);
+        if (currentModuleIndex < course.modules.length - 1) {
+          navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`);
+        } else {
+          showSuccess("Félicitations ! Vous avez terminé tous les modules de ce cours.");
+          navigate(`/courses/${courseId}`);
+        }
+      } else {
+        showError("Échec de la mise à jour de la progression du module.");
+      }
+    } catch (error: any) {
+      console.error("Error marking module complete:", error);
+      showError(`Erreur lors de la mise à jour de la progression: ${error.message}`);
     }
   };
 
-  const handleQuizComplete = (score: number, total: number, passed: boolean, sectionIdx: number) => {
+  const handleQuizComplete = async (score: number, total: number, passed: boolean, sectionIdx: number) => {
+    if (!currentUserProfile || !studentCourseProgress || !moduleProgress) {
+      showError("Impossible de marquer le quiz comme terminé. Profil étudiant non trouvé ou progression non chargée.");
+      return;
+    }
+
+    const quizResult = { score, total, passed };
+
     if (passed) {
       showSuccess(`Quiz terminé ! Votre score : ${score}/${total}. Vous avez réussi !`);
-      markSectionComplete(sectionIdx, { score, total, passed });
+      await markSectionComplete(sectionIdx, quizResult);
     } else {
       showError(`Quiz terminé ! Votre score : ${score}/${total}. Vous n'avez pas atteint le seuil de réussite.`);
       // Update quiz result without marking section complete if failed
-      if (!studentProfile || !courseProgress || !moduleProgress) return;
-
-      const updatedSectionsProgress = moduleProgress.sectionsProgress.map((sec, idx) => {
+      const updatedSectionsProgress = moduleProgress.sections_progress.map((sec, idx) => {
         if (idx === sectionIdx) {
           return {
             ...sec,
-            quizResult: { score, total, passed },
+            quiz_result: quizResult, // Use quiz_result
           };
         }
         return sec;
@@ -221,26 +249,29 @@ const ModuleDetail = () => {
 
       const updatedModuleProgress = {
         ...moduleProgress,
-        sectionsProgress: updatedSectionsProgress,
+        sections_progress: updatedSectionsProgress, // Use sections_progress
       };
 
-      const updatedModulesProgress = courseProgress.modulesProgress.map((mod, idx) =>
+      const updatedModulesProgress = studentCourseProgress.modules_progress.map((mod, idx) =>
         idx === currentModuleIndex ? updatedModuleProgress : mod
       );
 
-      const updatedCourseProgress = {
-        ...courseProgress,
-        modulesProgress: updatedModulesProgress,
+      const updatedCourseProgress: StudentCourseProgressType = {
+        ...studentCourseProgress,
+        modules_progress: updatedModulesProgress, // Use modules_progress
       };
 
-      const updatedStudentProfile = {
-        ...studentProfile,
-        enrolledCoursesProgress: studentProfile.enrolledCoursesProgress.map(cp =>
-          cp.courseId === courseId ? updatedCourseProgress : cp
-        ),
-      };
-      updateStudentProfile(updatedStudentProfile);
-      setStudentProfiles(loadStudents()); // Refresh local state
+      try {
+        const savedProgress = await upsertStudentCourseProgress(updatedCourseProgress);
+        if (savedProgress) {
+          setStudentCourseProgress(savedProgress);
+        } else {
+          showError("Échec de la mise à jour du résultat du quiz.");
+        }
+      } catch (error: any) {
+        console.error("Error updating quiz result:", error);
+        showError(`Erreur lors de la mise à jour du résultat du quiz: ${error.message}`);
+      }
     }
   };
 
@@ -273,13 +304,13 @@ const ModuleDetail = () => {
   const totalSectionsInModule = module.sections.length;
 
   if (moduleProgress) {
-    moduleDisplayCompletedSections = moduleProgress.sectionsProgress.filter(s => s.isCompleted).length;
+    moduleDisplayCompletedSections = moduleProgress.sections_progress.filter(s => s.is_completed).length;
     moduleDisplayProgress = totalSectionsInModule > 0 ? Math.round((moduleDisplayCompletedSections / totalSectionsInModule) * 100) : 0;
   }
 
   const moduleNoteKey = generateNoteKey('module', course.id, currentModuleIndex);
 
-  const allSectionsInModuleCompleted = moduleProgress?.sectionsProgress.every(section => section.isCompleted) || false;
+  const allSectionsInModuleCompleted = moduleProgress?.sections_progress.every(section => section.is_completed) || false;
 
   return (
     <div className="flex flex-col gap-8 max-w-screen-xl mx-auto">
@@ -302,7 +333,7 @@ const ModuleDetail = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{module.title}</span>
-                {moduleProgress?.isCompleted && <CheckCircle className="h-6 w-6 text-green-500" />}
+                {moduleProgress?.is_completed && <CheckCircle className="h-6 w-6 text-green-500" />}
               </CardTitle>
               <CardDescription>
                 Module {currentModuleIndex + 1} sur {course.modules.length}
@@ -312,11 +343,11 @@ const ModuleDetail = () => {
             <CardContent>
               {module.sections.map((section, index) => {
                 const sectionNoteKey = generateNoteKey('section', course.id, currentModuleIndex, index);
-                const sectionProgress = moduleProgress?.sectionsProgress.find(sp => sp.sectionIndex === index);
-                const isSectionCompleted = sectionProgress?.isCompleted || false;
-                const quizResult = sectionProgress?.quizResult;
+                const sectionProgress = moduleProgress?.sections_progress.find(sp => sp.section_index === index);
+                const isSectionCompleted = sectionProgress?.is_completed || false;
+                const quizResult = sectionProgress?.quiz_result;
 
-                const isSectionAccessible = index === 0 || (moduleProgress?.sectionsProgress.find(sp => sp.sectionIndex === index - 1)?.isCompleted || false);
+                const isSectionAccessible = index === 0 || (moduleProgress?.sections_progress.find(sp => sp.section_index === index - 1)?.is_completed || false);
 
                 return (
                   <div key={index} className="mb-6">
@@ -386,21 +417,26 @@ const ModuleDetail = () => {
                         </div>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-auto p-1">
-                        <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === sectionNoteKey ? null : sectionNoteKey)}>
-                          <NotebookText className="mr-2 h-4 w-4" /> {visibleNotesKey === sectionNoteKey ? 'Masquer les notes' : 'Afficher les notes'}
-                        </ContextMenuItem>
-                        <ContextMenuItem className="p-2" onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
-                          <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide
-                        </ContextMenuItem>
+                        {currentUserProfile && (
+                          <>
+                            <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === sectionNoteKey ? null : sectionNoteKey)}>
+                              <NotebookText className="mr-2 h-4 w-4" /> {visibleNotesKey === sectionNoteKey ? 'Masquer les notes' : 'Afficher les notes'}
+                            </ContextMenuItem>
+                            <ContextMenuItem className="p-2" onClick={() => handleOpenQuickNoteDialog(section.title, index)}>
+                              <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide
+                            </ContextMenuItem>
+                          </>
+                        )}
                         <ContextMenuItem className="p-2" onClick={() => handleAskAiaAboutSection(section.title)}>
                           <Bot className="mr-2 h-4 w-4" /> Demander à AiA
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
-                    {visibleNotesKey === sectionNoteKey && (
+                    {visibleNotesKey === sectionNoteKey && currentUserProfile && (
                       <NotesSection
                         noteKey={sectionNoteKey}
                         title={section.title}
+                        userId={currentUserProfile.id}
                         refreshKey={refreshNotesSection}
                       />
                     )}
@@ -419,13 +455,13 @@ const ModuleDetail = () => {
                   <Button
                     variant="outline"
                     onClick={() => navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`)}
-                    disabled={currentModuleIndex === course.modules.length - 1 || !moduleProgress?.isCompleted}
+                    disabled={currentModuleIndex === course.modules.length - 1 || !moduleProgress?.is_completed}
                   >
                     Suivant <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
                 <div className="flex gap-2">
-                  {!moduleProgress?.isCompleted && (
+                  {!moduleProgress?.is_completed && (
                     <Button onClick={handleMarkModuleComplete} disabled={!allSectionsInModuleCompleted}>
                       <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
                     </Button>
@@ -436,39 +472,46 @@ const ModuleDetail = () => {
           </Card>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-auto p-1">
-          <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === moduleNoteKey ? null : moduleNoteKey)}>
-            <NotebookText className="mr-2 h-4 w-4" /> {visibleNotesKey === moduleNoteKey ? 'Masquer les notes du module' : 'Afficher les notes du module'}
-          </ContextMenuItem>
-          <ContextMenuItem className="p-2" onClick={() => handleOpenQuickNoteDialog(module.title)}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide au module
-          </ContextMenuItem>
+          {currentUserProfile && (
+            <>
+              <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === moduleNoteKey ? null : moduleNoteKey)}>
+                <NotebookText className="mr-2 h-4 w-4" /> {visibleNotesKey === moduleNoteKey ? 'Masquer les notes du module' : 'Afficher les notes du module'}
+              </ContextMenuItem>
+              <ContextMenuItem className="p-2" onClick={() => handleOpenQuickNoteDialog(module.title)}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une note rapide au module
+              </ContextMenuItem>
+            </>
+          )}
           <ContextMenuItem className="p-2" onClick={handleAskAiaAboutModule}>
             <Bot className="mr-2 h-4 w-4" /> Demander à AiA sur ce module
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
-      {visibleNotesKey === moduleNoteKey && (
+      {visibleNotesKey === moduleNoteKey && currentUserProfile && (
         <NotesSection
           noteKey={moduleNoteKey}
           title={module.title}
+          userId={currentUserProfile.id}
           refreshKey={refreshNotesSection}
         />
       )}
 
-      <div className={cn(
-        "fixed z-40 p-4",
-        isMobile ? "bottom-20 left-4" : "bottom-4 left-4"
-      )}>
-        <Button
-          size="lg"
-          className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
-          onClick={() => handleOpenQuickNoteDialog(module.title)}
-        >
-          <PlusCircle className="h-7 w-7" />
-          <span className="sr-only">Ajouter une note rapide pour le module</span>
-        </Button>
-      </div>
+      {currentUserProfile && (
+        <div className={cn(
+          "fixed z-40 p-4",
+          isMobile ? "bottom-20 left-4" : "bottom-4 left-4"
+        )}>
+          <Button
+            size="lg"
+            className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
+            onClick={() => handleOpenQuickNoteDialog(module.title)}
+          >
+            <PlusCircle className="h-7 w-7" />
+            <span className="sr-only">Ajouter une note rapide pour le module</span>
+          </Button>
+        </div>
+      )}
 
       <QuickNoteDialog
         isOpen={isQuickNoteDialogOpen}

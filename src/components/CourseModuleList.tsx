@@ -4,43 +4,36 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Lock, CheckCircle, ArrowDown, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Course, Module, loadCourses } from "@/lib/courseData";
-import { Student } from '@/lib/dataModels'; // Import Student type
+import { Course, Module } from "@/lib/courseData";
+import { StudentCourseProgress } from '@/lib/dataModels'; // Import StudentCourseProgress type
 
 interface CourseModuleListProps {
   course: Course;
-  studentProfile?: Student; // Pass student profile to determine completion
+  studentCourseProgress?: StudentCourseProgress | null; // Pass student course progress
 }
 
-const CourseModuleList = ({ course, studentProfile }: CourseModuleListProps) => {
-  // Use the course prop directly, as it's already loaded and potentially updated in CourseDetail
-  // const updatedCourses = loadCourses();
-  // const currentCourse = updatedCourses.find(c => c.id === course.id) || course;
-
+const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListProps) => {
   const getModuleProgress = (moduleIndex: number) => {
-    if (!studentProfile) return 0;
-    const courseProgress = studentProfile.enrolledCoursesProgress.find(cp => cp.courseId === course.id);
-    if (!courseProgress) return 0;
+    if (!studentCourseProgress) return 0;
 
-    const moduleProgress = courseProgress.modulesProgress.find(mp => mp.moduleIndex === moduleIndex);
+    const moduleProgress = studentCourseProgress.modules_progress.find(mp => mp.module_index === moduleIndex);
     if (!moduleProgress) return 0;
 
-    const completedSections = moduleProgress.sectionsProgress.filter(s => s.isCompleted).length;
+    const completedSections = moduleProgress.sections_progress.filter(s => s.is_completed).length;
     const totalSections = course.modules[moduleIndex].sections.length;
     return totalSections > 0 ? Math.round((completedSections / totalSections) * 100) : 0;
   };
 
   const isModuleCompleted = (moduleIndex: number) => {
-    if (!studentProfile) return false;
-    const courseProgress = studentProfile.enrolledCoursesProgress.find(cp => cp.courseId === course.id);
-    if (!courseProgress) return false;
-    return courseProgress.modulesProgress.find(mp => mp.moduleIndex === moduleIndex)?.isCompleted || false;
+    if (!studentCourseProgress) return false;
+    return studentCourseProgress.modules_progress.find(mp => mp.module_index === moduleIndex)?.is_completed || false;
   };
 
   const isModuleAccessible = (moduleIndex: number) => {
     if (moduleIndex === 0) {
       return true;
     }
+    // A module is accessible if the previous one is completed
     return isModuleCompleted(moduleIndex - 1);
   };
 
@@ -60,9 +53,9 @@ const CourseModuleList = ({ course, studentProfile }: CourseModuleListProps) => 
                 isCompleted && "border-green-500 ring-2 ring-green-500/50"
               )}
             >
-              {course.imageUrl && (
+              {course.image_url && (
                 <img
-                  src={course.imageUrl}
+                  src={course.image_url}
                   alt={`Image pour le cours ${course.title}`}
                   className="w-full h-32 object-cover rounded-md mb-4"
                 />
@@ -93,10 +86,9 @@ const CourseModuleList = ({ course, studentProfile }: CourseModuleListProps) => 
                   <h4 className="text-lg font-semibold mb-3 text-left">Sections du module:</h4>
                   <div className="flex flex-row space-x-4 overflow-x-auto pb-4 scrollbar-hide md:flex-col md:space-y-4 md:space-x-0 md:overflow-x-visible md:pb-0 md:items-center"> {/* Responsive layout for sections */}
                     {module.sections.map((section, sectionIndex) => {
-                      const sectionIsCompleted = studentProfile?.enrolledCoursesProgress
-                        .find(cp => cp.courseId === course.id)
-                        ?.modulesProgress.find(mp => mp.moduleIndex === index)
-                        ?.sectionsProgress.find(sp => sp.sectionIndex === sectionIndex)?.isCompleted || false;
+                      const sectionIsCompleted = studentCourseProgress?.modules_progress
+                        .find(mp => mp.module_index === index)
+                        ?.sections_progress.find(sp => sp.section_index === sectionIndex)?.is_completed || false;
 
                       return (
                         <React.Fragment key={sectionIndex}>

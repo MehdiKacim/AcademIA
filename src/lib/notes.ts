@@ -1,12 +1,14 @@
-import { Course } from "./dataModels"; // Import Course interface
-import { loadCourses } from "./courseData"; // Import loadCourses
+import { Course, Note } from "./dataModels"; // Import Course and Note interfaces
+import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
+
 /**
- * Génère une clé unique pour stocker les notes dans le localStorage.
+ * Génère une clé unique pour stocker les notes.
+ * Cette clé sera utilisée comme 'note_key' dans la table Supabase 'notes'.
  * @param entityType Le type d'entité (cours, module ou section).
  * @param entityId L'ID du cours.
  * @param moduleIndex L'index du module (optionnel, pour les notes de module ou section).
  * @param sectionIndex L'index de la section (optionnel, pour les notes de section).
- * @returns La clé unique pour le localStorage.
+ * @returns La clé unique.
  */
 export const generateNoteKey = (entityType: EntityType, entityId: string, moduleIndex?: number, sectionIndex?: number): string => {
   if (entityType === 'section' && moduleIndex !== undefined && sectionIndex !== undefined) {
@@ -19,79 +21,124 @@ export const generateNoteKey = (entityType: EntityType, entityId: string, module
 };
 
 /**
- * Récupère les notes pour une clé donnée depuis le localStorage.
- * @param key La clé des notes.
+ * Récupère les notes pour une clé donnée et un utilisateur depuis Supabase.
+ * @param userId L'ID de l'utilisateur actuel.
+ * @param noteKey La clé des notes.
  * @returns Un tableau de chaînes de caractères représentant les notes.
  */
-export const getNotes = (key: string): string[] => {
-  try {
-    const storedNotes = localStorage.getItem(key);
-    return storedNotes ? JSON.parse(storedNotes) : [];
-  } catch (error) {
-    console.error("Erreur lors de la récupération des notes du localStorage:", error);
+export const getNotes = async (userId: string, noteKey: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('notes')
+    .select('content')
+    .eq('user_id', userId)
+    .eq('note_key', noteKey)
+    .order('created_at', { ascending: true }); // Order to maintain consistency
+  if (error) {
+    console.error("Erreur lors de la récupération des notes de Supabase:", error);
     return [];
   }
+  return data.map(note => note.content);
 };
 
 /**
- * Ajoute une nouvelle note pour une clé donnée dans le localStorage.
- * @param key La clé des notes.
- * @param note La note à ajouter.
+ * Ajoute une nouvelle note pour une clé donnée et un utilisateur dans Supabase.
+ * @param userId L'ID de l'utilisateur actuel.
+ * @param noteKey La clé des notes.
+ * @param content Le contenu de la note à ajouter.
  * @returns Le tableau mis à jour des notes.
  */
-export const addNote = (key: string, note: string): string[] => {
-  try {
-    const existingNotes = getNotes(key);
-    const updatedNotes = [...existingNotes, note];
-    localStorage.setItem(key, JSON.stringify(updatedNotes));
-    return updatedNotes;
-  } catch (error) {
-    console.error("Erreur lors de l'ajout de la note au localStorage:", error);
-    return getNotes(key); // Retourne l'état actuel sans la nouvelle note si l'ajout échoue
+export const addNote = async (userId: string, noteKey: string, content: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('notes')
+    .insert({ user_id: userId, note_key: noteKey, content: content })
+    .select('content')
+    .single(); // Select the content of the newly inserted note
+  if (error) {
+    console.error("Erreur lors de l'ajout de la note à Supabase:", error);
+    throw error;
   }
+  // Re-fetch all notes for the key to ensure the list is up-to-date
+  return getNotes(userId, noteKey);
 };
 
 /**
- * Met à jour une note existante pour une clé donnée dans le localStorage.
- * @param key La clé des notes.
+ * Met à jour une note existante pour une clé donnée et un utilisateur dans Supabase.
+ * Note: Cette fonction est simplifiée. Dans un cas réel, vous auriez besoin d'un ID unique pour chaque note
+ * ou d'une logique plus complexe pour identifier la note à mettre à jour si vous n'avez que l'index.
+ * Pour l'instant, nous allons récupérer toutes les notes, modifier celle à l'index, puis la mettre à jour.
+ * C'est moins efficace mais fonctionnel avec la structure actuelle.
+ * @param userId L'ID de l'utilisateur actuel.
+ * @param noteKey La clé des notes.
  * @param index L'index de la note à mettre à jour.
  * @param newContent Le nouveau contenu de la note.
  * @returns Le tableau mis à jour des notes.
  */
-export const updateNote = (key: string, index: number, newContent: string): string[] => {
-  try {
-    const existingNotes = getNotes(key);
-    if (index >= 0 && index < existingNotes.length) {
-      existingNotes[index] = newContent;
-      localStorage.setItem(key, JSON.stringify(existingNotes));
-      return existingNotes;
-    }
-    return existingNotes; // Retourne l'état inchangé si l'index est invalide
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour de la note dans le localStorage:", error);
-    return getNotes(key);
+export const updateNote = async (userId: string, noteKey: string, index: number, newContent: string): Promise<string[]> => {
+  const { data: existingNotesData, error: fetchError } = await supabase
+    .from('notes')
+    .select('id, content')
+    .eq('user_id', userId)
+    .eq('note_key', noteKey)
+    .order('created_at', { ascending: true });
+
+  if (fetchError) {
+    console.error("Erreur lors de la récupération des notes pour la mise à jour:", fetchError);
+    throw fetchError;
   }
+
+  if (index >= 0 && index < existingNotesData.length) {
+    const noteToUpdateId = existingNotesData[index].id;
+    const { error: updateError } = await supabase
+      .from('notes')
+      .update({ content: newContent, updated_at: new Date().toISOString() })
+      .eq('id', noteToUpdateId);
+
+    if (updateError) {
+      console.error("Erreur lors de la mise à jour de la note dans Supabase:", updateError);
+      throw updateError;
+    }
+  } else {
+    console.warn("Index de note invalide pour la mise à jour.");
+  }
+  return getNotes(userId, noteKey); // Re-fetch all notes to ensure consistency
 };
 
 /**
- * Supprime une note pour une clé donnée dans le localStorage.
- * @param key La clé des notes.
+ * Supprime une note pour une clé donnée et un utilisateur dans Supabase.
+ * Comme pour updateNote, cette fonction est simplifiée et supprime par index.
+ * @param userId L'ID de l'utilisateur actuel.
+ * @param noteKey La clé des notes.
  * @param index L'index de la note à supprimer.
  * @returns Le tableau mis à jour des notes.
  */
-export const deleteNote = (key: string, index: number): string[] => {
-  try {
-    const existingNotes = getNotes(key);
-    if (index >= 0 && index < existingNotes.length) {
-      const updatedNotes = existingNotes.filter((_, i) => i !== index);
-      localStorage.setItem(key, JSON.stringify(updatedNotes));
-      return updatedNotes;
-    }
-    return existingNotes; // Retourne l'état inchangé si l'index est invalide
-  } catch (error) {
-    console.error("Erreur lors de la suppression de la note du localStorage:", error);
-    return getNotes(key);
+export const deleteNote = async (userId: string, noteKey: string, index: number): Promise<string[]> => {
+  const { data: existingNotesData, error: fetchError } = await supabase
+    .from('notes')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('note_key', noteKey)
+    .order('created_at', { ascending: true });
+
+  if (fetchError) {
+    console.error("Erreur lors de la récupération des notes pour la suppression:", fetchError);
+    throw fetchError;
   }
+
+  if (index >= 0 && index < existingNotesData.length) {
+    const noteToDeleteId = existingNotesData[index].id;
+    const { error: deleteError } = await supabase
+      .from('notes')
+      .delete()
+      .eq('id', noteToDeleteId);
+
+    if (deleteError) {
+      console.error("Erreur lors de la suppression de la note de Supabase:", deleteError);
+      throw deleteError;
+    }
+  } else {
+    console.warn("Index de note invalide pour la suppression.");
+  }
+  return getNotes(userId, noteKey); // Re-fetch all notes to ensure consistency
 };
 
 // --- Fonctions pour la vue globale des notes ---
@@ -135,31 +182,34 @@ export const parseNoteKey = (key: string): ParsedNoteKey | null => {
 };
 
 /**
- * Récupère toutes les clés de note du localStorage.
+ * Récupère toutes les clés de note pour un utilisateur depuis Supabase.
  */
-export const getAllNoteKeys = (): string[] => {
-  const keys: string[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('notes_')) {
-      keys.push(key);
-    }
+export const getAllNoteKeys = async (userId: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('notes')
+    .select('note_key')
+    .eq('user_id', userId)
+    .distinct('note_key'); // Get unique note_keys
+  if (error) {
+    console.error("Erreur lors de la récupération de toutes les clés de note de Supabase:", error);
+    return [];
   }
-  return keys;
+  return data.map(row => row.note_key);
 };
 
 /**
- * Retrieves all notes from localStorage and aggregates them with context.
+ * Retrieves all notes from Supabase for a given user and aggregates them with context.
+ * @param userId The ID of the current user.
  * @param courses The list of all courses to resolve context titles.
  */
-export const getAllNotesData = (courses: Course[]): AggregatedNote[] => {
-  const allKeys = getAllNoteKeys();
+export const getAllNotesData = async (userId: string, courses: Course[]): Promise<AggregatedNote[]> => {
+  const allKeys = await getAllNoteKeys(userId);
   const aggregatedNotes: AggregatedNote[] = [];
 
-  allKeys.forEach(key => {
+  for (const key of allKeys) {
     const parsedKey = parseNoteKey(key);
     if (parsedKey) {
-      const notes = getNotes(key);
+      const notes = await getNotes(userId, key); // Fetch notes for each key
       if (notes.length > 0) {
         let context = '';
         const course = courses.find(c => c.id === parsedKey.entityId);
@@ -188,7 +238,12 @@ export const getAllNotesData = (courses: Course[]): AggregatedNote[] => {
         }
       }
     }
-  });
-
+  }
   return aggregatedNotes;
+};
+
+// Reset function for notes (for development/testing)
+export const resetNotes = async () => {
+  const { error } = await supabase.from('notes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error("Error resetting notes:", error);
 };

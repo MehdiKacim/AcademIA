@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Edit, Trash2, Save, XCircle } from "lucide-react";
-import { getNotes, addNote, updateNote, deleteNote } from "@/lib/notes";
+import { getNotes, addNote, updateNote, deleteNote } from "@/lib/notes"; // Import Supabase-based notes functions
 import { showSuccess, showError } from "@/utils/toast";
 import {
   AlertDialog,
@@ -21,27 +21,41 @@ import 'react-quill/dist/quill.snow.css'; // Import the Quill CSS
 interface NotesSectionProps {
   noteKey: string; // Clé unique pour le localStorage (ex: 'notes_course_1', 'notes_module_1_0')
   title: string; // Titre de l'entité (cours ou module) pour l'affichage
+  userId: string; // New: Pass the current user's ID
   refreshKey?: number; // Nouvelle prop pour forcer le rafraîchissement
 }
 
-const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
+const NotesSection = ({ noteKey, title, userId, refreshKey }: NotesSectionProps) => {
   const [notes, setNotes] = useState<string[]>([]);
   const [newNote, setNewNote] = useState<string>('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState<string>('');
 
   useEffect(() => {
-    setNotes(getNotes(noteKey));
-  }, [noteKey, refreshKey]);
+    const fetchNotes = async () => {
+      try {
+        const fetchedNotes = await getNotes(userId, noteKey);
+        setNotes(fetchedNotes);
+      } catch (error: any) {
+        console.error("Error fetching notes in NotesSection:", error);
+        showError(`Erreur lors du chargement des notes: ${error.message}`);
+      }
+    };
+    fetchNotes();
+  }, [noteKey, userId, refreshKey]); // Depend on userId and refreshKey
 
-  const handleAddNote = () => {
-    // Check if the content is not just empty HTML tags (e.g., <p><br></p>)
+  const handleAddNote = async () => {
     const strippedNewNote = newNote.replace(/<[^>]*>/g, '').trim();
     if (strippedNewNote) {
-      const updatedNotes = addNote(noteKey, newNote); // Save HTML content
-      setNotes(updatedNotes);
-      setNewNote('');
-      showSuccess("Note ajoutée avec succès !");
+      try {
+        const updatedNotes = await addNote(userId, noteKey, newNote); // Pass userId
+        setNotes(updatedNotes);
+        setNewNote('');
+        showSuccess("Note ajoutée avec succès !");
+      } catch (error: any) {
+        console.error("Error adding note:", error);
+        showError(`Erreur lors de l'ajout de la note: ${error.message}`);
+      }
     } else {
       showError("Veuillez écrire quelque chose pour ajouter une note.");
     }
@@ -52,15 +66,19 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
     setEditedContent(content);
   };
 
-  const handleSaveEdit = (index: number) => {
-    // Check if the content is not just empty HTML tags
+  const handleSaveEdit = async (index: number) => {
     const strippedEditedContent = editedContent.replace(/<[^>]*>/g, '').trim();
     if (strippedEditedContent) {
-      const updatedNotes = updateNote(noteKey, index, editedContent); // Save HTML content
-      setNotes(updatedNotes);
-      setEditingIndex(null);
-      setEditedContent('');
-      showSuccess("Note modifiée avec succès !");
+      try {
+        const updatedNotes = await updateNote(userId, noteKey, index, editedContent); // Pass userId
+        setNotes(updatedNotes);
+        setEditingIndex(null);
+        setEditedContent('');
+        showSuccess("Note modifiée avec succès !");
+      } catch (error: any) {
+        console.error("Error saving edited note:", error);
+        showError(`Erreur lors de la modification de la note: ${error.message}`);
+      }
     } else {
       showError("La note ne peut pas être vide.");
     }
@@ -71,10 +89,15 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
     setEditedContent('');
   };
 
-  const handleDeleteNote = (index: number) => {
-    const updatedNotes = deleteNote(noteKey, index);
-    setNotes(updatedNotes);
-    showSuccess("Note supprimée avec succès !");
+  const handleDeleteNote = async (index: number) => {
+    try {
+      const updatedNotes = await deleteNote(userId, noteKey, index); // Pass userId
+      setNotes(updatedNotes);
+      showSuccess("Note supprimée avec succès !");
+    } catch (error: any) {
+      console.error("Error deleting note:", error);
+      showError(`Erreur lors de la suppression de la note: ${error.message}`);
+    }
   };
 
   // Quill modules and formats for rich text editing
@@ -119,7 +142,7 @@ const NotesSection = ({ noteKey, title, refreshKey }: NotesSectionProps) => {
                   </div>
                 ) : (
                   <div className="prose prose-sm dark:prose-invert flex-grow mr-2 max-w-none">
-                    {/* WARNING: dangerouslySetInnerHTML can expose to XSS attacks if content is not sanitized. 
+                    {/* WARNING: dangerouslySetInnerHTML can expose to XSS attacks if content is not sanitized.
                         For a production app, ensure server-side sanitization or use a library like DOMPurify. */}
                     <div dangerouslySetInnerHTML={{ __html: note }} />
                   </div>

@@ -10,8 +10,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { addNote } from "@/lib/notes";
+import { addNote } from "@/lib/notes"; // Import addNote from Supabase-based notes.ts
 import { showSuccess, showError } from "@/utils/toast";
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface QuickNoteDialogProps {
   isOpen: boolean;
@@ -23,14 +24,24 @@ interface QuickNoteDialogProps {
 
 const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }: QuickNoteDialogProps) => {
   const [noteContent, setNoteContent] = useState('');
+  const { currentUserProfile } = useRole();
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
+    if (!currentUserProfile) {
+      showError("Vous devez être connecté pour ajouter une note.");
+      return;
+    }
     if (noteContent.trim()) {
-      addNote(noteKey, noteContent.trim());
-      setNoteContent('');
-      showSuccess("Note rapide ajoutée !");
-      onNoteAdded(); // Déclenche le rafraîchissement
-      onClose();
+      try {
+        await addNote(currentUserProfile.id, noteKey, noteContent.trim());
+        setNoteContent('');
+        showSuccess("Note rapide ajoutée !");
+        onNoteAdded(); // Déclenche le rafraîchissement
+        onClose();
+      } catch (error: any) {
+        console.error("Error adding quick note:", error);
+        showError(`Erreur lors de l'ajout de la note: ${error.message}`);
+      }
     } else {
       showError("Veuillez écrire quelque chose pour ajouter une note.");
     }

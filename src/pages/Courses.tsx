@@ -12,20 +12,24 @@ import { loadCourses } from "@/lib/courseData"; // Import loadCourses
 import { BookOpen, Lock, CheckCircle } from "lucide-react"; // Import icons
 import { cn } from "@/lib/utils"; // Import cn
 import React, { useState, useMemo, useEffect } from "react"; // Import useState and useMemo
-import { loadStudents, getStudentProfileByUserId } from "@/lib/studentData";
+import { getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supabase function
+import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import types
 
 const Courses = () => {
-  const { currentUser, currentRole } = useRole();
-  const [courses, setCourses] = useState(loadCourses());
-  const [studentProfiles, setStudentProfiles] = useState(loadStudents());
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    setCourses(loadCourses());
-    setStudentProfiles(loadStudents());
-  }, []); // Load data once on mount
-
-  const studentProfile = currentUser && currentRole === 'student' ? getStudentProfileByUserId(currentUser.id) : undefined;
+    const fetchData = async () => {
+      const loadedCourses = await loadCourses();
+      setCourses(loadedCourses);
+      const loadedProgresses = await getAllStudentCourseProgress();
+      setStudentCourseProgresses(loadedProgresses);
+    };
+    fetchData();
+  }, [currentUserProfile]); // Re-fetch if user profile changes
 
   const getCoursesForRole = useMemo(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
@@ -36,12 +40,13 @@ const Courses = () => {
     );
 
     if (currentRole === 'student') {
+      const studentProgress = studentCourseProgresses.filter(p => p.user_id === currentUserProfile?.id);
       return filtered.map(course => {
-        const courseProgress = studentProfile?.enrolledCoursesProgress.find(cp => cp.courseId === course.id);
-        const completedModules = courseProgress ? courseProgress.modulesProgress.filter(m => m.isCompleted).length : 0;
+        const courseProgress = studentProgress.find(cp => cp.course_id === course.id);
+        const completedModules = courseProgress ? courseProgress.modules_progress.filter(m => m.is_completed).length : 0;
         const totalModules = course.modules.length;
         const progress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
-        const isCompleted = courseProgress ? courseProgress.modulesProgress.every(m => m.isCompleted) : false;
+        const isCompleted = courseProgress ? courseProgress.modules_progress.every(m => m.is_completed) : false;
         return {
           ...course,
           progress: progress,
@@ -63,9 +68,22 @@ const Courses = () => {
       }));
     }
     return [];
-  }, [courses, currentRole, searchQuery, studentProfile]);
+  }, [courses, currentRole, searchQuery, currentUserProfile, studentCourseProgresses]);
 
   const coursesToDisplay = getCoursesForRole;
+
+  if (isLoadingUser) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Chargement des cours...
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez patienter.
+        </p>
+      </div>
+    );
+  }
 
   const renderCoursesContent = () => {
     if (currentRole === 'student') {
@@ -85,9 +103,9 @@ const Courses = () => {
                     course.isCompleted && "border-green-500 ring-2 ring-green-500/50"
                   )}
                 >
-                  {course.imageUrl && (
+                  {course.image_url && (
                     <img
-                      src={course.imageUrl}
+                      src={course.image_url}
                       alt={`Image pour le cours ${course.title}`}
                       className="w-full h-40 object-cover rounded-t-lg"
                     />
@@ -108,8 +126,8 @@ const Courses = () => {
                   <CardContent className="flex-grow flex flex-col justify-between">
                     <p className="text-sm text-muted-foreground mb-4">
                       Progression: {course.progress}% ({course.modules.filter((m: any) => {
-                        const courseProgress = studentProfile?.enrolledCoursesProgress.find(cp => cp.courseId === course.id);
-                        return courseProgress?.modulesProgress.find(mp => mp.moduleIndex === course.modules.indexOf(m))?.isCompleted;
+                        const courseProgress = studentCourseProgresses.find(cp => cp.course_id === course.id && cp.user_id === currentUserProfile?.id);
+                        return courseProgress?.modules_progress.find(mp => mp.module_index === course.modules.indexOf(m))?.is_completed;
                       }).length}/{course.modules.length} modules)
                     </p>
                     <Link to={`/courses/${course.id}`}>

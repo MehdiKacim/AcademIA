@@ -1,22 +1,14 @@
 import { resetCourses, resetCurricula, resetEstablishments, resetClasses } from "./courseData";
-import { resetUsers, resetStudentProfiles, resetCreatorProfiles, resetTutorProfiles } from "./studentData";
+import { resetProfiles, resetStudentCourseProgress } from "./studentData";
+import { resetNotes } from "./notes";
 
-export const clearAllAppData = () => {
-  // Clear all notes (keys starting with 'notes_')
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('notes_')) {
-      localStorage.removeItem(key);
-    }
-  }
-
-  // Call specific reset functions for each data type
-  resetCourses();
-  resetCurricula();
-  resetEstablishments();
-  resetClasses();
-  resetUsers();
-  resetStudentProfiles();
-  resetCreatorProfiles();
-  resetTutorProfiles();
+export const clearAllAppData = async () => {
+  // Call specific reset functions for each data type using Supabase
+  await resetNotes();
+  await resetStudentCourseProgress();
+  await resetCourses();
+  await resetCurricula();
+  await resetEstablishments();
+  await resetClasses();
+  await resetProfiles(); // Reset profiles last, as other tables might reference it
 };

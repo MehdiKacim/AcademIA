@@ -7,17 +7,40 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { loadCourses } from "@/lib/courseData";
-import { loadStudents, loadCreatorProfiles, loadTutorProfiles, getStudentProfileByUserId } from "@/lib/studentData"; // Import new data loaders
+import { getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supabase function
+import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import types
+import React, { useState, useEffect } from "react";
 
 const Dashboard = () => {
-  const { currentUser, currentRole } = useRole();
-  const courses = loadCourses();
-  const students = loadStudents(); // Load all student profiles
-  const creatorProfiles = loadCreatorProfiles();
-  const tutorProfiles = loadTutorProfiles();
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const loadedCourses = await loadCourses();
+      setCourses(loadedCourses);
+      const loadedProgresses = await getAllStudentCourseProgress();
+      setStudentCourseProgresses(loadedProgresses);
+    };
+    fetchData();
+  }, [currentUserProfile]); // Re-fetch if user profile changes
+
+  if (isLoadingUser) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Chargement du tableau de bord...
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez patienter.
+        </p>
+      </div>
+    );
+  }
 
   const renderDashboardContent = () => {
-    if (!currentUser) {
+    if (!currentUserProfile) {
       return (
         <div className="text-center py-20">
           <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -31,28 +54,16 @@ const Dashboard = () => {
     }
 
     if (currentRole === 'student') {
-      const studentProfile = getStudentProfileByUserId(currentUser.id);
-      if (!studentProfile) {
-        return (
-          <div className="text-center py-20">
-            <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-              Profil Étudiant Introuvable
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Votre profil étudiant n'a pas pu être chargé.
-            </p>
-          </div>
-        );
-      }
+      const studentProgress = studentCourseProgresses.filter(p => p.user_id === currentUserProfile.id);
 
-      const enrolledCourses = courses.filter(c => studentProfile.enrolledCoursesProgress.some(ec => ec.courseId === c.id));
+      const enrolledCourses = courses.filter(c => studentProgress.some(ec => ec.course_id === c.id));
       const completedCoursesCount = enrolledCourses.filter(c => {
-        const progress = studentProfile.enrolledCoursesProgress.find(ec => ec.courseId === c.id);
-        return progress && progress.modulesProgress.every(m => m.isCompleted);
+        const progress = studentProgress.find(ec => ec.course_id === c.id);
+        return progress && progress.modules_progress.every(m => m.is_completed);
       }).length;
 
-      const totalModulesCompleted = studentProfile.enrolledCoursesProgress.reduce((acc, courseProgress) =>
-        acc + courseProgress.modulesProgress.filter(m => m.isCompleted).length, 0
+      const totalModulesCompleted = studentProgress.reduce((acc, courseProgress) =>
+        acc + courseProgress.modules_progress.filter(m => m.is_completed).length, 0
       );
       const totalModulesAvailable = courses.reduce((acc, course) => acc + course.modules.length, 0);
       const overallProgress = totalModulesAvailable > 0 ? Math.round((totalModulesCompleted / totalModulesAvailable) * 100) : 0;
@@ -94,7 +105,7 @@ const Dashboard = () => {
     } else if (currentRole === 'creator') {
       const createdCourses = courses; // Assuming all courses are created by this creator for demo
       const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.isCompleted)).length; // Simple heuristic for 'published'
-      const totalStudents = students.length; // Total students in the system
+      const totalStudents = studentCourseProgresses.length; // Total students with any progress
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -111,7 +122,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Statistiques des Élèves</CardTitle>
-              <CardDescription>Vue d'overview de la progression.</CardDescription>
+              <CardDescription>Engagement et progression des apprenants.</CardDescription>
             </CardHeader>
             <CardContent>
               <p>{totalStudents} élèves inscrits au total.</p>
@@ -130,7 +141,7 @@ const Dashboard = () => {
         </div>
       );
     } else if (currentRole === 'tutor') {
-      const supervisedStudents = students.slice(0, 2); // Just taking first two for demo
+      const supervisedStudents = studentCourseProgresses.slice(0, 2); // Just taking first two for demo
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -139,7 +150,7 @@ const Dashboard = () => {
               <CardDescription>Suivez la progression de vos enfants/protégés.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous suivez {supervisedStudents.length} élèves : {supervisedStudents.map(s => `${s.firstName} ${s.lastName}`).join(', ')}.</p>
+              <p>Vous suivez {supervisedStudents.length} élèves : {supervisedStudents.map(s => s.user_id).join(', ')}.</p> {/* Placeholder for user names */}
             </CardContent>
           </Card>
           <Card>
@@ -148,7 +159,7 @@ const Dashboard = () => {
               <CardDescription>Points nécessitant votre attention.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>{supervisedStudents[0]?.firstName} a des difficultés en algèbre. {supervisedStudents[1]?.firstName} excelle en géométrie.</p>
+              <p>Alertes fictives pour le moment.</p>
             </CardContent>
           </Card>
           <Card>
@@ -157,7 +168,7 @@ const Dashboard = () => {
               <CardDescription>Messages récents.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Nouveau message de l'enseignant de {supervisedStudents[0]?.firstName}.</p>
+              <p>Messages fictifs pour le moment.</p>
             </CardContent>
           </Card>
         </div>

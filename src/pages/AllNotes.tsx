@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { NotebookText, Search, ArrowLeft } from "lucide-react";
-import { getAllNotesData, AggregatedNote } from "@/lib/notes";
+import { getAllNotesData, AggregatedNote } from "@/lib/notes"; // Import getAllNotesData
 import NotesSection from "@/components/NotesSection";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import { loadCourses } from '@/lib/courseData'; // Import loadCourses
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 const AllNotes = () => {
+  const { currentUserProfile, isLoadingUser } = useRole();
   const [allNotes, setAllNotes] = useState<AggregatedNote[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,6 +26,28 @@ const AllNotes = () => {
   const location = useLocation();
 
   const isBackToListActionRef = useRef(false);
+
+  useEffect(() => {
+    const fetchAllNotes = async () => {
+      if (currentUserProfile) {
+        const courses = await loadCourses(); // Load courses to resolve context
+        const notes = await getAllNotesData(currentUserProfile.id, courses);
+        setAllNotes(notes);
+
+        const queryParams = new URLSearchParams(location.search);
+        const selectKey = queryParams.get('select');
+
+        if (selectKey && notes.some(n => n.key === selectKey)) {
+          setSelectedNoteGroupKey(selectKey);
+        } else if (notes.length > 0 && !selectedNoteGroupKey) { // Only set default if no key is already selected
+          setSelectedNoteGroupKey(notes[0].key);
+        } else if (notes.length === 0) {
+          setSelectedNoteGroupKey(null);
+        }
+      }
+    };
+    fetchAllNotes();
+  }, [refreshKey, location.search, currentUserProfile]); // Depend on currentUserProfile
 
   const filteredNotes = useMemo(() => {
     if (!searchQuery) {
@@ -38,23 +62,6 @@ const AllNotes = () => {
       return contextMatch || notesContentMatch;
     });
   }, [allNotes, searchQuery]);
-
-  useEffect(() => {
-    // Pass loadCourses to getAllNotesData to ensure it uses current data
-    const notes = getAllNotesData(loadCourses());
-    setAllNotes(notes);
-
-    const queryParams = new URLSearchParams(location.search);
-    const selectKey = queryParams.get('select');
-
-    if (selectKey && notes.some(n => n.key === selectKey)) {
-      setSelectedNoteGroupKey(selectKey);
-    } else if (notes.length > 0) {
-      setSelectedNoteGroupKey(notes[0].key);
-    } else {
-      setSelectedNoteGroupKey(null);
-    }
-  }, [refreshKey, location.search]);
 
   useEffect(() => {
     if (isBackToListActionRef.current) {
@@ -86,6 +93,32 @@ const AllNotes = () => {
   const selectedNoteGroup = useMemo(() => {
     return allNotes.find(group => group.key === selectedNoteGroupKey);
   }, [allNotes, selectedNoteGroupKey]);
+
+  if (isLoadingUser) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Chargement des notes...
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez patienter.
+        </p>
+      </div>
+    );
+  }
+
+  if (!currentUserProfile) {
+    return (
+      <div className="text-center py-20">
+        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+          Accès Restreint
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Veuillez vous connecter pour voir vos notes.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 h-[calc(100vh-120px)] flex flex-col">
@@ -151,6 +184,7 @@ const AllNotes = () => {
                     <NotesSection
                       noteKey={selectedNoteGroup.key}
                       title={selectedNoteGroup.context}
+                      userId={currentUserProfile.id}
                       refreshKey={refreshKey}
                     />
                   ) : (
@@ -202,10 +236,11 @@ const AllNotes = () => {
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={65} minSize={35}>
                 <div className="flex flex-col h-full p-4">
-                  {selectedNoteGroup ? (
+                  {selectedNoteGroup && currentUserProfile ? (
                     <NotesSection
                       noteKey={selectedNoteGroup.key}
                       title={selectedNoteGroup.context}
+                      userId={currentUserProfile.id}
                       refreshKey={refreshKey}
                     />
                   ) : (

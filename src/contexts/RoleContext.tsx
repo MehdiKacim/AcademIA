@@ -1,45 +1,65 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { User } from '@/lib/dataModels';
-import { loadUsers, getUserById } from '@/lib/studentData'; // Import loadUsers and getUserById
+import { supabase } from "@/integrations/supabase/client";
+import { Profile } from '@/lib/dataModels'; // Import Profile interface
 
 interface RoleContextType {
-  currentUser: User | null;
-  setCurrentUser: (user: User | null) => void;
+  currentUserProfile: Profile | null;
+  setCurrentUserProfile: (profile: Profile | null) => void;
   currentRole: 'student' | 'creator' | 'tutor' | null;
+  isLoadingUser: boolean; // New loading state
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true); // Initialize as true
 
-  // Load user from localStorage on initial mount
   useEffect(() => {
-    const storedUserId = localStorage.getItem('currentUserId');
-    if (storedUserId) {
-      const users = loadUsers();
-      const foundUser = users.find(u => u.id === storedUserId);
-      if (foundUser) {
-        setCurrentUser(foundUser);
-      } else {
-        localStorage.removeItem('currentUserId'); // Clear invalid ID
+    const fetchUserProfile = async (userId: string) => {
+      setIsLoadingUser(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        setCurrentUserProfile(null);
+      } else if (data) {
+        setCurrentUserProfile(data);
       }
-    }
+      setIsLoadingUser(false);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        // User is logged in
+        fetchUserProfile(session.user.id);
+      } else {
+        // User is logged out
+        setCurrentUserProfile(null);
+        setIsLoadingUser(false);
+      }
+    });
+
+    // Initial check for session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setIsLoadingUser(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Persist user ID to localStorage whenever currentUser changes
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('currentUserId', currentUser.id);
-    } else {
-      localStorage.removeItem('currentUserId');
-    }
-  }, [currentUser]);
-
-  const currentRole = currentUser ? currentUser.role : null;
+  const currentRole = currentUserProfile ? currentUserProfile.role : null;
 
   return (
-    <RoleContext.Provider value={{ currentUser, setCurrentUser, currentRole }}>
+    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser }}>
       {children}
     </RoleContext.Provider>
   );

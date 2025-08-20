@@ -18,23 +18,26 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { Student, Course } from "@/lib/dataModels";
+import { Profile, Course, StudentCourseProgress } from "@/lib/dataModels"; // Import Profile, Course, StudentCourseProgress
 
 interface StudentAnalyticsSectionProps {
-  studentProfile: Student;
+  studentProfile: Profile; // Now expects a Profile object
   courses: Course[];
+  studentCourseProgresses: StudentCourseProgress[]; // All student course progresses
   view: string | null; // Added view prop
 }
 
-const StudentAnalyticsSection = ({ studentProfile, courses, view }: StudentAnalyticsSectionProps) => {
-  const enrolledCourses = courses.filter(c => studentProfile.enrolledCoursesProgress.some(ec => ec.courseId === c.id));
+const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgresses, view }: StudentAnalyticsSectionProps) => {
+  const studentProgress = studentCourseProgresses.filter(p => p.user_id === studentProfile.id);
+
+  const enrolledCourses = courses.filter(c => studentProgress.some(ec => ec.course_id === c.id));
   const completedCoursesCount = enrolledCourses.filter(c => {
-    const progress = studentProfile.enrolledCoursesProgress.find(ec => ec.courseId === c.id);
-    return progress && progress.modulesProgress.every(m => m.isCompleted);
+    const progress = studentProgress.find(ec => ec.course_id === c.id);
+    return progress && progress.modules_progress.every(m => m.is_completed);
   }).length;
 
-  const totalModulesCompleted = studentProfile.enrolledCoursesProgress.reduce((acc, courseProgress) =>
-    acc + courseProgress.modulesProgress.filter(m => m.isCompleted).length, 0
+  const totalModulesCompleted = studentProgress.reduce((acc, courseProgress) =>
+    acc + courseProgress.modules_progress.filter(m => m.is_completed).length, 0
   );
   const totalModulesAvailable = courses.reduce((acc, course) => acc + course.modules.length, 0);
   const overallProgress = totalModulesAvailable > 0 ? `${Math.round((totalModulesCompleted / totalModulesAvailable) * 100)}%` : "0%";
@@ -175,16 +178,16 @@ const StudentAnalyticsSection = ({ studentProfile, courses, view }: StudentAnaly
             </CardHeader>
             <CardContent>
               <ul className="list-disc pl-5 text-sm text-muted-foreground mt-4">
-                {studentProfile.enrolledCoursesProgress.map(cp => {
-                  const course = courses.find(c => c.id === cp.courseId);
-                  return cp.modulesProgress.map(mp => {
-                    const module = course?.modules[mp.moduleIndex];
-                    return mp.sectionsProgress.map(sp => {
-                      const section = module?.sections[sp.sectionIndex];
-                      if (section?.type === 'quiz' && sp.quizResult) {
+                {studentProgress.map(cp => {
+                  const course = courses.find(c => c.id === cp.course_id);
+                  return cp.modules_progress.map(mp => {
+                    const module = course?.modules[mp.module_index];
+                    return mp.sections_progress.map(sp => {
+                      const section = module?.sections[sp.section_index];
+                      if (section?.type === 'quiz' && sp.quiz_result) {
                         return (
-                          <li key={`${cp.courseId}-${mp.moduleIndex}-${sp.sectionIndex}`}>
-                            **{course?.title}** - Module {mp.moduleIndex + 1}: "{module?.title}" - Quiz: "{section.title}" - Score: {sp.quizResult.score}/{sp.quizResult.total} ({((sp.quizResult.score / sp.quizResult.total) * 100).toFixed(0)}%) - **{sp.quizResult.passed ? 'Réussi' : 'Échoué'}**
+                          <li key={`${cp.course_id}-${mp.module_index}-${sp.section_index}`}>
+                            **{course?.title}** - Module {mp.module_index + 1}: "{module?.title}" - Quiz: "{section.title}" - Score: {sp.quiz_result.score}/{sp.quiz_result.total} ({((sp.quiz_result.score / sp.quiz_result.total) * 100).toFixed(0)}%) - **{sp.quiz_result.passed ? 'Réussi' : 'Échoué'}**
                           </li>
                         );
                       }
@@ -192,7 +195,7 @@ const StudentAnalyticsSection = ({ studentProfile, courses, view }: StudentAnaly
                     });
                   });
                 }).flat(3).filter(Boolean)}
-                {studentProfile.enrolledCoursesProgress.length === 0 && <p>Aucun quiz terminé pour le moment.</p>}
+                {studentProgress.length === 0 && <p>Aucun quiz terminé pour le moment.</p>}
               </ul>
             </CardContent>
           </Card>

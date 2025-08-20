@@ -8,6 +8,7 @@ import { getAllNotesData, AggregatedNote } from "@/lib/notes";
 import { loadCourses, Course, Module, ModuleSection } from "@/lib/courseData";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface SearchResult {
   type: 'note' | 'course' | 'module' | 'section';
@@ -24,6 +25,7 @@ interface GlobalSearchOverlayProps {
 }
 
 const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
+  const { currentUserProfile } = useRole();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +43,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
 
   // Debounced search effect
   useEffect(() => {
-    const handler = setTimeout(() => {
+    const handler = setTimeout(async () => { // Made async
       const query = searchQuery.trim().toLowerCase();
       if (!query) {
         setSearchResults([]);
@@ -51,30 +53,32 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
       const results: SearchResult[] = [];
 
       // Load current courses for search context
-      const currentCourses = loadCourses();
+      const currentCourses = await loadCourses(); // Await loadCourses
 
       // Search Notes
-      const allNotes = getAllNotesData(currentCourses); // Pass courses to get context
-      allNotes.forEach(noteGroup => {
-        if (noteGroup.context.toLowerCase().includes(query) ||
-            noteGroup.notes.some(note => note.toLowerCase().includes(query))) {
-          results.push({
-            type: 'note',
-            id: noteGroup.key,
-            title: `Note: ${noteGroup.context}`,
-            description: noteGroup.notes.join(' | ').substring(0, 150) + (noteGroup.notes.join(' | ').length > 150 ? '...' : ''),
-            link: `/all-notes?select=${noteGroup.key}`,
-            icon: NotebookText,
-          });
-        }
-      });
+      if (currentUserProfile) {
+        const allNotes = await getAllNotesData(currentUserProfile.id, currentCourses); // Pass userId and await
+        allNotes.forEach(noteGroup => {
+          if (noteGroup.context.toLowerCase().includes(query) ||
+              noteGroup.notes.some(note => note.toLowerCase().includes(query))) {
+            results.push({
+              type: 'note',
+              id: noteGroup.key,
+              title: `Note: ${noteGroup.context}`,
+              description: noteGroup.notes.join(' | ').substring(0, 150) + (noteGroup.notes.join(' | ').length > 150 ? '...' : ''),
+              link: `/all-notes?select=${noteGroup.key}`,
+              icon: NotebookText,
+            });
+          }
+        });
+      }
 
       // Search Courses, Modules, and Sections
       currentCourses.forEach(course => {
         // Search Courses
         if (course.title.toLowerCase().includes(query) ||
             course.description.toLowerCase().includes(query) ||
-            course.skillsToAcquire.some(skill => skill.toLowerCase().includes(query))) {
+            course.skills_to_acquire.some(skill => skill.toLowerCase().includes(query))) {
           results.push({
             type: 'course',
             id: course.id,
@@ -121,7 +125,26 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
     return () => {
       clearTimeout(handler); // Cleanup on unmount or if searchQuery changes again
     };
-  }, [searchQuery]); // Dependency array: re-run effect when searchQuery changes
+  }, [searchQuery, currentUserProfile]); // Dependency array: re-run effect when searchQuery or currentUserProfile changes
+
+  // Effect for Escape key to close the overlay
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+    } else {
+      document.removeEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   const groupedResults = useMemo(() => {
     const groups: { [key: string]: SearchResult[] } = {
