@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom"; // Import Outlet
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./components/layouts/DashboardLayout";
@@ -15,7 +15,7 @@ import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
 import ClassManagement from "./pages/ClassManagement";
-// import GlobalSearch from "./pages/GlobalSearch"; // Removed GlobalSearch import
+import Profile from "./pages/Profile"; // Import the new Profile component
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -65,7 +65,7 @@ const App = () => {
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/all-notes" element={<AllNotes />} />
                   <Route path="/class-management" element={<ClassManagement />} />
-                  {/* Removed Global Search Route */}
+                  <Route path="/profile" element={<Profile />} /> {/* Add the new Profile route */}
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

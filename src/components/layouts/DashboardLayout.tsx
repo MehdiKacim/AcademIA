@@ -134,9 +134,11 @@ const DashboardLayout = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => console.log("Mon profil cliqué")}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Mon profil</span>
+              <DropdownMenuItem asChild>
+                <NavLink to="/profile"> {/* Updated to link to the new Profile page */}
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Mon profil</span>
+                </NavLink>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => console.log("Paramètres cliqués")}>
                 <Settings className="mr-2 h-4 w-4" />
