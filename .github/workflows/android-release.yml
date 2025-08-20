@@ -1,4 +1,4 @@
-name: Android Release CI/CD
+name: Android Build Debug AcademIA
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 jobs:
   build_android:
     runs-on: ubuntu-latest # Exécute le job sur une machine virtuelle Ubuntu
+    permissions:
+      contents: write # Ajoute les permissions d'écriture pour le GITHUB_TOKEN
 
     steps:
       - name: Checkout code
@@ -29,6 +31,9 @@ jobs:
 
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android # Copie les assets web dans le projet Android
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
