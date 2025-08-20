@@ -9,18 +9,27 @@ import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { loadCourses } from "@/lib/courseData"; // Import loadCourses
-import { BookOpen, Lock, CheckCircle } from "lucide-react"; // Import icons
+import { BookOpen, Lock, CheckCircle, Search } from "lucide-react"; // Import icons, including Search
 import { cn } from "@/lib/utils"; // Import cn
+import { Input } from "@/components/ui/input"; // Import Input
+import React, { useState, useMemo } from "react"; // Import useState and useMemo
 
 const Courses = () => {
   const { currentRole } = useRole();
   const dummyCourses = loadCourses(); // Charger les cours depuis le localStorage
+  const [searchQuery, setSearchQuery] = useState(''); // État pour la requête de recherche
 
-  // Filter courses based on role or display all for creators
-  const getCoursesForRole = () => {
+  // Filtrer les cours en fonction du rôle et de la requête de recherche
+  const getCoursesForRole = useMemo(() => {
+    const lowerCaseQuery = searchQuery.toLowerCase();
+
+    const filtered = dummyCourses.filter(course =>
+      course.title.toLowerCase().includes(lowerCaseQuery) ||
+      course.description.toLowerCase().includes(lowerCaseQuery)
+    );
+
     if (currentRole === 'student') {
-      // For students, show all courses (or could filter by enrolled courses if we had user data)
-      return dummyCourses.map(course => {
+      return filtered.map(course => {
         const completedModules = course.modules.filter(m => m.isCompleted).length;
         const totalModules = course.modules.length;
         const progress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
@@ -30,33 +39,40 @@ const Courses = () => {
         };
       });
     } else if (currentRole === 'creator') {
-      // For creators, show all courses they created (or all for demo)
-      return dummyCourses.map(course => ({
+      return filtered.map(course => ({
         ...course,
         status: Math.random() > 0.5 ? "Publié" : "Brouillon", // Dummy status
         students: Math.floor(Math.random() * 200), // Dummy student count
       }));
     } else if (currentRole === 'tutor') {
       // For tutors, show supervised courses (dummy data for now)
-      return [
-        { studentName: "John Doe", courseTitle: "Mathématiques Avancées", progress: 60, alerts: "Difficultés en géométrie" },
-        { studentName: "Jane Smith", courseTitle: "Physique Quantique", progress: 90, alerts: "Excellent progrès" },
-      ];
+      // This part might need more complex filtering if tutor supervises specific courses/students
+      // For now, it will just show all courses that match the search query,
+      // and then map them to a tutor-specific display format.
+      return filtered.map(course => ({
+        studentName: "Élève fictif", // Placeholder
+        courseTitle: course.title,
+        progress: Math.floor(Math.random() * 100), // Dummy progress
+        alerts: "Aucune alerte", // Placeholder
+      }));
     }
     return [];
-  };
+  }, [dummyCourses, currentRole, searchQuery]); // Dépendances pour useMemo
 
-  const coursesToDisplay = getCoursesForRole();
+  const coursesToDisplay = getCoursesForRole;
 
   const renderCoursesContent = () => {
     if (currentRole === 'student') {
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Voici les cours disponibles. Cliquez sur un cours pour voir sa progression par modules.</p>
+          {coursesToDisplay.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche.</p>
+          )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {dummyCourses.map((course) => {
-              const isCompleted = course.modules.every(m => m.isCompleted);
-              const completedModulesCount = course.modules.filter(m => m.isCompleted).length;
+            {coursesToDisplay.map((course: any) => { // Use 'any' for simplicity due to mixed types
+              const isCompleted = course.modules.every((m: any) => m.isCompleted);
+              const completedModulesCount = course.modules.filter((m: any) => m.isCompleted).length;
               const totalModulesCount = course.modules.length;
               const progressPercentage = totalModulesCount > 0 ? Math.round((completedModulesCount / totalModulesCount) * 100) : 0;
 
@@ -108,6 +124,9 @@ const Courses = () => {
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Gérez les cours que vous avez créés.</p>
+          {coursesToDisplay.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche.</p>
+          )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => ( // Use 'any' for simplicity due to mixed types
               <Card key={course.id}>
@@ -139,6 +158,9 @@ const Courses = () => {
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Suivez les cours de vos élèves.</p>
+          {coursesToDisplay.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche.</p>
+          )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((data: any, index: number) => ( // Use 'any' for simplicity due to mixed types
               <Card key={index}>
@@ -164,6 +186,15 @@ const Courses = () => {
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         {currentRole === 'student' ? 'Mes Cours' : currentRole === 'creator' ? 'Gestion des Cours' : 'Cours des Élèves'}
       </h1>
+      <div className="relative mb-6 max-w-md mx-auto">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher un cours..."
+          className="pl-9"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
       {renderCoursesContent()}
     </div>
   );
