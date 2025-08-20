@@ -1,95 +1,108 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool } from "lucide-react";
+import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock } from "lucide-react";
 
 const DataModelContent = () => {
   const dataModels = {
-    User: `
-interface User {
-  id: string;
+    "Auth.users (Supabase)": `
+// Table gérée par Supabase pour l'authentification
+// Non directement accessible via l'API client pour des raisons de sécurité.
+// Les données pertinentes sont liées à la table 'profiles'.
+interface AuthUser {
+  id: string; // UUID unique de l'utilisateur
   email: string;
+  created_at: string;
+  last_sign_in_at: string;
+  // ... autres champs d'authentification
+}
+    `,
+    "public.profiles": `
+// Table des profils utilisateurs (étudiants, créateurs, tuteurs)
+// Liée à auth.users par l'ID.
+interface Profile {
+  id: string; // UUID, clé primaire, référence auth.users(id)
+  first_name: string;
+  last_name: string;
   username: string;
-  passwordHash: string; // Hashed password
   role: 'student' | 'creator' | 'tutor';
+  class_id?: string; // UUID, pour les étudiants, référence public.classes(id)
+  theme?: 'light' | 'dark' | 'system'; // Préférence de thème de l'utilisateur
+  created_at: string;
+  updated_at: string;
 }
     `,
-    Student: `
-interface Student {
-  id: string; // Student profile ID
-  userId: string; // Link to the User account
-  firstName: string;
-  lastName: string;
-  classId?: string; // Link to the class
-  enrolledCoursesProgress: {
-    courseId: string;
-    isCompleted: boolean;
-    modulesProgress: {
-      moduleIndex: number;
-      isCompleted: boolean;
-      sectionsProgress: {
-        sectionIndex: number;
-        isCompleted: boolean;
-        quizResult?: { score: number; total: number; passed: boolean };
-      }[];
-    }[];
-  }[];
-}
-    `,
-    CreatorProfile: `
-interface CreatorProfile {
-  id: string; // Creator profile ID
-  userId: string; // Link to the User account
-  establishmentIds: string[]; // List of Establishment IDs this creator is associated with
-  // Add any specific creator fields here, e.g., bio, expertise
-}
-    `,
-    TutorProfile: `
-interface TutorProfile {
-  id: string; // Tutor profile ID
-  userId: string; // Link to the User account
-  // Add any specific tutor fields here, e.g., subjects, availability
-}
-    `,
-    Establishment: `
+    "public.establishments": `
 interface Establishment {
-  id: string;
+  id: string; // UUID
   name: string;
   address?: string;
-  contactEmail?: string;
+  contact_email?: string;
+  created_at: string;
 }
     `,
-    Curriculum: `
+    "public.curricula": `
 interface Curriculum {
-  id: string;
+  id: string; // UUID
   name: string;
   description?: string;
-  establishmentId: string; // Link to parent establishment
-  courseIds: string[]; // List of course IDs included in this curriculum
+  establishment_id: string; // UUID, référence public.establishments(id)
+  course_ids: string[]; // JSONB, liste d'UUIDs de public.courses(id)
+  created_at: string;
 }
     `,
-    Class: `
+    "public.classes": `
 interface Class {
-  id: string;
+  id: string; // UUID
   name: string;
-  curriculumId: string; // Link to parent curriculum
-  studentIds: string[]; // List of student IDs in this class
-  creatorIds: string[]; // List of User IDs (creators/teachers) associated with this class
+  curriculum_id: string; // UUID, référence public.curricula(id)
+  creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'creator')
+  created_at: string;
 }
     `,
-    Course: `
+    "public.courses": `
 interface Course {
-  id: string;
+  id: string; // UUID
   title: string;
   description: string;
-  modules: Module[];
-  skillsToAcquire: string[];
-  imageUrl?: string;
+  modules: Module[]; // JSONB, structure imbriquée de modules
+  skills_to_acquire: string[]; // JSONB, liste de chaînes
+  image_url?: string;
   category?: string;
   difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
+  created_at: string;
 }
     `,
-    Module: `
+    "public.notes": `
+interface Note {
+  id: string; // UUID
+  user_id: string; // UUID, référence public.profiles(id)
+  note_key: string; // Clé unique pour le contexte de la note (ex: 'notes_course_1')
+  content: string; // Contenu de la note (peut être HTML/Rich Text)
+  created_at: string;
+  updated_at: string;
+}
+    `,
+    "public.student_course_progress": `
+interface StudentCourseProgress {
+  id: string; // UUID
+  user_id: string; // UUID, référence public.profiles(id) (rôle 'student')
+  course_id: string; // UUID, référence public.courses(id)
+  is_completed: boolean;
+  modules_progress: {
+    module_index: number;
+    is_completed: boolean;
+    sections_progress: {
+      section_index: number;
+      is_completed: boolean;
+      quiz_result?: { score: number; total: number; passed: boolean };
+    }[];
+  }[]; // JSONB, progression détaillée par module et section
+  created_at: string;
+  updated_at: string;
+}
+    `,
+    "Module (Nested in Course)": `
 interface Module {
   title: string;
   sections: ModuleSection[];
@@ -97,25 +110,25 @@ interface Module {
   level: number;
 }
     `,
-    ModuleSection: `
+    "ModuleSection (Nested in Module)": `
 interface ModuleSection {
   title: string;
   content: string;
   type?: 'text' | 'quiz' | 'video' | 'image';
-  url?: string;
-  questions?: QuizQuestion[];
+  url?: string; // Pour les types 'video' ou 'image'
+  questions?: QuizQuestion[]; // Pour le type 'quiz'
   isCompleted: boolean;
-  passingScore?: number;
-  quizResult?: { score: number; total: number; passed: boolean };
+  passingScore?: number; // Pour le type 'quiz'
+  quizResult?: { score: number; total: number; passed: boolean }; // Résultat du dernier quiz
 }
     `,
-    QuizQuestion: `
+    "QuizQuestion (Nested in ModuleSection)": `
 interface QuizQuestion {
   question: string;
   options: QuizOption[];
 }
     `,
-    QuizOption: `
+    "QuizOption (Nested in QuizQuestion)": `
 interface QuizOption {
   text: string;
   isCorrect: boolean;
@@ -125,14 +138,14 @@ interface QuizOption {
 
   const getIcon = (modelName: string) => {
     switch (modelName) {
-      case 'User': return <User className="h-5 w-5 text-primary" />;
-      case 'Student': return <GraduationCap className="h-5 w-5 text-primary" />;
-      case 'CreatorProfile': return <PenTool className="h-5 w-5 text-primary" />;
-      case 'TutorProfile': return <Users className="h-5 w-5 text-primary" />;
-      case 'Establishment': return <School className="h-5 w-5 text-primary" />;
-      case 'Curriculum': return <LayoutList className="h-5 w-5 text-primary" />;
-      case 'Class': return <Users className="h-5 w-5 text-primary" />;
-      case 'Course': return <BookOpen className="h-5 w-5 text-primary" />;
+      case 'Auth.users (Supabase)': return <Lock className="h-5 w-5 text-primary" />;
+      case 'public.profiles': return <User className="h-5 w-5 text-primary" />;
+      case 'public.establishments': return <School className="h-5 w-5 text-primary" />;
+      case 'public.curricula': return <LayoutList className="h-5 w-5 text-primary" />;
+      case 'public.classes': return <Users className="h-5 w-5 text-primary" />;
+      case 'public.courses': return <BookOpen className="h-5 w-5 text-primary" />;
+      case 'public.notes': return <NotebookText className="h-5 w-5 text-primary" />;
+      case 'public.student_course_progress': return <GraduationCap className="h-5 w-5 text-primary" />;
       default: return <Code className="h-5 w-5 text-primary" />;
     }
   };
