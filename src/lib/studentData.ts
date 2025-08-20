@@ -47,6 +47,23 @@ export const getUserByEmail = (email: string): User | undefined => {
   return dummyUsers.find(user => user.email.toLowerCase() === email.toLowerCase());
 };
 
+// New utility functions to get user full name, username, and email by userId
+export const getUserFullName = (userId: string): string => {
+  const user = getUserById(userId);
+  return user ? `${user.firstName} ${user.lastName}` : 'N/A';
+};
+
+export const getUserUsername = (userId: string): string => {
+  const user = getUserById(userId);
+  return user ? user.username : 'N/A';
+};
+
+export const getUserEmail = (userId: string): string => {
+  const user = getUserById(userId);
+  return user ? user.email : 'N/A';
+};
+
+
 // --- Student Profile Management ---
 export const loadStudents = (): Student[] => {
   return loadData<Student>(LOCAL_STORAGE_STUDENTS_KEY);
