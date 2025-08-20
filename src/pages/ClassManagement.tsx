@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRole } from "@/contexts/RoleContext";
 import {
   Card,
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail, ArrowLeft, Search, UserCheck, UserX } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, School, BookOpen, GraduationCap, Mail, ArrowLeft, Search, UserCheck, UserX, Loader2 } from "lucide-react"; // Import Loader2
 import {
   Establishment,
   Class,
@@ -28,7 +28,7 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import { dummyStudents, saveStudents, addStudent, deleteStudent, updateStudent, getStudentById } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const LOCAL_STORAGE_ESTABLISHMENTS_KEY = 'academia_establishments';
 const LOCAL_STORAGE_CLASSES_KEY = 'academia_classes';
@@ -54,7 +54,8 @@ const ClassManagement = () => {
   const [usernameToAssign, setUsernameToAssign] = useState('');
   const [foundStudent, setFoundStudent] = useState<Student | null>(null);
   const [classToAssign, setClassToAssign] = useState<string | undefined>(undefined);
-
+  const [isSearchingStudent, setIsSearchingStudent] = useState(false); // New loading state for search
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Debounce ref
 
   useEffect(() => {
     setEstablishments(loadData<Establishment>(LOCAL_STORAGE_ESTABLISHMENTS_KEY, [{ id: 'est1', name: 'École Primaire Alpha' }]));
@@ -62,6 +63,38 @@ const ClassManagement = () => {
     setCurricula(loadData<Curriculum>(LOCAL_STORAGE_CURRICULA_KEY, [{ id: 'cur1', name: 'Cursus Fondamental', courseIds: ['1', '2'] }]));
     setCurrentStudents(dummyStudents); // Ensure this is always up-to-date
   }, []);
+
+  // Debounced search effect for usernameToAssign
+  useEffect(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    if (usernameToAssign.trim() === '') {
+      setFoundStudent(null);
+      setIsSearchingStudent(false);
+      return;
+    }
+
+    setIsSearchingStudent(true);
+    setFoundStudent(null); // Clear previous result
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      const student = dummyStudents.find(s => s.username.toLowerCase() === usernameToAssign.trim().toLowerCase());
+      setFoundStudent(student || null);
+      setIsSearchingStudent(false);
+      if (!student) {
+        showError("Aucun élève trouvé avec ce nom d'utilisateur.");
+      }
+    }, 500); // 500ms debounce
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [usernameToAssign]);
+
 
   const handleAddEstablishment = () => {
     if (newEstablishmentName.trim()) {
@@ -117,22 +150,6 @@ const ClassManagement = () => {
   const handleDeleteCurriculum = (id: string) => {
     setCurricula(prev => deleteData(LOCAL_STORAGE_CURRICULA_KEY, id));
     showSuccess("Cursus supprimé !");
-  };
-
-  const handleSearchStudentByUsername = () => {
-    if (!usernameToAssign.trim()) {
-      showError("Veuillez entrer un nom d'utilisateur.");
-      setFoundStudent(null);
-      return;
-    }
-    const student = dummyStudents.find(s => s.username.toLowerCase() === usernameToAssign.trim().toLowerCase());
-    if (student) {
-      setFoundStudent(student);
-      showSuccess(`Élève "${student.firstName} ${student.lastName}" trouvé.`);
-    } else {
-      setFoundStudent(null);
-      showError("Aucun élève trouvé avec ce nom d'utilisateur.");
-    }
   };
 
   const handleAssignStudentToClass = () => {
@@ -203,6 +220,12 @@ const ClassManagement = () => {
       setClasses(updatedClasses);
       showSuccess(`Élève retiré de la classe !`);
     }
+  };
+
+  const handleDeleteStudent = (id: string) => {
+    const updatedStudents = deleteStudent(id);
+    setCurrentStudents(updatedStudents);
+    showSuccess("Élève supprimé !");
   };
 
   const handleInviteStudentToCourse = (student: Student, courseTitle: string) => {
@@ -436,16 +459,15 @@ const ClassManagement = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <h3 className="text-lg font-semibold">Affecter un élève à une classe</h3>
-              <div className="flex gap-2">
+              <div className="relative flex gap-2">
                 <Input
                   placeholder="Nom d'utilisateur de l'élève (ex: @john_doe)"
                   value={usernameToAssign}
                   onChange={(e) => setUsernameToAssign(e.target.value)}
-                  onKeyPress={(e) => { if (e.key === 'Enter') handleSearchStudentByUsername(); }}
                 />
-                <Button onClick={handleSearchStudentByUsername}>
-                  <Search className="h-4 w-4 mr-2" /> Rechercher
-                </Button>
+                {isSearchingStudent && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                )}
               </div>
 
               {foundStudent && (
@@ -477,7 +499,7 @@ const ClassManagement = () => {
                   </div>
                 </div>
               )}
-              {!foundStudent && usernameToAssign.trim() && (
+              {!foundStudent && usernameToAssign.trim() && !isSearchingStudent && (
                 <div className="p-3 border rounded-md bg-red-50/20 text-red-700 flex items-center gap-2">
                   <UserX className="h-5 w-5" />
                   <p>Aucun élève trouvé avec le nom d'utilisateur "{usernameToAssign}".</p>
