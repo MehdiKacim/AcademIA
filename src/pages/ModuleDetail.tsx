@@ -7,7 +7,7 @@ import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
 import { Progress } from "@/components/ui/progress";
 import QuickNoteDialog from "@/components/QuickNoteDialog";
-import { cn } from "@/lib/utils"; // Correction: Ajout de 'from'
+import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generateNoteKey } from "@/lib/notes";
 import NotesSection from "@/components/NotesSection";
@@ -60,15 +60,16 @@ const ModuleDetail = () => {
     };
   }, [courseId, moduleIndex, course, module, setCourseContext, setModuleContext]);
 
-  useEffect(() => {
-    if (location.hash) {
-      const sectionId = location.hash.substring(1);
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  }, [location.hash, location.pathname]);
+  // Ancien useEffect pour le défilement automatique, maintenant supprimé
+  // useEffect(() => {
+  //   if (location.hash) {
+  //     const sectionId = location.hash.substring(1);
+  //     const element = document.getElementById(sectionId);
+  //     if (element) {
+  //       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  //     }
+  //   }
+  // }, [location.hash, location.pathname]);
 
   const scrollToSection = useCallback((sectionIdx: number) => {
     if (sectionRefs.current[sectionIdx]) {
