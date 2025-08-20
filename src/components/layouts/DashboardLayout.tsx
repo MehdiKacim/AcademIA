@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness } from "lucide-react"; // Added BriefcaseBusiness for Administration
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -57,13 +57,13 @@ const DashboardLayout = () => {
       if (location.pathname === '/courses' || location.pathname.startsWith('/create-course')) {
         setCurrentNavLevel('courses');
       } else if (location.pathname.startsWith('/class-management')) {
-        setCurrentNavLevel('class-management');
+        setCurrentNavLevel('administration'); // Updated nav level name
       } else {
         setCurrentNavLevel(null);
       }
     } else if (currentRole === 'tutor') {
       if (location.pathname.startsWith('/class-management')) {
-        setCurrentNavLevel('class-management');
+        setCurrentNavLevel('user-management'); // Updated nav level name
       } else {
         setCurrentNavLevel(null);
       }
@@ -118,10 +118,10 @@ const DashboardLayout = () => {
           ],
         },
         {
-          icon: School,
-          label: "Gestion des Classes",
+          icon: BriefcaseBusiness, // Changed icon for Administration
+          label: "Administration", // Renamed
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('class-management'),
+          onClick: () => setCurrentNavLevel('administration'), // Updated nav level name
           items: [
             { to: "/class-management?tab=establishments", label: "Établissements", icon: School, type: 'link' },
             { to: "/class-management?tab=curricula", label: "Cursus", icon: LayoutList, type: 'link' },
@@ -136,9 +136,9 @@ const DashboardLayout = () => {
         ...baseItems,
         {
           icon: Users,
-          label: "Gestion des Élèves",
+          label: "Gestion des Utilisateurs", // Renamed for tutor
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('class-management'),
+          onClick: () => setCurrentNavLevel('user-management'), // Updated nav level name
           items: [
             { to: "/class-management?tab=classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/class-management?tab=students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
@@ -157,19 +157,19 @@ const DashboardLayout = () => {
         { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
         { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
       ];
-    } else if (currentNavLevel === 'class-management' && (currentRole === 'creator' || currentRole === 'tutor')) {
-      const classManagementItems = currentRole === 'creator' ? [
+    } else if (currentNavLevel === 'administration' && currentRole === 'creator') { // Updated nav level name
+      return [
+        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
         { to: "/class-management?tab=establishments", label: "Établissements", icon: School, type: 'link' },
         { to: "/class-management?tab=curricula", label: "Cursus", icon: LayoutList, type: 'link' },
         { to: "/class-management?tab=classes", label: "Classes", icon: Users, type: 'link' },
         { to: "/class-management?tab=students", label: "Élèves", icon: GraduationCap, type: 'link' },
-      ] : [ // For tutor role
-        { to: "/class-management?tab=classes", label: "Mes Classes", icon: Users, type: 'link' },
-        { to: "/class-management?tab=students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
       ];
+    } else if (currentNavLevel === 'user-management' && currentRole === 'tutor') { // Updated nav level name
       return [
         { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        ...classManagementItems,
+        { to: "/class-management?tab=classes", label: "Mes Classes", icon: Users, type: 'link' },
+        { to: "/class-management?tab=students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
       ];
     }
     return getMainNavItems();

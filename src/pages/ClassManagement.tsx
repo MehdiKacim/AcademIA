@@ -56,7 +56,7 @@ import {
   addClassToStorage,
   deleteClassFromStorage,
 } from '@/lib/courseData';
-import { useSearchParams } from 'react-router-dom'; // Import useSearchParams
+import { useSearchParams } from 'react-router-dom';
 
 // Shadcn UI components for autocomplete
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -434,10 +434,10 @@ const ClassManagement = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        {currentRole === 'creator' ? 'Gestion des Établissements et Classes' : 'Gestion des Élèves'}
+        {currentRole === 'creator' ? 'Administration de l\'Application' : 'Gestion des Utilisateurs'}
       </h1>
       <p className="text-lg text-muted-foreground">
-        {currentRole === 'creator' ? 'En tant que professeur, gérez vos établissements, classes, cursus et élèves.' : 'En tant que tuteur, gérez vos élèves et leurs classes.'}
+        {currentRole === 'creator' ? 'En tant qu\'administrateur, gérez les établissements, cursus, classes et élèves.' : 'En tant que tuteur, gérez vos élèves et leurs classes.'}
       </p>
 
       <Tabs defaultValue={activeTab} onValueChange={(value) => setSearchParams({ tab: value })} className="w-full">
