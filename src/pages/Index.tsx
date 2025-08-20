@@ -265,7 +265,7 @@ const Index = () => {
                 </Button>
               )}
               {showApkDownloadButton && ( // New APK download button
-                <a href="/path/to/your/app.apk" download="AcademIA.apk">
+                <a href="/downloads/AcademIA.apk" download="AcademIA.apk"> {/* Updated path */}
                   <Button size="lg" variant="outline">
                     <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android)
                   </Button>
