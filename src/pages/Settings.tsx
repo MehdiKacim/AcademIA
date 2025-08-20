@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon } from "lucide-react";
+import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle"; // Import ThemeToggle
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
+import { clearAllAppData } from "@/lib/dataReset"; // Import the new utility
 
 const Settings = () => {
   const [language, setLanguage] = useState('fr');
@@ -17,6 +18,15 @@ const Settings = () => {
     // In a real app, you would save these preferences to a backend or localStorage
     console.log("Saving preferences:", { language, emailNotifications, appNotifications });
     showSuccess("Préférences enregistrées !");
+  };
+
+  const handleClearAllData = () => {
+    if (window.confirm("Êtes-vous sûr de vouloir effacer TOUTES les données de l'application ? Cette action est irréversible.")) {
+      clearAllAppData();
+      showSuccess("Toutes les données ont été effacées ! Veuillez rafraîchir la page.");
+      // Optionally, you might want to force a page reload here to reflect changes immediately
+      // window.location.reload();
+    }
   };
 
   return (
@@ -113,9 +123,12 @@ const Settings = () => {
             Gérez les informations de sécurité de votre compte.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Button variant="outline" onClick={() => showSuccess("Fonctionnalité de changement de mot de passe à implémenter.")}>
             Changer le mot de passe
+          </Button>
+          <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2">
+            <Eraser className="h-4 w-4" /> Réinitialiser toutes les données
           </Button>
         </CardContent>
       </Card>
