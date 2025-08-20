@@ -242,8 +242,11 @@ const DashboardLayout = () => {
         <Logo />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {navItemsToDisplayForDesktop().map((item) => (
-              item.type === 'link' && item.to ? (
+            {navItemsToDisplayForDesktop().map((item) => {
+              const isCurrentPathActive = item.to && location.pathname.startsWith(item.to);
+              const isTriggerActive = item.type === 'trigger' && currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-'); // Normalize label for comparison
+
+              return item.type === 'link' && item.to ? (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -264,13 +267,18 @@ const DashboardLayout = () => {
                   key={item.label}
                   variant="ghost"
                   onClick={item.onClick}
-                  className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                  className={cn(
+                    "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                    isTriggerActive || isCurrentPathActive // Check if trigger itself is active or if a sub-path is active
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-accent hover:text-accent-foreground"
+                  )}
                 >
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
                 </Button>
               ) : null
-            ))}
+            })}
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
