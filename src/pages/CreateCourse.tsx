@@ -15,7 +15,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Form,
+  Form, // <-- Ajout de l'importation de Form
   FormControl,
   FormField,
   FormItem,
@@ -382,8 +382,8 @@ const CreateCourse = () => {
                               field.onChange(value);
                               // Reset URL and questions when type changes
                               form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.url`, '');
-                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, []);
-                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].passingScore`, undefined); // Reset passingScore
+                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, []);
+                              form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.passingScore`, undefined); // Reset passingScore
                             }} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
@@ -453,7 +453,7 @@ const CreateCourse = () => {
                                       const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
                                       if (currentQuestions && currentQuestions[questionIndex]) {
                                         currentQuestions[questionIndex].options.splice(questionIndex, 1);
-                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, currentQuestions);
+                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                                       }
                                     }}
                                   >
@@ -515,7 +515,7 @@ const CreateCourse = () => {
                                           const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
                                           if (currentQuestions && currentQuestions[questionIndex]) {
                                             currentQuestions[questionIndex].options.splice(optionIndex, 1);
-                                            form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, currentQuestions);
+                                            form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                                           }
                                         }}
                                         disabled={form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`)?.length === 2}
@@ -533,7 +533,7 @@ const CreateCourse = () => {
                                       if (currentQuestions && currentQuestions[questionIndex]) {
                                         currentQuestions[questionIndex].options = currentQuestions[questionIndex].options || [];
                                         currentQuestions[questionIndex].options?.push({ text: "", isCorrect: false });
-                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex].questions`, currentQuestions);
+                                        form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                                       }
                                     }}
                                   >
