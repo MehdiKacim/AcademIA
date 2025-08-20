@@ -35,7 +35,14 @@ export interface Course {
   imageUrl?: string;
   category?: string;
   difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
-  // prerequisiteCourseId?: string; // Supprimé car la progression est au niveau des modules
+}
+
+export interface Curriculum {
+  id: string;
+  name: string;
+  description?: string;
+  establishmentId: string; // Lien vers l'établissement parent
+  courseIds: string[]; // Liste des IDs des cours inclus dans ce cursus
 }
 
 export type EntityType = 'course' | 'module' | 'section';
@@ -194,7 +201,9 @@ const initialDummyCourses: Course[] = [
         level: 0
       },
     ],
-    skillsToAcquire: ["Comprendre l'IA", "Maîtriser le ML", "Appliquer le Deep Learning", "Analyser les données"]
+    skillsToAcquire: ["Comprendre l'IA", "Maîtriser le ML", "Appliquer le Deep Learning", "Analyser les données"],
+    category: "Informatique",
+    difficulty: "Intermédiaire"
   },
   {
     id: '2',
@@ -321,7 +330,9 @@ const initialDummyCourses: Course[] = [
         level: 0
       },
     ],
-    skillsToAcquire: ["Développer avec React", "Gérer l'état", "Naviguer avec React Router", "Intégrer des APIs"]
+    skillsToAcquire: ["Développer avec React", "Gérer l'état", "Naviguer avec React Router", "Intégrer des APIs"],
+    category: "Développement Web",
+    difficulty: "Débutant"
   },
   {
     id: '3',
@@ -443,7 +454,9 @@ const initialDummyCourses: Course[] = [
         level: 0
       },
     ],
-    skillsToAcquire: ["Maîtriser les structures de données", "Optimiser les algorithmes", "Résoudre des problèmes complexes", "Analyser les graphes"]
+    skillsToAcquire: ["Maîtriser les structures de données", "Optimiser les algorithmes", "Résoudre des problèmes complexes", "Analyser les graphes"],
+    category: "Informatique",
+    difficulty: "Avancé"
   },
   {
     id: '4',
@@ -569,7 +582,9 @@ const initialDummyCourses: Course[] = [
         level: 0
       },
     ],
-    skillsToAcquire: ["Développer Frontend", "Développer Backend", "Gérer les bases de données", "Déployer des applications"]
+    skillsToAcquire: ["Développer Frontend", "Développer Backend", "Gérer les bases de données", "Déployer des applications"],
+    category: "Développement Web",
+    difficulty: "Intermédiaire"
   },
   {
     id: '5',
@@ -693,7 +708,9 @@ const initialDummyCourses: Course[] = [
         level: 0
       },
     ],
-    skillsToAcquire: ["Collecte de données", "Analyse statistique", "Modélisation ML", "Visualisation"]
+    skillsToAcquire: ["Collecte de données", "Analyse statistique", "Modélisation ML", "Visualisation"],
+    category: "Science des Données",
+    difficulty: "Intermédiaire"
   },
   {
     id: '6',
@@ -816,35 +833,53 @@ const initialDummyCourses: Course[] = [
         level: 0
       },
     ],
-    skillsToAcquire: ["Programmation C#", "POO", ".NET Framework", "Développement d'applications"]
+    skillsToAcquire: ["Programmation C#", "POO", ".NET Framework", "Développement d'applications"],
+    category: "Programmation",
+    difficulty: "Débutant"
   },
 ];
 
-const LOCAL_STORAGE_KEY = 'academia_courses';
+const initialDummyCurricula: Curriculum[] = [
+  {
+    id: 'cur1',
+    name: 'Cursus Scientifique',
+    description: 'Cursus axé sur les sciences et l\'informatique.',
+    establishmentId: 'est1',
+    courseIds: ['1', '3', '5'], // Introduction à l'IA, Algorithmes Avancés, Science des Données
+  },
+  {
+    id: 'cur2',
+    name: 'Cursus Développement Web',
+    description: 'Cursus complet pour devenir développeur web fullstack.',
+    establishmentId: 'est1',
+    courseIds: ['2', '4'], // React pour débutants, Développement Web Fullstack
+  },
+  {
+    id: 'cur3',
+    name: 'Cursus Programmation Générale',
+    description: 'Introduction à la programmation avec C#.',
+    establishmentId: 'est1',
+    courseIds: ['6'], // Programmation en C#
+  },
+];
+
+const LOCAL_STORAGE_COURSES_KEY = 'academia_courses';
+const LOCAL_STORAGE_CURRICULA_KEY = 'academia_curricula';
 
 // Fonction pour charger les cours depuis le localStorage
 export const loadCourses = (): Course[] => {
   try {
-    const storedCourses: Course[] = localStorage.getItem(LOCAL_STORAGE_KEY)
-      ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!)
+    const storedCourses: Course[] = localStorage.getItem(LOCAL_STORAGE_COURSES_KEY)
+      ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_COURSES_KEY)!)
       : [];
 
-    // Créer une map pour une recherche rapide des cours stockés par ID
-    const storedCoursesMap = new Map<string, Course>();
-    storedCourses.forEach(course => storedCoursesMap.set(course.id, course));
-
-    // Commencer avec les cours par défaut initiaux
     const combinedCourses: Course[] = [...initialDummyCourses];
 
-    // Ajouter ou mettre à jour avec les cours du stockage local
     storedCourses.forEach(storedCourse => {
       const existingInitialCourse = combinedCourses.find(c => c.id === storedCourse.id);
       if (existingInitialCourse) {
-        // Si un cours initial avec le même ID existe, le mettre à jour avec la version stockée
-        // Cela garantit que le statut de complétion, etc., de la session de l'utilisateur est préservé
         Object.assign(existingInitialCourse, storedCourse);
       } else {
-        // S'il s'agit d'un nouveau cours (non présent dans initialDummyCourses), l'ajouter
         combinedCourses.push(storedCourse);
       }
     });
@@ -859,14 +894,49 @@ export const loadCourses = (): Course[] => {
 // Fonction pour sauvegarder les cours dans le localStorage
 export const saveCourses = (courses: Course[]) => {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(courses));
+    localStorage.setItem(LOCAL_STORAGE_COURSES_KEY, JSON.stringify(courses));
   } catch (error) {
     console.error("Erreur lors de la sauvegarde des cours dans le localStorage:", error);
   }
 };
 
+// Fonction pour charger les cursus depuis le localStorage
+export const loadCurricula = (): Curriculum[] => {
+  try {
+    const storedCurricula: Curriculum[] = localStorage.getItem(LOCAL_STORAGE_CURRICULA_KEY)
+      ? JSON.parse(localStorage.getItem(LOCAL_STORAGE_CURRICULA_KEY)!)
+      : [];
+
+    const combinedCurricula: Curriculum[] = [...initialDummyCurricula];
+
+    storedCurricula.forEach(storedCurriculum => {
+      const existingInitialCurriculum = combinedCurricula.find(c => c.id === storedCurriculum.id);
+      if (existingInitialCurriculum) {
+        Object.assign(existingInitialCurriculum, storedCurriculum);
+      } else {
+        combinedCurricula.push(storedCurriculum);
+      }
+    });
+
+    return combinedCurricula;
+  } catch (error) {
+    console.error("Erreur lors du chargement des cursus depuis le localStorage:", error);
+    return initialDummyCurricula; // Revenir aux cursus initiaux en cas d'erreur
+  }
+};
+
+// Fonction pour sauvegarder les cursus dans le localStorage
+export const saveCurricula = (curricula: Curriculum[]) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_CURRICULA_KEY, JSON.stringify(curricula));
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde des cursus dans le localStorage:", error);
+  }
+};
+
 // Variable exportée qui sera utilisée dans l'application
 export let dummyCourses: Course[] = loadCourses();
+export let dummyCurricula: Curriculum[] = loadCurricula();
 
 // Fonction pour mettre à jour un cours spécifique et le sauvegarder
 export const updateCourseInStorage = (updatedCourse: Course) => {
@@ -878,4 +948,20 @@ export const updateCourseInStorage = (updatedCourse: Course) => {
 export const addCourseToStorage = (newCourse: Course) => {
   dummyCourses = [...dummyCourses, newCourse];
   saveCourses(dummyCourses);
+};
+
+// Fonctions pour les cursus
+export const addCurriculumToStorage = (newCurriculum: Curriculum) => {
+  dummyCurricula = [...dummyCurricula, newCurriculum];
+  saveCurricula(dummyCurricula);
+};
+
+export const updateCurriculumInStorage = (updatedCurriculum: Curriculum) => {
+  dummyCurricula = dummyCurricula.map(c => c.id === updatedCurriculum.id ? updatedCurriculum : c);
+  saveCurricula(dummyCurricula);
+};
+
+export const deleteCurriculumFromStorage = (curriculumId: string) => {
+  dummyCurricula = dummyCurricula.filter(c => c.id !== curriculumId);
+  saveCurricula(dummyCurricula);
 };

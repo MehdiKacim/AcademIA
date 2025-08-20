@@ -6,12 +6,11 @@ const LOCAL_STORAGE_STUDENTS_KEY = 'academia_students';
 const initialDummyStudents: Student[] = [
   {
     id: 'student1',
-    firstName: 'Alice', // Changement
-    lastName: 'Dupont', // Changement
-    username: 'alice_d', // Ajout du username
+    firstName: 'Alice',
+    lastName: 'Dupont',
+    username: 'alice_d',
     email: 'alice.dupont@example.com',
-    classId: 'class1', // Exemple de lien vers une classe
-    establishmentId: 'est1', // Exemple de lien vers un établissement
+    classId: 'class1', // Lié à une classe
     enrolledCoursesProgress: [
       {
         courseId: '1', // Introduction à l'IA
@@ -60,12 +59,11 @@ const initialDummyStudents: Student[] = [
   },
   {
     id: 'student2',
-    firstName: 'Bob', // Changement
-    lastName: 'Martin', // Changement
-    username: 'bob_m', // Ajout du username
+    firstName: 'Bob',
+    lastName: 'Martin',
+    username: 'bob_m',
     email: 'bob.martin@example.com',
-    classId: 'class1',
-    establishmentId: 'est1',
+    classId: 'class1', // Lié à une classe
     enrolledCoursesProgress: [
       {
         courseId: '1', // Introduction à l'IA
@@ -87,12 +85,11 @@ const initialDummyStudents: Student[] = [
   },
   {
     id: 'student3',
-    firstName: 'Charlie', // Changement
-    lastName: 'Brown', // Changement
-    username: 'charlie_b', // Ajout du username
+    firstName: 'Charlie',
+    lastName: 'Brown',
+    username: 'charlie_b',
     email: 'charlie.brown@example.com',
-    classId: 'class2',
-    establishmentId: 'est1',
+    classId: 'class2', // Lié à une classe
     enrolledCoursesProgress: [],
   },
 ];
@@ -108,20 +105,20 @@ export const saveStudents = (students: Student[]) => {
 
 // Fonctions CRUD pour les élèves
 export const addStudent = (newStudent: Student) => {
-  const updatedStudents = addData<Student>(LOCAL_STORAGE_STUDENTS_KEY, newStudent); // Spécifier le type
+  const updatedStudents = addData<Student>(LOCAL_STORAGE_STUDENTS_KEY, newStudent);
   dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
 export const updateStudent = (updatedStudent: Student) => {
-  const updatedStudents = updateData<Student>(LOCAL_STORAGE_STUDENTS_KEY, updatedStudent); // Spécifier le type
+  const updatedStudents = updateData<Student>(LOCAL_STORAGE_STUDENTS_KEY, updatedStudent);
   dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
 export const deleteStudent = (studentId: string) => {
-  const updatedStudents = deleteData<Student>(LOCAL_STORAGE_STUDENTS_KEY, studentId); // Spécifier le type
-  dummyStudents = updatedStudents; // L'assertion de type n'est plus nécessaire ici
+  const updatedStudents = deleteData<Student>(LOCAL_STORAGE_STUDENTS_KEY, studentId);
+  dummyStudents = updatedStudents;
   return updatedStudents;
 };
 
