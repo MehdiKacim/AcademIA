@@ -18,6 +18,7 @@ import {
   Curriculum,
   Student,
   User,
+  CreatorProfile, // Import CreatorProfile
 } from "@/lib/dataModels";
 import {
   loadData,
@@ -35,6 +36,8 @@ import {
   deleteStudentProfile,
   getUserByUsername,
   getUserById,
+  loadCreatorProfiles, // Import loadCreatorProfiles
+  updateCreatorProfile, // Import updateCreatorProfile
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -71,6 +74,7 @@ const ClassManagement = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [users, setUsers] = useState<User[]>([]); // All users
   const [studentProfiles, setStudentProfiles] = useState<Student[]>([]); // All student profiles
+  const [creatorProfiles, setCreatorProfiles] = useState<CreatorProfile[]>([]); // All creator profiles
   const [allCourses, setAllCourses] = useState<Course[]>([]);
 
   // States for add/edit forms
@@ -104,6 +108,7 @@ const ClassManagement = () => {
     setClasses(loadClasses());
     setUsers(loadUsers());
     setStudentProfiles(loadStudents());
+    setCreatorProfiles(loadCreatorProfiles()); // Load creator profiles
     setAllCourses(loadCourses());
   }, []);
 
@@ -156,7 +161,21 @@ const ClassManagement = () => {
   const handleAddEstablishment = () => {
     if (newEstablishmentName.trim()) {
       const newEst: Establishment = { id: `est${Date.now()}`, name: newEstablishmentName.trim() };
-      setEstablishments(addEstablishmentToStorage(newEst));
+      const updatedEstablishments = addEstablishmentToStorage(newEst);
+      setEstablishments(updatedEstablishments);
+
+      // If current user is a creator, associate them with this new establishment
+      if (currentUser && currentUser.role === 'creator') {
+        const creatorProfile = creatorProfiles.find(p => p.userId === currentUser.id);
+        if (creatorProfile) {
+          const updatedCreatorProfile = {
+            ...creatorProfile,
+            establishmentIds: [...(creatorProfile.establishmentIds || []), newEst.id],
+          };
+          setCreatorProfiles(updateCreatorProfile(updatedCreatorProfile));
+        }
+      }
+
       setNewEstablishmentName('');
       showSuccess("Établissement ajouté !");
     } else {
@@ -168,6 +187,16 @@ const ClassManagement = () => {
     // Delete associated curricula
     const curriculaToDelete = curricula.filter(cur => cur.establishmentId === id);
     curriculaToDelete.forEach(cur => handleDeleteCurriculum(cur.id, false));
+
+    // Remove association from creator profiles
+    const updatedCreatorProfiles = creatorProfiles.map(profile => ({
+      ...profile,
+      establishmentIds: profile.establishmentIds.filter(estId => estId !== id),
+    }));
+    setCreatorProfiles(updatedCreatorProfiles);
+    // Save updated creator profiles (assuming updateCreatorProfile handles persistence)
+    updatedCreatorProfiles.forEach(profile => updateCreatorProfile(profile));
+
 
     setEstablishments(deleteEstablishmentFromStorage(id));
     showSuccess("Établissement supprimé !");
@@ -221,7 +250,13 @@ const ClassManagement = () => {
         return;
       }
       const formattedClassName = `${selectedCurriculum.name}-${newClassName.trim()}`;
-      const newCls: Class = { id: `class${Date.now()}`, name: formattedClassName, curriculumId: newClassCurriculumId, studentIds: [] };
+      const newCls: Class = {
+        id: `class${Date.now()}`,
+        name: formattedClassName,
+        curriculumId: newClassCurriculumId,
+        studentIds: [],
+        creatorIds: currentUser ? [currentUser.id] : [], // Associate current creator with the class
+      };
       setClasses(addClassToStorage(newCls));
       setNewClassName('');
       setNewClassCurriculumId(undefined);
@@ -457,6 +492,11 @@ const ClassManagement = () => {
                       </div>
                       <div className="mt-2 text-sm text-muted-foreground">
                         {curricula.filter(c => c.establishmentId === est.id).length} cursus
+                        {creatorProfiles.filter(cp => cp.establishmentIds.includes(est.id)).length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            Professeurs associés: {creatorProfiles.filter(cp => cp.establishmentIds.includes(est.id)).map(cp => getUserFullName(cp.userId)).join(', ')}
+                          </p>
+                        )}
                       </div>
                     </Card>
                   ))
@@ -596,6 +636,11 @@ const ClassManagement = () => {
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
+                              {cls.creatorIds.length > 0 && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Professeurs: {cls.creatorIds.map(creatorId => getUserFullName(creatorId)).join(', ')}
+                                </p>
+                              )}
                             </div>
                           ))
                         )}

@@ -250,7 +250,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
                 <SelectContent>
                   <SelectItem value="student">Élève</SelectItem>
                   <SelectItem value="creator">Créateur (Professeur)</SelectItem>
-                  <SelectItem value="tutor">Tuteur</SelectItem>
+                  <SelectItem value="tutor" disabled>Tuteur (Bientôt disponible)</SelectItem> {/* Disabled tutor role */}
                 </SelectContent>
               </Select>
             </div>

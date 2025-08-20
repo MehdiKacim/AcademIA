@@ -26,6 +26,7 @@ export interface Class {
   name: string;
   curriculumId: string; // Lien vers le cursus parent
   studentIds: string[]; // Liste des IDs des élèves dans cette classe
+  creatorIds: string[]; // New: List of User IDs (creators/teachers) associated with this class
 }
 
 export interface Student {
@@ -52,6 +53,7 @@ export interface Student {
 export interface CreatorProfile {
   id: string; // Creator profile ID
   userId: string; // Link to the User account
+  establishmentIds: string[]; // New: List of Establishment IDs this creator is associated with
   // Add any specific creator fields here, e.g., bio, expertise
 }
 

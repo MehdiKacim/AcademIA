@@ -40,6 +40,7 @@ interface Student {
 interface CreatorProfile {
   id: string; // Creator profile ID
   userId: string; // Link to the User account
+  establishmentIds: string[]; // List of Establishment IDs this creator is associated with
   // Add any specific creator fields here, e.g., bio, expertise
 }
     `,
@@ -73,6 +74,7 @@ interface Class {
   name: string;
   curriculumId: string; // Link to parent curriculum
   studentIds: string[]; // List of student IDs in this class
+  creatorIds: string[]; // List of User IDs (creators/teachers) associated with this class
 }
     `,
     Course: `
