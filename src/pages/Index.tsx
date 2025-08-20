@@ -17,6 +17,7 @@ import {
   Home,
   LogIn,
   UserPlus,
+  Download, // New icon for install
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -24,20 +25,14 @@ import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
 import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useRole } from "@/contexts/RoleContext"; // Import useRole
-
-interface IndexNavItem { // Define a specific interface for Index page nav items
-  label: string;
-  icon: React.ElementType;
-  onClick: () => void;
-  isActive: boolean;
-  type: 'trigger'; // Explicitly define as trigger
-}
+import { useRole } from "@/contexts/RoleContext";
+import { showSuccess, showError } from "@/utils/toast"; // Import toast utilities
 
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
-  // Removed isGlobalSearchOverlayOpen state
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -46,8 +41,8 @@ const Index = () => {
     methodologie: useRef<HTMLDivElement>(null),
   };
 
-  const { currentUser } = useRole(); // Get currentUser from context
-  const navigate = useNavigate(); // Initialize useNavigate
+  const { currentUser } = useRole();
+  const navigate = useNavigate();
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -87,6 +82,55 @@ const Index = () => {
       });
     };
   }, []);
+
+  // PWA installation logic
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      // Only show the button if the user is on a mobile device and not already installed
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setShowInstallButton(false); // Already installed as PWA
+      } else {
+        setShowInstallButton(true);
+      }
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setShowInstallButton(false);
+      showSuccess("AcademIA a été installée sur votre appareil !");
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Check if already installed on mount
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setShowInstallButton(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt.');
+        // The 'appinstalled' event will handle showing success toast and hiding button
+      } else {
+        console.log('User dismissed the install prompt.');
+        showError("Installation annulée.");
+        setDeferredPrompt(null); // Prompt can only be used once
+        setShowInstallButton(false);
+      }
+    }
+  };
 
   const handleNavLinkClick = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -136,7 +180,7 @@ const Index = () => {
 
   const isMobile = useIsMobile();
 
-  const indexNavItems: IndexNavItem[] = [
+  const indexNavItems: any[] = [ // Changed to any[] for simplicity with onClick
     { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil', type: 'trigger' },
     { label: "AiA Bot", icon: MessageCircleMore, onClick: () => handleNavLinkClick('aiaBot'), isActive: activeSection === 'aiaBot', type: 'trigger' },
     { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => handleNavLinkClick('methodologie'), isActive: activeSection === 'methodologie', type: 'trigger' },
@@ -197,7 +241,7 @@ const Index = () => {
               suivi intelligent et un tuteur IA pour libérer le potentiel de
               chaque apprenant.
             </p>
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center flex-wrap">
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -208,6 +252,11 @@ const Index = () => {
               <Button size="lg" variant="secondary" onClick={openRegisterModal}>
                 Créer un compte
               </Button>
+              {showInstallButton && (
+                <Button size="lg" variant="outline" onClick={handleInstallClick}>
+                  <Download className="h-5 w-5 mr-2" /> Installer l'application
+                </Button>
+              )}
             </div>
           </div>
         </section>
@@ -281,9 +330,7 @@ const Index = () => {
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
       />
-      {/* Pass currentUser to BottomNavigationBar, and remove onOpenGlobalSearch as it's not needed here */}
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUser} />
-      {/* GlobalSearchOverlay is now only rendered in DashboardLayout */}
     </div>
   );
 };
