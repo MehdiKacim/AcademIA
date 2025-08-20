@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 import Logo from "@/components/Logo";
 import {
   Card,
@@ -47,6 +47,14 @@ const Index = () => {
   };
 
   const { currentUser } = useRole(); // Get currentUser from context
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/dashboard");
+    }
+  }, [currentUser, navigate]);
 
   useEffect(() => {
     const observerOptions = {
