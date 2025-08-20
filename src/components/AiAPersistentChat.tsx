@@ -117,8 +117,8 @@ const AiAPersistentChat = () => {
       </div>
 
       {!isMinimized && (
-        <div className="flex-grow flex flex-col py-4 px-4">
-          <ScrollArea className="flex-grow border rounded-md mb-4">
+        <div className="flex-grow flex flex-col py-4 px-4 gap-4"> {/* Ajout de gap-4 ici */}
+          <ScrollArea className="flex-grow border rounded-md"> {/* Suppression de mb-4 */}
             <div className="flex flex-col gap-4 p-4">
               {messages.map((msg) => (
                 <div
