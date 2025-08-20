@@ -1,4 +1,4 @@
-const CACHE_NAME = 'academia-cache-v2'; // Increment cache version
+const CACHE_NAME = 'academia-cache-v4'; // Increment cache version
 const OFFLINE_URL = '/offline.html'; // New offline page
 
 // Assets to precache on install
@@ -24,7 +24,7 @@ self.addEventListener('install', (event) => {
         console.error('[Service Worker] Pre-caching failed:', error);
       })
   );
-  self.skipWaiting(); // Activate new service worker immediately
+  // self.skipWaiting(); // Removed to allow for user-controlled update
 });
 
 self.addEventListener('activate', (event) => {
@@ -39,10 +39,11 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    }).then(() => {
-      console.log('[Service Worker] Activation complete. Claiming clients.');
-      return self.clients.claim(); // Take control of all clients immediately
     })
+    // .then(() => { // self.clients.claim() removed to allow for user-controlled update
+    //   console.log('[Service Worker] Activation complete. Claiming clients.');
+    //   return self.clients.claim();
+    // })
   );
 });
 
@@ -102,4 +103,11 @@ self.addEventListener('fetch', (event) => {
           });
       })
   );
+});
+
+// Listen for messages from the main window to skip waiting
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

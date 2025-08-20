@@ -26,6 +26,8 @@ import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext"; // Import useRole
 import { CourseChatProvider } from "./contexts/CourseChatContext";
 import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
+import { toast } from "sonner"; // Import toast from sonner
+import { Button } from "@/components/ui/button"; // Import Button
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,68 @@ const AppWithThemeProvider = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoadingUser]);
+
+  // Service Worker Update Logic
+  React.useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      let registration: ServiceWorkerRegistration | null = null;
+
+      const onUpdateFound = (reg: ServiceWorkerRegistration) => {
+        const newWorker = reg.installing || reg.waiting;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New content is available and ready to be activated
+              toast.info("Une nouvelle version de l'application est disponible !", {
+                action: (
+                  <Button
+                    onClick={() => {
+                      newWorker.postMessage({ type: 'SKIP_WAITING' });
+                      window.location.reload();
+                    }}
+                    size="sm"
+                  >
+                    Mettre à jour
+                  </Button>
+                ),
+                duration: Infinity, // Keep toast visible until user acts
+              });
+            }
+          });
+        }
+      };
+
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((reg) => {
+          registration = reg;
+          console.log('SW registered: ', reg);
+
+          // Check for updates immediately
+          reg.update();
+
+          // Listen for new updates
+          reg.addEventListener('updatefound', () => onUpdateFound(reg));
+        })
+        .catch((registrationError) => {
+          console.log('SW registration failed: ', registrationError);
+        });
+
+      // Also check for updates when the page gains focus (e.g., user returns to tab)
+      const handleFocus = () => {
+        if (registration) {
+          registration.update();
+        }
+      };
+      window.addEventListener('focus', handleFocus);
+
+      return () => {
+        if (registration) {
+          registration.removeEventListener('updatefound', () => onUpdateFound(registration));
+        }
+        window.removeEventListener('focus', handleFocus);
+      };
+    }
+  }, []);
 
 
   return (
