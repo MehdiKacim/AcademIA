@@ -18,6 +18,7 @@ import {
   LogIn,
   UserPlus,
   Download, // New icon for install
+  Android, // Import Android icon
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const Index = () => {
   const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
+  const [showApkDownloadButton, setShowApkDownloadButton] = useState(false); // New state for APK button
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -43,6 +45,7 @@ const Index = () => {
 
   const { currentUser } = useRole();
   const navigate = useNavigate();
+  const isMobile = useIsMobile(); // Get isMobile status
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -116,6 +119,13 @@ const Index = () => {
     };
   }, []);
 
+  // Set APK download button visibility based on isMobile
+  useEffect(() => {
+    // We can't reliably detect Android vs iOS from browser, so we'll show it on any mobile device
+    // and add a note that it's for Android.
+    setShowApkDownloadButton(isMobile);
+  }, [isMobile]);
+
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -177,8 +187,6 @@ const Index = () => {
         "Des exercices ciblés pour renforcer vos points faibles et assurer une maîtrise durable.",
     },
   ];
-
-  const isMobile = useIsMobile();
 
   const indexNavItems: any[] = [ // Changed to any[] for simplicity with onClick
     { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil', type: 'trigger' },
@@ -256,6 +264,13 @@ const Index = () => {
                 <Button size="lg" variant="outline" onClick={handleInstallClick}>
                   <Download className="h-5 w-5 mr-2" /> Installer l'application
                 </Button>
+              )}
+              {showApkDownloadButton && ( // New APK download button
+                <a href="/path/to/your/app.apk" download="AcademIA.apk">
+                  <Button size="lg" variant="outline">
+                    <Android className="h-5 w-5 mr-2" /> Télécharger l'APK (Android)
+                  </Button>
+                </a>
               )}
             </div>
           </div>
