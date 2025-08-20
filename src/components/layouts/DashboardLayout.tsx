@@ -59,7 +59,7 @@ const DashboardLayout = () => {
     // Iterate through main items to find if current path belongs to any sub-menu
     for (const item of mainItems) {
       if (item.type === 'trigger' && item.items) {
-        if (item.items.some(subItem => subItem.to && location.pathname.startsWith(subItem.to))) {
+        if (item.items.some(subItem => subItem.to && location.pathname.startsWith(subItem.to.split('?')[0]))) { // Modified here
           foundParentLabel = item.label.toLowerCase().replace(/\s/g, '-');
           break; // Found the parent, no need to check further
         }
@@ -188,8 +188,15 @@ const DashboardLayout = () => {
   const getIsParentTriggerActive = (item: NavItem): boolean => {
     if (item.type !== 'trigger' || !item.items) return false;
 
-    // Check if the current path starts with any of the sub-items' 'to' paths
-    return item.items.some(subItem => subItem.to && location.pathname.startsWith(subItem.to));
+    // Check if the current path (without query params) matches the base path of any sub-item
+    const currentBasePath = location.pathname;
+    return item.items.some(subItem => {
+      if (subItem.to) {
+        const subItemBasePath = subItem.to.split('?')[0]; // Extract base path
+        return currentBasePath.startsWith(subItemBasePath);
+      }
+      return false;
+    });
   };
 
   const navItemsToDisplayForDesktop = () => {
@@ -215,13 +222,10 @@ const DashboardLayout = () => {
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {navItemsToDisplayForDesktop().map((item) => {
-              // Determine if a trigger is active (for Button)
-              // A trigger is active if its sub-menu is currently displayed (currentNavLevel matches its label)
-              // OR if the current path is a child of this trigger (meaning one of its sub-items is active)
-              const isTriggerActive = item.type === 'trigger' && (
-                currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-') || // This trigger's sub-menu is explicitly open
-                getIsParentTriggerActive(item) // One of its children's routes is active
-              );
+              // Determine if a link is active
+              const isLinkActive = item.to && location.pathname.startsWith(item.to.split('?')[0]); // Modified here for direct links
+              // Determine if a trigger is active (itself or one of its children)
+              const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
 
               return item.type === 'link' && item.to ? (
                 <NavLink
@@ -230,7 +234,7 @@ const DashboardLayout = () => {
                   className={({ isActive }) =>
                     cn(
                       "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isActive // NavLink's own isActive
+                      isLinkActive // Use the new isLinkActive logic
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-accent hover:text-accent-foreground"
                     )
