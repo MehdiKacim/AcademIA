@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels"; // Import Profile and Curriculum, Establishment
+import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -23,13 +23,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   loadClasses,
   loadCurricula,
-  // updateClassInStorage, // Removed as it's not needed for student assignment
-  // addClassToStorage, // Removed as it's not needed for student assignment
-  // deleteClassFromStorage, // Removed as it's not needed for student assignment
-  loadEstablishments, // Added loadEstablishments
+  loadEstablishments,
 } from '@/lib/courseData';
 
-// Shadcn UI components for autocomplete
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check } from "lucide-react";
@@ -42,20 +38,13 @@ const StudentManagementPage = () => {
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
   
-  // Main states for data
   const [classes, setClasses] = useState<Class[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
 
-  // States for add/edit forms (not directly used in this file, but kept for context if needed elsewhere)
-  const [newClassName, setNewClassName] = useState('');
-  const [newClassCurriculumId, setNewClassCurriculumId] = useState<string | undefined>(undefined);
-
-  // State for viewing students in a class
   const [selectedClassIdForStudents, setSelectedClassIdForStudents] = useState<string | null>(null);
 
-  // States for student assignment (autocomplete)
   const [usernameToAssign, setUsernameToAssign] = useState('');
   const [foundUserForAssignment, setFoundUserForAssignment] = useState<Profile | null>(null);
   const [classToAssign, setClassToAssign] = useState<string | undefined>(undefined);
@@ -65,32 +54,26 @@ const StudentManagementPage = () => {
 
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
-  // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       setClasses(await loadClasses());
       setCurricula(await loadCurricula());
-      setEstablishments(await loadEstablishments()); // Load establishments
+      setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
     };
     fetchData();
   }, []);
 
-  // Helper functions to get names from IDs
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
-  
-  // --- Class Management (simplified, as student assignment is handled via profile.class_id) ---
-  // Removed handleAddClass, handleDeleteClass as they are not directly related to student assignment here.
-  // These functions should ideally be in ClassManagementPage.tsx
+  const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
   const handleRemoveStudentFromClass = async (studentProfileId: string) => {
     const studentToUpdate = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
     if (studentToUpdate) {
       try {
-        await updateProfile({ id: studentToUpdate.id, class_id: null }); // Set class_id to null
-        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
-        // No need to update class.creator_ids here, as student-class link is via profile.class_id
+        await updateProfile({ id: studentToUpdate.id, class_id: null });
+        setAllProfiles(await getAllProfiles()); // Refresh profiles after update
         showSuccess(`Élève retiré de la classe !`);
       } catch (error: any) {
         console.error("Error removing student from class:", error);
@@ -111,7 +94,6 @@ const StudentManagementPage = () => {
     setSelectedClassIdForStudents(null);
   };
 
-  // Debounced search for user username (autocomplete)
   useEffect(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -166,7 +148,7 @@ const StudentManagementPage = () => {
       });
 
       if (updatedStudentProfile) {
-        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles to update their class_id
+        setAllProfiles(await getAllProfiles()); // Refresh profiles after update
         showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${getClassName(classToAssign)} !`);
         setUsernameToAssign('');
         setFoundUserForAssignment(null);
@@ -187,7 +169,7 @@ const StudentManagementPage = () => {
 
     try {
       await deleteProfile(studentProfileId); // Delete the profile
-      setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+      setAllProfiles(await getAllProfiles()); // Refresh profiles after deletion
       showSuccess("Élève supprimé !");
     } catch (error: any) {
       console.error("Error deleting student:", error);
@@ -391,7 +373,7 @@ const StudentManagementPage = () => {
                             try {
                               const updatedProfile = await updateProfile({ id: profile.id, class_id: classId });
                               if (updatedProfile) {
-                                setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+                                setAllProfiles(await getAllProfiles());
                                 showSuccess(`Élève ${updatedProfile.first_name} ${updatedProfile.last_name} affecté à la classe ${getClassName(classId)} !`);
                               } else {
                                 showError("Échec de l'affectation de l'élève.");

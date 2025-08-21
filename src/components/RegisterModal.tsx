@@ -28,7 +28,6 @@ interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginClick: () => void;
-  // onEmailConfirmationRequired: () => void; // Removed
 }
 
 const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) => {
@@ -42,7 +41,6 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [usernameCheckLoading, setUsernameCheckLoading] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [openCommand, setOpenCommand] = useState(false); // Keep for potential future use with Command component
 
   useEffect(() => {
     if (!isOpen) {
@@ -148,9 +146,8 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
         return;
       }
 
-      showSuccess("Compte créé avec succès !"); // Changed success message
+      showSuccess("Compte créé avec succès !");
       onClose(); // Close the modal
-      // onEmailConfirmationRequired(); // Removed
     }
   };
 
@@ -204,7 +201,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
                   placeholder="m@example.com"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)} // Simplified onChange
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -221,7 +218,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
                 <SelectContent>
                   <SelectItem value="student">Élève</SelectItem>
                   <SelectItem value="creator">Créateur (Professeur)</SelectItem>
-                  <SelectItem value="tutor" disabled>Tuteur (Bientôt disponible)</SelectItem> {/* Disabled tutor role */}
+                  <SelectItem value="tutor" disabled>Tuteur (Bientôt disponible)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -84,6 +84,7 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'creat
     category: course.category || undefined,
     difficulty: course.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: course.created_at || undefined,
+    creator_id: course.creator_id || undefined,
   }));
 };
 

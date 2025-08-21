@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
 import {
   Card,
@@ -17,9 +17,7 @@ import {
   Home,
   LogIn,
   UserPlus,
-  Download, // Use Download icon for APK as well
-  // MailCheck, // Removed
-  // X, // Removed
+  Download,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -28,7 +26,7 @@ import RegisterModal from "@/components/RegisterModal";
 import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
-import { showSuccess, showError } from "@/utils/toast"; // Import toast utilities
+import { showSuccess, showError } from "@/utils/toast";
 
 const Index = () => {
   const [isLoginModalOpen, setIsLoginModal] = useState(false);
@@ -36,7 +34,6 @@ const Index = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [showApkDownloadButton, setShowApkDownloadButton] = useState(false);
-  // const [showEmailConfirmationMessage, setShowEmailConfirmationMessage] = useState(false); // Removed
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -45,21 +42,20 @@ const Index = () => {
     methodologie: useRef<HTMLDivElement>(null),
   };
 
-  const { currentUserProfile } = useRole(); // Correctly destructure currentUserProfile
+  const { currentUserProfile } = useRole();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Redirect if user is already logged in
   useEffect(() => {
-    if (currentUserProfile) { // Use currentUserProfile here
+    if (currentUserProfile) {
       navigate("/dashboard");
     }
   }, [currentUserProfile, navigate]);
 
   useEffect(() => {
     const observerOptions = {
-      root: null, // viewport
-      rootMargin: '-50% 0px -50% 0px', // Trigger when 50% of the section is in view
+      root: null,
+      rootMargin: '-50% 0px -50% 0px',
       threshold: 0,
     };
 
@@ -88,14 +84,12 @@ const Index = () => {
     };
   }, []);
 
-  // PWA installation logic
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Only show the button if the user is on a mobile device and not already installed
       if (window.matchMedia('(display-mode: standalone)').matches) {
-        setShowInstallButton(false); // Already installed as PWA
+        setShowInstallButton(false);
       } else {
         setShowInstallButton(true);
       }
@@ -110,7 +104,6 @@ const Index = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Check if already installed on mount
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setShowInstallButton(false);
     }
@@ -121,7 +114,6 @@ const Index = () => {
     };
   }, []);
 
-  // Set APK download button visibility based on isMobile
   useEffect(() => {
     setShowApkDownloadButton(isMobile);
   }, [isMobile]);
@@ -149,7 +141,6 @@ const Index = () => {
   const openLoginModal = () => {
     setIsRegisterModal(false);
     setIsLoginModal(true);
-    // setShowEmailConfirmationMessage(false); // Removed
   };
 
   const closeLoginModal = () => setIsLoginModal(false);
@@ -157,14 +148,9 @@ const Index = () => {
   const openRegisterModal = () => {
     setIsLoginModal(false);
     setIsRegisterModal(true);
-    // setShowEmailConfirmationMessage(false); // Removed
   };
 
   const closeRegisterModal = () => setIsRegisterModal(false);
-
-  // const handleEmailConfirmationRequired = () => { // Removed
-  //   setShowEmailConfirmationMessage(true);
-  // };
 
   const methodology = [
     {
@@ -233,21 +219,6 @@ const Index = () => {
       </header>
 
       <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-24 md:pt-32", isMobile && "pb-20")}>
-        {/* {showEmailConfirmationMessage && ( // Removed
-          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md p-4 bg-blue-100 border border-blue-400 text-blue-800 rounded-lg shadow-md flex items-center justify-between animate-in fade-in-0 zoom-in-95 duration-300">
-            <div className="flex items-center gap-2">
-              <MailCheck className="h-5 w-5" />
-              <p className="text-sm font-medium">
-                Un e-mail de confirmation a été envoyé. Veuillez vérifier votre boîte de réception (et vos spams) pour activer votre compte.
-              </p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setShowEmailConfirmationMessage(false)}>
-              <X className="h-4 w-4" />
-              <span className="sr-only">Fermer</span>
-            </Button>
-          </div>
-        )} */}
-
         <section
           id="accueil"
           ref={sectionRefs.accueil}
@@ -363,7 +334,6 @@ const Index = () => {
         isOpen={isRegisterModalOpen}
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
-        // onEmailConfirmationRequired={handleEmailConfirmationRequired} // Removed
       />
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />
     </div>
