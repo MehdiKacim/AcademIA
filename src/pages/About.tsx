@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Info, Code, Heart } from "lucide-react";
+import { Info, Code, Heart, Linkedin, Github } from "lucide-react"; // Import Linkedin and Github icons
 import packageJson from '../../package.json'; // Import package.json to get version
 
 const About = () => {
@@ -60,6 +60,38 @@ const About = () => {
           <p className="text-lg font-semibold text-primary">
             Developed with love for you, for all ❤️
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-6 w-6 text-primary" />
+            Connectez-vous avec le développeur
+          </CardTitle>
+          <CardDescription>
+            Retrouvez Mehdi Kacim sur ses réseaux professionnels.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-4">
+          <a 
+            href="https://www.linkedin.com/in/mehdi-kacim-333304142?originalSubdomain=fr" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-blue-500 hover:text-blue-700 transition-colors"
+          >
+            <Linkedin className="h-6 w-6" />
+            LinkedIn
+          </a>
+          <a 
+            href="https://github.com/MehdiKacim" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          >
+            <Github className="h-6 w-6" />
+            GitHub
+          </a>
         </CardContent>
       </Card>
     </div>
