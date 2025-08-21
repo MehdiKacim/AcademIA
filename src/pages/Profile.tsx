@@ -360,7 +360,7 @@ const Profile = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Mon Profil
+        Mon Profil ({currentUserProfile?.first_name} {currentUserProfile?.last_name})
       </h1>
       {renderProfileContent()}
 

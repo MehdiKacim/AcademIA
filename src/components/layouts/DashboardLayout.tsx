@@ -350,6 +350,11 @@ const DashboardLayout = () => {
               <LogIn className="h-5 w-5 mr-2" /> Authentification
             </Button>
           )}
+          {currentUserProfile && (
+            <span className="text-sm font-medium text-muted-foreground hidden md:block">
+              Bonjour, {currentUserProfile.first_name} !
+            </span>
+          )}
           {/* Removed DropdownMenu for desktop profile/settings, as it's now handled by the mobile drawer */}
           {/* The mobile drawer will be triggered by a dedicated button in BottomNavigationBar */}
         </div>

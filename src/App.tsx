@@ -120,7 +120,14 @@ const AppWithThemeProvider = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <Sonner />
+          <Sonner 
+            position="top-center" 
+            className="!left-0 !right-0 !w-full !max-w-full !translate-x-0 top-16 z-[9999]" 
+            toastOptions={{
+              className: "rounded-none border-x-0 border-t-0 shadow-none",
+              duration: 5000,
+            }}
+          />
           {showSplash || isLoadingUser ? ( // Show splash if loading user or splash is active
             <SplashScreen onComplete={() => setShowSplash(false)} />
           ) : (
