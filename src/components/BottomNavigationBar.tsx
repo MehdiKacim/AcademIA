@@ -86,7 +86,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
       // Add "Authentification" button for unauthenticated users
       itemsToRender.push({
         icon: LogIn,
-        label: "Connexion", // Changed label to "Connexion" for simplicity
+        label: "Authentification", // Changed label to "Authentification"
         type: 'trigger',
         onClick: () => setIsAuthDrawerOpen(true),
       });
