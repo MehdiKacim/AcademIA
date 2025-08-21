@@ -3,7 +3,7 @@ name: Android Build Debug AcademIA
 on:
   push:
     branches:
-      - main # Déclenche le workflow à chaque push sur la branche 'main'
+      - main # Déclenche le workflow à chaque push sur la branche 'main '
 
 jobs:
   build_android:
