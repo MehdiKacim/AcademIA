@@ -103,7 +103,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
     debounceTimeoutRef.current = setTimeout(async () => {
       // Check if email exists in auth.users table
       const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      const isTaken = users?.some((user: SupabaseUser) => user.email === currentEmail); // Explicitly type user as SupabaseUser
+      const isTaken = users?.some((user: SupabaseUser) => user.email === currentEmail);
       setEmailAvailable(!isTaken);
       setEmailCheckLoading(false);
     }, 500);

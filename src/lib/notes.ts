@@ -185,11 +185,11 @@ export const parseNoteKey = (key: string): ParsedNoteKey | null => {
  * Récupère toutes les clés de note pour un utilisateur depuis Supabase.
  */
 export const getAllNoteKeys = async (userId: string): Promise<string[]> => {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase
     .from('notes')
     .select('note_key')
-    .eq('user_id', userId)
-    .distinct(); // Corrected syntax for distinct
+    .eq('user_id', userId) as any) // Cast to any to allow distinct
+    .distinct('note_key'); 
   if (error) {
     console.error("Erreur lors de la récupération de toutes les clés de note de Supabase:", error);
     return [];

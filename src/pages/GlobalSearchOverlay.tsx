@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Search, NotebookText, BookOpen, Layers, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes";
-import { loadCourses, Course, Module, ModuleSection } from "@/lib/courseData";
+import { loadCourses } from "@/lib/courseData";
+import { Course, Module, ModuleSection } from "@/lib/dataModels"; // Import interfaces from dataModels
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRole } from '@/contexts/RoleContext'; // Import useRole

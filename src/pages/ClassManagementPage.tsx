@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, Users, GraduationCap, Mail, ArrowLeft, LayoutList } from "lucide-react";
 import {
   Class,
-  Curriculum,
+  Curriculum, // Import Curriculum
   Establishment,
   Profile, // Import Profile
   StudentCourseProgress, // Import StudentCourseProgress

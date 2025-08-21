@@ -38,12 +38,12 @@ export const getProfileByEmail = async (email: string): Promise<Profile | null> 
   // Instead, you'd typically get the user from auth.users first, then their profile by ID.
   // For now, we'll simulate by checking if a profile exists with that email (less secure for direct lookup)
   // In a real app, you'd use auth.getUser() or similar.
-  const { data: usersData, error: userError } = await supabase.auth.admin.listUsers();
+  const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
   if (userError) {
     console.error("Error listing users for email lookup:", userError);
     return null;
   }
-  const foundUser = usersData.users.find((u: SupabaseUser) => u.email === email); // Explicitly type u as SupabaseUser
+  const foundUser = users?.find((u: SupabaseUser) => u.email === email);
   if (foundUser) {
     return getProfileById(foundUser.id);
   }

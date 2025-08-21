@@ -1,3 +1,5 @@
+import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavItem
+
 export interface User {
   id: string; // This will be the Supabase auth.users ID
   email: string;
@@ -30,7 +32,7 @@ export interface Curriculum {
   name: string;
   description?: string;
   establishment_id: string; // Link to parent establishment
-  course_ids: string[]; // List of IDs of courses included in this curriculum
+  course_ids: string[]; // JSONB, liste d'UUIDs de public.courses(id)
   created_at?: string;
 }
 
@@ -38,7 +40,7 @@ export interface Class {
   id: string; // UUID
   name: string;
   curriculum_id: string; // Link to parent curriculum
-  creator_ids: string[]; // List of User IDs (creators/teachers) associated with this class
+  creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'creator')
   created_at?: string;
 }
 
@@ -139,13 +141,13 @@ export interface Document {
   uploaded_at: string;
 }
 
-// Interface for navigation items (moved here for global access)
+// Moved NavItem interface here to be a single source of truth
 export interface NavItem {
-  icon: React.ElementType;
+  icon: ElementType;
   label: string;
   to?: string; // Optional for trigger items
   onClick?: () => void;
   type: 'link' | 'trigger';
-  items?: { to: string; label: string; icon: React.ElementType; type: 'link' }[];
+  items?: { to: string; label: string; icon: ElementType; type: 'link' }[];
   badge?: number; // New: for unread message count
 }

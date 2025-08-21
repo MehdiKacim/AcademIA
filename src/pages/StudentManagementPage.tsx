@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile and Curriculum
+import { Class, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile, Curriculum
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -122,7 +122,12 @@ const StudentManagementPage = () => {
         const oldClass = classes.find(cls => cls.id === foundUserForAssignment.class_id);
         if (oldClass) {
           // Note: Assuming creator_ids is used for students in class for now.
-          // In a real app, you'd have a dedicated student_ids array or a join table.
+          // You might need to fetch the current profile first to append to the array
+          // For simplicity, we'll assume it's directly updatable or handled by a separate join table
+          // For now, we'll just update the current user's profile if it's a creator
+          // This part needs careful consideration based on your actual profile table structure
+          // If establishmentIds is a JSONB array in profiles table:
+          // establishment_ids: [...(currentUserProfile.establishment_ids || []), newEst.id],
           const updatedOldClass = { ...oldClass, creator_ids: oldClass.creator_ids.filter(id => id !== foundUserForAssignment.id) };
           await updateClassInStorage(updatedOldClass);
         }

@@ -36,7 +36,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
         type: 'trigger',
         onClick: () => setCurrentMobileNavLevel(null),
       },
-      ...activeParentTrigger.items.map(subItem => ({ ...subItem, type: 'link', icon: subItem.icon })), // Ensure icon is carried over
+      ...activeParentTrigger.items.map(subItem => ({ ...subItem, type: 'link' as const, icon: subItem.icon })), // Ensure icon is carried over and type is literal
     ];
   } else {
     // Otherwise, show the main navigation items
