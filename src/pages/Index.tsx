@@ -41,7 +41,7 @@ const Index = () => {
     accueil: useRef<HTMLDivElement>(null),
     aiaBot: useRef<HTMLDivElement>(null),
     methodologie: useRef<HTMLDivElement>(null),
-    about: useRef<HTMLDivElement>(null), // Add ref for About section
+    // Removed about: useRef<HTMLDivElement>(null),
   };
 
   const { currentUserProfile } = useRole();
@@ -86,18 +86,16 @@ const Index = () => {
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-    Object.values(sectionRefs).forEach(ref => {
-      if (ref.current) {
-        observer.observe(ref.current);
-      }
-    });
+    // Observe only the remaining sections
+    if (sectionRefs.accueil.current) observer.observe(sectionRefs.accueil.current);
+    if (sectionRefs.aiaBot.current) observer.observe(sectionRefs.aiaBot.current);
+    if (sectionRefs.methodologie.current) observer.observe(sectionRefs.methodologie.current);
 
     return () => {
-      Object.values(sectionRefs).forEach(ref => {
-        if (ref.current) {
-          observer.unobserve(ref.current);
-        }
-      });
+      // Disconnect observer from all refs
+      if (sectionRefs.accueil.current) observer.unobserve(sectionRefs.accueil.current);
+      if (sectionRefs.aiaBot.current) observer.unobserve(sectionRefs.aiaBot.current);
+      if (sectionRefs.methodologie.current) observer.unobserve(sectionRefs.methodologie.current);
     };
   }, []);
 
@@ -146,11 +144,7 @@ const Index = () => {
     }
   };
 
-  const handleNavLinkClick = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    setActiveSection(id);
-  };
-
+  // Removed handleNavLinkClick as 'À propos' will now be a direct link
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false); // Close auth modal on success
     // The RoleContext's onAuthStateChange listener will handle navigation to dashboard
@@ -184,10 +178,10 @@ const Index = () => {
   ];
 
   const indexNavItems: any[] = [
-    { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil', type: 'trigger' },
-    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => handleNavLinkClick('aiaBot'), isActive: activeSection === 'aiaBot', type: 'trigger' },
-    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => handleNavLinkClick('methodologie'), isActive: activeSection === 'methodologie', type: 'trigger' },
-    { label: "À propos", icon: Info, onClick: () => handleNavLinkClick('about'), isActive: activeSection === 'about', type: 'trigger' }, // New About link
+    { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'accueil', type: 'trigger' },
+    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'aiaBot', type: 'trigger' },
+    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'methodologie', type: 'trigger' },
+    { label: "À propos", icon: Info, to: "/about", type: 'link' }, // Changed to direct link
   ];
 
   return (
@@ -198,16 +192,32 @@ const Index = () => {
         <Logo />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {indexNavItems.map((item) => (
-              <Button
-                key={item.label}
-                variant="ghost"
-                onClick={item.onClick}
-                className={cn(item.isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}
-              >
-                {item.label}
-              </Button>
-            ))}
+            {indexNavItems.map((item) => {
+              if (item.type === 'link' && item.to) {
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={cn(
+                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                      location.pathname === item.to ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }
+              return (
+                <Button
+                  key={item.label}
+                  variant="ghost"
+                  onClick={item.onClick}
+                  className={cn(item.isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}
+                >
+                  {item.label}
+                </Button>
+              );
+            })}
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
@@ -321,16 +331,6 @@ const Index = () => {
                 </Card>
               </div>
             ))}
-          </div>
-        </section>
-
-        <section
-          id="about"
-          ref={sectionRefs.about}
-          className="py-20 w-full px-4 border-t border-border/50"
-        >
-          <div className="max-w-5xl mx-auto text-left">
-            <About /> {/* Render the About component here */}
           </div>
         </section>
       </main>
