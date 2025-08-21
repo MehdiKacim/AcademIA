@@ -135,7 +135,7 @@ const Index = () => {
   };
 
   const handleAuthRedirect = () => {
-    navigate("/"); // Redirect to the new AuthPage
+    navigate("/"); // Redirect to the AuthPage
   };
 
   const methodology = [

@@ -125,8 +125,10 @@ const AppWithThemeProvider = () => {
           ) : (
             <BrowserRouter>
               <Routes>
-                {/* Public route for the landing page */}
-                <Route path="/" element={<AuthPage />} /> {/* Point to AuthPage */}
+                {/* Public route for the landing page (AuthPage) */}
+                <Route path="/" element={<AuthPage />} /> 
+                {/* Public route for the welcome/marketing page */}
+                <Route path="/welcome" element={<Index />} />
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}

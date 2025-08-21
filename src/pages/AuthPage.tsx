@@ -6,7 +6,7 @@ import { LoginForm } from "@/components/LoginForm";
 import { SignUpForm } from "@/components/SignUpForm";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 const AuthPage = () => {
@@ -54,6 +54,11 @@ const AuthPage = () => {
               <SignUpForm onSuccess={handleSignUpSuccess} onError={handleSignUpError} />
             </TabsContent>
           </Tabs>
+        </CardContent>
+        <CardContent className="text-center mt-4">
+          <Link to="/welcome" className="text-sm text-muted-foreground hover:underline">
+            En savoir plus sur AcademIA
+          </Link>
         </CardContent>
       </Card>
     </div>
