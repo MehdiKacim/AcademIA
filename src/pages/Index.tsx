@@ -18,6 +18,7 @@ import {
   LogIn, // Keep LogIn for the main button
   UserPlus, // Keep UserPlus for the main button
   Download,
+  Info, // Import Info icon for About section
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
 import AuthModal from "@/components/AuthModal"; // Import AuthModal
+import About from "./About"; // Import the About component
 
 const Index = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -37,6 +39,7 @@ const Index = () => {
     accueil: useRef<HTMLDivElement>(null),
     aiaBot: useRef<HTMLDivElement>(null),
     methodologie: useRef<HTMLDivElement>(null),
+    about: useRef<HTMLDivElement>(null), // Add ref for About section
   };
 
   const { currentUserProfile } = useRole();
@@ -172,6 +175,7 @@ const Index = () => {
     { label: "Accueil", icon: Home, onClick: () => handleNavLinkClick('accueil'), isActive: activeSection === 'accueil', type: 'trigger' },
     { label: "AiA Bot", icon: MessageCircleMore, onClick: () => handleNavLinkClick('aiaBot'), isActive: activeSection === 'aiaBot', type: 'trigger' },
     { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => handleNavLinkClick('methodologie'), isActive: activeSection === 'methodologie', type: 'trigger' },
+    { label: "À propos", icon: Info, onClick: () => handleNavLinkClick('about'), isActive: activeSection === 'about', type: 'trigger' }, // New About link
   ];
 
   return (
@@ -293,6 +297,16 @@ const Index = () => {
                 </Card>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section
+          id="about"
+          ref={sectionRefs.about}
+          className="py-20 w-full px-4 border-t border-border/50"
+        >
+          <div className="max-w-5xl mx-auto text-left">
+            <About /> {/* Render the About component here */}
           </div>
         </section>
       </main>
