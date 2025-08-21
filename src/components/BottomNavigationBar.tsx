@@ -69,15 +69,9 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
         type: 'trigger', // Use trigger to open the drawer
         onClick: () => setIsProfileDrawerOpen(true),
       });
-    } else {
-      // If not logged in, show login/register buttons
-      itemsToRender.push({
-        icon: LogIn,
-        label: "Connexion",
-        type: 'link',
-        to: '/', // Assuming '/' is the login/index page
-      });
     }
+    // Removed the explicit "Connexion" button here.
+    // If not logged in, the user will land on '/' (Index.tsx) which has login/signup buttons.
   }
 
   const handleLogout = async () => {

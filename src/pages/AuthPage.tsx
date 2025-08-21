@@ -56,9 +56,7 @@ const AuthPage = () => {
           </Tabs>
         </CardContent>
         <CardContent className="text-center mt-4">
-          <Link to="/welcome" className="text-sm text-muted-foreground hover:underline">
-            En savoir plus sur AcademIA
-          </Link>
+          {/* Removed the link to /welcome as / is now the welcome page */}
         </CardContent>
       </Card>
     </div>
