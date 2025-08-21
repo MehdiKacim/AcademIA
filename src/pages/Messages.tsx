@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getRecentConversations, getUnreadMessageCount } from "@/lib/messageData"; // Import messageData functions
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
 import { cn } from '@/lib/utils'; // Import cn for conditional styling
+import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
 
 const Messages = () => {
   const { currentUserProfile, isLoadingUser } = useRole();

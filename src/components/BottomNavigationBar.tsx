@@ -5,16 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowLeft, MessageSquare } from "lucide-react"; // Import MessageSquare
 import { useRole } from "@/contexts/RoleContext"; // Import useRole
-
-interface NavItem {
-  to?: string;
-  icon: React.ElementType;
-  label: string;
-  type?: 'link' | 'trigger'; // 'trigger' for items that open a sub-menu
-  items?: { to: string; label: string; icon: React.ElementType; type: 'link' }[]; // Sub-items for dropdown/trigger // icon is now required for sub-items
-  onClick?: () => void; // Added for generic trigger items
-  badge?: number; // New: for unread message count
-}
+import { NavItem } from "@/lib/dataModels"; // Import NavItem from dataModels
 
 interface BottomNavigationBarProps {
   navItems: NavItem[]; // This now receives the full hierarchical structure

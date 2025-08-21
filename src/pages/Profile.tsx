@@ -9,7 +9,8 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { loadCourses } from "@/lib/courseData"; // Still load courses from Supabase
 import { getProfileById, updateProfile, getStudentCourseProgress, upsertStudentCourseProgress, getAllStudentCourseProgress, getUserFullName } from "@/lib/studentData";
-import { Profile, Course, StudentCourseProgress } from "@/lib/dataModels"; // Import Profile, Course, StudentCourseProgress types
+import type { Profile } from "@/lib/dataModels"; // Import Profile as type
+import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import Course, StudentCourseProgress types
 import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";

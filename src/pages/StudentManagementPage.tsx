@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile } from "@/lib/dataModels"; // Import Profile
+import { Class, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile and Curriculum
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,

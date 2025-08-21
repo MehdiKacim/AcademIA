@@ -189,7 +189,7 @@ export const getAllNoteKeys = async (userId: string): Promise<string[]> => {
     .from('notes')
     .select('note_key')
     .eq('user_id', userId)
-    .distinct('note_key' as never); // Add 'as never' to bypass TS2339 for distinct, as it's valid Supabase syntax
+    .distinct(); // Corrected syntax for distinct
   if (error) {
     console.error("Erreur lors de la récupération de toutes les clés de note de Supabase:", error);
     return [];

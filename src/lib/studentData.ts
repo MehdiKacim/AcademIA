@@ -1,5 +1,6 @@
 import { Profile, User, StudentCourseProgress } from "./dataModels"; // Import Profile and StudentCourseProgress
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
+import { User as SupabaseUser } from '@supabase/supabase-js'; // Import Supabase User type
 
 // --- User & Profile Management (Supabase) ---
 
@@ -42,7 +43,7 @@ export const getProfileByEmail = async (email: string): Promise<Profile | null> 
     console.error("Error listing users for email lookup:", userError);
     return null;
   }
-  const foundUser = usersData.users.find(u => u.email === email);
+  const foundUser = usersData.users.find((u: SupabaseUser) => u.email === email); // Explicitly type u as SupabaseUser
   if (foundUser) {
     return getProfileById(foundUser.id);
   }
@@ -130,8 +131,9 @@ export const getAllStudentCourseProgress = async (): Promise<StudentCourseProgre
 };
 
 // Utility functions (will need to fetch user data from auth.users or profiles table)
-export const getUserFullName = (profile: Profile): string => {
-  return `${profile.first_name} ${profile.last_name}`;
+export const getUserFullName = async (userId: string): Promise<string> => {
+  const profile = await getProfileById(userId);
+  return profile ? `${profile.first_name} ${profile.last_name}` : 'N/A';
 };
 
 export const getUserUsername = (profile: Profile): string => {

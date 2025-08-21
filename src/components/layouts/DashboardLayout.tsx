@@ -28,17 +28,7 @@ import DataModelModal from "@/components/DataModelModal";
 import React, { useState, useEffect, useCallback } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData"; // Import getUnreadMessageCount
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
-import { Message } from "@/lib/dataModels"; // Import Message type
-
-interface NavItem {
-  icon: React.ElementType;
-  label: string;
-  to?: string; // Optional for trigger items
-  onClick?: () => void;
-  type: 'link' | 'trigger';
-  items?: { to: string; label: string; icon?: React.ElementType; type: 'link' }[];
-  badge?: number; // New: for unread message count
-}
+import { Message, NavItem } from "@/lib/dataModels"; // Import Message type and NavItem
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();

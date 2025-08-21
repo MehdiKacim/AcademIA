@@ -23,6 +23,7 @@ import { Profile } from "@/lib/dataModels";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
+import { User as SupabaseUser } from '@supabase/supabase-js'; // Import Supabase User type
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -102,7 +103,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
     debounceTimeoutRef.current = setTimeout(async () => {
       // Check if email exists in auth.users table
       const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      const isTaken = users?.some(user => user.email === currentEmail);
+      const isTaken = users?.some((user: SupabaseUser) => user.email === currentEmail); // Explicitly type user as SupabaseUser
       setEmailAvailable(!isTaken);
       setEmailCheckLoading(false);
     }, 500);

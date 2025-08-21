@@ -138,3 +138,14 @@ export interface Document {
   description?: string;
   uploaded_at: string;
 }
+
+// Interface for navigation items (moved here for global access)
+export interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  to?: string; // Optional for trigger items
+  onClick?: () => void;
+  type: 'link' | 'trigger';
+  items?: { to: string; label: string; icon: React.ElementType; type: 'link' }[];
+  badge?: number; // New: for unread message count
+}
