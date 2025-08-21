@@ -46,9 +46,18 @@ jobs:
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
       
-      # NOUVELLE ÉTAPE : Génère les icônes Android avec Python et Pillow
+      # 7. Génère les icônes Android avec Python et Pillow
       - name: Generate Android icons with Python
         run: |
+          # Affiche le répertoire de travail pour vérification
+          echo "Répertoire de travail actuel : $(pwd)"
+          
+          # Vérifie la présence de l'image source
+          if [ ! -f "icon-512x512.png" ]; then
+            echo "Erreur : Fichier d'image introuvable à la racine du projet."
+            exit 1
+          fi
+          
           # Installe Python et la bibliothèque Pillow
           sudo apt-get update
           sudo apt-get install -y python3-pip
@@ -68,10 +77,12 @@ jobs:
               "xxxhdpi": 192,
           }
           
-          source_image_path = 'public/icons/icon-512x512.png'
-          base_dir = 'android/app/src/main/res/'
+          # Le chemin de l'image est maintenant la racine du projet
+          source_image_path = os.path.join(os.getcwd(), 'icon-512x512.png')
+          base_dir = os.path.join(os.getcwd(), 'android', 'app', 'src', 'main', 'res')
           
           try:
+              print(f"Tentative d'ouverture de l'image : {source_image_path}")
               # Ouvre l'image source
               img = Image.open(source_image_path)
               
@@ -94,7 +105,7 @@ jobs:
           # Exécute le script
           python3 generate_icons.py
 
-      # 7. Incrémente automatiquement le numéro de version et de build Android
+      # 8. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
         id: increment_version
         run: |
@@ -119,7 +130,7 @@ jobs:
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # 8. Commit et push la modification de version
+      # 9. Commit et push la modification de version
       - name: Commit version change
         run: |
           git config --local user.email "action@github.com"
@@ -129,22 +140,22 @@ jobs:
           git commit -m "chore: Auto. incrémentation de la version Android et mise à jour de l'icône"
           git push
 
-      # 9. Rend le script gradlew exécutable
+      # 10. Rend le script gradlew exécutable
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # 10. Configure le JDK Java nécessaire pour la compilation Android
+      # 11. Configure le JDK Java nécessaire pour la compilation Android
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 11. Compile l'APK en mode 'debug'
+      # 12. Compile l'APK en mode 'debug'
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug
 
-      # 12. Trouve et renomme l'APK compilé
+      # 13. Trouve et renomme l'APK compilé
       - name: Find and Rename APK file
         id: find_and_rename_apk
         run: |
@@ -155,14 +166,14 @@ jobs:
           echo "APK renommé en : $NEW_APK_NAME"
           echo "apk_path=android/app/build/outputs/apk/debug/$NEW_APK_NAME" >> $GITHUB_OUTPUT
 
-      # 13. Uploade l'APK renommé comme un artefact de build
+      # 14. Uploade l'APK renommé comme un artefact de build
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: ${{ steps.find_and_rename_apk.outputs.apk_path }}
 
-      # 14. Crée une nouvelle release sur GitHub
+      # 15. Crée une nouvelle release sur GitHub
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/heads/main')
