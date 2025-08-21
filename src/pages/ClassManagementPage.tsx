@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useRole } from "@/contexts/RoleContext";
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -10,38 +9,41 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, GraduationCap, Mail, ArrowLeft, LayoutList } from "lucide-react";
-import {
-  Class,
-  Curriculum, // Import Curriculum
-  Establishment,
-  Profile, // Import Profile
-  StudentCourseProgress, // Import StudentCourseProgress
-} from "@/lib/dataModels";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
+import { Class, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile and Curriculum
 import { showSuccess, showError } from "@/utils/toast";
 import {
-  loadClasses,
-  addClassToStorage,
-  deleteClassFromStorage,
-  loadCurricula,
-  loadEstablishments,
-  updateClassInStorage, // Import updateClassInStorage
-} from '@/lib/courseData';
-import { getAllProfiles, updateProfile, getUserFullName, getUserUsername, getUserEmail } from '@/lib/studentData'; // Import Supabase functions
+  getAllProfiles,
+  getProfileByUsername,
+  updateProfile,
+  deleteProfile,
+  // Removed getUserFullName, getUserUsername, getUserEmail as they are not needed here
+} from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  loadClasses,
+  loadCurricula,
+  updateClassInStorage, // Import updateClassInStorage
+} from '@/lib/courseData';
+
+// Shadcn UI components for autocomplete
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useRole } from '@/contexts/RoleContext';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
-const ClassManagementPage = () => {
-  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
+const StudentManagementPage = () => {
+  const { currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
   
   // Main states for data
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
-  const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // All profiles, including students
+  const [curricula, setCurricula] = useState<Curriculum[]>([]); // Explicitly type as Curriculum[]
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // All profiles
 
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
@@ -53,10 +55,9 @@ const ClassManagementPage = () => {
   // Load initial data
   useEffect(() => {
     const fetchData = async () => {
-      setEstablishments(await loadEstablishments());
-      setCurricula(await loadCurricula());
       setClasses(await loadClasses());
-      setAllProfiles(await getAllProfiles()); // Load all profiles
+      setCurricula(await loadCurricula());
+      setAllProfiles(await getAllProfiles());
     };
     fetchData();
   }, []);
@@ -147,8 +148,116 @@ const ClassManagementPage = () => {
     setSelectedClassIdForStudents(null);
   };
 
+  // Debounced search for user username (autocomplete)
+  useEffect(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    if (usernameToAssign.trim() === '') {
+      setFoundUserForAssignment(null);
+      setIsSearchingUser(false);
+      return;
+    }
+
+    setIsSearchingUser(true);
+    setFoundUserForAssignment(null);
+
+    debounceTimeoutRef.current = setTimeout(async () => {
+      const profile = await getProfileByUsername(usernameToAssign.trim());
+      setFoundUserForAssignment(profile || null);
+      setIsSearchingUser(false);
+    }, 500);
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [usernameToAssign]);
+
+  const handleAssignStudentToClass = async () => {
+    if (!foundUserForAssignment) {
+      showError("Veuillez d'abord sélectionner un élève.");
+      return;
+    }
+    if (!classToAssign) {
+      showError("Veuillez sélectionner une classe.");
+      return;
+    }
+
+    if (foundUserForAssignment.role !== 'student') {
+      showError("Seuls les profils d'élèves peuvent être affectés à une classe.");
+      return;
+    }
+
+    if (foundUserForAssignment.class_id === classToAssign) {
+      showError("Cet élève est déjà dans cette classe.");
+      return;
+    }
+
+    try {
+      // Remove from old class if any
+      if (foundUserForAssignment.class_id) {
+        const oldClass = classes.find(cls => cls.id === foundUserForAssignment.class_id);
+        if (oldClass) {
+          // Note: Assuming creator_ids is used for students in class for now.
+          // In a real app, you'd have a dedicated student_ids array or a join table.
+          const updatedOldClass = { ...oldClass, creator_ids: oldClass.creator_ids.filter(id => id !== foundUserForAssignment.id) };
+          await updateClassInStorage(updatedOldClass);
+        }
+      }
+
+      // Add to new class
+      const newClass = classes.find(cls => cls.id === classToAssign);
+      if (newClass) {
+        // Note: Assuming creator_ids is used for students in class for now.
+        const updatedNewClass = { ...newClass, creator_ids: [...(newClass.creator_ids || []), foundUserForAssignment.id] };
+        await updateClassInStorage(updatedNewClass);
+      }
+
+      const updatedStudentProfile = await updateProfile({
+        id: foundUserForAssignment.id,
+        class_id: classToAssign,
+      });
+
+      if (updatedStudentProfile) {
+        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+        setClasses(await loadClasses()); // Re-fetch classes to update student counts
+        showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${newClass?.name} !`);
+        setUsernameToAssign('');
+        setFoundUserForAssignment(null);
+        setClassToAssign(undefined);
+        setOpenCommand(false);
+      } else {
+        showError("Échec de l'affectation de l'élève.");
+      }
+    } catch (error: any) {
+      console.error("Error assigning student to class:", error);
+      showError(`Erreur lors de l'affectation de l'élève: ${error.message}`);
+    }
+  };
+
   const selectedClass = selectedClassIdForStudents ? classes.find(cls => cls.id === selectedClassIdForStudents) : null;
   const studentsInSelectedClass = selectedClass ? allProfiles.filter(profile => profile.role === 'student' && profile.class_id === selectedClass.id) : [];
+
+  const filteredUsersForDropdown = usernameToAssign.trim() === ''
+    ? []
+    : allProfiles.filter(p =>
+        p.role === 'student' &&
+        (p.username.toLowerCase().includes(usernameToAssign.toLowerCase()) ||
+        p.first_name.toLowerCase().includes(usernameToAssign.toLowerCase()) ||
+        p.last_name.toLowerCase().includes(usernameToAssign.toLowerCase()))
+      ).slice(0, 10);
+
+  const filteredStudentProfiles = allProfiles.filter(profile => {
+    if (profile.role !== 'student') return false;
+    const lowerCaseQuery = studentSearchQuery.toLowerCase();
+    return profile.first_name.toLowerCase().includes(lowerCaseQuery) ||
+           profile.last_name.toLowerCase().includes(lowerCaseQuery) ||
+           profile.username.toLowerCase().includes(lowerCaseQuery.replace('@', '')) ||
+           profile.email.toLowerCase().includes(lowerCaseQuery);
+  });
 
   if (isLoadingUser) {
     return (
@@ -179,92 +288,184 @@ const ClassManagementPage = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Classes
+        Gestion des Élèves
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Ajoutez, modifiez ou supprimez des classes, et gérez les élèves qui y sont affectés.
+        Recherchez des élèves par nom d'utilisateur et affectez-les à des classes.
       </p>
 
-      {/* --- Classes Section --- */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" /> Classes
+            <GraduationCap className="h-6 w-6 text-primary" /> Élèves
           </CardTitle>
-          <CardDescription>Ajoutez, modifiez ou supprimez des classes, liées à un cursus.</CardDescription>
+          <CardDescription>Recherchez des élèves par nom d'utilisateur et affectez-les à des classes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {currentRole === 'creator' && (
-            <div className="grid gap-2">
-              <Label htmlFor="new-class-name">Nom de la nouvelle classe</Label>
-              <Input
-                id="new-class-name"
-                placeholder="Ex: 1ère Scientifique A"
-                value={newClassName}
-                onChange={(e) => setNewClassName(e.target.value)}
-              />
-              <Label htmlFor="class-curriculum">Cursus</Label>
-              <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
-                <SelectTrigger id="class-curriculum">
-                  <SelectValue placeholder="Sélectionner un cursus" />
-                </SelectTrigger>
-                <SelectContent>
-                  {curricula.map(cur => (
-                    <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId}>
-                <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Classe
-              </Button>
+          <h3 className="text-lg font-semibold">Affecter un élève à une classe</h3>
+          <div className="relative">
+            <Popover open={openCommand} onOpenChange={setOpenCommand}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCommand}
+                  className="w-full justify-between"
+                >
+                  {foundUserForAssignment ? `${foundUserForAssignment.first_name} ${foundUserForAssignment.last_name} (@${foundUserForAssignment.username})` : "Rechercher un élève..."}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <Command>
+                  <CommandInput
+                    placeholder="Rechercher par nom d'utilisateur..."
+                    value={usernameToAssign}
+                    onValueChange={(value) => {
+                      setUsernameToAssign(value);
+                      setFoundUserForAssignment(null);
+                    }}
+                  />
+                  <CommandList>
+                    {isSearchingUser && usernameToAssign.trim() !== '' && (
+                      <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
+                      </CommandEmpty>
+                    )}
+                    {!isSearchingUser && filteredUsersForDropdown.length === 0 && usernameToAssign.trim() !== '' && (
+                      <CommandEmpty className="py-2 text-center text-muted-foreground">
+                        Aucun élève trouvé pour "{usernameToAssign}".
+                      </CommandEmpty>
+                    )}
+                    <CommandGroup>
+                      {filteredUsersForDropdown.map((profile) => (
+                        <CommandItem
+                          key={profile.id}
+                          value={profile.username}
+                          onSelect={() => {
+                            setFoundUserForAssignment(profile);
+                            setUsernameToAssign(profile.username);
+                            setOpenCommand(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              foundUserForAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {profile.first_name} {profile.last_name} (@{profile.username})
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {foundUserForAssignment && (
+            <div className="p-3 border rounded-md bg-muted/20 space-y-2">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-green-500" />
+                <p className="font-medium">{foundUserForAssignment.first_name} {foundUserForAssignment.last_name} <span className="text-sm text-muted-foreground">(@{foundUserForAssignment.username})</span></p>
+              </div>
+              <p className="text-sm text-muted-foreground">Email : {foundUserForAssignment.email}</p>
+              {foundUserForAssignment.class_id && (
+                <p className="text-sm text-muted-foreground">Actuellement dans : {getClassName(foundUserForAssignment.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === foundUserForAssignment.class_id)?.curriculum_id)})</p>
+              )}
+              <div className="flex gap-2 mt-2">
+                <Select value={classToAssign} onValueChange={setClassToAssign}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Sélectionner une classe" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map(cls => (
+                      <SelectItem key={cls.id} value={cls.id}>
+                        {cls.name} ({getCurriculumName(cls.curriculum_id)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAssignStudentToClass} disabled={!classToAssign}>
+                  <PlusCircle className="h-4 w-4 mr-2" /> Affecter
+                </Button>
+              </div>
             </div>
           )}
+
+          <h3 className="text-lg font-semibold mt-6">Liste de tous les élèves</h3>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom, email ou @username..."
+              className="pl-10"
+              value={studentSearchQuery}
+              onChange={(e) => setStudentSearchQuery(e.target.value)}
+            />
+          </div>
           <div className="space-y-2">
-            {curricula.length === 0 && currentRole === 'creator' ? (
-              <p className="text-muted-foreground">Veuillez d'abord créer un cursus pour ajouter des classes.</p>
-            ) : classes.length === 0 ? (
-              <p className="text-muted-foreground">Aucune classe créée.</p>
+            {filteredStudentProfiles.length === 0 ? (
+              <p className="text-muted-foreground">Aucun élève trouvé pour votre recherche.</p>
             ) : (
-              curricula.map(cur => (
-                <Card key={cur.id} className="p-4 space-y-3 bg-muted/20">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <LayoutList className="h-5 w-5 text-primary" /> Classes du cursus "{cur.name}" ({getEstablishmentName(cur.establishment_id)})
-                  </h3>
-                  <div className="space-y-2 pl-4 border-l">
-                    {classes.filter(cls => cls.curriculum_id === cur.id).length === 0 ? (
-                      <p className="text-muted-foreground text-sm">Aucune classe pour ce cursus.</p>
-                    ) : (
-                      classes.filter(cls => cls.curriculum_id === cur.id).map(cls => (
-                        <div key={cls.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
-                          <span>{cls.name} ({allProfiles.filter(p => p.class_id === cls.id).length} élèves)</span>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
-                              <GraduationCap className="h-4 w-4 mr-1" /> Élèves
-                            </Button>
-                            {currentRole === 'creator' && (
-                              <>
-                                <Button variant="outline" size="sm" onClick={() => console.log('Modifier classe', cls.id)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                          {cls.creator_ids.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Professeurs: {cls.creator_ids.map(creatorId => {
-                                const creatorProfile = allProfiles.find(p => p.id === creatorId);
-                                return creatorProfile ? `${creatorProfile.first_name} ${creatorProfile.last_name}` : 'N/A';
-                              }).join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      ))
+              filteredStudentProfiles.map((profile) => (
+                <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex-grow">
+                    <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
+                    <p className="text-sm text-muted-foreground">{profile.email}</p>
+                    {profile.class_id && (
+                      <p className="text-xs text-muted-foreground">
+                        Classe: {getClassName(profile.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === profile.class_id)?.curriculum_id)})
+                      </p>
                     )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                    {profile.class_id ? (
+                      <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(profile.id, profile.class_id!)}>
+                        <Users className="h-4 w-4 mr-1" /> Retirer de la classe
+                      </Button>
+                    ) : (
+                      <select
+                        className="flex h-9 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value=""
+                        onChange={async (e) => {
+                          const classId = e.target.value;
+                          if (classId) {
+                            try {
+                              const updatedProfile = await updateProfile({ id: profile.id, class_id: classId });
+                              if (updatedProfile) {
+                                setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+                                const targetClass = classes.find(cls => cls.id === classId);
+                                if (targetClass) {
+                                  // Note: Assuming creator_ids is used for students in class for now.
+                                  const updatedTargetClass = { ...targetClass, creator_ids: [...(targetClass.creator_ids || []), profile.id] };
+                                  await updateClassInStorage(updatedTargetClass);
+                                }
+                                setClasses(await loadClasses()); // Re-fetch classes to update student counts
+                                showSuccess(`Élève ${updatedProfile.first_name} ${updatedProfile.last_name} affecté à la classe ${getClassName(classId)} !`);
+                              } else {
+                                showError("Échec de l'affectation de l'élève.");
+                              }
+                            } catch (error: any) {
+                              console.error("Error assigning student to class:", error);
+                              showError(`Erreur lors de l'affectation de l'élève: ${error.message}`);
+                            }
+                          }
+                        }}
+                      >
+                        <option value="">Affecter à une classe</option>
+                        {classes.map(cls => (
+                          <option key={cls.id} value={cls.id}>{cls.name} ({getCurriculumName(cls.curriculum_id)})</option>
+                        ))}
+                      </select>
+                    )}
+
+                    <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
+                      <Mail className="h-4 w-4 mr-1" /> Message
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </Card>
               ))
@@ -289,8 +490,8 @@ const ClassManagementPage = () => {
               studentsInSelectedClass.map(student => (
                 <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
-                    <p className="font-medium">{getUserFullName(student)} <span className="text-sm text-muted-foreground">(@{getUserUsername(student)})</span></p>
-                    <p className="text-sm text-muted-foreground">{getUserEmail(student)}</p>
+                    <p className="font-medium">{student.first_name} {student.last_name} <span className="text-sm text-muted-foreground">(@{student.username})</span></p>
+                    <p className="text-sm text-muted-foreground">{student.email}</p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
@@ -310,4 +511,4 @@ const ClassManagementPage = () => {
   );
 };
 
-export default ClassManagementPage;
+export default StudentManagementPage;
