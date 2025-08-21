@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { addCourseToStorage, loadCourses, updateCourseInStorage } from "@/lib/courseData";
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption } from "@/lib/dataModels"; // Corrected import path
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption } from "@/lib/dataModels"; // Import interfaces from dataModels
 import { useParams, useNavigate } from "react-router-dom";
 
 // Zod Schemas for validation
@@ -46,6 +46,7 @@ const ModuleSectionSchema = z.object({
   type: z.enum(["text", "quiz", "video", "image"]),
   url: z.string().url("L'URL doit être valide.").optional().or(z.literal("")),
   questions: z.array(QuizQuestionSchema).optional(), // Optionnel pour les sections non-quiz
+  isCompleted: z.boolean().default(false), // Default for new sections
   passingScore: z.number().min(0).max(100).optional(), // Optionnel pour les sections non-quiz
 }).superRefine((data, ctx) => {
   if (data.type === 'quiz') {
@@ -83,6 +84,8 @@ const ModuleSectionSchema = z.object({
 const ModuleSchema = z.object({
   title: z.string().min(1, "Le titre du module est requis."),
   sections: z.array(ModuleSectionSchema).min(1, "Un module doit avoir au moins une section."),
+  isCompleted: z.boolean().default(false), // Default for new courses
+  level: z.number().default(0), // Default for new courses
 });
 
 const CourseSchema = z.object({
@@ -113,8 +116,10 @@ const CreateCourse = () => {
         {
           title: "Introduction",
           sections: [
-            { title: "Bienvenue", content: "Contenu de la section de bienvenue.", type: "text", url: "" },
+            { title: "Bienvenue", content: "Contenu de la section de bienvenue.", type: "text", url: "", isCompleted: false },
           ],
+          isCompleted: false,
+          level: 0,
         },
       ],
     },
@@ -152,8 +157,10 @@ const CreateCourse = () => {
             {
               title: "Introduction",
               sections: [
-                { title: "Bienvenue", content: "Contenu de la section de bienvenue.", type: "text", url: "" },
+                { title: "Bienvenue", content: "Contenu de la section de bienvenue.", type: "text", url: "", isCompleted: false },
               ],
+              isCompleted: false,
+              level: 0,
             },
           ],
         });
@@ -172,6 +179,7 @@ const CreateCourse = () => {
       image_url: values.image_url || undefined,
       skills_to_acquire: values.skills_to_acquire.split(',').map(s => s.trim()),
       modules: values.modules as Module[],
+      creator_id: 'dummy-creator-id', // Add a dummy creator_id for now, or fetch from currentUserProfile.id
     };
 
     try {
@@ -596,7 +604,7 @@ const CreateCourse = () => {
                     size="sm"
                     onClick={() => {
                       const currentModules = form.getValues("modules");
-                      currentModules[moduleIndex].sections.push({ title: "", content: "", type: "text", url: "" });
+                      currentModules[moduleIndex].sections.push({ title: "", content: "", type: "text", url: "", isCompleted: false });
                       form.setValue("modules", currentModules);
                     }}
                   >
@@ -608,7 +616,7 @@ const CreateCourse = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => appendModule({ title: "", sections: [{ title: "", content: "", type: "text", url: "" }] })}
+              onClick={() => appendModule({ title: "", sections: [{ title: "", content: "", type: "text", url: "", isCompleted: false }], isCompleted: false, level: 0 })}
             >
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter un module
             </Button>

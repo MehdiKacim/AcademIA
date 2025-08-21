@@ -10,6 +10,7 @@ interface RoleContextType {
   isLoadingUser: boolean; // New loading state
   updateUserTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>; // New function to update theme
   signOut: () => Promise<void>; // Add signOut function
+  fetchUserProfile: (userId: string) => Promise<void>; // Add fetchUserProfile
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
@@ -18,24 +19,24 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Initialize as true
 
+  const fetchUserProfile = async (userId: string) => {
+    setIsLoadingUser(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      setCurrentUserProfile(null);
+    } else if (data) {
+      setCurrentUserProfile(data);
+    }
+    setIsLoadingUser(false);
+  };
+
   useEffect(() => {
-    const fetchUserProfile = async (userId: string) => {
-      setIsLoadingUser(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user profile:", error);
-        setCurrentUserProfile(null);
-      } else if (data) {
-        setCurrentUserProfile(data);
-      }
-      setIsLoadingUser(false);
-    };
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         // User is logged in
@@ -88,7 +89,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const currentRole = currentUserProfile ? currentUserProfile.role : null;
 
   return (
-    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut }}>
+    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut, fetchUserProfile }}>
       {children}
     </RoleContext.Provider>
   );

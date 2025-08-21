@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getProfileByUsername, getProfileByEmail } from "@/lib/studentData"; // Import profile lookup functions
+import { getProfileByUsername } from "@/lib/studentData"; // Import profile lookup functions
 import { showSuccess, showError } from "@/utils/toast";
 import { Profile } from "@/lib/dataModels";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
@@ -100,7 +100,9 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      const isTaken = await getProfileByEmail(currentEmail);
+      // Check if email exists in auth.users table
+      const { data: { users }, error } = await supabase.auth.admin.listUsers();
+      const isTaken = users?.some(user => user.email === currentEmail);
       setEmailAvailable(!isTaken);
       setEmailCheckLoading(false);
     }, 500);
@@ -151,7 +153,6 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
           last_name: lastName.trim(),
           username: username.trim(),
           role: role,
-          email: email.trim(), // Pass email to metadata for handle_new_user trigger
         },
       },
     });
@@ -161,6 +162,24 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
       showError(`Erreur d'inscription: ${error.message}`);
     } else if (data.user) {
       // User created, but session might not be immediate if email confirmation is required
+      // Manually insert profile data as the handle_new_user trigger might not have all metadata
+      const { error: profileInsertError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          username: username.trim(),
+          email: email.trim(), // Store email in profile for easier access
+          role: role,
+        });
+
+      if (profileInsertError) {
+        console.error("Error inserting profile after signup:", profileInsertError);
+        showError(`Erreur lors de la création du profil: ${profileInsertError.message}`);
+        return;
+      }
+
       showSuccess("Compte créé avec succès ! Veuillez vérifier votre email pour confirmer votre inscription.");
       onClose(); // Close the modal
       onEmailConfirmationRequired(); // Trigger the new callback

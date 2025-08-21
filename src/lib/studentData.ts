@@ -33,17 +33,20 @@ export const getProfileByUsername = async (username: string): Promise<Profile | 
 };
 
 export const getProfileByEmail = async (email: string): Promise<Profile | null> => {
-  // Query the public.profiles table directly for email
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('email', email)
-    .single();
-  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-    console.error("Error fetching profile by email:", error);
+  // For security, direct email lookup on profiles table is not recommended as email is in auth.users
+  // Instead, you'd typically get the user from auth.users first, then their profile by ID.
+  // For now, we'll simulate by checking if a profile exists with that email (less secure for direct lookup)
+  // In a real app, you'd use auth.getUser() or similar.
+  const { data: usersData, error: userError } = await supabase.auth.admin.listUsers();
+  if (userError) {
+    console.error("Error listing users for email lookup:", userError);
     return null;
   }
-  return data;
+  const foundUser = usersData.users.find(u => u.email === email);
+  if (foundUser) {
+    return getProfileById(foundUser.id);
+  }
+  return null;
 };
 
 export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<Profile | null> => {
@@ -80,6 +83,11 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
     return [];
   }
   return data;
+};
+
+export const getAllStudents = async (): Promise<Profile[]> => {
+  const profiles = await getAllProfiles();
+  return profiles.filter(p => p.role === 'student');
 };
 
 // --- Student Course Progress Management (Supabase) ---
@@ -122,42 +130,15 @@ export const getAllStudentCourseProgress = async (): Promise<StudentCourseProgre
 };
 
 // Utility functions (will need to fetch user data from auth.users or profiles table)
-export const getUserFullName = async (userId: string): Promise<string> => {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('first_name, last_name')
-    .eq('id', userId)
-    .single();
-  if (error || !profile) {
-    console.error("Error fetching user full name:", error);
-    return 'N/A';
-  }
+export const getUserFullName = (profile: Profile): string => {
   return `${profile.first_name} ${profile.last_name}`;
 };
 
-export const getUserUsername = async (userId: string): Promise<string> => {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('id', userId)
-    .single();
-  if (error || !profile) {
-    console.error("Error fetching user username:", error);
-    return 'N/A';
-  }
+export const getUserUsername = (profile: Profile): string => {
   return profile.username;
 };
 
-export const getUserEmail = async (userId: string): Promise<string> => {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('id', userId)
-    .single();
-  if (error || !profile) {
-    console.error("Error fetching user email:", error);
-    return 'N/A';
-  }
+export const getUserEmail = (profile: Profile): string => {
   return profile.email || 'N/A';
 };
 

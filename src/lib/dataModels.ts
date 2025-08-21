@@ -35,7 +35,7 @@ export interface Curriculum {
 }
 
 export interface Class {
-  id: string;
+  id: string; // UUID
   name: string;
   curriculum_id: string; // Link to parent curriculum
   creator_ids: string[]; // List of User IDs (creators/teachers) associated with this class
@@ -78,11 +78,14 @@ export interface ModuleSection {
   questions?: QuizQuestion[]; // For 'quiz' sections
   passingScore?: number; // New property for quiz passing score
   quizResult?: { score: number; total: number; passed: boolean }; // To store the last quiz result
+  isCompleted: boolean; // Added for tracking section completion
 }
 
 export interface Module {
   title: string;
   sections: ModuleSection[];
+  isCompleted: boolean; // Added for tracking module completion
+  level: number; // Added for module level
 }
 
 export interface Course {
@@ -95,6 +98,7 @@ export interface Course {
   category?: string;
   difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
   created_at?: string;
+  creator_id?: string; // Added creator_id to link courses to creators
 }
 
 export interface Note {
@@ -117,7 +121,7 @@ export interface Message {
   created_at: string;
 }
 
-// New interfaces for global search
+// New interfaces for global search (placeholders)
 export interface Event {
   id: string;
   title: string;

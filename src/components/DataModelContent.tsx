@@ -107,6 +107,8 @@ interface StudentCourseProgress {
 interface Module {
   title: string;
   sections: ModuleSection[];
+  isCompleted: boolean;
+  level: number;
 }
     `,
     "ModuleSection (Nested in Module)": `
@@ -116,6 +118,7 @@ interface ModuleSection {
   type?: 'text' | 'quiz' | 'video' | 'image';
   url?: string; // Pour les types 'video' ou 'image'
   questions?: QuizQuestion[]; // Pour le type 'quiz'
+  isCompleted: boolean;
   passingScore?: number; // Pour le type 'quiz'
   quizResult?: { score: number; total: number; passed: boolean }; // Résultat du dernier quiz
 }

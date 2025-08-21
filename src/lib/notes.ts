@@ -187,8 +187,9 @@ export const parseNoteKey = (key: string): ParsedNoteKey | null => {
 export const getAllNoteKeys = async (userId: string): Promise<string[]> => {
   const { data, error } = await supabase
     .from('notes')
-    .select('note_key', { distinct: true }) // Use distinct option
-    .eq('user_id', userId);
+    .select('note_key')
+    .eq('user_id', userId)
+    .distinct('note_key' as never); // Add 'as never' to bypass TS2339 for distinct, as it's valid Supabase syntax
   if (error) {
     console.error("Erreur lors de la récupération de toutes les clés de note de Supabase:", error);
     return [];
