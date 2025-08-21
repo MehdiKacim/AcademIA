@@ -53,8 +53,8 @@ jobs:
           echo "Répertoire de travail actuel : $(pwd)"
           
           # Vérifie la présence de l'image source SVG
-          if [ ! -f "logo.svg" ]; then
-            echo "Erreur : Fichier SVG introuvable à la racine du projet."
+          if [ ! -f "public/icons/logo.svg" ]; then
+            echo "Erreur : Fichier SVG introuvable à public/icons/logo.svg"
             exit 1
           fi
           
@@ -80,7 +80,7 @@ jobs:
           }
           
           # Le chemin de l'image SVG
-          source_svg_path = os.path.join(os.getcwd(), 'logo.svg')
+          source_svg_path = os.path.join(os.getcwd(), 'public', 'icons', 'logo.svg')
           base_dir = os.path.join(os.getcwd(), 'android', 'app', 'src', 'main', 'res')
           
           try:
