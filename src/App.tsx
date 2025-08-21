@@ -22,13 +22,14 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import Messages from "./pages/Messages";
-import { ThemeProvider } from "./components/theme-provider";
+import { ThemeProvider } => "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import AuthPage from "./pages/AuthPage"; // New import for AuthPage
+import { CourseChatProvider } from "./contexts/CourseChatContext"; // Import CourseChatProvider
 
 const queryClient = new QueryClient();
 
