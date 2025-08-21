@@ -46,9 +46,13 @@ jobs:
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
       
-      # 7. Génère les icônes Android avec ImageMagick
+      # 7. Installe ImageMagick et génère les icônes
       - name: Generate Android icons with ImageMagick
         run: |
+          # Installe ImageMagick
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
           # Définit le chemin de l'image source
           SOURCE_SVG="public/icons/logo.svg"
           BASE_DIR="android/app/src/main/res"
