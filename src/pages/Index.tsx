@@ -18,8 +18,8 @@ import {
   LogIn,
   UserPlus,
   Download, // Use Download icon for APK as well
-  MailCheck, // New icon for email confirmation
-  X, // New icon for closing message
+  // MailCheck, // Removed
+  // X, // Removed
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ const Index = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [showApkDownloadButton, setShowApkDownloadButton] = useState(false);
-  const [showEmailConfirmationMessage, setShowEmailConfirmationMessage] = useState(false); // New state for email confirmation message
+  // const [showEmailConfirmationMessage, setShowEmailConfirmationMessage] = useState(false); // Removed
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -149,7 +149,7 @@ const Index = () => {
   const openLoginModal = () => {
     setIsRegisterModal(false);
     setIsLoginModal(true);
-    setShowEmailConfirmationMessage(false); // Hide message if user tries to log in
+    // setShowEmailConfirmationMessage(false); // Removed
   };
 
   const closeLoginModal = () => setIsLoginModal(false);
@@ -157,14 +157,14 @@ const Index = () => {
   const openRegisterModal = () => {
     setIsLoginModal(false);
     setIsRegisterModal(true);
-    setShowEmailConfirmationMessage(false); // Hide message if user tries to register again
+    // setShowEmailConfirmationMessage(false); // Removed
   };
 
   const closeRegisterModal = () => setIsRegisterModal(false);
 
-  const handleEmailConfirmationRequired = () => {
-    setShowEmailConfirmationMessage(true);
-  };
+  // const handleEmailConfirmationRequired = () => { // Removed
+  //   setShowEmailConfirmationMessage(true);
+  // };
 
   const methodology = [
     {
@@ -233,7 +233,7 @@ const Index = () => {
       </header>
 
       <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-24 md:pt-32", isMobile && "pb-20")}>
-        {showEmailConfirmationMessage && (
+        {/* {showEmailConfirmationMessage && ( // Removed
           <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md p-4 bg-blue-100 border border-blue-400 text-blue-800 rounded-lg shadow-md flex items-center justify-between animate-in fade-in-0 zoom-in-95 duration-300">
             <div className="flex items-center gap-2">
               <MailCheck className="h-5 w-5" />
@@ -246,7 +246,7 @@ const Index = () => {
               <span className="sr-only">Fermer</span>
             </Button>
           </div>
-        )}
+        )} */}
 
         <section
           id="accueil"
@@ -363,7 +363,7 @@ const Index = () => {
         isOpen={isRegisterModalOpen}
         onClose={closeRegisterModal}
         onLoginClick={openLoginModal}
-        onEmailConfirmationRequired={handleEmailConfirmationRequired} // Pass the new handler
+        // onEmailConfirmationRequired={handleEmailConfirmationRequired} // Removed
       />
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />
     </div>

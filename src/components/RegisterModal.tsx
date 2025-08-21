@@ -23,16 +23,15 @@ import { Profile } from "@/lib/dataModels";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
-import { User as SupabaseUser } from '@supabase/supabase-js'; // Import Supabase User type
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginClick: () => void;
-  onEmailConfirmationRequired: () => void; // New prop
+  // onEmailConfirmationRequired: () => void; // Removed
 }
 
-const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequired }: RegisterModalProps) => {
+const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -41,10 +40,9 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
   const [role, setRole] = useState<'student' | 'creator' | 'tutor'>('student'); // Default role
 
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
-  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const [usernameCheckLoading, setUsernameCheckLoading] = useState(false);
-  const [emailCheckLoading, setEmailCheckLoading] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [openCommand, setOpenCommand] = useState(false); // Keep for potential future use with Command component
 
   useEffect(() => {
     if (!isOpen) {
@@ -56,9 +54,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
       setPassword('');
       setRole('student');
       setUsernameAvailable(null);
-      setEmailAvailable(null);
       setUsernameCheckLoading(false);
-      setEmailCheckLoading(false);
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
@@ -86,39 +82,10 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
     }, 500);
   };
 
-  const checkEmailAvailability = async (currentEmail: string) => {
-    if (currentEmail.trim() === '' || !/\S+@\S+\.\S+/.test(currentEmail)) {
-      setEmailAvailable(null);
-      setEmailCheckLoading(false);
-      return;
-    }
-
-    setEmailCheckLoading(true);
-    setEmailAvailable(null);
-
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    debounceTimeoutRef.current = setTimeout(async () => {
-      // Check if email exists in auth.users table
-      const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      const isTaken = users?.some((user: SupabaseUser) => user.email === currentEmail);
-      setEmailAvailable(!isTaken);
-      setEmailCheckLoading(false);
-    }, 500);
-  };
-
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUsername = e.target.value;
     setUsername(newUsername);
     checkUsernameAvailability(newUsername);
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    checkEmailAvailability(newEmail);
   };
 
   const handleRegister = async () => {
@@ -135,12 +102,8 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
       showError("Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre.");
       return;
     }
-    if (emailAvailable === false) {
-      showError("Cet email est déjà utilisé. Veuillez en choisir un autre.");
-      return;
-    }
-    if (usernameAvailable === null || usernameCheckLoading || emailAvailable === null || emailCheckLoading) {
-      showError("Veuillez attendre la vérification du nom d'utilisateur et de l'email.");
+    if (usernameAvailable === null || usernameCheckLoading) {
+      showError("Veuillez attendre la vérification du nom d'utilisateur.");
       return;
     }
 
@@ -160,7 +123,11 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
 
     if (error) {
       console.error("Signup error:", error);
-      showError(`Erreur d'inscription: ${error.message}`);
+      if (error.message.includes('User already registered')) {
+        showError("Cet email est déjà enregistré. Veuillez vous connecter.");
+      } else {
+        showError(`Erreur d'inscription: ${error.message}`);
+      }
     } else if (data.user) {
       // User created, but session might not be immediate if email confirmation is required
       // Manually insert profile data as the handle_new_user trigger might not have all metadata
@@ -181,13 +148,13 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
         return;
       }
 
-      showSuccess("Compte créé avec succès ! Veuillez vérifier votre email pour confirmer votre inscription.");
+      showSuccess("Compte créé avec succès !"); // Changed success message
       onClose(); // Close the modal
-      onEmailConfirmationRequired(); // Trigger the new callback
+      // onEmailConfirmationRequired(); // Removed
     }
   };
 
-  const isRegisterButtonDisabled = !firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim() || usernameCheckLoading || usernameAvailable === false || emailCheckLoading || emailAvailable === false || usernameAvailable === null || emailAvailable === null;
+  const isRegisterButtonDisabled = !firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim() || usernameCheckLoading || usernameAvailable === false || usernameAvailable === null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -237,23 +204,9 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick, onEmailConfirmationRequi
                   placeholder="m@example.com"
                   required
                   value={email}
-                  onChange={handleEmailChange}
+                  onChange={(e) => setEmail(e.target.value)} // Simplified onChange
                 />
-                {emailCheckLoading && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                )}
-                {emailAvailable === true && !emailCheckLoading && email.trim() !== '' && /\S+@\S+\.\S+/.test(email) && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                )}
-                {emailAvailable === false && !emailCheckLoading && email.trim() !== '' && /\S+@\S+\.\S+/.test(email) && (
-                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                )}
               </div>
-              {email.trim() !== '' && !emailCheckLoading && emailAvailable !== null && /\S+@\S+\.\S+/.test(email) && (
-                <p className={`text-sm ${emailAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                  {emailAvailable ? "Email disponible." : "Cet email est déjà utilisé."}
-                </p>
-              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Mot de passe</Label>

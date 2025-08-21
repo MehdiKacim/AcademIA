@@ -10,23 +10,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile, Curriculum
+import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels"; // Import Profile and Curriculum, Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
   getProfileByUsername,
   updateProfile,
   deleteProfile,
-  getUserFullName,
-  getUserUsername,
-  getUserEmail,
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   loadClasses,
   loadCurricula,
-  updateClassInStorage, // Import updateClassInStorage
+  // updateClassInStorage, // Removed as it's not needed for student assignment
+  // addClassToStorage, // Removed as it's not needed for student assignment
+  // deleteClassFromStorage, // Removed as it's not needed for student assignment
+  loadEstablishments, // Added loadEstablishments
 } from '@/lib/courseData';
 
 // Shadcn UI components for autocomplete
@@ -35,16 +35,25 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from '@/contexts/RoleContext';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 const StudentManagementPage = () => {
-  const { currentRole, isLoadingUser } = useRole();
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
-
+  
+  // Main states for data
   const [classes, setClasses] = useState<Class[]>([]);
-  const [curricula, setCurricula] = useState<Curriculum[]>([]); // Explicitly type as Curriculum[]
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // All profiles
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+
+  // States for add/edit forms (not directly used in this file, but kept for context if needed elsewhere)
+  const [newClassName, setNewClassName] = useState('');
+  const [newClassCurriculumId, setNewClassCurriculumId] = useState<string | undefined>(undefined);
+
+  // State for viewing students in a class
+  const [selectedClassIdForStudents, setSelectedClassIdForStudents] = useState<string | null>(null);
 
   // States for student assignment (autocomplete)
   const [usernameToAssign, setUsernameToAssign] = useState('');
@@ -56,17 +65,51 @@ const StudentManagementPage = () => {
 
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
+  // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       setClasses(await loadClasses());
       setCurricula(await loadCurricula());
+      setEstablishments(await loadEstablishments()); // Load establishments
       setAllProfiles(await getAllProfiles());
     };
     fetchData();
   }, []);
 
-  const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
+  // Helper functions to get names from IDs
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
+  
+  // --- Class Management (simplified, as student assignment is handled via profile.class_id) ---
+  // Removed handleAddClass, handleDeleteClass as they are not directly related to student assignment here.
+  // These functions should ideally be in ClassManagementPage.tsx
+
+  const handleRemoveStudentFromClass = async (studentProfileId: string) => {
+    const studentToUpdate = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
+    if (studentToUpdate) {
+      try {
+        await updateProfile({ id: studentToUpdate.id, class_id: null }); // Set class_id to null
+        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+        // No need to update class.creator_ids here, as student-class link is via profile.class_id
+        showSuccess(`Élève retiré de la classe !`);
+      } catch (error: any) {
+        console.error("Error removing student from class:", error);
+        showError(`Erreur lors du retrait de l'élève: ${error.message}`);
+      }
+    }
+  };
+
+  const handleSendMessageToStudent = (studentProfile: Profile) => {
+    navigate(`/messages?contactId=${studentProfile.id}`);
+  };
+
+  const handleViewStudentsInClass = (classId: string) => {
+    setSelectedClassIdForStudents(classId);
+  };
+
+  const handleBackToClasses = () => {
+    setSelectedClassIdForStudents(null);
+  };
 
   // Debounced search for user username (autocomplete)
   useEffect(() => {
@@ -117,39 +160,14 @@ const StudentManagementPage = () => {
     }
 
     try {
-      // Remove from old class if any
-      if (foundUserForAssignment.class_id) {
-        const oldClass = classes.find(cls => cls.id === foundUserForAssignment.class_id);
-        if (oldClass) {
-          // Note: Assuming creator_ids is used for students in class for now.
-          // You might need to fetch the current profile first to append to the array
-          // For simplicity, we'll assume it's directly updatable or handled by a separate join table
-          // For now, we'll just update the current user's profile if it's a creator
-          // This part needs careful consideration based on your actual profile table structure
-          // If establishmentIds is a JSONB array in profiles table:
-          // establishment_ids: [...(currentUserProfile.establishment_ids || []), newEst.id],
-          const updatedOldClass = { ...oldClass, creator_ids: oldClass.creator_ids.filter(id => id !== foundUserForAssignment.id) };
-          await updateClassInStorage(updatedOldClass);
-        }
-      }
-
-      // Add to new class
-      const newClass = classes.find(cls => cls.id === classToAssign);
-      if (newClass) {
-        // Note: Assuming creator_ids is used for students in class for now.
-        const updatedNewClass = { ...newClass, creator_ids: [...(newClass.creator_ids || []), foundUserForAssignment.id] };
-        await updateClassInStorage(updatedNewClass);
-      }
-
       const updatedStudentProfile = await updateProfile({
         id: foundUserForAssignment.id,
         class_id: classToAssign,
       });
 
       if (updatedStudentProfile) {
-        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
-        setClasses(await loadClasses()); // Re-fetch classes to update student counts
-        showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${newClass?.name} !`);
+        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles to update their class_id
+        showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${getClassName(classToAssign)} !`);
         setUsernameToAssign('');
         setFoundUserForAssignment(null);
         setClassToAssign(undefined);
@@ -163,45 +181,13 @@ const StudentManagementPage = () => {
     }
   };
 
-  const handleRemoveStudentFromClass = async (studentProfileId: string, classId: string) => {
-    const studentToUpdate = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
-    if (studentToUpdate) {
-      try {
-        await updateProfile({ id: studentToUpdate.id, class_id: null }); // Set class_id to null
-        setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
-
-        const targetClass = classes.find(cls => cls.id === classId);
-        if (targetClass) {
-          // Note: Assuming creator_ids is used for students in class for now.
-          const updatedTargetClass = { ...targetClass, creator_ids: targetClass.creator_ids.filter(id => id !== studentProfileId) };
-          await updateClassInStorage(updatedTargetClass);
-        }
-        setClasses(await loadClasses()); // Re-fetch classes to update student counts
-        showSuccess(`Élève retiré de la classe !`);
-      } catch (error: any) {
-        console.error("Error removing student from class:", error);
-        showError(`Erreur lors du retrait de l'élève: ${error.message}`);
-      }
-    }
-  };
-
   const handleDeleteStudent = async (studentProfileId: string) => {
     const studentProfileToDelete = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
     if (!studentProfileToDelete) return;
 
     try {
-      // Remove student profile from any classes they might be in
-      if (studentProfileToDelete.class_id) {
-        const targetClass = classes.find(cls => cls.id === studentProfileToDelete.class_id);
-        if (targetClass) {
-          // Note: Assuming creator_ids is used for students in class for now.
-          const updatedTargetClass = { ...targetClass, creator_ids: targetClass.creator_ids.filter(id => id !== studentProfileId) };
-          await updateClassInStorage(updatedTargetClass);
-        }
-      }
       await deleteProfile(studentProfileId); // Delete the profile
       setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
-      setClasses(await loadClasses()); // Re-fetch classes to update student counts
       showSuccess("Élève supprimé !");
     } catch (error: any) {
       console.error("Error deleting student:", error);
@@ -209,9 +195,8 @@ const StudentManagementPage = () => {
     }
   };
 
-  const handleSendMessageToStudent = (studentProfile: Profile) => {
-    navigate(`/messages?contactId=${studentProfile.id}`);
-  };
+  const selectedClass = selectedClassIdForStudents ? classes.find(cls => cls.id === selectedClassIdForStudents) : null;
+  const studentsInSelectedClass = selectedClass ? allProfiles.filter(profile => profile.role === 'student' && profile.class_id === selectedClass.id) : [];
 
   const filteredUsersForDropdown = usernameToAssign.trim() === ''
     ? []
@@ -393,7 +378,7 @@ const StudentManagementPage = () => {
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     {profile.class_id ? (
-                      <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(profile.id, profile.class_id!)}>
+                      <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(profile.id)}>
                         <Users className="h-4 w-4 mr-1" /> Retirer de la classe
                       </Button>
                     ) : (
@@ -407,13 +392,6 @@ const StudentManagementPage = () => {
                               const updatedProfile = await updateProfile({ id: profile.id, class_id: classId });
                               if (updatedProfile) {
                                 setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
-                                const targetClass = classes.find(cls => cls.id === classId);
-                                if (targetClass) {
-                                  // Note: Assuming creator_ids is used for students in class for now.
-                                  const updatedTargetClass = { ...targetClass, creator_ids: [...(targetClass.creator_ids || []), profile.id] };
-                                  await updateClassInStorage(updatedTargetClass);
-                                }
-                                setClasses(await loadClasses()); // Re-fetch classes to update student counts
                                 showSuccess(`Élève ${updatedProfile.first_name} ${updatedProfile.last_name} affecté à la classe ${getClassName(classId)} !`);
                               } else {
                                 showError("Échec de l'affectation de l'élève.");
@@ -445,6 +423,40 @@ const StudentManagementPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {selectedClassIdForStudents && selectedClass && (
+        <Card className="mt-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ArrowLeft className="h-5 w-5 cursor-pointer" onClick={handleBackToClasses} />
+              Élèves de la classe "{selectedClass.name}"
+            </CardTitle>
+            <CardDescription>{studentsInSelectedClass.length} élève(s)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {studentsInSelectedClass.length === 0 ? (
+              <p className="text-muted-foreground">Aucun élève dans cette classe.</p>
+            ) : (
+              studentsInSelectedClass.map(student => (
+                <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex-grow">
+                    <p className="font-medium">{student.first_name} {student.last_name} <span className="text-sm text-muted-foreground">(@{student.username})</span></p>
+                    <p className="text-sm text-muted-foreground">{student.email}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                    <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
+                      <Mail className="h-4 w-4 mr-1" /> Message
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id)}>
+                      <Trash2 className="h-4 w-4" /> Retirer
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
