@@ -3,38 +3,38 @@ name: Android Build Release AcademIA
 on:
   push:
     branches:
-      - main # Déclenche le workflow à chaque push sur la branche 'main '
+      - main
 
 jobs:
   build_android:
-    runs-on: ubuntu-latest # Exécute le job sur une machine virtuelle Ubuntu
+    runs-on: ubuntu-latest
     permissions:
-      contents: write # Ajoute les permissions d'écriture pour le GITHUB_TOKEN
-      pull-requests: write # Ajoute les permissions d'écriture pour les pull requests
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Clone le code du dépôt
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Utilise Node.js version 20
+          node-version: '20'
 
       - name: Install npm dependencies
-        run: npm install # Installe les dépendances Node.js
+        run: npm install
 
       - name: Build web app
-        run: npm run build # Construit l'application web React (crée le dossier 'dist')
+        run: npm run build
 
       - name: Install Capacitor CLI
-        run: npm install -g @capacitor/cli # Installe l'outil CLI de Capacitor globalement
+        run: npm install -g @capacitor/cli
 
       - name: Sync Capacitor web assets to Android
-        run: npx cap sync android # Copie les assets web dans le projet Android
+        run: npx cap sync android
 
       - name: Increment Android Version with Shell Script
-        id: increment_version # ID pour accéder aux sorties
+        id: increment_version
         run: |
           # Fichier à modifier
           GRADLE_FILE="android/app/build.gradle"
@@ -68,7 +68,16 @@ jobs:
           git add android/app/build.gradle
           git commit -m "chore: Incrémentation auto. de la version Android pour le build ${{ steps.increment_version.outputs.version_name }}"
           git push
-
+      
+      - name: Create Keystore and Properties File
+        run: |
+          mkdir -p android/app/keystore/
+          echo "${{ secrets.KEY_STORE_FILE_BASE64 }}" | base64 --decode > android/app/keystore/my-release-key.jks
+          echo "storeFile=./keystore/my-release-key.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+      
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
@@ -84,7 +93,7 @@ jobs:
       - name: Find and Rename APK file
         id: find_and_rename_apk
         run: |
-          # Trouver l'APK de release
+          # Trouve l'APK de release
           APK_PATH=$(find android/app/build/outputs/apk/release -name "app-release.apk" | head -n 1)
           
           # Nom de la nouvelle version
