@@ -28,7 +28,7 @@ import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import AuthPage from "./pages/AuthPage"; // New import for AuthPage
+// import AuthPage from "./pages/AuthPage"; // Removed AuthPage import
 import { CourseChatProvider } from "./contexts/CourseChatContext"; // Import CourseChatProvider
 
 const queryClient = new QueryClient();
@@ -127,8 +127,7 @@ const AppWithThemeProvider = () => {
               <Routes>
                 {/* Public route for the landing page (Index.tsx) */}
                 <Route path="/" element={<Index />} /> 
-                {/* Public route for the authentication page (AuthPage.tsx) */}
-                <Route path="/auth" element={<AuthPage />} />
+                {/* Removed public route for AuthPage.tsx */}
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}

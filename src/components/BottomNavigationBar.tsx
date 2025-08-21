@@ -16,6 +16,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"; // Import Drawer components
 import { useRole } from "@/contexts/RoleContext"; // Corrected import path
+import AuthMenu from "./AuthMenu"; // Import the new AuthMenu component
 
 interface BottomNavigationBarProps {
   navItems: NavItem[];
@@ -31,10 +32,22 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
 
   const [currentMobileNavLevel, setCurrentMobileNavLevel] = useState<string | null>(null);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false); // State for the profile drawer
+  const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false); // New state for auth drawer
 
   if (!isMobile) {
     return null; // Do not display on non-mobile screens
   }
+
+  const handleLogout = async () => { // Make it async
+    await signOut(); // Call the signOut function from context
+    navigate("/");
+    setIsProfileDrawerOpen(false); // Close drawer after logout
+  };
+
+  const handleAuthSuccess = () => {
+    setIsAuthDrawerOpen(false); // Close auth drawer on success
+    navigate("/dashboard"); // Redirect to dashboard after login/signup
+  };
 
   const activeParentTrigger = navItems.find(item => item.label === currentMobileNavLevel && item.type === 'trigger');
 
@@ -69,16 +82,16 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
         type: 'trigger', // Use trigger to open the drawer
         onClick: () => setIsProfileDrawerOpen(true),
       });
+    } else {
+      // Add "Authentification" button for unauthenticated users
+      itemsToRender.push({
+        icon: LogIn,
+        label: "Connexion", // Changed label to "Connexion" for simplicity
+        type: 'trigger',
+        onClick: () => setIsAuthDrawerOpen(true),
+      });
     }
-    // Removed the explicit "Connexion" button here.
-    // If not logged in, the user will land on '/' (Index.tsx) which has login/signup buttons.
   }
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-    setIsProfileDrawerOpen(false); // Close drawer after logout
-  };
 
   return (
     <>
@@ -124,7 +137,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
           return null;
         })}
 
-        {onOpenGlobalSearch && !activeParentTrigger && (
+        {onOpenGlobalSearch && !activeParentTrigger && currentUser && ( // Only show search if logged in
           <Button
             variant="ghost"
             onClick={onOpenGlobalSearch}
@@ -175,6 +188,22 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
                   <LogOut className="mr-2 h-4 w-4" /> Déconnexion
                 </Button>
               </div>
+              <DrawerFooter>
+                <DrawerClose asChild>
+                  <Button variant="outline">Fermer</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
+
+      {/* Authentication Drawer for Mobile */}
+      {!currentUser && (
+        <Drawer open={isAuthDrawerOpen} onOpenChange={setIsAuthDrawerOpen}>
+          <DrawerContent className="h-auto mt-24 rounded-t-lg">
+            <div className="mx-auto w-full max-w-sm">
+              <AuthMenu onClose={() => setIsAuthDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
               <DrawerFooter>
                 <DrawerClose asChild>
                   <Button variant="outline">Fermer</Button>

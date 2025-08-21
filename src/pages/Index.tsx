@@ -15,8 +15,8 @@ import {
   Target,
   MessageCircleMore,
   Home,
-  LogIn,
-  UserPlus,
+  LogIn, // Keep LogIn for the main button
+  UserPlus, // Keep UserPlus for the main button
   Download,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -134,9 +134,7 @@ const Index = () => {
     setActiveSection(id);
   };
 
-  const handleAuthRedirect = () => {
-    navigate("/auth"); // Redirect to the AuthPage
-  };
+  // No direct handleAuthRedirect here, as auth is now via bottom nav
 
   const methodology = [
     {
@@ -193,14 +191,7 @@ const Index = () => {
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
-          <Button variant="outline" size="icon" onClick={handleAuthRedirect}>
-            <LogIn className="h-5 w-5" />
-            <span className="sr-only">Se connecter</span>
-          </Button>
-          <Button size="icon" onClick={handleAuthRedirect}>
-            <UserPlus className="h-5 w-5" />
-            <span className="sr-only">Créer un compte</span>
-          </Button>
+          {/* Removed direct login/signup buttons from header */}
         </div>
       </header>
 
@@ -226,16 +217,7 @@ const Index = () => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={handleAuthRedirect}
-              >
-                Commencer l'aventure
-              </Button>
-              <Button size="lg" variant="secondary" onClick={handleAuthRedirect}>
-                Créer un compte
-              </Button>
+              {/* Removed direct login/signup buttons from main content */}
               {showInstallButton && (
                 <Button size="lg" variant="outline" onClick={handleInstallClick}>
                   <Download className="h-5 w-5 mr-2" /> Installer l'application
@@ -268,9 +250,7 @@ const Index = () => {
               <MessageCircleMore className="w-24 h-24 text-primary" />
             </div>
             <div>
-              <Button size="lg" onClick={handleAuthRedirect}>
-                Découvrir AiA
-              </Button>
+              {/* Removed direct Discover AiA button */}
             </div>
           </div>
         </section>
