@@ -19,6 +19,7 @@ import {
   UserPlus, // Keep UserPlus for the main button
   Download,
   Info, // Import Info icon for About section
+  Loader2, // Import Loader2 for loading state
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -28,11 +29,12 @@ import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
 import AuthModal from "@/components/AuthModal"; // Import AuthModal
 import About from "./About"; // Import the About component
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { supabase } from "@/integrations/supabase/client"; // Import supabase
 
 const Index = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
-  const [showApkDownloadButton, setShowApkDownloadButton] = useState(false);
 
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
@@ -46,6 +48,20 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
+
+  // Fetch latest APK release data using TanStack Query
+  const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
+    queryKey: ['latestApkRelease'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('get-latest-apk-release');
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour
+    enabled: isMobile, // Only fetch if on a mobile device
+  });
 
   useEffect(() => {
     if (currentUserProfile) {
@@ -114,10 +130,6 @@ const Index = () => {
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
-
-  useEffect(() => {
-    setShowApkDownloadButton(isMobile);
-  }, [isMobile]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -235,10 +247,18 @@ const Index = () => {
                   <Download className="h-5 w-5 mr-2" /> Installer l'application
                 </Button>
               )}
-              {showApkDownloadButton && (
-                <a href="/downloads/AcademIA.apk" download="AcademIA.apk">
-                  <Button size="lg" variant="outline">
-                    <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android)
+              {isMobile && (
+                <a href={apkData?.apkUrl} download={`AcademIA-${apkData?.version}.apk`}>
+                  <Button size="lg" variant="outline" disabled={isLoadingApk || isApkError || !apkData?.apkUrl}>
+                    {isLoadingApk ? (
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    ) : isApkError || !apkData?.apkUrl ? (
+                      <Download className="h-5 w-5 mr-2" /> "APK non disponible"
+                    ) : (
+                      <>
+                        <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android {apkData.version})
+                      </>
+                    )}
                   </Button>
                 </a>
               )}
