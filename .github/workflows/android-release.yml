@@ -52,9 +52,9 @@ jobs:
           # Affiche le répertoire de travail pour vérification
           echo "Répertoire de travail actuel : $(pwd)"
           
-          # Vérifie la présence de l'image source
-          if [ ! -f "icon-512x512.png" ]; then
-            echo "Erreur : Fichier d'image introuvable à la racine du projet."
+          # Vérifie la présence de l'image source dans le bon dossier
+          if [ ! -f "public/icons/icon-512x512.png" ]; then
+            echo "Erreur : Fichier d'image introuvable à public/icons/icon-512x512.png"
             exit 1
           fi
           
@@ -77,8 +77,8 @@ jobs:
               "xxxhdpi": 192,
           }
           
-          # Le chemin de l'image est maintenant la racine du projet
-          source_image_path = os.path.join(os.getcwd(), 'icon-512x512.png')
+          # Le chemin de l'image est maintenant dans le sous-répertoire public/icons
+          source_image_path = os.path.join(os.getcwd(), 'public', 'icons', 'icon-512x512.png')
           base_dir = os.path.join(os.getcwd(), 'android', 'app', 'src', 'main', 'res')
           
           try:
