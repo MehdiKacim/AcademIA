@@ -251,9 +251,13 @@ const Index = () => {
                 <a href={apkData?.apkUrl} download={`AcademIA-${apkData?.version}.apk`}>
                   <Button size="lg" variant="outline" disabled={isLoadingApk || isApkError || !apkData?.apkUrl}>
                     {isLoadingApk ? (
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Chargement APK...
+                      </>
                     ) : isApkError || !apkData?.apkUrl ? (
-                      <Download className="h-5 w-5 mr-2" /> "APK non disponible"
+                      <>
+                        <Download className="h-5 w-5 mr-2" /> <span>APK non disponible</span>
+                      </>
                     ) : (
                       <>
                         <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android {apkData.version})
