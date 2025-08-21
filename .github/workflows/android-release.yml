@@ -45,7 +45,18 @@ jobs:
       # 6. Synchronise les fichiers web compilés vers le projet Android
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
-
+      
+      # NOUVELLE ÉTAPE : Génère et place les icônes Android
+      - name: Generate Android icons
+        uses: capgo/android-icon-generator@v1
+        with:
+          # Spécifie le chemin de l'image source à utiliser
+          source-image: 'public/icons/icon-512x512.png'
+          # Définit le chemin de destination pour les icônes générées
+          destination-path: 'android/app/src/main/res/'
+          # Optionnel : Ajoute un suffixe pour différencier l'icône de debug
+          suffix: '_debug'
+          
       # 7. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
         id: increment_version
@@ -77,7 +88,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add android/app/build.gradle
-          git commit -m "chore: Auto. incrémentation de la version Android pour le build ${{ steps.increment_version.outputs.version_name }}"
+          git add android/app/src/main/res/
+          git commit -m "chore: Auto. incrémentation de la version Android et mise à jour de l'icône"
           git push
 
       # 9. Rend le script gradlew exécutable
