@@ -20,31 +20,32 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
   return data;
 };
 
-export const getProfileByUsername = async (username: string): Promise<Profile | null> => {
+export const getProfileByUsername = async (username: string): Promise<boolean> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id') // Only need ID to check existence
     .eq('username', username)
-    .maybeSingle(); // Use maybeSingle to get null if not found, or data if found
+    .maybeSingle();
+
   if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-    console.error("Error fetching profile by username:", error);
-    return null;
+    console.error("Error checking username availability:", error);
+    return true; // Safer default: assume taken on error
   }
-  return data;
+  return !!data; // Returns true if data exists (username taken), false if data is null (username available)
 };
 
-export const getProfileByEmail = async (email: string): Promise<Profile | null> => {
-  // Now directly query the public.profiles table for email uniqueness check
+export const getProfileByEmail = async (email: string): Promise<boolean> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id')
     .eq('email', email)
-    .maybeSingle(); // Use maybeSingle to get null if not found, or data if found
+    .maybeSingle();
+
   if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-    console.error("Error fetching profile by email:", error);
-    return null;
+    console.error("Error checking email availability:", error);
+    return true; // Safer default: assume taken on error
   }
-  return data;
+  return !!data;
 };
 
 export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<Profile | null> => {
