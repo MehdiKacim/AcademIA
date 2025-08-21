@@ -16,7 +16,8 @@ const AuthPage = () => {
 
   const handleLoginSuccess = async () => {
     showSuccess("Connexion réussie !");
-    await fetchUserProfile(); // Fetch user profile after successful login
+    // fetchUserProfile is called by the onAuthStateChange listener in RoleContext
+    // after successful login, so no need to call it explicitly here.
     navigate('/dashboard');
   };
 

@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Search, Users, BookOpen, GraduationCap } from "lucide-react";
 import { useRole } from "@/contexts/RoleContext";
-import { Profile, Course } from '@/lib/dataModels';
-import { getAllStudents, getStudentsByCourseId } from '@/lib/studentData'; // Assuming these functions exist
-import { getAllCoursesByTeacherId } from '@/lib/courseData'; // Assuming this function exists
+import { Profile, Course, Class } from '@/lib/dataModels'; // Import Class
+import { getAllStudents, getProfileById } from '@/lib/studentData'; // Assuming these functions exist
+import { getAllCoursesByCreatorId } from '@/lib/courseData'; // Assuming this function exists
 import { showSuccess, showError } from '@/utils/toast';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,23 +23,23 @@ const ClassManagement = () => {
   const { currentUserProfile, isLoadingUser } = useRole();
   const [searchTerm, setSearchTerm] = useState('');
   const [allStudents, setAllStudents] = useState<Profile[]>([]);
-  const [teacherCourses, setTeacherCourses] = useState<Course[]>([]);
+  const [creatorCourses, setCreatorCourses] = useState<Course[]>([]); // Changed to creatorCourses
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (!currentUserProfile || currentUserProfile.role !== 'teacher') {
+      if (!currentUserProfile || currentUserProfile.role !== 'creator') { // Changed 'teacher' to 'creator'
         setIsLoadingStudents(false);
         setIsLoadingCourses(false);
         return;
       }
 
-      // Fetch all students (or students relevant to this teacher)
+      // Fetch all students (or students relevant to this creator)
       setIsLoadingStudents(true);
       try {
-        const studentsData = await getAllStudents(); // Or a more specific function like getStudentsByTeacherId
+        const studentsData = await getAllStudents(); // Or a more specific function like getStudentsByCreatorId
         setAllStudents(studentsData.filter(s => s.role === 'student')); // Ensure only students are listed
       } catch (error) {
         console.error("Error fetching students:", error);
@@ -48,11 +48,11 @@ const ClassManagement = () => {
         setIsLoadingStudents(false);
       }
 
-      // Fetch courses taught by the current teacher
+      // Fetch courses created by the current creator
       setIsLoadingCourses(true);
       try {
-        const coursesData = await getAllCoursesByTeacherId(currentUserProfile.id);
-        setTeacherCourses(coursesData);
+        const coursesData = await getAllCoursesByCreatorId(currentUserProfile.id); // Changed to getAllCoursesByCreatorId
+        setCreatorCourses(coursesData);
       } catch (error) {
         console.error("Error fetching courses:", error);
         showError("Erreur lors du chargement des cours.");
@@ -70,12 +70,24 @@ const ClassManagement = () => {
 
     // First, filter by selected course if any
     if (selectedCourseId) {
-      // This assumes getStudentsByCourseId returns students for a specific course
-      // For simplicity, we'll filter from allStudents here.
-      // In a real app, you might re-fetch students specific to the course.
-      const course = teacherCourses.find(c => c.id === selectedCourseId);
-      if (course && course.student_ids) {
-        studentsToFilter = allStudents.filter(student => course.student_ids.includes(student.id));
+      const course = creatorCourses.find(c => c.id === selectedCourseId);
+      if (course) {
+        // Filter students who are in classes associated with this course's curriculum
+        // This requires fetching classes and curricula, which are not directly available here.
+        // For simplicity, we'll assume a direct link or skip this complex filtering for now.
+        // A more robust solution would involve fetching classes and curricula here.
+        // For now, we'll just filter by students who have progress in this course (if available)
+        // or simply show all students if no direct link is easily established.
+        // Given the current data model, students are linked to classes, and classes to curricula, and curricula to courses.
+        // This filtering would be complex without pre-fetching all related data.
+        // For now, we'll just show all students if a course is selected, as direct student-course linking is not in Profile.
+        // If you need to filter students by course, you'd need to fetch student_course_progress and then filter profiles.
+        // For this demo, we'll just show all students if a course is selected, as direct student-course linking is not in Profile.
+        studentsToFilter = allStudents.filter(student => {
+          // This is a placeholder. A real implementation would check student_course_progress table.
+          // For now, we'll just return all students if a course is selected, as direct student-course linking is not in Profile.
+          return true;
+        });
       } else {
         studentsToFilter = []; // No students in this course or course not found
       }
@@ -90,9 +102,9 @@ const ClassManagement = () => {
       student.first_name?.toLowerCase().includes(lowerCaseSearchTerm) ||
       student.last_name?.toLowerCase().includes(lowerCaseSearchTerm) ||
       student.username?.toLowerCase().includes(lowerCaseSearchTerm) ||
-      student.email?.toLowerCase().includes(lowerCaseSearchTerm)
+      student.email?.toLowerCase().includes(lowerCaseSearchTerm) // Use email from Profile
     );
-  }, [searchTerm, allStudents, selectedCourseId, teacherCourses]);
+  }, [searchTerm, allStudents, selectedCourseId, creatorCourses]);
 
   if (isLoadingUser || isLoadingStudents || isLoadingCourses) {
     return (
@@ -107,14 +119,14 @@ const ClassManagement = () => {
     );
   }
 
-  if (!currentUserProfile || currentUserProfile.role !== 'teacher') {
+  if (!currentUserProfile || currentUserProfile.role !== 'creator') { // Changed 'teacher' to 'creator'
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les professeurs peuvent accéder à cette page.
+          Seuls les créateurs peuvent accéder à cette page.
         </p>
       </div>
     );
@@ -143,18 +155,18 @@ const ClassManagement = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            {teacherCourses.length === 0 ? (
+            {creatorCourses.length === 0 ? ( // Changed to creatorCourses
               <p className="text-muted-foreground">Vous n'avez pas encore créé de cours.</p>
             ) : (
               <div className="space-y-2">
-                {teacherCourses.map(course => (
+                {creatorCourses.map(course => ( // Changed to creatorCourses
                   <Card key={course.id} className="p-3 flex items-center justify-between hover:bg-accent transition-colors">
                     <div>
                       <p className="font-medium">{course.title}</p>
                       <p className="text-sm text-muted-foreground">{course.description?.substring(0, 50)}...</p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/course/${course.id}/manage`}>Gérer</Link>
+                      <Link to={`/create-course/${course.id}`}>Gérer</Link>
                     </Button>
                   </Card>
                 ))}
@@ -190,7 +202,7 @@ const ClassManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les cours</SelectItem>
-                    {teacherCourses.map(course => (
+                    {creatorCourses.map(course => ( // Changed to creatorCourses
                       <SelectItem key={course.id} value={course.id}>
                         {course.title}
                       </SelectItem>

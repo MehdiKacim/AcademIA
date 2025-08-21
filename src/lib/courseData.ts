@@ -98,6 +98,7 @@ export const addCourseToStorage = async (newCourse: Course): Promise<Course | nu
       image_url: newCourse.image_url,
       category: newCourse.category,
       difficulty: newCourse.difficulty,
+      creator_id: newCourse.creator_id, // Include creator_id
     })
     .select()
     .single();
@@ -115,6 +116,7 @@ export const addCourseToStorage = async (newCourse: Course): Promise<Course | nu
     category: data.category || undefined,
     difficulty: data.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: data.created_at || undefined,
+    creator_id: data.creator_id || undefined,
   };
 };
 
@@ -130,6 +132,7 @@ export const updateCourseInStorage = async (updatedCourse: Course): Promise<Cour
       category: updatedCourse.category,
       difficulty: updatedCourse.difficulty,
       updated_at: new Date().toISOString(), // Add updated_at if your table has it
+      creator_id: updatedCourse.creator_id, // Include creator_id
     })
     .eq('id', updatedCourse.id)
     .select()
@@ -148,6 +151,7 @@ export const updateCourseInStorage = async (updatedCourse: Course): Promise<Cour
     category: data.category || undefined,
     difficulty: data.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: data.created_at || undefined,
+    creator_id: data.creator_id || undefined,
   };
 };
 
@@ -161,6 +165,30 @@ export const deleteCourseFromStorage = async (courseId: string): Promise<void> =
     throw error;
   }
 };
+
+export const getAllCoursesByCreatorId = async (creatorId: string): Promise<Course[]> => {
+  const { data, error } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('creator_id', creatorId);
+  if (error) {
+    console.error("Error fetching courses by creator ID:", error);
+    return [];
+  }
+  return data.map(course => ({
+    id: course.id,
+    title: course.title,
+    description: course.description || '',
+    modules: course.modules as Module[],
+    skills_to_acquire: course.skills_to_acquire || [],
+    image_url: course.image_url || undefined,
+    category: course.category || undefined,
+    difficulty: course.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
+    created_at: course.created_at || undefined,
+    creator_id: course.creator_id || undefined,
+  }));
+};
+
 
 // --- Curriculum Management ---
 export const loadCurricula = async (): Promise<Curriculum[]> => {

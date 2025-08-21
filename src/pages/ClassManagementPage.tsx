@@ -289,8 +289,8 @@ const ClassManagementPage = () => {
               studentsInSelectedClass.map(student => (
                 <Card key={student.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
-                    <p className="font-medium">{student.first_name} {student.last_name} <span className="text-sm text-muted-foreground">(@{student.username})</span></p>
-                    <p className="text-sm text-muted-foreground">{student.email}</p>
+                    <p className="font-medium">{getUserFullName(student)} <span className="text-sm text-muted-foreground">(@{getUserUsername(student)})</span></p>
+                    <p className="text-sm text-muted-foreground">{getUserEmail(student)}</p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
