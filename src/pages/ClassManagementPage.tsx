@@ -10,21 +10,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile and Curriculum
+import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels"; // Import Profile and Curriculum, Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
   getProfileByUsername,
   updateProfile,
   deleteProfile,
-  // Removed getUserFullName, getUserUsername, getUserEmail as they are not needed here
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   loadClasses,
   loadCurricula,
-  updateClassInStorage, // Import updateClassInStorage
+  updateClassInStorage,
+  addClassToStorage, // Added addClassToStorage
+  deleteClassFromStorage, // Added deleteClassFromStorage
+  loadEstablishments, // Added loadEstablishments
 } from '@/lib/courseData';
 
 // Shadcn UI components for autocomplete
@@ -33,17 +35,18 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from '@/contexts/RoleContext';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
-const StudentManagementPage = () => {
-  const { currentRole, isLoadingUser } = useRole();
+const ClassManagementPage = () => {
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
   
   // Main states for data
+  const [classes, setClasses] = useState<Class[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
-  const [curricula, setCurricula] = useState<Curriculum[]>([]); // Explicitly type as Curriculum[]
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // All profiles
+  const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
 
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
@@ -52,11 +55,22 @@ const StudentManagementPage = () => {
   // State for viewing students in a class
   const [selectedClassIdForStudents, setSelectedClassIdForStudents] = useState<string | null>(null);
 
+  // States for student assignment (autocomplete)
+  const [usernameToAssign, setUsernameToAssign] = useState('');
+  const [foundUserForAssignment, setFoundUserForAssignment] = useState<Profile | null>(null);
+  const [classToAssign, setClassToAssign] = useState<string | undefined>(undefined);
+  const [isSearchingUser, setIsSearchingUser] = useState(false);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [openCommand, setOpenCommand] = useState(false);
+
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+
   // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       setClasses(await loadClasses());
       setCurricula(await loadCurricula());
+      setEstablishments(await loadEstablishments()); // Load establishments
       setAllProfiles(await getAllProfiles());
     };
     fetchData();
@@ -511,4 +525,4 @@ const StudentManagementPage = () => {
   );
 };
 
-export default StudentManagementPage;
+export default ClassManagementPage;

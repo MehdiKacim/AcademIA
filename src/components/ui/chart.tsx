@@ -1,37 +1,6 @@
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
-
-// Removed circular imports:
-// import {
-//   ChartConfig,
-//   ChartContainer,
-//   ChartLegend,
-//   ChartLegendContent,
-//   ChartProps,
-//   ChartTooltip,
-//   ChartTooltipContent,
-// } from "@/components/ui/chart"
-
-const ChartContext = React.createContext<
-  | {
-      config: ChartConfig;
-      /**
-       * @deprecated Use `config` instead.
-       */
-      chartProps: ChartProps["chartProps"];
-    }
-  | null
->(null);
-
-function useChart() {
-  const context = React.useContext(ChartContext);
-
-  if (!context) {
-    throw new Error("useChart must be used within a <Chart />");
-  }
-
-  return context;
-}
+import { cn } from "@/lib/utils"; // Import cn
 
 type ChartProps = React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer> & {
   config: ChartConfig;
@@ -46,8 +15,29 @@ type ChartConfig = {
   };
 };
 
+const ChartContext = React.createContext<
+  | {
+      config: ChartConfig;
+      /**
+       * @deprecated Use `config` instead.
+       */
+      chartProps: Omit<ChartProps, "config" | "children">; // Corrected type for chartProps
+    }
+  | null
+>(null);
+
+function useChart() {
+  const context = React.useContext(ChartContext);
+
+  if (!context) {
+    throw new Error("useChart must be used within a <Chart />");
+  }
+
+  return context;
+}
+
 const ChartContainer = React.forwardRef<HTMLDivElement, ChartProps>(
-  ({ config, children, ...props }, ref) => {
+  ({ config, children, className, ...props }, ref) => { // Added className to destructuring
     const newChildren = React.Children.map(children, (child) => {
       if (React.isValidElement(child)) {
         return React.cloneElement(child, {
@@ -62,7 +52,7 @@ const ChartContainer = React.forwardRef<HTMLDivElement, ChartProps>(
       <ChartContext.Provider value={{ config, chartProps: props }}>
         <div
           ref={ref}
-          className="flex aspect-video justify-center text-foreground"
+          className={cn("flex aspect-video justify-center text-foreground", className)} // Used cn for className
           {...props}
         >
           <RechartsPrimitive.ResponsiveContainer {...props}>
@@ -79,9 +69,8 @@ const ChartTooltip = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<typeof RechartsPrimitive.Tooltip> & {
     hideIndicator?: boolean;
-    is
   }
->(({ active, payload, className, indicator, hideIndicator = false, ...props }, ref) => {
+>(({ active, payload, className, hideIndicator = false, ...props }, ref) => { // Removed 'indicator' from destructuring as it's not a standard prop
   const { config } = useChart();
 
   if (active && payload && payload.length) {
@@ -107,10 +96,11 @@ const ChartTooltip = React.forwardRef<
                 key={item.dataKey}
                 className={cn(
                   "flex items-center justify-between gap-2",
-                  indicator && "recharts-tooltip-indicator",
+                  // indicator && "recharts-tooltip-indicator", // Removed indicator prop usage
                 )}
               >
-                {indicator && !hideIndicator && (
+                {/* {indicator && !hideIndicator && ( // Removed indicator prop usage */}
+                {!hideIndicator && ( // Only check hideIndicator
                   <div
                     className={cn(
                       "recharts-tooltip-indicator-dot h-2 w-2 rounded-full",
@@ -160,7 +150,7 @@ const ChartLegend = React.forwardRef<
 
   return (
     <RechartsPrimitive.Legend
-      ref={ref}
+      ref={ref as React.Ref<RechartsPrimitive.Legend>} // Cast ref to correct type
       {...props}
       content={content || <ChartLegendContent config={config} />}
     />
