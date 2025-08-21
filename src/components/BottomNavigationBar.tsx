@@ -63,14 +63,14 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center py-1 px-1 rounded-md text-[0.65rem] font-medium transition-colors relative flex-shrink-0 min-w-[70px]",
+                  "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 min-w-[80px]",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )
               }
             >
-              <item.icon className="h-4 w-4 mb-1" />
+              <item.icon className="h-5 w-5 mb-1" />
               {item.label}
               {item.badge !== undefined && item.badge > 0 && (
                 <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
@@ -86,9 +86,9 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
               key={item.label}
               variant="ghost"
               onClick={item.onClick}
-              className="flex flex-col items-center py-1 px-1 rounded-md text-[0.65rem] font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[70px]"
+              className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[80px]"
             >
-              <item.icon className="h-4 w-4 mb-1" />
+              <item.icon className="h-5 w-5 mb-1" />
               {item.label}
             </Button>
           );
@@ -101,9 +101,9 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
         <Button
           variant="ghost"
           onClick={onOpenGlobalSearch}
-          className="flex flex-col items-center py-1 px-1 rounded-md text-[0.65rem] font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[70px]"
+          className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[80px]"
         >
-          <Search className="h-4 w-4 mb-1" />
+          <Search className="h-5 w-5 mb-1" />
           Recherche
         </Button>
       )}
