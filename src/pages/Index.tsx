@@ -21,16 +21,12 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-import LoginModal from "@/components/LoginModal";
-import RegisterModal from "@/components/RegisterModal";
 import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
 
 const Index = () => {
-  const [isLoginModalOpen, setIsLoginModal] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [showApkDownloadButton, setShowApkDownloadButton] = useState(false);
@@ -138,19 +134,9 @@ const Index = () => {
     setActiveSection(id);
   };
 
-  const openLoginModal = () => {
-    setIsRegisterModal(false);
-    setIsLoginModal(true);
+  const handleAuthRedirect = () => {
+    navigate("/"); // Redirect to the new AuthPage
   };
-
-  const closeLoginModal = () => setIsLoginModal(false);
-
-  const openRegisterModal = () => {
-    setIsLoginModal(false);
-    setIsRegisterModal(true);
-  };
-
-  const closeRegisterModal = () => setIsRegisterModal(false);
 
   const methodology = [
     {
@@ -207,11 +193,11 @@ const Index = () => {
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
-          <Button variant="outline" size="icon" onClick={openLoginModal}>
+          <Button variant="outline" size="icon" onClick={handleAuthRedirect}>
             <LogIn className="h-5 w-5" />
             <span className="sr-only">Se connecter</span>
           </Button>
-          <Button size="icon" onClick={openRegisterModal}>
+          <Button size="icon" onClick={handleAuthRedirect}>
             <UserPlus className="h-5 w-5" />
             <span className="sr-only">Créer un compte</span>
           </Button>
@@ -243,11 +229,11 @@ const Index = () => {
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={openLoginModal}
+                onClick={handleAuthRedirect}
               >
                 Commencer l'aventure
               </Button>
-              <Button size="lg" variant="secondary" onClick={openRegisterModal}>
+              <Button size="lg" variant="secondary" onClick={handleAuthRedirect}>
                 Créer un compte
               </Button>
               {showInstallButton && (
@@ -282,7 +268,7 @@ const Index = () => {
               <MessageCircleMore className="w-24 h-24 text-primary" />
             </div>
             <div>
-              <Button size="lg" onClick={openRegisterModal}>
+              <Button size="lg" onClick={handleAuthRedirect}>
                 Découvrir AiA
               </Button>
             </div>
@@ -325,16 +311,7 @@ const Index = () => {
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.
       </footer>
 
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={closeLoginModal}
-        onRegisterClick={openRegisterModal}
-      />
-      <RegisterModal
-        isOpen={isRegisterModalOpen}
-        onClose={closeRegisterModal}
-        onLoginClick={openLoginModal}
-      />
+      {/* Modals removed, authentication handled by AuthPage */}
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />
     </div>
   );

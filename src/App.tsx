@@ -14,21 +14,21 @@ import Analytics from "./pages/Analytics";
 import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
-import EstablishmentManagementPage from "./pages/EstablishmentManagementPage"; // New import
-import CurriculumManagementPage from "./pages/CurriculumManagementPage";   // New import
-import ClassManagementPage from "./pages/ClassManagementPage";             // New import
-import StudentManagementPage from "./pages/StudentManagementPage";         // New import
+import EstablishmentManagementPage from "./pages/EstablishmentManagementPage";
+import CurriculumManagementPage from "./pages/CurriculumManagementPage";
+import ClassManagementPage from "./pages/ClassManagementPage";
+import StudentManagementPage from "./pages/StudentManagementPage";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
-import Messages from "./pages/Messages"; // New import for Messages page
+import Messages from "./pages/Messages";
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
-import { RoleProvider, useRole } from "./contexts/RoleContext"; // Import useRole
-import { CourseChatProvider } from "./contexts/CourseChatContext";
-import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
-import { toast } from "sonner"; // Import toast from sonner
-import { Button } from "@/components/ui/button"; // Import Button
+import { RoleProvider, useRole } from "./contexts/RoleContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import AuthPage from "./pages/AuthPage"; // New import for AuthPage
 
 const queryClient = new QueryClient();
 
@@ -125,7 +125,7 @@ const AppWithThemeProvider = () => {
             <BrowserRouter>
               <Routes>
                 {/* Public route for the landing page */}
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<AuthPage />} /> {/* Point to AuthPage */}
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}
@@ -138,8 +138,7 @@ const AppWithThemeProvider = () => {
                     <Route path="/create-course/:courseId" element={<CreateCourse />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/all-notes" element={<AllNotes />} />
-                    <Route path="/messages" element={<Messages />} /> {/* New Messages route */}
-                    {/* New routes for management pages */}
+                    <Route path="/messages" element={<Messages />} />
                     <Route path="/establishments" element={<EstablishmentManagementPage />} />
                     <Route path="/curricula" element={<CurriculumManagementPage />} />
                     <Route path="/classes" element={<ClassManagementPage />} />
