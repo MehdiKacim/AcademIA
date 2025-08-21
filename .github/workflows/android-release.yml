@@ -1,4 +1,4 @@
-name: Android Build Release AcademIA
+Name: Android Build Release AcademIA
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -36,27 +36,14 @@ jobs:
       - name: Increment Android Version with Shell Script
         id: increment_version
         run: |
-          # Fichier à modifier
           GRADLE_FILE="android/app/build.gradle"
-          
-          # Lire le versionCode actuel
           CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}')
-          
-          # Calculer le nouveau versionCode
           NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
-          
-          # Lire le versionName actuel
           CURRENT_VERSION_NAME=$(grep "versionName" $GRADLE_FILE | cut -d\" -f2)
-
-          # Incrémenter la version patch (ex: 1.0.1 -> 1.0.2)
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION_NAME"
           NEW_VERSION_NAME="$major.$minor.$((patch + 1))"
-          
-          # Remplacer les anciennes valeurs par les nouvelles
           sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" $GRADLE_FILE
           sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" $GRADLE_FILE
-          
-          # Afficher les nouvelles versions et les rendre disponibles pour les étapes suivantes
           echo "Nouvelle version: $NEW_VERSION_NAME ($NEW_VERSION_CODE)"
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
@@ -71,9 +58,9 @@ jobs:
       
       - name: Create Keystore and Properties File
         run: |
-          mkdir -p android/app/keystore/
-          echo "${{ secrets.KEY_STORE_FILE_BASE64 }}" | base64 --decode > android/app/keystore/my-release-key.jks
-          echo "storeFile=./keystore/my-release-key.jks" > android/key.properties
+          mkdir -p android/keystore/
+          echo "${{ secrets.KEY_STORE_FILE_BASE64 }}" | base64 --decode > android/keystore/my-release-key.jks
+          echo "storeFile=../keystore/my-release-key.jks" > android/key.properties
           echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
@@ -91,20 +78,12 @@ jobs:
         run: cd android && ./gradlew assembleRelease
 
       - name: Find and Rename APK file
-        id: find_and_rename_apk
+        id: find_and_and_rename_apk
         run: |
-          # Trouve l'APK de release
-          APK_PATH=$(find android/app/build/outputs/apk/release -name "app-release.apk" | head -n 1)
-          
-          # Nom de la nouvelle version
+          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
           VERSION_NAME=${{ steps.increment_version.outputs.version_name }}
-          
-          # Nouveau nom du fichier APK
           NEW_APK_NAME="academia-v$VERSION_NAME.apk"
-          
-          # Renommer le fichier
           mv "$APK_PATH" "android/app/build/outputs/apk/release/$NEW_APK_NAME"
-          
           echo "APK renommé en : $NEW_APK_NAME"
           echo "apk_path=android/app/build/outputs/apk/release/$NEW_APK_NAME" >> $GITHUB_OUTPUT
 
