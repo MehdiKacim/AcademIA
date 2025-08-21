@@ -15,7 +15,7 @@ import {
   DrawerClose,
   DrawerTrigger,
 } from "@/components/ui/drawer"; // Import Drawer components
-import { useRole } from "@/contexts/Role/RoleContext"; // Import useRole to get signOut
+import { useRole } from "@/contexts/RoleContext"; // Corrected import path
 
 interface BottomNavigationBarProps {
   navItems: NavItem[];
