@@ -46,17 +46,54 @@ jobs:
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
       
-      # NOUVELLE ÉTAPE : Génère et place les icônes Android
-      - name: Generate Android icons
-        uses: capgo/android-icon-generator@v1
-        with:
-          # Spécifie le chemin de l'image source à utiliser
-          source-image: 'public/icons/icon-512x512.png'
-          # Définit le chemin de destination pour les icônes générées
-          destination-path: 'android/app/src/main/res/'
-          # Optionnel : Ajoute un suffixe pour différencier l'icône de debug
-          suffix: '_debug'
+      # NOUVELLE ÉTAPE : Génère les icônes Android avec Python et Pillow
+      - name: Generate Android icons with Python
+        run: |
+          # Installe Python et la bibliothèque Pillow
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install Pillow
           
+          # Crée le script Python
+          cat <<EOF > generate_icons.py
+          from PIL import Image
+          import os
+
+          # Définir les tailles d'icônes requises par Android
+          sizes = {
+              "mdpi": 48,
+              "hdpi": 72,
+              "xhdpi": 96,
+              "xxhdpi": 144,
+              "xxxhdpi": 192,
+          }
+          
+          source_image_path = 'public/icons/icon-512x512.png'
+          base_dir = 'android/app/src/main/res/'
+          
+          try:
+              # Ouvre l'image source
+              img = Image.open(source_image_path)
+              
+              # Crée les icônes pour chaque densité
+              for density, size in sizes.items():
+                  output_dir = os.path.join(base_dir, f'mipmap-{density}')
+                  os.makedirs(output_dir, exist_ok=True)
+                  
+                  # Redimensionne et sauvegarde l'icône
+                  resized_img = img.resize((size, size), Image.Resampling.LANCZOS)
+                  resized_img.save(os.path.join(output_dir, 'ic_launcher.png'))
+                  
+                  print(f"Icone {density} générée avec succès.")
+
+          except Exception as e:
+              print(f"Erreur lors de la génération des icônes : {e}")
+              exit(1)
+          EOF
+          
+          # Exécute le script
+          python3 generate_icons.py
+
       # 7. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
         id: increment_version
@@ -88,7 +125,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add android/app/build.gradle
-          git add android/app/src/main/res/
+          git add android/app/src/main/res/ # Ajoute les ressources d'icônes générées
           git commit -m "chore: Auto. incrémentation de la version Android et mise à jour de l'icône"
           git push
 
