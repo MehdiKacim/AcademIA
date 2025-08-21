@@ -226,16 +226,6 @@ const Index = () => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => setIsAuthModalOpen(true)}
-              >
-                Commencer l'aventure
-              </Button>
-              <Button size="lg" variant="secondary" onClick={() => setIsAuthModalOpen(true)}>
-                Créer un compte
-              </Button>
               {showInstallButton && (
                 <Button size="lg" variant="outline" onClick={handleInstallClick}>
                   <Download className="h-5 w-5 mr-2" /> Installer l'application
