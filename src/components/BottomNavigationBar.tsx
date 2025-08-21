@@ -189,9 +189,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
                 </Button>
               </div>
               <DrawerFooter>
-                <DrawerClose asChild>
-                  <Button variant="outline">Fermer</Button>
-                </DrawerClose>
+                {/* Removed DrawerClose button as swipe-to-dismiss is enabled */}
               </DrawerFooter>
             </div>
           </DrawerContent>
@@ -205,9 +203,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
             <div className="mx-auto w-full max-w-sm">
               <AuthMenu onClose={() => setIsAuthDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
               <DrawerFooter>
-                <DrawerClose asChild>
-                  <Button variant="outline">Fermer</Button>
-                </DrawerClose>
+                {/* Removed DrawerClose button as swipe-to-dismiss is enabled */}
               </DrawerFooter>
             </div>
           </DrawerContent>
