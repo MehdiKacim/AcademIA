@@ -54,7 +54,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden overflow-x-auto flex-nowrap">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden overflow-x-auto flex-nowrap">
       {itemsToRender.map((item) => {
         if (item.type === 'link' && item.to) {
           return (
