@@ -46,27 +46,29 @@ jobs:
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
       
-      # 7. Génère les icônes Android avec Python et Pillow
-      - name: Generate Android icons with Python
+      # 7. Génère les icônes Android avec Python et CairoSVG
+      - name: Generate Android icons from SVG
         run: |
           # Affiche le répertoire de travail pour vérification
           echo "Répertoire de travail actuel : $(pwd)"
           
-          # Vérifie la présence de l'image source dans le bon dossier
-          if [ ! -f "public/icons/icon-512x512.png" ]; then
-            echo "Erreur : Fichier d'image introuvable à public/icons/icon-512x512.png"
+          # Vérifie la présence de l'image source SVG
+          if [ ! -f "logo.svg" ]; then
+            echo "Erreur : Fichier SVG introuvable à la racine du projet."
             exit 1
           fi
           
-          # Installe Python et la bibliothèque Pillow
+          # Installe Python et les bibliothèques nécessaires
           sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install Pillow
+          sudo apt-get install -y python3-pip libffi-dev libcairo2-dev libpango1.0-dev
+          pip3 install Pillow cairosvg
           
           # Crée le script Python
           cat <<EOF > generate_icons.py
           from PIL import Image
+          import cairosvg
           import os
+          from io import BytesIO
 
           # Définir les tailles d'icônes requises par Android
           sizes = {
@@ -77,14 +79,19 @@ jobs:
               "xxxhdpi": 192,
           }
           
-          # Le chemin de l'image est maintenant dans le sous-répertoire public/icons
-          source_image_path = os.path.join(os.getcwd(), 'public', 'icons', 'icon-512x512.png')
+          # Le chemin de l'image SVG
+          source_svg_path = os.path.join(os.getcwd(), 'logo.svg')
           base_dir = os.path.join(os.getcwd(), 'android', 'app', 'src', 'main', 'res')
           
           try:
-              print(f"Tentative d'ouverture de l'image : {source_image_path}")
-              # Ouvre l'image source
-              img = Image.open(source_image_path)
+              print(f"Tentative de conversion et d'ouverture du fichier SVG : {source_svg_path}")
+              
+              # Convertit le SVG en PNG en mémoire
+              svg_data = open(source_svg_path, 'rb').read()
+              png_data = cairosvg.svg2png(bytestring=svg_data)
+              
+              # Ouvre les données PNG avec Pillow
+              img = Image.open(BytesIO(png_data))
               
               # Crée les icônes pour chaque densité
               for density, size in sizes.items():
