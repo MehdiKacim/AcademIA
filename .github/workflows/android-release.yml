@@ -45,8 +45,35 @@ jobs:
       # 6. Synchronise les fichiers web compilés vers le projet Android
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
+      
+      # 7. Installe ImageMagick et génère les icônes
+      - name: Generate Android icons with ImageMagick
+        run: |
+          # Installe ImageMagick
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
 
-      # 7. Incrémente automatiquement le numéro de version et de build Android
+          # Définit le chemin de l'image source
+          SOURCE_SVG="public/icons/logo.svg"
+          BASE_DIR="android/app/src/main/res"
+
+          # Crée les dossiers de destination s'ils n'existent pas
+          mkdir -p $BASE_DIR/mipmap-mdpi
+          mkdir -p $BASE_DIR/mipmap-hdpi
+          mkdir -p $BASE_DIR/mipmap-xhdpi
+          mkdir -p $BASE_DIR/mipmap-xxhdpi
+          mkdir -p $BASE_DIR/mipmap-xxxhdpi
+
+          # Redimensionne le SVG et le convertit en PNG pour chaque densité
+          convert -background none $SOURCE_SVG -resize 48x48 $BASE_DIR/mipmap-mdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 72x72 $BASE_DIR/mipmap-hdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 96x96 $BASE_DIR/mipmap-xhdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 144x144 $BASE_DIR/mipmap-xxhdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 192x192 $BASE_DIR/mipmap-xxxhdpi/ic_launcher.png
+
+          echo "Icônes Android générées avec ImageMagick."
+
+      # 8. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
         id: increment_version
         run: |
@@ -71,31 +98,32 @@ jobs:
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # 8. Commit et push la modification de version
+      # 9. Commit et push la modification de version
       - name: Commit version change
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add android/app/build.gradle
-          git commit -m "chore: Auto. incrémentation de la version Android pour le build ${{ steps.increment_version.outputs.version_name }}"
+          git add android/app/src/main/res/ # Ajoute les ressources d'icônes générées
+          git commit -m "chore: Auto. incrémentation de la version Android et mise à jour de l'icône"
           git push
 
-      # 9. Rend le script gradlew exécutable
+      # 10. Rend le script gradlew exécutable
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # 10. Configure le JDK Java nécessaire pour la compilation Android
+      # 11. Configure le JDK Java nécessaire pour la compilation Android
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 11. Compile l'APK en mode 'debug'
+      # 12. Compile l'APK en mode 'debug'
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug
 
-      # 12. Trouve et renomme l'APK compilé
+      # 13. Trouve et renomme l'APK compilé
       - name: Find and Rename APK file
         id: find_and_rename_apk
         run: |
@@ -106,14 +134,14 @@ jobs:
           echo "APK renommé en : $NEW_APK_NAME"
           echo "apk_path=android/app/build/outputs/apk/debug/$NEW_APK_NAME" >> $GITHUB_OUTPUT
 
-      # 13. Uploade l'APK renommé comme un artefact de build
+      # 14. Uploade l'APK renommé comme un artefact de build
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: ${{ steps.find_and_rename_apk.outputs.apk_path }}
 
-      # 14. Crée une nouvelle release sur GitHub
+      # 15. Crée une nouvelle release sur GitHub
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/heads/main')
