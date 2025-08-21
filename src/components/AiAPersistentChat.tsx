@@ -153,38 +153,44 @@ const AiAPersistentChat = () => {
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
-          <div className="flex gap-2 flex-wrap">
-            {currentCourseTitle && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
-                className="whitespace-nowrap text-xs"
-              >
-                @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
-              </Button>
+          <div className="flex flex-col gap-2"> {/* Nouveau conteneur pour les boutons de contexte et la ligne de saisie */}
+            {(currentCourseTitle || currentModuleTitle) && (
+              <div className="flex gap-2 flex-wrap"> {/* Ligne des boutons de contexte */}
+                {currentCourseTitle && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
+                    className="whitespace-nowrap text-xs"
+                  >
+                    @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
+                  </Button>
+                )}
+                {currentModuleTitle && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
+                    className="whitespace-nowrap text-xs"
+                  >
+                    @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
+                  </Button>
+                )}
+              </div>
             )}
-            {currentModuleTitle && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
-                className="whitespace-nowrap text-xs"
-              >
-                @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
+            <div className="flex gap-2"> {/* Ligne de saisie et bouton d'envoi, sans flex-wrap */}
+              <Input
+                placeholder="Écrivez votre message à AiA..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="flex-grow"
+              />
+              <Button onClick={handleSendMessage} disabled={!input.trim()}>
+                <Send className="h-5 w-5" />
+                <span className="sr-only">Envoyer</span>
               </Button>
-            )}
-            <Input
-              placeholder="Écrivez votre message à AiA..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="flex-grow"
-            />
-            <Button onClick={handleSendMessage} disabled={!input.trim()}>
-              <Send className="h-5 w-5" />
-              <span className="sr-only">Envoyer</span>
-            </Button>
+            </div>
           </div>
         </div>
       )}
