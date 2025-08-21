@@ -1,5 +1,5 @@
 # Nom du workflow qui s'affiche sur GitHub Actions
-name: Android Build Debug AcademIA
+name: Android Build Debug AcademIA app
 
 # Déclenche le workflow à chaque push sur la branche 'main'
 on:
