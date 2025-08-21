@@ -41,7 +41,6 @@ const Index = () => {
     accueil: useRef<HTMLDivElement>(null),
     aiaBot: useRef<HTMLDivElement>(null),
     methodologie: useRef<HTMLDivElement>(null),
-    // Removed about: useRef<HTMLDivElement>(null),
   };
 
   const { currentUserProfile } = useRole();
@@ -144,7 +143,6 @@ const Index = () => {
     }
   };
 
-  // Removed handleNavLinkClick as 'À propos' will now be a direct link
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false); // Close auth modal on success
     // The RoleContext's onAuthStateChange listener will handle navigation to dashboard

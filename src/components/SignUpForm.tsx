@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
+import { getProfileByUsername } from '@/lib/studentData'; // Import getProfileByUsername
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis."),
@@ -40,21 +41,12 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     setIsLoading(true);
     try {
       // 1. Check for existing username in profiles table
-      const { data: existingProfile, error: profileCheckError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', values.username)
-        .maybeSingle(); // Use maybeSingle to get null if not found, or data if found
-
-      if (existingProfile) {
+      const isUsernameTaken = await getProfileByUsername(values.username);
+      if (isUsernameTaken) {
         setError("username", { type: "manual", message: "Ce nom d'utilisateur est déjà pris." });
         onError("Ce nom d'utilisateur est déjà pris.");
         setIsLoading(false);
         return;
-      }
-      // If profileCheckError exists and it's not just 'no rows found' (PGRST116), then it's a real error
-      if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-        throw profileCheckError;
       }
 
       // 2. Attempt Supabase Auth signup (handles email uniqueness)
@@ -62,7 +54,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
         email: values.email,
         password: values.password,
         options: {
-          data: { // This data goes into user_metadata, not directly into public.profiles
+          data: { // This data goes into user_metadata, which the trigger can use
             first_name: values.firstName,
             last_name: values.lastName,
             username: values.username,
@@ -83,33 +75,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
       }
 
       if (authData.user) {
-        // 3. Insert/Upsert into public.profiles table
-        // This is crucial for linking auth user to a public profile with username
-        const { error: insertProfileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: authData.user.id, // Link profile to auth user ID
-            first_name: values.firstName,
-            last_name: values.lastName,
-            username: values.username,
-            email: values.email, // Store email in profile for easier access
-            role: values.role,
-            // Add any other profile fields here
-          }, { onConflict: 'id' }); // If a profile with this ID already exists (e.g., from a trigger), update it
-
-        if (insertProfileError) {
-          // This error might occur if the username check above was somehow bypassed,
-          // or if there's another unique constraint violation.
-          if (insertProfileError.code === '23505' && insertProfileError.message.includes('username')) {
-            setError("username", { type: "manual", message: "Ce nom d'utilisateur est déjà pris." });
-            onError("Ce nom d'utilisateur est déjà pris.");
-          } else {
-            onError(`Erreur lors de la création du profil: ${insertProfileError.message}`);
-          }
-          setIsLoading(false);
-          return;
-        }
-
+        // Profile creation is handled by the 'handle_new_user' trigger in Supabase.
+        // No need for client-side upsert into public.profiles here.
         onSuccess(values.email);
       } else {
         // This case might happen if email confirmation is required and no user object is returned immediately
