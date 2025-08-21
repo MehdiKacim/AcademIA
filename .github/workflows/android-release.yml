@@ -46,71 +46,28 @@ jobs:
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
       
-      # 7. Génère les icônes Android avec Python et CairoSVG
-      - name: Generate Android icons from SVG
+      # 7. Génère les icônes Android avec ImageMagick
+      - name: Generate Android icons with ImageMagick
         run: |
-          # Affiche le répertoire de travail pour vérification
-          echo "Répertoire de travail actuel : $(pwd)"
-          
-          # Vérifie la présence de l'image source SVG
-          if [ ! -f "public/icons/logo.svg" ]; then
-            echo "Erreur : Fichier SVG introuvable à public/icons/logo.svg"
-            exit 1
-          fi
-          
-          # Installe Python et les bibliothèques nécessaires
-          sudo apt-get update
-          sudo apt-get install -y python3-pip libffi-dev libcairo2-dev libpango1.0-dev
-          pip3 install Pillow cairosvg
-          
-          # Crée le script Python
-          cat <<EOF > generate_icons.py
-          from PIL import Image
-          import cairosvg
-          import os
-          from io import BytesIO
+          # Définit le chemin de l'image source
+          SOURCE_SVG="public/icons/logo.svg"
+          BASE_DIR="android/app/src/main/res"
 
-          # Définir les tailles d'icônes requises par Android
-          sizes = {
-              "mdpi": 48,
-              "hdpi": 72,
-              "xhdpi": 96,
-              "xxhdpi": 144,
-              "xxxhdpi": 192,
-          }
-          
-          # Le chemin de l'image SVG
-          source_svg_path = os.path.join(os.getcwd(), 'public', 'icons', 'logo.svg')
-          base_dir = os.path.join(os.getcwd(), 'android', 'app', 'src', 'main', 'res')
-          
-          try:
-              print(f"Tentative de conversion et d'ouverture du fichier SVG : {source_svg_path}")
-              
-              # Convertit le SVG en PNG en mémoire
-              svg_data = open(source_svg_path, 'rb').read()
-              png_data = cairosvg.svg2png(bytestring=svg_data)
-              
-              # Ouvre les données PNG avec Pillow
-              img = Image.open(BytesIO(png_data))
-              
-              # Crée les icônes pour chaque densité
-              for density, size in sizes.items():
-                  output_dir = os.path.join(base_dir, f'mipmap-{density}')
-                  os.makedirs(output_dir, exist_ok=True)
-                  
-                  # Redimensionne et sauvegarde l'icône
-                  resized_img = img.resize((size, size), Image.Resampling.LANCZOS)
-                  resized_img.save(os.path.join(output_dir, 'ic_launcher.png'))
-                  
-                  print(f"Icone {density} générée avec succès.")
+          # Crée les dossiers de destination s'ils n'existent pas
+          mkdir -p $BASE_DIR/mipmap-mdpi
+          mkdir -p $BASE_DIR/mipmap-hdpi
+          mkdir -p $BASE_DIR/mipmap-xhdpi
+          mkdir -p $BASE_DIR/mipmap-xxhdpi
+          mkdir -p $BASE_DIR/mipmap-xxxhdpi
 
-          except Exception as e:
-              print(f"Erreur lors de la génération des icônes : {e}")
-              exit(1)
-          EOF
-          
-          # Exécute le script
-          python3 generate_icons.py
+          # Redimensionne le SVG et le convertit en PNG pour chaque densité
+          convert -background none $SOURCE_SVG -resize 48x48 $BASE_DIR/mipmap-mdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 72x72 $BASE_DIR/mipmap-hdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 96x96 $BASE_DIR/mipmap-xhdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 144x144 $BASE_DIR/mipmap-xxhdpi/ic_launcher.png
+          convert -background none $SOURCE_SVG -resize 192x192 $BASE_DIR/mipmap-xxxhdpi/ic_launcher.png
+
+          echo "Icônes Android générées avec ImageMagick."
 
       # 8. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
