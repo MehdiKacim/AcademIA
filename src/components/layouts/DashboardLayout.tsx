@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare } from "lucide-react"; // Added MessageSquare
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare, LogIn } from "lucide-react"; // Added LogIn
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -30,6 +30,7 @@ import { getUnreadMessageCount } from "@/lib/messageData"; // Import getUnreadMe
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
 import { Message } from "@/lib/dataModels"; // Import Message type
 import { NavItem } from "@/lib/dataModels"; // Import NavItem from dataModels
+import AuthModal from "@/components/AuthModal"; // Import AuthModal
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
@@ -38,6 +39,7 @@ const DashboardLayout = () => {
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0); // State for unread messages
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // New state for AuthModal
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,6 +48,11 @@ const DashboardLayout = () => {
   const handleLogout = async () => { // Make it async
     await signOut(); // Call the signOut function from context
     navigate("/");
+  };
+
+  const handleAuthSuccess = () => {
+    setIsAuthModalOpen(false); // Close auth modal on success
+    // The RoleContext's onAuthStateChange listener will handle navigation to dashboard
   };
 
   useEffect(() => {
@@ -338,6 +345,11 @@ const DashboardLayout = () => {
           )}
 
           <ThemeToggle />
+          {!isMobile && !currentUserProfile && (
+            <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
+              <LogIn className="h-5 w-5 mr-2" /> Authentification
+            </Button>
+          )}
           {/* Removed DropdownMenu for desktop profile/settings, as it's now handled by the mobile drawer */}
           {/* The mobile drawer will be triggered by a dedicated button in BottomNavigationBar */}
         </div>
@@ -350,6 +362,7 @@ const DashboardLayout = () => {
       {currentUserProfile && <FloatingAiAChatButton />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
+      {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
     </div>
   );
 };

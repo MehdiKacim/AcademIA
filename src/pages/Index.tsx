@@ -25,6 +25,7 @@ import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
+import AuthModal from "@/components/AuthModal"; // Import AuthModal
 
 const Index = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -41,6 +42,7 @@ const Index = () => {
   const { currentUserProfile } = useRole();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
 
   useEffect(() => {
     if (currentUserProfile) {
@@ -134,7 +136,10 @@ const Index = () => {
     setActiveSection(id);
   };
 
-  // No direct handleAuthRedirect here, as auth is now via bottom nav
+  const handleAuthSuccess = () => {
+    setIsAuthModalOpen(false); // Close auth modal on success
+    // The RoleContext's onAuthStateChange listener will handle navigation to dashboard
+  };
 
   const methodology = [
     {
@@ -191,7 +196,11 @@ const Index = () => {
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
-          {/* Removed direct login/signup buttons from header */}
+          {!isMobile && (
+            <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
+              <LogIn className="h-5 w-5 mr-2" /> Authentification
+            </Button>
+          )}
         </div>
       </header>
 
@@ -217,7 +226,16 @@ const Index = () => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              {/* Removed direct login/signup buttons from main content */}
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => setIsAuthModalOpen(true)}
+              >
+                Commencer l'aventure
+              </Button>
+              <Button size="lg" variant="secondary" onClick={() => setIsAuthModalOpen(true)}>
+                Créer un compte
+              </Button>
               {showInstallButton && (
                 <Button size="lg" variant="outline" onClick={handleInstallClick}>
                   <Download className="h-5 w-5 mr-2" /> Installer l'application
@@ -250,7 +268,9 @@ const Index = () => {
               <MessageCircleMore className="w-24 h-24 text-primary" />
             </div>
             <div>
-              {/* Removed direct Discover AiA button */}
+              <Button size="lg" onClick={() => setIsAuthModalOpen(true)}>
+                Découvrir AiA
+              </Button>
             </div>
           </div>
         </section>
@@ -291,8 +311,8 @@ const Index = () => {
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.
       </footer>
 
-      {/* Modals removed, authentication handled by AuthPage */}
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />
+      {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
     </div>
   );
 };
