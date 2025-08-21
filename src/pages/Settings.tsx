@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code } from "lucide-react"; // Import Code icon
+import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code, Info } from "lucide-react"; // Import Code and Info icons
 import { ThemeToggle } from "@/components/theme-toggle"; // Import ThemeToggle
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,6 +130,11 @@ const Settings = () => {
           <Link to="/data-model"> {/* Link to the new DataModelViewer page */}
             <Button variant="outline" className="flex items-center gap-2">
               <Code className="h-4 w-4" /> Voir le modèle de données
+            </Button>
+          </Link>
+          <Link to="/about"> {/* New: Link to the About page */}
+            <Button variant="outline" className="flex items-center gap-2">
+              <Info className="h-4 w-4" /> À propos
             </Button>
           </Link>
           <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2">

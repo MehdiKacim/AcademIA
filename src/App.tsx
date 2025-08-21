@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import Messages from "./pages/Messages";
+import About from "./pages/About"; // Import the new About page
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
@@ -148,6 +149,7 @@ const AppWithThemeProvider = () => {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/data-model" element={<DataModelViewer />} />
+                    <Route path="/about" element={<About />} /> {/* New About page route */}
                   </Route>
                 </Route>
 
