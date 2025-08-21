@@ -25,29 +25,26 @@ export const getProfileByUsername = async (username: string): Promise<Profile | 
     .from('profiles')
     .select('*')
     .eq('username', username)
-    .single();
-  if (error) {
-    // console.error("Error fetching profile by username:", error); // Log only if needed for debugging
+    .maybeSingle(); // Use maybeSingle to get null if not found, or data if found
+  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error("Error fetching profile by username:", error);
     return null;
   }
   return data;
 };
 
 export const getProfileByEmail = async (email: string): Promise<Profile | null> => {
-  // For security, direct email lookup on profiles table is not recommended as email is in auth.users
-  // Instead, you'd typically get the user from auth.users first, then their profile by ID.
-  // For now, we'll simulate by checking if a profile exists with that email (less secure for direct lookup)
-  // In a real app, you'd use auth.getUser() or similar.
-  const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
-  if (userError) {
-    console.error("Error listing users for email lookup:", userError);
+  // Now directly query the public.profiles table for email uniqueness check
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle(); // Use maybeSingle to get null if not found, or data if found
+  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error("Error fetching profile by email:", error);
     return null;
   }
-  const foundUser = users?.find((u: SupabaseUser) => u.email === email);
-  if (foundUser) {
-    return getProfileById(foundUser.id);
-  }
-  return null;
+  return data;
 };
 
 export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<Profile | null> => {

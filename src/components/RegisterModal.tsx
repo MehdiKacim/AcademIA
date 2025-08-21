@@ -17,12 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getProfileByUsername } from "@/lib/studentData"; // Import profile lookup functions
+import { getProfileByUsername, getProfileByEmail } from "@/lib/studentData"; // Import getProfileByEmail
 import { showSuccess, showError } from "@/utils/toast";
 import { Profile } from "@/lib/dataModels";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
+import { cn } from "@/lib/utils"; // Import cn for conditional styling
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -40,7 +41,11 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
 
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [usernameCheckLoading, setUsernameCheckLoading] = useState(false);
-  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const usernameDebounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [emailCheckLoading, setEmailCheckLoading] = useState(false);
+  const emailDebounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -53,8 +58,13 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
       setRole('student');
       setUsernameAvailable(null);
       setUsernameCheckLoading(false);
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
+      setEmailAvailable(null);
+      setEmailCheckLoading(false);
+      if (usernameDebounceTimeoutRef.current) {
+        clearTimeout(usernameDebounceTimeoutRef.current);
+      }
+      if (emailDebounceTimeoutRef.current) {
+        clearTimeout(emailDebounceTimeoutRef.current);
       }
     }
   }, [isOpen]);
@@ -69,14 +79,35 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
     setUsernameCheckLoading(true);
     setUsernameAvailable(null);
 
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
+    if (usernameDebounceTimeoutRef.current) {
+      clearTimeout(usernameDebounceTimeoutRef.current);
     }
 
-    debounceTimeoutRef.current = setTimeout(async () => {
+    usernameDebounceTimeoutRef.current = setTimeout(async () => {
       const isTaken = await getProfileByUsername(currentUsername);
       setUsernameAvailable(!isTaken);
       setUsernameCheckLoading(false);
+    }, 500);
+  };
+
+  const checkEmailAvailability = async (currentEmail: string) => {
+    if (currentEmail.trim() === '' || !/\S+@\S+\.\S+/.test(currentEmail)) {
+      setEmailAvailable(null);
+      setEmailCheckLoading(false);
+      return;
+    }
+
+    setEmailCheckLoading(true);
+    setEmailAvailable(null);
+
+    if (emailDebounceTimeoutRef.current) {
+      clearTimeout(emailDebounceTimeoutRef.current);
+    }
+
+    emailDebounceTimeoutRef.current = setTimeout(async () => {
+      const isTaken = await getProfileByEmail(currentEmail);
+      setEmailAvailable(!isTaken);
+      setEmailCheckLoading(false);
     }, 500);
   };
 
@@ -84,6 +115,12 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
     const newUsername = e.target.value;
     setUsername(newUsername);
     checkUsernameAvailability(newUsername);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    checkEmailAvailability(newEmail);
   };
 
   const handleRegister = async () => {
@@ -104,6 +141,14 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
       showError("Veuillez attendre la vérification du nom d'utilisateur.");
       return;
     }
+    if (emailAvailable === false) {
+      showError("Cet email est déjà enregistré. Veuillez vous connecter ou utiliser un autre email.");
+      return;
+    }
+    if (emailAvailable === null || emailCheckLoading) {
+      showError("Veuillez attendre la vérification de l'email.");
+      return;
+    }
 
     // Supabase signup
     const { data, error } = await supabase.auth.signUp({
@@ -121,37 +166,18 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
 
     if (error) {
       console.error("Signup error:", error);
-      if (error.message.includes('User already registered')) {
-        showError("Cet email est déjà enregistré. Veuillez vous connecter.");
-      } else {
-        showError(`Erreur d'inscription: ${error.message}`);
-      }
+      // Supabase will also return an error if email is already registered,
+      // but our client-side check should ideally catch this first.
+      showError(`Erreur d'inscription: ${error.message}`);
     } else if (data.user) {
-      // User created, but session might not be immediate if email confirmation is required
-      // Manually insert profile data as the handle_new_user trigger might not have all metadata
-      const { error: profileInsertError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: data.user.id,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          username: username.trim(),
-          email: email.trim(), // Store email in profile for easier access
-          role: role,
-        });
-
-      if (profileInsertError) {
-        console.error("Error inserting profile after signup:", profileInsertError);
-        showError(`Erreur lors de la création du profil: ${profileInsertError.message}`);
-        return;
-      }
-
+      // User created, profile insertion is handled by the database trigger (handle_new_user)
+      // which now correctly inserts email.
       showSuccess("Compte créé avec succès !");
       onClose(); // Close the modal
     }
   };
 
-  const isRegisterButtonDisabled = !firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim() || usernameCheckLoading || usernameAvailable === false || usernameAvailable === null;
+  const isRegisterButtonDisabled = !firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim() || usernameCheckLoading || usernameAvailable === false || usernameAvailable === null || emailCheckLoading || emailAvailable === false || emailAvailable === null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -187,7 +213,7 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
                 )}
               </div>
               {username.trim() !== '' && !usernameCheckLoading && usernameAvailable !== null && (
-                <p className={`text-sm ${usernameAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={cn("text-sm", usernameAvailable ? 'text-green-600' : 'text-red-600')}>
                   {usernameAvailable ? "Nom d'utilisateur disponible." : "Ce nom d'utilisateur est déjà pris."}
                 </p>
               )}
@@ -201,9 +227,23 @@ const RegisterModal = ({ isOpen, onClose, onLoginClick }: RegisterModalProps) =>
                   placeholder="m@example.com"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                 />
+                {emailCheckLoading && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                )}
+                {emailAvailable === true && !emailCheckLoading && email.trim() !== '' && /\S+@\S+\.\S+/.test(email) && (
+                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                )}
+                {emailAvailable === false && !emailCheckLoading && email.trim() !== '' && /\S+@\S+\.\S+/.test(email) && (
+                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+                )}
               </div>
+              {email.trim() !== '' && !emailCheckLoading && emailAvailable !== null && /\S+@\S+\.\S+/.test(email) && (
+                <p className={cn("text-sm", emailAvailable ? 'text-green-600' : 'text-red-600')}>
+                  {emailAvailable ? "Email disponible." : "Cet email est déjà enregistré."}
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Mot de passe</Label>
