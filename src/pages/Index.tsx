@@ -256,7 +256,7 @@ const Index = () => {
                       </>
                     ) : isApkError || !apkData?.apkUrl ? (
                       <>
-                        <Download className="h-5 w-5 mr-2" /> <span>APK non disponible</span>
+                        <Download className="h-5 w-5 mr-2" /> <span>Bientôt Dispo sur Android</span>
                       </>
                     ) : (
                       <>
