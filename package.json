@@ -6,6 +6,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dyad-sh/react-vite-component-tagger": "^0.8.0",
     "@hookform/resolvers": "^3.4.2",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
