@@ -341,7 +341,7 @@ const Index = () => {
         </Button>
       </footer>
 
-      <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />
+      <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>

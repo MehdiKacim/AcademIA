@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom"; // Import 
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowLeft, MessageSquare, User, Settings, LogOut, LogIn } from "lucide-react"; // Import User, Settings, LogOut, LogIn
+import { Search, ArrowLeft, MessageSquare, User, Settings, LogOut, LogIn, Info } from "lucide-react"; // Import User, Settings, LogOut, LogIn, Info
 import { NavItem } from "@/lib/dataModels";
 import {
   Drawer,
@@ -22,9 +22,10 @@ interface BottomNavigationBarProps {
   navItems: NavItem[];
   onOpenGlobalSearch?: () => void;
   currentUser: any; // Profile type
+  onOpenAboutModal: () => void; // New prop for opening AboutModal
 }
 
-const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: BottomNavigationBarProps) => {
+const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpenAboutModal }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate(); // Initialize useNavigate
@@ -179,6 +180,16 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
                   }}
                 >
                   <Settings className="mr-2 h-4 w-4" /> Paramètres
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    onOpenAboutModal(); // Open AboutModal
+                    setIsProfileDrawerOpen(false); // Close profile drawer
+                  }}
+                >
+                  <Info className="mr-2 h-4 w-4" /> À propos
                 </Button>
                 <Button
                   variant="ghost"
