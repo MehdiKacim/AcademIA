@@ -17,7 +17,7 @@ import AllNotes from "./pages/AllNotes";
 import EstablishmentManagementPage from "./pages/EstablishmentManagementPage";
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
-import AdminStudentManagementPage from "./pages/AdminStudentManagementPage"; // Renamed
+import AdminStudentAndEnrollmentManagementPage from "./pages/AdminStudentAndEnrollmentManagementPage"; // Renamed
 import CreatorAndTutorStudentManagementPage from "./pages/CreatorAndTutorStudentManagementPage"; // Renamed
 import AdminUserManagementPage from "./pages/AdminUserManagementPage"; // New: Admin user management
 import Profile from "./pages/Profile";
@@ -77,20 +77,21 @@ const AppWithThemeProvider = () => {
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
                     <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} />
-                    <Route path="/create-course" element={<CreateCourse />} />
-                    <Route path="/create-course/:courseId" element={<CreateCourse />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/all-notes" element={<AllNotes />} />
                     <Route path="/messages" element={<Messages />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/data-model" element={<DataModelViewer />} />
                     
-                    {/* Role-specific student management routes */}
+                    {/* Role-specific routes */}
                     {currentRole === 'administrator' && (
                       <>
                         <Route path="/establishments" element={<EstablishmentManagementPage />} />
                         <Route path="/curricula" element={<CurriculumManagementPage />} />
                         <Route path="/classes" element={<ClassManagementPage />} />
-                        <Route path="/students" element={<AdminStudentManagementPage />} />
-                        <Route path="/admin-users" element={<AdminUserManagementPage />} /> {/* New admin user management page */}
+                        <Route path="/students" element={<AdminStudentAndEnrollmentManagementPage />} />
+                        <Route path="/admin-users" element={<AdminUserManagementPage />} />
                       </>
                     )}
                     {(currentRole === 'creator' || currentRole === 'tutor') && (
@@ -99,15 +100,20 @@ const AppWithThemeProvider = () => {
                         <Route path="/students" element={<CreatorAndTutorStudentManagementPage />} />
                       </>
                     )}
+                    {currentRole === 'creator' && (
+                      <>
+                        <Route path="/create-course" element={<CreateCourse />} />
+                        <Route path="/create-course/:courseId" element={<CreateCourse />} />
+                      </>
+                    )}
                     {currentRole === 'student' && (
                       // Students don't have direct management pages for other students/classes
                       // They might have a "My Classes" or "My Enrollments" page if needed
-                      <Route path="/students" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/create-course" element={<Navigate to="/courses" replace />} />
+                      // Redirect /students for students if they try to access it
+                      // The /students route is already handled by the admin/creator/tutor blocks above.
+                      // If a student somehow reaches /students, it will be caught by NotFound or redirected by ProtectedRoute.
                     )}
-
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/data-model" element={<DataModelViewer />} />
                   </Route>
                 </Route>
 

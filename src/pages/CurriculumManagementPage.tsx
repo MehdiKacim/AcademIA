@@ -55,6 +55,10 @@ const CurriculumManagementPage = () => {
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   const handleAddCurriculum = async () => {
+    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+      showError("Vous n'êtes pas autorisé à ajouter un cursus.");
+      return;
+    }
     if (!newCurriculumName.trim() || !newCurriculumEstablishmentId) {
       showError("Le nom du cursus et l'établissement sont requis.");
       return;
@@ -81,6 +85,10 @@ const CurriculumManagementPage = () => {
   };
 
   const handleDeleteCurriculum = async (id: string) => {
+    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+      showError("Vous n'êtes pas autorisé à supprimer un cursus.");
+      return;
+    }
     try {
       await deleteCurriculumFromStorage(id);
       setCurricula(await loadCurricula()); // Re-fetch to get the updated list
@@ -92,12 +100,20 @@ const CurriculumManagementPage = () => {
   };
 
   const handleOpenManageCoursesModal = (curriculum: Curriculum) => {
+    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+      showError("Vous n'êtes pas autorisé à gérer les cours d'un cursus.");
+      return;
+    }
     setSelectedCurriculumForCourses(curriculum);
     setSelectedCourseIds(curriculum.course_ids); // Use course_ids
     setIsManageCoursesModalOpen(true);
   };
 
   const handleSaveCurriculumCourses = async () => {
+    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+      showError("Vous n'êtes pas autorisé à sauvegarder les cours d'un cursus.");
+      return;
+    }
     if (selectedCurriculumForCourses) {
       try {
         const updatedCurriculum: Curriculum = {
@@ -118,6 +134,10 @@ const CurriculumManagementPage = () => {
   };
 
   const handleEditCurriculum = (curriculum: Curriculum) => {
+    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+      showError("Vous n'êtes pas autorisé à modifier un cursus.");
+      return;
+    }
     setCurrentCurriculumToEdit(curriculum);
     setIsEditDialogOpen(true);
   };

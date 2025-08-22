@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare, LogIn, Info, UserPlus } from "lucide-react"; // Added UserPlus
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, UserPlus, Building2 } from "lucide-react"; // Added Building2 for establishments
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -216,7 +216,7 @@ const DashboardLayout = () => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('gestion'),
           items: [
-            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
+            { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' }, // Renamed and updated path
           ],
         },
@@ -253,7 +253,7 @@ const DashboardLayout = () => {
           items: [
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
             { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
-            { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChartBig, type: 'link' },
+            { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link' }, // Changed icon to BarChart2
           ],
         },
       ];
@@ -266,7 +266,7 @@ const DashboardLayout = () => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('administration'),
           items: [
-            { to: "/establishments", label: "Établissements", icon: School, type: 'link' },
+            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' }, // Changed icon to Building2
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' }, // Admin student management

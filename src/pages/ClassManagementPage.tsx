@@ -73,7 +73,7 @@ const ClassManagementPage = () => {
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Initialize here
     };
     fetchData();
-  }, []);
+  }, [currentUserProfile]);
 
   // Helper functions to get names from IDs
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
@@ -83,6 +83,10 @@ const ClassManagementPage = () => {
   const handleAddClass = async () => {
     if (!currentUserProfile) {
       showError("Vous devez être connecté pour ajouter une classe.");
+      return;
+    }
+    if (currentRole !== 'administrator' && currentRole !== 'creator') {
+      showError("Vous n'êtes pas autorisé à ajouter une classe.");
       return;
     }
     if (!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()) {
@@ -126,6 +130,14 @@ const ClassManagementPage = () => {
   };
 
   const handleDeleteClass = async (id: string) => {
+    if (!currentUserProfile) {
+      showError("Vous devez être connecté pour supprimer une classe.");
+      return;
+    }
+    if (currentRole !== 'administrator' && currentRole !== 'creator') {
+      showError("Vous n'êtes pas autorisé à supprimer une classe.");
+      return;
+    }
     try {
       await deleteClassFromStorage(id);
       setClasses(await loadClasses()); // Re-fetch to get the updated list
@@ -144,6 +156,14 @@ const ClassManagementPage = () => {
   };
 
   const handleEditClass = (cls: Class) => {
+    if (!currentUserProfile) {
+      showError("Vous devez être connecté pour modifier une classe.");
+      return;
+    }
+    if (currentRole !== 'administrator' && currentRole !== 'creator') {
+      showError("Vous n'êtes pas autorisé à modifier une classe.");
+      return;
+    }
     setCurrentClassToEdit(cls);
     setIsEditClassDialogOpen(true);
   };
@@ -157,8 +177,8 @@ const ClassManagementPage = () => {
   };
 
   const filteredClasses = classSearchQuery.trim() === ''
-    ? classes
-    : classes.filter(cls => cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
+    ? classes.filter(cls => currentRole === 'administrator' || (currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)))
+    : classes.filter(cls => (currentRole === 'administrator' || (currentUserProfile && cls.creator_ids.includes(currentUserProfile.id))) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
@@ -206,56 +226,60 @@ const ClassManagementPage = () => {
           <CardDescription>Créez de nouvelles classes et gérez les existantes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">Ajouter une nouvelle classe</h3>
-          <div className="grid gap-2">
-            <Label htmlFor="new-class-name">Nom de la classe</Label>
-            <Input
-              id="new-class-name"
-              placeholder="Ex: Terminale S1"
-              value={newClassName}
-              onChange={(e) => setNewClassName(e.target.value)}
-            />
-            <Label htmlFor="new-class-establishment">Établissement</Label>
-            <Select value={newClassEstablishmentId} onValueChange={setNewClassEstablishmentId}>
-              <SelectTrigger id="new-class-establishment">
-                <SelectValue placeholder="Sélectionner un établissement" />
-              </SelectTrigger>
-              <SelectContent>
-                {establishments.map(est => (
-                  <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Label htmlFor="new-class-curriculum">Cursus</Label>
-            <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
-              <SelectTrigger id="new-class-curriculum">
-                <SelectValue placeholder="Sélectionner un cursus" />
-              </SelectTrigger>
-              <SelectContent>
-                {curricula.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
-                  <SelectItem key={cur.id} value={cur.id}>
-                    {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Label htmlFor="new-class-school-year">Année scolaire</Label>
-            <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
-              <SelectTrigger id="new-class-school-year">
-                <SelectValue placeholder="Sélectionner l'année scolaire" />
-              </SelectTrigger>
-              <SelectContent>
-                {schoolYears.map(year => (
-                  <SelectItem key={year} value={year}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
-            </Button>
-          </div>
-
-          <h3 className="text-lg font-semibold mt-6">Liste de toutes les classes</h3>
+          {(currentRole === 'administrator' || currentRole === 'creator') && (
+            <>
+              <h3 className="text-lg font-semibold">Ajouter une nouvelle classe</h3>
+              <div className="grid gap-2">
+                <Label htmlFor="new-class-name">Nom de la classe</Label>
+                <Input
+                  id="new-class-name"
+                  placeholder="Ex: Terminale S1"
+                  value={newClassName}
+                  onChange={(e) => setNewClassName(e.target.value)}
+                />
+                <Label htmlFor="new-class-establishment">Établissement</Label>
+                <Select value={newClassEstablishmentId} onValueChange={setNewClassEstablishmentId}>
+                  <SelectTrigger id="new-class-establishment">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {establishments.map(est => (
+                      <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Label htmlFor="new-class-curriculum">Cursus</Label>
+                <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
+                  <SelectTrigger id="new-class-curriculum">
+                    <SelectValue placeholder="Sélectionner un cursus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {curricula.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
+                      <SelectItem key={cur.id} value={cur.id}>
+                        {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Label htmlFor="new-class-school-year">Année scolaire</Label>
+                <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
+                  <SelectTrigger id="new-class-school-year">
+                    <SelectValue placeholder="Sélectionner l'année scolaire" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schoolYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
+                  <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
+                </Button>
+              </div>
+              <h3 className="text-lg font-semibold mt-6">Liste de toutes les classes</h3>
+            </>
+          )}
+          
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
@@ -290,12 +314,16 @@ const ClassManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
                       <Users className="h-4 w-4 mr-1" /> Voir les élèves
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEditClass(cls)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)}>
-                      <Trash2 className="h-4 w-4" /> Supprimer
-                    </Button>
+                    {(currentRole === 'administrator' || (currentUserProfile && cls.creator_ids.includes(currentUserProfile.id))) && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => handleEditClass(cls)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)}>
+                          <Trash2 className="h-4 w-4" /> Supprimer
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </Card>
               ))

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Edit, Trash2, School } from "lucide-react";
+import { PlusCircle, Edit, Trash2, School, Building2 } from "lucide-react"; // Changed icon to Building2
 import { Establishment, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile and Curriculum
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -134,7 +134,7 @@ const EstablishmentManagementPage = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <School className="h-6 w-6 text-primary" /> Établissements
+            <Building2 className="h-6 w-6 text-primary" /> Établissements
           </CardTitle>
           <CardDescription>Ajoutez, modifiez ou supprimez des établissements.</CardDescription>
         </CardHeader>

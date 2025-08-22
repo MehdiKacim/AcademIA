@@ -293,6 +293,17 @@ const CreatorAndTutorStudentManagementPage = () => {
       return;
     }
 
+    const enrollmentToDelete = allStudentClassEnrollments.find(e => e.id === enrollmentId);
+    if (!enrollmentToDelete) {
+      showError("Inscription introuvable.");
+      return;
+    }
+    const classOfEnrollment = classes.find(cls => cls.id === enrollmentToDelete.class_id);
+    if (!classOfEnrollment || !classOfEnrollment.creator_ids.includes(currentUserProfile.id)) {
+      showError("Vous ne pouvez retirer des élèves que des classes que vous gérez.");
+      return;
+    }
+
     try {
       await deleteStudentClassEnrollment(enrollmentId);
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
