@@ -58,6 +58,11 @@
     /* Removed user-select: none; to improve mobile scrolling */
   }
 
+  /* Removed overflow-x-hidden from html, body to allow horizontal scrolling */
+  html, body {
+    overflow-x: auto; /* Allow horizontal scrolling */
+  }
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   ::-webkit-scrollbar {
     display: none;
@@ -65,7 +70,7 @@
   }
 
   /* Hide scrollbar for IE, Edge and Firefox */
-  html, body, .overflow-y-auto, .overflow-auto {
+  .overflow-y-auto, .overflow-auto {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }

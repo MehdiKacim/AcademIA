@@ -313,7 +313,7 @@ const DashboardLayout = () => {
   const isFloatingButtonActuallyVisible = isFloatingButtonVisible && !isChatOpen;
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-muted/40"> {/* Removed overflow-x-hidden */}
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo />
         {!isMobile && (
