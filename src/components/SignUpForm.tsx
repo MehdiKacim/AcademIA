@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label"; // Keep Label for direct use if needed, but FormLabel is preferred
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
-import { checkUsernameExists, checkEmailExists } from '@/lib/studentData'; // Import new check functions
+import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import {
   Form,
   FormControl,
@@ -24,7 +23,7 @@ const signUpSchema = z.object({
   username: z.string().min(3, "Le nom d'utilisateur doit contenir au moins 3 caractères.").max(50, "Le nom d'utilisateur ne peut pas dépasser 50 caractères.").regex(/^[a-zA-Z0-9_]+$/, "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores."),
   email: z.string().email("Veuillez entrer une adresse email valide."),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères."),
-  role: z.enum(["student", "creator", "tutor"], { message: "Veuillez sélectionner un rôle." }), // Changed 'teacher' to 'creator' and added 'tutor'
+  role: z.enum(["student", "creator", "tutor"], { message: "Veuillez sélectionner un rôle." }),
 });
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
@@ -44,37 +43,84 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
       username: "",
       email: "",
       password: "",
-      role: undefined, // Set to undefined initially
+      role: undefined,
     },
   });
+
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const validateUsername = useCallback(async (username: string) => {
+    if (username.length < 3) {
+      form.setError("username", { type: "manual", message: "Le nom d'utilisateur doit contenir au moins 3 caractères." });
+      return false;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      form.setError("username", { type: "manual", message: "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores." });
+      return false;
+    }
+    const isTaken = await checkUsernameExists(username);
+    if (isTaken) {
+      form.setError("username", { type: "manual", message: "Ce nom d'utilisateur est déjà pris." });
+      return false;
+    }
+    form.clearErrors("username");
+    return true;
+  }, [form]);
+
+  const validateEmail = useCallback(async (email: string) => {
+    if (!z.string().email().safeParse(email).success) {
+      form.setError("email", { type: "manual", message: "Veuillez entrer une adresse email valide." });
+      return false;
+    }
+    const isTaken = await checkEmailExists(email);
+    if (isTaken) {
+      form.setError("email", { type: "manual", message: "Cet email est déjà utilisé par un autre profil." });
+      return false;
+    }
+    form.clearErrors("email");
+    return true;
+  }, [form]);
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    form.setValue("username", value);
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      validateUsername(value);
+    }, 500); // Debounce for 500ms
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    form.setValue("email", value);
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      validateEmail(value);
+    }, 500); // Debounce for 500ms
+  };
 
   const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      // 1. Check for existing username in profiles table
-      const isUsernameTaken = await checkUsernameExists(values.username);
-      if (isUsernameTaken) {
-        form.setError("username", { type: "manual", message: "Ce nom d'utilisateur est déjà pris." });
-        onError("Ce nom d'utilisateur est déjà pris.");
+      // Re-run final validation before submission
+      const isUsernameValid = await validateUsername(values.username);
+      const isEmailValid = await validateEmail(values.email);
+
+      if (!isUsernameValid || !isEmailValid) {
+        onError("Veuillez corriger les erreurs du formulaire.");
         setIsLoading(false);
         return;
       }
 
-      // 2. Check for existing email in profiles table
-      const isEmailTakenInProfiles = await checkEmailExists(values.email);
-      if (isEmailTakenInProfiles) {
-        form.setError("email", { type: "manual", message: "Cet email est déjà utilisé par un autre profil." });
-        onError("Cet email est déjà utilisé par un autre profil.");
-        setIsLoading(false);
-        return;
-      }
-
-      // 3. Attempt Supabase Auth signup (handles email uniqueness in auth.users table)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          data: { // This data goes into user_metadata, which the trigger can use
+          data: {
             first_name: values.firstName,
             last_name: values.lastName,
             username: values.username,
@@ -84,7 +130,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
       });
 
       if (authError) {
-        // This error typically means the email is already registered in auth.users
         if (authError.message.includes('User already registered')) {
           form.setError("email", { type: "manual", message: "Cet email est déjà enregistré. Veuillez vous connecter." });
           onError("Cet email est déjà enregistré. Veuillez vous connecter.");
@@ -95,14 +140,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
         return;
       }
 
-      if (authData.user) {
-        // Profile creation is handled by the 'handle_new_user' trigger in Supabase.
-        onSuccess(values.email);
-      } else {
-        // If authData.user is null, it means an email confirmation is pending.
-        // Still consider it a success for the user, they just need to confirm email.
-        onSuccess(values.email);
-      }
+      onSuccess(values.email);
 
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -150,7 +188,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
             <FormItem>
               <FormLabel>Nom d'utilisateur</FormLabel>
               <FormControl>
-                <Input id="username" {...field} />
+                <Input id="username" {...field} onChange={handleUsernameChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -163,7 +201,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input id="email" type="email" {...field} />
+                <Input id="email" type="email" {...field} onChange={handleEmailChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
