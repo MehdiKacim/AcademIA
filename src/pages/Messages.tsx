@@ -86,54 +86,9 @@ const Messages = () => {
             table: 'messages',
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
-          async (payload) => {
+          (payload) => {
             console.log("[Messages] Realtime INSERT event received:", payload);
-            const newMessage = payload.new as Message;
-            const contactId = newMessage.sender_id === currentUserId ? newMessage.receiver_id : newMessage.sender_id;
-
-            // Fetch the latest message for this conversation to ensure we have the correct representation
-            const { data: latestMessageForContact, error: latestError } = await supabase
-              .from('messages')
-              .select('*')
-              .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${currentUserId})`)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single();
-
-            if (latestError) {
-              console.error("[Messages] Error fetching latest message for contact after INSERT:", latestError);
-              fetchAllData(); // Fallback to full fetch
-              return;
-            }
-
-            if (latestMessageForContact) {
-              if (!latestMessageForContact.is_archived) {
-                setRecentConversations(prev => {
-                  const filtered = prev.filter(msg => {
-                    const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
-                    return other !== contactId;
-                  });
-                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                });
-                setArchivedConversations(prev => prev.filter(msg => {
-                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
-                  return other !== contactId;
-                }));
-              } else {
-                setArchivedConversations(prev => {
-                  const filtered = prev.filter(msg => {
-                    const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
-                    return other !== contactId;
-                  });
-                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                });
-                setRecentConversations(prev => prev.filter(msg => {
-                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
-                  return other !== contactId;
-                }));
-              }
-            }
-            setUnreadMessageCount(await getUnreadMessageCount(currentUserId));
+            fetchAllData(); // Re-fetch all data on new message
           }
         )
         .on(
@@ -144,59 +99,10 @@ const Messages = () => {
             table: 'messages',
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
-          async (payload) => {
+          (payload) => {
             console.log("[Messages] Realtime UPDATE event received:", payload);
-            const newMessage = payload.new as Message;
-            const oldMessage = payload.old as Message;
-
-            const contactId = newMessage.sender_id === currentUserId ? newMessage.receiver_id : newMessage.sender_id;
-
-            // Fetch the latest message for this conversation to ensure we have the correct representation
-            const { data: latestMessageForContact, error: latestError } = await supabase
-              .from('messages')
-              .select('*')
-              .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${currentUserId})`)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single();
-
-            if (latestError) {
-              console.error("[Messages] Error fetching latest message for contact after UPDATE:", latestError);
-              fetchAllData(); // Fallback to full fetch
-              return;
-            }
-
-            if (latestMessageForContact) {
-              // Update recentConversations
-              setRecentConversations(prev => {
-                const filtered = prev.filter(msg => {
-                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
-                  return other !== contactId;
-                });
-                if (!latestMessageForContact.is_archived) {
-                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                }
-                return filtered;
-              });
-
-              // Update archivedConversations
-              setArchivedConversations(prev => {
-                const filtered = prev.filter(msg => {
-                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
-                  return other !== contactId;
-                });
-                if (latestMessageForContact.is_archived) {
-                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                }
-                return filtered;
-              });
-
-              // If the currently selected contact's conversation was archived, deselect it
-              if (selectedContact?.id === contactId && latestMessageForContact.is_archived) {
-                setSelectedContact(null);
-              }
-            }
-            setUnreadMessageCount(await getUnreadMessageCount(currentUserId));
+            // Re-fetch all data on any relevant update (archiving, read status, content change)
+            fetchAllData();
           }
         )
         .subscribe();
@@ -208,7 +114,7 @@ const Messages = () => {
         supabase.removeChannel(channel);
       }
     };
-  }, [currentUserId, currentRole, selectedContact]); // Added selectedContact to dependencies for deselect logic
+  }, [currentUserId, currentRole]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -228,7 +134,7 @@ const Messages = () => {
         if (isContactArchived && currentUserId) {
           console.log(`[Messages] Contact ${contact.first_name} selected via URL, was archived. Attempting to unarchive.`);
           unarchiveConversation(currentUserId, contactId).then(() => {
-            // No need to call fetchAllData here, realtime listener will handle it
+            fetchAllData(); // Re-fetch to update lists
             showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
           }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
         }
@@ -250,7 +156,7 @@ const Messages = () => {
       if (isContactArchived) {
         console.log(`[Messages] Contact ${contact.first_name} selected, was archived. Attempting to unarchive.`);
         unarchiveConversation(currentUserId, contact.id).then(() => {
-          // No need to call fetchAllData here, realtime listener will handle it
+          fetchAllData(); // Re-fetch to update lists
           showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
         }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
       }
@@ -266,8 +172,9 @@ const Messages = () => {
     try {
       await archiveConversation(currentUserId, contactId);
       showSuccess("Conversation archivée !");
-      // The realtime listener will now handle updating the state
-      console.log("[Messages] Archive successful. Realtime listener should trigger state update.");
+      setSelectedContact(null); // Deselect if current chat is archived
+      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
+      console.log("[Messages] Archive successful. fetchAllData called directly.");
     } catch (error: any) {
       console.error("[Messages] Error during archiving:", error);
       showError(`Erreur lors de l'archivage: ${error.message}`);
@@ -283,8 +190,8 @@ const Messages = () => {
     try {
       await unarchiveConversation(currentUserId, contactId);
       showSuccess("Conversation désarchivée !");
-      // The realtime listener will now handle updating the state
-      console.log("[Messages] Unarchive successful. Realtime listener should trigger state update.");
+      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
+      console.log("[Messages] Unarchive successful. fetchAllData called directly.");
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
       showError(`Erreur lors du désarchivage: ${error.message}`);
@@ -536,6 +443,7 @@ const Messages = () => {
           </div>
 
           <MessageList
+            key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}`} {/* Dynamic key to force re-render */}
             recentMessages={showArchived ? archivedConversations : recentConversations}
             allProfiles={allProfiles}
             onSelectContact={handleSelectContact}
