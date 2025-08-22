@@ -24,7 +24,7 @@ import AiAPersistentChat from "@/components/AiAPersistentChat";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton"; // Import the new floating button
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import DataModelModal from "@/components/DataModelModal";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react"; // Import useRef
 import { getUnreadMessageCount } from "@/lib/messageData"; // Import getUnreadMessageCount
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
 import { Message } from "@/lib/dataModels"; // Import Message type
@@ -45,6 +45,9 @@ const DashboardLayout = () => {
   const location = useLocation();
 
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
+  const [showFloatingButton, setShowFloatingButton] = useState(true); // Nouvel état pour le bouton flottant
+  const lastScrollY = useRef(0);
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleLogout = async () => { // Make it async
     await signOut(); // Call the signOut function from context
@@ -157,7 +160,6 @@ const DashboardLayout = () => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' }, // Changed label
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages }, // Add messages link with badge
-      // Removed AiA Chat button from here
     ];
 
     if (currentRole === 'student') {
@@ -282,6 +284,25 @@ const DashboardLayout = () => {
     return mainItems;
   };
 
+  // Handle scroll to hide/show floating button
+  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    if (scrollTimeout.current) {
+      clearTimeout(scrollTimeout.current);
+    }
+
+    scrollTimeout.current = setTimeout(() => {
+      const currentScrollY = event.currentTarget.scrollTop;
+      const isScrollingDown = currentScrollY > lastScrollY.current;
+
+      if (isScrollingDown && currentScrollY > 100) { // Hide only if scrolled down significantly
+        setShowFloatingButton(false);
+      } else {
+        setShowFloatingButton(true);
+      }
+      lastScrollY.current = currentScrollY;
+    }, 100); // Debounce time
+  }, []);
+
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
@@ -375,7 +396,7 @@ const DashboardLayout = () => {
           )}
         </div>
       </header>
-      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}>
+      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")} onScroll={handleScroll}>
         <Outlet />
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
@@ -386,7 +407,7 @@ const DashboardLayout = () => {
       </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAChatButton />} {/* Re-added the floating button here */}
+      {currentUserProfile && <FloatingAiAChatButton isVisible={showFloatingButton} />} {/* Pass isVisible prop */}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
