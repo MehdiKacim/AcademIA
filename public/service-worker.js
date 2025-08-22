@@ -54,8 +54,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   // IMPORTANT: Bypass caching for Supabase API requests
-  // The Supabase project ID is kbdtcljqwonsgwcpoxsd
-  const supabaseApiUrl = 'https://kbdtcljqwonsgwcpoxsd.supabase.co/rest/v1/';
+  // The Supabase project ID is rdokwfeatumojiojzaym
+  const supabaseApiUrl = 'https://rdokwfeatumojiojzaym.supabase.co/rest/v1/';
   if (event.request.url.startsWith(supabaseApiUrl)) {
     console.log('[Service Worker] Bypassing cache for Supabase API request:', event.request.url);
     event.respondWith(fetch(event.request));
