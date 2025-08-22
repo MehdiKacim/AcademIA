@@ -22,7 +22,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import Messages from "./pages/Messages";
-import About from "./pages/About"; // Import the new About page
+// import About from "./pages/About"; // Removed direct import as it's now part of AboutModal
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
@@ -134,8 +134,8 @@ const AppWithThemeProvider = () => {
               <Routes>
                 {/* Public route for the landing page (Index.tsx) */}
                 <Route path="/" element={<Index />} /> 
-                {/* Public route for the About page */}
-                <Route path="/about" element={<About />} />
+                {/* Public route for the About page (now handled by modal, so route removed) */}
+                {/* <Route path="/about" element={<About />} /> */}
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}

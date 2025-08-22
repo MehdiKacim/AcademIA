@@ -28,7 +28,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
 import AuthModal from "@/components/AuthModal"; // Import AuthModal
-import About from "./About"; // Import the About component
+import AboutModal from "@/components/AboutModal"; // Import AboutModal
 import { useQuery } from "@tanstack/react-query"; // Import useQuery
 import { supabase } from "@/integrations/supabase/client"; // Import supabase
 
@@ -47,6 +47,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
 
   // Fetch latest APK release data using TanStack Query
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
@@ -179,7 +180,7 @@ const Index = () => {
     { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'accueil', type: 'trigger' },
     { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'aiaBot', type: 'trigger' },
     { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'methodologie', type: 'trigger' },
-    { label: "À propos", icon: Info, to: "/about", type: 'link' }, // Changed to direct link
+    { label: "À propos", icon: Info, onClick: () => setIsAboutModalOpen(true), type: 'trigger' }, // Changed to trigger AboutModal
   ];
 
   return (
@@ -339,6 +340,7 @@ const Index = () => {
 
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
   );
 };

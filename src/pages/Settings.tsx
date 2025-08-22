@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
 import { clearAllAppData } from "@/lib/dataReset"; // Import the new utility
 import { Link } from 'react-router-dom'; // Import Link
+import AboutModal from "@/components/AboutModal"; // Import AboutModal
 
 const Settings = () => {
   const [language, setLanguage] = useState('fr');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [appNotifications, setAppNotifications] = useState(true);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
 
   const handleSavePreferences = () => {
     // In a real app, you would save these preferences to a backend or localStorage
@@ -132,11 +134,9 @@ const Settings = () => {
               <Code className="h-4 w-4" /> Voir le modèle de données
             </Button>
           </Link>
-          <Link to="/about"> {/* New: Link to the About page */}
-            <Button variant="outline" className="flex items-center gap-2">
-              <Info className="h-4 w-4" /> À propos
-            </Button>
-          </Link>
+          <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="flex items-center gap-2"> {/* Changed to open AboutModal */}
+            <Info className="h-4 w-4" /> À propos
+          </Button>
           <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2">
             <Eraser className="h-4 w-4" /> Réinitialiser toutes les données
           </Button>
@@ -148,6 +148,8 @@ const Settings = () => {
           Enregistrer toutes les préférences
         </Button>
       </div>
+
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
   );
 };
