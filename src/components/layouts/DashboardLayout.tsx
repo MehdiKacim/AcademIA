@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare, LogIn, Info } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare, LogIn, Info, UserPlus } from "lucide-react"; // Added UserPlus
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -216,10 +216,8 @@ const DashboardLayout = () => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('gestion'),
           items: [
-            { to: "/establishments", label: "Établissements", icon: School, type: 'link' },
-            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' }, // Updated path
+            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' }, // Renamed and updated path
           ],
         },
         {
@@ -244,7 +242,7 @@ const DashboardLayout = () => {
           onClick: () => setCurrentNavLevel('suivi'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' }, // Updated path
+            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' }, // Renamed and updated path
           ],
         },
         {
@@ -256,6 +254,34 @@ const DashboardLayout = () => {
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
             { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
             { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChartBig, type: 'link' },
+          ],
+        },
+      ];
+    } else if (currentRole === 'administrator') { // New Administrator role
+      return [
+        ...baseItems,
+        {
+          icon: BriefcaseBusiness,
+          label: "Administration",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('administration'),
+          items: [
+            { to: "/establishments", label: "Établissements", icon: School, type: 'link' },
+            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
+            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' }, // Admin student management
+            { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserPlus, type: 'link' }, // Admin user management
+          ],
+        },
+        {
+          icon: BarChart2,
+          label: "Analytiques",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('analytiques'),
+          items: [
+            { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
+            { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
+            { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link' },
           ],
         },
       ];

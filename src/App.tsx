@@ -17,7 +17,9 @@ import AllNotes from "./pages/AllNotes";
 import EstablishmentManagementPage from "./pages/EstablishmentManagementPage";
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
-import StudentManagementPage from "./pages/StudentManagementPage";
+import AdminStudentManagementPage from "./pages/AdminStudentManagementPage"; // Renamed
+import CreatorAndTutorStudentManagementPage from "./pages/CreatorAndTutorStudentManagementPage"; // Renamed
+import AdminUserManagementPage from "./pages/AdminUserManagementPage"; // New: Admin user management
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
@@ -32,7 +34,7 @@ const queryClient = new QueryClient();
 
 // A wrapper component to get the theme from useRole and pass it to ThemeProvider
 const AppWithThemeProvider = () => {
-  const { currentUserProfile, isLoadingUser } = useRole();
+  const { currentUserProfile, isLoadingUser, currentRole } = useRole();
   // Removed local showSplash state, will rely solely on isLoadingUser for splash screen
 
   // Determine the initial theme based on user profile or system preference
@@ -80,10 +82,29 @@ const AppWithThemeProvider = () => {
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/all-notes" element={<AllNotes />} />
                     <Route path="/messages" element={<Messages />} />
-                    <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                    <Route path="/curricula" element={<CurriculumManagementPage />} />
-                    <Route path="/classes" element={<ClassManagementPage />} />
-                    <Route path="/students" element={<StudentManagementPage />} />
+                    
+                    {/* Role-specific student management routes */}
+                    {currentRole === 'administrator' && (
+                      <>
+                        <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                        <Route path="/curricula" element={<CurriculumManagementPage />} />
+                        <Route path="/classes" element={<ClassManagementPage />} />
+                        <Route path="/students" element={<AdminStudentManagementPage />} />
+                        <Route path="/admin-users" element={<AdminUserManagementPage />} /> {/* New admin user management page */}
+                      </>
+                    )}
+                    {(currentRole === 'creator' || currentRole === 'tutor') && (
+                      <>
+                        <Route path="/classes" element={<ClassManagementPage />} />
+                        <Route path="/students" element={<CreatorAndTutorStudentManagementPage />} />
+                      </>
+                    )}
+                    {currentRole === 'student' && (
+                      // Students don't have direct management pages for other students/classes
+                      // They might have a "My Classes" or "My Enrollments" page if needed
+                      <Route path="/students" element={<Navigate to="/dashboard" replace />} />
+                    )}
+
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/data-model" element={<DataModelViewer />} />

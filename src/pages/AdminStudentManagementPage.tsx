@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -9,47 +9,58 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, UserPlus, UserCheck, Loader2, Check, XCircle, Mail, Search, GraduationCap, Users as UsersIcon, CalendarDays } from "lucide-react";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School } from "lucide-react";
+import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
-import { useRole } from '@/contexts/RoleContext';
-import { getAllProfiles, checkUsernameExists, checkEmailExists, deleteProfile, updateProfile, getAllStudentClassEnrollments, upsertStudentClassEnrollment, deleteStudentClassEnrollment } from '@/lib/studentData';
-import { Profile, Class, StudentClassEnrollment, Curriculum, Establishment } from '@/lib/dataModels';
-import { supabase } from '@/integrations/supabase/client';
-import InputWithStatus from '@/components/InputWithStatus';
+import {
+  getAllProfiles,
+  updateProfile,
+  deleteProfile,
+  getAllStudentClassEnrollments,
+  upsertStudentClassEnrollment,
+  deleteStudentClassEnrollment,
+} from '@/lib/studentData';
+import { useCourseChat } from '@/contexts/CourseChatContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  loadClasses,
+  loadCurricula,
+  loadEstablishments,
+} from '@/lib/courseData';
+
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
-import { loadClasses, loadCurricula, loadEstablishments } from '@/lib/courseData';
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useRole } from '@/contexts/RoleContext';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 
-const CreatorStudentManagementPage = () => {
+const AdminStudentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
+  const { openChat } = useCourseChat();
   const navigate = useNavigate();
-
-  const [allStudents, setAllStudents] = useState<Profile[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [classes, setClasses] = useState<Class[]>([]);
-  const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
 
-  // States for new student creation form
-  const [newStudentFirstName, setNewStudentFirstName] = useState('');
-  const [newStudentLastName, setNewStudentLastName] = useState('');
-  const [newStudentUsername, setNewStudentUsername] = useState('');
-  const [newStudentEmail, setNewStudentEmail] = useState('');
-  const [newStudentPassword, setNewStudentPassword] = useState('');
-  const [isCreatingStudent, setIsCreatingStudent] = useState(false);
+  // States for assign student to establishment section
+  const [studentSearchInputEst, setStudentSearchInputEst] = useState('');
+  const [selectedStudentForEstAssignment, setSelectedStudentForEstAssignment] = useState<Profile | null>(null);
+  const [establishmentToAssign, setEstablishmentToAssign] = useState<string>("");
+  const [enrollmentStartDate, setEnrollmentStartDate] = useState<Date | undefined>(undefined);
+  const [enrollmentEndDate, setEnrollmentEndDate] = useState<Date | undefined>(undefined);
+  const [openStudentSelectEst, setOpenStudentSelectEst] = useState(false);
+  const [isSearchingUserEst, setIsSearchingUserEst] = useState(false);
+  const debounceTimeoutRefEst = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const debounceTimeoutRefUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // States for assigning student to class
+  // States for assign student to class section
   const [studentSearchInputClass, setStudentSearchInputClass] = useState('');
   const [selectedStudentForClassAssignment, setSelectedStudentForClassAssignment] = useState<Profile | null>(null);
   const [classToAssign, setClassToAssign] = useState<string>("");
@@ -60,132 +71,77 @@ const CreatorStudentManagementPage = () => {
   const [isSearchingUserClass, setIsSearchingUserClass] = useState(false);
   const debounceTimeoutRefClass = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // States for student list filtering
-  const [studentListSearchQuery, setStudentListSearchQuery] = useState('');
+  // States for student list section
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
-  const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | null>(null);
   const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | null>(null);
 
+  // Get classId from URL for initial filtering
+  const classIdFromUrl = searchParams.get('classId');
 
   useEffect(() => {
     const fetchData = async () => {
-      const profiles = await getAllProfiles();
-      setAllStudents(profiles.filter(p => p.role === 'student'));
       setClasses(await loadClasses());
       setCurricula(await loadCurricula());
       setEstablishments(await loadEstablishments());
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+      setAllProfiles(await getAllProfiles());
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Fetch ALL enrollments for display
     };
     fetchData();
   }, [currentUserProfile]);
+
+  // Set initial class filter from URL
+  useEffect(() => {
+    if (classIdFromUrl) {
+      setSelectedClassFilter(classIdFromUrl);
+    } else {
+      setSelectedClassFilter(null);
+    }
+  }, [classIdFromUrl]);
 
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
-  const validateUsername = useCallback(async (username: string, currentProfileId?: string) => {
-    if (username.length < 3) return false;
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) return false;
-    setUsernameAvailabilityStatus('checking');
-    const isTaken = await checkUsernameExists(username);
-    if (isTaken && (!currentProfileId || allStudents.find(u => u.username === username)?.id !== currentProfileId)) {
-      setUsernameAvailabilityStatus('taken');
-      return false;
-    }
-    setUsernameAvailabilityStatus('available');
-    return true;
-  }, [allStudents]);
-
-  const validateEmail = useCallback(async (email: string, currentProfileId?: string) => {
-    if (!/\S+@\S+\.\S+/.test(email)) return false;
-    setEmailAvailabilityStatus('checking');
-    const isTaken = await checkEmailExists(email);
-    if (isTaken && (!currentProfileId || allStudents.find(u => u.email === email)?.id !== currentProfileId)) {
-      setEmailAvailabilityStatus('taken');
-      return false;
-    }
-    setEmailAvailabilityStatus('available');
-    return true;
-  }, [allStudents]);
-
-  const handleUsernameChange = (value: string) => {
-    setNewStudentUsername(value);
-    if (debounceTimeoutRefUsername.current) clearTimeout(debounceTimeoutRefUsername.current);
-    if (value.trim() === '') {
-      setUsernameAvailabilityStatus('idle');
-      return;
-    }
-    debounceTimeoutRefUsername.current = setTimeout(() => {
-      validateUsername(value);
-    }, 500);
-  };
-
-  const handleEmailChange = (value: string) => {
-    setNewStudentEmail(value);
-    if (debounceTimeoutRefEmail.current) clearTimeout(debounceTimeoutRefEmail.current);
-    if (value.trim() === '') {
-      setEmailAvailabilityStatus('idle');
-      return;
-    }
-    debounceTimeoutRefEmail.current = setTimeout(() => {
-      validateEmail(value);
-    }, 500);
-  };
-
-  const handleCreateStudent = async () => {
-    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentUsername.trim() || !newStudentEmail.trim() || !newStudentPassword.trim()) {
-      showError("Tous les champs sont requis.");
-      return;
-    }
-    if (newStudentPassword.trim().length < 6) {
-      showError("Le mot de passe doit contenir au moins 6 caractères.");
-      return;
-    }
-    if (usernameAvailabilityStatus === 'taken' || emailAvailabilityStatus === 'taken') {
-      showError("Le nom d'utilisateur ou l'email est déjà pris.");
-      return;
-    }
-    if (usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking') {
-      showError("Veuillez attendre la vérification de la disponibilité du nom d'utilisateur et de l'email.");
+  const handleRemoveStudentFromClass = async (enrollmentId: string) => {
+    if (!currentUserProfile || currentRole !== 'administrator') { // Only admin can remove
+      showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
       return;
     }
 
-    setIsCreatingStudent(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-user-with-role', {
-        body: {
-          email: newStudentEmail.trim(),
-          password: newStudentPassword.trim(),
-          first_name: newStudentFirstName.trim(),
-          last_name: newStudentLastName.trim(),
-          username: newStudentUsername.trim(),
-          role: 'student', // Creators can only create students
-        },
-      });
-
-      if (error) {
-        console.error("Error creating student via Edge Function:", error);
-        showError(`Erreur lors de la création de l'élève: ${error.message}`);
-        return;
-      }
-      
-      showSuccess(`Élève ${newStudentFirstName} ${newStudentLastName} créé avec succès !`);
-      setNewStudentFirstName('');
-      setNewStudentLastName('');
-      setNewStudentUsername('');
-      setNewStudentEmail('');
-      setNewStudentPassword('');
-      setUsernameAvailabilityStatus('idle');
-      setEmailAvailabilityStatus('idle');
-      const profiles = await getAllProfiles();
-      setAllStudents(profiles.filter(p => p.role === 'student')); // Refresh student list
+      await deleteStudentClassEnrollment(enrollmentId);
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
+      showSuccess(`Élève retiré de la classe !`);
     } catch (error: any) {
-      console.error("Unexpected error creating student:", error);
-      showError(`Une erreur inattendue est survenue: ${error.message}`);
-    } finally {
-      setIsCreatingStudent(false);
+      console.error("Error removing student from class:", error);
+      showError(`Erreur lors du retrait de l'élève: ${error.message}`);
     }
   };
+
+  const handleSendMessageToStudent = (studentProfile: Profile) => {
+    navigate(`/messages?contactId=${studentProfile.id}`);
+  };
+
+  // Debounced search for student to assign to establishment
+  useEffect(() => {
+    if (debounceTimeoutRefEst.current) {
+      clearTimeout(debounceTimeoutRefEst.current);
+    }
+    if (studentSearchInputEst.trim() === '') {
+      setIsSearchingUserEst(false);
+      return;
+    }
+    setIsSearchingUserEst(true);
+    debounceTimeoutRefEst.current = setTimeout(async () => {
+      setIsSearchingUserEst(false);
+    }, 500);
+    return () => {
+      if (debounceTimeoutRefEst.current) {
+        clearTimeout(debounceTimeoutRefEst.current);
+      }
+    };
+  }, [studentSearchInputEst]);
 
   // Debounced search for student to assign to class
   useEffect(() => {
@@ -207,8 +163,60 @@ const CreatorStudentManagementPage = () => {
     };
   }, [studentSearchInputClass]);
 
+  const handleAssignStudentToEstablishment = async () => {
+    if (!currentUserProfile || currentRole !== 'administrator') { // Only admin can assign to establishment
+      showError("Vous n'êtes pas autorisé à affecter des élèves à des établissements.");
+      return;
+    }
+    if (!selectedStudentForEstAssignment) {
+      showError("Veuillez d'abord sélectionner un élève.");
+      return;
+    }
+    if (!establishmentToAssign) {
+      showError("Veuillez sélectionner un établissement.");
+      return;
+    }
+    if (!enrollmentStartDate || !enrollmentEndDate) {
+      showError("Veuillez spécifier les dates de début et de fin d'inscription.");
+      return;
+    }
+    if (selectedStudentForEstAssignment.role !== 'student') {
+      showError("Seuls les profils d'élèves peuvent être affectés à un établissement.");
+      return;
+    }
+
+    try {
+      const updatedStudentProfile = await updateProfile({
+        id: selectedStudentForEstAssignment.id,
+        establishment_id: establishmentToAssign,
+        enrollment_start_date: enrollmentStartDate.toISOString().split('T')[0],
+        enrollment_end_date: enrollmentEndDate.toISOString().split('T')[0],
+      });
+
+      if (updatedStudentProfile) {
+        setAllProfiles(await getAllProfiles()); // Refresh profiles
+        showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à l'établissement ${getEstablishmentName(establishmentToAssign)} !`);
+        handleClearEstAssignmentForm();
+      } else {
+        showError("Échec de l'affectation de l'élève à l'établissement.");
+      }
+    } catch (error: any) {
+      console.error("Error assigning student to establishment:", error);
+      showError(`Erreur lors de l'affectation de l'élève à l'établissement: ${error.message}`);
+    }
+  };
+
+  const handleClearEstAssignmentForm = () => {
+    setStudentSearchInputEst('');
+    setSelectedStudentForEstAssignment(null);
+    setEstablishmentToAssign("");
+    setEnrollmentStartDate(undefined);
+    setEnrollmentEndDate(undefined);
+    setOpenStudentSelectEst(false);
+  };
+
   const handleAssignStudentToClass = async () => {
-    if (!currentUserProfile || currentRole !== 'creator') {
+    if (!currentUserProfile || currentRole !== 'administrator') { // Only admin can assign to any class
       showError("Vous n'êtes pas autorisé à affecter des élèves à des classes.");
       return;
     }
@@ -228,17 +236,16 @@ const CreatorStudentManagementPage = () => {
       showError("Seuls les profils d'élèves peuvent être affectés à une classe.");
       return;
     }
-    
+    if (!selectedStudentForClassAssignment.establishment_id) {
+      showError("L'élève doit d'abord être affecté à un établissement.");
+      return;
+    }
     const selectedClass = classes.find(cls => cls.id === classToAssign);
-    if (!selectedClass) {
-      showError("Classe sélectionnée introuvable.");
+    if (selectedClass?.establishment_id !== selectedStudentForClassAssignment.establishment_id) {
+      showError("La classe sélectionnée n'appartient pas à l'établissement de l'élève.");
       return;
     }
-    // Ensure the creator is associated with the class they are assigning to
-    if (!selectedClass.creator_ids.includes(currentUserProfile.id)) {
-      showError("Vous ne pouvez affecter des élèves qu'aux classes que vous gérez.");
-      return;
-    }
+
 
     const existingEnrollment = allStudentClassEnrollments.find(
       e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.enrollment_year === enrollmentYear
@@ -283,50 +290,60 @@ const CreatorStudentManagementPage = () => {
     setOpenStudentSelectClass(false);
   };
 
-  const handleRemoveStudentFromClass = async (enrollmentId: string) => {
-    if (!currentUserProfile || currentRole !== 'creator') {
-      showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
+  const handleDeleteStudent = async (studentProfileId: string) => {
+    if (!currentUserProfile || currentRole !== 'administrator') { // Only admin can delete
+      showError("Vous n'êtes pas autorisé à supprimer des élèves.");
       return;
     }
 
-    try {
-      await deleteStudentClassEnrollment(enrollmentId);
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
-      showSuccess(`Élève retiré de la classe !`);
-    } catch (error: any) {
-      console.error("Error removing student from class:", error);
-      showError(`Erreur lors du retrait de l'élève: ${error.message}`);
+    const studentProfileToDelete = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
+    if (!studentProfileToDelete) return;
+
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet élève ? Cette action est irréversible et supprimera également son compte utilisateur.")) {
+      try {
+        // Delete user from auth.users (this will cascade delete from profiles)
+        const { error: authError } = await supabase.auth.admin.deleteUser(studentProfileId);
+        if (authError) {
+          console.error("Error deleting user from auth.users:", authError);
+          showError(`Erreur lors de la suppression du compte utilisateur: ${authError.message}`);
+          return;
+        }
+        
+        // The profile and enrollments should be cascade deleted by DB foreign keys
+        // Re-fetch all data to update the UI
+        setAllProfiles(await getAllProfiles());
+        setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+        showSuccess("Élève et compte utilisateur supprimés !");
+      } catch (error: any) {
+        console.error("Error deleting student:", error);
+        showError(`Erreur lors de la suppression de l'élève: ${error.message}`);
+      }
     }
   };
 
-  const handleSendMessageToStudent = (studentProfile: Profile) => {
-    navigate(`/messages?contactId=${studentProfile.id}`);
-  };
+  const filteredStudentsForEstDropdown = studentSearchInputEst.trim() === ''
+    ? allProfiles.filter(p => p.role === 'student').slice(0, 10)
+    : allProfiles.filter(p =>
+        p.role === 'student' &&
+        (p.username.toLowerCase().includes(studentSearchInputEst.toLowerCase()) ||
+        p.first_name.toLowerCase().includes(studentSearchInputEst.toLowerCase()) ||
+        p.last_name.toLowerCase().includes(studentSearchInputEst.toLowerCase()))
+      ).slice(0, 10);
 
   const filteredStudentsForClassDropdown = studentSearchInputClass.trim() === ''
-    ? allStudents.slice(0, 10)
-    : allStudents.filter(p =>
+    ? allProfiles.filter(p => p.role === 'student').slice(0, 10)
+    : allProfiles.filter(p =>
+        p.role === 'student' &&
         (p.username.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
         p.first_name.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
         p.last_name.toLowerCase().includes(studentSearchInputClass.toLowerCase()))
       ).slice(0, 10);
 
   const studentsToDisplay = React.useMemo(() => {
-    let students = allStudents;
-
-    // Filter by classes managed by the current creator
-    const creatorManagedClassIds = classes.filter(cls => currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)).map(cls => cls.id);
-    const studentIdsInCreatorClasses = new Set(allStudentClassEnrollments.filter(e => creatorManagedClassIds.includes(e.class_id)).map(e => e.student_id));
-    students = students.filter(s => studentIdsInCreatorClasses.has(s.id));
+    let students = allProfiles.filter(p => p.role === 'student');
 
     if (selectedEstablishmentFilter && selectedEstablishmentFilter !== 'all') {
       students = students.filter(s => s.establishment_id === selectedEstablishmentFilter);
-    }
-
-    if (selectedCurriculumFilter && selectedCurriculumFilter !== 'all') {
-      const classesInCurriculum = classes.filter(cls => cls.curriculum_id === selectedCurriculumFilter);
-      const studentIdsInCurriculum = new Set(allStudentClassEnrollments.filter(e => classesInCurriculum.some(c => c.id === e.class_id)).map(e => e.student_id));
-      students = students.filter(s => studentIdsInCurriculum.has(s.id));
     }
 
     if (selectedClassFilter && selectedClassFilter !== 'all') {
@@ -334,8 +351,8 @@ const CreatorStudentManagementPage = () => {
       students = students.filter(s => studentIdsInClass.has(s.id));
     }
 
-    if (studentListSearchQuery.trim()) {
-      const lowerCaseQuery = studentListSearchQuery.toLowerCase();
+    if (studentSearchQuery.trim()) {
+      const lowerCaseQuery = studentSearchQuery.toLowerCase();
       students = students.filter(s =>
         s.first_name?.toLowerCase().includes(lowerCaseQuery) ||
         s.last_name?.toLowerCase().includes(lowerCaseQuery) ||
@@ -344,10 +361,7 @@ const CreatorStudentManagementPage = () => {
       );
     }
     return students;
-  }, [allStudents, currentUserProfile, classes, allStudentClassEnrollments, selectedEstablishmentFilter, selectedCurriculumFilter, selectedClassFilter, studentListSearchQuery]);
-
-  const currentYear = new Date().getFullYear();
-  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
+  }, [allProfiles, selectedEstablishmentFilter, selectedClassFilter, studentSearchQuery, allStudentClassEnrollments]);
 
   if (isLoadingUser) {
     return (
@@ -362,73 +376,206 @@ const CreatorStudentManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'creator') {
+  if (currentRole !== 'administrator') { // Only administrators can access this page
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) peuvent accéder à cette page.
+          Seuls les administrateurs peuvent accéder à cette page.
         </p>
       </div>
     );
   }
 
+  const currentYear = new Date().getFullYear();
+  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Élèves
+        Gestion des Élèves (Admin)
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Créez de nouveaux comptes élèves et gérez leurs affectations aux classes que vous supervisez.
+        Recherchez des élèves et gérez leurs affectations aux établissements et aux classes.
       </p>
 
-      {/* Section: Créer un nouvel élève */}
+      {/* Section: Affecter un élève à un établissement */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-6 w-6 text-primary" /> Créer un nouvel élève
+            <School className="h-6 w-6 text-primary" /> Affecter un élève à un établissement
           </CardTitle>
-          <CardDescription>Créez un nouveau compte élève.</CardDescription>
+          <CardDescription>Affectez un élève à un établissement pour une période donnée.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              placeholder="Prénom"
-              value={newStudentFirstName}
-              onChange={(e) => setNewStudentFirstName(e.target.value)}
-            />
-            <Input
-              placeholder="Nom"
-              value={newStudentLastName}
-              onChange={(e) => setNewStudentLastName(e.target.value)}
-            />
-            <InputWithStatus
-              placeholder="Nom d'utilisateur"
-              value={newStudentUsername}
-              onChange={(e) => handleUsernameChange(e.target.value)}
-              status={usernameAvailabilityStatus}
-              errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-            />
-            <InputWithStatus
-              type="email"
-              placeholder="Email"
-              value={newStudentEmail}
-              onChange={(e) => handleEmailChange(e.target.value)}
-              status={emailAvailabilityStatus}
-              errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-            />
-            <Input
-              type="password"
-              placeholder="Mot de passe"
-              value={newStudentPassword}
-              onChange={(e) => setNewStudentPassword(e.target.value)}
-            />
+        <CardContent className="space-y-6">
+          <div>
+            <Label htmlFor="select-student-for-est-assignment" className="text-base font-semibold mb-2 block">1. Sélectionner l'élève</Label>
+            <Popover open={openStudentSelectEst} onOpenChange={setOpenStudentSelectEst}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openStudentSelectEst}
+                  className="w-full justify-between"
+                  id="select-student-for-est-assignment"
+                >
+                  {selectedStudentForEstAssignment ? `${selectedStudentForEstAssignment.first_name} ${selectedStudentForEstAssignment.last_name} (@${selectedStudentForEstAssignment.username})` : "Rechercher un élève..."}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <Command>
+                  <CommandInput
+                    placeholder="Rechercher par nom d'utilisateur..."
+                    value={studentSearchInputEst}
+                    onValueChange={(value) => {
+                      setStudentSearchInputEst(value);
+                      setIsSearchingUserEst(true);
+                    }}
+                  />
+                  <CommandList>
+                    {isSearchingUserEst && studentSearchInputEst.trim() !== '' ? (
+                      <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
+                      </CommandEmpty>
+                    ) : filteredStudentsForEstDropdown.length === 0 && studentSearchInputEst.trim() !== '' ? (
+                      <CommandEmpty className="py-2 text-center text-muted-foreground">
+                        Aucun élève trouvé pour "{studentSearchInputEst}".
+                      </CommandEmpty>
+                    ) : (
+                      <CommandGroup>
+                        {filteredStudentsForEstDropdown.map((profile) => (
+                          <CommandItem
+                            key={profile.id}
+                            value={profile.username}
+                            onSelect={() => {
+                              setSelectedStudentForEstAssignment(profile);
+                              setStudentSearchInputEst(profile.username);
+                              setEstablishmentToAssign(profile.establishment_id || "");
+                              setEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
+                              setEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
+                              setOpenStudentSelectEst(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {profile.first_name} {profile.last_name} (@{profile.username})
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
-          <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
-            {isCreatingStudent ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'élève
-          </Button>
+
+          {selectedStudentForEstAssignment && (
+            <div className="p-4 border rounded-md bg-muted/20 space-y-3">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-green-500" />
+                <p className="font-medium text-lg">{selectedStudentForEstAssignment.first_name} {selectedStudentForEstAssignment.last_name}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Email : {selectedStudentForEstAssignment.email}</p>
+              <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForEstAssignment.username}</p>
+              {selectedStudentForEstAssignment.establishment_id ? (
+                <p className="text-sm text-muted-foreground">
+                  Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForEstAssignment.establishment_id)}</span>
+                  {selectedStudentForEstAssignment.enrollment_start_date && selectedStudentForEstAssignment.enrollment_end_date && (
+                    <span> (Du {format(parseISO(selectedStudentForEstAssignment.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(selectedStudentForEstAssignment.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
+                  )}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
+              )}
+
+              <div>
+                <Label htmlFor="establishment-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir l'établissement d'affectation</Label>
+                <Select value={establishmentToAssign} onValueChange={setEstablishmentToAssign}>
+                  <SelectTrigger id="establishment-to-assign" className="w-full">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {establishments.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="enrollment-start-date" className="text-base font-semibold mb-2 block mt-4">Date de début d'inscription</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !enrollmentStartDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={enrollmentStartDate}
+                        onSelect={setEnrollmentStartDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label htmlFor="enrollment-end-date" className="text-base font-semibold mb-2 block mt-4">Date de fin d'inscription</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !enrollmentEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={enrollmentEndDate}
+                        onSelect={setEnrollmentEndDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button onClick={handleAssignStudentToEstablishment} disabled={!establishmentToAssign || !enrollmentStartDate || !enrollmentEndDate}>
+                  <PlusCircle className="h-4 w-4 mr-2" /> Affecter à cet établissement
+                </Button>
+                <Button variant="outline" onClick={handleClearEstAssignmentForm}>
+                  <XCircle className="h-4 w-4 mr-2" /> Effacer le formulaire
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -436,9 +583,9 @@ const CreatorStudentManagementPage = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UsersIcon className="h-6 w-6 text-primary" /> Affecter un élève à une classe
+            <Users className="h-6 w-6 text-primary" /> Affecter un élève à une classe
           </CardTitle>
-          <CardDescription>Inscrivez un élève à une classe que vous gérez pour une année scolaire spécifique.</CardDescription>
+          <CardDescription>Inscrivez un élève à une classe pour une année scolaire spécifique.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
@@ -527,7 +674,7 @@ const CreatorStudentManagementPage = () => {
                     <SelectValue placeholder="Sélectionner une classe" />
                   </SelectTrigger>
                   <SelectContent>
-                    {classes.filter(cls => currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)).map(cls => (
+                    {classes.filter(cls => cls.establishment_id === selectedStudentForClassAssignment.establishment_id).map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
                         {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
                       </SelectItem>
@@ -621,9 +768,9 @@ const CreatorStudentManagementPage = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" /> Mes Élèves
+            <Users className="h-6 w-6 text-primary" /> Liste de tous les élèves
           </CardTitle>
-          <CardDescription>Visualisez et gérez les élèves de vos classes.</CardDescription>
+          <CardDescription>Visualisez et gérez tous les élèves.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -632,16 +779,15 @@ const CreatorStudentManagementPage = () => {
               <Input
                 placeholder="Rechercher par nom, email ou @username..."
                 className="pl-10"
-                value={studentListSearchQuery}
-                onChange={(e) => setStudentListSearchQuery(e.target.value)}
+                value={studentSearchQuery}
+                onChange={(e) => setStudentSearchQuery(e.target.value)}
               />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
               <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {
                 setSelectedEstablishmentFilter(value === "all" ? null : value);
-                setSelectedCurriculumFilter(null);
-                setSelectedClassFilter(null);
+                setSelectedClassFilter(null); // Reset class filter when establishment changes
               }}>
                 <SelectTrigger id="establishment-filter">
                   <SelectValue placeholder="Tous les établissements" />
@@ -657,35 +803,24 @@ const CreatorStudentManagementPage = () => {
               </Select>
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
-              <Label htmlFor="curriculum-filter">Filtrer par Cursus</Label>
-              <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
-                setSelectedCurriculumFilter(value === "all" ? null : value);
-                setSelectedClassFilter(null);
-              }}>
-                <SelectTrigger id="curriculum-filter">
-                  <SelectValue placeholder="Tous les cursus" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les cursus</SelectItem>
-                  {curricula.filter(cur => !selectedEstablishmentFilter || cur.establishment_id === selectedEstablishmentFilter).map(cur => (
-                    <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="class-filter">Filtrer par Classe</Label>
               <Select value={selectedClassFilter || "all"} onValueChange={(value) => {
                 setSelectedClassFilter(value === "all" ? null : value);
+                setSearchParams(params => {
+                  if (value === "all") {
+                    params.delete('classId');
+                  } else {
+                    params.set('classId', value);
+                  }
+                  return params;
+                }, { replace: true });
               }}>
                 <SelectTrigger id="class-filter">
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les classes</SelectItem>
-                  {classes.filter(cls => currentUserProfile && cls.creator_ids.includes(currentUserProfile.id) && (!selectedCurriculumFilter || cls.curriculum_id === selectedCurriculumFilter)).map(cls => (
+                  {classes.filter(cls => !selectedEstablishmentFilter || cls.establishment_id === selectedEstablishmentFilter).map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
                     </SelectItem>
@@ -697,7 +832,7 @@ const CreatorStudentManagementPage = () => {
           <div className="space-y-2">
             {studentsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                {studentListSearchQuery.trim() === '' && !selectedClassFilter && !selectedEstablishmentFilter && !selectedCurriculumFilter
+                {studentSearchQuery.trim() === '' && !selectedClassFilter && !selectedEstablishmentFilter
                   ? "Aucun élève à afficher. Utilisez la recherche ou les filtres."
                   : "Aucun élève trouvé pour votre recherche ou vos filtres."}
               </p>
@@ -706,8 +841,10 @@ const CreatorStudentManagementPage = () => {
                 const currentEnrollments = allStudentClassEnrollments.filter(e => e.student_id === profile.id);
                 const currentClassEnrollment = currentEnrollments.find(e => {
                   const cls = classes.find(c => c.id === e.class_id);
-                  const currentSchoolYear = `${currentYear}-${currentYear + 1}`;
-                  return cls?.school_year === currentSchoolYear;
+                  const currentYear = new Date().getFullYear();
+                  const nextYear = currentYear + 1;
+                  const currentSchoolYear = `${currentYear}-${nextYear}`;
+                  return cls?.school_year === currentSchoolYear; // Check for current school year
                 });
                 const currentClass = currentClassEnrollment ? classes.find(c => c.id === currentClassEnrollment.class_id) : undefined;
 
@@ -737,11 +874,14 @@ const CreatorStudentManagementPage = () => {
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                       {currentClassEnrollment && (
                         <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(currentClassEnrollment.id)}>
-                          <XCircle className="h-4 w-4 mr-1" /> Retirer de la classe
+                          <UserX className="h-4 w-4 mr-1" /> Retirer de la classe
                         </Button>
                       )}
                       <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </Card>
@@ -755,4 +895,4 @@ const CreatorStudentManagementPage = () => {
   );
 };
 
-export default CreatorStudentManagementPage;
+export default AdminStudentManagementPage;
