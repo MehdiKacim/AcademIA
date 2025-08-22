@@ -106,13 +106,13 @@ const Messages = () => {
             const oldMessage = payload.old as Message;
             const newMessage = payload.new as Message;
             if (oldMessage && newMessage && oldMessage.is_archived !== newMessage.is_archived) {
-              console.log(`[Messages] Archiving status changed for message ${newMessage.id}. Re-fetching all data.`);
+              console.log(`[Messages] Archiving status changed for message ${newMessage.id}. Realtime listener triggered fetchAllData.`);
               fetchAllData(); // This should trigger re-render
             } else if (oldMessage && newMessage && oldMessage.is_read !== newMessage.is_read) {
-              console.log(`[Messages] Read status changed for message ${newMessage.id}. Re-fetching all data.`);
+              console.log(`[Messages] Read status changed for message ${newMessage.id}. Realtime listener triggered fetchAllData.`);
               fetchAllData(); // This should trigger re-render
             } else {
-              console.log(`[Messages] Other update for message ${newMessage.id}. Re-fetching all data.`);
+              console.log(`[Messages] Other update for message ${newMessage.id}. Realtime listener triggered fetchAllData.`);
               fetchAllData(); // This should trigger re-render for any relevant update
             }
           }
@@ -186,11 +186,9 @@ const Messages = () => {
     try {
       await archiveConversation(currentUserId, contactId);
       showSuccess("Conversation archivée !");
-      // fetchAllData() will be triggered by the realtime listener
-      console.log("[Messages] Archive successful. Realtime listener should trigger fetchAllData.");
-      if (selectedContact?.id === contactId) {
-        setSelectedContact(null); // Deselect if current chat is archived
-      }
+      setSelectedContact(null); // Deselect if current chat is archived
+      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
+      console.log("[Messages] Archive successful. fetchAllData called directly.");
     } catch (error: any) {
       console.error("[Messages] Error during archiving:", error);
       showError(`Erreur lors de l'archivage: ${error.message}`);
@@ -206,8 +204,8 @@ const Messages = () => {
     try {
       await unarchiveConversation(currentUserId, contactId);
       showSuccess("Conversation désarchivée !");
-      // fetchAllData() will be triggered by the realtime listener
-      console.log("[Messages] Unarchive successful. Realtime listener should trigger fetchAllData.");
+      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
+      console.log("[Messages] Unarchive successful. fetchAllData called directly.");
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
       showError(`Erreur lors du désarchivage: ${error.message}`);
