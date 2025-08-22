@@ -6,13 +6,17 @@ on:
   push:
     branches:
       - main
+    # Empêche le workflow de se re-déclencher sur les commits automatiques
+    # du bot d'incrémentation de version.
+    paths-ignore:
+      - 'android/app/build.gradle'
 
 # Un seul job nommé 'build_android'
 jobs:
   build_android:
     # Le job s'exécutera sur une machine virtuelle Ubuntu
     runs-on: ubuntu-latest
-    
+
     # Permissions requises pour le job
     permissions:
       contents: write
@@ -54,7 +58,7 @@ jobs:
       # 7. Synchronise les fichiers web compilés vers le projet Android
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
-      
+
       # 8. Installe ImageMagick et génère les icônes
       - name: Generate Android icons with ImageMagick
         run: |
@@ -89,20 +93,20 @@ jobs:
         run: |
           # Fichier à modifier
           GRADLE_FILE="android/app/build.gradle"
-          
+
           # Lit et incrémente le versionCode
           CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}')
           NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
-          
+
           # Lit et incrémente le versionName (patch)
           CURRENT_VERSION_NAME=$(grep "versionName" $GRADLE_FILE | cut -d\" -f2)
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION_NAME"
           NEW_VERSION_NAME="$major.$minor.$((patch + 1))"
-          
+
           # Remplace les versions dans le fichier
           sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" $GRADLE_FILE
           sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" $GRADLE_FILE
-          
+
           # Exporte les nouvelles versions pour les étapes suivantes
           echo "Nouvelle version: $NEW_VERSION_NAME ($NEW_VERSION_CODE)"
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
