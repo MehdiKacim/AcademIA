@@ -47,9 +47,10 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
     }
     setUnreadCounts(counts);
     onUnreadCountChange(totalUnread);
-    console.log(`[MessageList] Unread counts updated. Total unread: ${totalUnread}`);
-  }, [recentMessages, currentUserId, onUnreadCountChange]);
+    console.log(`[MessageList] Unread counts updated. Total unread: ${totalUnread}. isArchivedView: ${isArchivedView}`);
+  }, [recentMessages, currentUserId, onUnreadCountChange, isArchivedView]); // Added isArchivedView to dependencies
 
+  console.log(`[MessageList] Re-rendering. Number of recentMessages: ${recentMessages.length}. isArchivedView: ${isArchivedView}`);
 
   const getContactProfile = (message: Message) => {
     const contactId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
@@ -88,8 +89,6 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
       clearTimeout(touchTimeout.current);
     }
   };
-
-  console.log(`[MessageList] Rendering with ${recentMessages.length} messages. isArchivedView: ${isArchivedView}`);
 
   return (
     <div className="h-full flex flex-col">

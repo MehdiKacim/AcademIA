@@ -54,27 +54,27 @@ const Messages = () => {
 
     const recent = await getRecentConversations(currentUserId);
     setRecentConversations(recent);
-    console.log("[Messages] Fetched recent conversations:", recent.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
+    console.log("[Messages] Fetched recent conversations (after fetchAllData):", recent.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
 
     const archived = await getArchivedConversations(currentUserId);
     setArchivedConversations(archived);
-    console.log("[Messages] Fetched archived conversations:", archived.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
+    console.log("[Messages] Fetched archived conversations (after fetchAllData):", archived.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
 
     const totalUnread = await getUnreadMessageCount(currentUserId);
     setUnreadMessageCount(totalUnread);
-    console.log("[Messages] Fetched unread message count:", totalUnread);
+    console.log("[Messages] Fetched unread message count (after fetchAllData):", totalUnread);
 
     if (currentRole === 'creator' || currentRole === 'tutor') {
       setEstablishments(await loadEstablishments());
       setCurricula(await loadCurricula());
       setClasses(await loadClasses());
     }
+    console.log("[Messages] fetchAllData completed.");
   };
 
   useEffect(() => {
     fetchAllData();
 
-    // Set up real-time listener for new messages to update the list and unread counts
     let channel: any;
     if (currentUserId) {
       channel = supabase
@@ -85,12 +85,11 @@ const Messages = () => {
             event: 'INSERT',
             schema: 'public',
             table: 'messages',
-            filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})` // Corrected filter
+            filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
           (payload) => {
             console.log("[Messages] Realtime INSERT event received:", payload);
-            // Re-fetch all data to ensure consistency and correct unread counts
-            fetchAllData();
+            fetchAllData(); // This should trigger re-render
           }
         )
         .on(
@@ -99,12 +98,23 @@ const Messages = () => {
             event: 'UPDATE',
             schema: 'public',
             table: 'messages',
-            filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})` // Corrected filter
+            filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
           (payload) => {
             console.log("[Messages] Realtime UPDATE event received:", payload);
-            // Re-fetch all data to ensure consistency and correct unread counts
-            fetchAllData();
+            // Check if the update is related to archiving/unarchiving
+            const oldMessage = payload.old as Message;
+            const newMessage = payload.new as Message;
+            if (oldMessage && newMessage && oldMessage.is_archived !== newMessage.is_archived) {
+              console.log(`[Messages] Archiving status changed for message ${newMessage.id}. Re-fetching all data.`);
+              fetchAllData(); // This should trigger re-render
+            } else if (oldMessage && newMessage && oldMessage.is_read !== newMessage.is_read) {
+              console.log(`[Messages] Read status changed for message ${newMessage.id}. Re-fetching all data.`);
+              fetchAllData(); // This should trigger re-render
+            } else {
+              console.log(`[Messages] Other update for message ${newMessage.id}. Re-fetching all data.`);
+              fetchAllData(); // This should trigger re-render for any relevant update
+            }
           }
         )
         .subscribe();
@@ -176,9 +186,11 @@ const Messages = () => {
     try {
       await archiveConversation(currentUserId, contactId);
       showSuccess("Conversation archivée !");
-      setSelectedContact(null); // Deselect if current chat is archived
       // fetchAllData() will be triggered by the realtime listener
       console.log("[Messages] Archive successful. Realtime listener should trigger fetchAllData.");
+      if (selectedContact?.id === contactId) {
+        setSelectedContact(null); // Deselect if current chat is archived
+      }
     } catch (error: any) {
       console.error("[Messages] Error during archiving:", error);
       showError(`Erreur lors de l'archivage: ${error.message}`);
