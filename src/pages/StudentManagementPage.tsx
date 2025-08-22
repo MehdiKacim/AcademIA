@@ -47,7 +47,7 @@ const StudentManagementPage = () => {
 
   const [usernameToAssign, setUsernameToAssign] = useState('');
   const [foundUserForAssignment, setFoundUserForAssignment] = useState<Profile | null>(null);
-  const [classToAssign, setClassToAssign] = useState<string | undefined>(undefined);
+  const [classToAssign, setClassToAssign] = useState<string>(""); // Initialisé à ""
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openCommand, setOpenCommand] = useState(false);
@@ -152,7 +152,7 @@ const StudentManagementPage = () => {
         showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${getClassName(classToAssign)} !`);
         setUsernameToAssign('');
         setFoundUserForAssignment(null);
-        setClassToAssign(undefined);
+        setClassToAssign(""); // Réinitialisé à ""
         setOpenCommand(false);
       } else {
         showError("Échec de l'affectation de l'élève.");

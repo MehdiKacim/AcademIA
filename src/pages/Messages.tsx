@@ -32,9 +32,9 @@ const Messages = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string | undefined>(undefined);
-  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string | undefined>(undefined);
-  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
+  const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string>(""); // Initialisé à ""
+  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string>("");     // Initialisé à ""
+  const [selectedClassId, setSelectedClassId] = useState<string>("");             // Initialisé à ""
   const [searchStudentQuery, setSearchStudentQuery] = useState(''); // For searching students in professional view
 
   const currentUserId = currentUserProfile?.id;
@@ -135,19 +135,19 @@ const Messages = () => {
 
     let students = allProfiles.filter(p => p.role === 'student');
 
-    if (selectedEstablishmentId && selectedEstablishmentId !== 'all') {
+    if (selectedEstablishmentId && selectedEstablishmentId !== '') { // Changed 'all' to ''
       const curriculaInEstablishment = curricula.filter(c => c.establishment_id === selectedEstablishmentId);
       const classIdsInEstablishment = new Set(classes.filter(cls => curriculaInEstablishment.some(cur => cur.id === cls.curriculum_id)).map(cls => cls.id));
       students = students.filter(s => s.class_id && classIdsInEstablishment.has(s.class_id));
     }
 
-    if (selectedCurriculumId && selectedCurriculumId !== 'all') {
+    if (selectedCurriculumId && selectedCurriculumId !== '') { // Changed 'all' to ''
       const classesInCurriculum = classes.filter(cls => cls.curriculum_id === selectedCurriculumId);
       const classIdsInCurriculum = new Set(classesInCurriculum.map(cls => cls.id));
       students = students.filter(s => s.class_id && classIdsInCurriculum.has(s.class_id));
     }
 
-    if (selectedClassId && selectedClassId !== 'all') {
+    if (selectedClassId && selectedClassId !== '') { // Changed 'all' to ''
       students = students.filter(s => s.class_id === selectedClassId);
     }
 
@@ -238,9 +238,9 @@ const Messages = () => {
                 <div>
                   <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
                   <Select value={selectedEstablishmentId} onValueChange={(value) => {
-                    setSelectedEstablishmentId(value);
-                    setSelectedCurriculumId(undefined);
-                    setSelectedClassId(undefined);
+                    setSelectedEstablishmentId(value === "all" ? "" : value);
+                    setSelectedCurriculumId("");
+                    setSelectedClassId("");
                   }}>
                     <SelectTrigger id="select-establishment">
                       <SelectValue placeholder="Tous les établissements" />
@@ -256,8 +256,8 @@ const Messages = () => {
                 <div>
                   <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
                   <Select value={selectedCurriculumId} onValueChange={(value) => {
-                    setSelectedCurriculumId(value);
-                    setSelectedClassId(undefined);
+                    setSelectedCurriculumId(value === "all" ? "" : value);
+                    setSelectedClassId("");
                   }}>
                     <SelectTrigger id="select-curriculum">
                       <SelectValue placeholder="Tous les cursus" />
@@ -265,7 +265,7 @@ const Messages = () => {
                     <SelectContent>
                       <SelectItem value="all">Tous les cursus</SelectItem>
                       {curricula
-                        .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === 'all' || cur.establishment_id === selectedEstablishmentId)
+                        .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === '' || cur.establishment_id === selectedEstablishmentId)
                         .map(cur => (
                           <SelectItem key={cur.id} value={cur.id}>
                             {cur.name} ({getEstablishmentName(cur.establishment_id)})
@@ -276,14 +276,14 @@ const Messages = () => {
                 </div>
                 <div>
                   <Label htmlFor="select-class">Filtrer par Classe</Label>
-                  <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                  <Select value={selectedClassId} onValueChange={(value) => setSelectedClassId(value === "all" ? "" : value)}>
                     <SelectTrigger id="select-class">
                       <SelectValue placeholder="Toutes les classes" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes les classes</SelectItem>
                       {classes
-                        .filter(cls => !selectedCurriculumId || selectedCurriculumId === 'all' || cls.curriculum_id === selectedCurriculumId)
+                        .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
                         .map(cls => (
                           <SelectItem key={cls.id} value={cls.id}>
                             {cls.name} ({getCurriculumName(cls.curriculum_id)})
@@ -304,7 +304,11 @@ const Messages = () => {
                 {filteredStudentsForNewChat.length > 0 && (
                   <div>
                     <Label htmlFor="new-chat-select-professional">Sélectionner un élève</Label>
-                    <Select onValueChange={(value) => handleSelectContact(allProfiles.find(p => p.id === value)!)}>
+                    <Select onValueChange={(value) => {
+                      const contact = allProfiles.find(p => p.id === value);
+                      if (contact) handleSelectContact(contact);
+                      else showError("Contact non trouvé.");
+                    }}>
                       <SelectTrigger id="new-chat-select-professional">
                         <SelectValue placeholder="Sélectionner un élève" />
                       </SelectTrigger>
@@ -328,7 +332,11 @@ const Messages = () => {
           {currentRole === 'student' && (
             <div className="p-4 border-b border-border">
               <Label htmlFor="new-chat-select-student">Démarrer une nouvelle conversation</Label>
-              <Select onValueChange={(value) => handleSelectContact(allProfiles.find(p => p.id === value)!)}>
+              <Select onValueChange={(value) => {
+                const contact = allProfiles.find(p => p.id === value);
+                if (contact) handleSelectContact(contact);
+                else showError("Contact non trouvé.");
+              }}>
                 <SelectTrigger id="new-chat-select-student">
                   <SelectValue placeholder="Sélectionner un contact" />
                 </SelectTrigger>

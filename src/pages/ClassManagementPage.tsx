@@ -50,7 +50,7 @@ const ClassManagementPage = () => {
 
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
-  const [newClassCurriculumId, setNewClassCurriculumId] = useState<string | undefined>(undefined);
+  const [newClassCurriculumId, setNewClassCurriculumId] = useState<string>(""); // Initialisé à ""
 
   // State for viewing students in a class
   const [selectedClassIdForStudents, setSelectedClassIdForStudents] = useState<string | null>(null);
@@ -58,7 +58,7 @@ const ClassManagementPage = () => {
   // States for student assignment (autocomplete)
   const [usernameToAssign, setUsernameToAssign] = useState('');
   const [foundUserForAssignment, setFoundUserForAssignment] = useState<Profile | null>(null);
-  const [classToAssign, setClassToAssign] = useState<string | undefined>(undefined);
+  const [classToAssign, setClassToAssign] = useState<string>(""); // Initialisé à ""
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openCommand, setOpenCommand] = useState(false);
@@ -104,7 +104,7 @@ const ClassManagementPage = () => {
         if (addedClass) {
           setClasses(await loadClasses()); // Re-fetch to get the new list
           setNewClassName('');
-          setNewClassCurriculumId(undefined);
+          setNewClassCurriculumId(""); // Réinitialisé à ""
           showSuccess("Classe ajoutée !");
         } else {
           showError("Échec de l'ajout de la classe.");
@@ -123,7 +123,7 @@ const ClassManagementPage = () => {
       await deleteClassFromStorage(id);
       setClasses(await loadClasses()); // Re-fetch to get the updated list
       // Remove class_id from associated student profiles
-      const studentsInClass = allProfiles.filter(p => p.role === 'student' && p.class_id === id);
+      const studentsInClass = allProfiles.filter(p => p.id !== currentUserProfile?.id && p.role === 'student' && p.class_id === id); // Exclure l'utilisateur actuel
       for (const studentProfile of studentsInClass) {
         await updateProfile({ id: studentProfile.id, class_id: null }); // Set class_id to null
       }
@@ -241,7 +241,7 @@ const ClassManagementPage = () => {
         showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${newClass?.name} !`);
         setUsernameToAssign('');
         setFoundUserForAssignment(null);
-        setClassToAssign(undefined);
+        setClassToAssign(""); // Réinitialisé à ""
         setOpenCommand(false);
       } else {
         showError("Échec de l'affectation de l'élève.");
