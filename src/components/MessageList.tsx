@@ -47,6 +47,7 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
     }
     setUnreadCounts(counts);
     onUnreadCountChange(totalUnread);
+    console.log(`[MessageList] Unread counts updated. Total unread: ${totalUnread}`);
   }, [recentMessages, currentUserId, onUnreadCountChange]);
 
 
@@ -58,30 +59,37 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
   // Long press logic for mobile
   const touchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleTouchStart = (e: React.TouchEvent, contactProfile: Profile) => {
+    console.log("[MessageList] Touch start for long press.");
     touchTimeout.current = setTimeout(() => {
       // Prevent default touch behavior (like scrolling)
       e.preventDefault(); 
       // For simplicity, we'll just trigger the archive/unarchive directly for now
       // In a real app, you might open a custom modal or action sheet
       if (isArchivedView) {
+        console.log("[MessageList] Long press: Unarchiving conversation.");
         onUnarchiveConversation(contactProfile.id);
       } else {
+        console.log("[MessageList] Long press: Archiving conversation.");
         onArchiveConversation(contactProfile.id);
       }
     }, 700); // 700ms for long press
   };
 
   const handleTouchEnd = () => {
+    console.log("[MessageList] Touch end.");
     if (touchTimeout.current) {
       clearTimeout(touchTimeout.current);
     }
   };
 
   const handleTouchMove = () => {
+    console.log("[MessageList] Touch move.");
     if (touchTimeout.current) {
       clearTimeout(touchTimeout.current);
     }
   };
+
+  console.log(`[MessageList] Rendering with ${recentMessages.length} messages. isArchivedView: ${isArchivedView}`);
 
   return (
     <div className="h-full flex flex-col">

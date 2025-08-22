@@ -43,19 +43,26 @@ const Messages = () => {
   const currentUserId = currentUserProfile?.id;
 
   const fetchAllData = async () => {
-    if (!currentUserId) return;
+    console.log("[Messages] fetchAllData called.");
+    if (!currentUserId) {
+      console.log("[Messages] currentUserId is null, skipping fetchAllData.");
+      return;
+    }
 
     const profiles = await getAllProfiles();
     setAllProfiles(profiles.filter(p => p.id !== currentUserId)); // Exclude current user
 
     const recent = await getRecentConversations(currentUserId);
     setRecentConversations(recent);
+    console.log("[Messages] Fetched recent conversations:", recent.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
 
     const archived = await getArchivedConversations(currentUserId);
     setArchivedConversations(archived);
+    console.log("[Messages] Fetched archived conversations:", archived.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
 
     const totalUnread = await getUnreadMessageCount(currentUserId);
     setUnreadMessageCount(totalUnread);
+    console.log("[Messages] Fetched unread message count:", totalUnread);
 
     if (currentRole === 'creator' || currentRole === 'tutor') {
       setEstablishments(await loadEstablishments());
@@ -81,6 +88,7 @@ const Messages = () => {
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})` // Corrected filter
           },
           (payload) => {
+            console.log("[Messages] Realtime INSERT event received:", payload);
             // Re-fetch all data to ensure consistency and correct unread counts
             fetchAllData();
           }
@@ -94,6 +102,7 @@ const Messages = () => {
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})` // Corrected filter
           },
           (payload) => {
+            console.log("[Messages] Realtime UPDATE event received:", payload);
             // Re-fetch all data to ensure consistency and correct unread counts
             fetchAllData();
           }
@@ -103,6 +112,7 @@ const Messages = () => {
 
     return () => {
       if (channel) {
+        console.log("[Messages] Unsubscribing from realtime channel.");
         supabase.removeChannel(channel);
       }
     };
@@ -126,6 +136,7 @@ const Messages = () => {
           return otherUserId === contactId;
         });
         if (isContactArchived && currentUserId) {
+          console.log(`[Messages] Contact ${contact.first_name} selected via URL, was archived. Attempting to unarchive.`);
           unarchiveConversation(currentUserId, contactId).then(() => {
             fetchAllData(); // Re-fetch to update lists
           }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
@@ -135,6 +146,7 @@ const Messages = () => {
   }, [location.search, allProfiles, archivedConversations, currentUserId]); // Added archivedConversations to dependencies
 
   const handleSelectContact = (contact: Profile, courseId?: string, courseTitle?: string) => {
+    console.log("[Messages] handleSelectContact called for:", contact.username);
     setSelectedContact(contact);
     setInitialCourseContext({ id: courseId, title: courseTitle });
     navigate(`/messages?contactId=${contact.id}${courseId ? `&courseId=${courseId}` : ''}${courseTitle ? `&courseTitle=${courseTitle}` : ''}`, { replace: true });
@@ -146,6 +158,7 @@ const Messages = () => {
         return otherUserId === contact.id;
       });
       if (isContactArchived) {
+        console.log(`[Messages] Contact ${contact.first_name} selected, was archived. Attempting to unarchive.`);
         unarchiveConversation(currentUserId, contact.id).then(() => {
           fetchAllData(); // Re-fetch to update lists
           showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
@@ -155,26 +168,36 @@ const Messages = () => {
   };
 
   const handleArchive = async (contactId: string) => {
-    if (!currentUserId) return;
+    console.log("[Messages] handleArchive called for contactId:", contactId);
+    if (!currentUserId) {
+      console.error("[Messages] currentUserId is null, cannot archive.");
+      return;
+    }
     try {
       await archiveConversation(currentUserId, contactId);
       showSuccess("Conversation archivée !");
-      fetchAllData(); // Re-fetch to update lists
-      if (selectedContact?.id === contactId) {
-        setSelectedContact(null); // Deselect if current chat is archived
-      }
+      setSelectedContact(null); // Deselect if current chat is archived
+      // fetchAllData() will be triggered by the realtime listener
+      console.log("[Messages] Archive successful. Realtime listener should trigger fetchAllData.");
     } catch (error: any) {
+      console.error("[Messages] Error during archiving:", error);
       showError(`Erreur lors de l'archivage: ${error.message}`);
     }
   };
 
   const handleUnarchive = async (contactId: string) => {
-    if (!currentUserId) return;
+    console.log("[Messages] handleUnarchive called for contactId:", contactId);
+    if (!currentUserId) {
+      console.error("[Messages] currentUserId is null, cannot unarchive.");
+      return;
+    }
     try {
       await unarchiveConversation(currentUserId, contactId);
       showSuccess("Conversation désarchivée !");
-      fetchAllData(); // Re-fetch to update lists
+      // fetchAllData() will be triggered by the realtime listener
+      console.log("[Messages] Unarchive successful. Realtime listener should trigger fetchAllData.");
     } catch (error: any) {
+      console.error("[Messages] Error during unarchiving:", error);
       showError(`Erreur lors du désarchivage: ${error.message}`);
     }
   };
