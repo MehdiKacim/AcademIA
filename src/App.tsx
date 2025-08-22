@@ -45,10 +45,19 @@ const AppWithThemeProvider = () => {
           <Toaster />
           <Sonner 
             position="top-center" 
-            className="!left-0 !right-0 !w-full !max-w-full !translate-x-0 top-16 z-[9999]" 
+            // La classe ici s'applique au conteneur du Toaster.
+            // Pour que les toasts individuels soient pleine largeur, nous utilisons toastOptions.classNames.toast
+            className="top-16 z-[9999]" // Garde le positionnement du conteneur
             toastOptions={{
-              className: "rounded-none border-x-0 border-t-0 shadow-none",
               duration: 5000,
+              classNames: {
+                // Applique la pleine largeur et les styles de base à tous les toasts
+                toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none",
+                // Styles spécifiques pour chaque type de toast
+                success: "bg-success text-success-foreground border-success", // Vert pour le succès
+                error: "bg-destructive text-destructive-foreground border-destructive", // Rouge pour l'erreur
+                loading: "bg-primary text-primary-foreground border-primary", // Bleu pour le chargement/info
+              },
             }}
           />
           {isLoadingUser ? ( // Show splash ONLY if loading user
