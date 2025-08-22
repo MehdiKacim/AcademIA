@@ -45,17 +45,25 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
  * @returns True si le nom d'utilisateur est pris, false sinon.
  */
 export const checkUsernameExists = async (username: string): Promise<boolean> => {
+  console.log(`[checkUsernameExists] Checking if username '${username}' exists...`);
   const { data, error } = await supabase
     .from('profiles')
     .select('id')
     .eq('username', username)
     .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error("Error checking username availability:", error);
-    return true; // Safer default: assume taken on error
+  if (error) {
+    console.error(`[checkUsernameExists] Error checking username availability for '${username}':`, error);
+    if (error.code === 'PGRST116') {
+      console.log(`[checkUsernameExists] Username '${username}' does not exist (PGRST116).`);
+      return false; // No rows found, username is available
+    }
+    console.log(`[checkUsernameExists] Returning true (assuming taken) due to unexpected error for username '${username}'.`);
+    return true; // Safer default: assume taken on unexpected error
   }
-  return !!data;
+  
+  console.log(`[checkUsernameExists] Result for username '${username}': data =`, data);
+  return !!data; // If data is not null, username exists
 };
 
 /**
@@ -83,17 +91,25 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
  * @returns True si l'email est pris, false sinon.
  */
 export const checkEmailExists = async (email: string): Promise<boolean> => {
+  console.log(`[checkEmailExists] Checking if email '${email}' exists...`);
   const { data, error } = await supabase
     .from('profiles')
     .select('id')
     .eq('email', email)
     .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error("Error checking email availability:", error);
-    return true; // Safer default: assume taken on error
+  if (error) {
+    console.error(`[checkEmailExists] Error checking email availability for '${email}':`, error);
+    if (error.code === 'PGRST116') {
+      console.log(`[checkEmailExists] Email '${email}' does not exist (PGRST116).`);
+      return false; // No rows found, email is available
+    }
+    console.log(`[checkEmailExists] Returning true (assuming taken) due to unexpected error for email '${email}'.`);
+    return true; // Safer default: assume taken on unexpected error
   }
-  return !!data;
+
+  console.log(`[checkEmailExists] Result for email '${email}': data =`, data);
+  return !!data; // If data is not null, email exists
 };
 
 export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<Profile | null> => {
