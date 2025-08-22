@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
-import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
+import { checkUsernameExists } from '@/lib/studentData'; // Keep checkUsernameExists
 import {
   Form,
   FormControl,
@@ -38,7 +38,7 @@ interface SignUpFormProps {
 export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  // Removed emailAvailabilityStatus state
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -77,21 +77,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     return true;
   }, [form]);
 
-  const validateEmail = useCallback(async (email: string) => {
+  // Simplified validateEmail to only check format, not existence
+  const validateEmail = useCallback((email: string) => {
     if (!z.string().email().safeParse(email).success) {
       form.setError("email", { type: "manual", message: "Veuillez entrer une adresse email valide." });
-      setEmailAvailabilityStatus('idle');
-      return false;
-    }
-    setEmailAvailabilityStatus('checking');
-    const isTaken = await checkEmailExists(email);
-    if (isTaken) {
-      form.setError("email", { type: "manual", message: "Cet email est déjà utilisé par un autre profil." });
-      setEmailAvailabilityStatus('taken');
       return false;
     }
     form.clearErrors("email");
-    setEmailAvailabilityStatus('available');
     return true;
   }, [form]);
 
@@ -116,17 +108,11 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     const value = e.target.value;
     form.setValue("email", value);
     if (value.trim() === '') {
-        setEmailAvailabilityStatus('idle');
         form.clearErrors("email");
-        if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
         return;
     }
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    debounceTimeoutRef.current = setTimeout(() => {
-      validateEmail(value);
-    }, 500); // Debounce for 500ms
+    // No debounce needed for format validation, Zod handles it on submit
+    validateEmail(value); // Still call to update form errors immediately
   };
 
   const onSubmit = async (values: SignUpFormValues) => {
@@ -134,9 +120,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     try {
       // Re-run final validation before submission
       const isUsernameValid = await validateUsername(values.username);
-      const isEmailValid = await validateEmail(values.email);
+      const isEmailFormatValid = validateEmail(values.email); // Only check format
 
-      if (!isUsernameValid || !isEmailValid) {
+      if (!isUsernameValid || !isEmailFormatValid) {
         onError("Veuillez corriger les erreurs du formulaire.");
         setIsLoading(false);
         return;
@@ -156,6 +142,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
       });
 
       if (authError) {
+        // Supabase will still return an error if email is already registered in auth.users
         if (authError.message.includes('User already registered')) {
           form.setError("email", { type: "manual", message: "Cet email est déjà enregistré. Veuillez vous connecter." });
           onError("Cet email est déjà enregistré. Veuillez vous connecter.");
@@ -241,15 +228,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
                 <FormControl>
                   <Input id="email" type="email" {...field} onChange={handleEmailChange} className="pr-10" />
                 </FormControl>
-                {emailAvailabilityStatus === 'checking' && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                )}
-                {emailAvailabilityStatus === 'available' && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                )}
-                {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
-                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                )}
+                {/* Removed email availability status icons */}
               </div>
               <FormMessage />
             </FormItem>
