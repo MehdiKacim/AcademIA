@@ -59,7 +59,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.startsWith(supabaseApiUrl)) {
     console.log('[Service Worker] Bypassing cache for Supabase API request:', event.request.url);
     event.respondWith(fetch(event.request));
-    return;
+    return; // Stop processing this request further in the Service Worker
   }
 
   // Strategy for navigation requests (HTML pages)
