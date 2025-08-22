@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, Search } from "lucide-react";
+import { ArrowLeft, MessageSquare, Search, Archive } from "lucide-react"; // Import Archive icon
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
 import { Profile, Message, Establishment, Curriculum, Class } from '@/lib/dataModels'; // Import Message type
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input"; // Import Input component
 import { showSuccess, showError } from '@/utils/toast';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getRecentConversations, getUnreadMessageCount } from "@/lib/messageData"; // Import messageData functions
+import { getRecentConversations, getUnreadMessageCount, getArchivedConversations, archiveConversation, unarchiveConversation } from "@/lib/messageData"; // Import messageData functions
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
 import { cn } from '@/lib/utils'; // Import cn for conditional styling
 import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
@@ -25,9 +25,11 @@ const Messages = () => {
 
   const [selectedContact, setSelectedContact] = useState<Profile | null>(null);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
-  const [recentMessages, setRecentMessages] = useState<Message[]>([]); // State for recent messages
+  const [recentConversations, setRecentConversations] = useState<Message[]>([]); // Renamed from recentMessages
+  const [archivedConversations, setArchivedConversations] = useState<Message[]>([]); // New state for archived messages
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [initialCourseContext, setInitialCourseContext] = useState<{ id?: string; title?: string }>({});
+  const [showArchived, setShowArchived] = useState(false); // New state to toggle view
 
   // States for professional filters
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
@@ -46,8 +48,11 @@ const Messages = () => {
     const profiles = await getAllProfiles();
     setAllProfiles(profiles.filter(p => p.id !== currentUserId)); // Exclude current user
 
-    const messages = await getRecentConversations(currentUserId);
-    setRecentMessages(messages);
+    const recent = await getRecentConversations(currentUserId);
+    setRecentConversations(recent);
+
+    const archived = await getArchivedConversations(currentUserId);
+    setArchivedConversations(archived);
 
     const totalUnread = await getUnreadMessageCount(currentUserId);
     setUnreadMessageCount(totalUnread);
@@ -115,15 +120,63 @@ const Messages = () => {
       if (contact) {
         setSelectedContact(contact);
         if (courseId) setInitialCourseContext({ id: courseId, title: courseTitle || `Cours ID: ${courseId}` });
+        // If a contact is selected from URL, ensure it's unarchived
+        const isContactArchived = archivedConversations.some(msg => {
+          const otherUserId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+          return otherUserId === contactId;
+        });
+        if (isContactArchived && currentUserId) {
+          unarchiveConversation(currentUserId, contactId).then(() => {
+            fetchAllData(); // Re-fetch to update lists
+          }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
+        }
       }
     }
-  }, [location.search, allProfiles]);
+  }, [location.search, allProfiles, archivedConversations, currentUserId]); // Added archivedConversations to dependencies
 
   const handleSelectContact = (contact: Profile, courseId?: string, courseTitle?: string) => {
     setSelectedContact(contact);
     setInitialCourseContext({ id: courseId, title: courseTitle });
-    // Update URL to reflect selected contact (optional, but good for deep linking)
     navigate(`/messages?contactId=${contact.id}${courseId ? `&courseId=${courseId}` : ''}${courseTitle ? `&courseTitle=${courseTitle}` : ''}`, { replace: true });
+
+    // Implicitly unarchive if the conversation is currently archived
+    if (currentUserId) {
+      const isContactArchived = archivedConversations.some(msg => {
+        const otherUserId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+        return otherUserId === contact.id;
+      });
+      if (isContactArchived) {
+        unarchiveConversation(currentUserId, contact.id).then(() => {
+          fetchAllData(); // Re-fetch to update lists
+          showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
+        }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
+      }
+    }
+  };
+
+  const handleArchive = async (contactId: string) => {
+    if (!currentUserId) return;
+    try {
+      await archiveConversation(currentUserId, contactId);
+      showSuccess("Conversation archivée !");
+      fetchAllData(); // Re-fetch to update lists
+      if (selectedContact?.id === contactId) {
+        setSelectedContact(null); // Deselect if current chat is archived
+      }
+    } catch (error: any) {
+      showError(`Erreur lors de l'archivage: ${error.message}`);
+    }
+  };
+
+  const handleUnarchive = async (contactId: string) => {
+    if (!currentUserId) return;
+    try {
+      await unarchiveConversation(currentUserId, contactId);
+      showSuccess("Conversation désarchivée !");
+      fetchAllData(); // Re-fetch to update lists
+    } catch (error: any) {
+      showError(`Erreur lors du désarchivage: ${error.message}`);
+    }
   };
 
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
@@ -136,19 +189,19 @@ const Messages = () => {
 
     let students = allProfiles.filter(p => p.role === 'student');
 
-    if (selectedEstablishmentId && selectedEstablishmentId !== '') { // Changed 'all' to ''
+    if (selectedEstablishmentId && selectedEstablishmentId !== '') {
       const curriculaInEstablishment = curricula.filter(c => c.establishment_id === selectedEstablishmentId);
       const classIdsInEstablishment = new Set(classes.filter(cls => curriculaInEstablishment.some(cur => cur.id === cls.curriculum_id)).map(cls => cls.id));
       students = students.filter(s => s.class_id && classIdsInEstablishment.has(s.class_id));
     }
 
-    if (selectedCurriculumId && selectedCurriculumId !== '') { // Changed 'all' to ''
+    if (selectedCurriculumId && selectedCurriculumId !== '') {
       const classesInCurriculum = classes.filter(cls => cls.curriculum_id === selectedCurriculumId);
       const classIdsInCurriculum = new Set(classesInCurriculum.map(cls => cls.id));
       students = students.filter(s => s.class_id && classIdsInCurriculum.has(s.class_id));
     }
 
-    if (selectedClassId && selectedClassId !== '') { // Changed 'all' to ''
+    if (selectedClassId && selectedClassId !== '') {
       students = students.filter(s => s.class_id === selectedClassId);
     }
 
@@ -162,33 +215,33 @@ const Messages = () => {
       );
     }
 
-    // Exclude students already in recent conversations
-    const contactsInRecentConversations = new Set(
-      recentMessages.map(msg =>
+    // Exclude students already in recent or archived conversations
+    const contactsInAllConversations = new Set(
+      [...recentConversations, ...archivedConversations].map(msg =>
         msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
       )
     );
-    students = students.filter(s => !contactsInRecentConversations.has(s.id));
+    students = students.filter(s => !contactsInAllConversations.has(s.id));
 
     return students;
-  }, [allProfiles, currentUserProfile, currentRole, selectedEstablishmentId, selectedCurriculumId, selectedClassId, searchStudentQuery, establishments, curricula, classes, recentMessages]);
+  }, [allProfiles, currentUserProfile, currentRole, selectedEstablishmentId, selectedCurriculumId, selectedClassId, searchStudentQuery, establishments, curricula, classes, recentConversations, archivedConversations]);
 
 
   // Available contacts for new chat (for students)
   const availableContactsForStudentNewChat = useMemo(() => {
     if (!currentUserProfile || currentRole !== 'student') return [];
 
-    const contactsInRecentConversations = new Set(
-      recentMessages.map(msg =>
+    const contactsInAllConversations = new Set(
+      [...recentConversations, ...archivedConversations].map(msg =>
         msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
       )
     );
 
     return allProfiles.filter(profile =>
       profile.id !== currentUserProfile.id && // Exclude self
-      !contactsInRecentConversations.has(profile.id) // Exclude contacts already in recent conversations
+      !contactsInAllConversations.has(profile.id) // Exclude contacts already in any conversation
     );
-  }, [allProfiles, currentUserProfile, recentMessages, currentRole]);
+  }, [allProfiles, currentUserProfile, recentConversations, archivedConversations, currentRole]);
 
 
   if (isLoadingUser) {
@@ -356,12 +409,32 @@ const Messages = () => {
             </div>
           )}
 
+          <div className="flex justify-center gap-2 p-4 border-b border-border">
+            <Button
+              variant={!showArchived ? "default" : "outline"}
+              onClick={() => setShowArchived(false)}
+              className="flex-1"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" /> Récentes
+            </Button>
+            <Button
+              variant={showArchived ? "default" : "outline"}
+              onClick={() => setShowArchived(true)}
+              className="flex-1"
+            >
+              <Archive className="h-4 w-4 mr-2" /> Archivées
+            </Button>
+          </div>
+
           <MessageList
-            recentMessages={recentMessages} // Pass recentMessages
-            allProfiles={allProfiles} // Pass allProfiles
+            recentMessages={showArchived ? archivedConversations : recentConversations}
+            allProfiles={allProfiles}
             onSelectContact={handleSelectContact}
             selectedContactId={selectedContact?.id || null}
-            onUnreadCountChange={setUnreadMessageCount} // Update unread count in parent
+            onUnreadCountChange={setUnreadMessageCount}
+            onArchiveConversation={handleArchive}
+            onUnarchiveConversation={handleUnarchive}
+            isArchivedView={showArchived}
           />
         </div>
 
@@ -378,7 +451,7 @@ const Messages = () => {
           {selectedContact ? (
             <ChatInterface
               contact={selectedContact}
-              onMessageSent={fetchAllData} // Trigger re-fetch of all data
+              onMessageSent={fetchAllData}
               initialCourseId={initialCourseContext.id}
               initialCourseTitle={initialCourseContext.title}
             />

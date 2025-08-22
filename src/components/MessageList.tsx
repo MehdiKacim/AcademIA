@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Message } from "@/lib/dataModels";
@@ -7,17 +7,26 @@ import { getAllProfiles } from "@/lib/studentData";
 import { useRole } from "@/contexts/RoleContext";
 import { Profile } from '@/lib/dataModels';
 import { cn } from "@/lib/utils";
-import { MessageSquare, Mail, FileText, Paperclip } from "lucide-react"; // Import Paperclip
+import { MessageSquare, Mail, FileText, Paperclip, Archive, ArchiveRestore } from "lucide-react"; // Import Paperclip, Archive, ArchiveRestore
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 interface MessageListProps {
-  recentMessages: Message[]; // Now received as prop
-  allProfiles: Profile[]; // Now received as prop
+  recentMessages: Message[]; // Now represents either recent or archived based on isArchivedView
+  allProfiles: Profile[];
   onSelectContact: (contact: Profile, initialCourseId?: string, initialCourseTitle?: string) => void;
   selectedContactId: string | null;
   onUnreadCountChange: (count: number) => void;
+  onArchiveConversation: (contactId: string) => void; // New prop
+  onUnarchiveConversation: (contactId: string) => void; // New prop
+  isArchivedView?: boolean; // New prop to indicate if this list shows archived messages
 }
 
-const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedContactId, onUnreadCountChange }: MessageListProps) => {
+const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedContactId, onUnreadCountChange, onArchiveConversation, onUnarchiveConversation, isArchivedView = false }: MessageListProps) => {
   const { currentUserProfile } = useRole();
   const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(new Map());
 
@@ -30,7 +39,7 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
     const counts = new Map<string, number>();
     let totalUnread = 0;
     for (const msg of recentMessages) {
-      if (msg.receiver_id === currentUserId && !msg.is_read) {
+      if (msg.receiver_id === currentUserId && !msg.is_read && !msg.is_archived) { // Only count unread, non-archived
         const senderId = msg.sender_id;
         counts.set(senderId, (counts.get(senderId) || 0) + 1);
         totalUnread++;
@@ -46,17 +55,50 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
     return allProfiles.find(p => p.id === contactId);
   };
 
+  // Long press logic for mobile
+  const touchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleTouchStart = (e: React.TouchEvent, contactProfile: Profile) => {
+    touchTimeout.current = setTimeout(() => {
+      // Prevent default touch behavior (like scrolling)
+      e.preventDefault(); 
+      // For simplicity, we'll just trigger the archive/unarchive directly for now
+      // In a real app, you might open a custom modal or action sheet
+      if (isArchivedView) {
+        onUnarchiveConversation(contactProfile.id);
+      } else {
+        onArchiveConversation(contactProfile.id);
+      }
+    }, 700); // 700ms for long press
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimeout.current) {
+      clearTimeout(touchTimeout.current);
+    }
+  };
+
+  const handleTouchMove = () => {
+    if (touchTimeout.current) {
+      clearTimeout(touchTimeout.current);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="h-6 w-6 text-primary" /> Mes Conversations
+          {isArchivedView ? <Archive className="h-6 w-6 text-primary" /> : <MessageSquare className="h-6 w-6 text-primary" />}
+          {isArchivedView ? 'Conversations Archivées' : 'Mes Conversations'}
         </CardTitle>
-        <CardDescription>Sélectionnez une conversation pour commencer à chatter.</CardDescription>
+        <CardDescription>
+          {isArchivedView ? 'Retrouvez vos conversations archivées ici.' : 'Sélectionnez une conversation pour commencer à chatter.'}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto pr-2">
         {recentMessages.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">Aucune conversation récente.</p>
+          <p className="text-muted-foreground text-center py-4">
+            {isArchivedView ? 'Aucune conversation archivée.' : 'Aucune conversation récente.'}
+          </p>
         ) : (
           <div className="space-y-2">
             {recentMessages.map((message) => {
@@ -66,36 +108,53 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
               const unreadCount = unreadCounts.get(contactProfile.id) || 0;
 
               return (
-                <Card
-                  key={message.id}
-                  className={cn(
-                    "cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
-                    selectedContactId === contactProfile.id && "bg-accent text-accent-foreground"
-                  )}
-                  onClick={() => onSelectContact(contactProfile, message.course_id, message.course_id ? `Cours ID: ${message.course_id}` : undefined)}
-                >
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${contactProfile.first_name} ${contactProfile.last_name}`} />
-                      <AvatarFallback>{contactProfile.first_name[0]}{contactProfile.last_name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
-                      <p className="font-medium">{contactProfile.first_name} {contactProfile.last_name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {message.sender_id === currentUserId ? "Vous: " : ""}
-                        {message.file_url ? <><Paperclip className="inline h-3 w-3 mr-1" /> Fichier</> : message.content}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end text-xs text-muted-foreground">
-                      <span>{new Date(message.created_at).toLocaleDateString()}</span>
-                      {unreadCount > 0 && (
-                        <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 mt-1">
-                          {unreadCount}
-                        </span>
+                <ContextMenu key={message.id}>
+                  <ContextMenuTrigger asChild>
+                    <Card
+                      className={cn(
+                        "cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
+                        selectedContactId === contactProfile.id && "bg-accent text-accent-foreground"
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
+                      onClick={() => onSelectContact(contactProfile, message.course_id, message.course_id ? `Cours ID: ${message.course_id}` : undefined)}
+                      onTouchStart={(e) => handleTouchStart(e, contactProfile)}
+                      onTouchEnd={handleTouchEnd}
+                      onTouchMove={handleTouchMove}
+                    >
+                      <CardContent className="p-3 flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${contactProfile.first_name} ${contactProfile.last_name}`} />
+                          <AvatarFallback>{contactProfile.first_name[0]}{contactProfile.last_name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-grow">
+                          <p className="font-medium">{contactProfile.first_name} {contactProfile.last_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {message.sender_id === currentUserId ? "Vous: " : ""}
+                            {message.file_url ? <><Paperclip className="inline h-3 w-3 mr-1" /> Fichier</> : message.content}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end text-xs text-muted-foreground">
+                          <span>{new Date(message.created_at).toLocaleDateString()}</span>
+                          {unreadCount > 0 && (
+                            <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 mt-1">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-auto p-1">
+                    {isArchivedView ? (
+                      <ContextMenuItem className="p-2" onClick={() => onUnarchiveConversation(contactProfile.id)}>
+                        <ArchiveRestore className="mr-2 h-4 w-4" /> Désarchiver
+                      </ContextMenuItem>
+                    ) : (
+                      <ContextMenuItem className="p-2" onClick={() => onArchiveConversation(contactProfile.id)}>
+                        <Archive className="mr-2 h-4 w-4" /> Archiver
+                      </ContextMenuItem>
+                    )}
+                  </ContextMenuContent>
+                </ContextMenu>
               );
             })}
           </div>

@@ -130,8 +130,13 @@ const DashboardLayout = () => {
             },
             (payload) => {
               const updatedMessage = payload.new as Message;
-              if (updatedMessage.is_read) {
+              // Only decrement if the message was previously unread and is now read, and not archived
+              if (updatedMessage.is_read && !updatedMessage.is_archived && (payload.old as Message)?.is_read === false) {
                 setUnreadMessages(prev => Math.max(0, prev - 1)); // Ensure count doesn't go below zero
+              }
+              // If a message is archived and was unread, it should no longer count towards unread
+              if (updatedMessage.is_archived && (payload.old as Message)?.is_read === false && !updatedMessage.is_read) {
+                 setUnreadMessages(prev => Math.max(0, prev - 1));
               }
             }
           )

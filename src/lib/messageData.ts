@@ -31,6 +31,7 @@ export const sendMessage = async (
       course_id: courseId,
       content: content,
       is_read: false,
+      is_archived: false, // New messages are not archived by default
     })
     .select()
     .single();
@@ -90,6 +91,9 @@ export const sendMessage = async (
  * @returns Un tableau de messages.
  */
 export const getConversation = async (userId1: string, userId2: string): Promise<Message[]> => {
+  // First, implicitly unarchive the conversation when it's opened
+  await unarchiveConversation(userId1, userId2);
+
   const { data, error } = await supabase
     .from('messages')
     .select('*')
@@ -101,25 +105,20 @@ export const getConversation = async (userId1: string, userId2: string): Promise
     throw error; // Re-throw to be caught by the calling component
   }
 
-  // The frontend filter is no longer needed as the Supabase query is precise
   return data;
 };
 
 /**
- * Récupère toutes les conversations d'un utilisateur (les derniers messages de chaque contact).
+ * Récupère toutes les conversations récentes d'un utilisateur (les derniers messages de chaque contact non archivés).
  * @param userId L'ID de l'utilisateur.
- * @returns Un tableau des derniers messages de chaque conversation.
+ * @returns Un tableau des derniers messages de chaque conversation non archivée.
  */
 export const getRecentConversations = async (userId: string): Promise<Message[]> => {
-  // This is a more complex query for Supabase.
-  // A common pattern is to fetch all messages for the user, then group them by contact
-  // and pick the latest. This might be inefficient for very large datasets.
-  // For simplicity, we'll fetch all messages where the user is sender or receiver,
-  // then process them in memory.
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .eq('is_archived', false) // Filter out archived messages
     .order('created_at', { ascending: false }); // Order by most recent first
 
   if (error) {
@@ -138,6 +137,70 @@ export const getRecentConversations = async (userId: string): Promise<Message[]>
   }
 
   return Array.from(conversationsMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+};
+
+/**
+ * Récupère toutes les conversations archivées d'un utilisateur.
+ * @param userId L'ID de l'utilisateur.
+ * @returns Un tableau des derniers messages de chaque conversation archivée.
+ */
+export const getArchivedConversations = async (userId: string): Promise<Message[]> => {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .eq('is_archived', true) // Only archived messages
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Error fetching archived conversations:", error);
+    return [];
+  }
+
+  const conversationsMap = new Map<string, Message>(); // Key: other_user_id
+
+  for (const message of data) {
+    const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+    if (!conversationsMap.has(otherUserId)) {
+      conversationsMap.set(otherUserId, message);
+    }
+  }
+
+  return Array.from(conversationsMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+};
+
+/**
+ * Archive une conversation entre deux utilisateurs.
+ * @param userId1 L'ID du premier utilisateur.
+ * @param userId2 L'ID du second utilisateur.
+ */
+export const archiveConversation = async (userId1: string, userId2: string): Promise<void> => {
+  const { error } = await supabase
+    .from('messages')
+    .update({ is_archived: true })
+    .or(`and(sender_id.eq.${userId1},receiver_id.eq.${userId2}),and(sender_id.eq.${userId2},receiver_id.eq.${userId1})`);
+
+  if (error) {
+    console.error("Error archiving conversation:", error);
+    throw error;
+  }
+};
+
+/**
+ * Désarchive une conversation entre deux utilisateurs.
+ * @param userId1 L'ID du premier utilisateur.
+ * @param userId2 L'ID du second utilisateur.
+ */
+export const unarchiveConversation = async (userId1: string, userId2: string): Promise<void> => {
+  const { error } = await supabase
+    .from('messages')
+    .update({ is_archived: false })
+    .or(`and(sender_id.eq.${userId1},receiver_id.eq.${userId2}),and(sender_id.eq.${userId2},receiver_id.eq.${userId1})`);
+
+  if (error) {
+    console.error("Error unarchiving conversation:", error);
+    throw error;
+  }
 };
 
 /**
@@ -168,7 +231,8 @@ export const getUnreadMessageCount = async (userId: string): Promise<number> => 
     .from('messages')
     .select('*', { count: 'exact' })
     .eq('receiver_id', userId)
-    .eq('is_read', false);
+    .eq('is_read', false)
+    .eq('is_archived', false); // Only count unread, non-archived messages
 
   if (error) {
     console.error("Error fetching unread message count:", error);

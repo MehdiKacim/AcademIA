@@ -120,6 +120,7 @@ export interface Message {
   content: string;
   file_url?: string; // URL to the attachment in Supabase Storage
   is_read: boolean;
+  is_archived: boolean; // New: for soft delete/archive feature
   created_at: string;
 }
 
