@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
-import { Class, Curriculum } from "@/lib/dataModels";
-import { updateClassInStorage, loadCurricula } from "@/lib/courseData";
+import { Class, Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
+import { updateClassInStorage, loadCurricula, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
 
 interface EditClassDialogProps {
   isOpen: boolean;
@@ -25,20 +25,26 @@ interface EditClassDialogProps {
 const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDialogProps) => {
   const [name, setName] = useState(classToEdit.name);
   const [curriculumId, setCurriculumId] = useState(classToEdit.curriculum_id);
+  const [establishmentId, setEstablishmentId] = useState(classToEdit.establishment_id || ''); // New state
+  const [schoolYear, setSchoolYear] = useState(classToEdit.school_year || ''); // New state
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCurricula = async () => {
+    const fetchData = async () => {
       setCurricula(await loadCurricula());
+      setEstablishments(await loadEstablishments());
     };
-    fetchCurricula();
+    fetchData();
   }, []);
 
   useEffect(() => {
     if (isOpen && classToEdit) {
       setName(classToEdit.name);
       setCurriculumId(classToEdit.curriculum_id);
+      setEstablishmentId(classToEdit.establishment_id || '');
+      setSchoolYear(classToEdit.school_year || '');
     }
   }, [isOpen, classToEdit]);
 
@@ -51,6 +57,14 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       showError("Le cursus est requis.");
       return;
     }
+    if (!establishmentId) {
+      showError("L'établissement est requis.");
+      return;
+      }
+    if (!schoolYear.trim()) {
+      showError("L'année scolaire est requise.");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -58,6 +72,8 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
         ...classToEdit,
         name: name.trim(),
         curriculum_id: curriculumId,
+        establishment_id: establishmentId, // Include new field
+        school_year: schoolYear.trim(), // Include new field
       };
       const savedClass = await updateClassInStorage(updatedClassData);
 
@@ -75,6 +91,9 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       setIsLoading(false);
     }
   };
+
+  const currentYear = new Date().getFullYear();
+  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -99,6 +118,21 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="establishment" className="text-right">
+              Établissement
+            </Label>
+            <Select value={establishmentId} onValueChange={setEstablishmentId}>
+              <SelectTrigger id="establishment" className="col-span-3">
+                <SelectValue placeholder="Sélectionner un établissement" />
+              </SelectTrigger>
+              <SelectContent>
+                {establishments.map(est => (
+                  <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="curriculum" className="text-right">
               Cursus
             </Label>
@@ -107,8 +141,23 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
                 <SelectValue placeholder="Sélectionner un cursus" />
               </SelectTrigger>
               <SelectContent>
-                {curricula.map(cur => (
+                {curricula.filter(cur => !establishmentId || cur.establishment_id === establishmentId).map(cur => (
                   <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="schoolYear" className="text-right">
+              Année scolaire
+            </Label>
+            <Select value={schoolYear} onValueChange={setSchoolYear}>
+              <SelectTrigger id="schoolYear" className="col-span-3">
+                <SelectValue placeholder="Sélectionner l'année scolaire" />
+              </SelectTrigger>
+              <SelectContent>
+                {schoolYears.map(year => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

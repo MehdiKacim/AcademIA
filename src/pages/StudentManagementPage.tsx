@@ -17,7 +17,7 @@ import {
   findProfileByUsername,
   updateProfile,
   deleteProfile,
-  getStudentClassEnrollments,
+  getAllStudentClassEnrollments, // Changed to getAllStudentClassEnrollments
   upsertStudentClassEnrollment,
   deleteStudentClassEnrollment,
 } from '@/lib/studentData';
@@ -86,7 +86,7 @@ const StudentManagementPage = () => {
       setCurricula(await loadCurricula());
       setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
-      setAllStudentClassEnrollments(await getStudentClassEnrollments(currentUserProfile?.id || '')); // Fetch all enrollments for display
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Fetch ALL enrollments for display
     };
     fetchData();
   }, [currentUserProfile]);
@@ -112,7 +112,7 @@ const StudentManagementPage = () => {
 
     try {
       await deleteStudentClassEnrollment(enrollmentId);
-      setAllStudentClassEnrollments(await getStudentClassEnrollments(currentUserProfile.id)); // Refresh enrollments
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
       showSuccess(`Élève retiré de la classe !`);
     } catch (error: any) {
       console.error("Error removing student from class:", error);
@@ -237,6 +237,16 @@ const StudentManagementPage = () => {
       showError("Seuls les profils d'élèves peuvent être affectés à une classe.");
       return;
     }
+    if (!selectedStudentForClassAssignment.establishment_id) {
+      showError("L'élève doit d'abord être affecté à un établissement.");
+      return;
+    }
+    const selectedClass = classes.find(cls => cls.id === classToAssign);
+    if (selectedClass?.establishment_id !== selectedStudentForClassAssignment.establishment_id) {
+      showError("La classe sélectionnée n'appartient pas à l'établissement de l'élève.");
+      return;
+    }
+
 
     const existingEnrollment = allStudentClassEnrollments.find(
       e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.enrollment_year === enrollmentYear
@@ -259,7 +269,7 @@ const StudentManagementPage = () => {
       const savedEnrollment = await upsertStudentClassEnrollment(newEnrollment);
 
       if (savedEnrollment) {
-        setAllStudentClassEnrollments(await getStudentClassEnrollments(currentUserProfile.id)); // Refresh enrollments
+        setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
         showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign)} pour ${enrollmentYear} !`);
         handleClearClassAssignmentForm();
       } else {
@@ -298,7 +308,7 @@ const StudentManagementPage = () => {
       for (const enrollment of enrollmentsToDelete) {
         await deleteStudentClassEnrollment(enrollment.id);
       }
-      setAllStudentClassEnrollments(await getStudentClassEnrollments(currentUserProfile.id)); // Refresh enrollments
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
       showSuccess("Élève supprimé !");
     } catch (error: any) {
       console.error("Error deleting student:", error);

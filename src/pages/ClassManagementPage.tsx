@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels"; // Import Profile and Curriculum, Establishment
+import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment } from "@/lib/dataModels"; // Import Profile and Curriculum, Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -52,6 +52,8 @@ const ClassManagementPage = () => {
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
   const [newClassCurriculumId, setNewClassCurriculumId] = useState<string>("");
+  const [newClassEstablishmentId, setNewClassEstablishmentId] = useState<string>(""); // New state
+  const [newClassSchoolYear, setNewClassSchoolYear] = useState<string>(""); // New state
 
   // State for edit class dialog
   const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
@@ -80,36 +82,43 @@ const ClassManagementPage = () => {
       showError("Vous devez être connecté pour ajouter une classe.");
       return;
     }
-    if (newClassName.trim() && newClassCurriculumId) {
-      const selectedCurriculum = curricula.find(c => c.id === newClassCurriculumId);
-      if (!selectedCurriculum) {
-        showError("Cursus sélectionné introuvable.");
-        return;
+    if (!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()) {
+      showError("Le nom de la classe, le cursus, l'établissement et l'année scolaire sont requis.");
+      return;
+    }
+    const selectedCurriculum = curricula.find(c => c.id === newClassCurriculumId);
+    if (!selectedCurriculum) {
+      showError("Cursus sélectionné introuvable.");
+      return;
+    }
+    if (selectedCurriculum.establishment_id !== newClassEstablishmentId) {
+      showError("Le cursus sélectionné n'appartient pas à l'établissement choisi.");
+      return;
+    }
+
+    const newCls: Class = {
+      id: '', // Supabase will generate
+      name: newClassName.trim(),
+      curriculum_id: newClassCurriculumId,
+      creator_ids: [currentUserProfile.id], // Assign current creator
+      establishment_id: newClassEstablishmentId, // Include new field
+      school_year: newClassSchoolYear.trim(), // Include new field
+    };
+    try {
+      const addedClass = await addClassToStorage(newCls);
+      if (addedClass) {
+        setClasses(await loadClasses()); // Re-fetch to get the new list
+        setNewClassName('');
+        setNewClassCurriculumId("");
+        setNewClassEstablishmentId("");
+        setNewClassSchoolYear("");
+        showSuccess("Classe ajoutée !");
+      } else {
+        showError("Échec de l'ajout de la classe.");
       }
-      // The class name should be unique, maybe combine with curriculum name or just use the input
-      // For now, let's just use the input name.
-      const newCls: Class = {
-        id: '', // Supabase will generate
-        name: newClassName.trim(),
-        curriculum_id: newClassCurriculumId,
-        creator_ids: [currentUserProfile.id], // Assign current creator
-      };
-      try {
-        const addedClass = await addClassToStorage(newCls);
-        if (addedClass) {
-          setClasses(await loadClasses()); // Re-fetch to get the new list
-          setNewClassName('');
-          setNewClassCurriculumId("");
-          showSuccess("Classe ajoutée !");
-        } else {
-          showError("Échec de l'ajout de la classe.");
-        }
-      } catch (error: any) {
-        console.error("Error adding class:", error);
-        showError(`Erreur lors de l'ajout de la classe: ${error.message}`);
-      }
-    } else {
-      showError("Le nom de la classe et le cursus sont requis.");
+    } catch (error: any) {
+      console.error("Error adding class:", error);
+      showError(`Erreur lors de l'ajout de la classe: ${error.message}`);
     }
   };
 
@@ -118,11 +127,11 @@ const ClassManagementPage = () => {
       await deleteClassFromStorage(id);
       setClasses(await loadClasses()); // Re-fetch to get the updated list
       // Remove class_id from associated student profiles
-      const studentsInClass = allProfiles.filter(p => p.role === 'student' && p.class_id === id);
-      for (const studentProfile of studentsInClass) {
-        await updateProfile({ id: studentProfile.id, class_id: null }); // Set class_id to null
-      }
-      setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
+      // This logic is now handled by student_class_enrollments, not directly on profile
+      // We need to delete enrollments for this class
+      // For now, we'll rely on CASCADE DELETE in DB for student_class_enrollments
+      // and update profiles if they had a direct class_id (which is now removed)
+      setAllProfiles(await getAllProfiles()); // Re-fetch all profiles to ensure consistency
       showSuccess("Classe supprimée !");
     } catch (error: any) {
       console.error("Error deleting class:", error);
@@ -146,6 +155,9 @@ const ClassManagementPage = () => {
   const filteredClasses = classSearchQuery.trim() === ''
     ? classes
     : classes.filter(cls => cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
+
+  const currentYear = new Date().getFullYear();
+  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
   if (isLoadingUser) {
     return (
@@ -199,20 +211,42 @@ const ClassManagementPage = () => {
               value={newClassName}
               onChange={(e) => setNewClassName(e.target.value)}
             />
+            <Label htmlFor="new-class-establishment">Établissement</Label>
+            <Select value={newClassEstablishmentId} onValueChange={setNewClassEstablishmentId}>
+              <SelectTrigger id="new-class-establishment">
+                <SelectValue placeholder="Sélectionner un établissement" />
+              </SelectTrigger>
+              <SelectContent>
+                {establishments.map(est => (
+                  <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Label htmlFor="new-class-curriculum">Cursus</Label>
             <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
               <SelectTrigger id="new-class-curriculum">
                 <SelectValue placeholder="Sélectionner un cursus" />
               </SelectTrigger>
               <SelectContent>
-                {curricula.map(cur => (
+                {curricula.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
                   <SelectItem key={cur.id} value={cur.id}>
                     {cur.name} ({getEstablishmentName(cur.establishment_id)})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId}>
+            <Label htmlFor="new-class-school-year">Année scolaire</Label>
+            <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
+              <SelectTrigger id="new-class-school-year">
+                <SelectValue placeholder="Sélectionner l'année scolaire" />
+              </SelectTrigger>
+              <SelectContent>
+                {schoolYears.map(year => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
             </Button>
           </div>
@@ -236,10 +270,16 @@ const ClassManagementPage = () => {
                   <div className="flex-grow">
                     <p className="font-medium">{cls.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      Cursus: {getCurriculumName(cls.curriculum_id)} (Établissement: {getEstablishmentName(curricula.find(c => c.id === cls.curriculum_id)?.establishment_id)})
+                      Établissement: {getEstablishmentName(cls.establishment_id)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Cursus: {getCurriculumName(cls.curriculum_id)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Année scolaire: {cls.school_year}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Élèves: {allProfiles.filter(p => p.role === 'student' && p.class_id === cls.id).length}
+                      Élèves: {allProfiles.filter(p => p.role === 'student' && allStudentClassEnrollments.some(e => e.student_id === p.id && e.class_id === cls.id)).length}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
