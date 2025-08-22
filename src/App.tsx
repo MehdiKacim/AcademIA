@@ -29,7 +29,6 @@ import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-// import AuthPage from "./pages/AuthPage"; // Removed AuthPage import
 import { CourseChatProvider } from "./contexts/CourseChatContext"; // Import CourseChatProvider
 
 const queryClient = new QueryClient();
@@ -97,7 +96,7 @@ const AppWithThemeProvider = () => {
           console.log('SW registration failed: ', registrationError);
         });
 
-      // Also check for updates when the page gains focus (e.g., user returns to tab)
+      // Also check for updates when the page gains focus (e.e., user returns to tab)
       const handleFocus = () => {
         if (registration) {
           registration.update();
@@ -135,7 +134,8 @@ const AppWithThemeProvider = () => {
               <Routes>
                 {/* Public route for the landing page (Index.tsx) */}
                 <Route path="/" element={<Index />} /> 
-                {/* Removed public route for AuthPage.tsx */}
+                {/* Public route for the About page */}
+                <Route path="/about" element={<About />} />
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}
@@ -156,7 +156,6 @@ const AppWithThemeProvider = () => {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/data-model" element={<DataModelViewer />} />
-                    <Route path="/about" element={<About />} /> {/* New About page route */}
                   </Route>
                 </Route>
 
