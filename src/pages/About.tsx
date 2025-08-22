@@ -20,14 +20,14 @@ const About = () => {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-4 mx-auto w-fit" // Added mx-auto and w-fit to center the logo container
+          className="mb-4 mx-auto w-fit"
         >
-          <Logo iconClassName="w-24 h-24" showText={false} /> {/* Removed mx-auto from iconClassName as it's now on the parent */}
+          <Logo iconClassName="w-24 h-24" showText={false} />
         </motion.div>
-        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center"> {/* Added text-center here */}
           Informations sur l'Application
         </h2>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground mt-2 text-center"> {/* Added text-center here */}
           Découvrez les détails techniques et la version d'AcademIA.
         </p>
       </div>
