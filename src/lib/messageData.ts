@@ -93,21 +93,16 @@ export const getConversation = async (userId1: string, userId2: string): Promise
   const { data, error } = await supabase
     .from('messages')
     .select('*')
-    .or(`(sender_id.eq.${userId1},receiver_id.eq.${userId1}),(sender_id.eq.${userId2},receiver_id.eq.${userId2})`)
+    .or(`and(sender_id.eq.${userId1},receiver_id.eq.${userId2}),and(sender_id.eq.${userId2},receiver_id.eq.${userId1})`)
     .order('created_at', { ascending: true });
 
   if (error) {
     console.error("Error fetching conversation:", error);
-    return [];
+    throw error; // Re-throw to be caught by the calling component
   }
 
-  // Filter to ensure only messages between these two specific users are returned
-  const filteredData = data.filter(msg =>
-    (msg.sender_id === userId1 && msg.receiver_id === userId2) ||
-    (msg.sender_id === userId2 && msg.receiver_id === userId1)
-  );
-
-  return filteredData;
+  // The frontend filter is no longer needed as the Supabase query is precise
+  return data;
 };
 
 /**
