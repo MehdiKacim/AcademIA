@@ -7,10 +7,6 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
-    // Ajout de la configuration des types MIME pour les fichiers .apk
-    mimeTypes: {
-      'application/vnd.android.package-archive': ['apk'],
-    },
   },
   plugins: [
     dyadComponentTagger(),

@@ -22,13 +22,10 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import Messages from "./pages/Messages";
-// import About from "./pages/About"; // Removed direct import as it's now part of AboutModal
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { CourseChatProvider } from "./contexts/CourseChatContext"; // Import CourseChatProvider
 
 const queryClient = new QueryClient();
@@ -51,69 +48,6 @@ const AppWithThemeProvider = () => {
     }
   }, [isLoadingUser]);
 
-  // Service Worker Update Logic
-  React.useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      let registration: ServiceWorkerRegistration | null = null;
-
-      const onUpdateFound = (reg: ServiceWorkerRegistration) => {
-        const newWorker = reg.installing || reg.waiting;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New content is available and ready to be activated
-              toast.info("Une nouvelle version de l'application est disponible !", {
-                action: (
-                  <Button
-                    onClick={() => {
-                      newWorker.postMessage({ type: 'SKIP_WAITING' });
-                      window.location.reload();
-                    }}
-                    size="sm"
-                  >
-                    Mettre à jour
-                  </Button>
-                ),
-                duration: Infinity, // Keep toast visible until user acts
-              });
-            }
-          });
-        }
-      };
-
-      navigator.serviceWorker.register('/service-worker.js')
-        .then((reg) => {
-          registration = reg;
-          console.log('SW registered: ', reg);
-
-          // Check for updates immediately
-          reg.update();
-
-          // Listen for new updates
-          reg.addEventListener('updatefound', () => onUpdateFound(reg));
-        })
-        .catch((registrationError) => {
-          console.log('SW registration failed: ', registrationError);
-        });
-
-      // Also check for updates when the page gains focus (e.e., user returns to tab)
-      const handleFocus = () => {
-        if (registration) {
-          registration.update();
-        }
-      };
-      window.addEventListener('focus', handleFocus);
-
-      return () => {
-        if (registration) {
-          registration.removeEventListener('updatefound', () => onUpdateFound(registration));
-        }
-        window.removeEventListener('focus', handleFocus);
-      };
-    }
-  }, []);
-
-
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="class">
       <QueryClientProvider client={queryClient}>
@@ -134,8 +68,6 @@ const AppWithThemeProvider = () => {
               <Routes>
                 {/* Public route for the landing page (Index.tsx) */}
                 <Route path="/" element={<Index />} /> 
-                {/* Public route for the About page (now handled by modal, so route removed) */}
-                {/* <Route path="/about" element={<About />} /> */}
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}
