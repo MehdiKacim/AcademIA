@@ -215,22 +215,20 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
           control={form.control}
           name="username"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="relative"> {/* Make FormItem relative for icon positioning */}
               <FormLabel>Nom d'utilisateur</FormLabel>
-              <div className="relative">
-                <FormControl>
-                  <Input id="signup-username" {...field} onChange={handleUsernameChange} className="pr-10" autoComplete="username" /> {/* Unique ID and autocomplete */}
-                </FormControl>
-                {usernameAvailabilityStatus === 'checking' && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                )}
-                {usernameAvailabilityStatus === 'available' && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                )}
-                {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && (
-                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                )}
-              </div>
+              <FormControl>
+                <Input id="signup-username" {...field} onChange={handleUsernameChange} className="pr-10" autoComplete="username" />
+              </FormControl>
+              {usernameAvailabilityStatus === 'checking' && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+              )}
+              {usernameAvailabilityStatus === 'available' && (
+                <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+              )}
+              {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && (
+                <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -239,22 +237,20 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="relative"> {/* Make FormItem relative for icon positioning */}
               <FormLabel>Email</FormLabel>
-              <div className="relative">
-                <FormControl>
-                  <Input id="signup-email" type="email" {...field} onChange={handleEmailChange} className="pr-10" autoComplete="email" /> {/* Unique ID and autocomplete */}
-                </FormControl>
-                {emailAvailabilityStatus === 'checking' && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                )}
-                {emailAvailabilityStatus === 'available' && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                )}
-                {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
-                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                )}
-              </div>
+              <FormControl>
+                <Input id="signup-email" type="email" {...field} onChange={handleEmailChange} className="pr-10" autoComplete="email" />
+              </FormControl>
+              {emailAvailabilityStatus === 'checking' && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+              )}
+              {emailAvailabilityStatus === 'available' && (
+                <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+              )}
+              {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
+                <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+              )}
               <FormMessage />
             </FormItem>
           )}
