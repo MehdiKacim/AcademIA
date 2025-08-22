@@ -14,7 +14,7 @@ import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
-  findProfileByUsername, // Changed from getProfileByUsername
+  findProfileByUsername,
   updateProfile,
   deleteProfile,
 } from '@/lib/studentData';
@@ -47,7 +47,7 @@ const StudentManagementPage = () => {
 
   const [usernameToAssign, setUsernameToAssign] = useState('');
   const [foundUserForAssignment, setFoundUserForAssignment] = useState<Profile | null>(null);
-  const [classToAssign, setClassToAssign] = useState<string>(""); // Initialisé à ""
+  const [classToAssign, setClassToAssign] = useState<string>("");
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openCommand, setOpenCommand] = useState(false);
@@ -109,7 +109,7 @@ const StudentManagementPage = () => {
     setFoundUserForAssignment(null);
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      const profile = await findProfileByUsername(usernameToAssign.trim()); // Changed to findProfileByUsername
+      const profile = await findProfileByUsername(usernameToAssign.trim());
       setFoundUserForAssignment(profile || null);
       setIsSearchingUser(false);
     }, 500);
@@ -152,7 +152,7 @@ const StudentManagementPage = () => {
         showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${getClassName(classToAssign)} !`);
         setUsernameToAssign('');
         setFoundUserForAssignment(null);
-        setClassToAssign(""); // Réinitialisé à ""
+        setClassToAssign("");
         setOpenCommand(false);
       } else {
         showError("Échec de l'affectation de l'élève.");
@@ -190,7 +190,7 @@ const StudentManagementPage = () => {
       ).slice(0, 10);
 
   const filteredStudentProfiles = studentSearchQuery.trim() === ''
-    ? [] // Only show results if search query is not empty
+    ? []
     : allProfiles.filter(profile => {
         if (profile.role !== 'student') return false;
         const lowerCaseQuery = studentSearchQuery.toLowerCase();
@@ -433,7 +433,7 @@ const StudentManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
                       <Mail className="h-4 w-4 mr-1" /> Message
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id, selectedClass.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id)}>
                       <Trash2 className="h-4 w-4" /> Retirer
                     </Button>
                   </div>
