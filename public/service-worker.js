@@ -53,6 +53,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // IMPORTANT: Bypass caching for Supabase API requests
+  // The Supabase project ID is kbdtcljqwonsgwcpoxsd
+  const supabaseApiUrl = 'https://kbdtcljqwonsgwcpoxsd.supabase.co/rest/v1/';
+  if (event.request.url.startsWith(supabaseApiUrl)) {
+    console.log('[Service Worker] Bypassing cache for Supabase API request:', event.request.url);
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   // Strategy for navigation requests (HTML pages)
   if (event.request.mode === 'navigate') {
     event.respondWith(
