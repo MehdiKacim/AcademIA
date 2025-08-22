@@ -24,10 +24,10 @@ const About = () => {
         >
           <Logo iconClassName="w-24 h-24" showText={false} />
         </motion.div>
-        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center"> {/* Added text-center here */}
+        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center">
           Informations sur l'Application
         </h2>
-        <p className="text-muted-foreground mt-2 text-center"> {/* Added text-center here */}
+        <p className="text-muted-foreground mt-2 text-center">
           Découvrez les détails techniques et la version d'AcademIA.
         </p>
       </div>
@@ -50,7 +50,7 @@ const About = () => {
               <Info className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Détails Généraux</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+            <CardContent className="space-y-3 text-sm text-center"> {/* Added text-center here */}
               <p className="text-muted-foreground">
                 <span className="font-medium text-foreground">Nom de l'application :</span> AcademIA
               </p>
@@ -75,7 +75,7 @@ const About = () => {
               <Code className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Développeur</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+            <CardContent className="space-y-3 text-sm text-center"> {/* Added text-center here */}
               <p className="text-muted-foreground">
                 <span className="font-medium text-foreground">Nom du développeur :</span> Mehdi Kacim
               </p>
@@ -92,7 +92,7 @@ const About = () => {
               <Heart className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Connectez-vous avec le développeur</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-4 pt-2">
+            <CardContent className="flex flex-wrap gap-4 pt-2 justify-center"> {/* Added justify-center here */}
               <a
                 href="https://www.linkedin.com/in/mehdi-kacim-333304142?originalSubdomain=fr"
                 target="_blank"
