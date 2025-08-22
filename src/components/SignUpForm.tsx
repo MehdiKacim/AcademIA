@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils"; // Import cn for conditional styling
+import { CheckCircle, XCircle, Loader2 } from "lucide-react"; // Import icons and Loader2
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis."),
@@ -212,13 +213,21 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nom d'utilisateur</FormLabel>
-              <FormControl>
-                <Input id="username" {...field} onChange={handleUsernameChange} />
-              </FormControl>
+              <div className="relative">
+                <FormControl>
+                  <Input id="username" {...field} onChange={handleUsernameChange} className="pr-10" />
+                </FormControl>
+                {usernameAvailabilityStatus === 'checking' && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                )}
+                {usernameAvailabilityStatus === 'available' && (
+                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                )}
+                {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && (
+                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+                )}
+              </div>
               <FormMessage />
-              {usernameAvailabilityStatus === 'checking' && <p className="text-sm text-muted-foreground mt-1">Vérification...</p>}
-              {usernameAvailabilityStatus === 'available' && <p className="text-sm text-green-600 mt-1">Nom d'utilisateur disponible !</p>}
-              {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && <p className="text-sm text-red-600 mt-1">{form.formState.errors.username.message}</p>}
             </FormItem>
           )}
         />
@@ -228,13 +237,21 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input id="email" type="email" {...field} onChange={handleEmailChange} />
-              </FormControl>
+              <div className="relative">
+                <FormControl>
+                  <Input id="email" type="email" {...field} onChange={handleEmailChange} className="pr-10" />
+                </FormControl>
+                {emailAvailabilityStatus === 'checking' && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                )}
+                {emailAvailabilityStatus === 'available' && (
+                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                )}
+                {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
+                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+                )}
+              </div>
               <FormMessage />
-              {emailAvailabilityStatus === 'checking' && <p className="text-sm text-muted-foreground mt-1">Vérification...</p>}
-              {emailAvailabilityStatus === 'available' && <p className="text-sm text-green-600 mt-1">Email disponible !</p>}
-              {emailAvailabilityStatus === 'taken' && form.formState.errors.email && <p className="text-sm text-red-600 mt-1">{form.formState.errors.email.message}</p>}
             </FormItem>
           )}
         />
