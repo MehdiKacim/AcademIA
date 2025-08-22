@@ -219,7 +219,7 @@ const DashboardLayout = () => {
             { to: "/establishments", label: "Établissements", icon: School, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' }, // Updated path
           ],
         },
         {
@@ -244,7 +244,7 @@ const DashboardLayout = () => {
           onClick: () => setCurrentNavLevel('suivi'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' }, // Updated path
           ],
         },
         {
