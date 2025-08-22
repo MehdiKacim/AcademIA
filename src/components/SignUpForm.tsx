@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { cn } from "@/lib/utils"; // Import cn for conditional styling
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis."),
@@ -35,6 +36,9 @@ interface SignUpFormProps {
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -52,38 +56,53 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
   const validateUsername = useCallback(async (username: string) => {
     if (username.length < 3) {
       form.setError("username", { type: "manual", message: "Le nom d'utilisateur doit contenir au moins 3 caractères." });
+      setUsernameAvailabilityStatus('idle');
       return false;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       form.setError("username", { type: "manual", message: "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores." });
+      setUsernameAvailabilityStatus('idle');
       return false;
     }
+    setUsernameAvailabilityStatus('checking');
     const isTaken = await checkUsernameExists(username);
     if (isTaken) {
       form.setError("username", { type: "manual", message: "Ce nom d'utilisateur est déjà pris." });
+      setUsernameAvailabilityStatus('taken');
       return false;
     }
     form.clearErrors("username");
+    setUsernameAvailabilityStatus('available');
     return true;
   }, [form]);
 
   const validateEmail = useCallback(async (email: string) => {
     if (!z.string().email().safeParse(email).success) {
       form.setError("email", { type: "manual", message: "Veuillez entrer une adresse email valide." });
+      setEmailAvailabilityStatus('idle');
       return false;
     }
+    setEmailAvailabilityStatus('checking');
     const isTaken = await checkEmailExists(email);
     if (isTaken) {
       form.setError("email", { type: "manual", message: "Cet email est déjà utilisé par un autre profil." });
+      setEmailAvailabilityStatus('taken');
       return false;
     }
     form.clearErrors("email");
+    setEmailAvailabilityStatus('available');
     return true;
   }, [form]);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     form.setValue("username", value);
+    if (value.trim() === '') {
+        setUsernameAvailabilityStatus('idle');
+        form.clearErrors("username");
+        if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
+        return;
+    }
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -95,6 +114,12 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     form.setValue("email", value);
+    if (value.trim() === '') {
+        setEmailAvailabilityStatus('idle');
+        form.clearErrors("email");
+        if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
+        return;
+    }
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -191,6 +216,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
                 <Input id="username" {...field} onChange={handleUsernameChange} />
               </FormControl>
               <FormMessage />
+              {usernameAvailabilityStatus === 'checking' && <p className="text-sm text-muted-foreground mt-1">Vérification...</p>}
+              {usernameAvailabilityStatus === 'available' && <p className="text-sm text-green-600 mt-1">Nom d'utilisateur disponible !</p>}
+              {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && <p className="text-sm text-red-600 mt-1">{form.formState.errors.username.message}</p>}
             </FormItem>
           )}
         />
@@ -204,6 +232,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
                 <Input id="email" type="email" {...field} onChange={handleEmailChange} />
               </FormControl>
               <FormMessage />
+              {emailAvailabilityStatus === 'checking' && <p className="text-sm text-muted-foreground mt-1">Vérification...</p>}
+              {emailAvailabilityStatus === 'available' && <p className="text-sm text-green-600 mt-1">Email disponible !</p>}
+              {emailAvailabilityStatus === 'taken' && form.formState.errors.email && <p className="text-sm text-red-600 mt-1">{form.formState.errors.email.message}</p>}
             </FormItem>
           )}
         />
