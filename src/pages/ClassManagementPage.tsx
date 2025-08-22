@@ -408,70 +408,37 @@ const ClassManagementPage = () => {
             </div>
           )}
 
-          <h3 className="text-lg font-semibold mt-6">Liste de tous les élèves</h3>
+          <h3 className="text-lg font-semibold mt-6">Liste de toutes les classes</h3> {/* Changed title to reflect class management */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Rechercher par nom, email ou @username..."
+              placeholder="Rechercher par nom de classe..."
               className="pl-10"
-              value={studentSearchQuery}
+              value={studentSearchQuery} // Reusing studentSearchQuery for class search
               onChange={(e) => setStudentSearchQuery(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            {filteredStudentProfiles.length === 0 ? (
-              <p className="text-muted-foreground">Aucun élève trouvé pour votre recherche.</p>
+            {classes.filter(cls => cls.name.toLowerCase().includes(studentSearchQuery.toLowerCase())).length === 0 ? (
+              <p className="text-muted-foreground">Aucune classe trouvée pour votre recherche.</p>
             ) : (
-              filteredStudentProfiles.map((profile) => (
-                <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              classes.filter(cls => cls.name.toLowerCase().includes(studentSearchQuery.toLowerCase())).map((cls) => (
+                <Card key={cls.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
-                    <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
-                    <p className="text-sm text-muted-foreground">{profile.email}</p>
-                    {profile.class_id && (
-                      <p className="text-xs text-muted-foreground">
-                        Classe: {getClassName(profile.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === profile.class_id)?.curriculum_id)})
-                      </p>
-                    )}
+                    <p className="font-medium">{cls.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Cursus: {getCurriculumName(cls.curriculum_id)} (Établissement: {getEstablishmentName(curricula.find(c => c.id === cls.curriculum_id)?.establishment_id)})
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Élèves: {allProfiles.filter(p => p.role === 'student' && p.class_id === cls.id).length}
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                    {profile.class_id ? (
-                      <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(profile.id)}>
-                        <Users className="h-4 w-4 mr-1" /> Retirer de la classe
-                      </Button>
-                    ) : (
-                      <select
-                        className="flex h-9 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        value=""
-                        onChange={async (e) => {
-                          const classId = e.target.value;
-                          if (classId) {
-                            try {
-                              const updatedProfile = await updateProfile({ id: profile.id, class_id: classId });
-                              if (updatedProfile) {
-                                setAllProfiles(await getAllProfiles());
-                                showSuccess(`Élève ${updatedProfile.first_name} ${updatedProfile.last_name} affecté à la classe ${getClassName(classId)} !`);
-                              } else {
-                                showError("Échec de l'affectation de l'élève.");
-                              }
-                            } catch (error: any) {
-                              console.error("Error assigning student to class:", error);
-                              showError(`Erreur lors de l'affectation de l'élève: ${error.message}`);
-                            }
-                          }
-                        }}
-                      >
-                        <option value="">Affecter à une classe</option>
-                        {classes.map(cls => (
-                          <option key={cls.id} value={cls.id}>{cls.name} ({getCurriculumName(cls.curriculum_id)})</option>
-                        ))}
-                      </select>
-                    )}
-
-                    <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
-                      <Mail className="h-4 w-4 mr-1" /> Message
+                    <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
+                      <Users className="h-4 w-4 mr-1" /> Voir les élèves
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)}>
+                      <Trash2 className="h-4 w-4" /> Supprimer
                     </Button>
                   </div>
                 </Card>
@@ -504,7 +471,7 @@ const ClassManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
                       <Mail className="h-4 w-4 mr-1" /> Message
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id, selectedClass.id)}>
                       <Trash2 className="h-4 w-4" /> Retirer
                     </Button>
                   </div>
@@ -518,4 +485,4 @@ const ClassManagementPage = () => {
   );
 };
 
-export default StudentManagementPage;
+export default ClassManagementPage;
