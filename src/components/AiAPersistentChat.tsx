@@ -14,12 +14,11 @@ interface Message {
 }
 
 const AiAPersistentChat = () => {
-  const [messages, setMessages] = useState<Message[]>([]); // Initialisé vide
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Utilisation d'un useRef pour un compteur d'ID unique et persistant, commence à 0
   const messageIdCounter = useRef(0); 
   
   const { currentCourseTitle, currentModuleTitle, isChatOpen, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
@@ -30,7 +29,6 @@ const AiAPersistentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Ajoute le message initial d'AiA une seule fois au montage du composant
   useEffect(() => {
     if (messages.length === 0) {
       messageIdCounter.current += 1;
@@ -38,7 +36,7 @@ const AiAPersistentChat = () => {
         { id: messageIdCounter.current, sender: 'aia', text: "Bonjour ! Je suis AiA, votre tuteur personnel. Comment puis-je vous aider aujourd'hui ?" },
       ]);
     }
-  }, []); // Dépendance vide pour s'exécuter une seule fois au montage
+  }, []);
 
   useEffect(() => {
     if (isChatOpen && !isMinimized) {
@@ -73,7 +71,6 @@ const AiAPersistentChat = () => {
       }
       const contextPrefix = contextParts.length > 0 ? `(Contexte: ${contextParts.join(', ')}) ` : '';
 
-      // Incrémenter le compteur pour l'ID du message utilisateur
       messageIdCounter.current += 1;
       const userMessageId = messageIdCounter.current;
       const newMessage: Message = { id: userMessageId, sender: 'user', text: contextPrefix + input.trim() };
@@ -81,7 +78,6 @@ const AiAPersistentChat = () => {
       setInput('');
 
       setTimeout(() => {
-        // Incrémenter le compteur pour l'ID du message AiA
         messageIdCounter.current += 1;
         const aiaMessageId = messageIdCounter.current;
         const aiaResponse: Message = {
@@ -101,21 +97,21 @@ const AiAPersistentChat = () => {
   };
 
   if (!isChatOpen) {
-    return null; // Ne rien afficher si le chat n'est pas ouvert
+    return null;
   }
 
   return (
     <div
       className={cn(
-        "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000]", // Z-index élevé pour être au-dessus
+        "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000]",
         isMobile
-          ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg" // Taille et position spécifiques pour mobile
-          : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg", // Taille et position spécifiques pour desktop
-        isMinimized && (isMobile ? "h-auto w-auto" : "h-14 w-56"), // État minimisé
-        "transition-all duration-300 ease-in-out" // Transitions fluides
+          ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg"
+          : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg",
+        isMinimized && (isMobile ? "h-auto w-auto" : "h-14 w-56"),
+        "transition-all duration-300 ease-in-out"
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border shrink-0"> {/* Added shrink-0 */}
         <h3 className="flex items-center gap-2 text-lg font-semibold">
           <Bot className="h-6 w-6 text-primary" /> AiA
         </h3>
@@ -132,9 +128,33 @@ const AiAPersistentChat = () => {
       </div>
 
       {!isMinimized && (
-        <div className="flex-grow flex flex-col py-4 px-4 gap-4"> {/* Ajout de gap-4 ici */}
-          <ScrollArea className="flex-grow border rounded-md"> {/* Suppression de mb-4 */}
-            <div className="flex flex-col gap-4 p-4">
+        <div className="flex-grow flex flex-col overflow-hidden"> {/* Added overflow-hidden here */}
+          {(currentCourseTitle || currentModuleTitle) && (
+            <div className="flex gap-2 flex-wrap p-4 pb-0 shrink-0"> {/* Added p-4 pb-0 and shrink-0 */}
+              {currentCourseTitle && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
+                  className="whitespace-nowrap text-xs"
+                >
+                  @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
+                </Button>
+              )}
+              {currentModuleTitle && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
+                  className="whitespace-nowrap text-xs"
+                >
+                  @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
+                </Button>
+              )}
+            </div>
+          )}
+          <ScrollArea className="flex-grow border rounded-md p-4"> {/* flex-grow and p-4 moved here */}
+            <div className="flex flex-col gap-4"> {/* Removed p-4 from here */}
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -168,32 +188,8 @@ const AiAPersistentChat = () => {
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
-          <div className="flex flex-col gap-2"> {/* Nouveau conteneur pour les boutons de contexte et la ligne de saisie */}
-            {(currentCourseTitle || currentModuleTitle) && (
-              <div className="flex gap-2 flex-wrap"> {/* Ligne des boutons de contexte */}
-                {currentCourseTitle && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
-                    className="whitespace-nowrap text-xs"
-                  >
-                    @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
-                  </Button>
-                )}
-                {currentModuleTitle && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
-                    className="whitespace-nowrap text-xs"
-                  >
-                    @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
-                  </Button>
-                )}
-              </div>
-            )}
-            <div className="flex gap-2"> {/* Ligne de saisie et bouton d'envoi, sans flex-wrap */}
+          <div className="flex flex-col gap-2 p-4 pt-0 shrink-0"> {/* Input area - fixed height */}
+            <div className="flex gap-2">
               <Input
                 placeholder="Écrivez votre message à AiA..."
                 value={input}
