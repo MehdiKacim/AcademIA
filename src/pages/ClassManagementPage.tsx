@@ -17,6 +17,7 @@ import {
   findProfileByUsername,
   updateProfile,
   deleteProfile,
+  getAllStudentClassEnrollments, // Import getAllStudentClassEnrollments
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -48,6 +49,7 @@ const ClassManagementPage = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
 
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
@@ -68,6 +70,7 @@ const ClassManagementPage = () => {
       setCurricula(await loadCurricula());
       setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Initialize here
     };
     fetchData();
   }, []);
@@ -132,6 +135,7 @@ const ClassManagementPage = () => {
       // For now, we'll rely on CASCADE DELETE in DB for student_class_enrollments
       // and update profiles if they had a direct class_id (which is now removed)
       setAllProfiles(await getAllProfiles()); // Re-fetch all profiles to ensure consistency
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
       showSuccess("Classe supprimée !");
     } catch (error: any) {
       console.error("Error deleting class:", error);
