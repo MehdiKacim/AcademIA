@@ -113,17 +113,17 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
 };
 
 export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<Profile | null> => {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('profiles')
     .update(updatedProfile)
-    .eq('id', updatedProfile.id)
-    .select()
-    .single();
+    .eq('id', updatedProfile.id);
+    // Removed .select().single() to avoid PGRST116 error if no row is returned by RLS or query
   if (error) {
     console.error("Error updating profile:", error);
     throw error;
   }
-  return data;
+  // Re-fetch the profile to ensure we have the latest data after the update
+  return getProfileById(updatedProfile.id!);
 };
 
 export const deleteProfile = async (profileId: string): Promise<void> => {
