@@ -26,7 +26,7 @@ const EstablishmentManagementPage = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // To get all profiles for creator association
+  // Removed allProfiles state as it's no longer directly used for creator association here
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
   const [currentEstablishmentToEdit, setCurrentEstablishmentToEdit] = useState<Establishment | null>(null); // State for selected establishment
@@ -35,21 +35,11 @@ const EstablishmentManagementPage = () => {
     const fetchData = async () => {
       setEstablishments(await loadEstablishments());
       setCurricula(await loadCurricula());
-      // Fetch all profiles to correctly display associated creators
-      const profiles = await getProfileById(currentUserProfile?.id || ''); // This will fetch only current user's profile, need all profiles
-      // For now, we'll simulate fetching all profiles. In a real app, you'd have a function like `getAllProfiles()`
-      // For this demo, we'll just use the current user's profile for association logic.
-      if (profiles) {
-        setAllProfiles([profiles]); // Simplified: only current user's profile
-      }
     };
     fetchData();
-  }, [currentUserProfile]);
+  }, []);
 
-  const getUserFullName = async (userId: string): Promise<string> => {
-    const profile = await getProfileById(userId);
-    return profile ? `${profile.first_name} ${profile.last_name}` : 'N/A';
-  };
+  // Removed getUserFullName as it's not used in this component anymore
 
   const handleAddEstablishment = async () => {
     if (!currentUserProfile) {
@@ -62,20 +52,7 @@ const EstablishmentManagementPage = () => {
         if (newEst) {
           setEstablishments(await loadEstablishments()); // Re-fetch to get the new list
           
-          // Associate creator with the new establishment
-          if (currentUserProfile.role === 'creator') {
-            const updatedCreatorProfile: Partial<Profile> = {
-              id: currentUserProfile.id,
-              // Assuming establishmentIds is an array in the profile table
-              // You might need to fetch the current profile first to append to the array
-              // For simplicity, we'll assume it's directly updatable or handled by a separate join table
-              // For now, we'll just update the current user's profile if it's a creator
-              // This part needs careful consideration based on your actual profile table structure
-              // If establishmentIds is a JSONB array in profiles table:
-              // establishment_ids: [...(currentUserProfile.establishment_ids || []), newEst.id],
-            };
-            // await updateProfile(updatedCreatorProfile); // This would update the profile
-          }
+          // Removed creator association logic as it's not handled directly here anymore
 
           setNewEstablishmentName('');
           showSuccess("Établissement ajouté !");
@@ -183,13 +160,7 @@ const EstablishmentManagementPage = () => {
                   </div>
                   <div className="mt-2 text-sm text-muted-foreground">
                     {curricula.filter(c => c.establishment_id === est.id).length} cursus
-                    {/* This part needs to be updated to fetch all profiles and check their establishment_ids */}
-                    {/* For now, it will not display correctly as allProfiles only contains current user */}
-                    {/* {allProfiles.filter(cp => cp.establishment_ids?.includes(est.id)).length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Professeurs associés: {allProfiles.filter(cp => cp.establishment_ids?.includes(est.id)).map(cp => getUserFullName(cp.id)).join(', ')}
-                      </p>
-                    )} */}
+                    {/* Removed dynamic display of associated professors as it's not directly managed here */}
                   </div>
                 </Card>
               ))

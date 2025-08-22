@@ -176,14 +176,14 @@ const ClassManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'creator' && currentRole !== 'tutor') {
+  if (currentRole !== 'creator' && currentRole !== 'tutor' && currentRole !== 'administrator') { // Only creators, tutors and administrators can access
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) et les tuteurs peuvent accéder à cette page.
+          Seuls les créateurs (professeurs), les tuteurs et les administrateurs peuvent accéder à cette page.
         </p>
       </div>
     );

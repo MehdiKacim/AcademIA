@@ -209,9 +209,18 @@ const AdminUserManagementPage = () => {
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.")) {
       try {
-        await deleteProfile(userId);
-        showSuccess("Utilisateur supprimé avec succès !");
+        // Delete user from auth.users (this will cascade delete from profiles)
+        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+        if (authError) {
+          console.error("Error deleting user from auth.users:", authError);
+          showError(`Erreur lors de la suppression du compte utilisateur: ${authError.message}`);
+          return;
+        }
+        
+        // The profile and enrollments should be cascade deleted by DB foreign keys
+        // Re-fetch all data to update the UI
         setAllUsers(await getAllProfiles()); // Refresh user list
+        showSuccess("Utilisateur supprimé avec succès !");
       } catch (error: any) {
         console.error("Error deleting user:", error);
         showError(`Erreur lors de la suppression de l'utilisateur: ${error.message}`);
