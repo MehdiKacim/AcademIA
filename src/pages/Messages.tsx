@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, Search, Archive } from "lucide-react"; // Import Archive icon
+import { ArrowLeft, MessageSquare, Search, Archive } from "lucide-react";
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
-import { Profile, Message, Establishment, Curriculum, Class } from '@/lib/dataModels'; // Import Message type
+import { Profile, Message, Establishment, Curriculum, Class } from '@/lib/dataModels';
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input"; // Import Input component
+import { Input } from "@/components/ui/input";
 import { showSuccess, showError } from '@/utils/toast';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getRecentConversations, getUnreadMessageCount, getArchivedConversations, archiveConversation, unarchiveConversation } from "@/lib/messageData"; // Import messageData functions
-import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
-import { cn } from '@/lib/utils'; // Import cn for conditional styling
-import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
-import { loadEstablishments, loadCurricula, loadClasses } from '@/lib/courseData'; // Import course data loaders
+import { getRecentConversations, getUnreadMessageCount, getArchivedConversations, archiveConversation, unarchiveConversation } from "@/lib/messageData";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from '@/lib/utils';
+import { useIsMobile } from "@/hooks/use-mobile";
+import { loadEstablishments, loadCurricula, loadClasses } from '@/lib/courseData';
 
 const Messages = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -25,20 +25,19 @@ const Messages = () => {
 
   const [selectedContact, setSelectedContact] = useState<Profile | null>(null);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
-  const [recentConversations, setRecentConversations] = useState<Message[]>([]); // Renamed from recentMessages
-  const [archivedConversations, setArchivedConversations] = useState<Message[]>([]); // New state for archived messages
+  const [recentConversations, setRecentConversations] = useState<Message[]>([]);
+  const [archivedConversations, setArchivedConversations] = useState<Message[]>([]);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [initialCourseContext, setInitialCourseContext] = useState<{ id?: string; title?: string }>({});
-  const [showArchived, setShowArchived] = useState(false); // New state to toggle view
+  const [showArchived, setShowArchived] = useState(false);
 
-  // States for professional filters
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string>(""); // Initialisé à ""
-  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string>("");     // Initialisé à ""
-  const [selectedClassId, setSelectedClassId] = useState<string>("");             // Initialisé à ""
-  const [searchStudentQuery, setSearchStudentQuery] = useState(''); // For searching students in professional view
+  const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string>("");
+  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string>("");
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [searchStudentQuery, setSearchStudentQuery] = useState('');
 
   const currentUserId = currentUserProfile?.id;
 
@@ -50,7 +49,7 @@ const Messages = () => {
     }
 
     const profiles = await getAllProfiles();
-    setAllProfiles(profiles.filter(p => p.id !== currentUserId)); // Exclude current user
+    setAllProfiles(profiles.filter(p => p.id !== currentUserId));
 
     const recent = await getRecentConversations(currentUserId);
     setRecentConversations(recent);
@@ -87,9 +86,54 @@ const Messages = () => {
             table: 'messages',
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
-          (payload) => {
+          async (payload) => {
             console.log("[Messages] Realtime INSERT event received:", payload);
-            fetchAllData(); // This should trigger re-render
+            const newMessage = payload.new as Message;
+            const contactId = newMessage.sender_id === currentUserId ? newMessage.receiver_id : newMessage.sender_id;
+
+            // Fetch the latest message for this conversation to ensure we have the correct representation
+            const { data: latestMessageForContact, error: latestError } = await supabase
+              .from('messages')
+              .select('*')
+              .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${currentUserId})`)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+
+            if (latestError) {
+              console.error("[Messages] Error fetching latest message for contact after INSERT:", latestError);
+              fetchAllData(); // Fallback to full fetch
+              return;
+            }
+
+            if (latestMessageForContact) {
+              if (!latestMessageForContact.is_archived) {
+                setRecentConversations(prev => {
+                  const filtered = prev.filter(msg => {
+                    const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+                    return other !== contactId;
+                  });
+                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                });
+                setArchivedConversations(prev => prev.filter(msg => {
+                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+                  return other !== contactId;
+                }));
+              } else {
+                setArchivedConversations(prev => {
+                  const filtered = prev.filter(msg => {
+                    const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+                    return other !== contactId;
+                  });
+                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                });
+                setRecentConversations(prev => prev.filter(msg => {
+                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+                  return other !== contactId;
+                }));
+              }
+            }
+            setUnreadMessageCount(await getUnreadMessageCount(currentUserId));
           }
         )
         .on(
@@ -100,21 +144,59 @@ const Messages = () => {
             table: 'messages',
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
-          (payload) => {
+          async (payload) => {
             console.log("[Messages] Realtime UPDATE event received:", payload);
-            // Check if the update is related to archiving/unarchiving
-            const oldMessage = payload.old as Message;
             const newMessage = payload.new as Message;
-            if (oldMessage && newMessage && oldMessage.is_archived !== newMessage.is_archived) {
-              console.log(`[Messages] Archiving status changed for message ${newMessage.id}. Realtime listener triggered fetchAllData.`);
-              fetchAllData(); // This should trigger re-render
-            } else if (oldMessage && newMessage && oldMessage.is_read !== newMessage.is_read) {
-              console.log(`[Messages] Read status changed for message ${newMessage.id}. Realtime listener triggered fetchAllData.`);
-              fetchAllData(); // This should trigger re-render
-            } else {
-              console.log(`[Messages] Other update for message ${newMessage.id}. Realtime listener triggered fetchAllData.`);
-              fetchAllData(); // This should trigger re-render for any relevant update
+            const oldMessage = payload.old as Message;
+
+            const contactId = newMessage.sender_id === currentUserId ? newMessage.receiver_id : newMessage.sender_id;
+
+            // Fetch the latest message for this conversation to ensure we have the correct representation
+            const { data: latestMessageForContact, error: latestError } = await supabase
+              .from('messages')
+              .select('*')
+              .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${currentUserId})`)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+
+            if (latestError) {
+              console.error("[Messages] Error fetching latest message for contact after UPDATE:", latestError);
+              fetchAllData(); // Fallback to full fetch
+              return;
             }
+
+            if (latestMessageForContact) {
+              // Update recentConversations
+              setRecentConversations(prev => {
+                const filtered = prev.filter(msg => {
+                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+                  return other !== contactId;
+                });
+                if (!latestMessageForContact.is_archived) {
+                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                }
+                return filtered;
+              });
+
+              // Update archivedConversations
+              setArchivedConversations(prev => {
+                const filtered = prev.filter(msg => {
+                  const other = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+                  return other !== contactId;
+                });
+                if (latestMessageForContact.is_archived) {
+                  return [...filtered, latestMessageForContact].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                }
+                return filtered;
+              });
+
+              // If the currently selected contact's conversation was archived, deselect it
+              if (selectedContact?.id === contactId && latestMessageForContact.is_archived) {
+                setSelectedContact(null);
+              }
+            }
+            setUnreadMessageCount(await getUnreadMessageCount(currentUserId));
           }
         )
         .subscribe();
@@ -126,10 +208,9 @@ const Messages = () => {
         supabase.removeChannel(channel);
       }
     };
-  }, [currentUserId, currentRole]); // Depend on currentUserId and currentRole
+  }, [currentUserId, currentRole, selectedContact]); // Added selectedContact to dependencies for deselect logic
 
   useEffect(() => {
-    // Check for query parameters to pre-select a contact
     const params = new URLSearchParams(location.search);
     const contactId = params.get('contactId');
     const courseId = params.get('courseId');
@@ -140,7 +221,6 @@ const Messages = () => {
       if (contact) {
         setSelectedContact(contact);
         if (courseId) setInitialCourseContext({ id: courseId, title: courseTitle || `Cours ID: ${courseId}` });
-        // If a contact is selected from URL, ensure it's unarchived
         const isContactArchived = archivedConversations.some(msg => {
           const otherUserId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
           return otherUserId === contactId;
@@ -148,12 +228,13 @@ const Messages = () => {
         if (isContactArchived && currentUserId) {
           console.log(`[Messages] Contact ${contact.first_name} selected via URL, was archived. Attempting to unarchive.`);
           unarchiveConversation(currentUserId, contactId).then(() => {
-            fetchAllData(); // Re-fetch to update lists
+            // No need to call fetchAllData here, realtime listener will handle it
+            showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
           }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
         }
       }
     }
-  }, [location.search, allProfiles, archivedConversations, currentUserId]); // Added archivedConversations to dependencies
+  }, [location.search, allProfiles, archivedConversations, currentUserId]);
 
   const handleSelectContact = (contact: Profile, courseId?: string, courseTitle?: string) => {
     console.log("[Messages] handleSelectContact called for:", contact.username);
@@ -161,7 +242,6 @@ const Messages = () => {
     setInitialCourseContext({ id: courseId, title: courseTitle });
     navigate(`/messages?contactId=${contact.id}${courseId ? `&courseId=${courseId}` : ''}${courseTitle ? `&courseTitle=${courseTitle}` : ''}`, { replace: true });
 
-    // Implicitly unarchive if the conversation is currently archived
     if (currentUserId) {
       const isContactArchived = archivedConversations.some(msg => {
         const otherUserId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
@@ -170,7 +250,7 @@ const Messages = () => {
       if (isContactArchived) {
         console.log(`[Messages] Contact ${contact.first_name} selected, was archived. Attempting to unarchive.`);
         unarchiveConversation(currentUserId, contact.id).then(() => {
-          fetchAllData(); // Re-fetch to update lists
+          // No need to call fetchAllData here, realtime listener will handle it
           showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
         }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
       }
@@ -186,9 +266,8 @@ const Messages = () => {
     try {
       await archiveConversation(currentUserId, contactId);
       showSuccess("Conversation archivée !");
-      setSelectedContact(null); // Deselect if current chat is archived
-      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
-      console.log("[Messages] Archive successful. fetchAllData called directly.");
+      // The realtime listener will now handle updating the state
+      console.log("[Messages] Archive successful. Realtime listener should trigger state update.");
     } catch (error: any) {
       console.error("[Messages] Error during archiving:", error);
       showError(`Erreur lors de l'archivage: ${error.message}`);
@@ -204,8 +283,8 @@ const Messages = () => {
     try {
       await unarchiveConversation(currentUserId, contactId);
       showSuccess("Conversation désarchivée !");
-      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
-      console.log("[Messages] Unarchive successful. fetchAllData called directly.");
+      // The realtime listener will now handle updating the state
+      console.log("[Messages] Unarchive successful. Realtime listener should trigger state update.");
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
       showError(`Erreur lors du désarchivage: ${error.message}`);
@@ -216,7 +295,6 @@ const Messages = () => {
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
-  // Filtered students for new chat (for professionals)
   const filteredStudentsForNewChat = useMemo(() => {
     if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) return [];
 
@@ -248,7 +326,6 @@ const Messages = () => {
       );
     }
 
-    // Exclude students already in recent or archived conversations
     const contactsInAllConversations = new Set(
       [...recentConversations, ...archivedConversations].map(msg =>
         msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
@@ -260,7 +337,6 @@ const Messages = () => {
   }, [allProfiles, currentUserProfile, currentRole, selectedEstablishmentId, selectedCurriculumId, selectedClassId, searchStudentQuery, establishments, curricula, classes, recentConversations, archivedConversations]);
 
 
-  // Available contacts for new chat (for students)
   const availableContactsForStudentNewChat = useMemo(() => {
     if (!currentUserProfile || currentRole !== 'student') return [];
 
@@ -271,8 +347,8 @@ const Messages = () => {
     );
 
     return allProfiles.filter(profile =>
-      profile.id !== currentUserProfile.id && // Exclude self
-      !contactsInAllConversations.has(profile.id) // Exclude contacts already in any conversation
+      profile.id !== currentUserProfile.id &&
+      !contactsInAllConversations.has(profile.id)
     );
   }, [allProfiles, currentUserProfile, recentConversations, archivedConversations, currentRole]);
 
