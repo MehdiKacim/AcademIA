@@ -189,14 +189,16 @@ const StudentManagementPage = () => {
         p.last_name.toLowerCase().includes(usernameToAssign.toLowerCase()))
       ).slice(0, 10);
 
-  const filteredStudentProfiles = allProfiles.filter(profile => {
-    if (profile.role !== 'student') return false;
-    const lowerCaseQuery = studentSearchQuery.toLowerCase();
-    return profile.first_name.toLowerCase().includes(lowerCaseQuery) ||
-           profile.last_name.toLowerCase().includes(lowerCaseQuery) ||
-           profile.username.toLowerCase().includes(lowerCaseQuery.replace('@', '')) ||
-           profile.email.toLowerCase().includes(lowerCaseQuery);
-  });
+  const filteredStudentProfiles = studentSearchQuery.trim() === ''
+    ? [] // Only show results if search query is not empty
+    : allProfiles.filter(profile => {
+        if (profile.role !== 'student') return false;
+        const lowerCaseQuery = studentSearchQuery.toLowerCase();
+        return profile.first_name.toLowerCase().includes(lowerCaseQuery) ||
+               profile.last_name.toLowerCase().includes(lowerCaseQuery) ||
+               profile.username.toLowerCase().includes(lowerCaseQuery.replace('@', '')) ||
+               profile.email.toLowerCase().includes(lowerCaseQuery);
+      });
 
   if (isLoadingUser) {
     return (
@@ -344,7 +346,9 @@ const StudentManagementPage = () => {
             />
           </div>
           <div className="space-y-2">
-            {filteredStudentProfiles.length === 0 ? (
+            {studentSearchQuery.trim() === '' ? (
+              <p className="text-muted-foreground text-center py-4">Veuillez saisir un terme de recherche pour afficher les élèves.</p>
+            ) : filteredStudentProfiles.length === 0 ? (
               <p className="text-muted-foreground">Aucun élève trouvé pour votre recherche.</p>
             ) : (
               filteredStudentProfiles.map((profile) => (
@@ -429,7 +433,7 @@ const StudentManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
                       <Mail className="h-4 w-4 mr-1" /> Message
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id, selectedClass.id)}>
                       <Trash2 className="h-4 w-4" /> Retirer
                     </Button>
                   </div>

@@ -63,7 +63,7 @@ const ClassManagementPage = () => {
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openCommand, setOpenCommand] = useState(false);
 
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [classSearchQuery, setClassSearchQuery] = useState(''); // Renamed from studentSearchQuery
 
   // Load initial data
   useEffect(() => {
@@ -264,14 +264,9 @@ const ClassManagementPage = () => {
         p.last_name.toLowerCase().includes(usernameToAssign.toLowerCase()))
       ).slice(0, 10);
 
-  const filteredStudentProfiles = allProfiles.filter(profile => {
-    if (profile.role !== 'student') return false;
-    const lowerCaseQuery = studentSearchQuery.toLowerCase();
-    return profile.first_name.toLowerCase().includes(lowerCaseQuery) ||
-           profile.last_name.toLowerCase().includes(lowerCaseQuery) ||
-           profile.username.toLowerCase().includes(lowerCaseQuery.replace('@', '')) ||
-           profile.email.toLowerCase().includes(lowerCaseQuery);
-  });
+  const filteredClasses = classSearchQuery.trim() === ''
+    ? [] // Only show results if search query is not empty
+    : classes.filter(cls => cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
   if (isLoadingUser) {
     return (
@@ -302,21 +297,48 @@ const ClassManagementPage = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Élèves
+        Gestion des Classes
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Recherchez des élèves par nom d'utilisateur et affectez-les à des classes.
+        Créez et gérez des classes, et affectez-y des élèves.
       </p>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" /> Élèves
+            <Users className="h-6 w-6 text-primary" /> Classes
           </CardTitle>
-          <CardDescription>Recherchez des élèves par nom d'utilisateur et affectez-les à des classes.</CardDescription>
+          <CardDescription>Créez de nouvelles classes et gérez les existantes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">Affecter un élève à une classe</h3>
+          <h3 className="text-lg font-semibold">Ajouter une nouvelle classe</h3>
+          <div className="grid gap-2">
+            <Label htmlFor="new-class-name">Nom de la classe</Label>
+            <Input
+              id="new-class-name"
+              placeholder="Ex: Terminale S1"
+              value={newClassName}
+              onChange={(e) => setNewClassName(e.target.value)}
+            />
+            <Label htmlFor="new-class-curriculum">Cursus</Label>
+            <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
+              <SelectTrigger id="new-class-curriculum">
+                <SelectValue placeholder="Sélectionner un cursus" />
+              </SelectTrigger>
+              <SelectContent>
+                {curricula.map(cur => (
+                  <SelectItem key={cur.id} value={cur.id}>
+                    {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId}>
+              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
+            </Button>
+          </div>
+
+          <h3 className="text-lg font-semibold mt-6">Affecter un élève à une classe</h3>
           <div className="relative">
             <Popover open={openCommand} onOpenChange={setOpenCommand}>
               <PopoverTrigger asChild>
@@ -386,7 +408,7 @@ const ClassManagementPage = () => {
               </div>
               <p className="text-sm text-muted-foreground">Email : {foundUserForAssignment.email}</p>
               {foundUserForAssignment.class_id && (
-                <p className="text-sm text-muted-foreground">Actuellement dans : {getClassName(foundUserForAssignment.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === foundUserForAssignment.class_id)?.curriculum_id)})</p>
+                <p className="text-sm text-muted-foreground">Actuellement dans : {getCurriculumName(classes.find(c => c.id === foundUserForAssignment.class_id)?.curriculum_id)}</p>
               )}
               <div className="flex gap-2 mt-2">
                 <Select value={classToAssign} onValueChange={setClassToAssign}>
@@ -408,21 +430,23 @@ const ClassManagementPage = () => {
             </div>
           )}
 
-          <h3 className="text-lg font-semibold mt-6">Liste de toutes les classes</h3> {/* Changed title to reflect class management */}
+          <h3 className="text-lg font-semibold mt-6">Liste de toutes les classes</h3>
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Rechercher par nom de classe..."
               className="pl-10"
-              value={studentSearchQuery} // Reusing studentSearchQuery for class search
-              onChange={(e) => setStudentSearchQuery(e.target.value)}
+              value={classSearchQuery} // Using classSearchQuery
+              onChange={(e) => setClassSearchQuery(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            {classes.filter(cls => cls.name.toLowerCase().includes(studentSearchQuery.toLowerCase())).length === 0 ? (
+            {classSearchQuery.trim() === '' ? (
+              <p className="text-muted-foreground text-center py-4">Veuillez saisir un terme de recherche pour afficher les classes.</p>
+            ) : filteredClasses.length === 0 ? (
               <p className="text-muted-foreground">Aucune classe trouvée pour votre recherche.</p>
             ) : (
-              classes.filter(cls => cls.name.toLowerCase().includes(studentSearchQuery.toLowerCase())).map((cls) => (
+              filteredClasses.map((cls) => (
                 <Card key={cls.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
                     <p className="font-medium">{cls.name}</p>
