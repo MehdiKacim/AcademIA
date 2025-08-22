@@ -8,6 +8,7 @@ import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input"; // Import Input component
 import { showSuccess, showError } from '@/utils/toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getRecentConversations, getUnreadMessageCount } from "@/lib/messageData"; // Import messageData functions
