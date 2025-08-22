@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import { useCourseChat } from "@/contexts/CourseChatContext";
+import FloatingAiAChatButton from "@/components/FloatingAiAChatButton"; // Import the new floating button
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import DataModelModal from "@/components/DataModelModal";
 import React, { useState, useEffect, useCallback } from "react";
@@ -157,7 +157,7 @@ const DashboardLayout = () => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' }, // Changed label
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages }, // Add messages link with badge
-      { icon: BotMessageSquare, label: "AiA Chat", type: 'trigger', onClick: openChat }, // New AiA Chat button
+      // Removed AiA Chat button from here
     ];
 
     if (currentRole === 'student') {
@@ -386,6 +386,7 @@ const DashboardLayout = () => {
       </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {currentUserProfile && <AiAPersistentChat />}
+      {currentUserProfile && <FloatingAiAChatButton />} {/* Re-added the floating button here */}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
