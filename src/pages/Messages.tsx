@@ -442,8 +442,9 @@ const Messages = () => {
             </Button>
           </div>
 
+          {/* Dynamic key to force re-render */}
           <MessageList
-            key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}`} {/* Dynamic key to force re-render */}
+            key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}`}
             recentMessages={showArchived ? archivedConversations : recentConversations}
             allProfiles={allProfiles}
             onSelectContact={handleSelectContact}
