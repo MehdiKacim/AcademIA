@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LoginForm } from "@/components/LoginForm";
 import { SignUpForm } from "@/components/SignUpForm";
 import { showSuccess, showError } from '@/utils/toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft } from 'lucide-react'; // Import ArrowRightLeft
 import useEmblaCarousel from 'embla-carousel-react'; // Import Embla
+import { cn } from "@/lib/utils"; // Import cn for conditional styling
 
 interface AuthMenuProps {
   onClose: () => void;
@@ -46,9 +47,6 @@ const AuthMenu = ({ onClose, onLoginSuccess }: AuthMenuProps) => {
     showError(message);
   };
 
-  const onSwitchToSignup = () => emblaApi?.scrollTo(1);
-  const onSwitchToLogin = () => emblaApi?.scrollTo(0);
-
   const currentTitle = selectedIndex === 0 ? 'Connexion' : "S'inscrire";
   const currentDescription = selectedIndex === 0 ?
     "Entrez vos identifiants pour accéder à votre espace." :
@@ -74,39 +72,40 @@ const AuthMenu = ({ onClose, onLoginSuccess }: AuthMenuProps) => {
             <div className="embla__slide pl-4 min-w-0 flex-[0_0_100%]"> {/* Login Form */}
               <LoginForm
                 onSuccess={handleLoginSuccess}
-                onSwitchToSignup={onSwitchToSignup}
+                onSwitchToSignup={() => emblaApi?.scrollTo(1)}
               />
             </div>
             <div className="embla__slide pl-4 min-w-0 flex-[0_0_100%]"> {/* Signup Form */}
               <SignUpForm
                 onSuccess={handleSignUpSuccess}
                 onError={handleSignUpError}
-                onSwitchToLogin={onSwitchToLogin}
+                onSwitchToLogin={() => emblaApi?.scrollTo(0)}
               />
             </div>
           </div>
         </div>
 
-        {/* Navigation dots/tabs */}
-        <div className="flex justify-center gap-2 mt-4">
-          <Button
-            variant={selectedIndex === 0 ? "default" : "outline"}
-            size="sm"
-            onClick={() => emblaApi?.scrollTo(0)}
-          >
-            Connexion
-          </Button>
-          <Button
-            variant={selectedIndex === 1 ? "default" : "outline"}
-            size="sm"
-            onClick={() => emblaApi?.scrollTo(1)}
-          >
-            Inscription
-          </Button>
+        {/* Visual indicator for swipe */}
+        <div className="flex flex-col items-center justify-center mt-4">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full transition-colors duration-200",
+                selectedIndex === 0 ? "bg-primary" : "bg-muted-foreground"
+              )}
+            />
+            <ArrowRightLeft className="h-4 w-4 text-muted-foreground animate-wiggle-horizontal" />
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full transition-colors duration-200",
+                selectedIndex === 1 ? "bg-primary" : "bg-muted-foreground"
+              )}
+            />
+          </div>
+          <p className="text-center text-xs text-muted-foreground mt-1">
+            Glissez pour changer
+          </p>
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-2">
-          Glissez pour changer
-        </p>
       </CardContent>
     </Card>
   );
