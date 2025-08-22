@@ -21,6 +21,9 @@ const AiAPersistentChat = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Utilisation d'un useRef pour un compteur d'ID unique et persistant
+  const messageIdCounter = useRef(messages.length); 
+  
   const { currentCourseTitle, currentModuleTitle, isChatOpen, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
 
   const isMobile = useIsMobile();
@@ -64,13 +67,19 @@ const AiAPersistentChat = () => {
       }
       const contextPrefix = contextParts.length > 0 ? `(Contexte: ${contextParts.join(', ')}) ` : '';
 
-      const newMessage: Message = { id: messages.length + 1, sender: 'user', text: contextPrefix + input.trim() };
+      // Incrémenter le compteur pour l'ID du message utilisateur
+      messageIdCounter.current += 1;
+      const userMessageId = messageIdCounter.current;
+      const newMessage: Message = { id: userMessageId, sender: 'user', text: contextPrefix + input.trim() };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInput('');
 
       setTimeout(() => {
+        // Incrémenter le compteur pour l'ID du message AiA
+        messageIdCounter.current += 1;
+        const aiaMessageId = messageIdCounter.current;
         const aiaResponse: Message = {
-          id: messages.length + 2,
+          id: aiaMessageId,
           sender: 'aia',
           text: `Je comprends que vous avez dit : "${newMessage.text}". Je suis en train de traiter votre demande.`,
         };
