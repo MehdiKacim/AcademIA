@@ -14,7 +14,7 @@ android {
         applicationId "com.academia.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 
+        versionCode 1 // Initialisation du versionCode à 1
         versionName "1.0.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
