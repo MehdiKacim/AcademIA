@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, ArrowLeft } from "lucide-react";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle } from "lucide-react"; // Added XCircle for clear button
 import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -26,9 +26,6 @@ import {
   loadEstablishments,
 } from '@/lib/courseData';
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from '@/contexts/RoleContext';
 import { useNavigate, useSearchParams } from 'react-router-dom'; // Import useSearchParams
@@ -37,22 +34,23 @@ const StudentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams(); // Initialize useSearchParams
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [classes, setClasses] = useState<Class[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
 
+  // States for assign student section
   const [usernameToAssign, setUsernameToAssign] = useState('');
   const [foundUserForAssignment, setFoundUserForAssignment] = useState<Profile | null>(null);
   const [classToAssign, setClassToAssign] = useState<string>("");
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [openCommand, setOpenCommand] = useState(false);
 
+  // States for student list section
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
-  const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null); // New state for class filter
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
 
   // Get classId from URL for initial filtering
   const classIdFromUrl = searchParams.get('classId');
@@ -81,7 +79,6 @@ const StudentManagementPage = () => {
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
   const handleRemoveStudentFromClass = async (studentProfileId: string) => {
-    // Client-side IF check
     if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
       showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
       return;
@@ -95,7 +92,7 @@ const StudentManagementPage = () => {
 
     try {
       await updateProfile({ id: studentToUpdate.id, class_id: null });
-      setAllProfiles(await getAllProfiles()); // Refresh profiles after update
+      setAllProfiles(await getAllProfiles());
       showSuccess(`Élève retiré de la classe !`);
     } catch (error: any) {
       console.error("Error removing student from class:", error);
@@ -107,6 +104,7 @@ const StudentManagementPage = () => {
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
+  // Debounced search for username to assign
   useEffect(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -135,14 +133,13 @@ const StudentManagementPage = () => {
   }, [usernameToAssign]);
 
   const handleAssignStudentToClass = async () => {
-    // Client-side IF check
     if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
       showError("Vous n'êtes pas autorisé à affecter des élèves à des classes.");
       return;
     }
 
     if (!foundUserForAssignment) {
-      showError("Veuillez d'abord sélectionner un élève.");
+      showError("Veuillez d'abord rechercher et sélectionner un élève.");
       return;
     }
     if (!classToAssign) {
@@ -167,12 +164,9 @@ const StudentManagementPage = () => {
       });
 
       if (updatedStudentProfile) {
-        setAllProfiles(await getAllProfiles()); // Refresh profiles after update
+        setAllProfiles(await getAllProfiles());
         showSuccess(`Élève ${updatedStudentProfile.first_name} ${updatedStudentProfile.last_name} affecté à la classe ${getClassName(classToAssign)} !`);
-        setUsernameToAssign('');
-        setFoundUserForAssignment(null);
-        setClassToAssign("");
-        setOpenCommand(false);
+        handleClearAssignmentForm(); // Clear form after successful assignment
       } else {
         showError("Échec de l'affectation de l'élève.");
       }
@@ -182,8 +176,13 @@ const StudentManagementPage = () => {
     }
   };
 
+  const handleClearAssignmentForm = () => {
+    setUsernameToAssign('');
+    setFoundUserForAssignment(null);
+    setClassToAssign("");
+  };
+
   const handleDeleteStudent = async (studentProfileId: string) => {
-    // Client-side IF check
     if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
       showError("Vous n'êtes pas autorisé à supprimer des élèves.");
       return;
@@ -193,23 +192,14 @@ const StudentManagementPage = () => {
     if (!studentProfileToDelete) return;
 
     try {
-      await deleteProfile(studentProfileId); // Delete the profile
-      setAllProfiles(await getAllProfiles()); // Refresh profiles after deletion
+      await deleteProfile(studentProfileId);
+      setAllProfiles(await getAllProfiles());
       showSuccess("Élève supprimé !");
     } catch (error: any) {
       console.error("Error deleting student:", error);
       showError(`Erreur lors de la suppression de l'élève: ${error.message}`);
     }
   };
-
-  const filteredUsersForDropdown = usernameToAssign.trim() === ''
-    ? []
-    : allProfiles.filter(p =>
-        p.role === 'student' &&
-        (p.username.toLowerCase().includes(usernameToAssign.toLowerCase()) ||
-        p.first_name.toLowerCase().includes(usernameToAssign.toLowerCase()) ||
-        p.last_name.toLowerCase().includes(usernameToAssign.toLowerCase()))
-      ).slice(0, 10);
 
   const studentsToDisplay = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
@@ -268,71 +258,22 @@ const StudentManagementPage = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" /> Élèves
+            <GraduationCap className="h-6 w-6 text-primary" /> Affecter un élève à une classe
           </CardTitle>
-          <CardDescription>Recherchez des élèves par nom d'utilisateur et affectez-les à des classes.</CardDescription>
+          <CardDescription>Recherchez un élève par nom d'utilisateur et affectez-le à une classe.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <h3 className="text-lg font-semibold">Affecter un élève à une classe</h3>
           <div className="relative">
-            <Popover open={openCommand} onOpenChange={setOpenCommand}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openCommand}
-                  className="w-full justify-between"
-                >
-                  {foundUserForAssignment ? `${foundUserForAssignment.first_name} ${foundUserForAssignment.last_name} (@${foundUserForAssignment.username})` : "Rechercher un élève..."}
-                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                <Command>
-                  <CommandInput
-                    placeholder="Rechercher par nom d'utilisateur..."
-                    value={usernameToAssign}
-                    onValueChange={(value) => {
-                      setUsernameToAssign(value);
-                      setFoundUserForAssignment(null);
-                    }}
-                  />
-                  <CommandList>
-                    {isSearchingUser && usernameToAssign.trim() !== '' && (
-                      <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
-                      </CommandEmpty>
-                    )}
-                    {!isSearchingUser && filteredUsersForDropdown.length === 0 && usernameToAssign.trim() !== '' && (
-                      <CommandEmpty className="py-2 text-center text-muted-foreground">
-                        Aucun élève trouvé pour "{usernameToAssign}".
-                      </CommandEmpty>
-                    )}
-                    <CommandGroup>
-                      {filteredUsersForDropdown.map((profile) => (
-                        <CommandItem
-                          key={profile.id}
-                          value={profile.username}
-                          onSelect={() => {
-                            setFoundUserForAssignment(profile);
-                            setUsernameToAssign(profile.username);
-                            setOpenCommand(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              foundUserForAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {profile.first_name} {profile.last_name} (@{profile.username})
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un élève par nom d'utilisateur..."
+              className="pl-10"
+              value={usernameToAssign}
+              onChange={(e) => setUsernameToAssign(e.target.value)}
+            />
+            {isSearchingUser && usernameToAssign.trim() !== '' && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+            )}
           </div>
 
           {foundUserForAssignment && (
@@ -342,8 +283,10 @@ const StudentManagementPage = () => {
                 <p className="font-medium">{foundUserForAssignment.first_name} {foundUserForAssignment.last_name} <span className="text-sm text-muted-foreground">(@{foundUserForAssignment.username})</span></p>
               </div>
               <p className="text-sm text-muted-foreground">Email : {foundUserForAssignment.email}</p>
-              {foundUserForAssignment.class_id && (
+              {foundUserForAssignment.class_id ? (
                 <p className="text-sm text-muted-foreground">Actuellement dans : {getClassName(foundUserForAssignment.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === foundUserForAssignment.class_id)?.curriculum_id)})</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Non affecté à une classe.</p>
               )}
               <div className="flex gap-2 mt-2">
                 <Select value={classToAssign} onValueChange={setClassToAssign}>
@@ -361,11 +304,27 @@ const StudentManagementPage = () => {
                 <Button onClick={handleAssignStudentToClass} disabled={!classToAssign}>
                   <PlusCircle className="h-4 w-4 mr-2" /> Affecter
                 </Button>
+                <Button variant="outline" size="icon" onClick={handleClearAssignmentForm}>
+                  <XCircle className="h-4 w-4" />
+                  <span className="sr-only">Effacer</span>
+                </Button>
               </div>
             </div>
           )}
+          {!isSearchingUser && usernameToAssign.trim() !== '' && !foundUserForAssignment && (
+            <p className="text-muted-foreground text-center py-2">Aucun élève trouvé avec ce nom d'utilisateur.</p>
+          )}
+        </CardContent>
+      </Card>
 
-          <h3 className="text-lg font-semibold mt-6">Liste de tous les élèves</h3>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-6 w-6 text-primary" /> Liste de tous les élèves
+          </CardTitle>
+          <CardDescription>Visualisez et gérez tous les élèves.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -416,17 +375,18 @@ const StudentManagementPage = () => {
                   <div className="flex-grow">
                     <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
                     <p className="text-sm text-muted-foreground">{profile.email}</p>
-                    {profile.class_id && (
+                    {profile.class_id ? (
                       <p className="text-xs text-muted-foreground">
                         Classe: {getClassName(profile.class_id)} (Cursus: {getCurriculumName(classes.find(c => c.id === profile.class_id)?.curriculum_id)})
                       </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">Non affecté à une classe</p>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     <Select
                       value={profile.class_id || ""}
                       onValueChange={async (classId) => {
-                        // Client-side IF check
                         if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
                           showError("Vous n'êtes pas autorisé à modifier l'affectation des élèves.");
                           return;
