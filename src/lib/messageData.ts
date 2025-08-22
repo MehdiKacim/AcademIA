@@ -59,7 +59,7 @@ export const sendMessage = async (
       throw uploadError;
     }
 
-    // Get public URL for the uploaded file
+    // Get public URL for the uploaded file (since bucket is public)
     const { data: urlData } = supabase.storage
       .from(MESSAGE_BUCKET)
       .getPublicUrl(filePath);
@@ -260,18 +260,13 @@ export const deleteMessage = async (messageId: string, userId: string): Promise<
 };
 
 /**
- * Récupère l'URL signée d'un fichier attaché.
+ * Récupère l'URL publique d'un fichier attaché (le bucket est public).
  * @param filePath Le chemin du fichier dans le bucket de stockage.
- * @returns L'URL signée du fichier.
+ * @returns L'URL publique du fichier.
  */
-export const getSignedFileUrl = async (filePath: string): Promise<string | null> => {
-  const { data, error } = await supabase.storage
+export const getPublicFileUrl = (filePath: string): string => {
+  const { data } = supabase.storage
     .from(MESSAGE_BUCKET)
-    .createSignedUrl(filePath, 60); // URL valide pour 60 secondes
-
-  if (error) {
-    console.error("Error getting signed URL:", error);
-    return null;
-  }
-  return data?.signedUrl;
+    .getPublicUrl(filePath);
+  return data.publicUrl;
 };

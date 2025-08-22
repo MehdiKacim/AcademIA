@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Paperclip, Download, XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/lib/dataModels";
-import { sendMessage, getConversation, markMessagesAsRead, getSignedFileUrl } from "@/lib/messageData";
+import { sendMessage, getConversation, markMessagesAsRead, getPublicFileUrl } from "@/lib/messageData"; // Changed getSignedFileUrl to getPublicFileUrl
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,17 +112,13 @@ const ChatInterface = ({ contact, onMessageSent, initialCourseId, initialCourseT
     }
   };
 
-  const handleDownloadFile = async (filePath: string) => {
-    try {
-      const signedUrl = await getSignedFileUrl(filePath);
-      if (signedUrl) {
-        window.open(signedUrl, '_blank');
-      } else {
-        showError("Impossible de télécharger le fichier.");
-      }
-    } catch (error: any) {
-      console.error("Error downloading file:", error);
-      showError(`Erreur lors du téléchargement: ${error.message}`);
+  const handleDownloadFile = (filePath: string) => {
+    // Since the bucket is public, we can directly get the public URL
+    const publicUrl = getPublicFileUrl(filePath);
+    if (publicUrl) {
+      window.open(publicUrl, '_blank');
+    } else {
+      showError("Impossible de télécharger le fichier.");
     }
   };
 

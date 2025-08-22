@@ -113,7 +113,8 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
                     <Card
                       className={cn(
                         "cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
-                        selectedContactId === contactProfile.id && "bg-accent text-accent-foreground"
+                        selectedContactId === contactProfile.id && "bg-accent text-accent-foreground",
+                        isArchivedView && "opacity-60 border-dashed border-muted-foreground/50" // Visual indicator for archived
                       )}
                       onClick={() => onSelectContact(contactProfile, message.course_id, message.course_id ? `Cours ID: ${message.course_id}` : undefined)}
                       onTouchStart={(e) => handleTouchStart(e, contactProfile)}
