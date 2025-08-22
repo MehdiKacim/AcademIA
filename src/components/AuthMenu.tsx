@@ -54,7 +54,7 @@ const AuthMenu = ({ onClose, onLoginSuccess }: AuthMenuProps) => {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader className="text-center relative">
+      <CardHeader className="text-center relative pb-2"> {/* Adjusted padding-bottom */}
         <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-4">
           <ArrowLeft className="h-5 w-5" />
           <span className="sr-only">Fermer</span>
@@ -65,27 +65,7 @@ const AuthMenu = ({ onClose, onLoginSuccess }: AuthMenuProps) => {
         <CardDescription>
           {currentDescription}
         </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex -ml-4"> {/* Embla's inner container for slides, adjust margin for spacing */}
-            <div className="embla__slide pl-4 min-w-0 flex-[0_0_100%]"> {/* Login Form */}
-              <LoginForm
-                onSuccess={handleLoginSuccess}
-                onSwitchToSignup={() => emblaApi?.scrollTo(1)}
-              />
-            </div>
-            <div className="embla__slide pl-4 min-w-0 flex-[0_0_100%]"> {/* Signup Form */}
-              <SignUpForm
-                onSuccess={handleSignUpSuccess}
-                onError={handleSignUpError}
-                onSwitchToLogin={() => emblaApi?.scrollTo(0)}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Visual indicator for swipe */}
+        {/* Visual indicator for swipe - Moved here */}
         <div className="flex flex-col items-center justify-center mt-4">
           <div className="flex items-center gap-2">
             <span
@@ -105,6 +85,25 @@ const AuthMenu = ({ onClose, onLoginSuccess }: AuthMenuProps) => {
           <p className="text-center text-xs text-muted-foreground mt-1">
             Glissez pour changer
           </p>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex -ml-4"> {/* Embla's inner container for slides, adjust margin for spacing */}
+            <div className="embla__slide pl-4 min-w-0 flex-[0_0_100%]"> {/* Login Form */}
+              <LoginForm
+                onSuccess={handleLoginSuccess}
+                onSwitchToSignup={() => emblaApi?.scrollTo(1)}
+              />
+            </div>
+            <div className="embla__slide pl-4 min-w-0 flex-[0_0_100%]"> {/* Signup Form */}
+              <SignUpForm
+                onSuccess={handleSignUpSuccess}
+                onError={handleSignUpError}
+                onSwitchToLogin={() => emblaApi?.scrollTo(0)}
+              />
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
