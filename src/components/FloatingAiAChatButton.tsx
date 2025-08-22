@@ -11,8 +11,8 @@ const FloatingAiAChatButton = () => {
 
   return (
     <div className={cn(
-      "fixed z-40 p-4",
-      isMobile ? "bottom-20 right-4" : "bottom-4 right-4" // Positionnement ajusté pour mobile
+      "fixed z-50 p-4", // Augmentation du z-index à z-50
+      isMobile ? "bottom-[4.5rem] right-4" : "bottom-4 right-4" // Positionnement ajusté pour mobile (4.5rem = 72px)
     )}>
       <Button
         size="lg"
