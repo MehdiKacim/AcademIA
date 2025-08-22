@@ -435,7 +435,7 @@ const ClassManagementPage = () => {
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     {profile.class_id ? (
-                      <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(profile.id, profile.class_id!)}>
+                      <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(profile.id)}>
                         <Users className="h-4 w-4 mr-1" /> Retirer de la classe
                       </Button>
                     ) : (
@@ -448,14 +448,7 @@ const ClassManagementPage = () => {
                             try {
                               const updatedProfile = await updateProfile({ id: profile.id, class_id: classId });
                               if (updatedProfile) {
-                                setAllProfiles(await getAllProfiles()); // Re-fetch all profiles
-                                const targetClass = classes.find(cls => cls.id === classId);
-                                if (targetClass) {
-                                  // Note: Assuming creator_ids is used for students in class for now.
-                                  const updatedTargetClass = { ...targetClass, creator_ids: [...(targetClass.creator_ids || []), profile.id] };
-                                  // await updateClassInStorage(updatedTargetClass); // This line is commented out in the original, keep it that way
-                                }
-                                setClasses(await loadClasses()); // Re-fetch classes to update student counts
+                                setAllProfiles(await getAllProfiles());
                                 showSuccess(`Élève ${updatedProfile.first_name} ${updatedProfile.last_name} affecté à la classe ${getClassName(classId)} !`);
                               } else {
                                 showError("Échec de l'affectation de l'élève.");
@@ -511,7 +504,7 @@ const ClassManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(student)}>
                       <Mail className="h-4 w-4 mr-1" /> Message
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id, selectedClass.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => handleRemoveStudentFromClass(student.id)}>
                       <Trash2 className="h-4 w-4" /> Retirer
                     </Button>
                   </div>
@@ -525,4 +518,4 @@ const ClassManagementPage = () => {
   );
 };
 
-export default ClassManagementPage;
+export default StudentManagementPage;
