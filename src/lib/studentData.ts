@@ -20,28 +20,76 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
   return data;
 };
 
-export const getProfileByUsername = async (username: string): Promise<boolean> => {
+/**
+ * Trouve un profil par nom d'utilisateur.
+ * @param username Le nom d'utilisateur à rechercher.
+ * @returns Le profil trouvé ou null si non trouvé.
+ */
+export const findProfileByUsername = async (username: string): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id') // Only need ID to check existence
+    .select('*')
     .eq('username', username)
     .maybeSingle();
 
   if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error("Error finding profile by username:", error);
+    return null;
+  }
+  return data;
+};
+
+/**
+ * Vérifie si un nom d'utilisateur existe déjà.
+ * @param username Le nom d'utilisateur à vérifier.
+ * @returns True si le nom d'utilisateur est pris, false sinon.
+ */
+export const checkUsernameExists = async (username: string): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') {
     console.error("Error checking username availability:", error);
     return true; // Safer default: assume taken on error
   }
-  return !!data; // Returns true if data exists (username taken), false if data is null (username available)
+  return !!data;
 };
 
-export const getProfileByEmail = async (email: string): Promise<boolean> => {
+/**
+ * Trouve un profil par email.
+ * @param email L'email à rechercher.
+ * @returns Le profil trouvé ou null si non trouvé.
+ */
+export const findProfileByEmail = async (email: string): Promise<Profile | null> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error("Error finding profile by email:", error);
+    return null;
+  }
+  return data;
+};
+
+/**
+ * Vérifie si un email existe déjà dans la table des profils.
+ * @param email L'email à vérifier.
+ * @returns True si l'email est pris, false sinon.
+ */
+export const checkEmailExists = async (email: string): Promise<boolean> => {
   const { data, error } = await supabase
     .from('profiles')
     .select('id')
     .eq('email', email)
     .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+  if (error && error.code !== 'PGRST116') {
     console.error("Error checking email availability:", error);
     return true; // Safer default: assume taken on error
   }

@@ -14,7 +14,7 @@ import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
-  getProfileByUsername,
+  findProfileByUsername, // Changed from getProfileByUsername
   updateProfile,
   deleteProfile,
 } from '@/lib/studentData';
@@ -109,7 +109,7 @@ const StudentManagementPage = () => {
     setFoundUserForAssignment(null);
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      const profile = await getProfileByUsername(usernameToAssign.trim());
+      const profile = await findProfileByUsername(usernameToAssign.trim()); // Changed to findProfileByUsername
       setFoundUserForAssignment(profile || null);
       setIsSearchingUser(false);
     }, 500);

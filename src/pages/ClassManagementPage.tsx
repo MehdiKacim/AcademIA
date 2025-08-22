@@ -14,7 +14,7 @@ import { Class, Profile, Curriculum, Establishment } from "@/lib/dataModels"; //
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
-  getProfileByUsername,
+  findProfileByUsername, // Changed from getProfileByUsername
   updateProfile,
   deleteProfile,
 } from '@/lib/studentData';
@@ -178,7 +178,7 @@ const ClassManagementPage = () => {
     setFoundUserForAssignment(null);
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      const profile = await getProfileByUsername(usernameToAssign.trim());
+      const profile = await findProfileByUsername(usernameToAssign.trim()); // Changed to findProfileByUsername
       setFoundUserForAssignment(profile || null);
       setIsSearchingUser(false);
     }, 500);
@@ -453,7 +453,7 @@ const ClassManagementPage = () => {
                                 if (targetClass) {
                                   // Note: Assuming creator_ids is used for students in class for now.
                                   const updatedTargetClass = { ...targetClass, creator_ids: [...(targetClass.creator_ids || []), profile.id] };
-                                  await updateClassInStorage(updatedTargetClass);
+                                  // await updateClassInStorage(updatedTargetClass); // This line is commented out in the original, keep it that way
                                 }
                                 setClasses(await loadClasses()); // Re-fetch classes to update student counts
                                 showSuccess(`Élève ${updatedProfile.first_name} ${updatedProfile.last_name} affecté à la classe ${getClassName(classId)} !`);

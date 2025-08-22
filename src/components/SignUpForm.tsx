@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"; // Keep Label for direct use if n
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
-import { getProfileByUsername } from '@/lib/studentData'; // Import getProfileByUsername
+import { checkUsernameExists, checkEmailExists } from '@/lib/studentData'; // Import new check functions
 import {
   Form,
   FormControl,
@@ -52,7 +52,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     setIsLoading(true);
     try {
       // 1. Check for existing username in profiles table
-      const isUsernameTaken = await getProfileByUsername(values.username);
+      const isUsernameTaken = await checkUsernameExists(values.username);
       if (isUsernameTaken) {
         form.setError("username", { type: "manual", message: "Ce nom d'utilisateur est déjà pris." });
         onError("Ce nom d'utilisateur est déjà pris.");
@@ -60,7 +60,16 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
         return;
       }
 
-      // 2. Attempt Supabase Auth signup (handles email uniqueness)
+      // 2. Check for existing email in profiles table
+      const isEmailTakenInProfiles = await checkEmailExists(values.email);
+      if (isEmailTakenInProfiles) {
+        form.setError("email", { type: "manual", message: "Cet email est déjà utilisé par un autre profil." });
+        onError("Cet email est déjà utilisé par un autre profil.");
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Attempt Supabase Auth signup (handles email uniqueness in auth.users table)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -75,6 +84,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
       });
 
       if (authError) {
+        // This error typically means the email is already registered in auth.users
         if (authError.message.includes('User already registered')) {
           form.setError("email", { type: "manual", message: "Cet email est déjà enregistré. Veuillez vous connecter." });
           onError("Cet email est déjà enregistré. Veuillez vous connecter.");
@@ -89,7 +99,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
         // Profile creation is handled by the 'handle_new_user' trigger in Supabase.
         onSuccess(values.email);
       } else {
-        onSuccess(values.email); // Still consider it a success for the user, they just need to confirm email
+        // If authData.user is null, it means an email confirmation is pending.
+        // Still consider it a success for the user, they just need to confirm email.
+        onSuccess(values.email);
       }
 
     } catch (error: any) {
