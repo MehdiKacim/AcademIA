@@ -33,9 +33,10 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 interface SignUpFormProps {
   onSuccess: (email: string) => void;
   onError: (message: string) => void;
+  onSwitchToLogin: () => void; // New prop to switch to login
 }
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) => {
+export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSwitchToLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle'); // Re-added emailAvailabilityStatus
@@ -296,6 +297,12 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Inscription en cours..." : "S'inscrire"}
         </Button>
+        <div className="text-sm text-muted-foreground text-center mt-2">
+          Déjà un compte?{" "}
+          <Button variant="link" onClick={onSwitchToLogin} className="p-0 h-auto text-primary hover:underline">
+            Se connecter
+          </Button>
+        </div>
       </form>
     </Form>
   );

@@ -7,9 +7,10 @@ import { showError } from "@/utils/toast";
 
 interface LoginFormProps {
   onSuccess: () => void;
+  onSwitchToSignup: () => void; // New prop to switch to signup
 }
 
-export const LoginForm = ({ onSuccess }: LoginFormProps) => {
+export const LoginForm = ({ onSuccess, onSwitchToSignup }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +57,12 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
       <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
         {isLoading ? "Connexion en cours..." : "Se connecter"}
       </Button>
+      <div className="text-sm text-muted-foreground text-center mt-2">
+        Pas de compte?{" "}
+        <Button variant="link" onClick={onSwitchToSignup} className="p-0 h-auto text-primary hover:underline">
+          Créer un compte
+        </Button>
+      </div>
     </div>
   );
 };
