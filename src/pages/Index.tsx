@@ -180,7 +180,7 @@ const Index = () => {
     { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'accueil', type: 'trigger' },
     { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'aiaBot', type: 'trigger' },
     { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'methodologie', type: 'trigger' },
-    { label: "À propos", icon: Info, onClick: () => setIsAboutModalOpen(true), type: 'trigger' }, // Changed to trigger AboutModal
+    // Removed "À propos" from main navigation
   ];
 
   return (
@@ -335,7 +335,10 @@ const Index = () => {
       </main>
 
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
-        © {new Date().getFullYear()} AcademIA. Tous droits réservés.
+        © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
+        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => setIsAboutModalOpen(true)}>
+          À propos
+        </Button>
       </footer>
 
       <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} />

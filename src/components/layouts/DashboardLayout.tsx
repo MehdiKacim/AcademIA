@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare, LogIn } from "lucide-react"; // Added LogIn
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BarChartBig, MessageSquare, LogIn, Info } from "lucide-react"; // Added LogIn, Info
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client"; // Import supabase fo
 import { Message } from "@/lib/dataModels"; // Import Message type
 import { NavItem } from "@/lib/dataModels"; // Import NavItem from dataModels
 import AuthModal from "@/components/AuthModal"; // Import AuthModal
+import AboutModal from "@/components/AboutModal"; // Import AboutModal
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
@@ -40,6 +41,7 @@ const DashboardLayout = () => {
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0); // State for unread messages
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // New state for AuthModal
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -362,12 +364,19 @@ const DashboardLayout = () => {
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
         <Outlet />
       </main>
+      <footer className="p-4 text-center text-sm text-muted-foreground border-t">
+        © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
+        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => setIsAboutModalOpen(true)}>
+          À propos
+        </Button>
+      </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} />
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <FloatingAiAChatButton />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
   );
 };
