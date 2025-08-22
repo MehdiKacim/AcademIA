@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
-import { checkUsernameExists, checkEmailExists } from '@/lib/studentData'; // Keep checkUsernameExists and re-import checkEmailExists
+import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import {
   Form,
   FormControl,
@@ -16,8 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { cn } from "@/lib/utils"; // Import cn for conditional styling
-import { CheckCircle, XCircle, Loader2 } from "lucide-react"; // Import icons and Loader2
+import { cn } from "@/lib/utils";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis."),
@@ -33,13 +33,13 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 interface SignUpFormProps {
   onSuccess: (email: string) => void;
   onError: (message: string) => void;
-  onSwitchToLogin: () => void; // New prop to switch to login
+  onSwitchToLogin: () => void;
 }
 
 export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSwitchToLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle'); // Re-added emailAvailabilityStatus
+  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -54,7 +54,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
   });
 
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debounceEmailTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // New debounce ref for email
+  const debounceEmailTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const validateUsername = useCallback(async (username: string) => {
     if (username.length < 3) {
@@ -79,14 +79,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
     return true;
   }, [form]);
 
-  const validateEmail = useCallback(async (email: string) => { // Made async to check existence
+  const validateEmail = useCallback(async (email: string) => {
     if (!z.string().email().safeParse(email).success) {
       form.setError("email", { type: "manual", message: "Veuillez entrer une adresse email valide." });
       setEmailAvailabilityStatus('idle');
       return false;
     }
     setEmailAvailabilityStatus('checking');
-    const isTaken = await checkEmailExists(email); // Check email existence
+    const isTaken = await checkEmailExists(email);
     if (isTaken) {
       form.setError("email", { type: "manual", message: "Cet email est déjà enregistré." });
       setEmailAvailabilityStatus('taken');
@@ -111,7 +111,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
     }
     debounceTimeoutRef.current = setTimeout(() => {
       validateUsername(value);
-    }, 500); // Debounce for 500ms
+    }, 500);
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,15 +128,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
     }
     debounceEmailTimeoutRef.current = setTimeout(() => {
       validateEmail(value);
-    }, 500); // Debounce for 500ms
+    }, 500);
   };
 
   const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      // Re-run final validation before submission
       const isUsernameValid = await validateUsername(values.username);
-      const isEmailValid = await validateEmail(values.email); // Now checks for existence
+      const isEmailValid = await validateEmail(values.email);
 
       if (!isUsernameValid || !isEmailValid) {
         onError("Veuillez corriger les erreurs du formulaire.");
@@ -158,8 +157,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
       });
 
       if (authError) {
-        // Supabase will still return an error if email is already registered in auth.users
-        // This check is now redundant if client-side validation works, but kept as a fallback.
         if (authError.message.includes('User already registered')) {
           form.setError("email", { type: "manual", message: "Cet email est déjà enregistré. Veuillez vous connecter." });
           onError("Cet email est déjà enregistré. Veuillez vous connecter.");
@@ -191,7 +188,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormItem>
                 <FormLabel>Prénom</FormLabel>
                 <FormControl>
-                  <Input id="signup-firstName" {...field} autoComplete="given-name" /> {/* Unique ID and autocomplete */}
+                  <Input id="signup-firstName" {...field} autoComplete="given-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -204,7 +201,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormItem>
                 <FormLabel>Nom</FormLabel>
                 <FormControl>
-                  <Input id="signup-lastName" {...field} autoComplete="family-name" /> {/* Unique ID and autocomplete */}
+                  <Input id="signup-lastName" {...field} autoComplete="family-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -217,20 +214,20 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nom d'utilisateur</FormLabel>
-              <div className="relative"> {/* Wrapper div for Input and icons */}
-                <FormControl>
+              <FormControl> {/* FormControl now wraps the single div */}
+                <div className="relative">
                   <Input id="signup-username" {...field} onChange={handleUsernameChange} className="pr-10" autoComplete="username" />
-                </FormControl>
-                {usernameAvailabilityStatus === 'checking' && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                )}
-                {usernameAvailabilityStatus === 'available' && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                )}
-                {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && (
-                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                )}
-              </div>
+                  {usernameAvailabilityStatus === 'checking' && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                  )}
+                  {usernameAvailabilityStatus === 'available' && (
+                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                  )}
+                  {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && (
+                    <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+                  )}
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -241,20 +238,20 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
-              <div className="relative"> {/* Wrapper div for Input and icons */}
-                <FormControl>
+              <FormControl> {/* FormControl now wraps the single div */}
+                <div className="relative">
                   <Input id="signup-email" type="email" {...field} onChange={handleEmailChange} className="pr-10" autoComplete="email" />
-                </FormControl>
-                {emailAvailabilityStatus === 'checking' && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                )}
-                {emailAvailabilityStatus === 'available' && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                )}
-                {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
-                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                )}
-              </div>
+                  {emailAvailabilityStatus === 'checking' && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                  )}
+                  {emailAvailabilityStatus === 'available' && (
+                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                  )}
+                  {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
+                    <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+                  )}
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -266,7 +263,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
             <FormItem>
               <FormLabel>Mot de passe</FormLabel>
               <FormControl>
-                <Input id="signup-password" type="password" {...field} autoComplete="new-password" /> {/* Unique ID and autocomplete */}
+                <Input id="signup-password" type="password" {...field} autoComplete="new-password" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -280,7 +277,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormLabel>Rôle</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger id="signup-role"> {/* Unique ID */}
+                  <SelectTrigger id="signup-role">
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
                 </FormControl>
