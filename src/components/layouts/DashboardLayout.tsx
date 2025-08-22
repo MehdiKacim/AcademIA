@@ -347,11 +347,15 @@ const DashboardLayout = () => {
           )}
 
           <ThemeToggle />
-          {!isMobile && ( // Always show About button on desktop
-            <Button variant="outline" onClick={() => setIsAboutModalOpen(true)}>
-              <Info className="h-5 w-5 mr-2" /> À propos
-            </Button>
-          )}
+          {/* Mobile-only About button (icon only) */}
+          <Button variant="outline" size="icon" onClick={() => setIsAboutModalOpen(true)} className="md:hidden">
+            <Info className="h-5 w-5" />
+            <span className="sr-only">À propos</span>
+          </Button>
+          {/* Desktop-only About button (text + icon) */}
+          <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="hidden md:flex">
+            <Info className="h-5 w-5 mr-2" /> À propos
+          </Button>
           {!isMobile && !currentUserProfile && (
             <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
               <LogIn className="h-5 w-5 mr-2" /> Authentification
@@ -362,8 +366,6 @@ const DashboardLayout = () => {
               Bonjour, {currentUserProfile.first_name} !
             </span>
           )}
-          {/* Removed DropdownMenu for desktop profile/settings, as it's now handled by the mobile drawer */}
-          {/* The mobile drawer will be triggered by a dedicated button in BottomNavigationBar */}
         </div>
       </header>
       <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
