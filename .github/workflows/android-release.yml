@@ -65,11 +65,12 @@ jobs:
           mkdir -p $BASE_DIR/mipmap-xxxhdpi
 
           # Redimensionne le SVG et le convertit en PNG pour chaque densité
-          convert -background none $SOURCE_SVG -resize 48x48 $BASE_DIR/mipmap-mdpi/ic_launcher.png
-          convert -background none $SOURCE_SVG -resize 72x72 $BASE_DIR/mipmap-hdpi/ic_launcher.png
-          convert -background none $SOURCE_SVG -resize 96x96 $BASE_DIR/mipmap-xhdpi/ic_launcher.png
-          convert -background none $SOURCE_SVG -resize 144x144 $BASE_DIR/mipmap-xxhdpi/ic_launcher.png
-          convert -background none $SOURCE_SVG -resize 192x192 $BASE_DIR/mipmap-xxxhdpi/ic_launcher.png
+          # IMPORTANT: Génère ic_launcher_foreground.png pour les icônes adaptatives
+          convert -background none $SOURCE_SVG -resize 48x48 $BASE_DIR/mipmap-mdpi/ic_launcher_foreground.png
+          convert -background none $SOURCE_SVG -resize 72x72 $BASE_DIR/mipmap-hdpi/ic_launcher_foreground.png
+          convert -background none $SOURCE_SVG -resize 96x96 $BASE_DIR/mipmap-xhdpi/ic_launcher_foreground.png
+          convert -background none $SOURCE_SVG -resize 144x144 $BASE_DIR/mipmap-xxhdpi/ic_launcher_foreground.png
+          convert -background none $SOURCE_SVG -resize 192x192 $BASE_DIR/mipmap-xxxhdpi/ic_launcher_foreground.png
 
           echo "Icônes Android générées avec ImageMagick."
 
