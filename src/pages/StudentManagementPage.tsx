@@ -81,16 +81,25 @@ const StudentManagementPage = () => {
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
   const handleRemoveStudentFromClass = async (studentProfileId: string) => {
+    // Client-side IF check
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+      showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
+      return;
+    }
+
     const studentToUpdate = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
-    if (studentToUpdate) {
-      try {
-        await updateProfile({ id: studentToUpdate.id, class_id: null });
-        setAllProfiles(await getAllProfiles()); // Refresh profiles after update
-        showSuccess(`Élève retiré de la classe !`);
-      } catch (error: any) {
-        console.error("Error removing student from class:", error);
-        showError(`Erreur lors du retrait de l'élève: ${error.message}`);
-      }
+    if (!studentToUpdate) {
+      showError("Profil d'élève introuvable.");
+      return;
+    }
+
+    try {
+      await updateProfile({ id: studentToUpdate.id, class_id: null });
+      setAllProfiles(await getAllProfiles()); // Refresh profiles after update
+      showSuccess(`Élève retiré de la classe !`);
+    } catch (error: any) {
+      console.error("Error removing student from class:", error);
+      showError(`Erreur lors du retrait de l'élève: ${error.message}`);
     }
   };
 
@@ -126,6 +135,12 @@ const StudentManagementPage = () => {
   }, [usernameToAssign]);
 
   const handleAssignStudentToClass = async () => {
+    // Client-side IF check
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+      showError("Vous n'êtes pas autorisé à affecter des élèves à des classes.");
+      return;
+    }
+
     if (!foundUserForAssignment) {
       showError("Veuillez d'abord sélectionner un élève.");
       return;
@@ -168,6 +183,12 @@ const StudentManagementPage = () => {
   };
 
   const handleDeleteStudent = async (studentProfileId: string) => {
+    // Client-side IF check
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+      showError("Vous n'êtes pas autorisé à supprimer des élèves.");
+      return;
+    }
+
     const studentProfileToDelete = allProfiles.find(p => p.id === studentProfileId && p.role === 'student');
     if (!studentProfileToDelete) return;
 
@@ -405,6 +426,11 @@ const StudentManagementPage = () => {
                     <Select
                       value={profile.class_id || ""}
                       onValueChange={async (classId) => {
+                        // Client-side IF check
+                        if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+                          showError("Vous n'êtes pas autorisé à modifier l'affectation des élèves.");
+                          return;
+                        }
                         if (classId) {
                           try {
                             const updatedProfile = await updateProfile({ id: profile.id, class_id: classId });
