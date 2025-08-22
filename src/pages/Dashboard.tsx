@@ -6,9 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses, loadClasses } from "@/lib/courseData"; // Load classes for creator/tutor
+import { loadCourses, loadClasses, loadEstablishments, loadCurricula } from "@/lib/courseData"; // Load classes for creator/tutor
 import { getAllStudentCourseProgress, getAllProfiles } from "@/lib/studentData"; // Import Supabase function
-import { Course, StudentCourseProgress, Profile, Class } from "@/lib/dataModels"; // Import types
+import { Course, StudentCourseProgress, Profile, Class, Establishment, Curriculum } from "@/lib/dataModels"; // Import types
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ const Dashboard = () => {
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // For creator/tutor to count students
   const [classes, setClasses] = useState<Class[]>([]); // For creator/tutor to count students in classes
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // For admin
+  const [curricula, setCurricula] = useState<Curriculum[]>([]); // For admin
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,6 +33,10 @@ const Dashboard = () => {
       setAllProfiles(loadedProfiles);
       const loadedClasses = await loadClasses();
       setClasses(loadedClasses);
+      const loadedEstablishments = await loadEstablishments(); // Fetch establishments
+      setEstablishments(loadedEstablishments);
+      const loadedCurricula = await loadCurricula(); // Fetch curricula
+      setCurricula(loadedCurricula);
     };
     fetchData();
   }, [currentUserProfile]); // Re-fetch if user profile changes
@@ -230,6 +236,67 @@ const Dashboard = () => {
           </Card>
         </div>
       );
+    } else if (currentRole === 'administrator') {
+      const totalEstablishments = establishments.length;
+      const totalCurricula = curricula.length;
+      const totalClasses = classes.length;
+      const totalStudents = allProfiles.filter(p => p.role === 'student').length;
+      const totalCreators = allProfiles.filter(p => p.role === 'creator').length;
+      const totalTutors = allProfiles.filter(p => p.role === 'tutor').length;
+      const totalUsers = allProfiles.length;
+
+      return (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Établissements Gérés</CardTitle>
+              <CardDescription>Nombre total d'établissements.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{totalEstablishments}</p>
+              <Link to="/establishments" className="mt-4 block">
+                <Button className="w-full">Gérer les établissements</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Utilisateurs Totaux</CardTitle>
+              <CardDescription>Nombre total d'utilisateurs sur la plateforme.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{totalUsers}</p>
+              <p className="text-sm text-muted-foreground">Créateurs: {totalCreators}, Tuteurs: {totalTutors}, Élèves: {totalStudents}</p>
+              <Link to="/admin-users" className="mt-4 block">
+                <Button variant="outline" className="w-full">Gérer les utilisateurs</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Structure Pédagogique</CardTitle>
+              <CardDescription>Vue d'ensemble des cursus et classes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{totalCurricula} Cursus, {totalClasses} Classes</p>
+              <Link to="/curricula" className="mt-4 block">
+                <Button variant="outline" className="w-full">Gérer les cursus et classes</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Analytiques Générales</CardTitle>
+              <CardDescription>Accédez aux statistiques globales de la plateforme.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/analytics?view=overview" className="mt-4 block">
+                <Button className="w-full">Voir les analytiques globales</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      );
     }
     return null;
   };
@@ -237,7 +304,7 @@ const Dashboard = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Tableau de bord {currentUserProfile?.first_name} {currentUserProfile?.last_name} ({currentRole === 'student' ? 'Élève' : currentRole === 'creator' ? 'Créateur' : 'Tuteur'})
+        Tableau de bord {currentUserProfile?.first_name} {currentUserProfile?.last_name} ({currentRole === 'student' ? 'Élève' : currentRole === 'creator' ? 'Créateur' : currentRole === 'tutor' ? 'Tuteur' : 'Administrateur'})
       </h1>
       {renderDashboardContent()}
     </div>

@@ -120,6 +120,7 @@ const AdminStudentAndEnrollmentManagementPage = () => {
   };
 
   const handleSendMessageToStudent = (studentProfile: Profile) => {
+    openChat(`J'ai une question concernant l'élève ${studentProfile.first_name} ${studentProfile.last_name}.`);
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
 

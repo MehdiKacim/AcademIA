@@ -24,6 +24,7 @@ interface CreatorAnalyticsSectionProps {
   view: string | null;
   selectedClassId?: string;
   selectedCurriculumId?: string;
+  selectedEstablishmentId?: string; // New prop for establishment filter
   selectedCourseId?: string; // New prop for filtering by specific course
   allCourses: Course[];
   allProfiles: Profile[];
@@ -32,11 +33,17 @@ interface CreatorAnalyticsSectionProps {
   allCurricula: Curriculum[];
 }
 
-const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, selectedCourseId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => {
+const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, selectedEstablishmentId, selectedCourseId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => {
 
-  // Filter courses based on selected curriculum AND specific course ID
+  // Filter courses based on selected curriculum, establishment, AND specific course ID
   const filteredCourses = React.useMemo(() => {
     let coursesToFilter = allCourses;
+
+    if (selectedEstablishmentId && selectedEstablishmentId !== 'all') {
+      const curriculaInEstablishment = allCurricula.filter(c => c.establishment_id === selectedEstablishmentId);
+      const courseIdsInEstablishment = new Set(curriculaInEstablishment.flatMap(c => c.course_ids));
+      coursesToFilter = coursesToFilter.filter(course => courseIdsInEstablishment.has(course.id));
+    }
 
     if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const curriculum = allCurricula.find(c => c.id === selectedCurriculumId);
@@ -50,11 +57,16 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
     }
     
     return coursesToFilter;
-  }, [allCourses, allCurricula, selectedCurriculumId, selectedCourseId]);
+  }, [allCourses, allCurricula, selectedCurriculumId, selectedEstablishmentId, selectedCourseId]);
 
-  // Filter students based on selected class or curriculum
+  // Filter students based on selected class, curriculum, or establishment
   const filteredStudentProfiles = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
+
+    if (selectedEstablishmentId && selectedEstablishmentId !== 'all') {
+      students = students.filter(s => s.establishment_id === selectedEstablishmentId);
+    }
+
     if (selectedClassId && selectedClassId !== 'all') {
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
@@ -66,7 +78,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
       return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
     return students;
-  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId]);
+  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId, selectedEstablishmentId]);
 
   // Dummy data for creator analytics
   const creatorAnalytics = {
