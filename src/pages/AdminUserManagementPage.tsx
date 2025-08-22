@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, UserPlus, User, Edit, Trash2, Loader2, Check, XCircle, Mail } from "lucide-react";
+import { PlusCircle, UserPlus, User, Edit, Trash2, Loader2, Check, XCircle, Mail, Search } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, checkUsernameExists, checkEmailExists, deleteProfile, updateProfile } from '@/lib/studentData';
@@ -57,7 +57,7 @@ const AdminUserManagementPage = () => {
     fetchUsers();
   }, [currentUserProfile]);
 
-  const validateUsername = async (username: string, currentUserId?: string) => {
+  const validateUsername = useCallback(async (username: string, currentUserId?: string) => {
     if (username.length < 3) return false;
     if (!/^[a-zA-Z0-9_]+$/.test(username)) return false;
     setUsernameAvailabilityStatus('checking');
@@ -68,9 +68,9 @@ const AdminUserManagementPage = () => {
     }
     setUsernameAvailabilityStatus('available');
     return true;
-  };
+  }, [allUsers]);
 
-  const validateEmail = async (email: string, currentUserId?: string) => {
+  const validateEmail = useCallback(async (email: string, currentUserId?: string) => {
     if (!/\S+@\S+\.\S+/.test(email)) return false;
     setEmailAvailabilityStatus('checking');
     const isTaken = await checkEmailExists(email);
@@ -80,7 +80,7 @@ const AdminUserManagementPage = () => {
     }
     setEmailAvailabilityStatus('available');
     return true;
-  };
+  }, [allUsers]);
 
   const handleUsernameChange = (value: string, currentUserId?: string) => {
     setNewUsername(value);
@@ -264,7 +264,7 @@ const AdminUserManagementPage = () => {
         Gestion des Utilisateurs (Admin)
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Créez et gérez les comptes des professeurs et des tuteurs.
+        Créez et gérez les comptes des professeurs, des tuteurs et des élèves.
       </p>
 
       <Card>
