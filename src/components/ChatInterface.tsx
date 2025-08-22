@@ -169,11 +169,14 @@ const ChatInterface = ({ contact, onMessageSent, initialCourseId, initialCourseT
                     </Button>
                   </div>
                 )}
-                {msg.sender_id === currentUserId && (
-                  <span className="block text-right text-xs opacity-70 mt-1">
-                    {msg.is_read ? 'Lu' : 'Envoyé'}
-                  </span>
-                )}
+                <div className="text-right text-xs opacity-70 mt-1">
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {msg.sender_id === currentUserId && (
+                    <span className="ml-2">
+                      {msg.is_read ? 'Lu' : 'Envoyé'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}

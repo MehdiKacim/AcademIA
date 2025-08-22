@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare, Search } from "lucide-react";
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
-import { Profile, Message } from '@/lib/dataModels'; // Import Message type
+import { Profile, Message, Establishment, Curriculum, Class } from '@/lib/dataModels'; // Import Message type
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,9 +14,10 @@ import { getRecentConversations, getUnreadMessageCount } from "@/lib/messageData
 import { supabase } from "@/integrations/supabase/client"; // Import supabase for realtime
 import { cn } from '@/lib/utils'; // Import cn for conditional styling
 import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
+import { loadEstablishments, loadCurricula, loadClasses } from '@/lib/courseData'; // Import course data loaders
 
 const Messages = () => {
-  const { currentUserProfile, isLoadingUser } = useRole();
+  const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
@@ -26,6 +27,15 @@ const Messages = () => {
   const [recentMessages, setRecentMessages] = useState<Message[]>([]); // State for recent messages
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [initialCourseContext, setInitialCourseContext] = useState<{ id?: string; title?: string }>({});
+
+  // States for professional filters
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string | undefined>(undefined);
+  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string | undefined>(undefined);
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
+  const [searchStudentQuery, setSearchStudentQuery] = useState(''); // For searching students in professional view
 
   const currentUserId = currentUserProfile?.id;
 
@@ -40,6 +50,12 @@ const Messages = () => {
 
     const totalUnread = await getUnreadMessageCount(currentUserId);
     setUnreadMessageCount(totalUnread);
+
+    if (currentRole === 'creator' || currentRole === 'tutor') {
+      setEstablishments(await loadEstablishments());
+      setCurricula(await loadCurricula());
+      setClasses(await loadClasses());
+    }
   };
 
   useEffect(() => {
@@ -84,7 +100,7 @@ const Messages = () => {
         supabase.removeChannel(channel);
       }
     };
-  }, [currentUserId]); // Depend on currentUserId
+  }, [currentUserId, currentRole]); // Depend on currentUserId and currentRole
 
   useEffect(() => {
     // Check for query parameters to pre-select a contact
@@ -109,18 +125,57 @@ const Messages = () => {
     navigate(`/messages?contactId=${contact.id}${courseId ? `&courseId=${courseId}` : ''}${courseTitle ? `&courseTitle=${courseTitle}` : ''}`, { replace: true });
   };
 
-  const handleNewConversation = (profileId: string) => {
-    const contact = allProfiles.find(p => p.id === profileId);
-    if (contact) {
-      handleSelectContact(contact);
-    } else {
-      showError("Profil introuvable pour démarrer une nouvelle conversation.");
-    }
-  };
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
+  const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
-  // Filter contacts for new chat: all profiles except current user and those already in recent conversations
-  const availableContactsForNewChat = useMemo(() => {
-    if (!currentUserProfile) return [];
+  // Filtered students for new chat (for professionals)
+  const filteredStudentsForNewChat = useMemo(() => {
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) return [];
+
+    let students = allProfiles.filter(p => p.role === 'student');
+
+    if (selectedEstablishmentId && selectedEstablishmentId !== 'all') {
+      const curriculaInEstablishment = curricula.filter(c => c.establishment_id === selectedEstablishmentId);
+      const classIdsInEstablishment = new Set(classes.filter(cls => curriculaInEstablishment.some(cur => cur.id === cls.curriculum_id)).map(cls => cls.id));
+      students = students.filter(s => s.class_id && classIdsInEstablishment.has(s.class_id));
+    }
+
+    if (selectedCurriculumId && selectedCurriculumId !== 'all') {
+      const classesInCurriculum = classes.filter(cls => cls.curriculum_id === selectedCurriculumId);
+      const classIdsInCurriculum = new Set(classesInCurriculum.map(cls => cls.id));
+      students = students.filter(s => s.class_id && classIdsInCurriculum.has(s.class_id));
+    }
+
+    if (selectedClassId && selectedClassId !== 'all') {
+      students = students.filter(s => s.class_id === selectedClassId);
+    }
+
+    if (searchStudentQuery.trim()) {
+      const lowerCaseQuery = searchStudentQuery.toLowerCase();
+      students = students.filter(s =>
+        s.first_name?.toLowerCase().includes(lowerCaseQuery) ||
+        s.last_name?.toLowerCase().includes(lowerCaseQuery) ||
+        s.username?.toLowerCase().includes(lowerCaseQuery) ||
+        s.email?.toLowerCase().includes(lowerCaseQuery)
+      );
+    }
+
+    // Exclude students already in recent conversations
+    const contactsInRecentConversations = new Set(
+      recentMessages.map(msg =>
+        msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
+      )
+    );
+    students = students.filter(s => !contactsInRecentConversations.has(s.id));
+
+    return students;
+  }, [allProfiles, currentUserProfile, currentRole, selectedEstablishmentId, selectedCurriculumId, selectedClassId, searchStudentQuery, establishments, curricula, classes, recentMessages]);
+
+
+  // Available contacts for new chat (for students)
+  const availableContactsForStudentNewChat = useMemo(() => {
+    if (!currentUserProfile || currentRole !== 'student') return [];
 
     const contactsInRecentConversations = new Set(
       recentMessages.map(msg =>
@@ -132,7 +187,8 @@ const Messages = () => {
       profile.id !== currentUserProfile.id && // Exclude self
       !contactsInRecentConversations.has(profile.id) // Exclude contacts already in recent conversations
     );
-  }, [allProfiles, currentUserProfile, recentMessages]);
+  }, [allProfiles, currentUserProfile, recentMessages, currentRole]);
+
 
   if (isLoadingUser) {
     return (
@@ -170,30 +226,127 @@ const Messages = () => {
       </p>
 
       <div className="flex flex-col flex-grow md:flex-row md:gap-4">
-        {/* Left Panel (Message List) */}
+        {/* Left Panel (Message List & New Conversation) */}
         <div className={cn(
           "flex flex-col",
           isMobile ? (selectedContact ? "hidden" : "flex-grow") : "w-full md:w-1/3 flex-shrink-0"
         )}>
-          <div className="p-4 border-b border-border">
-            <Label htmlFor="new-chat-select-desktop">Démarrer une nouvelle conversation</Label>
-            <Select onValueChange={handleNewConversation}>
-              <SelectTrigger id="new-chat-select-desktop">
-                <SelectValue placeholder="Sélectionner un contact" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableContactsForNewChat.length === 0 ? (
-                  <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
-                ) : (
-                  availableContactsForNewChat.map(profile => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.first_name} {profile.last_name} (@{profile.username})
-                    </SelectItem>
-                  ))
+          {(currentRole === 'creator' || currentRole === 'tutor') && (
+            <div className="p-4 border-b border-border space-y-4">
+              <h3 className="text-lg font-semibold">Démarrer une nouvelle conversation avec un élève</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
+                  <Select value={selectedEstablishmentId} onValueChange={(value) => {
+                    setSelectedEstablishmentId(value);
+                    setSelectedCurriculumId(undefined);
+                    setSelectedClassId(undefined);
+                  }}>
+                    <SelectTrigger id="select-establishment">
+                      <SelectValue placeholder="Tous les établissements" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les établissements</SelectItem>
+                      {establishments.map(est => (
+                        <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
+                  <Select value={selectedCurriculumId} onValueChange={(value) => {
+                    setSelectedCurriculumId(value);
+                    setSelectedClassId(undefined);
+                  }}>
+                    <SelectTrigger id="select-curriculum">
+                      <SelectValue placeholder="Tous les cursus" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les cursus</SelectItem>
+                      {curricula
+                        .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === 'all' || cur.establishment_id === selectedEstablishmentId)
+                        .map(cur => (
+                          <SelectItem key={cur.id} value={cur.id}>
+                            {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="select-class">Filtrer par Classe</Label>
+                  <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                    <SelectTrigger id="select-class">
+                      <SelectValue placeholder="Toutes les classes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les classes</SelectItem>
+                      {classes
+                        .filter(cls => !selectedCurriculumId || selectedCurriculumId === 'all' || cls.curriculum_id === selectedCurriculumId)
+                        .map(cls => (
+                          <SelectItem key={cls.id} value={cls.id}>
+                            {cls.name} ({getCurriculumName(cls.curriculum_id)})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher un élève par nom ou pseudo..."
+                    className="pl-10"
+                    value={searchStudentQuery}
+                    onChange={(e) => setSearchStudentQuery(e.target.value)}
+                  />
+                </div>
+                {filteredStudentsForNewChat.length > 0 && (
+                  <div>
+                    <Label htmlFor="new-chat-select-professional">Sélectionner un élève</Label>
+                    <Select onValueChange={(value) => handleSelectContact(allProfiles.find(p => p.id === value)!)}>
+                      <SelectTrigger id="new-chat-select-professional">
+                        <SelectValue placeholder="Sélectionner un élève" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredStudentsForNewChat.map(profile => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {profile.first_name} {profile.last_name} (@{profile.username})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
-              </SelectContent>
-            </Select>
-          </div>
+                {searchStudentQuery.trim() !== '' && filteredStudentsForNewChat.length === 0 && (
+                  <p className="text-muted-foreground text-sm text-center">Aucun élève trouvé avec ces critères.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {currentRole === 'student' && (
+            <div className="p-4 border-b border-border">
+              <Label htmlFor="new-chat-select-student">Démarrer une nouvelle conversation</Label>
+              <Select onValueChange={(value) => handleSelectContact(allProfiles.find(p => p.id === value)!)}>
+                <SelectTrigger id="new-chat-select-student">
+                  <SelectValue placeholder="Sélectionner un contact" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableContactsForStudentNewChat.length === 0 ? (
+                    <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
+                  ) : (
+                    availableContactsForStudentNewChat.map(profile => (
+                      <SelectItem key={profile.id} value={profile.id}>
+                        {profile.first_name} {profile.last_name} (@{profile.username})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <MessageList
             recentMessages={recentMessages} // Pass recentMessages
             allProfiles={allProfiles} // Pass allProfiles
