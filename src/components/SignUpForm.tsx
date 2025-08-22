@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
-import { checkUsernameExists } from '@/lib/studentData'; // Keep checkUsernameExists
+import { checkUsernameExists, checkEmailExists } from '@/lib/studentData'; // Keep checkUsernameExists and re-import checkEmailExists
 import {
   Form,
   FormControl,
@@ -38,7 +38,7 @@ interface SignUpFormProps {
 export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  // Removed emailAvailabilityStatus state
+  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle'); // Re-added emailAvailabilityStatus
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -53,6 +53,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
   });
 
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceEmailTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // New debounce ref for email
 
   const validateUsername = useCallback(async (username: string) => {
     if (username.length < 3) {
@@ -77,13 +78,21 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     return true;
   }, [form]);
 
-  // Simplified validateEmail to only check format, not existence
-  const validateEmail = useCallback((email: string) => {
+  const validateEmail = useCallback(async (email: string) => { // Made async to check existence
     if (!z.string().email().safeParse(email).success) {
       form.setError("email", { type: "manual", message: "Veuillez entrer une adresse email valide." });
+      setEmailAvailabilityStatus('idle');
+      return false;
+    }
+    setEmailAvailabilityStatus('checking');
+    const isTaken = await checkEmailExists(email); // Check email existence
+    if (isTaken) {
+      form.setError("email", { type: "manual", message: "Cet email est déjà enregistré." });
+      setEmailAvailabilityStatus('taken');
       return false;
     }
     form.clearErrors("email");
+    setEmailAvailabilityStatus('available');
     return true;
   }, [form]);
 
@@ -108,11 +117,17 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     const value = e.target.value;
     form.setValue("email", value);
     if (value.trim() === '') {
+        setEmailAvailabilityStatus('idle');
         form.clearErrors("email");
+        if (debounceEmailTimeoutRef.current) clearTimeout(debounceEmailTimeoutRef.current);
         return;
     }
-    // No debounce needed for format validation, Zod handles it on submit
-    validateEmail(value); // Still call to update form errors immediately
+    if (debounceEmailTimeoutRef.current) {
+      clearTimeout(debounceEmailTimeoutRef.current);
+    }
+    debounceEmailTimeoutRef.current = setTimeout(() => {
+      validateEmail(value);
+    }, 500); // Debounce for 500ms
   };
 
   const onSubmit = async (values: SignUpFormValues) => {
@@ -120,9 +135,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
     try {
       // Re-run final validation before submission
       const isUsernameValid = await validateUsername(values.username);
-      const isEmailFormatValid = validateEmail(values.email); // Only check format
+      const isEmailValid = await validateEmail(values.email); // Now checks for existence
 
-      if (!isUsernameValid || !isEmailFormatValid) {
+      if (!isUsernameValid || !isEmailValid) {
         onError("Veuillez corriger les erreurs du formulaire.");
         setIsLoading(false);
         return;
@@ -143,6 +158,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
 
       if (authError) {
         // Supabase will still return an error if email is already registered in auth.users
+        // This check is now redundant if client-side validation works, but kept as a fallback.
         if (authError.message.includes('User already registered')) {
           form.setError("email", { type: "manual", message: "Cet email est déjà enregistré. Veuillez vous connecter." });
           onError("Cet email est déjà enregistré. Veuillez vous connecter.");
@@ -228,7 +244,15 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError }) =>
                 <FormControl>
                   <Input id="email" type="email" {...field} onChange={handleEmailChange} className="pr-10" />
                 </FormControl>
-                {/* Removed email availability status icons */}
+                {emailAvailabilityStatus === 'checking' && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                )}
+                {emailAvailabilityStatus === 'available' && (
+                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                )}
+                {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
+                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+                )}
               </div>
               <FormMessage />
             </FormItem>
