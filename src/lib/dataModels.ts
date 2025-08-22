@@ -12,7 +12,7 @@ export interface Profile {
   last_name: string;
   username: string;
   email: string; // Added email to Profile interface
-  role: 'student' | 'creator' | 'tutor';
+  role: 'student' | 'creator' | 'tutor' | 'administrator'; // Added 'administrator' role
   establishment_id?: string; // New: Link to parent establishment for students
   enrollment_start_date?: string; // New: Start date of enrollment in establishment
   enrollment_end_date?: string; // New: End date of enrollment in establishment

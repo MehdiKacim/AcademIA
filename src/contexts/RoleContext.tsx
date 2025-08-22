@@ -9,7 +9,7 @@ import { showError } from '@/utils/toast'; // Import showError for diagnostic me
 interface RoleContextType {
   currentUserProfile: Profile | null;
   setCurrentUserProfile: (profile: Profile | null) => void;
-  currentRole: 'student' | 'creator' | 'tutor' | null;
+  currentRole: 'student' | 'creator' | 'tutor' | 'administrator' | null; // Added 'administrator' role
   isLoadingUser: boolean; // New loading state
   updateUserTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>; // New function to update theme
   signOut: () => Promise<void>; // Add signOut function
