@@ -61,11 +61,8 @@ const Index = () => {
     enabled: false, // Disable fetching APK data as it's no longer used
   });
 
-  useEffect(() => {
-    if (currentUserProfile) {
-      navigate("/dashboard");
-    }
-  }, [currentUserProfile, navigate]);
+  // Removed the useEffect that was causing the redirection issue.
+  // The redirection for logged-in users is now handled at the App.tsx level.
 
   useEffect(() => {
     const observerOptions = {

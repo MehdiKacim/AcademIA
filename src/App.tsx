@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom"; // Import Navigate
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./components/layouts/DashboardLayout";
@@ -33,20 +33,10 @@ const queryClient = new QueryClient();
 // A wrapper component to get the theme from useRole and pass it to ThemeProvider
 const AppWithThemeProvider = () => {
   const { currentUserProfile, isLoadingUser } = useRole();
-  const [showSplash, setShowSplash] = useState(true);
+  // Removed local showSplash state, will rely solely on isLoadingUser for splash screen
 
   // Determine the initial theme based on user profile or system preference
   const initialTheme = currentUserProfile?.theme || "system";
-
-  React.useEffect(() => {
-    // Only hide splash screen once user loading is complete
-    if (!isLoadingUser) {
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-      }, 3000); // Affiche le splash screen pendant 3 secondes
-      return () => clearTimeout(timer);
-    }
-  }, [isLoadingUser]);
 
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="class">
@@ -61,13 +51,13 @@ const AppWithThemeProvider = () => {
               duration: 5000,
             }}
           />
-          {showSplash || isLoadingUser ? ( // Show splash if loading user or splash is active
-            <SplashScreen onComplete={() => setShowSplash(false)} />
+          {isLoadingUser ? ( // Show splash ONLY if loading user
+            <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />
           ) : (
             <BrowserRouter>
               <Routes>
-                {/* Public route for the landing page (Index.tsx) */}
-                <Route path="/" element={<Index />} /> 
+                {/* If user is logged in, redirect from "/" to "/dashboard" */}
+                <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index />} /> 
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}
