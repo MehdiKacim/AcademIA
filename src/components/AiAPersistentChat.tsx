@@ -14,15 +14,13 @@ interface Message {
 }
 
 const AiAPersistentChat = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: 'aia', text: "Bonjour ! Je suis AiA, votre tuteur personnel. Comment puis-je vous aider aujourd'hui ?" },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]); // Initialisé vide
   const [input, setInput] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Utilisation d'un useRef pour un compteur d'ID unique et persistant
-  const messageIdCounter = useRef(messages.length); 
+  // Utilisation d'un useRef pour un compteur d'ID unique et persistant, commence à 0
+  const messageIdCounter = useRef(0); 
   
   const { currentCourseTitle, currentModuleTitle, isChatOpen, closeChat, initialChatMessage, setInitialChatMessage } = useCourseChat();
 
@@ -32,13 +30,22 @@ const AiAPersistentChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Ajoute le message initial d'AiA une seule fois au montage du composant
+  useEffect(() => {
+    if (messages.length === 0) {
+      messageIdCounter.current += 1;
+      setMessages([
+        { id: messageIdCounter.current, sender: 'aia', text: "Bonjour ! Je suis AiA, votre tuteur personnel. Comment puis-je vous aider aujourd'hui ?" },
+      ]);
+    }
+  }, []); // Dépendance vide pour s'exécuter une seule fois au montage
+
   useEffect(() => {
     if (isChatOpen && !isMinimized) {
       if (initialChatMessage) {
         setInput(initialChatMessage);
         setInitialChatMessage(null);
       }
-      // Ajout d'un petit délai pour s'assurer que le DOM est mis à jour avant de défiler
       const timer = setTimeout(() => {
         scrollToBottom();
       }, 100); 
@@ -48,7 +55,6 @@ const AiAPersistentChat = () => {
 
   useEffect(() => {
     if (!isMinimized) {
-      // Ajout d'un petit délai pour s'assurer que le DOM est mis à jour avant de défiler
       const timer = setTimeout(() => {
         scrollToBottom();
       }, 100);
