@@ -328,7 +328,14 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
     );
   }
 
-  return null;
+  // Default return if no view matches
+  return (
+    <div className="text-center py-20">
+      <p className="text-lg text-muted-foreground">
+        Sélectionnez une vue pour les analytiques du créateur.
+      </p>
+    </div>
+  );
 };
 
-export default Analytics;
+export default CreatorAnalyticsSection;
