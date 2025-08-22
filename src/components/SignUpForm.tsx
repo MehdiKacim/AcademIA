@@ -191,7 +191,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormItem>
                 <FormLabel>Prénom</FormLabel>
                 <FormControl>
-                  <Input id="firstName" {...field} />
+                  <Input id="signup-firstName" {...field} autoComplete="given-name" /> {/* Unique ID and autocomplete */}
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -204,7 +204,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormItem>
                 <FormLabel>Nom</FormLabel>
                 <FormControl>
-                  <Input id="lastName" {...field} />
+                  <Input id="signup-lastName" {...field} autoComplete="family-name" /> {/* Unique ID and autocomplete */}
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -219,7 +219,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormLabel>Nom d'utilisateur</FormLabel>
               <div className="relative">
                 <FormControl>
-                  <Input id="username" {...field} onChange={handleUsernameChange} className="pr-10" />
+                  <Input id="signup-username" {...field} onChange={handleUsernameChange} className="pr-10" autoComplete="username" /> {/* Unique ID and autocomplete */}
                 </FormControl>
                 {usernameAvailabilityStatus === 'checking' && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
@@ -243,7 +243,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormLabel>Email</FormLabel>
               <div className="relative">
                 <FormControl>
-                  <Input id="email" type="email" {...field} onChange={handleEmailChange} className="pr-10" />
+                  <Input id="signup-email" type="email" {...field} onChange={handleEmailChange} className="pr-10" autoComplete="email" /> {/* Unique ID and autocomplete */}
                 </FormControl>
                 {emailAvailabilityStatus === 'checking' && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
@@ -266,7 +266,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
             <FormItem>
               <FormLabel>Mot de passe</FormLabel>
               <FormControl>
-                <Input id="password" type="password" {...field} />
+                <Input id="signup-password" type="password" {...field} autoComplete="new-password" /> {/* Unique ID and autocomplete */}
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -280,7 +280,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
               <FormLabel>Rôle</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger id="role">
+                  <SelectTrigger id="signup-role"> {/* Unique ID */}
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
                 </FormControl>
