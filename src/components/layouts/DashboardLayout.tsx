@@ -347,6 +347,11 @@ const DashboardLayout = () => {
           )}
 
           <ThemeToggle />
+          {!isMobile && ( // Always show About button on desktop
+            <Button variant="outline" onClick={() => setIsAboutModalOpen(true)}>
+              <Info className="h-5 w-5 mr-2" /> À propos
+            </Button>
+          )}
           {!isMobile && !currentUserProfile && (
             <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
               <LogIn className="h-5 w-5 mr-2" /> Authentification

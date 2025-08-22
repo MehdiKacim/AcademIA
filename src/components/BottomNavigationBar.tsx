@@ -91,13 +91,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
         type: 'trigger',
         onClick: () => setIsAuthDrawerOpen(true),
       });
-      // Add "À propos" button for unauthenticated users
-      itemsToRender.push({
-        icon: Info,
-        label: "À propos",
-        type: 'trigger',
-        onClick: onOpenAboutModal,
-      });
+      // Removed "À propos" from here, it will be in the AuthMenu or Profile Drawer
     }
   }
 

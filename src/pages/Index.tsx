@@ -174,6 +174,11 @@ const Index = () => {
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
+          {!isMobile && ( // Always show About button on desktop
+            <Button variant="outline" onClick={() => setIsAboutModalOpen(true)}>
+              <Info className="h-5 w-5 mr-2" /> À propos
+            </Button>
+          )}
           {!isMobile && (
             <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
               <LogIn className="h-5 w-5 mr-2" /> Authentification
