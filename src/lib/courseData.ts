@@ -1,55 +1,58 @@
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class } from "./dataModels";
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment } from "./dataModels";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 
 export type EntityType = 'course' | 'module' | 'section';
 
 /**
- * Récupère les IDs des cours accessibles pour un élève en fonction de sa classe et de son cursus.
+ * Récupère les IDs des cours accessibles pour un élève en fonction de ses affectations de classe et des cursus associés.
  * @param studentProfileId L'ID du profil de l'élève.
  * @returns Un tableau de promesses résolues en IDs de cours accessibles.
  */
 export const getAccessibleCourseIdsForStudent = async (studentProfileId: string): Promise<string[]> => {
-  // 1. Get the student's profile to find their class_id
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
+  // 1. Get the student's current class enrollments
+  const { data: enrollments, error: enrollmentsError } = await supabase
+    .from('student_class_enrollments')
     .select('class_id')
-    .eq('id', studentProfileId)
-    .single();
+    .eq('student_id', studentProfileId);
 
-  if (profileError || !profile?.class_id) {
-    // console.warn("Student not assigned to a class or profile not found, no courses accessible.");
+  if (enrollmentsError || !enrollments || enrollments.length === 0) {
+    // console.warn("Student not enrolled in any class, no courses accessible.");
     return [];
   }
 
-  const classId = profile.class_id;
+  const classIds = enrollments.map(e => e.class_id);
 
-  // 2. Get the class to find its curriculum_id
-  const { data: classData, error: classError } = await supabase
+  // 2. Get the classes to find their curriculum_ids
+  const { data: classesData, error: classesError } = await supabase
     .from('classes')
     .select('curriculum_id')
-    .eq('id', classId)
-    .single();
+    .in('id', classIds);
 
-  if (classError || !classData?.curriculum_id) {
-    console.error("Error fetching class or curriculum_id for student:", classError);
+  if (classesError || !classesData || classesData.length === 0) {
+    console.error("Error fetching classes for student enrollments:", classesError);
     return [];
   }
 
-  const curriculumId = classData.curriculum_id;
+  const curriculumIds = classesData.map(c => c.curriculum_id);
 
-  // 3. Get the curriculum to find its course_ids
-  const { data: curriculumData, error: curriculumError } = await supabase
+  // 3. Get the curricula to find their course_ids
+  const { data: curriculaData, error: curriculaError } = await supabase
     .from('curricula')
     .select('course_ids')
-    .eq('id', curriculumId)
-    .single();
+    .in('id', curriculumIds);
 
-  if (curriculumError || !curriculumData?.course_ids) {
-    console.error("Error fetching curriculum or course_ids for class:", curriculumError);
+  if (curriculaError || !curriculaData || curriculaData.length === 0) {
+    console.error("Error fetching curricula for classes:", curriculaError);
     return [];
   }
 
-  return curriculumData.course_ids;
+  // Aggregate all unique course IDs
+  const accessibleCourseIds = new Set<string>();
+  curriculaData.forEach(curriculum => {
+    curriculum.course_ids.forEach((courseId: string) => accessibleCourseIds.add(courseId));
+  });
+
+  return Array.from(accessibleCourseIds);
 };
 
 
@@ -364,6 +367,8 @@ export const loadClasses = async (): Promise<Class[]> => {
     name: cls.name,
     curriculum_id: cls.curriculum_id,
     creator_ids: cls.creator_ids || [],
+    establishment_id: cls.establishment_id || undefined, // New field
+    school_year: cls.school_year || undefined, // New field
     created_at: cls.created_at || undefined,
   }));
 };
@@ -375,6 +380,8 @@ export const addClassToStorage = async (newClass: Class): Promise<Class | null> 
       name: newClass.name,
       curriculum_id: newClass.curriculum_id,
       creator_ids: newClass.creator_ids,
+      establishment_id: newClass.establishment_id, // New field
+      school_year: newClass.school_year, // New field
     })
     .select()
     .single();
@@ -387,6 +394,8 @@ export const addClassToStorage = async (newClass: Class): Promise<Class | null> 
     name: data.name,
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
+    establishment_id: data.establishment_id || undefined, // New field
+    school_year: data.school_year || undefined, // New field
     created_at: data.created_at || undefined,
   };
 };
@@ -398,6 +407,8 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
       name: updatedClass.name,
       curriculum_id: updatedClass.curriculum_id,
       creator_ids: updatedClass.creator_ids,
+      establishment_id: updatedClass.establishment_id, // New field
+      school_year: updatedClass.school_year, // New field
       updated_at: new Date().toISOString(), // Add updated_at if your table has it
     })
     .eq('id', updatedClass.id)
@@ -412,6 +423,8 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
     name: data.name,
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
+    establishment_id: data.establishment_id || undefined, // New field
+    school_year: data.school_year || undefined, // New field
     created_at: data.created_at || undefined,
   };
 };

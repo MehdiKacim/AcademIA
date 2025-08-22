@@ -1,4 +1,4 @@
-import { Profile, User, StudentCourseProgress } from "./dataModels"; // Import Profile and StudentCourseProgress
+import { Profile, User, StudentCourseProgress, StudentClassEnrollment } from "./dataModels"; // Import Profile, StudentCourseProgress, StudentClassEnrollment
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 import { User as SupabaseUser } from '@supabase/supabase-js'; // Import Supabase User type
 
@@ -153,6 +153,74 @@ export const getAllStudents = async (): Promise<Profile[]> => {
   return profiles.filter(p => p.role === 'student');
 };
 
+// --- Student Class Enrollment Management (Supabase) ---
+
+/**
+ * Récupère les affectations de classe pour un élève.
+ * @param studentId L'ID de l'élève.
+ * @returns Un tableau des affectations de classe.
+ */
+export const getStudentClassEnrollments = async (studentId: string): Promise<StudentClassEnrollment[]> => {
+  const { data, error } = await supabase
+    .from('student_class_enrollments')
+    .select('*')
+    .eq('student_id', studentId);
+  if (error) {
+    console.error("Error fetching student class enrollments:", error);
+    return [];
+  }
+  return data;
+};
+
+/**
+ * Récupère toutes les affectations de classe.
+ * @returns Un tableau de toutes les affectations de classe.
+ */
+export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrollment[]> => {
+  const { data, error } = await supabase
+    .from('student_class_enrollments')
+    .select('*');
+  if (error) {
+    console.error("Error fetching all student class enrollments:", error);
+    return [];
+  }
+  return data;
+};
+
+/**
+ * Ajoute ou met à jour une affectation de classe pour un élève.
+ * @param enrollment L'objet d'affectation de classe.
+ * @returns L'affectation de classe ajoutée/mise à jour.
+ */
+export const upsertStudentClassEnrollment = async (enrollment: StudentClassEnrollment): Promise<StudentClassEnrollment | null> => {
+  const { data, error } = await supabase
+    .from('student_class_enrollments')
+    .upsert(enrollment)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error upserting student class enrollment:", error);
+    throw error;
+  }
+  return data;
+};
+
+/**
+ * Supprime une affectation de classe.
+ * @param enrollmentId L'ID de l'affectation à supprimer.
+ */
+export const deleteStudentClassEnrollment = async (enrollmentId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('student_class_enrollments')
+    .delete()
+    .eq('id', enrollmentId);
+  if (error) {
+    console.error("Error deleting student class enrollment:", error);
+    throw error;
+  }
+};
+
+
 // --- Student Course Progress Management (Supabase) ---
 export const getStudentCourseProgress = async (userId: string, courseId: string): Promise<StudentCourseProgress | null> => {
   const { data, error } = await supabase
@@ -215,4 +283,9 @@ export const resetProfiles = async () => {
 export const resetStudentCourseProgress = async () => {
   const { error } = await supabase.from('student_course_progress').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) console.error("Error resetting student course progress:", error);
+};
+
+export const resetStudentClassEnrollments = async () => {
+  const { error } = await supabase.from('student_class_enrollments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error("Error resetting student class enrollments:", error);
 };
