@@ -156,21 +156,28 @@ const DashboardLayout = () => {
 
   const getMainNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
-      { to: "/dashboard", icon: Home, label: "Tableau de bord", type: 'link' },
+      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' }, // Changed label
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages }, // Add messages link with badge
     ];
 
     if (currentRole === 'student') {
       return [
         ...baseItems,
-        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link' },
-        { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link' },
+        {
+          icon: GraduationCap, // New icon for Apprentissage
+          label: "Apprentissage", // New group label
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('apprentissage'),
+          items: [
+            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
+            { to: "/all-notes", label: "Mes Notes", icon: NotebookText, type: 'link' },
+          ],
+        },
         {
           icon: BarChart2,
-          label: "Analytiques",
+          label: "Progression", // Renamed for student
           type: 'trigger',
-          // No 'to' for trigger parents
-          onClick: () => setCurrentNavLevel('analytiques'),
+          onClick: () => setCurrentNavLevel('progression'), // Updated level name
           items: [
             { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
             { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
@@ -182,22 +189,20 @@ const DashboardLayout = () => {
       return [
         ...baseItems,
         {
-          icon: BookOpen,
-          label: "Cours",
+          icon: BookOpen, // Icon for Contenu
+          label: "Contenu", // New group label
           type: 'trigger',
-          // No 'to' for trigger parents
-          onClick: () => setCurrentNavLevel('cours'),
+          onClick: () => setCurrentNavLevel('contenu'),
           items: [
-            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' }, // This is now a sub-item
+            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
             { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
           ],
         },
         {
-          icon: BriefcaseBusiness,
-          label: "Administration",
+          icon: Users, // Icon for Gestion
+          label: "Gestion", // New group label
           type: 'trigger',
-          // No 'to' for trigger parents
-          onClick: () => setCurrentNavLevel('administration'),
+          onClick: () => setCurrentNavLevel('gestion'),
           items: [
             { to: "/establishments", label: "Établissements", icon: School, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
@@ -209,7 +214,6 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          // No 'to' for trigger parents
           onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
@@ -222,11 +226,10 @@ const DashboardLayout = () => {
       return [
         ...baseItems,
         {
-          icon: Users,
-          label: "Gestion des Utilisateurs",
+          icon: UsersRound, // Icon for Suivi
+          label: "Suivi", // New group label
           type: 'trigger',
-          // No 'to' for trigger parents
-          onClick: () => setCurrentNavLevel('gestion-des-utilisateurs'),
+          onClick: () => setCurrentNavLevel('suivi'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Tous les Élèves", icon: GraduationCap, type: 'link' },
@@ -236,7 +239,6 @@ const DashboardLayout = () => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          // No 'to' for trigger parents
           onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
