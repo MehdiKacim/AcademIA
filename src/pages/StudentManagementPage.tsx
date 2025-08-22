@@ -105,7 +105,7 @@ const StudentManagementPage = () => {
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
   const handleRemoveStudentFromClass = async (enrollmentId: string) => {
-    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
       return;
     }
@@ -165,7 +165,7 @@ const StudentManagementPage = () => {
   }, [studentSearchInputClass]);
 
   const handleAssignStudentToEstablishment = async () => {
-    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à affecter des élèves à des établissements.");
       return;
     }
@@ -217,7 +217,7 @@ const StudentManagementPage = () => {
   };
 
   const handleAssignStudentToClass = async () => {
-    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à affecter des élèves à des classes.");
       return;
     }
@@ -292,7 +292,7 @@ const StudentManagementPage = () => {
   };
 
   const handleDeleteStudent = async (studentProfileId: string) => {
-    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) {
+    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à supprimer des élèves.");
       return;
     }
@@ -371,14 +371,14 @@ const StudentManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'creator' && currentRole !== 'tutor') {
+  if (currentRole !== 'creator' && currentRole !== 'tutor' && currentRole !== 'administrator') {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) et les tuteurs peuvent accéder à cette page.
+          Seuls les créateurs (professeurs), les tuteurs et les administrateurs peuvent accéder à cette page.
         </p>
       </div>
     );

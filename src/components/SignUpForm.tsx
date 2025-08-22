@@ -26,7 +26,7 @@ const signUpSchema = z.object({
   username: z.string().min(3, "Le nom d'utilisateur doit contenir au moins 3 caractères.").max(50, "Le nom d'utilisateur ne peut pas dépasser 50 caractères.").regex(/^[a-zA-Z0-9_]+$/, "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores."),
   email: z.string().email("Veuillez entrer une adresse email valide."),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères."),
-  role: z.enum(["student", "creator", "tutor"], { message: "Veuillez sélectionner un rôle." }),
+  // role: z.enum(["student", "creator", "tutor"], { message: "Veuillez sélectionner un rôle." }), // Removed role selection
 });
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
@@ -50,7 +50,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
       username: "",
       email: "",
       password: "",
-      role: undefined,
+      // role: undefined, // Removed role default value
     },
   });
 
@@ -152,7 +152,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
             first_name: values.firstName,
             last_name: values.lastName,
             username: values.username,
-            role: values.role,
+            role: 'student', // Default role for signup is 'student'
           },
         },
       });
@@ -263,28 +263,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Rôle</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger id="signup-role">
-                    <SelectValue placeholder="Sélectionner un rôle" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="student">Élève</SelectItem>
-                  <SelectItem value="creator">Créateur (Professeur)</SelectItem>
-                  <SelectItem value="tutor">Tuteur</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Role selection removed from signup form */}
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Inscription en cours..." : "S'inscrire"}
         </Button>
