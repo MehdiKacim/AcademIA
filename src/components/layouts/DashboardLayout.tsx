@@ -375,7 +375,7 @@ const DashboardLayout = () => {
           )}
         </div>
       </header>
-      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32", isMobile && "pb-20")}>
+      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}>
         <Outlet />
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
