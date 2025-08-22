@@ -6,15 +6,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses } from "@/lib/courseData";
-import { getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supabase function
-import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import types
+import { loadCourses, loadClasses } from "@/lib/courseData"; // Load classes for creator/tutor
+import { getAllStudentCourseProgress, getAllProfiles } from "@/lib/studentData"; // Import Supabase function
+import { Course, StudentCourseProgress, Profile, Class } from "@/lib/dataModels"; // Import types
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react";
 
 const Dashboard = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // For creator/tutor to count students
+  const [classes, setClasses] = useState<Class[]>([]); // For creator/tutor to count students in classes
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,6 +27,10 @@ const Dashboard = () => {
       setCourses(loadedCourses);
       const loadedProgresses = await getAllStudentCourseProgress();
       setStudentCourseProgresses(loadedProgresses);
+      const loadedProfiles = await getAllProfiles();
+      setAllProfiles(loadedProfiles);
+      const loadedClasses = await loadClasses();
+      setClasses(loadedClasses);
     };
     fetchData();
   }, [currentUserProfile]); // Re-fetch if user profile changes
@@ -68,6 +77,11 @@ const Dashboard = () => {
       const totalModulesAvailable = courses.reduce((acc, course) => acc + course.modules.length, 0);
       const overallProgress = totalModulesAvailable > 0 ? Math.round((totalModulesCompleted / totalModulesAvailable) * 100) : 0;
 
+      const coursesInProgress = enrolledCourses.filter(c => {
+        const progress = studentProgress.find(ec => ec.course_id === c.id);
+        return progress && !progress.modules_progress.every(m => m.is_completed);
+      });
+
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -76,8 +90,13 @@ const Dashboard = () => {
               <CardDescription>Continuez votre apprentissage.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous avez {enrolledCourses.length} cours en cours ou terminés.</p>
-              <p className="text-sm text-muted-foreground">Reprenez là où vous en étiez !</p>
+              <p className="text-2xl font-bold text-primary">{coursesInProgress.length}</p>
+              <p className="text-sm text-muted-foreground">cours en cours.</p>
+              {coursesInProgress.length > 0 && (
+                <Link to={`/courses/${coursesInProgress[0].id}`} className="mt-4 block">
+                  <Button className="w-full">Reprendre le dernier cours</Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -86,8 +105,13 @@ const Dashboard = () => {
               <CardDescription>Votre succès jusqu'à présent.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous avez terminé {completedCoursesCount} cours.</p>
-              <p className="text-sm text-muted-foreground">Continuez sur cette lancée !</p>
+              <p className="text-2xl font-bold text-primary">{completedCoursesCount}</p>
+              <p className="text-sm text-muted-foreground">cours terminés sur {enrolledCourses.length} inscrits.</p>
+              {completedCoursesCount > 0 && (
+                <Link to="/courses" className="mt-4 block">
+                  <Button variant="outline" className="w-full">Voir tous les cours terminés</Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -98,14 +122,22 @@ const Dashboard = () => {
             <CardContent>
               <p className="text-2xl font-bold text-primary">{overallProgress}%</p>
               <p className="text-sm text-muted-foreground">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
+              <Link to="/analytics?view=personal" className="mt-4 block">
+                <Button variant="outline" className="w-full">Voir mes statistiques</Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
       );
     } else if (currentRole === 'creator') {
-      const createdCourses = courses; // Assuming all courses are created by this creator for demo
-      const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.isCompleted)).length; // Simple heuristic for 'published'
-      const totalStudents = studentCourseProgresses.length; // Total students with any progress
+      const createdCourses = courses.filter(c => c.creator_id === currentUserProfile.id);
+      const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.sections.length > 0)).length; // Heuristic: has at least one section
+      
+      const studentsInMyCourses = new Set(
+        studentCourseProgresses
+          .filter(scp => createdCourses.some(cc => cc.id === scp.course_id))
+          .map(scp => scp.user_id)
+      ).size;
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -115,60 +147,85 @@ const Dashboard = () => {
               <CardDescription>Gérez vos contenus d'apprentissage.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous avez créé {createdCourses.length} cours.</p>
+              <p className="text-2xl font-bold text-primary">{createdCourses.length}</p>
               <p className="text-sm text-muted-foreground">{publishedCoursesCount} sont publiés.</p>
+              <Link to="/courses" className="mt-4 block">
+                <Button className="w-full">Gérer mes cours</Button>
+              </Link>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Statistiques des Élèves</CardTitle>
-              <CardDescription>Engagement et progression des apprenants.</CardDescription>
+              <CardTitle>Impact sur les Élèves</CardTitle>
+              <CardDescription>Nombre total d'élèves inscrits à vos cours.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>{totalStudents} élèves inscrits au total.</p>
-              <p className="text-sm text-muted-foreground">Taux de complétion moyen : ~70% (estimation)</p>
+              <p className="text-2xl font-bold text-primary">{studentsInMyCourses}</p>
+              <p className="text-sm text-muted-foreground">élèves uniques.</p>
+              <Link to="/analytics?view=overview" className="mt-4 block">
+                <Button variant="outline" className="w-full">Voir les analytiques</Button>
+              </Link>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Nouveaux Inscrits</CardTitle>
-              <CardDescription>Les derniers arrivants.</CardDescription>
+              <CardTitle>Gestion des Classes</CardTitle>
+              <CardDescription>Organisez vos élèves en classes.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>5 nouveaux élèves cette semaine.</p>
+              <p className="text-2xl font-bold text-primary">{classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).length}</p>
+              <p className="text-sm text-muted-foreground">classes gérées.</p>
+              <Link to="/classes" className="mt-4 block">
+                <Button variant="outline" className="w-full">Gérer les classes</Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
       );
     } else if (currentRole === 'tutor') {
-      const supervisedStudents = studentCourseProgresses.slice(0, 2); // Just taking first two for demo
+      const studentsInMyClasses = allProfiles.filter(p => p.role === 'student' && p.class_id && classes.some(cls => cls.id === p.class_id && cls.creator_ids.includes(currentUserProfile.id)));
+      const studentsAtRisk = studentsInMyClasses.filter(s => studentCourseProgresses.some(scp => scp.user_id === s.id && scp.modules_progress.some(mp => mp.sections_progress.some(sp => sp.quiz_result && !sp.quiz_result.passed)))).length;
+      const totalSupervisedStudents = studentsInMyClasses.length;
+
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Mes Élèves</CardTitle>
-              <CardDescription>Suivez la progression de vos enfants/protégés.</CardDescription>
+              <CardTitle>Élèves Supervisés</CardTitle>
+              <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Vous suivez {supervisedStudents.length} élèves : {supervisedStudents.map(s => s.user_id).join(', ')}.</p> {/* Placeholder for user names */}
+              <p className="text-2xl font-bold text-primary">{totalSupervisedStudents}</p>
+              <p className="text-sm text-muted-foreground">élèves au total.</p>
+              <Link to="/students" className="mt-4 block">
+                <Button className="w-full">Voir tous les élèves</Button>
+              </Link>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Alertes de Progression</CardTitle>
-              <CardDescription>Points nécessitant votre attention.</CardDescription>
+              <CardTitle>Élèves en Difficulté</CardTitle>
+              <CardDescription>Élèves nécessitant une attention particulière.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Alertes fictives pour le moment.</p>
+              <p className="text-2xl font-bold text-destructive">{studentsAtRisk}</p>
+              <p className="text-sm text-muted-foreground">élèves avec des difficultés récentes.</p>
+              <Link to="/analytics?view=alerts" className="mt-4 block">
+                <Button variant="outline" className="w-full">Voir les alertes</Button>
+              </Link>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Communication</CardTitle>
-              <CardDescription>Messages récents.</CardDescription>
+              <CardTitle>Performance des Classes</CardTitle>
+              <CardDescription>Vue d'ensemble de la progression par classe.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Messages fictifs pour le moment.</p>
+              <p className="text-2xl font-bold text-primary">{classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).length}</p>
+              <p className="text-sm text-muted-foreground">classes supervisées.</p>
+              <Link to="/analytics?view=class-performance" className="mt-4 block">
+                <Button variant="outline" className="w-full">Voir les performances</Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

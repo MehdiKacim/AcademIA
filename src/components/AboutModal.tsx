@@ -31,12 +31,12 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
         <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
             <DrawerHeader className="text-center">
-              <DrawerTitle className="text-center">À Propos d'AcademIA</DrawerTitle> {/* Added text-center */}
-              <DrawerDescription className="text-center"> {/* Added text-center */}
+              <DrawerTitle className="text-center">À Propos d'AcademIA</DrawerTitle>
+              <DrawerDescription className="text-center">
                 Découvrez les informations sur l'application et son développement.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="flex-grow overflow-y-auto p-4">
+            <div className="flex-grow overflow-y-auto p-4"> {/* Ensure this div handles scrolling */}
               <About />
             </div>
             <DrawerFooter>
@@ -52,14 +52,14 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-2xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80">
         <DialogHeader className="mb-4 text-center">
-          <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center"> {/* Added text-center */}
+          <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center">
             À Propos d'AcademIA
           </DialogTitle>
-          <DialogDescription className="text-center"> {/* Added text-center */}
+          <DialogDescription className="text-center">
             Découvrez les informations sur l'application et son développement.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-grow overflow-y-auto pr-2">
+        <div className="flex-grow overflow-y-auto pr-2"> {/* Ensure this div handles scrolling */}
           <About />
         </div>
       </DialogContent>

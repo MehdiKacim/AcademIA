@@ -24,6 +24,7 @@ interface CreatorAnalyticsSectionProps {
   view: string | null;
   selectedClassId?: string;
   selectedCurriculumId?: string;
+  selectedCourseId?: string; // New prop for filtering by specific course
   allCourses: Course[];
   allProfiles: Profile[];
   allStudentCourseProgresses: StudentCourseProgress[];
@@ -31,18 +32,25 @@ interface CreatorAnalyticsSectionProps {
   allCurricula: Curriculum[];
 }
 
-const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => {
+const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, selectedCourseId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => {
 
-  // Filter courses based on selected curriculum
+  // Filter courses based on selected curriculum AND specific course ID
   const filteredCourses = React.useMemo(() => {
+    let coursesToFilter = allCourses;
+
     if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const curriculum = allCurricula.find(c => c.id === selectedCurriculumId);
       if (curriculum) {
-        return allCourses.filter(course => curriculum.course_ids.includes(course.id));
+        coursesToFilter = coursesToFilter.filter(course => curriculum.course_ids.includes(course.id));
       }
     }
-    return allCourses;
-  }, [allCourses, allCurricula, selectedCurriculumId]);
+
+    if (selectedCourseId) {
+      coursesToFilter = coursesToFilter.filter(course => course.id === selectedCourseId);
+    }
+    
+    return coursesToFilter;
+  }, [allCourses, allCurricula, selectedCurriculumId, selectedCourseId]);
 
   // Filter students based on selected class or curriculum
   const filteredStudentProfiles = React.useMemo(() => {
@@ -323,4 +331,4 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
   return null;
 };
 
-export default CreatorAnalyticsSection;
+export default Analytics;

@@ -19,6 +19,7 @@ import {
 } from '@/lib/courseData';
 import { getProfileById, updateProfile } from '@/lib/studentData'; // Import getProfileById and updateProfile
 import { useRole } from '@/contexts/RoleContext';
+import EditEstablishmentDialog from '@/components/EditEstablishmentDialog'; // Import the new dialog
 
 const EstablishmentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -26,6 +27,9 @@ const EstablishmentManagementPage = () => {
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // To get all profiles for creator association
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
+  const [currentEstablishmentToEdit, setCurrentEstablishmentToEdit] = useState<Establishment | null>(null); // State for selected establishment
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +102,15 @@ const EstablishmentManagementPage = () => {
     }
   };
 
+  const handleEditEstablishment = (establishment: Establishment) => {
+    setCurrentEstablishmentToEdit(establishment);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEditedEstablishment = async (updatedEstablishment: Establishment) => {
+    setEstablishments(await loadEstablishments()); // Re-fetch to get the updated list
+  };
+
   if (isLoadingUser) {
     return (
       <div className="text-center py-20">
@@ -160,7 +173,7 @@ const EstablishmentManagementPage = () => {
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{est.name}</span>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => console.log('Modifier établissement', est.id)}>
+                      <Button variant="outline" size="sm" onClick={() => handleEditEstablishment(est)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)}>
@@ -184,6 +197,15 @@ const EstablishmentManagementPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {currentEstablishmentToEdit && (
+        <EditEstablishmentDialog
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          establishment={currentEstablishmentToEdit}
+          onSave={handleSaveEditedEstablishment}
+        />
+      )}
     </div>
   );
 };

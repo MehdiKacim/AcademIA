@@ -21,6 +21,7 @@ const Analytics = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
+  const courseIdFromUrl = searchParams.get('courseId'); // New: Get courseId from URL
   const navigate = useNavigate(); // Initialize useNavigate
 
   const [courses, setCourses] = useState<Course[]>([]);
@@ -105,6 +106,7 @@ const Analytics = () => {
           view={view}
           selectedClassId={selectedClassId}
           selectedCurriculumId={selectedCurriculumId}
+          selectedCourseId={courseIdFromUrl} // Pass courseId from URL
           allCourses={courses}
           allProfiles={allProfiles}
           allStudentCourseProgresses={studentCourseProgresses}

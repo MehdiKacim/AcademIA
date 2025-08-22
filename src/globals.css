@@ -63,8 +63,10 @@
   }
 
   /* Removed overflow-x-hidden from html, body to allow horizontal scrolling */
+  /* Changed to overflow-x-hidden to prevent horizontal scroll on main body,
+     but allow internal components to scroll if needed */
   html, body {
-    overflow-x: auto; /* Allow horizontal scrolling */
+    overflow-x: hidden; 
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */

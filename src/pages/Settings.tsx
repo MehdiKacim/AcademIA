@@ -10,12 +10,14 @@ import { showSuccess } from "@/utils/toast";
 import { clearAllAppData } from "@/lib/dataReset"; // Import the new utility
 import { Link } from 'react-router-dom'; // Import Link
 import AboutModal from "@/components/AboutModal"; // Import AboutModal
+import ChangePasswordDialog from "@/components/ChangePasswordDialog"; // Import ChangePasswordDialog
 
 const Settings = () => {
   const [language, setLanguage] = useState('fr');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [appNotifications, setAppNotifications] = useState(true);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false); // State for ChangePasswordDialog
 
   const handleSavePreferences = () => {
     // In a real app, you would save these preferences to a backend or localStorage
@@ -126,7 +128,7 @@ const Settings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" onClick={() => showSuccess("Fonctionnalité de changement de mot de passe à implémenter.")}>
+          <Button variant="outline" onClick={() => setIsChangePasswordDialogOpen(true)}>
             Changer le mot de passe
           </Button>
           <Link to="/data-model"> {/* Link to the new DataModelViewer page */}
@@ -150,6 +152,7 @@ const Settings = () => {
       </div>
 
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
+      <ChangePasswordDialog isOpen={isChangePasswordDialogOpen} onClose={() => setIsChangePasswordDialogOpen(false)} />
     </div>
   );
 };

@@ -176,7 +176,9 @@ const Courses = () => {
                     <Link to={`/create-course/${course.id}`}>
                       <Button variant="outline">Modifier</Button>
                     </Link>
-                    <Button variant="secondary">Voir les statistiques</Button>
+                    <Link to={`/analytics?view=course-performance&courseId=${course.id}`}> {/* Updated Link */}
+                      <Button variant="secondary">Voir les statistiques</Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

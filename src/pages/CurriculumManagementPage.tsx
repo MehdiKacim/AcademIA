@@ -23,6 +23,7 @@ import {
 } from '@/lib/courseData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
+import EditCurriculumDialog from '@/components/EditCurriculumDialog'; // Import the new dialog
 
 const CurriculumManagementPage = () => {
   const { currentRole, isLoadingUser } = useRole();
@@ -37,6 +38,9 @@ const CurriculumManagementPage = () => {
   const [isManageCoursesModalOpen, setIsManageCoursesModalOpen] = useState(false);
   const [selectedCurriculumForCourses, setSelectedCurriculumForCourses] = useState<Curriculum | null>(null);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
+  const [currentCurriculumToEdit, setCurrentCurriculumToEdit] = useState<Curriculum | null>(null); // State for selected curriculum
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,6 +115,15 @@ const CurriculumManagementPage = () => {
         showError(`Erreur lors de la sauvegarde des cours du cursus: ${error.message}`);
       }
     }
+  };
+
+  const handleEditCurriculum = (curriculum: Curriculum) => {
+    setCurrentCurriculumToEdit(curriculum);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEditedCurriculum = async (updatedCurriculum: Curriculum) => {
+    setCurricula(await loadCurricula()); // Re-fetch to get the updated list
   };
 
   if (isLoadingUser) {
@@ -199,7 +212,7 @@ const CurriculumManagementPage = () => {
                             <Button variant="outline" size="sm" onClick={() => handleOpenManageCoursesModal(cur)}>
                               <BookOpen className="h-4 w-4 mr-1" /> Gérer Cours
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => console.log('Modifier cursus', cur.id)}>
+                            <Button variant="outline" size="sm" onClick={() => handleEditCurriculum(cur)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button variant="destructive" size="sm" onClick={() => handleDeleteCurriculum(cur.id)}>
@@ -256,6 +269,15 @@ const CurriculumManagementPage = () => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {currentCurriculumToEdit && (
+        <EditCurriculumDialog
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          curriculum={currentCurriculumToEdit}
+          onSave={handleSaveEditedCurriculum}
+        />
       )}
     </div>
   );
