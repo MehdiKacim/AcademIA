@@ -42,8 +42,8 @@ const EstablishmentManagementPage = () => {
   // Removed getUserFullName as it's not used in this component anymore
 
   const handleAddEstablishment = async () => {
-    if (!currentUserProfile) {
-      showError("Vous devez être connecté pour ajouter un établissement.");
+    if (!currentUserProfile || currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à ajouter un établissement.");
       return;
     }
     if (newEstablishmentName.trim()) {
@@ -69,6 +69,10 @@ const EstablishmentManagementPage = () => {
   };
 
   const handleDeleteEstablishment = async (id: string) => {
+    if (!currentUserProfile || currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à supprimer un établissement.");
+      return;
+    }
     try {
       await deleteEstablishmentFromStorage(id);
       setEstablishments(await loadEstablishments()); // Re-fetch to get the updated list
@@ -80,6 +84,10 @@ const EstablishmentManagementPage = () => {
   };
 
   const handleEditEstablishment = (establishment: Establishment) => {
+    if (!currentUserProfile || currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à modifier un établissement.");
+      return;
+    }
     setCurrentEstablishmentToEdit(establishment);
     setIsEditDialogOpen(true);
   };

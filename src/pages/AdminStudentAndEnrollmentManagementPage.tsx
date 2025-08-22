@@ -38,7 +38,7 @@ import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 
-const AdminStudentManagementPage = () => {
+const AdminStudentAndEnrollmentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
@@ -395,7 +395,7 @@ const AdminStudentManagementPage = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Élèves (Admin)
+        Gestion des Élèves et Inscriptions (Admin)
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
         Recherchez des élèves et gérez leurs affectations aux établissements et aux classes.
@@ -895,4 +895,4 @@ const AdminStudentManagementPage = () => {
   );
 };
 
-export default AdminStudentManagementPage;
+export default AdminStudentAndEnrollmentManagementPage;
