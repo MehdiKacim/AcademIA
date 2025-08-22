@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import InputWithStatus from './InputWithStatus'; // Import the new component
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis."),
@@ -214,19 +215,15 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nom d'utilisateur</FormLabel>
-              <FormControl> {/* FormControl now wraps the single div */}
-                <div className="relative">
-                  <Input id="signup-username" {...field} onChange={handleUsernameChange} className="pr-10" autoComplete="username" />
-                  {usernameAvailabilityStatus === 'checking' && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                  )}
-                  {usernameAvailabilityStatus === 'available' && (
-                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                  )}
-                  {usernameAvailabilityStatus === 'taken' && form.formState.errors.username && (
-                    <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                  )}
-                </div>
+              <FormControl>
+                <InputWithStatus
+                  id="signup-username"
+                  {...field}
+                  onChange={handleUsernameChange}
+                  status={usernameAvailabilityStatus}
+                  errorMessage={form.formState.errors.username?.message}
+                  autoComplete="username"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -238,19 +235,16 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess, onError, onSw
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
-              <FormControl> {/* FormControl now wraps the single div */}
-                <div className="relative">
-                  <Input id="signup-email" type="email" {...field} onChange={handleEmailChange} className="pr-10" autoComplete="email" />
-                  {emailAvailabilityStatus === 'checking' && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-                  )}
-                  {emailAvailabilityStatus === 'available' && (
-                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-                  )}
-                  {emailAvailabilityStatus === 'taken' && form.formState.errors.email && (
-                    <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
-                  )}
-                </div>
+              <FormControl>
+                <InputWithStatus
+                  id="signup-email"
+                  type="email"
+                  {...field}
+                  onChange={handleEmailChange}
+                  status={emailAvailabilityStatus}
+                  errorMessage={form.formState.errors.email?.message}
+                  autoComplete="email"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
