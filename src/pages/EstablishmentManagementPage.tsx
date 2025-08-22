@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Edit, Trash2, School, Building2 } from "lucide-react"; // Changed icon to Building2
-import { Establishment, Profile, Curriculum } from "@/lib/dataModels"; // Import Profile and Curriculum
+import { PlusCircle, Edit, Trash2, Building2 } from "lucide-react"; // Changed icon to Building2
+import { Establishment, Curriculum } from "@/lib/dataModels"; // Import Curriculum
 import { showSuccess, showError } from "@/utils/toast";
 import {
   loadEstablishments,
@@ -17,7 +17,6 @@ import {
   deleteEstablishmentFromStorage,
   loadCurricula,
 } from '@/lib/courseData';
-import { getProfileById, updateProfile } from '@/lib/studentData'; // Import getProfileById and updateProfile
 import { useRole } from '@/contexts/RoleContext';
 import EditEstablishmentDialog from '@/components/EditEstablishmentDialog'; // Import the new dialog
 
@@ -26,7 +25,6 @@ const EstablishmentManagementPage = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  // Removed allProfiles state as it's no longer directly used for creator association here
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
   const [currentEstablishmentToEdit, setCurrentEstablishmentToEdit] = useState<Establishment | null>(null); // State for selected establishment
@@ -39,8 +37,6 @@ const EstablishmentManagementPage = () => {
     fetchData();
   }, []);
 
-  // Removed getUserFullName as it's not used in this component anymore
-
   const handleAddEstablishment = async () => {
     if (!currentUserProfile || currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à ajouter un établissement.");
@@ -52,8 +48,6 @@ const EstablishmentManagementPage = () => {
         if (newEst) {
           setEstablishments(await loadEstablishments()); // Re-fetch to get the new list
           
-          // Removed creator association logic as it's not handled directly here anymore
-
           setNewEstablishmentName('');
           showSuccess("Établissement ajouté !");
         } else {
@@ -168,7 +162,6 @@ const EstablishmentManagementPage = () => {
                   </div>
                   <div className="mt-2 text-sm text-muted-foreground">
                     {curricula.filter(c => c.establishment_id === est.id).length} cursus
-                    {/* Removed dynamic display of associated professors as it's not directly managed here */}
                   </div>
                 </Card>
               ))

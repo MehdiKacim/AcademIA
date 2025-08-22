@@ -85,34 +85,28 @@ const AppWithThemeProvider = () => {
                     <Route path="/data-model" element={<DataModelViewer />} />
                     
                     {/* Role-specific routes */}
-                    {currentRole === 'administrator' && (
-                      <>
-                        <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                        <Route path="/curricula" element={<CurriculumManagementPage />} />
-                        <Route path="/classes" element={<ClassManagementPage />} />
-                        <Route path="/students" element={<AdminStudentAndEnrollmentManagementPage />} />
-                        <Route path="/admin-users" element={<AdminUserManagementPage />} />
-                      </>
-                    )}
-                    {(currentRole === 'creator' || currentRole === 'tutor') && (
-                      <>
-                        <Route path="/classes" element={<ClassManagementPage />} />
-                        <Route path="/students" element={<CreatorAndTutorStudentManagementPage />} />
-                      </>
-                    )}
-                    {currentRole === 'creator' && (
-                      <>
-                        <Route path="/create-course" element={<CreateCourse />} />
-                        <Route path="/create-course/:courseId" element={<CreateCourse />} />
-                      </>
-                    )}
+                    {/* Administrator Routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
+                      <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                      <Route path="/admin-users" element={<AdminUserManagementPage />} />
+                    </Route>
+
+                    {/* Administrator & Creator Routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'creator']} />}>
+                      <Route path="/curricula" element={<CurriculumManagementPage />} />
+                      <Route path="/create-course" element={<CreateCourse />} />
+                      <Route path="/create-course/:courseId" element={<CreateCourse />} />
+                    </Route>
+
+                    {/* Administrator, Creator & Tutor Routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'creator', 'tutor']} />}>
+                      <Route path="/classes" element={<ClassManagementPage />} />
+                      <Route path="/students" element={<CreatorAndTutorStudentManagementPage />} />
+                    </Route>
+
+                    {/* Redirect /create-course for students if they try to access it */}
                     {currentRole === 'student' && (
-                      // Students don't have direct management pages for other students/classes
-                      // They might have a "My Classes" or "My Enrollments" page if needed
                       <Route path="/create-course" element={<Navigate to="/courses" replace />} />
-                      // Redirect /students for students if they try to access it
-                      // The /students route is already handled by the admin/creator/tutor blocks above.
-                      // If a student somehow reaches /students, it will be caught by NotFound or redirected by ProtectedRoute.
                     )}
                   </Route>
                 </Route>
