@@ -17,7 +17,7 @@ interface AuthModalProps {
 const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md p-0">
+      <DialogContent className="w-full max-w-md p-0 backdrop-blur-lg bg-background/80">
         {/* AuthMenu handles its own header and content */}
         <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
       </DialogContent>

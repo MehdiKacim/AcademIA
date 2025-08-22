@@ -9,8 +9,8 @@ const About = () => {
   const appVersion = packageJson.version;
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 50 }, // Increased y for more noticeable slide-up
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }, // Slightly longer duration
   };
 
   return (
@@ -38,10 +38,11 @@ const About = () => {
         variants={{
           visible: {
             transition: {
-              staggerChildren: 0.1, // Stagger animation for each card
+              staggerChildren: 0.2, // Increased stagger delay
             },
           },
         }}
+        className="space-y-6" // Apply space-y to the motion.div for consistent spacing
       >
         <motion.div variants={cardVariants}>
           <Card className="shadow-md">

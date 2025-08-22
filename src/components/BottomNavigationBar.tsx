@@ -153,7 +153,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
       {currentUser && (
         <Drawer open={isProfileDrawerOpen} onOpenChange={setIsProfileDrawerOpen}>
           {/* The DrawerTrigger is handled by the 'Profil' button's onClick */}
-          <DrawerContent className="h-auto mt-24 rounded-t-lg">
+          <DrawerContent className="h-auto mt-24 rounded-t-lg backdrop-blur-lg bg-background/80">
             <div className="mx-auto w-full max-w-sm">
               <DrawerHeader className="text-left">
                 <DrawerTitle>Mon Compte</DrawerTitle>
@@ -199,7 +199,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser }: Bott
       {/* Authentication Drawer for Mobile */}
       {!currentUser && (
         <Drawer open={isAuthDrawerOpen} onOpenChange={setIsAuthDrawerOpen}>
-          <DrawerContent className="h-auto mt-24 rounded-t-lg">
+          <DrawerContent className="h-auto mt-24 rounded-t-lg backdrop-blur-lg bg-background/80">
             <div className="mx-auto w-full max-w-sm">
               <AuthMenu onClose={() => setIsAuthDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
               <DrawerFooter>

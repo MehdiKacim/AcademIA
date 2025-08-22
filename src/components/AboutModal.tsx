@@ -28,7 +28,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col">
+        <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
             <DrawerHeader className="text-left">
               <DrawerTitle>À Propos d'AcademIA</DrawerTitle>
@@ -50,7 +50,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-2xl h-[90vh] flex flex-col p-6">
+      <DialogContent className="w-full max-w-2xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             À Propos d'AcademIA
