@@ -78,7 +78,7 @@ const Messages = () => {
             event: 'INSERT',
             schema: 'public',
             table: 'messages',
-            filter: `receiver_id=eq.${currentUserId}`
+            filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})` // Corrected filter
           },
           (payload) => {
             // Re-fetch all data to ensure consistency and correct unread counts
@@ -91,7 +91,7 @@ const Messages = () => {
             event: 'UPDATE',
             schema: 'public',
             table: 'messages',
-            filter: `receiver_id=eq.${currentUserId}`
+            filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})` // Corrected filter
           },
           (payload) => {
             // Re-fetch all data to ensure consistency and correct unread counts
