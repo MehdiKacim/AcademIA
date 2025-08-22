@@ -36,7 +36,7 @@ import { useCourseChat } from "@/contexts/CourseChatContext";
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { currentUserProfile, currentRole, signOut } = useRole();
-  const { isChatOpen } = useCourseChat(); // Récupérer l'état du chat
+  const { isChatOpen } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -46,9 +46,24 @@ const DashboardLayout = () => {
   const location = useLocation();
 
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
-  const [showFloatingButton, setShowFloatingButton] = useState(true);
-  const lastScrollY = useRef(0);
-  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Timeout pour le masquage
+  const [isFloatingButtonVisible, setIsFloatingButtonVisible] = useState(true); // État pour la visibilité du bouton
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Réf pour le timer de masquage automatique
+
+  // Fonction pour démarrer le timer de masquage automatique
+  const startAutoHideTimer = useCallback(() => {
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+    }
+    autoHideTimerRef.current = setTimeout(() => {
+      setIsFloatingButtonVisible(false);
+    }, 5000); // Masquer après 5 secondes d'inactivité
+  }, []);
+
+  // Fonction pour réinitialiser le timer et afficher le bouton
+  const resetAndShowButton = useCallback(() => {
+    setIsFloatingButtonVisible(true);
+    startAutoHideTimer();
+  }, [startAutoHideTimer]);
 
   const handleLogout = async () => {
     await signOut();
@@ -274,28 +289,28 @@ const DashboardLayout = () => {
     return mainItems;
   };
 
-  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    const currentScrollY = event.currentTarget.scrollTop;
-    const isScrollingDown = currentScrollY > lastScrollY.current;
+  // Gérer le défilement pour réinitialiser le timer
+  const handleScroll = useCallback(() => {
+    resetAndShowButton();
+  }, [resetAndShowButton]);
 
-    if (isScrollingDown && currentScrollY > 100) { // Scrolled down significantly
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current); // Clear any pending hide
-      }
-      hideTimeoutRef.current = setTimeout(() => {
-        setShowFloatingButton(false);
-      }, 5000); // Masquer après 5 secondes
-    } else if (!isScrollingDown) { // Scrolled up
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current); // Clear any pending hide
-      }
-      setShowFloatingButton(true); // Afficher immédiatement
-    }
-    lastScrollY.current = currentScrollY;
-  }, []);
+  // Gérer le clic sur la zone principale pour réinitialiser le timer
+  const handleClick = useCallback(() => {
+    resetAndShowButton();
+  }, [resetAndShowButton]);
 
-  // Le bouton flottant doit être visible si showFloatingButton est vrai ET que le chat n'est PAS ouvert
-  const isFloatingButtonActuallyVisible = showFloatingButton && !isChatOpen;
+  // Démarrer le timer au montage du composant
+  useEffect(() => {
+    startAutoHideTimer();
+    return () => {
+      if (autoHideTimerRef.current) {
+        clearTimeout(autoHideTimerRef.current);
+      }
+    };
+  }, [startAutoHideTimer]);
+
+  // Le bouton flottant doit être visible si isFloatingButtonVisible est vrai ET que le chat n'est PAS ouvert
+  const isFloatingButtonActuallyVisible = isFloatingButtonVisible && !isChatOpen;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
@@ -385,7 +400,11 @@ const DashboardLayout = () => {
           )}
         </div>
       </header>
-      <main className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")} onScroll={handleScroll}>
+      <main
+        className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}
+        onScroll={handleScroll}
+        onClick={handleClick} // Ajout du gestionnaire de clic
+      >
         <Outlet />
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
@@ -396,7 +415,7 @@ const DashboardLayout = () => {
       </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAChatButton isVisible={isFloatingButtonActuallyVisible} />} {/* Utiliser la nouvelle variable de visibilité */}
+      {currentUserProfile && <FloatingAiAChatButton isVisible={isFloatingButtonActuallyVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
