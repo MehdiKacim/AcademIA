@@ -47,6 +47,7 @@ const Index = () => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
 
   // Fetch latest APK release data using TanStack Query
+  // This query is no longer needed as the APK download button is removed.
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
     queryKey: ['latestApkRelease'],
     queryFn: async () => {
@@ -57,7 +58,7 @@ const Index = () => {
       return data;
     },
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
-    enabled: isMobile, // Only fetch if on a mobile device
+    enabled: false, // Disable fetching APK data as it's no longer used
   });
 
   useEffect(() => {
@@ -203,25 +204,7 @@ const Index = () => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              {isMobile && (
-                <a href={apkData?.apkUrl} download={`AcademIA-${apkData?.version}.apk`}>
-                  <Button size="lg" variant="outline" disabled={isLoadingApk || isApkError || !apkData?.apkUrl}>
-                    {isLoadingApk ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Chargement APK...
-                      </>
-                    ) : isApkError || !apkData?.apkUrl ? (
-                      <>
-                        <Download className="h-5 w-5 mr-2" /> <span>Bientôt Dispo sur Android</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android {apkData.version})
-                      </>
-                    )}
-                  </Button>
-                </a>
-              )}
+              {/* Le bouton de téléchargement de l'APK a été supprimé */}
             </div>
           </div>
         </section>
