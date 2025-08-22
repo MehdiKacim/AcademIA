@@ -4,9 +4,7 @@
     android:height="108dp"
     android:viewportHeight="108"
     android:viewportWidth="108">
-    <path
-        android:fillColor="#26A69A"
-        android:pathData="M0,0h108v108h-108z" />
+    <!-- Removed android:fillColor="#26A69A" to make the background transparent -->
     <path
         android:fillColor="#00000000"
         android:pathData="M9,0L9,108"
