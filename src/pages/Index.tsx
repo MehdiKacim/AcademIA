@@ -33,9 +33,6 @@ import { useQuery } from "@tanstack/react-query"; // Import useQuery
 import { supabase } from "@/integrations/supabase/client"; // Import supabase
 
 const Index = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallButton, setShowInstallButton] = useState(false);
-
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -50,8 +47,6 @@ const Index = () => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
 
   // Fetch latest APK release data using TanStack Query
-  // This query is no longer needed if APK download is removed, but keeping it for now
-  // in case it's used elsewhere or the decision changes.
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
     queryKey: ['latestApkRelease'],
     queryFn: async () => {
@@ -62,7 +57,7 @@ const Index = () => {
       return data;
     },
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
-    enabled: false, // Disable fetching APK data as it's no longer used for direct download
+    enabled: isMobile, // Only fetch if on a mobile device
   });
 
   useEffect(() => {
@@ -100,51 +95,6 @@ const Index = () => {
       if (sectionRefs.methodologie.current) observer.unobserve(sectionRefs.methodologie.current);
     };
   }, []);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        setShowInstallButton(false);
-      } else {
-        setShowInstallButton(true);
-      }
-    };
-
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null);
-      setShowInstallButton(false);
-      showSuccess("AcademIA a été installée sur votre appareil !");
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setShowInstallButton(false);
-    }
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt.');
-      } else {
-        console.log('User dismissed the install prompt.');
-        showError("Installation annulée.");
-        setDeferredPrompt(null);
-        setShowInstallButton(false);
-      }
-    }
-  };
 
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false); // Close auth modal on success
@@ -253,12 +203,25 @@ const Index = () => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              {showInstallButton && (
-                <Button size="lg" variant="outline" onClick={handleInstallClick}>
-                  <Download className="h-5 w-5 mr-2" /> Installer l'application
-                </Button>
+              {isMobile && (
+                <a href={apkData?.apkUrl} download={`AcademIA-${apkData?.version}.apk`}>
+                  <Button size="lg" variant="outline" disabled={isLoadingApk || isApkError || !apkData?.apkUrl}>
+                    {isLoadingApk ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Chargement APK...
+                      </>
+                    ) : isApkError || !apkData?.apkUrl ? (
+                      <>
+                        <Download className="h-5 w-5 mr-2" /> <span>Bientôt Dispo sur Android</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-5 w-5 mr-2" /> Télécharger l'APK (Android {apkData.version})
+                      </>
+                    )}
+                  </Button>
+                </a>
               )}
-              {/* Removed APK download button */}
             </div>
           </div>
         </section>
