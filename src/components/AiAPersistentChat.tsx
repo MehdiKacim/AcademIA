@@ -16,7 +16,7 @@ interface Message {
 const AiAPersistentChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false); // Internal state for minimization
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const messageIdCounter = useRef(0); 
@@ -38,8 +38,10 @@ const AiAPersistentChat = () => {
     }
   }, []);
 
+  // Ensure chat is maximized when opened from the floating button
   useEffect(() => {
-    if (isChatOpen && !isMinimized) {
+    if (isChatOpen) {
+      setIsMinimized(false); // Always open in maximized state
       if (initialChatMessage) {
         setInput(initialChatMessage);
         setInitialChatMessage(null);
@@ -49,7 +51,7 @@ const AiAPersistentChat = () => {
       }, 100); 
       return () => clearTimeout(timer);
     }
-  }, [isChatOpen, isMinimized, initialChatMessage, setInitialChatMessage]);
+  }, [isChatOpen, initialChatMessage, setInitialChatMessage]);
 
   useEffect(() => {
     if (!isMinimized) {
@@ -79,7 +81,6 @@ const AiAPersistentChat = () => {
 
       setTimeout(() => {
         messageIdCounter.current += 1;
-        const aiaMessageId = messageIdCounter.current;
         const aiaResponse: Message = {
           id: aiaMessageId,
           sender: 'aia',
@@ -103,112 +104,115 @@ const AiAPersistentChat = () => {
   return (
     <div
       className={cn(
-        "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000]",
-        isMobile
-          ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg"
-          : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg",
-        isMinimized && (isMobile ? "h-auto w-auto" : "h-14 w-56"),
-        "transition-all duration-300 ease-in-out"
+        "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000] transition-all duration-300 ease-in-out",
+        isMinimized
+          ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-pointer" // Minimized state: small button
+          : isMobile
+            ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg" // Maximized mobile
+            : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg" // Maximized desktop
       )}
+      onClick={isMinimized ? () => setIsMinimized(false) : undefined} // Click to maximize when minimized
     >
-      <div className="flex items-center justify-between p-4 border-b border-border shrink-0"> {/* Added shrink-0 */}
-        <h3 className="flex items-center gap-2 text-lg font-semibold">
-          <Bot className="h-6 w-6 text-primary" /> AiA
-        </h3>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setIsMinimized(!isMinimized)}>
-            {isMinimized ? <Maximize className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
-            <span className="sr-only">{isMinimized ? "Maximiser" : "Minimiser"}</span>
-          </Button>
-          <Button variant="ghost" size="icon" onClick={closeChat}>
-            <X className="h-4 w-4" />
-            <span className="sr-only">Fermer le chat</span>
-          </Button>
+      {isMinimized ? (
+        <div className="flex items-center justify-center h-full w-full">
+          <Bot className="h-7 w-7 text-primary" />
+          <span className="sr-only">Ouvrir le chat AiA</span>
         </div>
-      </div>
-
-      {!isMinimized && (
-        <div className="flex-grow flex flex-col overflow-hidden"> {/* Added overflow-hidden here */}
-          {(currentCourseTitle || currentModuleTitle) && (
-            <div className="flex gap-2 flex-wrap p-4 pb-0 shrink-0"> {/* Added p-4 pb-0 and shrink-0 */}
-              {currentCourseTitle && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
-                  className="whitespace-nowrap text-xs"
-                >
-                  @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
-                </Button>
-              )}
-              {currentModuleTitle && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
-                  className="whitespace-nowrap text-xs"
-                >
-                  @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
-                </Button>
-              )}
-            </div>
-          )}
-          <ScrollArea className="flex-grow border rounded-md p-4"> {/* flex-grow and p-4 moved here */}
-            <div className="flex flex-col gap-4"> {/* Removed p-4 from here */}
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex items-start gap-3",
-                    msg.sender === 'user' ? "justify-end" : "justify-start"
-                  )}
-                >
-                  {msg.sender === 'aia' && (
-                    <div className="flex-shrink-0 p-2 rounded-full bg-primary text-primary-foreground">
-                      <Bot className="h-4 w-4" />
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      "max-w-[70%] p-3 rounded-lg",
-                      msg.sender === 'user'
-                        ? "bg-primary text-primary-foreground rounded-br-none"
-                        : "bg-muted text-muted-foreground rounded-bl-none"
-                    )}
-                  >
-                    {msg.text}
-                  </div>
-                  {msg.sender === 'user' && (
-                    <div className="flex-shrink-0 p-2 rounded-full bg-secondary text-secondary-foreground">
-                      <UserIcon className="h-4 w-4" />
-                    </div>
-                  )}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-          <div className="flex flex-col gap-2 p-4 pt-0 shrink-0"> {/* Input area - fixed height */}
+      ) : (
+        <>
+          <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+              <Bot className="h-6 w-6 text-primary" /> AiA
+            </h3>
             <div className="flex gap-2">
-              <Input
-                placeholder="Écrivez votre message à AiA..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="flex-grow"
-              />
-              <Button onClick={handleSendMessage} disabled={!input.trim()}>
-                <Send className="h-5 w-5" />
-                <span className="sr-only">Envoyer</span>
+              <Button variant="ghost" size="icon" onClick={() => setIsMinimized(true)}>
+                <Minus className="h-4 w-4" />
+                <span className="sr-only">Minimiser</span>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={closeChat}>
+                <X className="h-4 w-4" />
+                <span className="sr-only">Fermer le chat</span>
               </Button>
             </div>
           </div>
-        </div>
-      )}
-      {isMinimized && (
-        <div className="p-4 text-center text-sm text-muted-foreground">
-          Chat AiA minimisé
-        </div>
+
+          <div className="flex-grow flex flex-col overflow-hidden">
+            {(currentCourseTitle || currentModuleTitle) && (
+              <div className="flex gap-2 flex-wrap p-4 pb-0 shrink-0">
+                {currentCourseTitle && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInput(prev => prev + ` @${currentCourseTitle}`)}
+                    className="whitespace-nowrap text-xs"
+                  >
+                    @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
+                  </Button>
+                )}
+                {currentModuleTitle && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInput(prev => prev + ` @${currentModuleTitle}`)}
+                    className="whitespace-nowrap text-xs"
+                  >
+                    @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
+                  </Button>
+                )}
+              </div>
+            )}
+            <ScrollArea className="flex-grow border rounded-md p-4">
+              <div className="flex flex-col gap-4">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex items-start gap-3",
+                      msg.sender === 'user' ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    {msg.sender === 'aia' && (
+                      <div className="flex-shrink-0 p-2 rounded-full bg-primary text-primary-foreground">
+                        <Bot className="h-4 w-4" />
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        "max-w-[70%] p-3 rounded-lg",
+                        msg.sender === 'user'
+                          ? "bg-primary text-primary-foreground rounded-br-none"
+                          : "bg-muted text-muted-foreground rounded-bl-none"
+                      )}
+                    >
+                      {msg.text}
+                    </div>
+                    {msg.sender === 'user' && (
+                      <div className="flex-shrink-0 p-2 rounded-full bg-secondary text-secondary-foreground">
+                        <UserIcon className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+            <div className="flex flex-col gap-2 p-4 pt-0 shrink-0">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Écrivez votre message à AiA..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-grow"
+                />
+                <Button onClick={handleSendMessage} disabled={!input.trim()}>
+                  <Send className="h-5 w-5" />
+                  <span className="sr-only">Envoyer</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
