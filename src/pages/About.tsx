@@ -2,15 +2,15 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Info, Code, Heart, Linkedin, Github } from "lucide-react";
 import packageJson from '../../package.json';
-import Logo from "@/components/Logo"; // Import the Logo component
-import { motion } from 'framer-motion'; // Import motion from framer-motion
+import Logo from "@/components/Logo";
+import { motion } from 'framer-motion';
 
 const About = () => {
   const appVersion = packageJson.version;
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 50 }, // Increased y for more noticeable slide-up
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }, // Slightly longer duration
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };
 
   return (
@@ -20,9 +20,9 @@ const About = () => {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-4"
+          className="mb-4 mx-auto w-fit" // Added mx-auto and w-fit to center the logo container
         >
-          <Logo iconClassName="w-24 h-24 mx-auto" showText={false} />
+          <Logo iconClassName="w-24 h-24" showText={false} /> {/* Removed mx-auto from iconClassName as it's now on the parent */}
         </motion.div>
         <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Informations sur l'Application
@@ -38,11 +38,11 @@ const About = () => {
         variants={{
           visible: {
             transition: {
-              staggerChildren: 0.2, // Increased stagger delay
+              staggerChildren: 0.2,
             },
           },
         }}
-        className="space-y-6" // Apply space-y to the motion.div for consistent spacing
+        className="space-y-6"
       >
         <motion.div variants={cardVariants}>
           <Card className="shadow-md">
