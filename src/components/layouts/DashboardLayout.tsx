@@ -31,12 +31,12 @@ import { Message } from "@/lib/dataModels";
 import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
-import { useCourseChat } from "@/contexts/CourseChatContext"; // Importation manquante ajoutée ici
+import { useCourseChat } from "@/contexts/CourseChatContext";
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { currentUserProfile, currentRole, signOut } = useRole();
-  const { openChat } = useCourseChat();
+  const { isChatOpen } = useCourseChat(); // Récupérer l'état du chat
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -48,7 +48,7 @@ const DashboardLayout = () => {
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
   const [showFloatingButton, setShowFloatingButton] = useState(true);
   const lastScrollY = useRef(0);
-  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Timeout pour le masquage
 
   const handleLogout = async () => {
     await signOut();
@@ -275,23 +275,27 @@ const DashboardLayout = () => {
   };
 
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    if (scrollTimeout.current) {
-      clearTimeout(scrollTimeout.current);
-    }
+    const currentScrollY = event.currentTarget.scrollTop;
+    const isScrollingDown = currentScrollY > lastScrollY.current;
 
-    scrollTimeout.current = setTimeout(() => {
-      const currentScrollY = event.currentTarget.scrollTop;
-      const isScrollingDown = currentScrollY > lastScrollY.current;
-
-      if (isScrollingDown && currentScrollY > 100) {
-        setShowFloatingButton(false);
-      } else {
-        setShowFloatingButton(true);
+    if (isScrollingDown && currentScrollY > 100) { // Scrolled down significantly
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current); // Clear any pending hide
       }
-      lastScrollY.current = currentScrollY;
-    }, 100);
+      hideTimeoutRef.current = setTimeout(() => {
+        setShowFloatingButton(false);
+      }, 5000); // Masquer après 5 secondes
+    } else if (!isScrollingDown) { // Scrolled up
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current); // Clear any pending hide
+      }
+      setShowFloatingButton(true); // Afficher immédiatement
+    }
+    lastScrollY.current = currentScrollY;
   }, []);
 
+  // Le bouton flottant doit être visible si showFloatingButton est vrai ET que le chat n'est PAS ouvert
+  const isFloatingButtonActuallyVisible = showFloatingButton && !isChatOpen;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40 overflow-x-hidden">
@@ -392,7 +396,7 @@ const DashboardLayout = () => {
       </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAChatButton isVisible={showFloatingButton} />}
+      {currentUserProfile && <FloatingAiAChatButton isVisible={isFloatingButtonActuallyVisible} />} {/* Utiliser la nouvelle variable de visibilité */}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
