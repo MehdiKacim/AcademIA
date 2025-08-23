@@ -21,9 +21,22 @@ export interface Profile {
   updated_at?: string;
 }
 
+export type EstablishmentType = 
+  | 'Maternelle'
+  | 'Élémentaire'
+  | 'Collège'
+  | 'Lycée Général'
+  | 'Lycée Technologique'
+  | 'Lycée Professionnel'
+  | 'Privé Sous Contrat'
+  | 'Privé Hors Contrat'
+  | 'Spécialisé'
+  | 'CFA';
+
 export interface Establishment {
   id: string;
   name: string;
+  type: EstablishmentType; // New: Type of establishment
   address?: string;
   contact_email?: string;
   created_at?: string;
@@ -72,7 +85,7 @@ export interface StudentCourseProgress {
       is_completed: boolean;
       quiz_result?: { score: number; total: number; passed: boolean };
     }[];
-  }[];
+  }[]; // JSONB, progression détaillée par module et section
   created_at?: string;
   updated_at?: string;
 }

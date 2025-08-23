@@ -1,4 +1,4 @@
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment } from "./dataModels";
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment, EstablishmentType } from "./dataModels";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 
 export type EntityType = 'course' | 'module' | 'section';
@@ -288,6 +288,7 @@ export const loadEstablishments = async (): Promise<Establishment[]> => {
   return data.map(establishment => ({
     id: establishment.id,
     name: establishment.name,
+    type: establishment.type as EstablishmentType, // Map new 'type' field
     address: establishment.address || undefined,
     contact_email: establishment.contact_email || undefined,
     created_at: establishment.created_at || undefined,
@@ -299,6 +300,7 @@ export const addEstablishmentToStorage = async (newEstablishment: Establishment)
     .from('establishments')
     .insert({
       name: newEstablishment.name,
+      type: newEstablishment.type, // Include new 'type' field
       address: newEstablishment.address,
       contact_email: newEstablishment.contact_email,
     })
@@ -311,6 +313,7 @@ export const addEstablishmentToStorage = async (newEstablishment: Establishment)
   return {
     id: data.id,
     name: data.name,
+    type: data.type as EstablishmentType, // Map new 'type' field
     address: data.address || undefined,
     contact_email: data.contact_email || undefined,
     created_at: data.created_at || undefined,
@@ -322,6 +325,7 @@ export const updateEstablishmentInStorage = async (updatedEstablishment: Establi
     .from('establishments')
     .update({
       name: updatedEstablishment.name,
+      type: updatedEstablishment.type, // Include new 'type' field
       address: updatedEstablishment.address,
       contact_email: updatedEstablishment.contact_email,
       updated_at: new Date().toISOString(), // Add updated_at if your table has it
@@ -336,6 +340,7 @@ export const updateEstablishmentInStorage = async (updatedEstablishment: Establi
   return {
     id: data.id,
     name: data.name,
+    type: data.type as EstablishmentType, // Map new 'type' field
     address: data.address || undefined,
     contact_email: data.contact_email || undefined,
     created_at: data.created_at || undefined,
