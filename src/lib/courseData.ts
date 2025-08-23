@@ -9,14 +9,19 @@ export type EntityType = 'course' | 'module' | 'section';
  * @returns Un tableau de promesses résolues en IDs de cours accessibles.
  */
 export const getAccessibleCourseIdsForStudent = async (studentProfileId: string): Promise<string[]> => {
-  // 1. Get the student's current class enrollments
+  // 1. Get the student's current class enrollments for the current school year
+  const currentYear = new Date().getFullYear();
+  const nextYear = currentYear + 1;
+  const currentSchoolYear = `${currentYear}-${nextYear}`;
+
   const { data: enrollments, error: enrollmentsError } = await supabase
     .from('student_class_enrollments')
     .select('class_id')
-    .eq('student_id', studentProfileId);
+    .eq('student_id', studentProfileId)
+    .eq('enrollment_year', currentSchoolYear); // Filter by current school year
 
   if (enrollmentsError || !enrollments || enrollments.length === 0) {
-    // console.warn("Student not enrolled in any class, no courses accessible.");
+    // console.warn("Student not enrolled in any class for the current school year, no courses accessible.");
     return [];
   }
 
