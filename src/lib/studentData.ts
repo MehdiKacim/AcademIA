@@ -250,6 +250,7 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
 };
 
 export const getAllProfiles = async (): Promise<Profile[]> => {
+  console.log("[getAllProfiles] Attempting to fetch all profiles...");
   const { data, error } = await supabase
     .from('profiles')
     .select(`
@@ -267,9 +268,10 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
       roles(name)
     `);
   if (error) {
-    console.error("Error fetching all profiles:", error);
+    console.error("[getAllProfiles] Error fetching all profiles:", error);
     return [];
   }
+  console.log(`[getAllProfiles] Successfully fetched ${data.length} profiles. Data:`, data);
   return data.map((p: any) => ({
     id: p.id,
     first_name: p.first_name,
