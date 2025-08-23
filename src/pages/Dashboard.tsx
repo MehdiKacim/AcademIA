@@ -199,7 +199,7 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle>Élèves Supervisés</CardTitle>
               <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
-            </CardDescription>
+            </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalSupervisedStudents}</p>
               <p className="text-sm text-muted-foreground">élèves au total.</p>
@@ -224,7 +224,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Performance des Classes</CardTitle>
-              <CardDescription>Vue d'ensemble de la progression par classe.</CardDescription>
+              <CardDescription>Vue d'overview de la progression par classe.</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).length}</p>
