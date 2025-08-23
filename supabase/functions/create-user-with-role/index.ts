@@ -23,7 +23,7 @@ serve(async (req) => {
       }
     );
 
-    // 1. Get the role of the user invoking this function
+    // 1. Get the role of the user invoking this function using the RPC function
     const { data: { user: invokingUser }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !invokingUser) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Could not get invoking user.' }), {
@@ -32,20 +32,17 @@ serve(async (req) => {
       });
     }
 
-    const { data: invokingProfile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('role')
-      .eq('id', invokingUser.id)
-      .single();
+    const { data: invokingUserRoleData, error: rpcError } = await supabaseClient.rpc('get_user_role', { user_id: invokingUser.id });
 
-    if (profileError || !invokingProfile) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: Could not get invoking user profile.' }), {
+    if (rpcError || !invokingUserRoleData) {
+      console.error("Error fetching invoking user role via RPC:", rpcError);
+      return new Response(JSON.stringify({ error: 'Unauthorized: Could not get invoking user role.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
     }
 
-    const invokingUserRole = invokingProfile.role;
+    const invokingUserRole = invokingUserRoleData; // rpc returns the role directly
     const { email, password, first_name, last_name, username, role: newUserRole } = await req.json();
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole

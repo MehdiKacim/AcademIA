@@ -92,13 +92,21 @@ serve(async (req) => {
       RETURNS public.user_role
       LANGUAGE plpgsql
       SECURITY DEFINER
-      SET search_path = public
+      SET search_path = auth, public -- Search auth schema first
       AS $$
       DECLARE
+        user_role_text TEXT;
         user_role public.user_role;
       BEGIN
-        SELECT role INTO user_role FROM public.profiles WHERE id = user_id;
-        RETURN COALESCE(user_role, 'student'::public.user_role); -- Default to 'student' if not found
+        -- Query auth.users directly to get the role from raw_user_meta_data
+        SELECT raw_user_meta_data ->> 'role' INTO user_role_text
+        FROM auth.users
+        WHERE id = user_id;
+
+        -- Cast the text role to the user_role enum
+        user_role := COALESCE(user_role_text::public.user_role, 'student'::public.user_role);
+        
+        RETURN user_role;
       END;
       $$;
 
