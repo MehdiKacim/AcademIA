@@ -38,7 +38,11 @@ const AdminUserManagementPage = () => {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<Profile['role']>('student');
-  const [newUserEstablishmentId, setNewUserEstablishmentId] = useState<string>('');
+  const [newUserEstablishmentId, setNewUserEstablishmentId] = useState<string>(
+    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+      ? currentUserProfile.establishment_id
+      : ''
+  );
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isNewUserFormOpen, setIsNewUserFormOpen] = useState(false);
 

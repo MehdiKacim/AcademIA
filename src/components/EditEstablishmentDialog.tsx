@@ -74,9 +74,20 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
       setType(establishment.type);
       setAddress(establishment.address || '');
       setPhoneNumber(establishment.phone_number || '');
-      setDirectorId(establishment.director_id);
-      setDeputyDirectorId(establishment.deputy_director_id);
       setContactEmail(establishment.contact_email || '');
+
+      // Only set director/deputyDirector IDs if the lists are populated
+      // This ensures the Select component has the options to match against
+      if (directors.length > 0) {
+        setDirectorId(establishment.director_id);
+      } else {
+        setDirectorId(undefined); // Reset if directors not loaded yet
+      }
+      if (deputyDirectors.length > 0) {
+        setDeputyDirectorId(establishment.deputy_director_id);
+      } else {
+        setDeputyDirectorId(undefined); // Reset if deputyDirectors not loaded yet
+      }
     }
   }, [isOpen, establishment, directors, deputyDirectors]); // Added dependencies
 
