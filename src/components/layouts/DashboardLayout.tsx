@@ -47,7 +47,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
+  const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null); // State to manage drill-down navigation
   const [isFloatingButtonVisible, setIsFloatingButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoTapCountRef = useRef(0);
@@ -76,10 +76,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   };
 
   useEffect(() => {
-    const mainItems = getMainNavItems();
+    // This effect is primarily for highlighting the active parent in the main menu
+    // when navigating directly to a sub-route.
+    const allPossibleNavItems = getMainNavItems(true); // Get all items including sub-items
     let foundParentLabel: string | null = null;
 
-    for (const item of mainItems) {
+    for (const item of allPossibleNavItems) {
       if (item.type === 'trigger' && item.items) {
         const currentFullPath = location.pathname + location.search;
         if (item.items.some(subItem => subItem.to && currentFullPath.startsWith(subItem.to))) {
@@ -88,7 +90,15 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         }
       }
     }
-    setCurrentNavLevel(foundParentLabel);
+    // Only update currentNavLevel if it's not already set to a drill-down level
+    // and if a parent is found, or if we're returning to top level.
+    if (foundParentLabel !== currentNavLevel && currentNavLevel === null) {
+      setCurrentNavLevel(foundParentLabel);
+    } else if (!foundParentLabel && currentNavLevel !== null) {
+      // If no parent is found for the current path, and we are in a drill-down,
+      // it means we navigated away from the drill-down context. Reset it.
+      setCurrentNavLevel(null);
+    }
   }, [location.pathname, location.search, currentRole]);
 
 
@@ -164,20 +174,20 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   }, [currentUserProfile?.id]);
 
 
-  const getMainNavItems = (): NavItem[] => {
+  const getMainNavItems = (includeAllSubItems = false): NavItem[] => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages },
     ];
 
+    const roleSpecificItems: NavItem[] = [];
+
     if (currentRole === 'student') {
-      return [
-        ...baseItems,
+      roleSpecificItems.push(
         {
           icon: GraduationCap,
           label: "Apprentissage",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('apprentissage'),
           items: [
             { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
             { to: "/all-notes", label: "Mes Notes", icon: NotebookText, type: 'link' },
@@ -187,22 +197,19 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           icon: BarChart2,
           label: "Progression",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('progression'),
           items: [
             { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
             { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
             { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link' },
           ],
         },
-      ];
+      );
     } else if (currentRole === 'professeur') {
-      return [
-        ...baseItems,
+      roleSpecificItems.push(
         {
           icon: BookOpen,
           label: "Contenu",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('contenu'),
           items: [
             { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
             { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
@@ -212,7 +219,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           icon: Users,
           label: "Gestion",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('gestion'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
@@ -223,22 +229,19 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
             { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
             { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link' },
           ],
         },
-      ];
+      );
     } else if (currentRole === 'tutor') {
-      return [
-        ...baseItems,
+      roleSpecificItems.push(
         {
           icon: UsersRound,
           label: "Suivi",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('suivi'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
@@ -248,48 +251,74 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           icon: BarChart2,
           label: "Analytiques",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('analytiques'),
           items: [
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
             { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
             { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link' },
           ],
         },
-      ];
+      );
     } else if (currentRole === 'administrator') {
-      return [
-        ...baseItems,
+      roleSpecificItems.push(
         {
           icon: BriefcaseBusiness,
           label: "Administration",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('administration'),
           items: [
             { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' },
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
-            // Removed: Cursus, Classes, Élèves, Analytiques Globales as per new spec
           ],
         },
-      ];
+      );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
-      return [
-        ...baseItems,
+      roleSpecificItems.push(
         {
           icon: BriefcaseBusiness,
           label: "Gestion Établissement",
           type: 'trigger',
-          onClick: () => setCurrentNavLevel('gestion-etablissement'),
           items: [
             { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // For creating profs/students
+            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
             { to: "/analytics?view=overview", label: "Analytiques Globales", icon: LayoutDashboard, type: 'link' },
           ],
         },
-      ];
+      );
     }
-    return baseItems;
+
+    const allTopLevelItems = [...baseItems, ...roleSpecificItems];
+
+    if (currentNavLevel && !isMobile) { // Apply drill-down logic only for desktop
+      const parentItem = allTopLevelItems.find(item => item.type === 'trigger' && item.label.toLowerCase().replace(/\s/g, '-') === currentNavLevel);
+      if (parentItem && parentItem.items) {
+        return [
+          {
+            icon: ArrowLeft,
+            label: "Retour",
+            type: 'trigger',
+            onClick: () => setCurrentNavLevel(null),
+          },
+          ...parentItem.items.map(subItem => ({ ...subItem, type: 'link' as const, icon: subItem.icon })),
+        ];
+      }
+    }
+    
+    // If not in a drill-down or on mobile, return top-level items
+    // If includeAllSubItems is true, flatten all sub-items for the useEffect that checks active parent
+    if (includeAllSubItems) {
+      const flattenedItems: NavItem[] = [];
+      allTopLevelItems.forEach(item => {
+        flattenedItems.push(item);
+        if (item.type === 'trigger' && item.items) {
+          item.items.forEach(subItem => flattenedItems.push(subItem));
+        }
+      });
+      return flattenedItems;
+    }
+
+    return allTopLevelItems;
   };
 
   const getIsParentTriggerActive = (item: NavItem): boolean => {
@@ -371,34 +400,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     )}
                   </NavLink>
                 );
-              } else if (item.type === 'trigger' && item.items) { // For desktop, navigate to the first sub-item
-                const firstSubItemPath = item.items[0]?.to;
+              } else if (item.type === 'trigger') { // Handle trigger items for drill-down
                 return (
                   <Button
                     key={item.label}
                     variant="ghost"
-                    onClick={() => {
-                      if (firstSubItemPath) {
-                        navigate(firstSubItemPath);
-                      }
-                    }}
-                    className={cn(
-                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isTriggerActive
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent hover:text-accent-foreground"
-                    )}
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                  </Button>
-                );
-              } else if (item.type === 'trigger' && item.onClick) { // Handle simple trigger without sub-items
-                return (
-                  <Button
-                    key={item.label}
-                    variant="ghost"
-                    onClick={item.onClick}
+                    onClick={item.onClick || (() => setCurrentNavLevel(item.label.toLowerCase().replace(/\s/g, '-')))}
                     className={cn(
                       "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
                       isTriggerActive
