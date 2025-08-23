@@ -25,7 +25,7 @@ interface EditEstablishmentDialogProps {
 }
 
 const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: EditEstablishmentDialogProps) => {
-  const { currentRole } = useRole();
+  const { currentUserProfile, currentRole } = useRole();
   const [name, setName] = useState(establishment.name);
   const [type, setType] = useState<EstablishmentType>(establishment.type);
   const [address, setAddress] = useState(establishment.address || '');
@@ -36,8 +36,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
   const [isLoading, setIsLoading] = useState(false);
   const [directors, setDirectors] = useState<Profile[]>([]);
   const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]);
-  // Removed currentDirectorName and currentDeputyDirectorName states as SelectValue will handle display
-
+  
   const establishmentTypes: EstablishmentType[] = [
     'Maternelle',
     'Élémentaire',
@@ -68,15 +67,20 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
       setDirectorId(establishment.director_id);
       setDeputyDirectorId(establishment.deputy_director_id);
       setContactEmail(establishment.contact_email || '');
-      // No need to resolve names here, SelectValue will do it
     }
   }, [isOpen, establishment]);
 
   const handleSave = async () => {
-    if (currentRole !== 'administrator') {
+    if (!currentUserProfile || (currentRole !== 'administrator' && !(currentRole === 'director' || currentRole === 'deputy_director'))) {
       showError("Vous n'êtes pas autorisé à modifier un établissement.");
       return;
     }
+    // Directors/Deputy Directors can only edit their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && establishment.id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier que votre propre établissement.");
+      return;
+    }
+
     if (!name.trim()) {
       showError("Le nom de l'établissement est requis.");
       return;
@@ -119,6 +123,8 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
     }
   };
 
+  const isEditableByDirector = (currentRole === 'director' || currentRole === 'deputy_director') && establishment.id === currentUserProfile?.establishment_id;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -139,7 +145,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
-              disabled={currentRole !== 'administrator'}
+              disabled={currentRole !== 'administrator'} {/* Only admin can change name */}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -166,7 +172,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               className="col-span-3"
-              disabled={currentRole !== 'administrator'}
+              disabled={currentRole !== 'administrator' && !isEditableByDirector}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -178,14 +184,18 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="col-span-3"
-              disabled={currentRole !== 'administrator'}
+              disabled={currentRole !== 'administrator' && !isEditableByDirector}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="director" className="text-right">
               Directeur (facultatif)
             </Label>
-            <Select value={directorId || "none"} onValueChange={(value) => setDirectorId(value === "none" ? undefined : value)} disabled={currentRole !== 'administrator'}>
+            <Select 
+              value={directorId || "none"} 
+              onValueChange={(value) => setDirectorId(value === "none" ? undefined : value)} 
+              disabled={currentRole !== 'administrator' && !(currentRole === 'director' && establishment.id === currentUserProfile?.establishment_id)}
+            >
               <SelectTrigger id="director" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur" />
               </SelectTrigger>
@@ -203,7 +213,11 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
             <Label htmlFor="deputyDirector" className="text-right">
               Directeur Adjoint (facultatif)
             </Label>
-            <Select value={deputyDirectorId || "none"} onValueChange={(value) => setDeputyDirectorId(value === "none" ? undefined : value)} disabled={currentRole !== 'administrator'}>
+            <Select 
+              value={deputyDirectorId || "none"} 
+              onValueChange={(value) => setDeputyDirectorId(value === "none" ? undefined : value)} 
+              disabled={currentRole !== 'administrator' && !(currentRole === 'director' && establishment.id === currentUserProfile?.establishment_id)}
+            >
               <SelectTrigger id="deputyDirector" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur adjoint" />
               </SelectTrigger>
@@ -227,12 +241,12 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               className="col-span-3"
-              disabled={currentRole !== 'administrator'}
+              disabled={currentRole !== 'administrator' && !isEditableByDirector}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSave} disabled={isLoading || currentRole !== 'administrator'}>
+          <Button onClick={handleSave} disabled={isLoading || (currentRole !== 'administrator' && !isEditableByDirector)}>
             {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
           </Button>
         </DialogFooter>
