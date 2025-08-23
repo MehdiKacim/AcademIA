@@ -257,7 +257,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
             { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' }, // New item for subjects
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
+            // Moved "Gestion Élèves" to "Gestion Administrative"
           ],
         },
         {
@@ -267,6 +267,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' },
             { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
+            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' }, // Moved here
           ],
         },
         {
