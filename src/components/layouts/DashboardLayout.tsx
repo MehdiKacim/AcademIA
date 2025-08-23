@@ -429,9 +429,29 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             </Button>
           )}
           {currentUserProfile && (
-            <span className="text-sm font-medium text-muted-foreground hidden md:block">
-              Bonjour, {currentUserProfile.first_name} !
-            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  <span className="text-sm font-medium hidden md:block">
+                    {currentUserProfile.first_name} {currentUserProfile.last_name}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="mr-2 h-4 w-4" /> Mon profil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" /> Paramètres
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </header>
