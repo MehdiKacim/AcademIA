@@ -37,7 +37,9 @@ const AdminUserManagementPage = () => {
   const [newUserUsername, setNewUserUsername] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
-  const [newUserRole, setNewUserRole] = useState<Profile['role']>('student');
+  const [newUserRole, setNewUserRole] = useState<Profile['role']>(
+    (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'student'
+  );
   const [newUserEstablishmentId, setNewUserEstablishmentId] = useState<string>(
     (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
       ? currentUserProfile.establishment_id
@@ -53,8 +55,14 @@ const AdminUserManagementPage = () => {
 
   // States for user list filtering
   const [userListSearchQuery, setUserListSearchQuery] = useState('');
-  const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>(
+    (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'all'
+  );
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>(
+    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+      ? currentUserProfile.establishment_id
+      : 'all'
+  );
 
   // States for editing user
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -81,12 +89,18 @@ const AdminUserManagementPage = () => {
     fetchData();
   }, [currentUserProfile]);
 
-  // Set default establishment filter for directors/deputy directors
+  // Set default filters based on role
   useEffect(() => {
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id) {
-      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
-    } else if (currentRole === 'administrator') {
+    if ((currentRole === 'director' || currentRole === 'deputy_director')) {
+      setSelectedRoleFilter('professeur');
+      setSelectedEstablishmentFilter(currentUserProfile?.establishment_id || 'all');
+      setNewUserRole('professeur'); // Default new user role for directors
+      setNewUserEstablishmentId(currentUserProfile?.establishment_id || ''); // Default new user establishment for directors
+    } else {
+      setSelectedRoleFilter('all');
       setSelectedEstablishmentFilter('all');
+      setNewUserRole('student'); // Default new user role for admin
+      setNewUserEstablishmentId(''); // Default new user establishment for admin
     }
   }, [currentRole, currentUserProfile?.establishment_id]);
 
@@ -173,29 +187,28 @@ const AdminUserManagementPage = () => {
       return;
     }
 
-    let finalEstablishmentId = newUserEstablishmentId;
+    let finalNewUserRole = newUserRole;
+    let finalNewUserEstablishmentId = newUserEstablishmentId;
 
-    // Role-based creation restrictions
+    // Role-based creation restrictions and defaults
     if (currentRole === 'director' || currentRole === 'deputy_director') {
-      if (!['professeur', 'tutor', 'student'].includes(newUserRole)) { // Added 'tutor'
+      // For directors, the default role on this page is 'professeur', but they can also create 'tutor' or 'student'
+      if (!['professeur', 'tutor', 'student'].includes(newUserRole)) {
         showError("Les directeurs ne peuvent créer que des professeurs, tuteurs ou des élèves.");
         return;
       }
-      // If an establishment is selected, it must match their own
-      if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) { 
+      // Establishment is fixed to their own
+      finalNewUserEstablishmentId = currentUserProfile.establishment_id || '';
+      if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) {
         showError("Vous ne pouvez créer des utilisateurs que pour votre établissement.");
         return;
       }
-      // If creating a professeur or student, and no establishment is selected, default to current user's establishment
-      if ((newUserRole === 'professeur' || newUserRole === 'tutor' || newUserRole === 'student') && !newUserEstablishmentId && currentUserProfile.establishment_id) {
-        finalEstablishmentId = currentUserProfile.establishment_id; // Use this directly for the invoke call
+    } else if (currentRole === 'administrator') {
+      // For admin, if a role that requires establishment is selected, ensure establishment is provided
+      if ((newUserRole === 'professeur' || newUserRole === 'tutor' || newUserRole === 'director' || newUserRole === 'deputy_director') && !newUserEstablishmentId) {
+        showError("L'établissement est requis pour ce rôle.");
+        return;
       }
-    }
-
-    // For 'professeur' and 'tutor' roles, establishment_id is still required
-    if ((newUserRole === 'professeur' || newUserRole === 'tutor') && !finalEstablishmentId) {
-      showError("L'établissement est requis pour les rôles de professeur et tuteur.");
-      return;
     }
 
     setIsCreatingUser(true);
@@ -207,8 +220,8 @@ const AdminUserManagementPage = () => {
           first_name: newUserFirstName.trim(),
           last_name: newUserLastName.trim(),
           username: newUserUsername.trim(),
-          role: newUserRole,
-          establishment_id: finalEstablishmentId || undefined, // Pass undefined if empty
+          role: finalNewUserRole,
+          establishment_id: finalNewUserEstablishmentId || undefined, // Pass undefined if empty
         },
       });
 
@@ -218,14 +231,14 @@ const AdminUserManagementPage = () => {
         return;
       }
       
-      showSuccess(`Utilisateur ${newUserFirstName} ${newUserLastName} (${newUserRole}) créé avec succès !`);
+      showSuccess(`Utilisateur ${newUserFirstName} ${newUserLastName} (${finalNewUserRole}) créé avec succès !`);
       setNewUserFirstName('');
       setNewUserLastName('');
       setNewUserUsername('');
       setNewUserEmail('');
       setNewUserPassword('');
-      setNewUserRole('student');
-      setNewUserEstablishmentId('');
+      setNewUserRole((currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'student'); // Reset to default based on role
+      setNewUserEstablishmentId((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id ? currentUserProfile.establishment_id : ''); // Reset to default
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
       setAllUsers(await getAllProfiles());
@@ -242,15 +255,17 @@ const AdminUserManagementPage = () => {
   const filteredUsers = React.useMemo(() => {
     let users = allUsers;
 
+    // Filter by current user's establishment if director/deputy director
     if (currentUserProfile && (currentRole === 'director' || currentRole === 'deputy_director')) {
       users = users.filter(u => u.establishment_id === currentUserProfile.establishment_id);
     }
 
+    // Apply role filter
     if (selectedRoleFilter !== 'all') {
       users = users.filter(u => u.role === selectedRoleFilter);
     }
-    // Only apply establishment filter if it's not 'all' AND the current user is an administrator
-    // Directors/Deputy Directors already have their list filtered by their establishment above.
+    
+    // Apply establishment filter (only for admin, as directors are already filtered by their own establishment)
     if (currentRole === 'administrator' && selectedEstablishmentFilter !== 'all') {
       users = users.filter(u => u.establishment_id === selectedEstablishmentFilter);
     }
@@ -517,12 +532,12 @@ const AdminUserManagementPage = () => {
   const rolesForCreation: Profile['role'][] = 
     currentRole === 'administrator'
       ? ['student', 'professeur', 'tutor', 'director', 'deputy_director', 'administrator']
-      : ['student', 'professeur', 'tutor']; // Directors/Deputy Directors can create students, professeurs, tutors
+      : ['professeur', 'tutor', 'student']; // Directors/Deputy Directors can create students, professeurs, tutors
 
   const rolesForEdit: Profile['role'][] = 
     currentRole === 'administrator'
       ? ['student', 'professeur', 'tutor', 'director', 'deputy_director', 'administrator']
-      : ['student', 'professeur', 'tutor']; // Directors/Deputy Directors can edit students, professeurs, tutors
+      : ['professeur', 'tutor', 'student']; // Directors/Deputy Directors can edit students, professeurs, tutors
 
   if (isLoadingUser) {
     return (
@@ -553,7 +568,7 @@ const AdminUserManagementPage = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Utilisateurs ({currentRole === 'administrator' ? 'Admin' : 'Direction'})
+        {currentRole === 'director' || currentRole === 'deputy_director' ? "Gestion des Professeurs" : "Gestion des Utilisateurs"}
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
         Créez, modifiez et supprimez des utilisateurs sur la plateforme.
@@ -607,15 +622,19 @@ const AdminUserManagementPage = () => {
                   value={newUserPassword}
                   onChange={(e) => setNewUserPassword(e.target.value)}
                 />
-                <Select value={newUserRole} onValueChange={(value: Profile['role']) => {
-                  setNewUserRole(value);
-                  // Reset establishment_id if role doesn't require it or if it's a director/deputy director
-                  if (value === 'student' || value === 'administrator' || value === 'director' || value === 'deputy_director') {
-                    setNewUserEstablishmentId('');
-                  } else if (currentRole === 'director' || currentRole === 'deputy_director') {
-                    setNewUserEstablishmentId(currentUserProfile.establishment_id || '');
-                  }
-                }}>
+                <Select 
+                  value={newUserRole} 
+                  onValueChange={(value: Profile['role']) => {
+                    setNewUserRole(value);
+                    // Reset establishment_id if role doesn't require it or if it's a director/deputy director
+                    if (value === 'student' || value === 'administrator' || value === 'director' || value === 'deputy_director') {
+                      setNewUserEstablishmentId('');
+                    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
+                      setNewUserEstablishmentId(currentUserProfile.establishment_id || '');
+                    }
+                  }}
+                  disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable if director
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
@@ -637,9 +656,9 @@ const AdminUserManagementPage = () => {
                   <Select 
                     value={newUserEstablishmentId || "none"} 
                     onValueChange={(value) => setNewUserEstablishmentId(value === "none" ? '' : value)}
-                    disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+                    disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable if director
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="new-user-establishment">
                       <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>
                     <SelectContent>
@@ -655,7 +674,7 @@ const AdminUserManagementPage = () => {
                   </Select>
                 )}
               </div>
-              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newUserRole === 'professeur' || newUserRole === 'tutor') && !newUserEstablishmentId && !(currentRole === 'director' || currentRole === 'deputy_director'))}>
+              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newUserRole === 'professeur' || newUserRole === 'tutor' || newUserRole === 'director' || newUserRole === 'deputy_director') && !newUserEstablishmentId && currentRole === 'administrator')}>
                 {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
               </Button>
             </CardContent>
@@ -684,20 +703,30 @@ const AdminUserManagementPage = () => {
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="role-filter">Filtrer par Rôle</Label>
-              <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
+              <Select 
+                value={selectedRoleFilter} 
+                onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}
+                disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable if director
+              >
                 <SelectTrigger id="role-filter">
                   <SelectValue placeholder="Tous les rôles" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les rôles</SelectItem>
-                  <SelectItem value="student">Élève</SelectItem>
-                  <SelectItem value="professeur">Professeur</SelectItem>
-                  <SelectItem value="tutor">Tuteur</SelectItem>
-                  {currentRole === 'administrator' && (
+                  {(currentRole === 'director' || currentRole === 'deputy_director') ? (
+                    <SelectItem value="professeur">Professeur</SelectItem>
+                  ) : (
                     <>
-                      <SelectItem value="director">Directeur</SelectItem>
-                      <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
-                      <SelectItem value="administrator">Administrateur (Super Admin)</SelectItem>
+                      <SelectItem value="all">Tous les rôles</SelectItem>
+                      <SelectItem value="student">Élève</SelectItem>
+                      <SelectItem value="professeur">Professeur</SelectItem>
+                      <SelectItem value="tutor">Tuteur</SelectItem>
+                      {currentRole === 'administrator' && (
+                        <>
+                          <SelectItem value="director">Directeur</SelectItem>
+                          <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
+                          <SelectItem value="administrator">Administrateur (Super Admin)</SelectItem>
+                        </>
+                      )}
                     </>
                   )}
                 </SelectContent>
@@ -824,29 +853,44 @@ const AdminUserManagementPage = () => {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="editRole" className="text-right">Rôle</Label>
-                <Select value={editRole} onValueChange={(value: Profile['role']) => {
-                  setEditRole(value);
-                  // Reset establishment_id if role doesn't require it or if it's a director/deputy director
-                  if (value === 'student' || value === 'administrator' || value === 'director' || value === 'deputy_director') {
-                    setEditEstablishmentId('');
-                  } else if (currentRole === 'director' || currentRole === 'deputy_director') {
-                    setEditEstablishmentId(currentUserProfile.establishment_id || '');
+                <Select 
+                  value={editRole} 
+                  onValueChange={(value: Profile['role']) => {
+                    setEditRole(value);
+                    // Reset establishment_id if role doesn't require it or if it's a director/deputy director
+                    if (value === 'student' || value === 'administrator' || value === 'director' || value === 'deputy_director') {
+                      setEditEstablishmentId('');
+                    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
+                      setEditEstablishmentId(currentUserProfile.establishment_id || '');
+                    }
+                  }}
+                  disabled={
+                    (currentRole === 'director' || currentRole === 'deputy_director') || // Disable for directors
+                    ['administrator', 'director', 'deputy_director'].includes(userToEdit?.role || '') // Also disable if editing admin/director
                   }
-                }}>
+                >
                   <SelectTrigger id="editRole" className="col-span-3">
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
                   <SelectContent>
-                    {rolesForEdit.map(role => (
-                      <SelectItem key={role} value={role}>
-                        {role === 'student' ? 'Élève' :
-                         role === 'professeur' ? 'Professeur' :
-                         role === 'tutor' ? 'Tuteur' :
-                         role === 'director' ? 'Directeur' :
-                         role === 'deputy_director' ? 'Directeur Adjoint' :
-                         'Administrateur (Super Admin)'}
-                      </SelectItem>
-                    ))}
+                    {(currentRole === 'director' || currentRole === 'deputy_director') ? (
+                      <>
+                        <SelectItem value="professeur">Professeur</SelectItem>
+                        <SelectItem value="tutor">Tuteur</SelectItem>
+                        <SelectItem value="student">Élève</SelectItem>
+                      </>
+                    ) : (
+                      rolesForEdit.map(role => (
+                        <SelectItem key={role} value={role}>
+                          {role === 'student' ? 'Élève' :
+                           role === 'professeur' ? 'Professeur' :
+                           role === 'tutor' ? 'Tuteur' :
+                           role === 'director' ? 'Directeur' :
+                           role === 'deputy_director' ? 'Directeur Adjoint' :
+                           'Administrateur (Super Admin)'}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -875,7 +919,7 @@ const AdminUserManagementPage = () => {
                 </div>
               )}
             </div>
-            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || ((editRole === 'professeur' || editRole === 'tutor') && !editEstablishmentId && !(currentRole === 'director' || currentRole === 'deputy_director'))}>
+            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || ((editRole === 'professeur' || editRole === 'tutor' || editRole === 'director' || editRole === 'deputy_director') && !editEstablishmentId && currentRole === 'administrator')}>
               {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
             </Button>
           </DialogContent>
