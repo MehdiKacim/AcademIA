@@ -40,7 +40,11 @@ serve(async (req) => {
     switch (invokingUserRole) {
       case 'administrator':
         // Admins can create any role
-        isAllowed = ['student', 'creator', 'tutor', 'director', 'deputy_director', 'administrator'].includes(newUserRole);
+        isAllowed = ['student', 'creator', 'tutor', 'director', 'deputy_director', 'administrator', 'gestion_admin'].includes(newUserRole);
+        break;
+      case 'gestion_admin':
+        // Gestion Admins can only create director and deputy_director roles
+        isAllowed = ['director', 'deputy_director'].includes(newUserRole);
         break;
       case 'director':
       case 'deputy_director':

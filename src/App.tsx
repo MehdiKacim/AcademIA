@@ -80,10 +80,14 @@ const AppWithThemeProvider = () => {
                     {/* Admin-specific routes */}
                     <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                       <Route path="/admin-users" element={<AdminUserManagementPage />} /> {/* New Admin User Management */}
-                      <Route path="/establishments" element={<EstablishmentManagementPage />} />
                       <Route path="/curricula" element={<CurriculumManagementPage />} />
                       <Route path="/classes" element={<ClassManagementPage />} />
                       <Route path="/students" element={<StudentManagementPage />} /> {/* Admin can also manage students here */}
+                    </Route>
+
+                    {/* Gestion Admin-specific routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'gestion_admin']} />}>
+                      <Route path="/establishments" element={<EstablishmentManagementPage />} />
                     </Route>
 
                     {/* Creator-specific routes */}

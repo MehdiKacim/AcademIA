@@ -273,6 +273,19 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           ],
         },
       ];
+    } else if (currentRole === 'gestion_admin') { // New role: gestion_admin
+      return [
+        ...baseItems,
+        {
+          icon: BriefcaseBusiness,
+          label: "Gestion",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('gestion'),
+          items: [
+            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
+          ],
+        },
+      ];
     }
     return baseItems;
   };

@@ -130,7 +130,7 @@ const AdminUserManagementPage = () => {
       showError("Vous n'êtes pas autorisé à créer des utilisateurs.");
       return;
     }
-    if (!newUserFirstName.trim() || !newUserLastName.trim() || !newUserUsername.trim() || !newUserEmail.trim() || !newUserPassword.trim() || !newUserRole || (newUserRole !== 'student' && !newUserEstablishmentId)) {
+    if (!newUserFirstName.trim() || !newUserLastName.trim() || !newUserUsername.trim() || !newUserEmail.trim() || !newUserPassword.trim() || !newUserRole || (newUserRole !== 'student' && !newUserEstablishmentId && newUserRole !== 'administrator' && newUserRole !== 'gestion_admin')) {
       showError("Tous les champs requis doivent être remplis.");
       return;
     }
@@ -262,7 +262,7 @@ const AdminUserManagementPage = () => {
       showError("Vous n'êtes pas autorisé à modifier cet utilisateur.");
       return;
     }
-    if (!editFirstName.trim() || !editLastName.trim() || !editUsername.trim() || !editEmail.trim() || (editRole !== 'student' && !editEstablishmentId)) {
+    if (!editFirstName.trim() || !editLastName.trim() || !editUsername.trim() || !editEmail.trim() || !editRole || (editRole !== 'student' && !editEstablishmentId && editRole !== 'administrator' && editRole !== 'gestion_admin')) {
       showError("Tous les champs requis doivent être remplis.");
       return;
     }
@@ -352,7 +352,9 @@ const AdminUserManagementPage = () => {
           return;
         }
         
-        setAllUsers(await getAllProfiles()); // Refresh user list
+        // The profile and enrollments should be cascade deleted by DB foreign keys
+        // Re-fetch all data to update the UI
+        setAllProfiles(await getAllProfiles());
         showSuccess("Utilisateur et compte supprimés !");
       } catch (error: any) {
         console.error("Error deleting user:", error);
@@ -439,7 +441,7 @@ const AdminUserManagementPage = () => {
             />
             <Select value={newUserRole} onValueChange={(value: Profile['role']) => {
               setNewUserRole(value);
-              if (value === 'student') setNewUserEstablishmentId(''); // Clear establishment for students
+              if (value === 'student' || value === 'administrator' || value === 'gestion_admin') setNewUserEstablishmentId(''); // Clear establishment for students, administrators, and gestion_admin
             }}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un rôle" />
@@ -450,10 +452,11 @@ const AdminUserManagementPage = () => {
                 <SelectItem value="tutor">Tuteur</SelectItem>
                 <SelectItem value="director">Directeur</SelectItem>
                 <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
-                <SelectItem value="administrator">Administrateur</SelectItem>
+                <SelectItem value="gestion_admin">Admin Gestion (Employé AcademIA)</SelectItem>
+                <SelectItem value="administrator">Administrateur (Super Admin)</SelectItem>
               </SelectContent>
             </Select>
-            {newUserRole !== 'student' && (
+            {(newUserRole !== 'student' && newUserRole !== 'administrator' && newUserRole !== 'gestion_admin') && (
               <Select value={newUserEstablishmentId} onValueChange={setNewUserEstablishmentId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un établissement" />
@@ -466,7 +469,7 @@ const AdminUserManagementPage = () => {
               </Select>
             )}
           </div>
-          <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole !== 'student' && !newUserEstablishmentId)}>
+          <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole !== 'student' && !newUserEstablishmentId && newUserRole !== 'administrator' && newUserRole !== 'gestion_admin')}>
             {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
           </Button>
         </CardContent>
@@ -504,7 +507,8 @@ const AdminUserManagementPage = () => {
                   <SelectItem value="tutor">Tuteur</SelectItem>
                   <SelectItem value="director">Directeur</SelectItem>
                   <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
-                  <SelectItem value="administrator">Administrateur</SelectItem>
+                  <SelectItem value="gestion_admin">Admin Gestion (Employé AcademIA)</SelectItem>
+                  <SelectItem value="administrator">Administrateur (Super Admin)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -602,7 +606,7 @@ const AdminUserManagementPage = () => {
                 <Label htmlFor="editRole" className="text-right">Rôle</Label>
                 <Select value={editRole} onValueChange={(value: Profile['role']) => {
                   setEditRole(value);
-                  if (value === 'student') setEditEstablishmentId('');
+                  if (value === 'student' || value === 'administrator' || value === 'gestion_admin') setEditEstablishmentId('');
                 }}>
                   <SelectTrigger id="editRole" className="col-span-3">
                     <SelectValue placeholder="Sélectionner un rôle" />
@@ -613,11 +617,12 @@ const AdminUserManagementPage = () => {
                     <SelectItem value="tutor">Tuteur</SelectItem>
                     <SelectItem value="director">Directeur</SelectItem>
                     <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
-                    <SelectItem value="administrator">Administrateur</SelectItem>
+                    <SelectItem value="gestion_admin">Admin Gestion (Employé AcademIA)</SelectItem>
+                    <SelectItem value="administrator">Administrateur (Super Admin)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {editRole !== 'student' && (
+              {(editRole !== 'student' && editRole !== 'administrator' && editRole !== 'gestion_admin') && (
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="editEstablishment" className="text-right">Établissement</Label>
                   <Select value={editEstablishmentId} onValueChange={setEditEstablishmentId}>
@@ -633,7 +638,7 @@ const AdminUserManagementPage = () => {
                 </div>
               )}
             </div>
-            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || (editRole !== 'student' && !editEstablishmentId)}>
+            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || (editRole !== 'student' && !editEstablishmentId && editRole !== 'administrator' && editRole !== 'gestion_admin')}>
               {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
             </Button>
           </DialogContent>

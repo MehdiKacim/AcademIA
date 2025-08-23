@@ -21,7 +21,7 @@ import {
 import { useRole } from '@/contexts/RoleContext';
 import EditEstablishmentDialog from '@/components/EditEstablishmentDialog'; // Import the new dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-import { getProfilesByRole } from '@/lib/studentData'; // Import getProfilesByRole
+import { getProfilesByRole } from '@/lib/studentData';
 
 const EstablishmentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -66,7 +66,7 @@ const EstablishmentManagementPage = () => {
   const getDeputyDirectorName = (id?: string) => deputyDirectors.find(dd => dd.id === id)?.first_name + ' ' + deputyDirectors.find(dd => dd.id === id)?.last_name || 'N/A';
 
   const handleAddEstablishment = async () => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'gestion_admin')) {
       showError("Vous n'êtes pas autorisé à ajouter un établissement.");
       return;
     }
@@ -103,7 +103,7 @@ const EstablishmentManagementPage = () => {
   };
 
   const handleDeleteEstablishment = async (id: string) => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'gestion_admin')) {
       showError("Vous n'êtes pas autorisé à supprimer un établissement.");
       return;
     }
@@ -118,7 +118,7 @@ const EstablishmentManagementPage = () => {
   };
 
   const handleEditEstablishment = (establishment: Establishment) => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'gestion_admin')) {
       showError("Vous n'êtes pas autorisé à modifier un établissement.");
       return;
     }
@@ -143,14 +143,14 @@ const EstablishmentManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'administrator') {
+  if (currentRole !== 'administrator' && currentRole !== 'gestion_admin') {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les administrateurs peuvent accéder à cette page.
+          Seuls les administrateurs et les administrateurs de gestion peuvent accéder à cette page.
         </p>
       </div>
     );
