@@ -748,7 +748,7 @@ const CreateCourse = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => appendModule({ title: "", sections: [{ title: "", content: "", type: "text", url: "", isCompleted: false }], isCompleted: false, level: 0 })}
+              onClick={() => appendModule({ title: "", sections: [{ title: "", content: "Contenu de la nouvelle section.", type: "text", url: "", isCompleted: false }], isCompleted: false, level: 0 })}
             >
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter un module
             </Button>

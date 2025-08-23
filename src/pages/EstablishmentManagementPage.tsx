@@ -86,7 +86,7 @@ const EstablishmentManagementPage = () => {
   const getDeputyDirectorName = (id?: string) => deputyDirectors.find(dd => dd.id === id)?.first_name + ' ' + deputyDirectors.find(dd => dd.id === id)?.last_name || 'N/A';
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
-  -- --- Establishment Management Handlers ---
+  // --- Establishment Management Handlers ---
   const handleAddEstablishment = async () => {
     if (!currentUserProfile || currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à ajouter un établissement.");
@@ -158,7 +158,7 @@ const EstablishmentManagementPage = () => {
     setEstablishments(await loadEstablishments());
   };
 
-  -- --- Subject Management Handlers ---
+  // --- Subject Management Handlers ---
   const handleAddSubject = async () => {
     if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
       showError("Vous n'êtes pas autorisé à ajouter une matière.");
@@ -168,7 +168,7 @@ const EstablishmentManagementPage = () => {
       showError("Le nom de la matière et l'établissement sont requis.");
       return;
     }
-    -- Directors/Deputy Directors can only add subjects to their own establishment
+    // Directors/Deputy Directors can only add subjects to their own establishment
     if ((currentRole === 'director' || currentRole === 'deputy_director') && newSubjectEstablishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez ajouter des matières que pour votre établissement.");
       return;
@@ -208,7 +208,7 @@ const EstablishmentManagementPage = () => {
       showError("Matière introuvable.");
       return;
     }
-    -- Directors/Deputy Directors can only delete subjects from their own establishment
+    // Directors/Deputy Directors can only delete subjects from their own establishment
     if ((currentRole === 'director' || currentRole === 'deputy_director') && subjectToDelete.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez supprimer des matières que de votre établissement.");
       return;
@@ -229,7 +229,7 @@ const EstablishmentManagementPage = () => {
       showError("Vous n'êtes pas autorisé à modifier une matière.");
       return;
     }
-    -- Directors/Deputy Directors can only edit subjects from their own establishment
+    // Directors/Deputy Directors can only edit subjects from their own establishment
     if ((currentRole === 'director' || currentRole === 'deputy_director') && subject.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez modifier des matières que de votre établissement.");
       return;
@@ -439,7 +439,7 @@ const EstablishmentManagementPage = () => {
         </CardContent>
       </Card>
 
-      -- Section: Gestion des Matières
+      {/* Section: Gestion des Matières */}
       <Collapsible open={isNewSubjectFormOpen} onOpenChange={setIsNewSubjectFormOpen}>
         <Card>
           <CardHeader>
@@ -468,7 +468,7 @@ const EstablishmentManagementPage = () => {
                 <Select 
                   value={newSubjectEstablishmentId || "none"} 
                   onValueChange={(value) => setNewSubjectEstablishmentId(value === "none" ? undefined : value)}
-                  disabled={currentRole === 'director' || currentRole === 'deputy_director'} -- Disable for directors/deputy directors
+                  disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
                 >
                   <SelectTrigger id="new-subject-establishment">
                     <SelectValue placeholder="Sélectionner un établissement" />
