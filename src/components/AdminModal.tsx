@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Loader2 } from "lucide-react";
+import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp } from "lucide-react"; // Import ChevronDown, ChevronUp
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal';
 import { clearAllAppData } from '@/lib/dataReset';
@@ -37,6 +37,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
+  const [showCreateAdminForm, setShowCreateAdminForm] = useState(false); // State to toggle admin creation form
 
   // State for initial admin creation form
   const [adminFirstName, setAdminFirstName] = useState('');
@@ -159,6 +160,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       setAdminPassword('');
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
+      setShowCreateAdminForm(false); // Hide form after successful creation
       onClose(); // Close modal after successful creation
     } catch (error: any) {
       console.error("Unexpected error creating initial admin:", error);
@@ -200,48 +202,58 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
             </Button>
             
-            <div className="space-y-4 p-4 border rounded-md bg-muted/20">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-primary" /> Créer un administrateur initial
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
-              </p>
-              <Input
-                placeholder="Prénom"
-                value={adminFirstName}
-                onChange={(e) => setAdminFirstName(e.target.value)}
-              />
-              <Input
-                placeholder="Nom"
-                value={adminLastName}
-                onChange={(e) => setAdminLastName(e.target.value)}
-              />
-              <InputWithStatus
-                placeholder="Nom d'utilisateur"
-                value={adminUsername}
-                onChange={(e) => handleAdminUsernameChange(e.target.value)}
-                status={usernameAvailabilityStatus}
-                errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-              />
-              <InputWithStatus
-                type="email"
-                placeholder="Email"
-                value={adminEmail}
-                onChange={(e) => handleAdminEmailChange(e.target.value)}
-                status={emailAvailabilityStatus}
-                errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-              />
-              <Input
-                type="password"
-                placeholder="Mot de passe"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-              />
-              <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
-                {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
-              </Button>
-            </div>
+            <Button 
+              onClick={() => setShowCreateAdminForm(prev => !prev)} 
+              className="w-full justify-between" 
+              variant="outline"
+            >
+              <div className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" /> Créer un administrateur initial
+              </div>
+              {showCreateAdminForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+
+            {showCreateAdminForm && (
+              <div className="space-y-4 p-4 border rounded-md bg-muted/20">
+                <p className="text-sm text-muted-foreground">
+                  Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
+                </p>
+                <Input
+                  placeholder="Prénom"
+                  value={adminFirstName}
+                  onChange={(e) => setAdminFirstName(e.target.value)}
+                />
+                <Input
+                  placeholder="Nom"
+                  value={adminLastName}
+                  onChange={(e) => setAdminLastName(e.target.value)}
+                />
+                <InputWithStatus
+                  placeholder="Nom d'utilisateur"
+                  value={adminUsername}
+                  onChange={(e) => handleAdminUsernameChange(e.target.value)}
+                  status={usernameAvailabilityStatus}
+                  errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                />
+                <InputWithStatus
+                  type="email"
+                  placeholder="Email"
+                  value={adminEmail}
+                  onChange={(e) => handleAdminEmailChange(e.target.value)}
+                  status={emailAvailabilityStatus}
+                  errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                />
+                <Input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                />
+                <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
+                  {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
+                </Button>
+              </div>
+            )}
 
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Effacer toutes les données
