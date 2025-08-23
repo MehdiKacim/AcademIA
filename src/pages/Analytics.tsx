@@ -6,24 +6,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { useSearchParams, useNavigate } from "react-router-dom"; // Import useSearchParams and useNavigate
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { loadCourses, loadEstablishments, loadCurricula, loadClasses } from "@/lib/courseData";
-import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supabase functions
+import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData";
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
 import TutorAnalyticsSection from "@/components/TutorAnalyticsSection";
-import AdminAnalyticsSection from "@/components/AdminAnalyticsSection"; // New import
-import React, { useState, useEffect } from "react"; // Import useState and useEffect
+import AdminAnalyticsSection from "@/components/AdminAnalyticsSection";
+import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Course, Establishment, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels"; // Import types
+import { Course, Establishment, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels";
 
 const Analytics = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
-  const courseIdFromUrl = searchParams.get('courseId'); // New: Get courseId from URL
-  const navigate = useNavigate(); // Initialize useNavigate
+  const courseIdFromUrl = searchParams.get('courseId');
+  const navigate = useNavigate();
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
@@ -34,7 +34,7 @@ const Analytics = () => {
 
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | undefined>(undefined);
   const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | undefined>(undefined);
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | undefined>(undefined); // New state for admin filter
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,13 +46,13 @@ const Analytics = () => {
       setEstablishments(await loadEstablishments());
     };
     fetchData();
-  }, [currentUserProfile]); // Re-fetch if user profile changes
+  }, [currentUserProfile]);
 
   // Reset filters when role changes or on initial load
   useEffect(() => {
     setSelectedClassFilter(undefined);
     setSelectedCurriculumFilter(undefined);
-    setSelectedEstablishmentFilter(undefined); // Reset establishment filter
+    setSelectedEstablishmentFilter(undefined);
   }, [currentRole]);
 
   if (isLoadingUser) {
@@ -104,19 +104,19 @@ const Analytics = () => {
         );
       }
       return <StudentAnalyticsSection studentProfile={studentProfile} courses={courses} studentCourseProgresses={studentCourseProgresses} view={view} />;
-    } else if (currentRole === 'creator') {
+    } else if (currentRole === 'professeur') {
       return (
         <CreatorAnalyticsSection
           view={view}
           selectedClassId={selectedClassFilter}
           selectedCurriculumId={selectedCurriculumFilter}
-          selectedCourseId={courseIdFromUrl} // Pass courseId from URL
+          selectedCourseId={courseIdFromUrl}
           allCourses={courses}
           allProfiles={allProfiles}
           allStudentCourseProgresses={studentCourseProgresses}
           allClasses={classes}
           allCurricula={curricula}
-          selectedEstablishmentId={selectedEstablishmentFilter} // Pass establishment filter
+          selectedEstablishmentId={selectedEstablishmentFilter}
         />
       );
     } else if (currentRole === 'tutor') {
@@ -129,26 +129,26 @@ const Analytics = () => {
           view={view}
           selectedClassId={selectedClassFilter}
           selectedCurriculumId={selectedCurriculumFilter}
-          onSendMessageToUser={handleSendMessageToUser} // Pass the new prop
+          onSendMessageToUser={handleSendMessageToUser}
         />
       );
-    } else if (currentRole === 'administrator') { // New: Administrator Analytics
+    } else if (currentRole === 'administrator') {
       return (
         <AdminAnalyticsSection
           establishments={establishments}
           curricula={curricula}
           classes={classes}
           allProfiles={allProfiles}
+          selectedEstablishmentFilter={selectedEstablishmentFilter} // Pass the filter here
         />
       );
-    } else if (currentRole === 'director' || currentRole === 'deputy_director') { // Director, Deputy Director
-      // For directors/deputy directors, they see analytics for their establishment
+    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
       return (
-        <CreatorAnalyticsSection // Re-using CreatorAnalyticsSection for now, it has filters
+        <CreatorAnalyticsSection
           view={view}
           selectedClassId={selectedClassFilter}
           selectedCurriculumId={selectedCurriculumFilter}
-          selectedEstablishmentId={currentUserProfile.establishment_id} // Filter by current user's establishment
+          selectedEstablishmentId={currentUserProfile.establishment_id}
           selectedCourseId={courseIdFromUrl}
           allCourses={courses}
           allProfiles={allProfiles}
@@ -167,17 +167,17 @@ const Analytics = () => {
         {currentRole === 'student' ? 'Mes Analytiques' : currentRole === 'professeur' ? 'Analytiques des Cours' : currentRole === 'tutor' ? 'Suivi des Élèves' : currentRole === 'administrator' ? 'Analytiques Globales' : 'Analytiques de l\'Établissement'}
       </h1>
 
-      {(currentRole === 'creator' || currentRole === 'tutor' || currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"> {/* Adjusted grid for 3 filters */}
-          {(currentRole === 'administrator' || currentRole === 'creator' || currentRole === 'director' || currentRole === 'deputy_director') && ( // Only admin, creator, director, deputy_director can filter by establishment
+      {(currentRole === 'administrator' || currentRole === 'creator' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director') && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {(currentRole === 'administrator' || currentRole === 'creator' || currentRole === 'director' || currentRole === 'deputy_director') && (
             <div>
               <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
               <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {
                 setSelectedEstablishmentFilter(value === "all" ? undefined : value);
-                setSelectedCurriculumFilter(undefined); // Reset curriculum when establishment changes
-                setSelectedClassFilter(undefined); // Reset class when establishment changes
+                setSelectedCurriculumFilter(undefined);
+                setSelectedClassFilter(undefined);
               }}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Directors/Deputy Directors can't change establishment filter
+              disabled={currentRole === 'director' || currentRole === 'deputy_director'}
               >
                 <SelectTrigger id="select-establishment">
                   <SelectValue placeholder="Tous les établissements" />
@@ -185,7 +185,7 @@ const Analytics = () => {
                 <SelectContent>
                   <SelectItem value="all">Tous les établissements</SelectItem>
                   {establishments
-                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id) // Filter for directors/deputy directors
+                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                     .map(est => (
                       <SelectItem key={est.id} value={est.id}>
                         {est.name}
@@ -195,13 +195,13 @@ const Analytics = () => {
               </Select>
             </div>
           )}
-          {(currentRole !== 'administrator') && ( // Admin doesn't need curriculum/class filters here, as their analytics are global by establishment
+          {(currentRole !== 'administrator') && (
             <>
               <div>
                 <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
                 <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
                   setSelectedCurriculumFilter(value === "all" ? undefined : value);
-                  setSelectedClassFilter(undefined); // Reset class when curriculum changes
+                  setSelectedClassFilter(undefined);
                 }}>
                   <SelectTrigger id="select-curriculum">
                     <SelectValue placeholder="Tous les cursus" />
