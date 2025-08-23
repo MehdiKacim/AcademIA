@@ -256,7 +256,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           ],
         },
       ];
-    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') {
+    } else if (currentRole === 'administrator') {
       return [
         ...baseItems,
         {
@@ -266,6 +266,23 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onClick: () => setCurrentNavLevel('administration'),
           items: [
             { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' },
+            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
+            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
+            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/analytics?view=overview", label: "Analytiques Globales", icon: LayoutDashboard, type: 'link' },
+          ],
+        },
+      ];
+    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
+      return [
+        ...baseItems,
+        {
+          icon: BriefcaseBusiness,
+          label: "Gestion Établissement",
+          type: 'trigger',
+          onClick: () => setCurrentNavLevel('gestion-etablissement'),
+          items: [
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
@@ -289,19 +306,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       }
       return false;
     });
-  };
-
-  const navItemsToDisplayForDesktop = () => {
-    const mainItems = getMainNavItems();
-    const activeParent = mainItems.find(item => item.type === 'trigger' && item.label.toLowerCase().replace(/\s/g, '-') === currentNavLevel);
-
-    if (activeParent && activeParent.items) {
-      return [
-        { icon: ArrowLeft, label: "Retour", type: 'trigger', onClick: () => setCurrentNavLevel(null) },
-        ...activeParent.items,
-      ];
-    }
-    return mainItems;
   };
 
   const handleScroll = useCallback(() => {
