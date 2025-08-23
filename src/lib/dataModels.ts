@@ -37,10 +37,10 @@ export interface Establishment {
   id: string;
   name: string;
   type: EstablishmentType;
-  address: string; // Made mandatory
-  phone_number?: string; // New: Phone number
-  director_id?: string; // New: UUID, references public.profiles(id) with role 'director'
-  deputy_director_id?: string; // New: UUID, references public.profiles(id) with role 'deputy_director'
+  address?: string; // Made optional
+  phone_number?: string;
+  director_id?: string; // Made optional
+  deputy_director_id?: string; // Made optional
   contact_email?: string;
   created_at?: string;
 }

@@ -298,10 +298,10 @@ export const loadEstablishments = async (): Promise<Establishment[]> => {
     id: establishment.id,
     name: establishment.name,
     type: establishment.type as EstablishmentType,
-    address: establishment.address, // Now mandatory
-    phone_number: establishment.phone_number || undefined, // New field
-    director_id: establishment.director_id || undefined, // New field
-    deputy_director_id: establishment.deputy_director_id || undefined, // New field
+    address: establishment.address || undefined, // Now optional
+    phone_number: establishment.phone_number || undefined,
+    director_id: establishment.director_id || undefined, // Now optional
+    deputy_director_id: establishment.deputy_director_id || undefined, // Now optional
     contact_email: establishment.contact_email || undefined,
     created_at: establishment.created_at || undefined,
   }));
@@ -313,11 +313,11 @@ export const addEstablishmentToStorage = async (newEstablishment: Establishment)
     .insert({
       name: newEstablishment.name,
       type: newEstablishment.type,
-      address: newEstablishment.address, // Now mandatory
-      phone_number: newEstablishment.phone_number, // New field
-      director_id: newEstablishment.director_id, // New field
-      deputy_director_id: newEstablishment.deputy_director_id, // New field
-      contact_email: newEstablishment.contact_email,
+      address: newEstablishment.address || null, // Pass null if undefined
+      phone_number: newEstablishment.phone_number || null, // Pass null if undefined
+      director_id: newEstablishment.director_id || null, // Pass null if undefined
+      deputy_director_id: newEstablishment.deputy_director_id || null, // Pass null if undefined
+      contact_email: newEstablishment.contact_email || null,
     })
     .select()
     .single();
@@ -329,10 +329,10 @@ export const addEstablishmentToStorage = async (newEstablishment: Establishment)
     id: data.id,
     name: data.name,
     type: data.type as EstablishmentType,
-    address: data.address, // Now mandatory
-    phone_number: data.phone_number || undefined, // New field
-    director_id: data.director_id || undefined, // New field
-    deputy_director_id: data.deputy_director_id || undefined, // New field
+    address: data.address || undefined,
+    phone_number: data.phone_number || undefined,
+    director_id: data.director_id || undefined,
+    deputy_director_id: data.deputy_director_id || undefined,
     contact_email: data.contact_email || undefined,
     created_at: data.created_at || undefined,
   };
@@ -344,12 +344,12 @@ export const updateEstablishmentInStorage = async (updatedEstablishment: Establi
     .update({
       name: updatedEstablishment.name,
       type: updatedEstablishment.type,
-      address: updatedEstablishment.address, // Now mandatory
-      phone_number: updatedEstablishment.phone_number, // New field
-      director_id: updatedEstablishment.director_id, // New field
-      deputy_director_id: updatedEstablishment.deputy_director_id, // New field
-      contact_email: updatedEstablishment.contact_email,
-      updated_at: new Date().toISOString(), // Add updated_at if your table has it
+      address: updatedEstablishment.address || null, // Pass null if undefined
+      phone_number: updatedEstablishment.phone_number || null, // Pass null if undefined
+      director_id: updatedEstablishment.director_id || null, // Pass null if undefined
+      deputy_director_id: updatedEstablishment.deputy_director_id || null, // Pass null if undefined
+      contact_email: updatedEstablishment.contact_email || null,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', updatedEstablishment.id)
     .select()
@@ -362,10 +362,10 @@ export const updateEstablishmentInStorage = async (updatedEstablishment: Establi
     id: data.id,
     name: data.name,
     type: data.type as EstablishmentType,
-    address: data.address, // Now mandatory
-    phone_number: data.phone_number || undefined, // New field
-    director_id: data.director_id || undefined, // New field
-    deputy_director_id: data.deputy_director_id || undefined, // New field
+    address: data.address || undefined,
+    phone_number: data.phone_number || undefined,
+    director_id: data.director_id || undefined,
+    deputy_director_id: data.deputy_director_id || undefined,
     contact_email: data.contact_email || undefined,
     created_at: data.created_at || undefined,
   };
@@ -396,8 +396,8 @@ export const loadClasses = async (): Promise<Class[]> => {
     name: cls.name,
     curriculum_id: cls.curriculum_id,
     creator_ids: cls.creator_ids || [],
-    establishment_id: cls.establishment_id || undefined, // New field
-    school_year: cls.school_year || undefined, // New field
+    establishment_id: cls.establishment_id || undefined,
+    school_year: cls.school_year || undefined,
     created_at: cls.created_at || undefined,
   }));
 };
@@ -409,8 +409,8 @@ export const addClassToStorage = async (newClass: Class): Promise<Class | null> 
       name: newClass.name,
       curriculum_id: newClass.curriculum_id,
       creator_ids: newClass.creator_ids,
-      establishment_id: newClass.establishment_id, // New field
-      school_year: newClass.school_year, // New field
+      establishment_id: newClass.establishment_id,
+      school_year: newClass.school_year,
     })
     .select()
     .single();
@@ -423,8 +423,8 @@ export const addClassToStorage = async (newClass: Class): Promise<Class | null> 
     name: data.name,
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
-    establishment_id: data.establishment_id || undefined, // New field
-    school_year: data.school_year || undefined, // New field
+    establishment_id: data.establishment_id || undefined,
+    school_year: data.school_year || undefined,
     created_at: data.created_at || undefined,
   };
 };
@@ -436,9 +436,9 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
       name: updatedClass.name,
       curriculum_id: updatedClass.curriculum_id,
       creator_ids: updatedClass.creator_ids,
-      establishment_id: updatedClass.establishment_id, // New field
-      school_year: updatedClass.school_year, // New field
-      updated_at: new Date().toISOString(), // Add updated_at if your table has it
+      establishment_id: updatedClass.establishment_id,
+      school_year: updatedClass.school_year,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', updatedClass.id)
     .select()
@@ -452,8 +452,8 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
     name: data.name,
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
-    establishment_id: data.establishment_id || undefined, // New field
-    school_year: data.school_year || undefined, // New field
+    establishment_id: data.establishment_id || undefined,
+    school_year: data.school_year || undefined,
     created_at: data.created_at || undefined,
   };
 };

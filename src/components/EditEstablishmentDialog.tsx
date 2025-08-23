@@ -12,10 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
-import { Establishment, EstablishmentType, Profile } from "@/lib/dataModels"; // Import Profile
+import { Establishment, EstablishmentType, Profile } from "@/lib/dataModels";
 import { updateEstablishmentInStorage } from "@/lib/courseData";
-import { getProfilesByRole } from '@/lib/studentData'; // Import getProfilesByRole
-import { useRole } from '@/contexts/RoleContext'; // Import useRole
+import { getProfilesByRole } from '@/lib/studentData';
+import { useRole } from '@/contexts/RoleContext';
 
 interface EditEstablishmentDialogProps {
   isOpen: boolean;
@@ -25,17 +25,17 @@ interface EditEstablishmentDialogProps {
 }
 
 const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: EditEstablishmentDialogProps) => {
-  const { currentRole } = useRole(); // Get currentRole
+  const { currentRole } = useRole();
   const [name, setName] = useState(establishment.name);
   const [type, setType] = useState<EstablishmentType>(establishment.type);
   const [address, setAddress] = useState(establishment.address || '');
-  const [phoneNumber, setPhoneNumber] = useState(establishment.phone_number || ''); // New state
-  const [directorId, setDirectorId] = useState<string | undefined>(establishment.director_id); // New state
-  const [deputyDirectorId, setDeputyDirectorId] = useState<string | undefined>(establishment.deputy_director_id); // New state
+  const [phoneNumber, setPhoneNumber] = useState(establishment.phone_number || '');
+  const [directorId, setDirectorId] = useState<string | undefined>(establishment.director_id);
+  const [deputyDirectorId, setDeputyDirectorId] = useState<string | undefined>(establishment.deputy_director_id);
   const [contactEmail, setContactEmail] = useState(establishment.contact_email || '');
   const [isLoading, setIsLoading] = useState(false);
-  const [directors, setDirectors] = useState<Profile[]>([]); // State for directors
-  const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]); // State for deputy directors
+  const [directors, setDirectors] = useState<Profile[]>([]);
+  const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]);
 
   const establishmentTypes: EstablishmentType[] = [
     'Maternelle',
@@ -71,7 +71,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
   }, [isOpen, establishment]);
 
   const handleSave = async () => {
-    if (currentRole !== 'administrator') { // Only administrator can save
+    if (currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à modifier un établissement.");
       return;
     }
@@ -83,14 +83,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
       showError("Le type de l'établissement est requis.");
       return;
     }
-    if (!address.trim()) {
-      showError("L'adresse de l'établissement est requise.");
-      return;
-    }
-    if (!directorId) {
-      showError("Le directeur de l'établissement est requis.");
-      return;
-    }
+    // Address and Director are now optional, so no validation here
     if (contactEmail.trim() && !/\S+@\S+\.\S+/.test(contactEmail)) {
       showError("Veuillez entrer une adresse email de contact valide.");
       return;
@@ -102,10 +95,10 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
         ...establishment,
         name: name.trim(),
         type: type,
-        address: address.trim(),
+        address: address.trim() || undefined, // Pass undefined if empty
         phone_number: phoneNumber.trim() || undefined,
-        director_id: directorId,
-        deputy_director_id: deputyDirectorId || undefined,
+        director_id: directorId, // Can be undefined
+        deputy_director_id: deputyDirectorId || undefined, // Can be undefined
         contact_email: contactEmail.trim() || undefined,
       };
       const savedEstablishment = await updateEstablishmentInStorage(updatedEstablishmentData);
@@ -145,7 +138,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
-              disabled={currentRole !== 'administrator'} // Only admin can edit
+              disabled={currentRole !== 'administrator'}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -165,38 +158,38 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="address" className="text-right">
-              Adresse
+              Adresse (facultatif)
             </Label>
             <Input
               id="address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               className="col-span-3"
-              required
-              disabled={currentRole !== 'administrator'} // Only admin can edit
+              disabled={currentRole !== 'administrator'}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="phoneNumber" className="text-right">
-              Téléphone
+              Téléphone (facultatif)
             </Label>
             <Input
               id="phoneNumber"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="col-span-3"
-              disabled={currentRole !== 'administrator'} // Only admin can edit
+              disabled={currentRole !== 'administrator'}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="director" className="text-right">
-              Directeur
+              Directeur (facultatif)
             </Label>
-            <Select value={directorId} onValueChange={setDirectorId} disabled={currentRole !== 'administrator'}>
+            <Select value={directorId || "none"} onValueChange={(value) => setDirectorId(value === "none" ? undefined : value)} disabled={currentRole !== 'administrator'}>
               <SelectTrigger id="director" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Aucun</SelectItem>
                 {directors.map(director => (
                   <SelectItem key={director.id} value={director.id}>
                     {director.first_name} {director.last_name} (@{director.username})
@@ -207,7 +200,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="deputyDirector" className="text-right">
-              Directeur Adjoint
+              Directeur Adjoint (facultatif)
             </Label>
             <Select value={deputyDirectorId || "none"} onValueChange={(value) => setDeputyDirectorId(value === "none" ? undefined : value)} disabled={currentRole !== 'administrator'}>
               <SelectTrigger id="deputyDirector" className="col-span-3">
@@ -225,7 +218,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="contactEmail" className="text-right">
-              Email de contact
+              Email de contact (facultatif)
             </Label>
             <Input
               id="contactEmail"
@@ -233,7 +226,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               className="col-span-3"
-              disabled={currentRole !== 'administrator'} // Only admin can edit
+              disabled={currentRole !== 'administrator'}
             />
           </div>
         </div>

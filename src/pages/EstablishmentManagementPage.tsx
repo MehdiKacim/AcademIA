@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Building2, UserRound, ChevronDown, ChevronUp } from "lucide-react"; // Import UserRound, ChevronDown, ChevronUp
-import { Establishment, Curriculum, EstablishmentType, Profile } from "@/lib/dataModels"; // Import Profile
+import { PlusCircle, Edit, Trash2, Building2, UserRound, ChevronDown, ChevronUp } from "lucide-react";
+import { Establishment, Curriculum, EstablishmentType, Profile } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   loadEstablishments,
@@ -19,24 +19,24 @@ import {
   loadCurricula,
 } from '@/lib/courseData';
 import { useRole } from '@/contexts/RoleContext';
-import EditEstablishmentDialog from '@/components/EditEstablishmentDialog'; // Import the new dialog
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import EditEstablishmentDialog from '@/components/EditEstablishmentDialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getProfilesByRole } from '@/lib/studentData';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible components
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const EstablishmentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [newEstablishmentType, setNewEstablishmentType] = useState<EstablishmentType>('Lycée Général');
-  const [newEstablishmentAddress, setNewEstablishmentAddress] = useState(''); // New state
-  const [newEstablishmentPhoneNumber, setNewEstablishmentPhoneNumber] = useState(''); // New state
-  const [newEstablishmentDirectorId, setNewEstablishmentDirectorId] = useState<string | undefined>(undefined); // New state
-  const [newEstablishmentDeputyDirectorId, setNewEstablishmentDeputyDirectorId] = useState<string | undefined>(undefined); // New state
+  const [newEstablishmentAddress, setNewEstablishmentAddress] = useState('');
+  const [newEstablishmentPhoneNumber, setNewEstablishmentPhoneNumber] = useState('');
+  const [newEstablishmentDirectorId, setNewEstablishmentDirectorId] = useState<string | undefined>(undefined);
+  const [newEstablishmentDeputyDirectorId, setNewEstablishmentDeputyDirectorId] = useState<string | undefined>(undefined);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [directors, setDirectors] = useState<Profile[]>([]); // State for directors
-  const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]); // State for deputy directors
-  const [isNewEstablishmentFormOpen, setIsNewEstablishmentFormOpen] = useState(false); // State for collapsible
+  const [directors, setDirectors] = useState<Profile[]>([]);
+  const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]);
+  const [isNewEstablishmentFormOpen, setIsNewEstablishmentFormOpen] = useState(false);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEstablishmentToEdit, setCurrentEstablishmentToEdit] = useState<Establishment | null>(null);
@@ -58,8 +58,8 @@ const EstablishmentManagementPage = () => {
     const fetchData = async () => {
       setEstablishments(await loadEstablishments());
       setCurricula(await loadCurricula());
-      setDirectors(await getProfilesByRole('director')); // Fetch directors
-      setDeputyDirectors(await getProfilesByRole('deputy_director')); // Fetch deputy directors
+      setDirectors(await getProfilesByRole('director'));
+      setDeputyDirectors(await getProfilesByRole('deputy_director'));
     };
     fetchData();
   }, []);
@@ -68,12 +68,12 @@ const EstablishmentManagementPage = () => {
   const getDeputyDirectorName = (id?: string) => deputyDirectors.find(dd => dd.id === id)?.first_name + ' ' + deputyDirectors.find(dd => dd.id === id)?.last_name || 'N/A';
 
   const handleAddEstablishment = async () => {
-    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can add
+    if (!currentUserProfile || currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à ajouter un établissement.");
       return;
     }
-    if (!newEstablishmentName.trim() || !newEstablishmentType || !newEstablishmentAddress.trim() || !newEstablishmentDirectorId) {
-      showError("Le nom, le type, l'adresse et le directeur de l'établissement sont requis.");
+    if (!newEstablishmentName.trim() || !newEstablishmentType) { // Address and Director are now optional
+      showError("Le nom et le type de l'établissement sont requis.");
       return;
     }
     try {
@@ -81,10 +81,10 @@ const EstablishmentManagementPage = () => {
         id: '', 
         name: newEstablishmentName.trim(),
         type: newEstablishmentType,
-        address: newEstablishmentAddress.trim(),
+        address: newEstablishmentAddress.trim() || undefined, // Pass undefined if empty
         phone_number: newEstablishmentPhoneNumber.trim() || undefined,
-        director_id: newEstablishmentDirectorId,
-        deputy_director_id: newEstablishmentDeputyDirectorId || undefined,
+        director_id: newEstablishmentDirectorId, // Can be undefined
+        deputy_director_id: newEstablishmentDeputyDirectorId || undefined, // Can be undefined
       });
       if (newEst) {
         setEstablishments(await loadEstablishments());
@@ -95,7 +95,7 @@ const EstablishmentManagementPage = () => {
         setNewEstablishmentDirectorId(undefined);
         setNewEstablishmentDeputyDirectorId(undefined);
         showSuccess("Établissement ajouté !");
-        setIsNewEstablishmentFormOpen(false); // Close the collapsible after creation
+        setIsNewEstablishmentFormOpen(false);
       } else {
         showError("Échec de l'ajout de l'établissement.");
       }
@@ -106,7 +106,7 @@ const EstablishmentManagementPage = () => {
   };
 
   const handleDeleteEstablishment = async (id: string) => {
-    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can delete
+    if (!currentUserProfile || currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à supprimer un établissement.");
       return;
     }
@@ -121,7 +121,7 @@ const EstablishmentManagementPage = () => {
   };
 
   const handleEditEstablishment = (establishment: Establishment) => {
-    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can edit
+    if (!currentUserProfile || currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à modifier un établissement.");
       return;
     }
@@ -146,7 +146,7 @@ const EstablishmentManagementPage = () => {
     );
   }
 
-  if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) { // Only administrator, director, deputy_director can access
+  if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -172,7 +172,7 @@ const EstablishmentManagementPage = () => {
         Ajoutez, modifiez ou supprimez des établissements scolaires.
       </p>
 
-      {currentRole === 'administrator' && ( // Only administrators can add establishments
+      {currentRole === 'administrator' && (
         <Collapsible open={isNewEstablishmentFormOpen} onOpenChange={setIsNewEstablishmentFormOpen}>
           <Card>
             <CardHeader>
@@ -195,6 +195,7 @@ const EstablishmentManagementPage = () => {
                     placeholder="Nom du nouvel établissement"
                     value={newEstablishmentName}
                     onChange={(e) => setNewEstablishmentName(e.target.value)}
+                    required
                   />
                   <Label htmlFor="new-establishment-type">Type d'établissement</Label>
                   <Select value={newEstablishmentType} onValueChange={(value: EstablishmentType) => setNewEstablishmentType(value)}>
@@ -207,7 +208,7 @@ const EstablishmentManagementPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Label htmlFor="new-establishment-address">Adresse</Label>
+                  <Label htmlFor="new-establishment-address">Adresse (facultatif)</Label>
                   <Input
                     id="new-establishment-address"
                     placeholder="Adresse de l'établissement"
@@ -221,12 +222,13 @@ const EstablishmentManagementPage = () => {
                     value={newEstablishmentPhoneNumber}
                     onChange={(e) => setNewEstablishmentPhoneNumber(e.target.value)}
                   />
-                  <Label htmlFor="new-establishment-director">Directeur (obligatoire)</Label>
-                  <Select value={newEstablishmentDirectorId} onValueChange={setNewEstablishmentDirectorId}>
+                  <Label htmlFor="new-establishment-director">Directeur (facultatif)</Label>
+                  <Select value={newEstablishmentDirectorId || "none"} onValueChange={(value) => setNewEstablishmentDirectorId(value === "none" ? undefined : value)}>
                     <SelectTrigger id="new-establishment-director">
                       <SelectValue placeholder="Sélectionner un directeur" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">Aucun</SelectItem>
                       {directors.map(director => (
                         <SelectItem key={director.id} value={director.id}>
                           {director.first_name} {director.last_name} (@{director.username})
@@ -248,7 +250,7 @@ const EstablishmentManagementPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button onClick={handleAddEstablishment} disabled={!newEstablishmentName.trim() || !newEstablishmentType || !newEstablishmentAddress.trim() || !newEstablishmentDirectorId}>
+                  <Button onClick={handleAddEstablishment} disabled={!newEstablishmentName.trim() || !newEstablishmentType}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
                   </Button>
                 </div>
@@ -275,12 +277,12 @@ const EstablishmentManagementPage = () => {
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{est.name}</span>
                     <div className="flex gap-2">
-                      {currentRole === 'administrator' && ( // Only administrator can edit
+                      {currentRole === 'administrator' && (
                         <Button variant="outline" size="sm" onClick={() => handleEditEstablishment(est)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                       )}
-                      {currentRole === 'administrator' && ( // Only administrator can delete
+                      {currentRole === 'administrator' && (
                         <Button variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -290,17 +292,21 @@ const EstablishmentManagementPage = () => {
                   <div className="mt-2 text-sm text-muted-foreground">
                     Type: {est.type}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Adresse: {est.address}
-                  </div>
+                  {est.address && (
+                    <div className="text-sm text-muted-foreground">
+                      Adresse: {est.address}
+                    </div>
+                  )}
                   {est.phone_number && (
                     <div className="text-sm text-muted-foreground">
                       Téléphone: {est.phone_number}
                     </div>
                   )}
-                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                    <UserRound className="h-4 w-4" /> Directeur: {getDirectorName(est.director_id)}
-                  </div>
+                  {est.director_id && (
+                    <div className="text-sm text-muted-foreground flex items-center gap-1">
+                      <UserRound className="h-4 w-4" /> Directeur: {getDirectorName(est.director_id)}
+                    </div>
+                  )}
                   {est.deputy_director_id && (
                     <div className="text-sm text-muted-foreground flex items-center gap-1">
                       <UserRound className="h-4 w-4" /> Directeur Adjoint: {getDeputyDirectorName(est.deputy_director_id)}

@@ -31,28 +31,32 @@ serve(async (req) => {
       });
     }
 
-    const invokingUserRole = invokingUser.user_metadata.role as string; // Get role directly from JWT
+    const invokingUserRole = invokingUser.user_metadata.role as string;
 
-    const { email, password, first_name, last_name, username, role: newUserRole, establishment_id, enrollment_start_date, enrollment_end_date } = await req.json(); // Added enrollment dates
+    const { email, password, first_name, last_name, username, role: newUserRole, establishment_id, enrollment_start_date, enrollment_end_date } = await req.json();
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole
     let isAllowed = false;
     switch (invokingUserRole) {
       case 'administrator':
-        // Administrator can create any role
         isAllowed = ['student', 'professeur', 'tutor', 'director', 'deputy_director', 'administrator'].includes(newUserRole);
         break;
       case 'director':
       case 'deputy_director':
-        // Directors and Deputy Directors can create professeurs and tutors
-        isAllowed = ['professeur', 'tutor'].includes(newUserRole);
+        // Directors and Deputy Directors can create professeurs, tutors, and students
+        isAllowed = ['professeur', 'tutor', 'student'].includes(newUserRole);
+        // If an establishment_id is provided, it must match the invoking user's establishment
+        if (establishment_id && establishment_id !== invokingUser.user_metadata.establishment_id) {
+          return new Response(JSON.stringify({ error: `Forbidden: You can only create users for your own establishment.` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
         break;
       case 'professeur':
-        // Professors can only create student roles
         isAllowed = newUserRole === 'student';
         break;
       default:
-        // Other roles (like student, tutor) cannot create users via this function
         isAllowed = false;
     }
 
@@ -72,15 +76,15 @@ serve(async (req) => {
     const { data: newUserData, error: signUpError } = await supabaseAdminClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Set to true to avoid email confirmation for admin-created users
+      email_confirm: true,
       user_metadata: {
         first_name,
         last_name,
         username,
-        role: newUserRole, // Pass the role name to user_metadata for handle_new_user trigger
-        establishment_id: establishment_id, // Pass establishment_id to user_metadata
-        enrollment_start_date: enrollment_start_date, // Pass enrollment_start_date
-        enrollment_end_date: enrollment_end_date, // Pass enrollment_end_date
+        role: newUserRole,
+        establishment_id: establishment_id || null, // Pass null if undefined
+        enrollment_start_date: enrollment_start_date || null, // Pass null if undefined
+        enrollment_end_date: enrollment_end_date || null, // Pass null if undefined
       },
     });
 
