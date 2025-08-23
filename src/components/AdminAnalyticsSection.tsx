@@ -3,10 +3,13 @@ import AdminStatCard from './analytics/AdminStatCard';
 import UserDistributionModal from './analytics/UserDistributionModal';
 import PedagogicalStructureModal from './analytics/PedagogicalStructureModal';
 import EstablishmentDetailModal from './analytics/EstablishmentDetailModal';
+import UserListModal from './analytics/UserListModal'; // New import
+import CurriculumListModal from './analytics/CurriculumListModal'; // New import
+import ClassListModal from './analytics/ClassListModal'; // New import
 import { Profile, Class, Curriculum, Establishment } from "@/lib/dataModels";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, LayoutList, Building2, BarChart2 } from "lucide-react";
+import { Users, LayoutList, Building2, BarChart2, User, GraduationCap, PenTool, BriefcaseBusiness, School } from "lucide-react"; // New icons
 
 interface AdminAnalyticsSectionProps {
   establishments: Establishment[];
@@ -20,15 +23,50 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
   const [isPedagogicalStructureModalOpen, setIsPedagogicalStructureModalOpen] = useState(false);
   const [isEstablishmentDetailModalOpen, setIsEstablishmentDetailModalOpen] = useState(false);
 
+  // New states for list modals
+  const [isDirectorListModalOpen, setIsDirectorListModalOpen] = useState(false);
+  const [isDeputyDirectorListModalOpen, setIsDeputyDirectorListModalOpen] = useState(false);
+  const [isStudentListModalOpen, setIsStudentListModalOpen] = useState(false);
+  const [isProfesseurListModalOpen, setIsProfesseurListModalOpen] = useState(false);
+  const [isTutorListModalOpen, setIsTutorListModalOpen] = useState(false);
+  const [isCurriculumListModalOpen, setIsCurriculumListModalOpen] = useState(false);
+  const [isClassListModalOpen, setIsClassListModalOpen] = useState(false);
+
+
   const getRoleCount = (role: Profile['role']) => {
     return allProfiles.filter(p => p.role === role).length;
   };
 
-  const totalStudents = getRoleCount('student');
-  const totalProfesseurs = getRoleCount('professeur');
-  const totalTutors = getRoleCount('tutor');
-  const totalCurricula = curricula.length;
-  const totalClasses = classes.length;
+  const getRoleProfiles = (role: Profile['role']) => {
+    return allProfiles.filter(p => p.role === role);
+  };
+
+  const getCurriculumCountForEstablishment = (establishmentId: string) => {
+    return curricula.filter(c => c.establishment_id === establishmentId).length;
+  };
+
+  const getClassCountForEstablishment = (establishmentId: string) => {
+    return classes.filter(c => c.establishment_id === establishmentId).length;
+  };
+
+  const establishmentData = establishments.map(est => {
+    const students = getRoleCountForEstablishment(est.id, 'student');
+    const professeurs = getRoleCountForEstablishment(est.id, 'professeur');
+    const tutors = getRoleCountForEstablishment(est.id, 'tutor');
+    const directors = getRoleCountForEstablishment(est.id, 'director');
+    const deputyDirectors = getRoleCountForEstablishment(est.id, 'deputy_director');
+    
+    return {
+      name: est.name,
+      students: students,
+      professeurs: professeurs,
+      tutors: tutors,
+      directors: directors,
+      deputyDirectors: deputyDirectors,
+      curricula: getCurriculumCountForEstablishment(est.id),
+      classes: getClassCountForEstablishment(est.id),
+    };
+  });
 
   return (
     <>
@@ -38,44 +76,60 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
           title="Total Établissements"
           description="Nombre d'établissements gérés."
           value={establishments.length}
+          icon={Building2}
+          onClick={() => setIsEstablishmentDetailModalOpen(true)}
         />
         <AdminStatCard
           title="Total Directeurs"
           description="Nombre total de directeurs sur la plateforme."
           value={getRoleCount('director')}
+          icon={BriefcaseBusiness}
+          onClick={() => setIsDirectorListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Directeurs Adjoints"
           description="Nombre total de directeurs adjoints sur la plateforme."
           value={getRoleCount('deputy_director')}
+          icon={BriefcaseBusiness}
+          onClick={() => setIsDeputyDirectorListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Élèves"
           description="Nombre total d'élèves inscrits."
-          value={totalStudents}
+          value={getRoleCount('student')}
+          icon={GraduationCap}
+          onClick={() => setIsStudentListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Professeurs"
           description="Nombre total de professeurs."
-          value={totalProfesseurs}
+          value={getRoleCount('professeur')}
+          icon={PenTool}
+          onClick={() => setIsProfesseurListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Tuteurs"
           description="Nombre total de tuteurs."
-          value={totalTutors}
+          value={getRoleCount('tutor')}
+          icon={User}
+          onClick={() => setIsTutorListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Cursus"
           description="Nombre total de cursus créés."
-          value={totalCurricula}
+          value={curricula.length}
+          icon={LayoutList}
+          onClick={() => setIsCurriculumListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Classes"
           description="Nombre total de classes créées."
-          value={totalClasses}
+          value={classes.length}
+          icon={Users}
+          onClick={() => setIsClassListModalOpen(true)}
         />
 
-        {/* Widgets to open modals for detailed views */}
+        {/* Widgets to open modals for detailed charts/lists */}
         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setIsUserDistributionModalOpen(true)}>
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Users className="h-5 w-5 text-primary" />
@@ -128,6 +182,65 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         curricula={curricula}
         classes={classes}
         allProfiles={allProfiles}
+      />
+
+      {/* New list modals */}
+      <UserListModal
+        isOpen={isDirectorListModalOpen}
+        onClose={() => setIsDirectorListModalOpen(false)}
+        title="Liste des Directeurs"
+        description="Tous les directeurs enregistrés sur la plateforme."
+        users={getRoleProfiles('director')}
+        establishments={establishments}
+      />
+      <UserListModal
+        isOpen={isDeputyDirectorListModalOpen}
+        onClose={() => setIsDeputyDirectorListModalOpen(false)}
+        title="Liste des Directeurs Adjoints"
+        description="Tous les directeurs adjoints enregistrés sur la plateforme."
+        users={getRoleProfiles('deputy_director')}
+        establishments={establishments}
+      />
+      <UserListModal
+        isOpen={isStudentListModalOpen}
+        onClose={() => setIsStudentListModalOpen(false)}
+        title="Liste des Élèves"
+        description="Tous les élèves enregistrés sur la plateforme."
+        users={getRoleProfiles('student')}
+        establishments={establishments}
+      />
+      <UserListModal
+        isOpen={isProfesseurListModalOpen}
+        onClose={() => setIsProfesseurListModalOpen(false)}
+        title="Liste des Professeurs"
+        description="Tous les professeurs enregistrés sur la plateforme."
+        users={getRoleProfiles('professeur')}
+        establishments={establishments}
+      />
+      <UserListModal
+        isOpen={isTutorListModalOpen}
+        onClose={() => setIsTutorListModalOpen(false)}
+        title="Liste des Tuteurs"
+        description="Tous les tuteurs enregistrés sur la plateforme."
+        users={getRoleProfiles('tutor')}
+        establishments={establishments}
+      />
+      <CurriculumListModal
+        isOpen={isCurriculumListModalOpen}
+        onClose={() => setIsCurriculumListModalOpen(false)}
+        title="Liste des Cursus"
+        description="Tous les cursus disponibles sur la plateforme."
+        curricula={curricula}
+        establishments={establishments}
+      />
+      <ClassListModal
+        isOpen={isClassListModalOpen}
+        onClose={() => setIsClassListModalOpen(false)}
+        title="Liste des Classes"
+        description="Toutes les classes créées sur la plateforme."
+        classes={classes}
+        curricula={curricula}
+        establishments={establishments}
       />
     </>
   );
