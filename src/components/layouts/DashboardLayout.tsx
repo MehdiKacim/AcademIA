@@ -265,22 +265,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onClick: () => setCurrentNavLevel('administration'),
           items: [
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
-            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
-            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
+            // Removed "Cursus" link
+            // Removed "Classes" link
             // Removed "Gestion Élèves" link
           ],
         },
-        {
-          icon: BarChart2,
-          label: "Analytiques",
-          type: 'trigger',
-          onClick: () => setCurrentNavLevel('analytiques'),
-          items: [
-            { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
-            { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
-            { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link' },
-          ],
-        },
+        // Removed "Analytiques" section for administrator
       ];
     }
     return baseItems;

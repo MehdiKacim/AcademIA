@@ -80,13 +80,13 @@ const AppWithThemeProvider = () => {
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
                     </Route>
 
-                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'creator']} />}>
+                    <Route element={<ProtectedRoute allowedRoles={['creator']} />}> {/* Only creators can manage curricula and create courses */}
                       <Route path="/curricula" element={<CurriculumManagementPage />} />
                       <Route path="/create-course" element={<CreateCourse />} />
                       <Route path="/create-course/:courseId" element={<CreateCourse />} />
                     </Route>
 
-                    <Route element={<ProtectedRoute allowedRoles={['creator', 'tutor']} />}> {/* Updated allowedRoles */}
+                    <Route element={<ProtectedRoute allowedRoles={['creator', 'tutor']} />}>
                       <Route path="/classes" element={<ClassManagementPage />} />
                       <Route path="/students" element={<CreatorAndTutorStudentManagementPage />} />
                     </Route>

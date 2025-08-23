@@ -18,13 +18,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus } from "lucide-react"; // Import ChevronDown, ChevronUp, UserRoundPlus
+import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal';
 import { clearAllAppData } from '@/lib/dataReset';
 import InputWithStatus from './InputWithStatus';
 import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+import { Establishment } from '@/lib/dataModels'; // Import Establishment type
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -39,7 +41,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const [showCreateAdminForm, setShowCreateAdminForm] = useState(false);
-  const [showCreateProfessorForm, setShowCreateProfessorForm] = useState(false); // New state for professor creation form
+  const [showCreateProfessorForm, setShowCreateProfessorForm] = useState(false);
 
   // State for initial admin creation form
   const [adminFirstName, setAdminFirstName] = useState('');
@@ -60,13 +62,25 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [profUsername, setProfUsername] = useState('');
   const [profEmail, setProfEmail] = useState('');
   const [profPassword, setProfPassword] = useState('');
-  const [profRole, setProfRole] = useState<'creator' | 'tutor'>('creator'); // Default to creator
+  const [profRole, setProfRole] = useState<'creator' | 'tutor'>('creator');
+  const [profEstablishmentId, setProfEstablishmentId] = useState<string>(''); // New state for establishment
   const [isCreatingProfessor, setIsCreatingProfessor] = useState(false);
 
   const [profUsernameAvailabilityStatus, setProfUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [profEmailAvailabilityStatus, setProfEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const debounceTimeoutRefProfUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimeoutRefProfEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // State to store establishments
+
+  useEffect(() => {
+    const fetchEstablishments = async () => {
+      setEstablishments(await loadEstablishments());
+    };
+    if (isAuthenticated) {
+      fetchEstablishments();
+    }
+  }, [isAuthenticated]);
 
 
   const handleAuthenticate = () => {
@@ -225,7 +239,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   };
 
   const handleCreateProfessor = async () => {
-    if (!profFirstName.trim() || !profLastName.trim() || !profUsername.trim() || !profEmail.trim() || !profPassword.trim() || !profRole) {
+    if (!profFirstName.trim() || !profLastName.trim() || !profUsername.trim() || !profEmail.trim() || !profPassword.trim() || !profRole || !profEstablishmentId) {
       showError("Tous les champs sont requis pour créer le professeur.");
       return;
     }
@@ -252,6 +266,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
           last_name: profLastName.trim(),
           username: profUsername.trim(),
           role: profRole, // Use the selected role
+          establishment_id: profEstablishmentId, // Pass the selected establishment ID
         },
       });
 
@@ -268,6 +283,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       setProfEmail('');
       setProfPassword('');
       setProfRole('creator');
+      setProfEstablishmentId(''); // Clear establishment selection
       setProfUsernameAvailabilityStatus('idle');
       setProfEmailAvailabilityStatus('idle');
       setShowCreateProfessorForm(false);
@@ -420,7 +436,17 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                     <SelectItem value="tutor">Tuteur</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button onClick={handleCreateProfessor} className="w-full" disabled={isCreatingProfessor || profUsernameAvailabilityStatus === 'checking' || profEmailAvailabilityStatus === 'checking'}>
+                <Select value={profEstablishmentId} onValueChange={setProfEstablishmentId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {establishments.map(est => (
+                      <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleCreateProfessor} className="w-full" disabled={isCreatingProfessor || profUsernameAvailabilityStatus === 'checking' || profEmailAvailabilityStatus === 'checking' || !profEstablishmentId}>
                   {isCreatingProfessor ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserRoundPlus className="h-4 w-4 mr-2" />} Créer le professeur
                 </Button>
               </div>

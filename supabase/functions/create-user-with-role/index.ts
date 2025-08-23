@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const invokingUserRole = invokingUser.user_metadata.role as string; // Get role directly from JWT
 
-    const { email, password, first_name, last_name, username, role: newUserRole } = await req.json();
+    const { email, password, first_name, last_name, username, role: newUserRole, establishment_id } = await req.json(); // Added establishment_id
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole
     if (invokingUserRole === 'administrator') {
@@ -75,6 +75,7 @@ serve(async (req) => {
         last_name,
         username,
         role: newUserRole, // Pass the role name to user_metadata for handle_new_user trigger
+        establishment_id: establishment_id, // Pass establishment_id to user_metadata
       },
     });
 
