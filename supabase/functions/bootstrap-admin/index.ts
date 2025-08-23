@@ -148,7 +148,7 @@ serve(async (req) => {
 
       CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles
       FOR SELECT USING (
-        (role = 'student'::user_role) AND
+        (public.get_user_role(id) = 'student'::user_role) AND -- Changed this line
         (public.get_user_role(auth.uid()) = ANY (ARRAY['creator'::user_role, 'tutor'::user_role, 'administrator'::user_role]))
       );
 
