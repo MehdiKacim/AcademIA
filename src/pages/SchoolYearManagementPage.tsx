@@ -20,7 +20,7 @@ import {
   getActiveSchoolYear,
 } from '@/lib/courseData';
 import { useRole } from '@/contexts/RoleContext';
-import { format, parseISO, startOfYear, endOfYear, addYears } from 'date-fns';
+import { format, parseISO, addYears, addDays } from 'date-fns'; // Added addDays
 import { fr } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -175,15 +175,16 @@ const SchoolYearManagementPage = () => {
 
     if (latestYear) {
       const lastEndDate = parseISO(latestYear.end_date);
-      nextStartDate = addYears(lastEndDate, 0); // Start immediately after previous end
-      nextEndDate = addYears(nextStartDate, 1); // One year duration
+      nextStartDate = addDays(lastEndDate, 1); // Start the day after the previous year ended
+      nextEndDate = addYears(nextStartDate, 1); // One year duration from the new start date
+      nextEndDate = addDays(nextEndDate, -1); // Adjust to end on July 31st (one day before the next August 1st)
       nextName = `${format(nextStartDate, 'yyyy')}-${format(nextEndDate, 'yyyy')}`;
     } else {
-      // If no years exist, start from current year
-      const currentYear = new Date().getFullYear();
-      nextStartDate = startOfYear(new Date(currentYear, 8, 1)); // Default to Sept 1st
-      nextEndDate = endOfYear(addYears(nextStartDate, 1)); // End Aug 31st next year
-      nextName = `${format(nextStartDate, 'yyyy')}-${format(nextEndDate, 'yyyy')}`;
+      // If no years exist, start from August 1st of the current calendar year
+      const currentCalendarYear = new Date().getFullYear();
+      nextStartDate = new Date(currentCalendarYear, 7, 1); // August is month 7 (0-indexed)
+      nextEndDate = new Date(currentCalendarYear + 1, 6, 31); // July is month 6 (0-indexed)
+      nextName = `${currentCalendarYear}-${currentCalendarYear + 1}`;
     }
 
     setNewSchoolYearName(nextName);
