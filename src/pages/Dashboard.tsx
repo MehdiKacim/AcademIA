@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { loadCourses, loadClasses, loadEstablishments, loadCurricula } from "@/lib/courseData"; // Load classes for professeur/tutor
-import { getAllStudentCourseProgress, getAllProfiles } from "@/lib/studentData"; // Import Supabase function
-import { Course, StudentCourseProgress, Profile, Class, Establishment, Curriculum } from "@/lib/dataModels"; // Import types
+import { getAllStudentCourseProgress, getAllProfiles, getAllStudentClassEnrollments } from "@/lib/studentData"; // Import Supabase function
+import { Course, StudentCourseProgress, Profile, Class, Establishment, Curriculum, StudentClassEnrollment } from "@/lib/dataModels"; // Import types
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const Dashboard = () => {
   const [classes, setClasses] = useState<Class[]>([]); // For professeur/tutor to count students in classes
   const [establishments, setEstablishments] = useState<Establishment[]>([]); // For admin
   const [curricula, setCurricula] = useState<Curriculum[]>([]); // For admin
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +38,7 @@ const Dashboard = () => {
       setEstablishments(loadedEstablishments);
       const loadedCurricula = await loadCurricula(); // Fetch curricula
       setCurricula(loadedCurricula);
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Fetch all enrollments
     };
     fetchData();
   }, [currentUserProfile]); // Re-fetch if user profile changes
@@ -189,7 +191,12 @@ const Dashboard = () => {
         </div>
       );
     } else if (currentRole === 'tutor') {
-      const studentsInMyClasses = allProfiles.filter(p => p.role === 'student' && p.class_id && classes.some(cls => cls.id === p.class_id && cls.creator_ids.includes(currentUserProfile.id)));
+      // Filter students based on classes managed by the current tutor
+      const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).map(cls => cls.id);
+      const studentsInMyClasses = allProfiles.filter(p => 
+        p.role === 'student' && allStudentClassEnrollments.some(e => e.student_id === p.id && managedClassIds.includes(e.class_id))
+      );
+      
       const studentsAtRisk = studentsInMyClasses.filter(s => studentCourseProgresses.some(scp => scp.user_id === s.id && scp.modules_progress.some(mp => mp.sections_progress.some(sp => sp.quiz_result && !sp.quiz_result.passed)))).length;
       const totalSupervisedStudents = studentsInMyClasses.length;
 
@@ -285,7 +292,7 @@ const Dashboard = () => {
               <CardDescription>Accédez aux statistiques détaillées par établissement.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link to="/analytics?view=global-admin" className="mt-4 block">
+              <Link to="/analytics?view=establishment-admin" className="mt-4 block">
                 <Button className="w-full">Voir les analytiques globales</Button>
               </Link>
             </CardContent>
@@ -304,7 +311,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Mon Établissement</CardTitle>
-              <CardDescription>Vue d'ensemble de {myEstablishment?.name || 'votre établissement'}.</CardDescription>
+              <CardDescription>Vue d'overview de {myEstablishment?.name || 'votre établissement'}.</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{myEstablishment?.name || 'N/A'}</p>

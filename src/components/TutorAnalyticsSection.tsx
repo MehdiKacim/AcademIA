@@ -18,8 +18,8 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-import { Profile, Class, Curriculum, StudentCourseProgress } from "@/lib/dataModels";
-import { getUserFullName } from "@/lib/studentData";
+import { Profile, Class, Curriculum, StudentCourseProgress, StudentClassEnrollment } from "@/lib/dataModels"; // Import StudentClassEnrollment
+import { getUserFullName, getAllStudentClassEnrollments } from "@/lib/studentData"; // Import getAllStudentClassEnrollments
 import { loadClasses, loadCurricula } from "@/lib/courseData"; // Import loadClasses, loadCurricula
 import { Button } from "@/components/ui/button"; // Import Button
 import { Mail } from "lucide-react"; // Import Mail icon
@@ -45,11 +45,14 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
     if (selectedClassId && selectedClassId !== 'all') {
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
-        return students.filter(student => student.class_id === selectedClass.id);
+        // Students are linked to classes via student_class_enrollments
+        const studentIdsInClass = new Set(getAllStudentClassEnrollments().filter(e => e.class_id === selectedClass.id).map(e => e.student_id));
+        return students.filter(student => studentIdsInClass.has(student.id));
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
-      const studentIdsInCurriculum = new Set(classesInCurriculum.flatMap(cls => allProfiles.filter(p => p.class_id === cls.id && p.role === 'student').map(p => p.id)));
+      const classIdsInCurriculum = classesInCurriculum.map(cls => cls.id);
+      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id));
       return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
     return students;
@@ -81,7 +84,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
   const classPerformanceData = filteredClasses.map(cls => ({
     name: cls.name,
     avgProgress: Math.floor(Math.random() * 20) + 70, // Dummy average progress
-    studentsCount: allProfiles.filter(p => p.class_id === cls.id && filteredStudentProfiles.some(fs => fs.id === p.id)).length, // Count students only from filtered set
+    studentsCount: allProfiles.filter(p => getAllStudentClassEnrollments().some(e => e.student_id === p.id && e.class_id === cls.id) && filteredStudentProfiles.some(fs => fs.id === p.id)).length, // Count students only from filtered set
   }));
 
   // Dummy data for individual student progress trends (adjusting names to match filtered students)
@@ -274,7 +277,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
     );
   }
 
-  return null;
+  return null; // Should not happen if view is always one of the cases
 };
 
 export default TutorAnalyticsSection;

@@ -14,6 +14,7 @@ export interface Profile {
   email: string; // Added email to Profile interface
   role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
   establishment_id?: string; // New: Link to parent establishment for students, professeurs, tutors, directors, deputy_directors
+  class_id?: string; // New: Link to the student's class (if applicable)
   enrollment_start_date?: string; // New: Start date of enrollment in establishment
   enrollment_end_date?: string; // New: End date of enrollment in establishment
   theme?: 'light' | 'dark' | 'system'; // New: User's theme preference

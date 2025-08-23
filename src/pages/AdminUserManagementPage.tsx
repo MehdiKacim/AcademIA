@@ -259,8 +259,8 @@ const AdminUserManagementPage = () => {
     setEditEmail(user.email || '');
     setEditRole(user.role);
     setEditEstablishmentId(user.establishment_id || '');
-    setEditUsernameAvailabilityStatus('available');
-    setEditEmailAvailabilityStatus('available');
+    setEditUsernameAvailabilityStatus('available'); // Assume available initially for existing user
+    setEditEmailAvailabilityStatus('available'); // Assume available initially for existing user
     setIsEditDialogOpen(true);
   };
 
@@ -273,7 +273,7 @@ const AdminUserManagementPage = () => {
     }
     debounceTimeoutRefEditUsername.current = setTimeout(async () => {
       const isTaken = await checkUsernameExists(value);
-      if (isTaken && userToEdit?.username !== value) {
+      if (isTaken && userToEdit?.username !== value) { // Only mark as taken if it's different from current user's username
         setEditUsernameAvailabilityStatus('taken');
       } else {
         setEditUsernameAvailabilityStatus('available');
@@ -290,7 +290,7 @@ const AdminUserManagementPage = () => {
     }
     debounceTimeoutRefEditEmail.current = setTimeout(async () => {
       const isTaken = await checkEmailExists(value);
-      if (isTaken && userToEdit?.email !== value) {
+      if (isTaken && userToEdit?.email !== value) { // Only mark as taken if it's different from current user's email
         setEditEmailAvailabilityStatus('taken');
       } else {
         setEditEmailAvailabilityStatus('available');
@@ -644,10 +644,10 @@ const AdminUserManagementPage = () => {
                   {establishments
                     .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                     .map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                      </SelectItem>
-                    ))}
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                          </SelectItem>
+                        ))}
                 </SelectContent>
               </Select>
             </div>

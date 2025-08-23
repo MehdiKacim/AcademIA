@@ -18,7 +18,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { Course, Profile, Class, Curriculum, StudentCourseProgress } from '@/lib/dataModels';
+import { Course, Profile, Class, Curriculum, StudentCourseProgress, StudentClassEnrollment } from '@/lib/dataModels'; // Import StudentClassEnrollment
+import { getAllStudentClassEnrollments } from '@/lib/studentData'; // Import getAllStudentClassEnrollments
 
 interface CreatorAnalyticsSectionProps {
   view: string | null;
@@ -70,11 +71,14 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
     if (selectedClassId && selectedClassId !== 'all') {
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
-        return students.filter(student => student.class_id === selectedClass.id);
+        // Students are linked to classes via student_class_enrollments
+        const studentIdsInClass = new Set(getAllStudentClassEnrollments().filter(e => e.class_id === selectedClass.id).map(e => e.student_id));
+        return students.filter(student => studentIdsInClass.has(student.id));
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
-      const studentIdsInCurriculum = new Set(classesInCurriculum.flatMap(cls => allProfiles.filter(p => p.class_id === cls.id && p.role === 'student').map(p => p.id)));
+      const classIdsInCurriculum = classesInCurriculum.map(cls => cls.id);
+      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id));
       return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
     return students;
@@ -297,7 +301,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
                   <Legend />
                   <Line type="monotone" dataKey="activeStudents" stroke="hsl(var(--primary))" name="Élèves Actifs" />
                   <Line type="monotone" dataKey="newEnrollments" stroke="hsl(var(--secondary))" name="Nouvelles Inscriptions" />
-                </LineChart>
+                </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
