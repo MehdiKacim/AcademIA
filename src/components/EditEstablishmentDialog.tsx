@@ -200,12 +200,12 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
             <Label htmlFor="deputyDirector" className="text-right">
               Directeur Adjoint
             </Label>
-            <Select value={deputyDirectorId || ""} onValueChange={(value) => setDeputyDirectorId(value === "" ? undefined : value)}>
+            <Select value={deputyDirectorId || "none"} onValueChange={(value) => setDeputyDirectorId(value === "none" ? undefined : value)}>
               <SelectTrigger id="deputyDirector" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur adjoint" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun</SelectItem>
+                <SelectItem value="none">Aucun</SelectItem>
                 {deputyDirectors.map(deputy => (
                   <SelectItem key={deputy.id} value={deputy.id}>
                     {deputy.first_name} {deputy.last_name} (@{deputy.username})
