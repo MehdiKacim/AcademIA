@@ -121,10 +121,11 @@ serve(async (req) => {
       DROP POLICY IF EXISTS "Administrators can delete profiles" ON public.profiles;
       DROP POLICY IF EXISTS "Creators and Tutors can view student profiles" ON public.profiles;
 
-      -- Create secure policies for each operation, using get_user_role for role checks
+      -- Create only the basic self-select policy for SELECT operations
       CREATE POLICY "profiles_select_policy" ON public.profiles
       FOR SELECT TO authenticated USING (auth.uid() = id);
 
+      -- Keep INSERT, UPDATE, DELETE policies as they are not causing the SELECT recursion
       CREATE POLICY "profiles_insert_policy" ON public.profiles
       FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
@@ -134,9 +135,6 @@ serve(async (req) => {
       CREATE POLICY "profiles_delete_policy" ON public.profiles
       FOR DELETE TO authenticated USING (auth.uid() = id);
 
-      CREATE POLICY "Administrators can view all profiles" ON public.profiles
-      FOR SELECT USING (public.get_user_role(auth.uid()) = 'administrator');
-
       CREATE POLICY "Administrators can insert profiles" ON public.profiles
       FOR INSERT WITH CHECK (public.get_user_role(auth.uid()) = 'administrator');
 
@@ -145,13 +143,6 @@ serve(async (req) => {
 
       CREATE POLICY "Administrators can delete profiles" ON public.profiles
       FOR DELETE USING (public.get_user_role(auth.uid()) = 'administrator');
-
-      -- Temporarily commented out to debug recursion issue
-      -- CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles
-      -- FOR SELECT USING (
-      --   (public.get_user_role(id) = 'student'::user_role) AND
-      --   (public.get_user_role(auth.uid()) = ANY (ARRAY['creator'::user_role, 'tutor'::user_role, 'administrator'::user_role]))
-      -- );
 
       -- Create or replace handle_new_user function
       CREATE OR REPLACE FUNCTION public.handle_new_user()
