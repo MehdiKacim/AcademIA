@@ -176,7 +176,7 @@ const Profile = () => {
           </Card>
         </div>
       );
-    } else if (currentRole === 'creator') {
+    } else if (currentRole === 'professeur') {
       const createdCourses = courses; // Assuming all courses are created by this creator for demo
       const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.sections.some(s => s.content))).length; // Check if any section has content as a proxy for 'published'
       const totalStudents = studentCourseProgresses.length; // Total students with any progress
@@ -209,7 +209,7 @@ const Profile = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              <p className="text-lg text-muted-foreground">Rôle actuel: Créateur</p>
+              <p className="text-lg text-muted-foreground">Rôle actuel: Professeur</p>
             </CardContent>
           </Card>
 

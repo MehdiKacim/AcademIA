@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
-import { Class, Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
-import { updateClassInStorage, loadCurricula, loadEstablishments, getEstablishmentAddress } from "@/lib/courseData"; // Import loadEstablishments and getEstablishmentAddress
+import { Class, Curriculum, Establishment, SchoolYear } from "@/lib/dataModels"; // Import SchoolYear
+import { updateClassInStorage, loadCurricula, loadEstablishments, getEstablishmentAddress, loadSchoolYears } from "@/lib/courseData"; // Import loadSchoolYears
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface EditClassDialogProps {
@@ -27,16 +27,18 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
   const { currentUserProfile, currentRole } = useRole();
   const [name, setName] = useState(classToEdit.name);
   const [curriculumId, setCurriculumId] = useState(classToEdit.curriculum_id);
-  const [establishmentId, setEstablishmentId] = useState(classToEdit.establishment_id || ''); // New state
-  const [schoolYear, setSchoolYear] = useState(classToEdit.school_year || ''); // New state
+  const [establishmentId, setEstablishmentId] = useState(classToEdit.establishment_id || '');
+  const [schoolYearId, setSchoolYearId] = useState(classToEdit.school_year_id); // Changed to schoolYearId
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]); // New state for school years
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setCurricula(await loadCurricula());
       setEstablishments(await loadEstablishments());
+      setSchoolYears(await loadSchoolYears()); // Load school years
     };
     fetchData();
   }, []);
@@ -46,7 +48,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       setName(classToEdit.name);
       setCurriculumId(classToEdit.curriculum_id);
       setEstablishmentId(classToEdit.establishment_id || '');
-      setSchoolYear(classToEdit.school_year || '');
+      setSchoolYearId(classToEdit.school_year_id); // Set schoolYearId
     }
   }, [isOpen, classToEdit]);
 
@@ -67,7 +69,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       showError("L'établissement est requis.");
       return;
       }
-    if (!schoolYear.trim()) {
+    if (!schoolYearId) { // Check for schoolYearId
       showError("L'année scolaire est requise.");
       return;
     }
@@ -89,8 +91,8 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
         ...classToEdit,
         name: name.trim(),
         curriculum_id: curriculumId,
-        establishment_id: establishmentId, // Include new field
-        school_year: schoolYear.trim(), // Include new field
+        establishment_id: establishmentId,
+        school_year_id: schoolYearId, // Include new field
       };
       const savedClass = await updateClassInStorage(updatedClassData);
 
@@ -108,9 +110,6 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       setIsLoading(false);
     }
   };
-
-  const currentYear = new Date().getFullYear();
-  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
   const establishmentsToDisplay = currentRole === 'administrator'
     ? establishments
@@ -182,13 +181,13 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
             <Label htmlFor="schoolYear" className="text-right">
               Année scolaire
             </Label>
-            <Select value={schoolYear} onValueChange={setSchoolYear}>
+            <Select value={schoolYearId} onValueChange={setSchoolYearId}>
               <SelectTrigger id="schoolYear" className="col-span-3">
                 <SelectValue placeholder="Sélectionner l'année scolaire" />
               </SelectTrigger>
               <SelectContent>
                 {schoolYears.map(year => (
-                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                  <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

@@ -1,5 +1,6 @@
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment, EstablishmentType, Subject, ClassSubject, ProfessorSubjectAssignment } from "./dataModels";
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment, EstablishmentType, Subject, ClassSubject, ProfessorSubjectAssignment, SchoolYear } from "./dataModels";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
+import { format, addYears, subYears } from 'date-fns'; // Import date-fns for date manipulation
 
 export type EntityType = 'course' | 'module' | 'section';
 
@@ -9,19 +10,21 @@ export type EntityType = 'course' | 'module' | 'section';
  * @returns Un tableau de promesses résolues en IDs de cours accessibles.
  */
 export const getAccessibleCourseIdsForStudent = async (studentProfileId: string): Promise<string[]> => {
-  // 1. Get the student's current class enrollments for the current school year
-  const currentYear = new Date().getFullYear();
-  const nextYear = currentYear + 1;
-  const currentSchoolYear = `${currentYear}-${nextYear}`;
+  // 1. Get the student's current class enrollments for the current active school year
+  const activeSchoolYear = await getActiveSchoolYear();
+  if (!activeSchoolYear) {
+    console.warn("No active school year found, no courses accessible.");
+    return [];
+  }
 
   const { data: enrollments, error: enrollmentsError } = await supabase
     .from('student_class_enrollments')
     .select('class_id')
     .eq('student_id', studentProfileId)
-    .eq('enrollment_year', currentSchoolYear); // Filter by current school year
+    .eq('school_year_id', activeSchoolYear.id); // Filter by active school year ID
 
   if (enrollmentsError || !enrollments || enrollments.length === 0) {
-    // console.warn("Student not enrolled in any class for the current school year, no courses accessible.");
+    // console.warn("Student not enrolled in any class for the current active school year, no courses accessible.");
     return [];
   }
 
@@ -441,23 +444,24 @@ export const deleteSubjectFromStorage = async (subjectId: string): Promise<void>
 export const loadClasses = async (): Promise<Class[]> => {
   const { data, error } = await supabase
     .from('classes')
-    .select('*');
+    .select('*, school_years(name)'); // Join to get school year name
   if (error) {
     console.error("Error loading classes:", error);
     return [];
   }
-  return data.map(cls => ({
+  return data.map((cls: any) => ({
     id: cls.id,
     name: cls.name,
     curriculum_id: cls.curriculum_id,
     creator_ids: cls.creator_ids || [],
     establishment_id: cls.establishment_id || undefined,
-    school_year: cls.school_year || undefined,
+    school_year_id: cls.school_year_id,
+    school_year_name: cls.school_years?.name, // For convenience
     created_at: cls.created_at || undefined,
   }));
 };
 
-export const addClassToStorage = async (newClass: Class): Promise<Class | null> => {
+export const addClassToStorage = async (newClass: Omit<Class, 'id' | 'created_at'>): Promise<Class | null> => {
   const { data, error } = await supabase
     .from('classes')
     .insert({
@@ -465,9 +469,9 @@ export const addClassToStorage = async (newClass: Class): Promise<Class | null> 
       curriculum_id: newClass.curriculum_id,
       creator_ids: newClass.creator_ids,
       establishment_id: newClass.establishment_id,
-      school_year: newClass.school_year,
+      school_year_id: newClass.school_year_id,
     })
-    .select()
+    .select('*, school_years(name)')
     .single();
   if (error) {
     console.error("Error adding class:", error);
@@ -479,7 +483,8 @@ export const addClassToStorage = async (newClass: Class): Promise<Class | null> 
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
     establishment_id: data.establishment_id || undefined,
-    school_year: data.school_year || undefined,
+    school_year_id: data.school_year_id,
+    school_year_name: (data as any).school_years?.name,
     created_at: data.created_at || undefined,
   };
 };
@@ -492,11 +497,11 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
       curriculum_id: updatedClass.curriculum_id,
       creator_ids: updatedClass.creator_ids,
       establishment_id: updatedClass.establishment_id,
-      school_year: updatedClass.school_year,
+      school_year_id: updatedClass.school_year_id,
       updated_at: new Date().toISOString(),
     })
     .eq('id', updatedClass.id)
-    .select()
+    .select('*, school_years(name)')
     .single();
   if (error) {
     console.error("Error updating class:", error);
@@ -508,7 +513,8 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
     establishment_id: data.establishment_id || undefined,
-    school_year: data.school_year || undefined,
+    school_year_id: data.school_year_id,
+    school_year_name: (data as any).school_years?.name,
     created_at: data.created_at || undefined,
   };
 };
@@ -569,16 +575,16 @@ export const deleteClassSubjectFromStorage = async (classSubjectId: string): Pro
 };
 
 // --- Professor Subject Assignment Management (New) ---
-export const loadProfessorSubjectAssignments = async (professorId?: string, classId?: string, schoolYear?: string): Promise<ProfessorSubjectAssignment[]> => {
-  let query = supabase.from('professor_subject_assignments').select('*, subjects(name), classes(name)');
+export const loadProfessorSubjectAssignments = async (professorId?: string, classId?: string, schoolYearId?: string): Promise<ProfessorSubjectAssignment[]> => {
+  let query = supabase.from('professor_subject_assignments').select('*, subjects(name), classes(name), school_years(name)');
   if (professorId) {
     query = query.eq('professor_id', professorId);
   }
   if (classId) {
     query = query.eq('class_id', classId);
   }
-  if (schoolYear) {
-    query = query.eq('school_year', schoolYear);
+  if (schoolYearId) {
+    query = query.eq('school_year_id', schoolYearId);
   }
   const { data, error } = await query;
   if (error) {
@@ -592,7 +598,8 @@ export const loadProfessorSubjectAssignments = async (professorId?: string, clas
     subject_name: psa.subjects?.name, // Add subject name for convenience
     class_id: psa.class_id,
     class_name: psa.classes?.name, // Add class name for convenience
-    school_year: psa.school_year,
+    school_year_id: psa.school_year_id,
+    school_year_name: psa.school_years?.name, // Add school year name for convenience
     created_at: psa.created_at,
   }));
 };
@@ -617,7 +624,7 @@ export const updateProfessorSubjectAssignmentInStorage = async (updatedAssignmen
       professor_id: updatedAssignment.professor_id,
       subject_id: updatedAssignment.subject_id,
       class_id: updatedAssignment.class_id,
-      school_year: updatedAssignment.school_year,
+      school_year_id: updatedAssignment.school_year_id,
       updated_at: new Date().toISOString(),
     })
     .eq('id', updatedAssignment.id)
@@ -641,6 +648,65 @@ export const deleteProfessorSubjectAssignmentFromStorage = async (assignmentId: 
   }
 };
 
+
+// --- School Year Management (New) ---
+export const loadSchoolYears = async (): Promise<SchoolYear[]> => {
+  const { data, error } = await supabase
+    .from('school_years')
+    .select('*')
+    .order('start_date', { ascending: false }); // Order by most recent first
+  if (error) {
+    console.error("Error loading school years:", error);
+    return [];
+  }
+  return data;
+};
+
+export const getActiveSchoolYear = async (): Promise<SchoolYear | null> => {
+  const { data, error } = await supabase
+    .from('school_years')
+    .select('*')
+    .eq('is_active', true)
+    .single();
+  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error("Error fetching active school year:", error);
+    return null;
+  }
+  return data;
+};
+
+export const addSchoolYear = async (newSchoolYear: Omit<SchoolYear, 'id' | 'created_at' | 'updated_at'>): Promise<SchoolYear | null> => {
+  const { data, error } = await supabase
+    .from('school_years')
+    .insert(newSchoolYear)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error adding school year:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const updateSchoolYear = async (updatedSchoolYear: SchoolYear): Promise<SchoolYear | null> => {
+  const { data, error } = await supabase
+    .from('school_years')
+    .update({
+      name: updatedSchoolYear.name,
+      start_date: updatedSchoolYear.start_date,
+      end_date: updatedSchoolYear.end_date,
+      is_active: updatedSchoolYear.is_active,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', updatedSchoolYear.id)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error updating school year:", error);
+    throw error;
+  }
+  return data;
+};
 
 // New helper function to get establishment address by ID
 export const getEstablishmentAddress = async (establishmentId: string): Promise<string | undefined> => {
@@ -691,4 +757,9 @@ export const resetClassSubjects = async () => {
 export const resetProfessorSubjectAssignments = async () => {
   const { error } = await supabase.from('professor_subject_assignments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) console.error("Error resetting professor subject assignments:", error);
+};
+
+export const resetSchoolYears = async () => {
+  const { error } = await supabase.from('school_years').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error("Error resetting school years:", error);
 };

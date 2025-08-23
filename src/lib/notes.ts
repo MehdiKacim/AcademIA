@@ -1,5 +1,6 @@
 import { Course, Note } from "./dataModels"; // Import Course and Note interfaces
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
+import { getActiveSchoolYear } from "./courseData"; // Import getActiveSchoolYear
 
 /**
  * Génère une clé unique pour stocker les notes.

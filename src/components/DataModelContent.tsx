@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock, NotebookText, BookText, ClipboardList, UserCheck } from "lucide-react"; // Import new icons
+import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock, NotebookText, BookText, ClipboardList, UserCheck, CalendarDays } from "lucide-react"; // Import new icons
 
 const DataModelContent = () => {
   const dataModels = {
@@ -69,6 +69,18 @@ interface Curriculum {
   created_at: string;
 }
     `,
+    "public.school_years": `
+// Nouvelle table pour les années scolaires
+interface SchoolYear {
+  id: string; // UUID
+  name: string; // e.g., "2023-2024"
+  start_date: string; // ISO date string
+  end_date: string; // ISO date string
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+    `,
     "public.classes": `
 interface Class {
   id: string; // UUID
@@ -76,7 +88,7 @@ interface Class {
   curriculum_id: string; // UUID, référence public.curricula(id)
   creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
   establishment_id?: string; // New: Link to parent establishment
-  school_year?: string; // New: School year for the class (e.g., "2023-2024")
+  school_year_id: string; // Changed: Link to SchoolYear
   created_at: string;
 }
     `,
@@ -86,6 +98,7 @@ interface ClassSubject {
   id: string; // UUID
   class_id: string; // UUID, référence public.classes(id)
   subject_id: string; // UUID, référence public.subjects(id)
+  subject_name?: string; // For convenience when fetching
   created_at?: string;
 }
     `,
@@ -95,8 +108,9 @@ interface ProfessorSubjectAssignment {
   id: string; // UUID
   professor_id: string; // UUID, référence public.profiles(id)
   subject_id: string; // UUID, référence public.subjects(id)
+  subject_name?: string; // For convenience when fetching
   class_id: string; // UUID, référence public.classes(id)
-  school_year: string; // Année scolaire (ex: '2023-2024')
+  school_year_id: string; // Changed: Link to SchoolYear
   created_at?: string;
 }
     `,
@@ -110,11 +124,21 @@ interface Note {
   updated_at: string;
 }
     `,
+    "public.student_class_enrollments": `
+interface StudentClassEnrollment { // New interface for student-class liaison
+  id: string; // Unique ID for this enrollment entry
+  student_id: string; // Link to the student's Profile
+  class_id: string; // Link to the Class
+  school_year_id: string; // Changed: Link to SchoolYear
+  created_at?: string;
+  updated_at?: string;
+}
+    `,
     "public.student_course_progress": `
 interface StudentCourseProgress {
-  id: string; // UUID
-  user_id: string; // UUID, référence public.profiles(id) (rôle 'student')
-  course_id: string; // UUID, référence public.courses(id)
+  id: string; // Unique ID for this progress entry
+  user_id: string; // Link to the User account (and Profile)
+  course_id: string;
   is_completed: boolean;
   modules_progress: {
     module_index: number;
@@ -190,9 +214,11 @@ interface Document {
       case 'public.establishments': return <School className="h-5 w-5 text-primary" />;
       case 'public.subjects': return <BookText className="h-5 w-5 text-primary" />; // New icon for subjects
       case 'public.curricula': return <LayoutList className="h-5 w-5 text-primary" />;
+      case 'public.school_years': return <CalendarDays className="h-5 w-5 text-primary" />; // Icon for school years
       case 'public.classes': return <Users className="h-5 w-5 text-primary" />;
       case 'public.class_subjects': return <ClipboardList className="h-5 w-5 text-primary" />; // New icon for class subjects
       case 'public.professor_subject_assignments': return <UserCheck className="h-5 w-5 text-primary" />; // New icon for professor assignments
+      case 'public.student_class_enrollments': return <GraduationCap className="h-5 w-5 text-primary" />; // Icon for student class enrollments
       case 'public.courses': return <BookOpen className="h-5 w-5 text-primary" />;
       case 'public.notes': return <NotebookText className="h-5 w-5 text-primary" />;
       case 'public.student_course_progress': return <GraduationCap className="h-5 w-5 text-primary" />;

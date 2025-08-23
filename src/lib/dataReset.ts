@@ -1,4 +1,4 @@
-import { resetCourses, resetCurricula, resetEstablishments, resetClasses, resetSubjects, resetClassSubjects, resetProfessorSubjectAssignments } from "./courseData";
+import { resetCourses, resetCurricula, resetEstablishments, resetClasses, resetSubjects, resetClassSubjects, resetProfessorSubjectAssignments, resetSchoolYears } from "./courseData";
 import { resetProfiles, resetStudentCourseProgress, resetStudentClassEnrollments } from "./studentData"; // Import resetStudentClassEnrollments
 import { resetNotes } from "./notes";
 
@@ -13,5 +13,7 @@ export const clearAllAppData = async () => {
   await resetCurricula();
   await resetClasses();
   await resetSubjects(); // New: Reset subjects
+  await resetSchoolYears(); // New: Reset school years
+  await resetEstablishments();
   await resetProfiles(); // Reset profiles last, as other tables might reference it
 };

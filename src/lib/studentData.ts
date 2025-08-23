@@ -17,8 +17,6 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
       username,
       email,
       establishment_id,
-      enrollment_start_date,
-      enrollment_end_date,
       theme,
       created_at,
       updated_at,
@@ -44,8 +42,6 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
     // Assuming roles is an object with a name property
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: data.establishment_id,
-    enrollment_start_date: data.enrollment_start_date,
-    enrollment_end_date: data.enrollment_end_date,
     theme: data.theme,
     created_at: data.created_at,
     updated_at: data.updated_at,
@@ -67,8 +63,6 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
       username,
       email,
       establishment_id,
-      enrollment_start_date,
-      enrollment_end_date,
       theme,
       created_at,
       updated_at,
@@ -90,8 +84,6 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: data.establishment_id,
-    enrollment_start_date: data.enrollment_start_date,
-    enrollment_end_date: data.enrollment_end_date,
     theme: data.theme,
     created_at: data.created_at,
     updated_at: data.updated_at,
@@ -140,8 +132,6 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
       username,
       email,
       establishment_id,
-      enrollment_start_date,
-      enrollment_end_date,
       theme,
       created_at,
       updated_at,
@@ -163,8 +153,6 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: data.establishment_id,
-    enrollment_start_date: data.enrollment_start_date,
-    enrollment_end_date: data.enrollment_end_date,
     theme: data.theme,
     created_at: data.created_at,
     updated_at: data.updated_at,
@@ -220,8 +208,6 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
     role: undefined, // Remove role from payload to avoid sending it to DB
     // Explicitly set optional fields to null if they are undefined or empty string
     establishment_id: updatedProfile.establishment_id === '' ? null : updatedProfile.establishment_id,
-    enrollment_start_date: updatedProfile.enrollment_start_date === '' ? null : updatedProfile.enrollment_start_date,
-    enrollment_end_date: updatedProfile.enrollment_end_date === '' ? null : updatedProfile.enrollment_end_date,
     theme: updatedProfile.theme === '' ? null : updatedProfile.theme,
   };
 
@@ -260,8 +246,6 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
       username,
       email,
       establishment_id,
-      enrollment_start_date,
-      enrollment_end_date,
       theme,
       created_at,
       updated_at,
@@ -280,8 +264,6 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
     email: p.email,
     role: (p.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: p.establishment_id,
-    enrollment_start_date: p.enrollment_start_date,
-    enrollment_end_date: p.enrollment_end_date,
     theme: p.theme,
     created_at: p.created_at,
     updated_at: p.updated_at,
@@ -339,13 +321,21 @@ export const getAllStudents = async (): Promise<Profile[]> => {
 export const getStudentClassEnrollments = async (studentId: string): Promise<StudentClassEnrollment[]> => {
   const { data, error } = await supabase
     .from('student_class_enrollments')
-    .select('*')
+    .select('*, school_years(name)') // Join to get school year name
     .eq('student_id', studentId);
   if (error) {
     console.error("Error fetching student class enrollments:", error);
     return [];
   }
-  return data;
+  return data.map((enrollment: any) => ({
+    id: enrollment.id,
+    student_id: enrollment.student_id,
+    class_id: enrollment.class_id,
+    school_year_id: enrollment.school_year_id,
+    school_year_name: enrollment.school_years?.name, // For convenience
+    created_at: enrollment.created_at,
+    updated_at: enrollment.updated_at,
+  }));
 };
 
 /**
@@ -355,12 +345,20 @@ export const getStudentClassEnrollments = async (studentId: string): Promise<Stu
 export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrollment[]> => {
   const { data, error } = await supabase
     .from('student_class_enrollments')
-    .select('*');
+    .select('*, school_years(name)'); // Join to get school year name
   if (error) {
     console.error("Error fetching all student class enrollments:", error);
     return [];
   }
-  return data;
+  return data.map((enrollment: any) => ({
+    id: enrollment.id,
+    student_id: enrollment.student_id,
+    class_id: enrollment.class_id,
+    school_year_id: enrollment.school_year_id,
+    school_year_name: enrollment.school_years?.name, // For convenience
+    created_at: enrollment.created_at,
+    updated_at: enrollment.updated_at,
+  }));
 };
 
 /**
@@ -368,17 +366,25 @@ export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrol
  * @param enrollment L'objet d'affectation de classe.
  * @returns L'affectation de classe ajoutée/mise à jour.
  */
-export const upsertStudentClassEnrollment = async (enrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at'>): Promise<StudentClassEnrollment | null> => {
+export const upsertStudentClassEnrollment = async (enrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at' | 'school_year_name'>): Promise<StudentClassEnrollment | null> => {
   const { data, error } = await supabase
     .from('student_class_enrollments')
     .upsert(enrollment as any) // Cast to any to allow upsert without 'id' if it's new
-    .select()
+    .select('*, school_years(name)')
     .single();
   if (error) {
     console.error("Error upserting student class enrollment:", error);
     throw error;
   }
-  return data;
+  return {
+    id: data.id,
+    student_id: data.student_id,
+    class_id: data.class_id,
+    school_year_id: data.school_year_id,
+    school_year_name: (data as any).school_years?.name,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
 };
 
 /**

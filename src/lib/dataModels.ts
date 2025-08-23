@@ -14,8 +14,6 @@ export interface Profile {
   email: string; // Added email to Profile interface
   role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
   establishment_id?: string; // New: Link to parent establishment for students, professeurs, tutors, directors, deputy_directors
-  enrollment_start_date?: string; // New: Start date of enrollment in establishment
-  enrollment_end_date?: string; // New: End date of enrollment in establishment
   theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
   created_at?: string;
   updated_at?: string;
@@ -62,13 +60,23 @@ export interface Curriculum {
   created_at?: string;
 }
 
+export interface SchoolYear { // New: SchoolYear interface
+  id: string; // UUID
+  name: string; // e.g., "2023-2024"
+  start_date: string; // ISO date string
+  end_date: string; // ISO date string
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Class {
   id: string; // UUID
   name: string;
   curriculum_id: string; // Link to parent curriculum
   creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
   establishment_id?: string; // New: Link to parent establishment
-  school_year?: string; // New: School year for the class (e.g., "2023-2024")
+  school_year_id: string; // Changed: Link to SchoolYear
   created_at?: string;
 }
 
@@ -87,7 +95,7 @@ export interface ProfessorSubjectAssignment { // New: Professor-Subject-Class-Ye
   subject_name?: string; // For convenience when fetching
   class_id: string;
   class_name?: string; // For convenience when fetching
-  school_year: string;
+  school_year_id: string; // Changed: Link to SchoolYear
   created_at?: string;
 }
 
@@ -95,7 +103,7 @@ export interface StudentClassEnrollment { // New interface for student-class lia
   id: string; // Unique ID for this enrollment entry
   student_id: string; // Link to the student's Profile
   class_id: string; // Link to the Class
-  enrollment_year: string; // School year of enrollment (e.g., "2023-2024")
+  school_year_id: string; // Changed: Link to SchoolYear
   created_at?: string;
   updated_at?: string;
 }
