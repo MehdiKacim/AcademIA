@@ -10,10 +10,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
-import { Establishment, EstablishmentType } from "@/lib/dataModels"; // Import EstablishmentType
+import { Establishment, EstablishmentType, Profile } from "@/lib/dataModels"; // Import Profile
 import { updateEstablishmentInStorage } from "@/lib/courseData";
+import { getProfilesByRole } from '@/lib/studentData'; // Import getProfilesByRole
 
 interface EditEstablishmentDialogProps {
   isOpen: boolean;
@@ -24,10 +25,15 @@ interface EditEstablishmentDialogProps {
 
 const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: EditEstablishmentDialogProps) => {
   const [name, setName] = useState(establishment.name);
-  const [type, setType] = useState<EstablishmentType>(establishment.type); // New state for type
+  const [type, setType] = useState<EstablishmentType>(establishment.type);
   const [address, setAddress] = useState(establishment.address || '');
+  const [phoneNumber, setPhoneNumber] = useState(establishment.phone_number || ''); // New state
+  const [directorId, setDirectorId] = useState<string | undefined>(establishment.director_id); // New state
+  const [deputyDirectorId, setDeputyDirectorId] = useState<string | undefined>(establishment.deputy_director_id); // New state
   const [contactEmail, setContactEmail] = useState(establishment.contact_email || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [directors, setDirectors] = useState<Profile[]>([]); // State for directors
+  const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]); // State for deputy directors
 
   const establishmentTypes: EstablishmentType[] = [
     'Maternelle',
@@ -43,10 +49,21 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
   ];
 
   useEffect(() => {
+    const fetchRoles = async () => {
+      setDirectors(await getProfilesByRole('director'));
+      setDeputyDirectors(await getProfilesByRole('deputy_director'));
+    };
+    fetchRoles();
+  }, []);
+
+  useEffect(() => {
     if (isOpen && establishment) {
       setName(establishment.name);
-      setType(establishment.type); // Set initial type
+      setType(establishment.type);
       setAddress(establishment.address || '');
+      setPhoneNumber(establishment.phone_number || '');
+      setDirectorId(establishment.director_id);
+      setDeputyDirectorId(establishment.deputy_director_id);
       setContactEmail(establishment.contact_email || '');
     }
   }, [isOpen, establishment]);
@@ -60,6 +77,14 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
       showError("Le type de l'établissement est requis.");
       return;
     }
+    if (!address.trim()) {
+      showError("L'adresse de l'établissement est requise.");
+      return;
+    }
+    if (!directorId) {
+      showError("Le directeur de l'établissement est requis.");
+      return;
+    }
     if (contactEmail.trim() && !/\S+@\S+\.\S+/.test(contactEmail)) {
       showError("Veuillez entrer une adresse email de contact valide.");
       return;
@@ -70,8 +95,11 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
       const updatedEstablishmentData: Establishment = {
         ...establishment,
         name: name.trim(),
-        type: type, // Include new type
-        address: address.trim() || undefined,
+        type: type,
+        address: address.trim(),
+        phone_number: phoneNumber.trim() || undefined,
+        director_id: directorId,
+        deputy_director_id: deputyDirectorId || undefined,
         contact_email: contactEmail.trim() || undefined,
       };
       const savedEstablishment = await updateEstablishmentInStorage(updatedEstablishmentData);
@@ -137,7 +165,54 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               className="col-span-3"
+              required
             />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="phoneNumber" className="text-right">
+              Téléphone
+            </Label>
+            <Input
+              id="phoneNumber"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="director" className="text-right">
+              Directeur
+            </Label>
+            <Select value={directorId} onValueChange={setDirectorId}>
+              <SelectTrigger id="director" className="col-span-3">
+                <SelectValue placeholder="Sélectionner un directeur" />
+              </SelectTrigger>
+              <SelectContent>
+                {directors.map(director => (
+                  <SelectItem key={director.id} value={director.id}>
+                    {director.first_name} {director.last_name} (@{director.username})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="deputyDirector" className="text-right">
+              Directeur Adjoint
+            </Label>
+            <Select value={deputyDirectorId} onValueChange={setDeputyDirectorId}>
+              <SelectTrigger id="deputyDirector" className="col-span-3">
+                <SelectValue placeholder="Sélectionner un directeur adjoint" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun</SelectItem>
+                {deputyDirectors.map(deputy => (
+                  <SelectItem key={deputy.id} value={deputy.id}>
+                    {deputy.first_name} {deputy.last_name} (@{deputy.username})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="contactEmail" className="text-right">

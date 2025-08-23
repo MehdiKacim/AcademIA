@@ -37,9 +37,9 @@ serve(async (req) => {
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole
     if (invokingUserRole === 'administrator') {
-      // Admins can create any role (student, creator, tutor, administrator)
-      if (!['student', 'creator', 'tutor', 'administrator'].includes(newUserRole)) {
-        return new Response(JSON.stringify({ error: 'Administrators can only create student, creator, tutor, or administrator roles.' }), {
+      // Admins can create any role (student, creator, tutor, director, deputy_director, administrator)
+      if (!['student', 'creator', 'tutor', 'administrator', 'director', 'deputy_director'].includes(newUserRole)) {
+        return new Response(JSON.stringify({ error: 'Administrators can only create student, creator, tutor, director, deputy_director, or administrator roles.' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 403,
         });
@@ -53,7 +53,7 @@ serve(async (req) => {
         });
       }
     } else {
-      // Other roles (like student, tutor) cannot create users via this function
+      // Other roles (like student, tutor, director, deputy_director) cannot create users via this function
       return new Response(JSON.stringify({ error: 'Forbidden: Your role does not permit user creation.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,

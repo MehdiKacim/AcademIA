@@ -62,8 +62,8 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [profUsername, setProfUsername] = useState('');
   const [profEmail, setProfEmail] = useState('');
   const [profPassword, setProfPassword] = useState('');
-  const [profRole, setProfRole] = useState<'creator' | 'tutor'>('creator');
-  const [profEstablishmentId, setProfEstablishmentId] = useState<string>(''); // New state for establishment
+  const [profRole, setProfRole] = useState<'creator' | 'tutor' | 'director' | 'deputy_director'>('creator'); // Added new roles
+  const [profEstablishmentId, setProfEstablishmentId] = useState<string>('');
   const [isCreatingProfessor, setIsCreatingProfessor] = useState(false);
 
   const [profUsernameAvailabilityStatus, setProfUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
@@ -71,7 +71,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const debounceTimeoutRefProfUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimeoutRefProfEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // State to store establishments
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
 
   useEffect(() => {
     const fetchEstablishments = async () => {
@@ -386,7 +386,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               variant="outline"
             >
               <div className="flex items-center gap-2">
-                <UserRoundPlus className="h-4 w-4" /> Créer un professeur (Créateur/Tuteur)
+                <UserRoundPlus className="h-4 w-4" /> Créer un utilisateur (Créateur/Tuteur/Directeur)
               </div>
               {showCreateProfessorForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
@@ -394,7 +394,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
             {showCreateProfessorForm && (
               <div className="space-y-4 p-4 border rounded-md bg-muted/20">
                 <p className="text-sm text-muted-foreground">
-                  Créez un nouveau compte pour un créateur de contenu ou un tuteur.
+                  Créez un nouveau compte pour un créateur de contenu, un tuteur, un directeur ou un directeur adjoint.
                 </p>
                 <Input
                   placeholder="Prénom"
@@ -427,13 +427,15 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                   value={profPassword}
                   onChange={(e) => setProfPassword(e.target.value)}
                 />
-                <Select value={profRole} onValueChange={(value: 'creator' | 'tutor') => setProfRole(value)}>
+                <Select value={profRole} onValueChange={(value: 'creator' | 'tutor' | 'director' | 'deputy_director') => setProfRole(value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="creator">Créateur (Professeur)</SelectItem>
                     <SelectItem value="tutor">Tuteur</SelectItem>
+                    <SelectItem value="director">Directeur</SelectItem>
+                    <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={profEstablishmentId} onValueChange={setProfEstablishmentId}>
@@ -447,14 +449,11 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                   </SelectContent>
                 </Select>
                 <Button onClick={handleCreateProfessor} className="w-full" disabled={isCreatingProfessor || profUsernameAvailabilityStatus === 'checking' || profEmailAvailabilityStatus === 'checking' || !profEstablishmentId}>
-                  {isCreatingProfessor ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserRoundPlus className="h-4 w-4 mr-2" />} Créer le professeur
+                  {isCreatingProfessor ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserRoundPlus className="h-4 w-4 mr-2" />} Créer l'utilisateur
                 </Button>
               </div>
             )}
 
-            <Button onClick={handleClearAllData} className="w-full" variant="destructive">
-              <Eraser className="h-4 w-4 mr-2" /> Effacer toutes les données
-            </Button>
             <Button onClick={onClose} className="w-full" variant="secondary">
               Fermer
             </Button>

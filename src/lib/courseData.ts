@@ -288,8 +288,11 @@ export const loadEstablishments = async (): Promise<Establishment[]> => {
   return data.map(establishment => ({
     id: establishment.id,
     name: establishment.name,
-    type: establishment.type as EstablishmentType, // Map new 'type' field
-    address: establishment.address || undefined,
+    type: establishment.type as EstablishmentType,
+    address: establishment.address, // Now mandatory
+    phone_number: establishment.phone_number || undefined, // New field
+    director_id: establishment.director_id || undefined, // New field
+    deputy_director_id: establishment.deputy_director_id || undefined, // New field
     contact_email: establishment.contact_email || undefined,
     created_at: establishment.created_at || undefined,
   }));
@@ -300,8 +303,11 @@ export const addEstablishmentToStorage = async (newEstablishment: Establishment)
     .from('establishments')
     .insert({
       name: newEstablishment.name,
-      type: newEstablishment.type, // Include new 'type' field
-      address: newEstablishment.address,
+      type: newEstablishment.type,
+      address: newEstablishment.address, // Now mandatory
+      phone_number: newEstablishment.phone_number, // New field
+      director_id: newEstablishment.director_id, // New field
+      deputy_director_id: newEstablishment.deputy_director_id, // New field
       contact_email: newEstablishment.contact_email,
     })
     .select()
@@ -313,8 +319,11 @@ export const addEstablishmentToStorage = async (newEstablishment: Establishment)
   return {
     id: data.id,
     name: data.name,
-    type: data.type as EstablishmentType, // Map new 'type' field
-    address: data.address || undefined,
+    type: data.type as EstablishmentType,
+    address: data.address, // Now mandatory
+    phone_number: data.phone_number || undefined, // New field
+    director_id: data.director_id || undefined, // New field
+    deputy_director_id: data.deputy_director_id || undefined, // New field
     contact_email: data.contact_email || undefined,
     created_at: data.created_at || undefined,
   };
@@ -325,8 +334,11 @@ export const updateEstablishmentInStorage = async (updatedEstablishment: Establi
     .from('establishments')
     .update({
       name: updatedEstablishment.name,
-      type: updatedEstablishment.type, // Include new 'type' field
-      address: updatedEstablishment.address,
+      type: updatedEstablishment.type,
+      address: updatedEstablishment.address, // Now mandatory
+      phone_number: updatedEstablishment.phone_number, // New field
+      director_id: updatedEstablishment.director_id, // New field
+      deputy_director_id: updatedEstablishment.deputy_director_id, // New field
       contact_email: updatedEstablishment.contact_email,
       updated_at: new Date().toISOString(), // Add updated_at if your table has it
     })
@@ -340,8 +352,11 @@ export const updateEstablishmentInStorage = async (updatedEstablishment: Establi
   return {
     id: data.id,
     name: data.name,
-    type: data.type as EstablishmentType, // Map new 'type' field
-    address: data.address || undefined,
+    type: data.type as EstablishmentType,
+    address: data.address, // Now mandatory
+    phone_number: data.phone_number || undefined, // New field
+    director_id: data.director_id || undefined, // New field
+    deputy_director_id: data.deputy_director_id || undefined, // New field
     contact_email: data.contact_email || undefined,
     created_at: data.created_at || undefined,
   };

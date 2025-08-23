@@ -12,8 +12,8 @@ export interface Profile {
   last_name: string;
   username: string;
   email: string; // Added email to Profile interface
-  role: 'student' | 'creator' | 'tutor' | 'administrator'; // Added 'administrator' role
-  establishment_id?: string; // New: Link to parent establishment for students
+  role: 'student' | 'creator' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Added new roles
+  establishment_id?: string; // New: Link to parent establishment for students, creators, tutors, directors, deputy_directors
   enrollment_start_date?: string; // New: Start date of enrollment in establishment
   enrollment_end_date?: string; // New: End date of enrollment in establishment
   theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
@@ -36,8 +36,11 @@ export type EstablishmentType =
 export interface Establishment {
   id: string;
   name: string;
-  type: EstablishmentType; // New: Type of establishment
-  address?: string;
+  type: EstablishmentType;
+  address: string; // Made mandatory
+  phone_number?: string; // New: Phone number
+  director_id?: string; // New: UUID, references public.profiles(id) with role 'director'
+  deputy_director_id?: string; // New: UUID, references public.profiles(id) with role 'deputy_director'
   contact_email?: string;
   created_at?: string;
 }

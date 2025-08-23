@@ -279,6 +279,42 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
   }));
 };
 
+/**
+ * Récupère tous les profils d'un rôle spécifique.
+ * @param role Le rôle à filtrer.
+ * @returns Un tableau de profils.
+ */
+export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[]> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(`
+      id,
+      first_name,
+      last_name,
+      username,
+      email,
+      establishment_id,
+      roles(name)
+    `)
+    .eq('roles.name', role); // Filter by role name
+
+  if (error) {
+    console.error(`Error fetching profiles for role ${role}:`, error);
+    return [];
+  }
+
+  return data.map((p: any) => ({
+    id: p.id,
+    first_name: p.first_name,
+    last_name: p.last_name,
+    username: p.username,
+    email: p.email,
+    role: (p.roles as { name: string } | null)?.name as Profile['role'] || 'student',
+    establishment_id: p.establishment_id,
+  }));
+};
+
+
 export const getAllStudents = async (): Promise<Profile[]> => {
   const profiles = await getAllProfiles();
   return profiles.filter(p => p.role === 'student');
