@@ -80,9 +80,13 @@ const AppWithThemeProvider = () => {
                     {/* Administrator-specific routes */}
                     <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
+                      <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                      <Route path="/curricula" element={<CurriculumManagementPage />} />
+                      <Route path="/classes" element={<ClassManagementPage />} />
+                      <Route path="/students" element={<StudentManagementPage />} />
                     </Route>
 
-                    {/* Director/Deputy Director specific routes (can also access some admin pages) */}
+                    {/* Director/Deputy Director specific routes */}
                     <Route element={<ProtectedRoute allowedRoles={['director', 'deputy_director']} />}>
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
                       <Route path="/curricula" element={<CurriculumManagementPage />} />
@@ -92,8 +96,8 @@ const AppWithThemeProvider = () => {
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
                     </Route>
 
-                    {/* Creator-specific routes */}
-                    <Route element={<ProtectedRoute allowedRoles={['professeur']} />}> {/* Changed 'creator' to 'professeur' */}
+                    {/* Professeur-specific routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['professeur']} />}>
                       <Route path="/create-course" element={<CreateCourse />} />
                       <Route path="/create-course/:courseId" element={<CreateCourse />} />
                       <Route path="/classes" element={<ClassManagementPage />} />
@@ -118,14 +122,14 @@ const AppWithThemeProvider = () => {
                         <Route path="/students" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
-                    {/* Redirect for professeurs/tutors trying to access admin-only pages */}
+                    {/* Redirect for professeurs/tutors trying to access admin/director-only pages */}
                     {(currentRole === 'professeur' || currentRole === 'tutor') && (
                       <>
                         <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
-                    {/* Redirect for directors/deputy_directors trying to access creator-only pages */}
+                    {/* Redirect for directors/deputy_directors trying to access professeur-only pages */}
                     {(currentRole === 'director' || currentRole === 'deputy_director') && (
                       <>
                         <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />

@@ -72,8 +72,12 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'profe
     }
     query = query.in('id', accessibleCourseIds);
   }
-  // For professeurs and tutors, they can see all courses (or courses they created/are associated with)
-  // For now, we'll let them see all courses, as RLS policies handle creation/update permissions.
+  // For professeurs, they should only see courses they created
+  if (userRole === 'professeur' && userId) {
+    query = query.eq('creator_id', userId);
+  }
+  // For tutors, directors, deputy_directors, and administrators, they can see all courses
+  // No additional filtering needed here as RLS policies handle creation/update permissions.
 
   const { data, error } = await query;
 
