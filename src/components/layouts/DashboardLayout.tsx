@@ -445,8 +445,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </header>
       <main
         className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}
-        onScroll={handleScroll}
-        onClick={handleClick}
+        // Removed onScroll and onClick props
       >
         <Outlet />
       </main>
