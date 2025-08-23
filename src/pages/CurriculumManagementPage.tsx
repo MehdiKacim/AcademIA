@@ -33,7 +33,11 @@ const CurriculumManagementPage = () => {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
 
   const [newCurriculumName, setNewCurriculumName] = useState('');
-  const [newCurriculumEstablishmentId, setNewCurriculumEstablishmentId] = useState<string | undefined>(undefined);
+  const [newCurriculumEstablishmentId, setNewCurriculumEstablishmentId] = useState<string | undefined>(
+    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+      ? currentUserProfile.establishment_id
+      : undefined
+  ); // Pre-fill for directors/deputy directors
 
   const [isManageCoursesModalOpen, setIsManageCoursesModalOpen] = useState(false);
   const [selectedCurriculumForCourses, setSelectedCurriculumForCourses] = useState<Curriculum | null>(null);
@@ -80,7 +84,11 @@ const CurriculumManagementPage = () => {
       if (newCur) {
         setCurricula(await loadCurricula()); // Re-fetch to get the new list
         setNewCurriculumName('');
-        setNewCurriculumEstablishmentId(undefined);
+        setNewCurriculumEstablishmentId(
+          (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+            ? currentUserProfile.establishment_id
+            : undefined
+        ); // Reset to pre-filled value
         showSuccess("Cursus ajouté !");
       } else {
         showError("Échec de l'ajout du cursus.");

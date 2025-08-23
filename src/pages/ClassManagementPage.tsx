@@ -54,7 +54,11 @@ const ClassManagementPage = () => {
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
   const [newClassCurriculumId, setNewClassCurriculumId] = useState<string>("");
-  const [newClassEstablishmentId, setNewClassEstablishmentId] = useState<string>(""); // New state
+  const [newClassEstablishmentId, setNewClassEstablishmentId] = useState<string>(
+    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+      ? currentUserProfile.establishment_id
+      : ''
+  ); // Pre-fill for directors/deputy directors
   const [newClassSchoolYear, setNewClassSchoolYear] = useState<string>(""); // New state
 
   // State for edit class dialog
@@ -118,7 +122,11 @@ const ClassManagementPage = () => {
         setClasses(await loadClasses()); // Re-fetch to get the new list
         setNewClassName('');
         setNewClassCurriculumId("");
-        setNewClassEstablishmentId("");
+        setNewClassEstablishmentId(
+          (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+            ? currentUserProfile.establishment_id
+            : ''
+        ); // Reset to pre-filled value
         setNewClassSchoolYear("");
         showSuccess("Classe ajoutée !");
       } else {
