@@ -255,7 +255,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           ],
         },
       ];
-    } else if (currentRole === 'administrator') {
+    } else if (currentRole === 'administrator') { // Administrator now has all management links
       return [
         ...baseItems,
         {
@@ -264,26 +264,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('administration'),
           items: [
-            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // New link
+            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' },
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
             { to: "/analytics?view=overview", label: "Analytiques Globales", icon: LayoutDashboard, type: 'link' },
-          ],
-        },
-      ];
-    } else if (currentRole === 'gestion_admin') { // New role: gestion_admin
-      return [
-        ...baseItems,
-        {
-          icon: BriefcaseBusiness,
-          label: "Gestion",
-          type: 'trigger',
-          onClick: () => setCurrentNavLevel('gestion'),
-          items: [
-            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
-            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // Added for gestion_admin
           ],
         },
       ];

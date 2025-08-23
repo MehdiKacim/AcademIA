@@ -279,7 +279,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Structure Pédagogique</CardTitle>
-              <CardDescription>Vue d'ensemble des cursus et classes.</CardDescription>
+              <CardDescription>Vue d'overview des cursus et classes.</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalCurricula} Cursus, {totalClasses} Classes</p>
