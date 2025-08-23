@@ -59,6 +59,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         username: username.trim(),
+        email: email.trim(), // Update email in profile table as well
       };
       const savedProfile = await updateProfile(updatedProfileData);
 

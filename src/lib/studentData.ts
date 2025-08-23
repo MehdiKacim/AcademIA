@@ -17,7 +17,6 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
       username,
       email,
       establishment_id,
-      class_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -45,7 +44,6 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
     // Assuming roles is an object with a name property
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: data.establishment_id,
-    class_id: data.class_id,
     enrollment_start_date: data.enrollment_start_date,
     enrollment_end_date: data.enrollment_end_date,
     theme: data.theme,
@@ -69,7 +67,6 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
       username,
       email,
       establishment_id,
-      class_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -93,7 +90,6 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: data.establishment_id,
-    class_id: data.class_id,
     enrollment_start_date: data.enrollment_start_date,
     enrollment_end_date: data.enrollment_end_date,
     theme: data.theme,
@@ -144,7 +140,6 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
       username,
       email,
       establishment_id,
-      class_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -168,7 +163,6 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: data.establishment_id,
-    class_id: data.class_id,
     enrollment_start_date: data.enrollment_start_date,
     enrollment_end_date: data.enrollment_end_date,
     theme: data.theme,
@@ -226,6 +220,7 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
       ...updatedProfile,
       role_id: role_id_to_update, // Use role_id for DB update
       role: undefined, // Remove role from payload to avoid sending it to DB
+      class_id: undefined, // Ensure class_id is not sent in update payload
     })
     .eq('id', updatedProfile.id!);
     // Removed .select().single() to avoid PGRST116 error if no row is returned by RLS or query
@@ -258,7 +253,6 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
       username,
       email,
       establishment_id,
-      class_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -278,7 +272,6 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
     email: p.email,
     role: (p.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: p.establishment_id,
-    class_id: p.class_id,
     enrollment_start_date: p.enrollment_start_date,
     enrollment_end_date: p.enrollment_end_date,
     theme: p.theme,
@@ -302,7 +295,6 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
       username,
       email,
       establishment_id,
-      class_id,
       roles(name)
     `)
     .eq('roles.name', role); // Filter by role name
@@ -320,7 +312,6 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
     email: p.email,
     role: (p.roles as { name: Profile['role'] } | null)?.name || 'student',
     establishment_id: p.establishment_id,
-    class_id: p.class_id,
   }));
 };
 
