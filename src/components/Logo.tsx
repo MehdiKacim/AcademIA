@@ -5,11 +5,12 @@ interface LogoProps {
   iconClassName?: string;
   textClassName?: string;
   showText?: boolean;
+  onLogoClick?: () => void; // New prop for click handler
 }
 
-const Logo = ({ iconClassName, textClassName, showText = true }: LogoProps) => {
+const Logo = ({ iconClassName, textClassName, showText = true, onLogoClick }: LogoProps) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" onClick={onLogoClick}> {/* Attach onClick handler here */}
       <div className={cn("w-8 h-8", iconClassName)}>
         <svg viewBox="0 0 100 100" className="w-full h-full">
           {/* Orbits */}

@@ -23,7 +23,6 @@ import { useRole } from "@/contexts/RoleContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
-import DataModelModal from "@/components/DataModelModal";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,13 +31,14 @@ import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
 import { useCourseChat } from "@/contexts/CourseChatContext";
+import AdminModal from "@/components/AdminModal"; // Import the new AdminModal
 
 const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { currentUserProfile, currentRole, signOut } = useRole();
   const { isChatOpen } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // State for AdminModal
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -48,6 +48,7 @@ const DashboardLayout = () => {
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
   const [isFloatingButtonVisible, setIsFloatingButtonVisible] = useState(true); // État pour la visibilité du bouton
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Réf pour le timer de masquage automatique
+  const logoTapCountRef = useRef(0); // Ref pour le compteur de taps sur le logo
 
   // Fonction pour démarrer le timer de masquage automatique
   const startAutoHideTimer = useCallback(() => {
@@ -99,9 +100,9 @@ const DashboardLayout = () => {
       if (isModifierPressed && event.key === 'f') {
         event.preventDefault();
         setIsSearchOverlayOpen(true);
-      } else if (isModifierPressed && event.key === 'm') {
+      } else if (isModifierPressed && event.key === 'u') { // New shortcut for AdminModal
         event.preventDefault();
-        setIsDataModelModalOpen(true);
+        setIsAdminModalOpen(true);
       }
     }
   }, [currentUserProfile]);
@@ -325,6 +326,19 @@ const DashboardLayout = () => {
     resetAndShowButton();
   }, [resetAndShowButton]);
 
+  // Gérer les clics sur le logo pour le déclencheur mobile de l'AdminModal
+  const handleLogoClick = useCallback(() => {
+    logoTapCountRef.current += 1;
+    if (logoTapCountRef.current >= 10) {
+      setIsAdminModalOpen(true);
+      logoTapCountRef.current = 0; // Reset count after opening
+    }
+    // Reset tap count after a short delay if not enough taps
+    setTimeout(() => {
+      logoTapCountRef.current = 0;
+    }, 1000); // 1 second to reset tap count
+  }, []);
+
   // Démarrer le timer au montage du composant
   useEffect(() => {
     startAutoHideTimer();
@@ -341,7 +355,7 @@ const DashboardLayout = () => {
   return (
     <div className="flex flex-col min-h-screen bg-muted/40"> {/* Removed overflow-x-hidden */}
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
-        <Logo />
+        <Logo onLogoClick={handleLogoClick} /> {/* Pass the new prop */}
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {navItemsToDisplayForDesktop().map((item) => {
@@ -443,9 +457,10 @@ const DashboardLayout = () => {
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <FloatingAiAChatButton isVisible={isFloatingButtonActuallyVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
-      {currentUserProfile && <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />}
+      {/* DataModelModal is now opened from AdminModal */}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
+      {currentUserProfile && <AdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} />} {/* Render AdminModal */}
     </div>
   );
 };
