@@ -46,6 +46,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
+  const [isRecreatingSchema, setIsRecreatingSchema] = useState(false);
 
   const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
@@ -71,6 +72,26 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       } catch (error: any) {
         console.error("Error clearing all app data:", error);
         showError(`Erreur lors de l'effacement des données: ${error.message}`);
+      }
+    }
+  };
+
+  const handleRecreateDatabaseSchema = async () => {
+    if (window.confirm("Êtes-vous sûr de vouloir recréer le schéma de la base de données ? Cela recréera les tables, enums et triggers si manquants, mais ne supprimera PAS les données existantes (sauf si vous avez effacé les données avant).")) {
+      setIsRecreatingSchema(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('execute-schema-setup');
+        if (error) {
+          console.error("Error recreating database schema via Edge Function:", error);
+          showError(`Erreur lors de la recréation du schéma: ${error.message}`);
+          return;
+        }
+        showSuccess("Schéma de la base de données recréé avec succès !");
+      } catch (error: any) {
+        console.error("Unexpected error recreating database schema:", error);
+        showError(`Une erreur inattendue est survenue lors de la recréation du schéma: ${error.message}`);
+      } finally {
+        setIsRecreatingSchema(false);
       }
     }
   };
@@ -254,6 +275,10 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                 </Button>
               </div>
             )}
+
+            <Button onClick={handleRecreateDatabaseSchema} className="w-full" variant="outline" disabled={isRecreatingSchema}>
+              {isRecreatingSchema ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />} Recréer le schéma de la base de données
+            </Button>
 
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Effacer toutes les données
