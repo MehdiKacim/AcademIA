@@ -75,33 +75,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     setIsAuthModalOpen(false);
   };
 
-  useEffect(() => {
-    // This effect is primarily for highlighting the active parent in the main menu
-    // when navigating directly to a sub-route.
-    const allPossibleNavItems = getMainNavItems(true); // Get all items including sub-items
-    let foundParentLabel: string | null = null;
-
-    for (const item of allPossibleNavItems) {
-      if (item.type === 'trigger' && item.items) {
-        const currentFullPath = location.pathname + location.search;
-        if (item.items.some(subItem => subItem.to && currentFullPath.startsWith(subItem.to))) {
-          foundParentLabel = item.label.toLowerCase().replace(/\s/g, '-');
-          break;
-        }
-      }
-    }
-    // Only update currentNavLevel if it's not already set to a drill-down level
-    // and if a parent is found, or if we're returning to top level.
-    if (foundParentLabel !== currentNavLevel && currentNavLevel === null) {
-      setCurrentNavLevel(foundParentLabel);
-    } else if (!foundParentLabel && currentNavLevel !== null) {
-      // If no parent is found for the current path, and we are in a drill-down,
-      // it means we navigated away from the drill-down context. Reset it.
-      setCurrentNavLevel(null);
-    }
-  }, [location.pathname, location.search, currentRole]);
-
-
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const isModifierPressed = event.ctrlKey || event.metaKey;
 
@@ -267,6 +240,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' },
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
+            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' }, // Added for admin
+            { to: "/classes", label: "Classes", icon: Users, type: 'link' }, // Added for admin
+            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' }, // Added for admin
+            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' }, // Changed view name
           ],
         },
       );
@@ -282,7 +259,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/analytics?view=overview", label: "Analytiques Globales", icon: LayoutDashboard, type: 'link' },
+            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' }, // Changed view name
           ],
         },
       );
@@ -334,14 +311,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     });
   };
 
-  const handleScroll = useCallback(() => {
-    resetAndShowButton();
-  }, [resetAndShowButton]);
-
-  const handleClick = useCallback(() => {
-    resetAndShowButton();
-  }, [resetAndShowButton]);
-
   const handleLogoClick = useCallback(() => {
     logoTapCountRef.current += 1;
     if (logoTapCountRef.current >= 10) {
@@ -372,10 +341,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {getMainNavItems().map((item) => {
               const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-              const isTriggerActive = item.type === 'trigger' && (
-                currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-') ||
-                getIsParentTriggerActive(item)
-              );
+              const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
 
               if (item.type === 'link' && item.to) {
                 return (

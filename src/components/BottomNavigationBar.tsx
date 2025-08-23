@@ -50,27 +50,40 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
     navigate("/dashboard"); // Redirect to dashboard after login/signup
   };
 
-  const activeParentTrigger = navItems.find(item => item.label === currentMobileNavLevel && item.type === 'trigger');
+  // Helper to determine if a parent trigger is active based on its children's routes
+  const getIsParentTriggerActive = (item: NavItem): boolean => {
+    if (item.type !== 'trigger' || !item.items) return false;
+    const currentFullPath = location.pathname + location.search;
+    return item.items.some(subItem => {
+      if (subItem.to) {
+        return currentFullPath.startsWith(subItem.to);
+      }
+      return false;
+    });
+  };
 
   let itemsToRender: NavItem[] = [];
 
-  if (activeParentTrigger && activeParentTrigger.items) {
-    itemsToRender = [
-      {
-        icon: ArrowLeft,
-        label: "Retour",
-        type: 'trigger',
-        onClick: () => setCurrentMobileNavLevel(null),
-      },
-      ...activeParentTrigger.items.map(subItem => ({ ...subItem, type: 'link' as const, icon: subItem.icon })),
-    ];
-  } else {
+  if (currentMobileNavLevel) { // If in a drill-down state
+    const activeParentTrigger = navItems.find(item => item.label.toLowerCase().replace(/\s/g, '-') === currentMobileNavLevel && item.type === 'trigger');
+    if (activeParentTrigger && activeParentTrigger.items) {
+      itemsToRender = [
+        {
+          icon: ArrowLeft,
+          label: "Retour",
+          type: 'trigger',
+          onClick: () => setCurrentMobileNavLevel(null),
+        },
+        ...activeParentTrigger.items.map(subItem => ({ ...subItem, type: 'link' as const, icon: subItem.icon })),
+      ];
+    }
+  } else { // Top-level navigation
     itemsToRender = navItems.map(item => {
       if (item.type === 'trigger' && item.items) {
         return {
           ...item,
-          onClick: () => setCurrentMobileNavLevel(item.label),
-          to: undefined,
+          onClick: () => setCurrentMobileNavLevel(item.label.toLowerCase().replace(/\s/g, '-')),
+          to: undefined, // Triggers don't have a direct 'to' link
         };
       }
       return item;
@@ -91,7 +104,6 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
         type: 'trigger',
         onClick: () => setIsAuthDrawerOpen(true),
       });
-      // Removed "À propos" from here, it will be in the AuthMenu or Profile Drawer
     }
   }
 
@@ -99,6 +111,9 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
     <>
       <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden overflow-x-auto flex-nowrap">
         {itemsToRender.map((item) => {
+          const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+          const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item); // Use the helper function
+
           if (item.type === 'link' && item.to) {
             return (
               <NavLink
@@ -129,7 +144,12 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
                 key={item.label}
                 variant="ghost"
                 onClick={item.onClick}
-                className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[80px]"
+                className={cn(
+                  "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto flex-shrink-0 min-w-[80px]",
+                  isTriggerActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
               >
                 <item.icon className="h-5 w-5 mb-1" />
                 {item.label}
@@ -139,7 +159,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
           return null;
         })}
 
-        {onOpenGlobalSearch && !activeParentTrigger && currentUser && ( // Only show search if logged in
+        {onOpenGlobalSearch && !currentMobileNavLevel && currentUser && ( // Only show search if logged in and not in drill-down
           <Button
             variant="ghost"
             onClick={onOpenGlobalSearch}
