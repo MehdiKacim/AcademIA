@@ -84,7 +84,22 @@ serve(async (req) => {
         END IF;
       END $$;
 
-      -- Temporarily DISABLE RLS for diagnostic purposes
+      -- Drop ALL existing policies on public.profiles
+      DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "profiles_delete_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can view all profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can insert profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can update all profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can delete profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Creators and Tutors can view student profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles; -- Ensure all are dropped
+      DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+
+
+      -- Explicitly DISABLE RLS for diagnostic purposes
       ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
 
       -- Create or replace get_user_role function (SECURITY DEFINER to bypass RLS for role lookup)
@@ -109,47 +124,6 @@ serve(async (req) => {
         RETURN user_role;
       END;
       $$;
-
-      -- Drop existing policies before recreating them to ensure idempotency
-      -- We are disabling RLS, so these policies will not be active, but we keep them for when RLS is re-enabled.
-      DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
-      DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
-      DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;
-      DROP POLICY IF EXISTS "profiles_delete_policy" ON public.profiles;
-      DROP POLICY IF EXISTS "Administrators can view all profiles" ON public.profiles;
-      DROP POLICY IF EXISTS "Administrators can insert profiles" ON public.profiles;
-      DROP POLICY IF EXISTS "Administrators can update all profiles" ON public.profiles;
-      DROP POLICY IF EXISTS "Administrators can delete profiles" ON public.profiles;
-      DROP POLICY IF EXISTS "Creators and Tutors can view student profiles" ON public.profiles;
-
-      -- Keep only the basic self-select policy for SELECT operations (will not be active with RLS disabled)
-      CREATE POLICY "profiles_select_policy" ON public.profiles
-      FOR SELECT TO authenticated USING (auth.uid() = id);
-
-      -- Keep INSERT, UPDATE, DELETE policies as they are not causing the SELECT recursion (will not be active with RLS disabled)
-      CREATE POLICY "profiles_insert_policy" ON public.profiles
-      FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
-
-      CREATE POLICY "profiles_update_policy" ON public.profiles
-      FOR UPDATE TO authenticated USING (auth.uid() = id);
-
-      CREATE POLICY "profiles_delete_policy" ON public.profiles
-      FOR DELETE TO authenticated USING (auth.uid() = id);
-
-      CREATE POLICY "Administrators can insert profiles" ON public.profiles
-      FOR INSERT WITH CHECK (public.get_user_role(auth.uid()) = 'administrator');
-
-      CREATE POLICY "Administrators can update all profiles" ON public.profiles
-      FOR UPDATE USING (public.get_user_role(auth.uid()) = 'administrator');
-
-      CREATE POLICY "Administrators can delete profiles" ON public.profiles
-      FOR DELETE USING (public.get_user_role(auth.uid()) = 'administrator');
-
-      CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles
-      FOR SELECT USING (
-        (role = 'student'::public.user_role) AND
-        (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = ANY (ARRAY['creator'::public.user_role, 'tutor'::public.user_role, 'administrator'::public.user_role]))
-      );
 
       -- Create or replace handle_new_user function
       CREATE OR REPLACE FUNCTION public.handle_new_user()
