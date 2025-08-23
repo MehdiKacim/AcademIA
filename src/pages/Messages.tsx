@@ -46,14 +46,14 @@ const Messages = () => {
     console.log("[Messages] fetchAllData called.");
     if (!currentUserId) {
       console.log("[Messages] currentUserId is null, skipping fetchAllData.");
+      setIsLoadingProfiles(false); // Ensure loading state is false if no user
       return;
     }
 
     setIsLoadingProfiles(true);
     const profiles = await getAllProfiles();
     setAllProfiles(profiles.filter(p => p.id !== currentUserId));
-    setIsLoadingProfiles(false);
-
+    
     const recent = await getRecentConversations(currentUserId);
     setRecentConversations(recent);
     console.log("[Messages] Fetched recent conversations (after fetchAllData):", recent.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
@@ -71,6 +71,7 @@ const Messages = () => {
       setCurricula(await loadCurricula());
       setClasses(await loadClasses());
     }
+    setIsLoadingProfiles(false); // Set loading state to false AFTER all profiles and messages are fetched
     console.log("[Messages] fetchAllData completed.");
   };
 
@@ -200,7 +201,7 @@ const Messages = () => {
       console.log("[Messages] Unarchive successful. fetchAllData called directly.");
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
-      showError(`Erreur lors du désarchivage: ${error.message}`);
+      showError(`Erreur lors du désarchivage: ${err.message}`);
     }
   };
 
@@ -449,17 +450,19 @@ const Messages = () => {
           </div>
 
           {/* Dynamic key to force re-render */}
-          <MessageList
-            key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}`}
-            recentMessages={showArchived ? archivedConversations : recentConversations}
-            allProfiles={allProfiles}
-            onSelectContact={handleSelectContact}
-            selectedContactId={selectedContact?.id || null}
-            onUnreadCountChange={setUnreadMessageCount}
-            onArchiveConversation={handleArchive}
-            onUnarchiveConversation={handleUnarchive}
-            isArchivedView={showArchived}
-          />
+          {allProfiles.length > 0 && (
+            <MessageList
+              key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}`}
+              recentMessages={showArchived ? archivedConversations : recentConversations}
+              allProfiles={allProfiles}
+              onSelectContact={handleSelectContact}
+              selectedContactId={selectedContact?.id || null}
+              onUnreadCountChange={setUnreadMessageCount}
+              onArchiveConversation={handleArchive}
+              onUnarchiveConversation={handleUnarchive}
+              isArchivedView={showArchived}
+            />
+          )}
         </div>
 
         {/* Right Panel (Chat Interface) */}
