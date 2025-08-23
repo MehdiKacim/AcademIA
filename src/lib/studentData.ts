@@ -343,7 +343,7 @@ export const getStudentClassEnrollments = async (studentId: string): Promise<Stu
  * Récupère toutes les affectations de classe.
  * @returns Un tableau de toutes les affectations de classe.
  */
-export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrollment[]> => {
+export const getAllStudentClassEnrollments = async (): Promise<StudentClassClassEnrollment[]> => {
   const { data, error } = await supabase
     .from('student_class_enrollments')
     .select('*');

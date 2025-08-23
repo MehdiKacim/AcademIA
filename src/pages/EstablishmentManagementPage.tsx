@@ -220,7 +220,7 @@ const EstablishmentManagementPage = () => {
               </SelectContent>
             </Select>
             <Label htmlFor="new-establishment-deputy-director">Directeur Adjoint (facultatif)</Label>
-            <Select value={newEstablishmentDeputyDirectorId} onValueChange={setNewEstablishmentDeputyDirectorId}>
+            <Select value={newEstablishmentDeputyDirectorId || ""} onValueChange={(value) => setNewEstablishmentDeputyDirectorId(value === "" ? undefined : value)}>
               <SelectTrigger id="new-establishment-deputy-director">
                 <SelectValue placeholder="Sélectionner un directeur adjoint" />
               </SelectTrigger>

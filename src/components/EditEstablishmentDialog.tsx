@@ -200,7 +200,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
             <Label htmlFor="deputyDirector" className="text-right">
               Directeur Adjoint
             </Label>
-            <Select value={deputyDirectorId} onValueChange={setDeputyDirectorId}>
+            <Select value={deputyDirectorId || ""} onValueChange={(value) => setDeputyDirectorId(value === "" ? undefined : value)}>
               <SelectTrigger id="deputyDirector" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur adjoint" />
               </SelectTrigger>
