@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment } from "@/lib/dataModels"; // Import Profile and Curriculum, Establishment
+import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels"; // Import SchoolYear
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -28,6 +28,7 @@ import {
   addClassToStorage,
   deleteClassFromStorage,
   loadEstablishments,
+  loadSchoolYears, // Import loadSchoolYears
 } from '@/lib/courseData';
 
 // Shadcn UI components for autocomplete
@@ -50,6 +51,7 @@ const ClassManagementPage = () => {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
+  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]); // New state for school years
 
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
@@ -59,7 +61,7 @@ const ClassManagementPage = () => {
       ? currentUserProfile.establishment_id
       : ''
   ); // Pre-fill for directors/deputy directors
-  const [newClassSchoolYear, setNewClassSchoolYear] = useState<string>(""); // New state
+  const [newClassSchoolYearId, setNewClassSchoolYearId] = useState<string>(""); // Changed to schoolYearId
 
   // State for edit class dialog
   const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
@@ -75,6 +77,7 @@ const ClassManagementPage = () => {
       setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Initialize here
+      setSchoolYears(await loadSchoolYears()); // Load school years
     };
     fetchData();
   }, [currentUserProfile]);
@@ -82,6 +85,7 @@ const ClassManagementPage = () => {
   // Helper functions to get names from IDs
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
+  const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
   
   // --- Class Management ---
   const handleAddClass = async () => {
@@ -89,7 +93,7 @@ const ClassManagementPage = () => {
       showError("Vous n'êtes pas autorisé à ajouter une classe.");
       return;
     }
-    if (!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()) {
+    if (!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYearId) { // Changed to newClassSchoolYearId
       showError("Le nom de la classe, le cursus, l'établissement et l'année scolaire sont requis.");
       return;
     }
@@ -108,13 +112,12 @@ const ClassManagementPage = () => {
       return;
     }
 
-    const newCls: Class = {
-      id: '', // Supabase will generate
+    const newCls: Omit<Class, 'id' | 'created_at' | 'school_year_name'> = { // Omit generated fields
       name: newClassName.trim(),
       curriculum_id: newClassCurriculumId,
       creator_ids: [currentUserProfile.id], // Assign current creator
       establishment_id: newClassEstablishmentId, // Include new field
-      school_year: newClassSchoolYear.trim(), // Include new field
+      school_year_id: newClassSchoolYearId, // Changed to school_year_id
     };
     try {
       const addedClass = await addClassToStorage(newCls);
@@ -127,7 +130,7 @@ const ClassManagementPage = () => {
             ? currentUserProfile.establishment_id
             : ''
         ); // Reset to pre-filled value
-        setNewClassSchoolYear("");
+        setNewClassSchoolYearId(""); // Reset school year
         showSuccess("Classe ajoutée !");
       } else {
         showError("Échec de l'ajout de la classe.");
@@ -200,7 +203,7 @@ const ClassManagementPage = () => {
   };
 
   const handleViewStudentsInClass = (classId: string) => {
-    navigate(`/students?classId=${classId}`);
+    navigate(`/pedagogical-management?classId=${classId}`); // Changed to pedagogical-management
   };
 
   const filteredClasses = classSearchQuery.trim() === ''
@@ -218,7 +221,7 @@ const ClassManagementPage = () => {
       )) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
   const currentYear = new Date().getFullYear();
-  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
+  const schoolYearsOptions = schoolYears.map(sy => ({ value: sy.id, label: sy.name })); // Map school years for select options
 
   if (isLoadingUser) {
     return (
@@ -311,17 +314,17 @@ const ClassManagementPage = () => {
                 </SelectContent>
               </Select>
               <Label htmlFor="new-class-school-year">Année scolaire</Label>
-              <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
+              <Select value={newClassSchoolYearId} onValueChange={setNewClassSchoolYearId}>
                 <SelectTrigger id="new-class-school-year">
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
                 <SelectContent>
-                  {schoolYears.map(year => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  {schoolYearsOptions.map(year => (
+                    <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
+              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYearId}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
               </Button>
             </div>
@@ -361,7 +364,7 @@ const ClassManagementPage = () => {
                       Cursus: {getCurriculumName(cls.curriculum_id)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Année scolaire: {cls.school_year}
+                      Année scolaire: {getSchoolYearName(cls.school_year_id)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Élèves: {allProfiles.filter(p => p.role === 'student' && allStudentClassEnrollments.some(e => e.student_id === p.id && e.class_id === cls.id)).length}
