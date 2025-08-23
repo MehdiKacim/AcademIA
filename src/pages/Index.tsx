@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
@@ -32,7 +32,11 @@ import AboutModal from "@/components/AboutModal"; // Import AboutModal
 import { useQuery } from "@tanstack/react-query"; // Import useQuery
 import { supabase } from "@/integrations/supabase/client"; // Import supabase
 
-const Index = () => {
+interface IndexProps {
+  setIsAdminModalOpen: (isOpen: boolean) => void; // New prop
+}
+
+const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -45,6 +49,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
+  const logoTapCountRef = useRef(0); // Ref pour le compteur de taps sur le logo
 
   // Fetch latest APK release data using TanStack Query
   // This query is no longer needed as the APK download button is removed.
@@ -133,12 +138,41 @@ const Index = () => {
     // Removed "À propos" from main navigation
   ];
 
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    const isModifierPressed = event.ctrlKey || event.metaKey;
+
+    if (isModifierPressed && event.key === 'u') { // Shortcut for AdminModal
+      event.preventDefault();
+      setIsAdminModalOpen(true);
+    }
+  }, [setIsAdminModalOpen]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
+  // Gérer les clics sur le logo pour le déclencheur mobile de l'AdminModal
+  const handleLogoClick = useCallback(() => {
+    logoTapCountRef.current += 1;
+    if (logoTapCountRef.current >= 10) {
+      setIsAdminModalOpen(true);
+      logoTapCountRef.current = 0; // Reset count after opening
+    }
+    // Reset tap count after a short delay if not enough taps
+    setTimeout(() => {
+      logoTapCountRef.current = 0;
+    }, 1000); // 1 second to reset tap count
+  }, [setIsAdminModalOpen]);
+
   return (
     <div className="flex flex-col min-h-screen bg-background overflow-x-hidden">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
-        <Logo />
+        <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {indexNavItems.map((item) => {

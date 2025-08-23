@@ -69,7 +69,7 @@ const AppWithThemeProvider = () => {
             <BrowserRouter>
               <Routes>
                 {/* If user is logged in, redirect from "/" to "/dashboard" */}
-                <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index />} /> 
+                <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}
