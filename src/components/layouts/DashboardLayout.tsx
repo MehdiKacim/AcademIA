@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import AiAPersistentChat from "@/components/AiAPersistentChat";
+import AiAPersistentChat from "@/components/AiAPersistent/Chat";
 import FloatingAiAPersistentChat from "@/components/FloatingAiAPersistentChat";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -238,11 +238,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           label: "Administration",
           type: 'trigger',
           items: [
-            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' },
-            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
-            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' }, // Added for admin
-            { to: "/classes", label: "Classes", icon: Users, type: 'link' }, // Added for admin
-            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' }, // Added for admin
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' }, // Changed view name
           ],
         },
@@ -254,11 +249,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           label: "Gestion Établissement",
           type: 'trigger',
           items: [
-            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // For creating profs/students
-            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
-            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
-            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' }, // Changed view name
           ],
         },
@@ -445,7 +435,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </header>
       <main
         className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}
-        // Removed onScroll and onClick props
       >
         <Outlet />
       </main>
