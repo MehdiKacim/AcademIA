@@ -19,7 +19,8 @@ import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
 import StudentManagementPage from "./pages/StudentManagementPage";
 import AdminUserManagementPage from "./pages/AdminUserManagementPage";
-import SubjectManagementPage from "./pages/SubjectManagementPage"; // New import
+import SubjectManagementPage from "./pages/SubjectManagementPage";
+import PedagogicalManagementPage from "./pages/PedagogicalManagementPage"; // New import
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
@@ -83,7 +84,7 @@ const AppWithThemeProvider = () => {
                     <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director']} />}>
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                      <Route path="/subjects" element={<SubjectManagementPage />} /> {/* New route for subjects */}
+                      <Route path="/subjects" element={<SubjectManagementPage />} />
                     </Route>
 
                     {/* Routes accessible by Administrator, Director, Deputy Director, Professeur */}
@@ -95,6 +96,7 @@ const AppWithThemeProvider = () => {
                     <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur', 'tutor']} />}>
                       <Route path="/classes" element={<ClassManagementPage />} />
                       <Route path="/students" element={<StudentManagementPage />} />
+                      <Route path="/pedagogical-management" element={<PedagogicalManagementPage />} /> {/* New route */}
                     </Route>
 
                     {/* Routes accessible by Professeur only */}
@@ -113,7 +115,8 @@ const AppWithThemeProvider = () => {
                         <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/students" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} /> {/* Redirect for students */}
+                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} /> {/* Redirect for students */}
                       </>
                     )}
                     {/* Directors/Deputy Directors should not access professeur-only pages like create-course */}
@@ -125,7 +128,7 @@ const AppWithThemeProvider = () => {
                       <>
                         <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} /> {/* Redirect for professeurs/tutors */}
+                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
                   </Route>

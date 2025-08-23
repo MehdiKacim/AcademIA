@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School } from "lucide-react";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp } from "lucide-react";
 import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -17,8 +17,8 @@ import {
   updateProfile,
   deleteProfile,
   getAllStudentClassEnrollments,
-  upsertStudentClassEnrollment,
-  deleteStudentClassEnrollment,
+  checkUsernameExists, // Import checkUsernameExists
+  checkEmailExists, // Import checkEmailExists
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,6 +37,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
+import InputWithStatus from '@/components/InputWithStatus'; // Import InputWithStatus
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
 
 const StudentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -50,6 +52,27 @@ const StudentManagementPage = () => {
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
 
+  // States for new student creation form
+  const [newStudentFirstName, setNewStudentFirstName] = useState('');
+  const [newStudentLastName, setNewStudentLastName] = useState('');
+  const [newStudentUsername, setNewStudentUsername] = useState('');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentPassword, setNewStudentPassword] = useState('');
+  const [newStudentEstablishmentId, setNewStudentEstablishmentId] = useState<string>(
+    (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
+      ? currentUserProfile.establishment_id
+      : ''
+  );
+  const [newStudentEnrollmentStartDate, setNewStudentEnrollmentStartDate] = useState<Date | undefined>(undefined);
+  const [newStudentEnrollmentEndDate, setNewStudentEnrollmentEndDate] = useState<Date | undefined>(undefined);
+  const [isCreatingStudent, setIsCreatingStudent] = useState(false);
+  const [isNewStudentFormOpen, setIsNewStudentFormOpen] = useState(false);
+
+  const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const debounceTimeoutRefUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // States for assign student to establishment section (Admin only)
   const [studentSearchInputEst, setStudentSearchInputEst] = useState('');
   const [selectedStudentForEstAssignment, setSelectedStudentForEstAssignment] = useState<Profile | null>(null);
@@ -60,22 +83,11 @@ const StudentManagementPage = () => {
   const [isSearchingUserEst, setIsSearchingUserEst] = useState(false);
   const debounceTimeoutRefEst = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // States for assign student to class section
-  const [studentSearchInputClass, setStudentSearchInputClass] = useState('');
-  const [selectedStudentForClassAssignment, setSelectedStudentForClassAssignment] = useState<Profile | null>(null);
-  const [classToAssign, setClassToAssign] = useState<string>("");
-  const [enrollmentYear, setEnrollmentYear] = useState<string>('');
-  const [openStudentSelectClass, setOpenStudentSelectClass] = useState(false);
-  const [isSearchingUserClass, setIsSearchingUserClass] = useState(false);
-  const debounceTimeoutRefClass = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // States for student list section
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
-  const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
   const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | null>(null);
-  const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null); // New state for school year filter
 
-  // Get classId from URL for initial filtering
+  // Get classId from URL for initial filtering (now removed from student list)
   const classIdFromUrl = searchParams.get('classId');
 
   useEffect(() => {
@@ -84,65 +96,156 @@ const StudentManagementPage = () => {
       setCurricula(await loadCurricula());
       setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Fetch ALL enrollments for display
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
     };
     fetchData();
   }, [currentUserProfile]);
 
-  // Set initial class filter from URL
+  // Set initial establishment filter based on user role
   useEffect(() => {
-    if (classIdFromUrl) {
-      setSelectedClassFilter(classIdFromUrl);
+    if (currentUserProfile && (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor')) {
+      setSelectedEstablishmentFilter(currentUserProfile.establishment_id || null);
     } else {
-      setSelectedClassFilter(null);
+      setSelectedEstablishmentFilter(null); // Admin can see all
     }
-  }, [classIdFromUrl]);
+  }, [currentRole, currentUserProfile?.establishment_id]);
 
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
-  const handleRemoveStudentFromClass = async (enrollmentId: string) => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur/tutor/director/deputy_director/administrator can remove
-      showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
-      return;
+  // --- New Student Creation Logic ---
+  const validateUsername = useCallback(async (username: string, currentUserId?: string) => {
+    if (username.length < 3) {
+      setUsernameAvailabilityStatus('idle');
+      return false;
     }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setUsernameAvailabilityStatus('idle');
+      return false;
+    }
+    setUsernameAvailabilityStatus('checking');
+    const isTaken = await checkUsernameExists(username);
+    if (isTaken && (!currentUserId || allProfiles.find(u => u.username === username)?.id !== currentUserId)) {
+      setUsernameAvailabilityStatus('taken');
+      return false;
+    }
+    setUsernameAvailabilityStatus('available');
+    return true;
+  }, [allProfiles]);
 
-    const enrollmentToDelete = allStudentClassEnrollments.find(e => e.id === enrollmentId);
-    if (!enrollmentToDelete) {
-      showError("Inscription introuvable.");
-      return;
+  const validateEmail = useCallback(async (email: string, currentUserId?: string) => {
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailAvailabilityStatus('idle');
+      return false;
     }
-    const classOfEnrollment = classes.find(cls => cls.id === enrollmentToDelete.class_id);
-    if (!classOfEnrollment) {
-      showError("Classe associée introuvable.");
-      return;
+    setEmailAvailabilityStatus('checking');
+    const isTaken = await checkEmailExists(email);
+    if (isTaken && (!currentUserId || allProfiles.find(u => u.email === email)?.id !== currentUserId)) {
+      setEmailAvailabilityStatus('taken');
+      return false;
     }
+    setEmailAvailabilityStatus('available');
+    return true;
+  }, [allProfiles]);
 
-    // Permission check: Professeur can only remove from classes they manage.
-    if (currentRole === 'professeur' && !classOfEnrollment.creator_ids.includes(currentUserProfile.id)) {
-      showError("Vous ne pouvez retirer des élèves que des classes que vous gérez.");
+  const handleNewStudentUsernameChange = (value: string) => {
+    setNewStudentUsername(value);
+    if (debounceTimeoutRefUsername.current) clearTimeout(debounceTimeoutRefUsername.current);
+    if (value.trim() === '') {
+      setUsernameAvailabilityStatus('idle');
       return;
     }
-    // Permission check: Director/Deputy Director can only remove from classes in their establishment.
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && classOfEnrollment.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez retirer des élèves que des classes de votre établissement.");
-      return;
-    }
-
-
-    try {
-      await deleteStudentClassEnrollment(enrollmentId);
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
-      showSuccess(`Élève retiré de la classe !`);
-    } catch (error: any) {
-      console.error("Error removing student from class:", error);
-      showError(`Erreur lors du retrait de l'élève: ${error.message}`);
-    }
+    debounceTimeoutRefUsername.current = setTimeout(() => {
+      validateUsername(value);
+    }, 500);
   };
 
-  const handleSendMessageToStudent = (studentProfile: Profile) => {
-    navigate(`/messages?contactId=${studentProfile.id}`);
+  const handleNewStudentEmailChange = (value: string) => {
+    setNewStudentEmail(value);
+    if (debounceTimeoutRefEmail.current) clearTimeout(debounceTimeoutRefEmail.current);
+    if (value.trim() === '') {
+      setEmailAvailabilityStatus('idle');
+      return;
+    }
+    debounceTimeoutRefEmail.current = setTimeout(() => {
+      validateEmail(value);
+    }, 500);
+  };
+
+  const handleCreateStudent = async () => {
+    if (!currentUserProfile || !['administrator', 'director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')) {
+      showError("Vous n'êtes pas autorisé à créer des élèves.");
+      return;
+    }
+    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentUsername.trim() || !newStudentEmail.trim() || !newStudentPassword.trim() || !newStudentEstablishmentId || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate) {
+      showError("Tous les champs requis doivent être remplis.");
+      return;
+    }
+    if (newStudentPassword.trim().length < 6) {
+      showError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+    if (usernameAvailabilityStatus === 'taken' || emailAvailabilityStatus === 'taken') {
+      showError("Le nom d'utilisateur ou l'email est déjà pris.");
+      return;
+    }
+    if (usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking') {
+      showError("Veuillez attendre la vérification de la disponibilité du nom d'utilisateur et de l'email.");
+      return;
+    }
+
+    // Role-based creation restrictions and defaults
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && newStudentEstablishmentId !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez créer des élèves que pour votre établissement.");
+      return;
+    }
+
+    setIsCreatingStudent(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-user-with-role', {
+        body: {
+          email: newStudentEmail.trim(),
+          password: newStudentPassword.trim(),
+          first_name: newStudentFirstName.trim(),
+          last_name: newStudentLastName.trim(),
+          username: newStudentUsername.trim(),
+          role: 'student', // Fixed role for this page
+          establishment_id: newStudentEstablishmentId,
+          enrollment_start_date: newStudentEnrollmentStartDate.toISOString().split('T')[0],
+          enrollment_end_date: newStudentEnrollmentEndDate.toISOString().split('T')[0],
+        },
+      });
+
+      if (error) {
+        console.error("Error creating student via Edge Function:", error);
+        showError(`Erreur lors de la création de l'élève: ${error.message}`);
+        return;
+      }
+      
+      showSuccess(`Élève ${newStudentFirstName} ${newStudentLastName} créé avec succès !`);
+      setNewStudentFirstName('');
+      setNewStudentLastName('');
+      setNewStudentUsername('');
+      setNewStudentEmail('');
+      setNewStudentPassword('');
+      setNewStudentEstablishmentId(
+        (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
+          ? currentUserProfile.establishment_id
+          : ''
+      );
+      setNewStudentEnrollmentStartDate(undefined);
+      setNewStudentEnrollmentEndDate(undefined);
+      setUsernameAvailabilityStatus('idle');
+      setEmailAvailabilityStatus('idle');
+      setAllProfiles(await getAllProfiles()); // Refresh profiles
+      setIsNewStudentFormOpen(false);
+    } catch (error: any) {
+      console.error("Unexpected error creating student:", error);
+      showError(`Une erreur inattendue est survenue: ${error.message}`);
+    } finally {
+      setIsCreatingStudent(false);
+    }
   };
 
   // Debounced search for student to assign to establishment (Admin only)
@@ -164,26 +267,6 @@ const StudentManagementPage = () => {
       }
     };
   }, [studentSearchInputEst]);
-
-  // Debounced search for student to assign to class
-  useEffect(() => {
-    if (debounceTimeoutRefClass.current) {
-      clearTimeout(debounceTimeoutRefClass.current);
-    }
-    if (studentSearchInputClass.trim() === '') {
-      setIsSearchingUserClass(false);
-      return;
-    }
-    setIsSearchingUserClass(true);
-    debounceTimeoutRefClass.current = setTimeout(async () => {
-      setIsSearchingUserClass(false);
-    }, 500);
-    return () => {
-      if (debounceTimeoutRefClass.current) {
-        clearTimeout(debounceTimeoutRefClass.current);
-      }
-    };
-  }, [studentSearchInputClass]);
 
   const handleAssignStudentToEstablishment = async () => {
     if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can assign to establishment
@@ -236,90 +319,6 @@ const StudentManagementPage = () => {
     setEnrollmentStartDate(undefined);
     setEnrollmentEndDate(undefined);
     setOpenStudentSelectEst(false);
-  };
-
-  const handleAssignStudentToClass = async () => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur/tutor/director/deputy_director/administrator can assign
-      showError("Vous n'êtes pas autorisé à affecter des élèves à des classes.");
-      return;
-    }
-    if (!selectedStudentForClassAssignment) {
-      showError("Veuillez d'abord sélectionner un élève.");
-      return;
-    }
-    if (!classToAssign) {
-      showError("Veuillez sélectionner une classe.");
-      return;
-    }
-    if (!enrollmentYear) {
-      showError("Veuillez spécifier l'année scolaire.");
-      return;
-    }
-    if (selectedStudentForClassAssignment.role !== 'student') {
-      showError("Seuls les profils d'élèves peuvent être affectés à une classe.");
-      return;
-    }
-    if (!selectedStudentForClassAssignment.establishment_id) {
-      showError("L'élève doit d'abord être affecté à un établissement.");
-      return;
-    }
-    const selectedClass = classes.find(cls => cls.id === classToAssign);
-    if (!selectedClass) {
-      showError("Classe sélectionnée introuvable.");
-      return;
-    }
-    if (selectedClass?.establishment_id !== selectedStudentForClassAssignment.establishment_id) {
-      showError("La classe sélectionnée n'appartient pas à l'établissement de l'élève.");
-      return;
-    }
-
-    // Permission check: Professeur can only assign to classes they manage.
-    if (currentRole === 'professeur' && !selectedClass.creator_ids.includes(currentUserProfile.id)) {
-      showError("Vous ne pouvez affecter des élèves qu'aux classes que vous gérez.");
-      return;
-    }
-    // Permission check: Director/Deputy Director can only assign to classes in their establishment.
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && selectedClass.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez affecter des élèves qu'aux classes de votre établissement.");
-      return;
-    }
-
-    const existingEnrollment = allStudentClassEnrollments.find(
-      e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.enrollment_year === enrollmentYear
-    );
-
-    if (existingEnrollment) {
-      showError("Cet élève est déjà inscrit à cette classe pour cette année scolaire.");
-      return;
-    }
-
-    try {
-      const newEnrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at'> = {
-        student_id: selectedStudentForClassAssignment.id,
-        class_id: classToAssign,
-        enrollment_year: enrollmentYear,
-      };
-      const savedEnrollment = await upsertStudentClassEnrollment(newEnrollment);
-
-      if (savedEnrollment) {
-        setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
-        showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign)} pour ${enrollmentYear} !`);
-        handleClearClassAssignmentForm();
-      } else {
-        showError("Échec de l'inscription de l'élève à la classe.");
-      }
-    } catch (error: any) {
-      console.error("Error assigning student to class:", error);
-      showError(`Erreur lors de l'inscription de l'élève à la classe: ${error.message}`);
-    }
-  };
-
-  const handleClearClassAssignmentForm = () => {
-    setStudentSearchInputClass('');
-    setSelectedStudentForClassAssignment(null);
-    setClassToAssign("");
-    setEnrollmentYear('');
-    setOpenStudentSelectClass(false);
   };
 
   const handleDeleteStudent = async (studentProfileId: string) => {
@@ -385,6 +384,10 @@ const StudentManagementPage = () => {
     }
   };
 
+  const handleSendMessageToStudent = (studentProfile: Profile) => {
+    navigate(`/messages?contactId=${studentProfile.id}`);
+  };
+
   const filteredStudentsForEstDropdown = studentSearchInputEst.trim() === ''
     ? allProfiles.filter(p => p.role === 'student').slice(0, 10)
     : allProfiles.filter(p =>
@@ -394,42 +397,16 @@ const StudentManagementPage = () => {
         p.last_name.toLowerCase().includes(studentSearchInputEst.toLowerCase()))
       ).slice(0, 10);
 
-  const filteredStudentsForClassDropdown = studentSearchInputClass.trim() === ''
-    ? allProfiles.filter(p => p.role === 'student').slice(0, 10)
-    : allProfiles.filter(p =>
-        p.role === 'student' &&
-        (p.username.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
-        p.first_name.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
-        p.last_name.toLowerCase().includes(studentSearchInputClass.toLowerCase()))
-      ).slice(0, 10);
-
   const studentsToDisplay = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
 
-    // Filter by classes/establishments managed by the current user (if not admin)
-    if (currentUserProfile && currentRole !== 'administrator') {
-      const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).map(cls => cls.id);
-      const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => managedClassIds.includes(e.class_id)).map(e => e.student_id));
-      students = students.filter(s => studentIdsInManagedClasses.has(s.id));
-    }
-    // For Director/Deputy Director, filter by establishment
-    if (currentUserProfile && (currentRole === 'director' || currentRole === 'deputy_director')) {
+    // Filter by current user's establishment if director/deputy director/professeur/tutor
+    if (currentUserProfile && (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor')) {
       students = students.filter(s => s.establishment_id === currentUserProfile.establishment_id);
     }
-
-
+    
     if (selectedEstablishmentFilter !== 'all' && selectedEstablishmentFilter !== null) {
       students = students.filter(s => s.establishment_id === selectedEstablishmentFilter);
-    }
-
-    if (selectedClassFilter !== 'all' && selectedClassFilter !== null) {
-      const studentIdsInClass = new Set(allStudentClassEnrollments.filter(e => e.class_id === selectedClassFilter).map(e => e.student_id));
-      students = students.filter(s => studentIdsInClass.has(s.id));
-    }
-
-    if (selectedSchoolYearFilter !== 'all' && selectedSchoolYearFilter !== null) {
-      const studentIdsInYear = new Set(allStudentClassEnrollments.filter(e => e.enrollment_year === selectedSchoolYearFilter).map(e => e.student_id));
-      students = students.filter(s => studentIdsInYear.has(s.id));
     }
 
     if (studentSearchQuery.trim()) {
@@ -442,7 +419,7 @@ const StudentManagementPage = () => {
       );
     }
     return students;
-  }, [allProfiles, currentUserProfile, currentRole, classes, allStudentClassEnrollments, selectedEstablishmentFilter, selectedClassFilter, selectedSchoolYearFilter, studentSearchQuery]);
+  }, [allProfiles, currentUserProfile, currentRole, selectedEstablishmentFilter, studentSearchQuery]);
 
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
@@ -460,18 +437,22 @@ const StudentManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, tutor, director, deputy_director, administrator can access
+  if (!currentUserProfile || !['administrator', 'director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les professeurs, tuteurs, directeurs et administrateurs peuvent accéder à cette page.
+          Seuls les administrateurs, directeurs, directeurs adjoints, professeurs et tuteurs peuvent accéder à cette page.
         </p>
       </div>
     );
   }
+
+  const establishmentsToDisplayForNewStudent = currentRole === 'administrator'
+    ? establishments
+    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
 
   return (
     <div className="space-y-8">
@@ -479,8 +460,134 @@ const StudentManagementPage = () => {
         Gestion des Élèves
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Gérez les affectations des élèves aux classes que vous supervisez.
+        Gérez les profils des élèves et leurs affectations aux établissements.
       </p>
+
+      {/* Section: Créer un nouvel élève */}
+      <Collapsible open={isNewStudentFormOpen} onOpenChange={setIsNewStudentFormOpen}>
+        <Card>
+          <CardHeader>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-0">
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-6 w-6 text-primary" /> Créer un nouvel élève
+                </CardTitle>
+                {isNewStudentFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CardDescription>Créez un nouveau compte élève et affectez-le à un établissement.</CardDescription>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  placeholder="Prénom"
+                  value={newStudentFirstName}
+                  onChange={(e) => setNewStudentFirstName(e.target.value)}
+                />
+                <Input
+                  placeholder="Nom"
+                  value={newStudentLastName}
+                  onChange={(e) => setNewStudentLastName(e.target.value)}
+                />
+                <InputWithStatus
+                  placeholder="Nom d'utilisateur"
+                  value={newStudentUsername}
+                  onChange={(e) => handleNewStudentUsernameChange(e.target.value)}
+                  status={usernameAvailabilityStatus}
+                  errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                />
+                <InputWithStatus
+                  type="email"
+                  placeholder="Email"
+                  value={newStudentEmail}
+                  onChange={(e) => handleNewStudentEmailChange(e.target.value)}
+                  status={emailAvailabilityStatus}
+                  errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                />
+                <Input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={newStudentPassword}
+                  onChange={(e) => setNewStudentPassword(e.target.value)}
+                />
+                <Select 
+                  value={newStudentEstablishmentId || "none"} 
+                  onValueChange={(value) => setNewStudentEstablishmentId(value === "none" ? '' : value)}
+                  disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
+                >
+                  <SelectTrigger id="new-student-establishment">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun</SelectItem>
+                    {establishmentsToDisplayForNewStudent.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div>
+                  <Label htmlFor="new-student-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newStudentEnrollmentStartDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {newStudentEnrollmentStartDate ? format(newStudentEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={newStudentEnrollmentStartDate}
+                        onSelect={setNewStudentEnrollmentStartDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label htmlFor="new-student-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newStudentEnrollmentEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {newStudentEnrollmentEndDate ? format(newStudentEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={newStudentEnrollmentEndDate}
+                        onSelect={setNewStudentEnrollmentEndDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || !newStudentEstablishmentId || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate}>
+                {isCreatingStudent ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'élève
+              </Button>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Section: Affecter un élève à un établissement (Admin only) */}
       {currentRole === 'administrator' && (
@@ -489,7 +596,7 @@ const StudentManagementPage = () => {
             <CardTitle className="flex items-center gap-2">
               <School className="h-6 w-6 text-primary" /> Affecter un élève à un établissement
             </CardTitle>
-            <CardDescription>Affectez un élève à un établissement pour une période donnée.</CardDescription>
+            <CardDescription>Affectez un élève existant à un établissement pour une période donnée.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -670,159 +777,13 @@ const StudentManagementPage = () => {
         </Card>
       )}
 
-      {/* Section: Affecter un élève à une classe */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" /> Affecter un élève à une classe
-          </CardTitle>
-          <CardDescription>Inscrivez un élève à une classe pour une année scolaire spécifique.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <Label htmlFor="select-student-for-class-assignment" className="text-base font-semibold mb-2 block">1. Sélectionner l'élève</Label>
-            <Popover open={openStudentSelectClass} onOpenChange={setOpenStudentSelectClass}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openStudentSelectClass}
-                  className="w-full justify-between"
-                  id="select-student-for-class-assignment"
-                >
-                  {selectedStudentForClassAssignment ? `${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} (@${selectedStudentForClassAssignment.username})` : "Rechercher un élève..."}
-                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                <Command>
-                  <CommandInput
-                    placeholder="Rechercher par nom d'utilisateur..."
-                    value={studentSearchInputClass}
-                    onValueChange={(value) => {
-                      setStudentSearchInputClass(value);
-                      setIsSearchingUserClass(true);
-                    }}
-                  />
-                  <CommandList>
-                    {(() => {
-                      if (isSearchingUserClass && studentSearchInputClass.trim() !== '') {
-                        return (
-                          <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
-                          </CommandEmpty>
-                        );
-                      } else if (filteredStudentsForClassDropdown.length === 0 && studentSearchInputClass.trim() !== '') {
-                        return (
-                          <CommandEmpty className="py-2 text-center text-muted-foreground">
-                            Aucun élève trouvé pour "{studentSearchInputClass}".
-                          </CommandEmpty>
-                        );
-                      } else {
-                        return (
-                          <CommandGroup>
-                            {filteredStudentsForClassDropdown.map((profile) => (
-                              <CommandItem
-                                key={profile.id}
-                                value={profile.username}
-                                onSelect={() => {
-                                  setSelectedStudentForClassAssignment(profile);
-                                  setStudentSearchInputClass(profile.username);
-                                  setOpenStudentSelectClass(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedStudentForClassAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {profile.first_name} {profile.last_name} (@{profile.username})
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        );
-                      }
-                    })()}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-            {selectedStudentForClassAssignment && (
-              <div className="p-4 border rounded-md bg-muted/20 space-y-3">
-                <div className="flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-green-500" />
-                  <p className="font-medium text-lg">{selectedStudentForClassAssignment.first_name} {selectedStudentForClassAssignment.last_name}</p>
-                </div>
-                <p className="text-sm text-muted-foreground">Email : {selectedStudentForClassAssignment.email}</p>
-                <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForClassAssignment.username}</p>
-                {selectedStudentForClassAssignment.establishment_id ? (
-                  <p className="text-sm text-muted-foreground">
-                    Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForClassAssignment.establishment_id)}</span>
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
-                )}
-
-                <div>
-                  <Label htmlFor="class-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir la classe d'affectation</Label>
-                  <Select value={classToAssign} onValueChange={setClassToAssign}>
-                    <SelectTrigger id="class-to-assign" className="w-full">
-                      <SelectValue placeholder="Sélectionner une classe" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classes
-                        .filter(cls => 
-                          (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && // Only classes managed by current professeur/director/deputy_director/administrator
-                          (!selectedStudentForClassAssignment.establishment_id || cls.establishment_id === selectedStudentForClassAssignment.establishment_id)
-                        )
-                        .map(cls => (
-                          <SelectItem key={cls.id} value={cls.id}>
-                            {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="enrollment-year" className="text-base font-semibold mb-2 block mt-4">Année scolaire</Label>
-                    <Select value={enrollmentYear} onValueChange={setEnrollmentYear}>
-                      <SelectTrigger id="enrollment-year" className="w-full">
-                        <SelectValue placeholder="Sélectionner l'année scolaire" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {schoolYears.map(year => (
-                          <SelectItem key={year} value={year}>{year}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentYear}>
-                    <PlusCircle className="h-4 w-4 mr-2" /> Inscrire à cette classe
-                  </Button>
-                  <Button variant="outline" onClick={handleClearClassAssignmentForm}>
-                    <XCircle className="h-4 w-4 mr-2" /> Effacer le formulaire
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
       {/* Section: Liste de tous les élèves */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-primary" /> Mes Élèves
           </CardTitle>
-          <CardDescription>Visualisez et gérez les élèves de vos classes.</CardDescription>
+          <CardDescription>Visualisez et gérez les élèves de votre établissement.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -839,61 +800,21 @@ const StudentManagementPage = () => {
               <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
               <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {
                 setSelectedEstablishmentFilter(value === "all" ? null : value);
-                setSelectedClassFilter(null); // Reset class filter when establishment changes
-              }}>
+              }}
+              disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
+              >
                 <SelectTrigger id="establishment-filter">
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les établissements</SelectItem>
-                  {establishments.map(est => (
-                    <SelectItem key={est.id} value={est.id}>
-                      {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-shrink-0 sm:w-1/3">
-              <Label htmlFor="class-filter">Filtrer par Classe</Label>
-              <Select value={selectedClassFilter || "all"} onValueChange={(value) => {
-                setSelectedClassFilter(value === "all" ? null : value);
-                setSearchParams(params => {
-                  if (value === "all") {
-                    params.delete('classId');
-                  } else {
-                    params.set('classId', value);
-                  }
-                  return params;
-                }, { replace: true });
-              }}>
-                <SelectTrigger id="class-filter">
-                  <SelectValue placeholder="Toutes les classes" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes
-                    .filter(cls => 
-                      (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && // Only classes managed by current professeur/director/deputy_director/administrator
-                      (!selectedEstablishmentFilter || cls.establishment_id === selectedEstablishmentFilter)
-                    )
-                    .map(cls => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
+                  {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
+                  {establishments
+                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id)
+                    .map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
                       </SelectItem>
                     ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-shrink-0 sm:w-1/3">
-              <Label htmlFor="school-year-filter">Filtrer par Année Scolaire</Label>
-              <Select value={selectedSchoolYearFilter || "all"} onValueChange={(value) => setSelectedSchoolYearFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="school-year-filter">
-                  <SelectValue placeholder="Toutes les années" />
-                </SelectTrigger>
-                <SelectContent>
-                  {schoolYears.map(year => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -901,7 +822,7 @@ const StudentManagementPage = () => {
           <div className="space-y-2">
             {studentsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                {studentSearchQuery.trim() === '' && !selectedClassFilter && !selectedEstablishmentFilter && !selectedSchoolYearFilter
+                {studentSearchQuery.trim() === '' && !selectedEstablishmentFilter
                   ? "Aucun élève à afficher. Utilisez la recherche ou les filtres."
                   : "Aucun élève trouvé pour votre recherche ou vos filtres."}
               </p>
@@ -941,11 +862,6 @@ const StudentManagementPage = () => {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                      {currentEnrollments.length > 0 && (currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can remove
-                        <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(currentEnrollments[0].id)}> {/* Assuming one active enrollment for simplicity */}
-                          <UserX className="h-4 w-4 mr-1" /> Retirer de la classe
-                        </Button>
-                      )}
                       {profile.establishment_id && (currentRole === 'administrator' || ((currentRole === 'director' || currentRole === 'deputy_director') && profile.establishment_id === currentUserProfile?.establishment_id)) && (
                         <Button variant="outline" size="sm" onClick={() => handleUnassignStudentFromEstablishment(profile.id, `${profile.first_name} ${profile.last_name}`)}>
                           <School className="h-4 w-4 mr-1" /> Désaffecter de l'établissement
