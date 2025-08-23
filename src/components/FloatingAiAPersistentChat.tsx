@@ -9,7 +9,7 @@ interface FloatingAiAChatButtonProps {
   isVisible: boolean; // Nouvelle prop pour contrôler la visibilité
 }
 
-const FloatingAiAChatButton = ({ isVisible }: FloatingAiAChatButtonProps) => {
+const FloatingAiAPersistentChat = ({ isVisible }: FloatingAiAChatButtonProps) => {
   const { openChat } = useCourseChat();
   const isMobile = useIsMobile();
 
@@ -31,4 +31,4 @@ const FloatingAiAChatButton = ({ isVisible }: FloatingAiAChatButtonProps) => {
   );
 };
 
-export default FloatingAiAChatButton;
+export default FloatingAiAPersistentChat;
