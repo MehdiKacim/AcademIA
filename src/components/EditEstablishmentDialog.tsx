@@ -52,14 +52,24 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
 
   useEffect(() => {
     const fetchRoles = async () => {
-      setDirectors(await getProfilesByRole('director'));
-      setDeputyDirectors(await getProfilesByRole('deputy_director'));
+      const fetchedDirectors = await getProfilesByRole('director');
+      const fetchedDeputyDirectors = await getProfilesByRole('deputy_director');
+      setDirectors(fetchedDirectors);
+      setDeputyDirectors(fetchedDeputyDirectors);
+      console.log("EditEstablishmentDialog: Fetched directors:", fetchedDirectors);
+      console.log("EditEstablishmentDialog: Fetched deputy directors:", fetchedDeputyDirectors);
     };
     fetchRoles();
   }, []);
 
   useEffect(() => {
     if (isOpen && establishment) {
+      console.log("EditEstablishmentDialog: Dialog opened/establishment changed.");
+      console.log("  Current establishment.director_id:", establishment.director_id);
+      console.log("  Current establishment.deputy_director_id:", establishment.deputy_director_id);
+      console.log("  Current directors state:", directors);
+      console.log("  Current deputyDirectors state:", deputyDirectors);
+
       setName(establishment.name);
       setType(establishment.type);
       setAddress(establishment.address || '');
@@ -68,7 +78,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
       setDeputyDirectorId(establishment.deputy_director_id);
       setContactEmail(establishment.contact_email || '');
     }
-  }, [isOpen, establishment]);
+  }, [isOpen, establishment, directors, deputyDirectors]); // Added dependencies
 
   const handleSave = async () => {
     if (!currentUserProfile || (currentRole !== 'administrator' && !(currentRole === 'director' || currentRole === 'deputy_director'))) {
