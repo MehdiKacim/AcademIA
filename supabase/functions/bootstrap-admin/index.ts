@@ -87,6 +87,30 @@ serve(async (req) => {
       -- Enable RLS (REQUIRED for security)
       ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+      -- Create or replace get_user_role function (SECURITY DEFINER to bypass RLS for role lookup)
+      -- IMPORTANT: This function now queries auth.users to avoid recursion with public.profiles
+      CREATE OR REPLACE FUNCTION public.get_user_role(user_id UUID)
+      RETURNS public.user_role
+      LANGUAGE PLPGSQL
+      SECURITY DEFINER
+      SET search_path = auth, public -- Search auth schema first
+      AS $$
+      DECLARE
+        user_role_text TEXT;
+        user_role public.user_role;
+      BEGIN
+        -- Query auth.users directly to get the role from raw_user_meta_data
+        SELECT raw_user_meta_data ->> 'role' INTO user_role_text
+        FROM auth.users
+        WHERE id = user_id;
+
+        -- Cast the text role to the user_role enum
+        user_role := COALESCE(user_role_text::public.user_role, 'student'::public.user_role);
+        
+        RETURN user_role;
+      END;
+      $$;
+
       -- Drop ALL existing policies on public.profiles before recreating them
       DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
       DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
@@ -101,19 +125,33 @@ serve(async (req) => {
       DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
       DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 
-      -- Add a very permissive SELECT policy for authenticated users (for diagnostic purposes)
-      CREATE POLICY "Allow all authenticated users to read profiles" ON public.profiles
-      FOR SELECT TO authenticated USING (true);
+      -- Re-add RLS policies with the corrected get_user_role function
+      CREATE POLICY "Users can view their own profile" ON public.profiles 
+      FOR SELECT TO authenticated USING (auth.uid() = id);
 
-      -- Keep basic INSERT, UPDATE, DELETE policies
-      CREATE POLICY "profiles_insert_policy" ON public.profiles
+      CREATE POLICY "Users can insert their own profile" ON public.profiles 
       FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
-      CREATE POLICY "profiles_update_policy" ON public.profiles
+      CREATE POLICY "Users can update their own profile" ON public.profiles 
       FOR UPDATE TO authenticated USING (auth.uid() = id);
 
-      CREATE POLICY "profiles_delete_policy" ON public.profiles
-      FOR DELETE TO authenticated USING (auth.uid() = id);
+      CREATE POLICY "Administrators can view all profiles" ON public.profiles
+      FOR SELECT USING (public.get_user_role(auth.uid()) = 'administrator');
+
+      CREATE POLICY "Administrators can insert profiles" ON public.profiles
+      FOR INSERT WITH CHECK (public.get_user_role(auth.uid()) = 'administrator');
+
+      CREATE POLICY "Administrators can update all profiles" ON public.profiles
+      FOR UPDATE USING (public.get_user_role(auth.uid()) = 'administrator');
+
+      CREATE POLICY "Administrators can delete profiles" ON public.profiles
+      FOR DELETE USING (public.get_user_role(auth.uid()) = 'administrator');
+
+      CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles
+      FOR SELECT USING (
+        (role = 'student'::public.user_role) AND
+        (public.get_user_role(auth.uid()) = ANY (ARRAY['creator'::public.user_role, 'tutor'::public.user_role, 'administrator'::public.user_role]))
+      );
 
       -- Create or replace handle_new_user function
       CREATE OR REPLACE FUNCTION public.handle_new_user()
