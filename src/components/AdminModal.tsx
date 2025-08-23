@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code } from "lucide-react";
+import { Lock, Database, UserPlus, Eraser, Code, Users } from "lucide-react"; // Import Users icon
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal'; // Import DataModelModal
 import { clearAllAppData } from '@/lib/dataReset'; // Import clearAllAppData
@@ -26,11 +26,12 @@ import { clearAllAppData } from '@/lib/dataReset'; // Import clearAllAppData
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigateToAdminUserManagement: () => void; // New prop for navigation
 }
 
 const ADMIN_PASSWORD = "Mehkac95!"; // Password for admin access
 
-const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
+const AdminModal = ({ isOpen, onClose, onNavigateToAdminUserManagement }: AdminModalProps) => {
   const isMobile = useIsMobile();
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -90,7 +91,9 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
             <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full" variant="outline">
               <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
             </Button>
-            {/* Le bouton de création d'administrateur est déplacé vers AdminUserManagementPage */}
+            <Button onClick={() => { onNavigateToAdminUserManagement(); onClose(); }} className="w-full" variant="outline">
+              <Users className="h-4 w-4 mr-2" /> Gérer les utilisateurs
+            </Button>
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Effacer toutes les données
             </Button>

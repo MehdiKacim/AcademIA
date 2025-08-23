@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom"; // Import Navigate
+import { BrowserRouter, Routes, Route, Outlet, Navigate, useNavigate } from "react-router-dom"; // Import useNavigate
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./components/layouts/DashboardLayout";
@@ -37,9 +37,14 @@ const queryClient = new QueryClient();
 const AppWithThemeProvider = () => {
   const { currentUserProfile, isLoadingUser, currentRole } = useRole();
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // State for AdminModal, now in App.tsx
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Determine the initial theme based on user profile or system preference
   const initialTheme = currentUserProfile?.theme || "system";
+
+  const handleNavigateToAdminUserManagement = () => {
+    navigate('/admin-users');
+  };
 
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="class">
@@ -117,7 +122,11 @@ const AppWithThemeProvider = () => {
               </Routes>
             </BrowserRouter>
           )}
-          <AdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} /> {/* Render AdminModal here */}
+          <AdminModal 
+            isOpen={isAdminModalOpen} 
+            onClose={() => setIsAdminModalOpen(false)} 
+            onNavigateToAdminUserManagement={handleNavigateToAdminUserManagement} // Pass the new prop
+          />
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
