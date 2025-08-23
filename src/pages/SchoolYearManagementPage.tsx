@@ -50,8 +50,10 @@ const SchoolYearManagementPage = () => {
     fetchData();
   }, []);
 
+  const isAllowedToManage = currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director';
+
   const handleAddSchoolYear = async () => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || !isAllowedToManage) {
       showError("Vous n'êtes pas autorisé à ajouter une année scolaire.");
       return;
     }
@@ -91,7 +93,7 @@ const SchoolYearManagementPage = () => {
   };
 
   const handleDeleteSchoolYear = async (id: string) => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || !isAllowedToManage) {
       showError("Vous n'êtes pas autorisé à supprimer une année scolaire.");
       return;
     }
@@ -108,7 +110,7 @@ const SchoolYearManagementPage = () => {
   };
 
   const handleEditSchoolYear = (year: SchoolYear) => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || !isAllowedToManage) {
       showError("Vous n'êtes pas autorisé à modifier une année scolaire.");
       return;
     }
@@ -121,7 +123,7 @@ const SchoolYearManagementPage = () => {
   };
 
   const handleSaveEditedSchoolYear = async () => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || !isAllowedToManage) {
       showError("Vous n'êtes pas autorisé à modifier une année scolaire.");
       return;
     }
@@ -162,7 +164,7 @@ const SchoolYearManagementPage = () => {
   };
 
   const handleGenerateNextYear = async () => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || !isAllowedToManage) {
       showError("Vous n'êtes pas autorisé à générer une année scolaire.");
       return;
     }
@@ -202,14 +204,14 @@ const SchoolYearManagementPage = () => {
     );
   }
 
-  if (!currentUserProfile || currentRole !== 'administrator') {
+  if (!currentUserProfile || !isAllowedToManage) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les administrateurs peuvent accéder à cette page.
+          Seuls les administrateurs, directeurs et directeurs adjoints peuvent accéder à cette page.
         </p>
       </div>
     );

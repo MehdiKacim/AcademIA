@@ -86,7 +86,7 @@ const AppWithThemeProvider = () => {
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
                       <Route path="/subjects" element={<SubjectManagementPage />} />
-                      <Route path="/school-years" element={<SchoolYearManagementPage />} /> {/* New route */}
+                      <Route path="/school-years" element={<SchoolYearManagementPage />} />
                     </Route>
 
                     {/* Routes accessible by Administrator, Director, Deputy Director, Professeur */}
@@ -98,7 +98,7 @@ const AppWithThemeProvider = () => {
                     <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur', 'tutor']} />}>
                       <Route path="/classes" element={<ClassManagementPage />} />
                       <Route path="/students" element={<StudentManagementPage />} />
-                      <Route path="/pedagogical-management" element={<PedagogicalManagementPage />} /> {/* New route */}
+                      <Route path="/pedagogical-management" element={<PedagogicalManagementPage />} />
                     </Route>
 
                     {/* Routes accessible by Professeur only */}
@@ -118,8 +118,8 @@ const AppWithThemeProvider = () => {
                         <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/students" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} /> {/* Redirect for students */}
-                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} /> {/* Redirect for students */}
+                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
                     {/* Directors/Deputy Directors should not access professeur-only pages like create-course */}
@@ -132,7 +132,7 @@ const AppWithThemeProvider = () => {
                         <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} /> {/* Redirect for professeurs/tutors */}
+                        {/* Removed redirect for school-years here, as it's now accessible by directors/deputy directors */}
                       </>
                     )}
                   </Route>

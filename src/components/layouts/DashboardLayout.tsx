@@ -247,7 +247,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
             { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' }, // New item
-            // Removed from here: { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
+            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
@@ -263,6 +263,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
             { to: "/pedagogical-management", label: "Gestion des Élèves par Classe", icon: BookMarked, type: 'link' }, // New item
+            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' }, // Added here
           ],
         },
         {
@@ -273,7 +274,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' },
             { to: "/admin-users", label: "Gestion Professeurs", icon: UserRoundCog, type: 'link' },
             { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' }, // Added here
           ],
         },
         {
