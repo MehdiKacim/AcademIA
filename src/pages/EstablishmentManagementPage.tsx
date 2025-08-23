@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Building2, UserRound } from "lucide-react"; // Import UserRound
+import { PlusCircle, Edit, Trash2, Building2, UserRound, ChevronDown, ChevronUp } from "lucide-react"; // Import UserRound, ChevronDown, ChevronUp
 import { Establishment, Curriculum, EstablishmentType, Profile } from "@/lib/dataModels"; // Import Profile
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -22,6 +22,7 @@ import { useRole } from '@/contexts/RoleContext';
 import EditEstablishmentDialog from '@/components/EditEstablishmentDialog'; // Import the new dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
 import { getProfilesByRole } from '@/lib/studentData';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible components
 
 const EstablishmentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -35,6 +36,7 @@ const EstablishmentManagementPage = () => {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [directors, setDirectors] = useState<Profile[]>([]); // State for directors
   const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]); // State for deputy directors
+  const [isNewEstablishmentFormOpen, setIsNewEstablishmentFormOpen] = useState(false); // State for collapsible
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEstablishmentToEdit, setCurrentEstablishmentToEdit] = useState<Establishment | null>(null);
@@ -93,6 +95,7 @@ const EstablishmentManagementPage = () => {
         setNewEstablishmentDirectorId(undefined);
         setNewEstablishmentDeputyDirectorId(undefined);
         showSuccess("Établissement ajouté !");
+        setIsNewEstablishmentFormOpen(false); // Close the collapsible after creation
       } else {
         showError("Échec de l'ajout de l'établissement.");
       }
@@ -170,80 +173,89 @@ const EstablishmentManagementPage = () => {
       </p>
 
       {currentRole === 'administrator' && ( // Only administrators can add establishments
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-6 w-6 text-primary" /> Ajouter un établissement
-            </CardTitle>
-            <CardDescription>Créez un nouvel établissement.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="new-establishment-name">Nom du nouvel établissement</Label>
-              <Input
-                id="new-establishment-name"
-                placeholder="Nom du nouvel établissement"
-                value={newEstablishmentName}
-                onChange={(e) => setNewEstablishmentName(e.target.value)}
-              />
-              <Label htmlFor="new-establishment-type">Type d'établissement</Label>
-              <Select value={newEstablishmentType} onValueChange={(value: EstablishmentType) => setNewEstablishmentType(value)}>
-                <SelectTrigger id="new-establishment-type">
-                  <SelectValue placeholder="Sélectionner un type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {establishmentTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Label htmlFor="new-establishment-address">Adresse</Label>
-              <Input
-                id="new-establishment-address"
-                placeholder="Adresse de l'établissement"
-                value={newEstablishmentAddress}
-                onChange={(e) => setNewEstablishmentAddress(e.target.value)}
-              />
-              <Label htmlFor="new-establishment-phone">Numéro de téléphone (facultatif)</Label>
-              <Input
-                id="new-establishment-phone"
-                placeholder="Ex: 0123456789"
-                value={newEstablishmentPhoneNumber}
-                onChange={(e) => setNewEstablishmentPhoneNumber(e.target.value)}
-              />
-              <Label htmlFor="new-establishment-director">Directeur (obligatoire)</Label>
-              <Select value={newEstablishmentDirectorId} onValueChange={setNewEstablishmentDirectorId}>
-                <SelectTrigger id="new-establishment-director">
-                  <SelectValue placeholder="Sélectionner un directeur" />
-                </SelectTrigger>
-                <SelectContent>
-                  {directors.map(director => (
-                    <SelectItem key={director.id} value={director.id}>
-                      {director.first_name} {director.last_name} (@{director.username})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Label htmlFor="new-establishment-deputy-director">Directeur Adjoint (facultatif)</Label>
-              <Select value={newEstablishmentDeputyDirectorId || "none"} onValueChange={(value) => setNewEstablishmentDeputyDirectorId(value === "none" ? undefined : value)}>
-                <SelectTrigger id="new-establishment-deputy-director">
-                  <SelectValue placeholder="Sélectionner un directeur adjoint" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun</SelectItem>
-                  {deputyDirectors.map(deputy => (
-                    <SelectItem key={deputy.id} value={deputy.id}>
-                      {deputy.first_name} {deputy.last_name} (@{deputy.username})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddEstablishment} disabled={!newEstablishmentName.trim() || !newEstablishmentType || !newEstablishmentAddress.trim() || !newEstablishmentDirectorId}>
-                <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <Collapsible open={isNewEstablishmentFormOpen} onOpenChange={setIsNewEstablishmentFormOpen}>
+          <Card>
+            <CardHeader>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0">
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-6 w-6 text-primary" /> Ajouter un établissement
+                  </CardTitle>
+                  {isNewEstablishmentFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CardDescription>Créez un nouvel établissement.</CardDescription>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="new-establishment-name">Nom du nouvel établissement</Label>
+                  <Input
+                    id="new-establishment-name"
+                    placeholder="Nom du nouvel établissement"
+                    value={newEstablishmentName}
+                    onChange={(e) => setNewEstablishmentName(e.target.value)}
+                  />
+                  <Label htmlFor="new-establishment-type">Type d'établissement</Label>
+                  <Select value={newEstablishmentType} onValueChange={(value: EstablishmentType) => setNewEstablishmentType(value)}>
+                    <SelectTrigger id="new-establishment-type">
+                      <SelectValue placeholder="Sélectionner un type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {establishmentTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Label htmlFor="new-establishment-address">Adresse</Label>
+                  <Input
+                    id="new-establishment-address"
+                    placeholder="Adresse de l'établissement"
+                    value={newEstablishmentAddress}
+                    onChange={(e) => setNewEstablishmentAddress(e.target.value)}
+                  />
+                  <Label htmlFor="new-establishment-phone">Numéro de téléphone (facultatif)</Label>
+                  <Input
+                    id="new-establishment-phone"
+                    placeholder="Ex: 0123456789"
+                    value={newEstablishmentPhoneNumber}
+                    onChange={(e) => setNewEstablishmentPhoneNumber(e.target.value)}
+                  />
+                  <Label htmlFor="new-establishment-director">Directeur (obligatoire)</Label>
+                  <Select value={newEstablishmentDirectorId} onValueChange={setNewEstablishmentDirectorId}>
+                    <SelectTrigger id="new-establishment-director">
+                      <SelectValue placeholder="Sélectionner un directeur" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {directors.map(director => (
+                        <SelectItem key={director.id} value={director.id}>
+                          {director.first_name} {director.last_name} (@{director.username})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Label htmlFor="new-establishment-deputy-director">Directeur Adjoint (facultatif)</Label>
+                  <Select value={newEstablishmentDeputyDirectorId || "none"} onValueChange={(value) => setNewEstablishmentDeputyDirectorId(value === "none" ? undefined : value)}>
+                    <SelectTrigger id="new-establishment-deputy-director">
+                      <SelectValue placeholder="Sélectionner un directeur adjoint" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Aucun</SelectItem>
+                      {deputyDirectors.map(deputy => (
+                        <SelectItem key={deputy.id} value={deputy.id}>
+                          {deputy.first_name} {deputy.last_name} (@{deputy.username})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleAddEstablishment} disabled={!newEstablishmentName.trim() || !newEstablishmentType || !newEstablishmentAddress.trim() || !newEstablishmentDirectorId}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
+                  </Button>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
 
       <Card>

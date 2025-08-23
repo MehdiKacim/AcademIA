@@ -21,6 +21,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { loadEstablishments } from '@/lib/courseData';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible components
 
 const AdminUserManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser, fetchUserProfile } = useRole();
@@ -37,6 +38,7 @@ const AdminUserManagementPage = () => {
   const [newUserRole, setNewUserRole] = useState<Profile['role']>('student');
   const [newUserEstablishmentId, setNewUserEstablishmentId] = useState<string>('');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [isNewUserFormOpen, setIsNewUserFormOpen] = useState(false); // State for collapsible
 
   const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
@@ -190,6 +192,7 @@ const AdminUserManagementPage = () => {
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
       setAllUsers(await getAllProfiles()); // Refresh user list
+      setIsNewUserFormOpen(false); // Close the collapsible after creation
     } catch (error: any) {
       console.error("Unexpected error creating user:", error);
       showError(`Une erreur inattendue est survenue: ${error.message}`);
@@ -474,95 +477,104 @@ const AdminUserManagementPage = () => {
         Créez, modifiez et supprimez des utilisateurs sur la plateforme.
       </p>
 
-      {/* Section: Créer un nouvel utilisateur */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-6 w-6 text-primary" /> Créer un nouvel utilisateur
-          </CardTitle>
-          <CardDescription>Créez un nouveau compte pour n'importe quel rôle.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              placeholder="Prénom"
-              value={newUserFirstName}
-              onChange={(e) => setNewUserFirstName(e.target.value)}
-            />
-            <Input
-              placeholder="Nom"
-              value={newUserLastName}
-              onChange={(e) => setNewUserLastName(e.target.value)}
-            />
-            <InputWithStatus
-              placeholder="Nom d'utilisateur"
-              value={newUserUsername}
-              onChange={(e) => handleNewUserUsernameChange(e.target.value)}
-              status={usernameAvailabilityStatus}
-              errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-            />
-            <InputWithStatus
-              type="email"
-              placeholder="Email"
-              value={newUserEmail}
-              onChange={(e) => handleNewUserEmailChange(e.target.value)}
-              status={emailAvailabilityStatus}
-              errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-            />
-            <Input
-              type="password"
-              placeholder="Mot de passe"
-              value={newUserPassword}
-              onChange={(e) => setNewUserPassword(e.target.value)}
-            />
-            <Select value={newUserRole} onValueChange={(value: Profile['role']) => {
-              setNewUserRole(value);
-              if (currentRole === 'administrator') { // Admin can choose establishment freely
-                if (value === 'student' || value === 'administrator') setNewUserEstablishmentId('');
-              } else { // Directors/Deputy Directors are restricted to their establishment
-                setNewUserEstablishmentId(currentUserProfile.establishment_id || '');
-              }
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un rôle" />
-              </SelectTrigger>
-              <SelectContent>
-                {rolesForCreation.map(role => (
-                  <SelectItem key={role} value={role}>
-                    {role === 'student' ? 'Élève' :
-                     role === 'professeur' ? 'Professeur' :
-                     role === 'tutor' ? 'Tuteur' :
-                     role === 'director' ? 'Directeur' :
-                     role === 'deputy_director' ? 'Directeur Adjoint' :
-                     'Administrateur (Super Admin)'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {(newUserRole !== 'student' && newUserRole !== 'administrator') && (
-              <Select 
-                value={newUserEstablishmentId} 
-                onValueChange={setNewUserEstablishmentId}
-                disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un établissement" />
-                </SelectTrigger>
-                <SelectContent>
-                  {establishments
-                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id) // Filter for directors/deputy directors
-                    .map(est => (
-                      <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+      {/* Section: Créer un nouvel utilisateur (Collapsible) */}
+      <Collapsible open={isNewUserFormOpen} onOpenChange={setIsNewUserFormOpen}>
+        <Card>
+          <CardHeader>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-0">
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-6 w-6 text-primary" /> Créer un nouvel utilisateur
+                </CardTitle>
+                {isNewUserFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CardDescription>Créez un nouveau compte pour n'importe quel rôle.</CardDescription>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  placeholder="Prénom"
+                  value={newUserFirstName}
+                  onChange={(e) => setNewUserFirstName(e.target.value)}
+                />
+                <Input
+                  placeholder="Nom"
+                  value={newUserLastName}
+                  onChange={(e) => setNewUserLastName(e.target.value)}
+                />
+                <InputWithStatus
+                  placeholder="Nom d'utilisateur"
+                  value={newUserUsername}
+                  onChange={(e) => handleNewUserUsernameChange(e.target.value)}
+                  status={usernameAvailabilityStatus}
+                  errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                />
+                <InputWithStatus
+                  type="email"
+                  placeholder="Email"
+                  value={newUserEmail}
+                  onChange={(e) => handleNewUserEmailChange(e.target.value)}
+                  status={emailAvailabilityStatus}
+                  errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                />
+                <Input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
+                />
+                <Select value={newUserRole} onValueChange={(value: Profile['role']) => {
+                  setNewUserRole(value);
+                  if (currentRole === 'administrator') { // Admin can choose establishment freely
+                    if (value === 'student' || value === 'administrator') setNewUserEstablishmentId('');
+                  } else { // Directors/Deputy Directors are restricted to their establishment
+                    setNewUserEstablishmentId(currentUserProfile.establishment_id || '');
+                  }
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un rôle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rolesForCreation.map(role => (
+                      <SelectItem key={role} value={role}>
+                        {role === 'student' ? 'Élève' :
+                         role === 'professeur' ? 'Professeur' :
+                         role === 'tutor' ? 'Tuteur' :
+                         role === 'director' ? 'Directeur' :
+                         role === 'deputy_director' ? 'Directeur Adjoint' :
+                         'Administrateur (Super Admin)'}
+                      </SelectItem>
                     ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole !== 'student' && newUserRole !== 'professeur' && newUserRole !== 'tutor' && !newUserEstablishmentId)}>
-            {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
-          </Button>
-        </CardContent>
-      </Card>
+                  </SelectContent>
+                </Select>
+                {(newUserRole !== 'student' && newUserRole !== 'administrator') && (
+                  <Select 
+                    value={newUserEstablishmentId} 
+                    onValueChange={setNewUserEstablishmentId}
+                    disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un établissement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {establishments
+                        .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id) // Filter for directors/deputy directors
+                        .map(est => (
+                          <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole !== 'student' && newUserRole !== 'professeur' && newUserRole !== 'tutor' && !newUserEstablishmentId)}>
+                {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
+              </Button>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Section: Liste de tous les utilisateurs */}
       <Card>
