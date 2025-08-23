@@ -152,7 +152,7 @@ const App = () => (
   <RoleProvider>
     <CourseChatProvider>
       <AppWithThemeProvider />
-    </CourseChatChatProvider>
+    </CourseChatProvider>
   </RoleProvider>
 );
 
