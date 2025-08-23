@@ -13,7 +13,6 @@ import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
 import TutorAnalyticsSection from "@/components/TutorAnalyticsSection";
 import EstablishmentAdminAnalyticsSection from "@/components/EstablishmentAdminAnalyticsSection"; // Renamed import
-import GlobalAdminAnalyticsSection from "@/components/GlobalAdminAnalyticsSection"; // New import
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -54,7 +53,12 @@ const Analytics = () => {
     setSelectedClassFilter(undefined);
     setSelectedCurriculumFilter(undefined);
     setSelectedEstablishmentFilter(undefined);
-  }, [currentRole]);
+
+    // For directors/deputy directors, default to their establishment and disable selection
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id) {
+      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
+    }
+  }, [currentRole, currentUserProfile?.establishment_id]);
 
   if (isLoadingUser) {
     return (
@@ -133,50 +137,38 @@ const Analytics = () => {
           onSendMessageToUser={handleSendMessageToUser}
         />
       );
-    } else if (currentRole === 'administrator') {
-      if (selectedEstablishmentFilter && selectedEstablishmentFilter !== 'all') {
+    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') {
+      if (!selectedEstablishmentFilter) {
         return (
-          <EstablishmentAdminAnalyticsSection // Render specific section
-            establishments={establishments}
-            curricula={curricula}
-            classes={classes}
-            allProfiles={allProfiles}
-            selectedEstablishmentFilter={selectedEstablishmentFilter}
-          />
-        );
-      } else {
-        return (
-          <GlobalAdminAnalyticsSection // Render global section
-            establishments={establishments}
-            curricula={curricula}
-            classes={classes}
-            allProfiles={allProfiles}
-          />
+          <div className="text-center py-20">
+            <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+              Sélectionnez un Établissement
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Veuillez choisir un établissement dans le filtre ci-dessus pour voir les analytiques.
+            </p>
+          </div>
         );
       }
-    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
       return (
-        <CreatorAnalyticsSection
-          view={view}
-          selectedClassId={selectedClassFilter}
-          selectedCurriculumId={selectedCurriculumFilter}
-          selectedEstablishmentId={currentUserProfile.establishment_id}
-          selectedCourseId={courseIdFromUrl}
-          allCourses={courses}
+        <EstablishmentAdminAnalyticsSection
+          establishments={establishments}
+          curricula={curricula}
+          classes={classes}
           allProfiles={allProfiles}
-          allStudentCourseProgresses={studentCourseProgresses}
-          allClasses={classes}
-          allCurricula={curricula}
+          selectedEstablishmentFilter={selectedEstablishmentFilter}
         />
       );
     }
     return null;
   };
 
+  const currentEstablishmentName = selectedEstablishmentFilter ? getEstablishmentName(selectedEstablishmentFilter) : 'Globales';
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        {currentRole === 'student' ? 'Mes Analytiques' : currentRole === 'professeur' ? 'Analytiques des Cours' : currentRole === 'tutor' ? 'Suivi des Élèves' : currentRole === 'administrator' ? 'Analytiques Globales' : 'Analytiques de l\'Établissement'}
+        Analytiques {currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director' ? `de l'Établissement : ${currentEstablishmentName}` : ''}
       </h1>
 
       {(currentRole === 'administrator' || currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director') && (
@@ -192,10 +184,10 @@ const Analytics = () => {
               disabled={currentRole === 'director' || currentRole === 'deputy_director'}
               >
                 <SelectTrigger id="select-establishment">
-                  <SelectValue placeholder="Tous les établissements" />
+                  <SelectValue placeholder="Sélectionner un établissement" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les établissements</SelectItem>
+                  {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
                   {establishments
                     .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                     .map(est => (

@@ -65,13 +65,6 @@ const EstablishmentAdminAnalyticsSection = ({ establishments, curricula, classes
       <p className="text-lg text-muted-foreground mb-8">Vue d'ensemble des statistiques pour {currentEstablishmentName}.</p>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <AdminStatCard
-          title="Établissement Actuel"
-          description="Établissement sélectionné."
-          value={currentEstablishmentName}
-          icon={Building2}
-          onClick={() => setIsEstablishmentDetailModalOpen(true)}
-        />
-        <AdminStatCard
           title="Personnel de Direction"
           description="Directeurs et Directeurs Adjoints."
           value={totalDirectors + totalDeputyDirectors}
