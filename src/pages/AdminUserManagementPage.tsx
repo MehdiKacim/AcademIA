@@ -458,7 +458,7 @@ const AdminUserManagementPage = () => {
                 {rolesForCreation.map(role => (
                   <SelectItem key={role} value={role}>
                     {role === 'student' ? 'Élève' :
-                     role === 'creator' ? 'Créateur (Professeur)' :
+                     role === 'creator' ? 'Professeur' : // Changed from 'Créateur (Professeur)'
                      role === 'tutor' ? 'Tuteur' :
                      role === 'director' ? 'Directeur' :
                      role === 'deputy_director' ? 'Directeur Adjoint' :
@@ -514,7 +514,7 @@ const AdminUserManagementPage = () => {
                 <SelectContent>
                   <SelectItem value="all">Tous les rôles</SelectItem>
                   <SelectItem value="student">Élève</SelectItem>
-                  <SelectItem value="creator">Créateur (Professeur)</SelectItem>
+                  <SelectItem value="creator">Professeur</SelectItem> {/* Changed from 'Créateur (Professeur)' */}
                   <SelectItem value="tutor">Tuteur</SelectItem>
                   <SelectItem value="director">Directeur</SelectItem>
                   <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
@@ -550,7 +550,7 @@ const AdminUserManagementPage = () => {
                   <div className="flex-grow">
                     <p className="font-medium">{user.first_name} {user.last_name} <span className="text-sm text-muted-foreground">(@{user.username})</span></p>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
-                    <p className="text-xs text-muted-foreground">Rôle: <span className="font-semibold">{user.role}</span></p>
+                    <p className="text-xs text-muted-foreground">Rôle: <span className="font-semibold">{user.role === 'creator' ? 'Professeur' : user.role === 'student' ? 'Élève' : user.role === 'tutor' ? 'Tuteur' : user.role === 'director' ? 'Directeur' : user.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur (Super Admin)'}</span></p>
                     {user.establishment_id && (
                       <p className="text-xs text-muted-foreground">Établissement: {getEstablishmentName(user.establishment_id)}</p>
                     )}
@@ -629,7 +629,7 @@ const AdminUserManagementPage = () => {
                     {rolesForEdit.map(role => (
                       <SelectItem key={role} value={role}>
                         {role === 'student' ? 'Élève' :
-                         role === 'creator' ? 'Créateur (Professeur)' :
+                         role === 'creator' ? 'Professeur' : // Changed from 'Créateur (Professeur)'
                          role === 'tutor' ? 'Tuteur' :
                          role === 'director' ? 'Directeur' :
                          role === 'deputy_director' ? 'Directeur Adjoint' :
