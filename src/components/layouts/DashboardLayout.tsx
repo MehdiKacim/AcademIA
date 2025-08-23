@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import AiAPersistentChat from "@/components/AiAPersistentChat"; // Corrected import path
+import AiAPersistentChat from "@/components/AiAPersistentChat";
 import FloatingAiAPersistentChat from "@/components/FloatingAiAPersistentChat";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -238,7 +238,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           label: "Administration",
           type: 'trigger',
           items: [
-            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' }, // Changed view name
+            { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
+            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
       );
@@ -249,7 +254,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           label: "Gestion Établissement",
           type: 'trigger',
           items: [
-            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' }, // Changed view name
+            { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
+            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
       );
