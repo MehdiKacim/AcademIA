@@ -201,7 +201,7 @@ const Messages = () => {
       console.log("[Messages] Unarchive successful. fetchAllData called directly.");
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
-      showError(`Erreur lors du désarchivage: ${err.message}`);
+      showError(`Erreur lors du désarchivage: ${error.message}`);
     }
   };
 
@@ -292,6 +292,8 @@ const Messages = () => {
       </div>
     );
   }
+
+  console.log("[Messages.tsx Render] allProfiles before passing to MessageList:", allProfiles);
 
   return (
     <div className="space-y-8 h-[calc(100vh-120px)] flex flex-col">
@@ -452,7 +454,7 @@ const Messages = () => {
           {/* Dynamic key to force re-render */}
           {allProfiles.length > 0 && (
             <MessageList
-              key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}`}
+              key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}-${allProfiles.length}`}
               recentMessages={showArchived ? archivedConversations : recentConversations}
               allProfiles={allProfiles}
               onSelectContact={handleSelectContact}

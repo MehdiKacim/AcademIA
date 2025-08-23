@@ -33,6 +33,7 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
   const currentUserId = currentUserProfile?.id;
 
   // Debugging logs
+  console.log(`[MessageList.tsx Render] Received allProfiles prop:`, allProfiles);
   console.log(`[MessageList Debug] Rendering with isArchivedView: ${isArchivedView}`);
   console.log(`[MessageList Debug] Received recentMessages (${recentMessages.length}):`, recentMessages.map(m => ({ id: m.id, sender: m.sender_id, receiver: m.receiver_id, content: m.content, is_archived: m.is_archived })));
   console.log(`[MessageList Debug] Received allProfiles (${allProfiles.length}):`, allProfiles.map(p => ({ id: p.id, username: p.username, role: p.role })));
