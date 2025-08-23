@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock, NotebookText } from "lucide-react"; // Import NotebookText
+import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock, NotebookText, BookText, ClipboardList, UserCheck } from "lucide-react"; // Import new icons
 
 const DataModelContent = () => {
   const dataModels = {
@@ -49,6 +49,16 @@ interface Establishment {
   created_at: string;
 }
     `,
+    "public.subjects": `
+// Nouvelle table pour les matières scolaires
+interface Subject {
+  id: string; // UUID
+  name: string; // Nom de la matière (ex: 'Mathématiques', 'Informatique')
+  establishment_id: string; // UUID, référence public.establishments(id)
+  created_at?: string;
+  updated_at?: string;
+}
+    `,
     "public.curricula": `
 interface Curriculum {
   id: string; // UUID
@@ -64,8 +74,30 @@ interface Class {
   id: string; // UUID
   name: string;
   curriculum_id: string; // UUID, référence public.curricula(id)
-  creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'creator')
+  creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
+  establishment_id?: string; // New: Link to parent establishment
+  school_year?: string; // New: School year for the class (e.g., "2023-2024")
   created_at: string;
+}
+    `,
+    "public.class_subjects": `
+// Nouvelle table de liaison pour les matières affectées à une classe
+interface ClassSubject {
+  id: string; // UUID
+  class_id: string; // UUID, référence public.classes(id)
+  subject_id: string; // UUID, référence public.subjects(id)
+  created_at?: string;
+}
+    `,
+    "public.professor_subject_assignments": `
+// Nouvelle table de liaison pour les affectations de professeurs aux matières par classe et année scolaire
+interface ProfessorSubjectAssignment {
+  id: string; // UUID
+  professor_id: string; // UUID, référence public.profiles(id)
+  subject_id: string; // UUID, référence public.subjects(id)
+  class_id: string; // UUID, référence public.classes(id)
+  school_year: string; // Année scolaire (ex: '2023-2024')
+  created_at?: string;
 }
     `,
     "public.notes": `
@@ -153,11 +185,14 @@ interface Document {
   const getIcon = (modelName: string) => {
     switch (modelName) {
       case 'Auth.users (Supabase)': return <Lock className="h-5 w-5 text-primary" />;
-      case 'public.roles': return <Users className="h-5 w-5 text-primary" />; // New icon for roles
+      case 'public.roles': return <Users className="h-5 w-5 text-primary" />;
       case 'public.profiles': return <User className="h-5 w-5 text-primary" />;
       case 'public.establishments': return <School className="h-5 w-5 text-primary" />;
+      case 'public.subjects': return <BookText className="h-5 w-5 text-primary" />; // New icon for subjects
       case 'public.curricula': return <LayoutList className="h-5 w-5 text-primary" />;
       case 'public.classes': return <Users className="h-5 w-5 text-primary" />;
+      case 'public.class_subjects': return <ClipboardList className="h-5 w-5 text-primary" />; // New icon for class subjects
+      case 'public.professor_subject_assignments': return <UserCheck className="h-5 w-5 text-primary" />; // New icon for professor assignments
       case 'public.courses': return <BookOpen className="h-5 w-5 text-primary" />;
       case 'public.notes': return <NotebookText className="h-5 w-5 text-primary" />;
       case 'public.student_course_progress': return <GraduationCap className="h-5 w-5 text-primary" />;

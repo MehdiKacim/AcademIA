@@ -46,6 +46,14 @@ export interface Establishment {
   created_at?: string;
 }
 
+export interface Subject { // New: Subject interface
+  id: string;
+  name: string;
+  establishment_id: string; // Link to parent establishment
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Curriculum {
   id: string;
   name: string;
@@ -62,6 +70,22 @@ export interface Class {
   creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
   establishment_id?: string; // New: Link to parent establishment
   school_year?: string; // New: School year for the class (e.g., "2023-2024")
+  created_at?: string;
+}
+
+export interface ClassSubject { // New: Class-Subject liaison
+  id: string;
+  class_id: string;
+  subject_id: string;
+  created_at?: string;
+}
+
+export interface ProfessorSubjectAssignment { // New: Professor-Subject-Class-Year assignment
+  id: string;
+  professor_id: string;
+  subject_id: string;
+  class_id: string;
+  school_year: string;
   created_at?: string;
 }
 
@@ -127,7 +151,7 @@ export interface Course {
   modules: Module[];
   skills_to_acquire: string[];
   image_url?: string;
-  category?: string;
+  subject_id?: string; // Changed from 'category' to 'subject_id'
   difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
   created_at?: string;
   creator_id?: string; // Added creator_id to link courses to professeurs

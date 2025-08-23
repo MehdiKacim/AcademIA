@@ -1,4 +1,4 @@
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment, EstablishmentType } from "./dataModels";
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment, EstablishmentType, Subject, ClassSubject, ProfessorSubjectAssignment } from "./dataModels";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 
 export type EntityType = 'course' | 'module' | 'section';
@@ -63,7 +63,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
 
 // --- Course Management ---
 export const loadCourses = async (userId?: string, userRole?: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'): Promise<Course[]> => {
-  let query = supabase.from('courses').select('*');
+  let query = supabase.from('courses').select('*, subjects(name)'); // Select subject name
 
   if (userRole === 'student' && userId) {
     const accessibleCourseIds = await getAccessibleCourseIdsForStudent(userId);
@@ -86,14 +86,15 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'profe
     return [];
   }
   // Map snake_case from DB to camelCase for frontend if necessary, or adjust frontend to use snake_case
-  return data.map(course => ({
+  return data.map((course: any) => ({
     id: course.id,
     title: course.title,
     description: course.description || '',
     modules: course.modules as Module[], // Assuming modules JSONB matches Module[] structure
     skills_to_acquire: course.skills_to_acquire || [],
     image_url: course.image_url || undefined,
-    category: course.category || undefined,
+    subject_id: course.subject_id || undefined, // Changed from category
+    // category: course.subjects?.name || undefined, // Can derive category from subject name if needed for display
     difficulty: course.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: course.created_at || undefined,
     creator_id: course.creator_id || undefined,
@@ -109,7 +110,7 @@ export const addCourseToStorage = async (newCourse: Course): Promise<Course | nu
       modules: newCourse.modules,
       skills_to_acquire: newCourse.skills_to_acquire,
       image_url: newCourse.image_url,
-      category: newCourse.category,
+      subject_id: newCourse.subject_id, // Changed from category
       difficulty: newCourse.difficulty,
       creator_id: newCourse.creator_id, // Include creator_id
     })
@@ -126,7 +127,7 @@ export const addCourseToStorage = async (newCourse: Course): Promise<Course | nu
     modules: data.modules as Module[],
     skills_to_acquire: data.skills_to_acquire || [],
     image_url: data.image_url || undefined,
-    category: data.category || undefined,
+    subject_id: data.subject_id || undefined, // Changed from category
     difficulty: data.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: data.created_at || undefined,
     creator_id: data.creator_id || undefined,
@@ -142,7 +143,7 @@ export const updateCourseInStorage = async (updatedCourse: Course): Promise<Cour
       modules: updatedCourse.modules,
       skills_to_acquire: updatedCourse.skills_to_acquire,
       image_url: updatedCourse.image_url,
-      category: updatedCourse.category,
+      subject_id: updatedCourse.subject_id, // Changed from category
       difficulty: updatedCourse.difficulty,
       updated_at: new Date().toISOString(), // Add updated_at if your table has it
       creator_id: updatedCourse.creator_id, // Include creator_id
@@ -161,7 +162,7 @@ export const updateCourseInStorage = async (updatedCourse: Course): Promise<Cour
     modules: data.modules as Module[],
     skills_to_acquire: data.skills_to_acquire || [],
     image_url: data.image_url || undefined,
-    category: data.category || undefined,
+    subject_id: data.subject_id || undefined, // Changed from category
     difficulty: data.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: data.created_at || undefined,
     creator_id: data.creator_id || undefined,
@@ -182,20 +183,21 @@ export const deleteCourseFromStorage = async (courseId: string): Promise<void> =
 export const getAllCoursesByCreatorId = async (creatorId: string): Promise<Course[]> => {
   const { data, error } = await supabase
     .from('courses')
-    .select('*')
+    .select('*, subjects(name)') // Select subject name
     .eq('creator_id', creatorId);
   if (error) {
     console.error("Error fetching courses by creator ID:", error);
     return [];
   }
-  return data.map(course => ({
+  return data.map((course: any) => ({
     id: course.id,
     title: course.title,
     description: course.description || '',
     modules: course.modules as Module[],
     skills_to_acquire: course.skills_to_acquire || [],
     image_url: course.image_url || undefined,
-    category: course.category || undefined,
+    subject_id: course.subject_id || undefined, // Changed from category
+    // category: course.subjects?.name || undefined,
     difficulty: course.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: course.created_at || undefined,
     creator_id: course.creator_id || undefined,
@@ -382,6 +384,59 @@ export const deleteEstablishmentFromStorage = async (establishmentId: string): P
   }
 };
 
+// --- Subject Management (New) ---
+export const loadSubjects = async (establishmentId?: string): Promise<Subject[]> => {
+  let query = supabase.from('subjects').select('*');
+  if (establishmentId) {
+    query = query.eq('establishment_id', establishmentId);
+  }
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error loading subjects:", error);
+    return [];
+  }
+  return data;
+};
+
+export const addSubjectToStorage = async (newSubject: Omit<Subject, 'id' | 'created_at' | 'updated_at'>): Promise<Subject | null> => {
+  const { data, error } = await supabase
+    .from('subjects')
+    .insert(newSubject)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error adding subject:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const updateSubjectInStorage = async (updatedSubject: Subject): Promise<Subject | null> => {
+  const { data, error } = await supabase
+    .from('subjects')
+    .update({ name: updatedSubject.name, updated_at: new Date().toISOString() })
+    .eq('id', updatedSubject.id)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error updating subject:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const deleteSubjectFromStorage = async (subjectId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('subjects')
+    .delete()
+    .eq('id', subjectId);
+  if (error) {
+    console.error("Error deleting subject:", error);
+    throw error;
+  }
+};
+
+
 // --- Class Management ---
 export const loadClasses = async (): Promise<Class[]> => {
   const { data, error } = await supabase
@@ -469,6 +524,104 @@ export const deleteClassFromStorage = async (classId: string): Promise<void> => 
   }
 };
 
+// --- Class Subject Management (New) ---
+export const loadClassSubjects = async (classId?: string): Promise<ClassSubject[]> => {
+  let query = supabase.from('class_subjects').select('*, subjects(name)');
+  if (classId) {
+    query = query.eq('class_id', classId);
+  }
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error loading class subjects:", error);
+    return [];
+  }
+  return data.map((cs: any) => ({
+    id: cs.id,
+    class_id: cs.class_id,
+    subject_id: cs.subject_id,
+    subject_name: cs.subjects?.name, // Add subject name for convenience
+    created_at: cs.created_at,
+  }));
+};
+
+export const addClassSubjectToStorage = async (newClassSubject: Omit<ClassSubject, 'id' | 'created_at'>): Promise<ClassSubject | null> => {
+  const { data, error } = await supabase
+    .from('class_subjects')
+    .insert(newClassSubject)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error adding class subject:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const deleteClassSubjectFromStorage = async (classSubjectId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('class_subjects')
+    .delete()
+    .eq('id', classSubjectId);
+  if (error) {
+    console.error("Error deleting class subject:", error);
+    throw error;
+  }
+};
+
+// --- Professor Subject Assignment Management (New) ---
+export const loadProfessorSubjectAssignments = async (professorId?: string, classId?: string, schoolYear?: string): Promise<ProfessorSubjectAssignment[]> => {
+  let query = supabase.from('professor_subject_assignments').select('*, subjects(name), classes(name)');
+  if (professorId) {
+    query = query.eq('professor_id', professorId);
+  }
+  if (classId) {
+    query = query.eq('class_id', classId);
+  }
+  if (schoolYear) {
+    query = query.eq('school_year', schoolYear);
+  }
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error loading professor subject assignments:", error);
+    return [];
+  }
+  return data.map((psa: any) => ({
+    id: psa.id,
+    professor_id: psa.professor_id,
+    subject_id: psa.subject_id,
+    subject_name: psa.subjects?.name, // Add subject name for convenience
+    class_id: psa.class_id,
+    class_name: psa.classes?.name, // Add class name for convenience
+    school_year: psa.school_year,
+    created_at: psa.created_at,
+  }));
+};
+
+export const addProfessorSubjectAssignmentToStorage = async (newAssignment: Omit<ProfessorSubjectAssignment, 'id' | 'created_at'>): Promise<ProfessorSubjectAssignment | null> => {
+  const { data, error } = await supabase
+    .from('professor_subject_assignments')
+    .insert(newAssignment)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error adding professor subject assignment:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const deleteProfessorSubjectAssignmentFromStorage = async (assignmentId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('professor_subject_assignments')
+    .delete()
+    .eq('id', assignmentId);
+  if (error) {
+    console.error("Error deleting professor subject assignment:", error);
+    throw error;
+  }
+};
+
+
 // New helper function to get establishment address by ID
 export const getEstablishmentAddress = async (establishmentId: string): Promise<string | undefined> => {
   const { data, error } = await supabase
@@ -503,4 +656,19 @@ export const resetEstablishments = async () => {
 export const resetClasses = async () => {
   const { error } = await supabase.from('classes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) console.error("Error resetting classes:", error);
+};
+
+export const resetSubjects = async () => {
+  const { error } = await supabase.from('subjects').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error("Error resetting subjects:", error);
+};
+
+export const resetClassSubjects = async () => {
+  const { error } = await supabase.from('class_subjects').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error("Error resetting class subjects:", error);
+};
+
+export const resetProfessorSubjectAssignments = async () => {
+  const { error } = await supabase.from('professor_subject_assignments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) console.error("Error resetting professor subject assignments:", error);
 };

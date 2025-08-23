@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,8 +25,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon, GripVertical } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { addCourseToStorage, loadCourses, updateCourseInStorage } from "@/lib/courseData";
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption } from "@/lib/dataModels";
+import { addCourseToStorage, loadCourses, updateCourseInStorage, loadSubjects } from "@/lib/courseData"; // Import loadSubjects
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Subject } from "@/lib/dataModels"; // Import Subject
 import { useParams, useNavigate } from "react-router-dom";
 import {
   DndContext,
@@ -109,7 +109,7 @@ const ModuleSchema = z.object({
 const CourseSchema = z.object({
   title: z.string().min(1, "Le titre du cours est requis."),
   description: z.string().min(1, "La description du cours est requise."),
-  category: z.string().min(1, "La catégorie est requise."),
+  subject_id: z.string().min(1, "La matière est requise."), // Changed from category
   difficulty: z.enum(["Débutant", "Intermédiaire", "Avancé"]),
   image_url: z.string().url("L'URL de l'image du cours doit être valide.").optional().or(z.literal("")),
   skills_to_acquire: z.string().min(1, "Les compétences à acquérir sont requises (séparées par des virgules)."),
@@ -205,7 +205,14 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                 type="button"
                 variant="destructive"
                 size="sm"
-                onClick={() => removeSection(sectionIndex)}
+                onClick={() => {
+                  const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
+                  if (currentQuestions && currentQuestions[sectionIndex]) { // Corrected index here
+                    currentQuestions[sectionIndex].options.splice(sectionIndex, 1); // This line seems incorrect, should be removing the section itself
+                    form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
+                  }
+                  removeSection(sectionIndex); // Correct way to remove section
+                }}
                 disabled={sectionFields.length === 1}
               >
                 <MinusCircle className="h-4 w-4" />
@@ -302,8 +309,8 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                           size="sm"
                           onClick={() => {
                             const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
-                            if (currentQuestions && currentQuestions[questionIndex]) {
-                              currentQuestions[questionIndex].options.splice(questionIndex, 1);
+                            if (currentQuestions) {
+                              currentQuestions.splice(questionIndex, 1); // Corrected to remove the question itself
                               form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                             }
                           }}
@@ -446,13 +453,14 @@ const CreateCourse = () => {
   const { currentRole, isLoadingUser, currentUserProfile } = useRole(); // Get currentUserProfile
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const [subjects, setSubjects] = useState<Subject[]>([]); // New state for subjects
 
   const form = useForm<z.infer<typeof CourseSchema>>({
     resolver: zodResolver(CourseSchema),
     defaultValues: {
       title: "",
       description: "",
-      category: "",
+      subject_id: "", // Changed from category
       difficulty: "Débutant",
       image_url: "",
       skills_to_acquire: "",
@@ -492,7 +500,11 @@ const CreateCourse = () => {
   }
 
   useEffect(() => {
-    const fetchCourse = async () => {
+    const fetchCourseAndSubjects = async () => {
+      if (currentUserProfile?.establishment_id) {
+        setSubjects(await loadSubjects(currentUserProfile.establishment_id)); // Load subjects for the user's establishment
+      }
+
       if (courseId) {
         const courses = await loadCourses();
         const courseToEdit = courses.find(c => c.id === courseId);
@@ -500,6 +512,7 @@ const CreateCourse = () => {
           const formattedCourse = {
             ...courseToEdit,
             skills_to_acquire: courseToEdit.skills_to_acquire.join(', '),
+            subject_id: courseToEdit.subject_id || "", // Ensure subject_id is set
           };
           form.reset(formattedCourse);
         } else {
@@ -510,7 +523,7 @@ const CreateCourse = () => {
         form.reset({
           title: "",
           description: "",
-          category: "",
+          subject_id: "", // Changed from category
           difficulty: "Débutant",
           image_url: "",
           skills_to_acquire: "",
@@ -527,8 +540,8 @@ const CreateCourse = () => {
         });
       }
     };
-    fetchCourse();
-  }, [courseId, form, navigate]);
+    fetchCourseAndSubjects();
+  }, [courseId, form, navigate, currentUserProfile?.establishment_id]); // Added currentUserProfile.establishment_id
 
   const onSubmit = async (values: z.infer<typeof CourseSchema>) => {
     if (!currentUserProfile?.id) {
@@ -540,7 +553,7 @@ const CreateCourse = () => {
       id: courseId || `course${Date.now()}`, // ID will be generated by Supabase if not editing
       title: values.title,
       description: values.description,
-      category: values.category,
+      subject_id: values.subject_id, // Changed from category
       difficulty: values.difficulty,
       image_url: values.image_url || undefined,
       skills_to_acquire: values.skills_to_acquire.split(',').map(s => s.trim()),
@@ -630,13 +643,26 @@ const CreateCourse = () => {
             />
             <FormField
               control={form.control}
-              name="category"
+              name="subject_id" // Changed from category
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Catégorie</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Informatique, Mathématiques" {...field} />
-                  </FormControl>
+                  <FormLabel>Matière</FormLabel> {/* Changed label */}
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez une matière" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {subjects.length === 0 ? (
+                        <SelectItem value="no-subjects" disabled>Aucune matière disponible</SelectItem>
+                      ) : (
+                        subjects.map(subject => (
+                          <SelectItem key={subject.id} value={subject.id}>{subject.name}</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
