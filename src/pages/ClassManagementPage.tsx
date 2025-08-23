@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp } from "lucide-react";
 import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment } from "@/lib/dataModels"; // Import Profile and Curriculum, Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -36,13 +36,15 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole } from '@/contexts/RoleContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import EditClassDialog from '@/components/EditClassDialog'; // Import the new dialog
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const ClassManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Main states for data
   const [classes, setClasses] = useState<Class[]>([]);
@@ -56,6 +58,7 @@ const ClassManagementPage = () => {
   const [newClassCurriculumId, setNewClassCurriculumId] = useState<string>("");
   const [newClassEstablishmentId, setNewClassEstablishmentId] = useState<string>(""); // New state
   const [newClassSchoolYear, setNewClassSchoolYear] = useState<string>(""); // New state
+  const [isNewClassFormOpen, setIsNewClassFormOpen] = useState(false);
 
   // State for edit class dialog
   const [isEditClassDialogOpen, setIsEditClassDialogOpen] = useState(false);
@@ -74,6 +77,24 @@ const ClassManagementPage = () => {
     };
     fetchData();
   }, [currentUserProfile]);
+
+  // Set default establishment for directors/deputy directors when creating new classes
+  useEffect(() => {
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id) {
+      setNewClassEstablishmentId(currentUserProfile.establishment_id);
+    } else {
+      setNewClassEstablishmentId('');
+    }
+  }, [currentRole, currentUserProfile?.establishment_id]);
+
+  // Set initial class filter from URL
+  useEffect(() => {
+    if (classIdFromUrl) {
+      setSelectedClassFilter(classIdFromUrl);
+    } else {
+      setSelectedClassFilter(null);
+    }
+  }, [classIdFromUrl]);
 
   // Helper functions to get names from IDs
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
@@ -118,9 +139,14 @@ const ClassManagementPage = () => {
         setClasses(await loadClasses()); // Re-fetch to get the new list
         setNewClassName('');
         setNewClassCurriculumId("");
-        setNewClassEstablishmentId("");
+        setNewClassEstablishmentId(
+          (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+            ? currentUserProfile.establishment_id
+            : ''
+        ); // Reset to default for director/deputy director
         setNewClassSchoolYear("");
         showSuccess("Classe ajoutée !");
+        setIsNewClassFormOpen(false);
       } else {
         showError("Échec de l'ajout de la classe.");
       }
@@ -256,69 +282,78 @@ const ClassManagementPage = () => {
       </p>
 
       {(currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can add
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-6 w-6 text-primary" /> Ajouter une nouvelle classe
-            </CardTitle>
-            <CardDescription>Créez de nouvelles classes.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="new-class-name">Nom de la classe</Label>
-              <Input
-                id="new-class-name"
-                placeholder="Ex: Terminale S1"
-                value={newClassName}
-                onChange={(e) => setNewClassName(e.target.value)}
-              />
-              <Label htmlFor="new-class-establishment">Établissement</Label>
-              <Select 
-                value={newClassEstablishmentId} 
-                onValueChange={setNewClassEstablishmentId}
-                disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
-              >
-                <SelectTrigger id="new-class-establishment">
-                  <SelectValue placeholder="Sélectionner un établissement" />
-                </SelectTrigger>
-                <SelectContent>
-                  {establishmentsToDisplay.map(est => (
-                    <SelectItem key={est.id} value={est.id}>
-                      {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Label htmlFor="new-class-curriculum">Cursus</Label>
-              <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
-                <SelectTrigger id="new-class-curriculum">
-                  <SelectValue placeholder="Sélectionner un cursus" />
-                </SelectTrigger>
-                <SelectContent>
-                  {curriculaToDisplay.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
-                    <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Label htmlFor="new-class-school-year">Année scolaire</Label>
-              <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
-                <SelectTrigger id="new-class-school-year">
-                  <SelectValue placeholder="Sélectionner l'année scolaire" />
-                </SelectTrigger>
-                <SelectContent>
-                  {schoolYears.map(year => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
-                <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <Collapsible open={isNewClassFormOpen} onOpenChange={setIsNewClassFormOpen}>
+          <Card>
+            <CardHeader>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-6 w-6 text-primary" /> Ajouter une nouvelle classe
+                  </CardTitle>
+                  {isNewClassFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CardDescription>Créez de nouvelles classes.</CardDescription>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="new-class-name">Nom de la classe</Label>
+                  <Input
+                    id="new-class-name"
+                    placeholder="Ex: Terminale S1"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                  />
+                  <Label htmlFor="new-class-establishment">Établissement</Label>
+                  <Select 
+                    value={newClassEstablishmentId} 
+                    onValueChange={setNewClassEstablishmentId}
+                    disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+                  >
+                    <SelectTrigger id="new-class-establishment">
+                      <SelectValue placeholder="Sélectionner un établissement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {establishmentsToDisplay.map(est => (
+                        <SelectItem key={est.id} value={est.id}>
+                          {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Label htmlFor="new-class-curriculum">Cursus</Label>
+                  <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
+                    <SelectTrigger id="new-class-curriculum">
+                      <SelectValue placeholder="Sélectionner un cursus" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {curriculaToDisplay.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
+                        <SelectItem key={cur.id} value={cur.id}>
+                          {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Label htmlFor="new-class-school-year">Année scolaire</Label>
+                  <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
+                    <SelectTrigger id="new-class-school-year">
+                      <SelectValue placeholder="Sélectionner l'année scolaire" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schoolYears.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
+                  </Button>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
           
       <Card>

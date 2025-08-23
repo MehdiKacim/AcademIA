@@ -122,8 +122,8 @@ const EstablishmentManagementPage = () => {
   };
 
   const handleEditEstablishment = (establishment: Establishment) => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
-      showError("Vous n'êtes pas autorisé à modifier un établissement.");
+    if (!currentUserProfile || (currentRole !== 'administrator' && establishment.id !== currentUserProfile.establishment_id)) { // Only admin can edit any, directors/deputy directors can only edit their own
+      showError("Vous n'êtes pas autorisé à modifier cet établissement.");
       return;
     }
     setCurrentEstablishmentToEdit(establishment);
@@ -278,7 +278,7 @@ const EstablishmentManagementPage = () => {
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{est.name}</span>
                     <div className="flex gap-2">
-                      {currentRole === 'administrator' && (
+                      {((currentRole === 'administrator') || (currentRole === 'director' || currentRole === 'deputy_director') && est.id === currentUserProfile.establishment_id) && (
                         <Button variant="outline" size="sm" onClick={() => handleEditEstablishment(est)}>
                           <Edit className="h-4 w-4" />
                         </Button>

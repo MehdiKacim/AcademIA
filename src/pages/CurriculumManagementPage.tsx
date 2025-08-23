@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, BookOpen, LayoutList, School } from "lucide-react";
+import { PlusCircle, Edit, Trash2, BookOpen, LayoutList, School, ChevronDown, ChevronUp } from "lucide-react";
 import { Curriculum, Establishment, Course, Class } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -24,6 +24,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
 import EditCurriculumDialog from '@/components/EditCurriculumDialog'; // Import the new dialog
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const CurriculumManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -34,6 +35,7 @@ const CurriculumManagementPage = () => {
 
   const [newCurriculumName, setNewCurriculumName] = useState('');
   const [newCurriculumEstablishmentId, setNewCurriculumEstablishmentId] = useState<string | undefined>(undefined);
+  const [isNewCurriculumFormOpen, setIsNewCurriculumFormOpen] = useState(false);
 
   const [isManageCoursesModalOpen, setIsManageCoursesModalOpen] = useState(false);
   const [selectedCurriculumForCourses, setSelectedCurriculumForCourses] = useState<Curriculum | null>(null);
@@ -51,6 +53,15 @@ const CurriculumManagementPage = () => {
     };
     fetchData();
   }, []);
+
+  // Set default establishment for directors/deputy directors when creating new curricula
+  useEffect(() => {
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id) {
+      setNewCurriculumEstablishmentId(currentUserProfile.establishment_id);
+    } else {
+      setNewCurriculumEstablishmentId(undefined);
+    }
+  }, [currentRole, currentUserProfile?.establishment_id]);
 
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
@@ -80,8 +91,13 @@ const CurriculumManagementPage = () => {
       if (newCur) {
         setCurricula(await loadCurricula()); // Re-fetch to get the new list
         setNewCurriculumName('');
-        setNewCurriculumEstablishmentId(undefined);
+        setNewCurriculumEstablishmentId(
+          (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+            ? currentUserProfile.establishment_id
+            : undefined
+        ); // Reset to default for director/deputy director
         showSuccess("Cursus ajouté !");
+        setIsNewCurriculumFormOpen(false);
       } else {
         showError("Échec de l'ajout du cursus.");
       }
@@ -224,43 +240,63 @@ const CurriculumManagementPage = () => {
         Créez et gérez des ensembles de cours pour vos classes, liés à un établissement.
       </p>
 
+      <Collapsible open={isNewCurriculumFormOpen} onOpenChange={setIsNewCurriculumFormOpen}>
+        <Card>
+          <CardHeader>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-0">
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutList className="h-6 w-6 text-primary" /> Ajouter un cursus
+                </CardTitle>
+                {isNewCurriculumFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CardDescription>Créez un nouveau cursus.</CardDescription>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="new-curriculum-name">Nom du nouveau cursus</Label>
+                <Input
+                  id="new-curriculum-name"
+                  placeholder="Ex: Cursus Scientifique"
+                  value={newCurriculumName}
+                  onChange={(e) => setNewCurriculumName(e.target.value)}
+                />
+                <Label htmlFor="curriculum-establishment">Établissement</Label>
+                <Select 
+                  value={newCurriculumEstablishmentId} 
+                  onValueChange={setNewCurriculumEstablishmentId}
+                  disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+                >
+                  <SelectTrigger id="curriculum-establishment">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {establishmentsToDisplay.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddCurriculum} disabled={!newCurriculumName.trim() || !newCurriculumEstablishmentId}>
+                  <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Cursus
+                </Button>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <LayoutList className="h-6 w-6 text-primary" /> Cursus Scolaires
+            <LayoutList className="h-6 w-6 text-primary" /> Liste des Cursus
           </CardTitle>
-          <CardDescription>Créez et gérez des ensembles de cours pour vos classes, liés à un établissement.</CardDescription>
+          <CardDescription>Visualisez et gérez les cursus existants.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="new-curriculum-name">Nom du nouveau cursus</Label>
-            <Input
-              id="new-curriculum-name"
-              placeholder="Ex: Cursus Scientifique"
-              value={newCurriculumName}
-              onChange={(e) => setNewCurriculumName(e.target.value)}
-            />
-            <Label htmlFor="curriculum-establishment">Établissement</Label>
-            <Select 
-              value={newCurriculumEstablishmentId} 
-              onValueChange={setNewCurriculumEstablishmentId}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
-            >
-              <SelectTrigger id="curriculum-establishment">
-                <SelectValue placeholder="Sélectionner un établissement" />
-              </SelectTrigger>
-              <SelectContent>
-                {establishmentsToDisplay.map(est => (
-                  <SelectItem key={est.id} value={est.id}>
-                    {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleAddCurriculum} disabled={!newCurriculumName.trim() || !newCurriculumEstablishmentId}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Cursus
-            </Button>
-          </div>
           <div className="space-y-2 mt-4">
             {establishmentsToDisplay.length === 0 ? (
               <p className="text-muted-foreground">Veuillez d'abord créer un établissement pour ajouter des cursus.</p>

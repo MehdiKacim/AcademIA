@@ -91,7 +91,11 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
     }
   };
 
-  const establishmentsToDisplay = currentRole === 'administrator'
+  const isAdministrator = currentRole === 'administrator';
+  const isDirectorOrDeputyDirector = currentRole === 'director' || currentRole === 'deputy_director';
+  const canEdit = isAdministrator || (isDirectorOrDeputyDirector && curriculum.establishment_id === currentUserProfile?.establishment_id);
+
+  const establishmentsToDisplay = isAdministrator
     ? establishments
     : establishments.filter(est => est.id === currentUserProfile?.establishment_id);
 
@@ -115,6 +119,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
+              disabled={!canEdit}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -126,6 +131,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="col-span-3"
+              disabled={!canEdit}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -135,7 +141,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
             <Select 
               value={establishmentId} 
               onValueChange={setEstablishmentId}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+              disabled={!isAdministrator} // Only admin can change establishment
             >
               <SelectTrigger id="establishment" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un établissement" />
@@ -151,7 +157,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSave} disabled={isLoading}>
+          <Button onClick={handleSave} disabled={isLoading || !canEdit}>
             {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
           </Button>
         </DialogFooter>
