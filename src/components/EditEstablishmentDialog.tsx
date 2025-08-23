@@ -145,7 +145,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
-              disabled={currentRole !== 'administrator'} {/* Only admin can change name */}
+              disabled={currentRole !== 'administrator'} /* Only admin can change name */
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
