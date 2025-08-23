@@ -22,7 +22,7 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import FloatingAiAChatButton from "@/components/FloatingAiAPersistentChat";
+import FloatingAiAPersistentChat from "@/components/FloatingAiAPersistentChat";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
@@ -267,10 +267,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' },
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
-            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
-            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/analytics?view=overview", label: "Analytiques Globales", icon: LayoutDashboard, type: 'link' },
+            // Removed: Cursus, Classes, Élèves, Analytiques Globales as per new spec
           ],
         },
       ];
@@ -283,7 +280,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('gestion-etablissement'),
           items: [
-            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
+            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // For creating profs/students
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
@@ -374,34 +371,27 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     )}
                   </NavLink>
                 );
-              } else if (item.type === 'trigger' && item.items) { // Handle trigger with sub-items for desktop dropdown
+              } else if (item.type === 'trigger' && item.items) { // For desktop, navigate to the first sub-item
+                const firstSubItemPath = item.items[0]?.to;
                 return (
-                  <DropdownMenu key={item.label}>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                          isTriggerActive
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-accent hover:text-accent-foreground"
-                        )}
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {item.items.map((subItem) => (
-                        <DropdownMenuItem key={subItem.to} onClick={() => navigate(subItem.to)}>
-                          <subItem.icon className="mr-2 h-4 w-4" />
-                          {subItem.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button
+                    key={item.label}
+                    variant="ghost"
+                    onClick={() => {
+                      if (firstSubItemPath) {
+                        navigate(firstSubItemPath);
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                      isTriggerActive
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
                 );
               } else if (item.type === 'trigger' && item.onClick) { // Handle simple trigger without sub-items
                 return (
@@ -495,7 +485,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAChatButton isVisible={isFloatingButtonActuallyVisible} />}
+      {currentUserProfile && <FloatingAiAPersistentChat isVisible={isFloatingButtonActuallyVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
