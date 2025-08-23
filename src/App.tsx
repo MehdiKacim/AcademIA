@@ -64,7 +64,7 @@ const AppWithThemeProvider = () => {
                 <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
                 <Route element={<ProtectedRoute />}>
-                  <Route element={<DashboardLayout />}> {/* Removed setIsAdminModalOpen prop */}
+                  <Route element={<DashboardLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -78,7 +78,6 @@ const AppWithThemeProvider = () => {
                     
                     <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                      {/* Removed /admin-users route */}
                     </Route>
 
                     <Route element={<ProtectedRoute allowedRoles={['administrator', 'creator']} />}>
@@ -87,7 +86,7 @@ const AppWithThemeProvider = () => {
                       <Route path="/create-course/:courseId" element={<CreateCourse />} />
                     </Route>
 
-                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'creator', 'tutor']} />}>
+                    <Route element={<ProtectedRoute allowedRoles={['creator', 'tutor']} />}> {/* Updated allowedRoles */}
                       <Route path="/classes" element={<ClassManagementPage />} />
                       <Route path="/students" element={<CreatorAndTutorStudentManagementPage />} />
                     </Route>
@@ -105,7 +104,6 @@ const AppWithThemeProvider = () => {
           <AdminModal 
             isOpen={isAdminModalOpen} 
             onClose={() => setIsAdminModalOpen(false)} 
-            // Removed onNavigateToAdminUserManagement prop
           />
         </TooltipProvider>
       </QueryClientProvider>

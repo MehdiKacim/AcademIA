@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2 } from "lucide-react"; // Removed UserPlus
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
-import { useCourseChat } from "@/contexts/CourseChatContext"; // Added this import
+import { useCourseChat } from "@/contexts/CourseChatContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
@@ -33,7 +33,7 @@ import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
 
 interface DashboardLayoutProps {
-  setIsAdminModalOpen: (isOpen: boolean) => void; // Keep this prop as Index.tsx still uses it
+  setIsAdminModalOpen: (isOpen: boolean) => void;
 }
 
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
@@ -267,8 +267,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
-            // Removed "Gestion Utilisateurs" link
+            // Removed "Gestion Élèves" link
           ],
         },
         {
