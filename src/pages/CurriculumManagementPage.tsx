@@ -55,7 +55,7 @@ const CurriculumManagementPage = () => {
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   const handleAddCurriculum = async () => {
-    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+    if (!currentRole || (currentRole !== 'creator')) { // Only creator can add
       showError("Vous n'êtes pas autorisé à ajouter un cursus.");
       return;
     }
@@ -85,7 +85,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleDeleteCurriculum = async (id: string) => {
-    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+    if (!currentRole || (currentRole !== 'creator')) { // Only creator can delete
       showError("Vous n'êtes pas autorisé à supprimer un cursus.");
       return;
     }
@@ -100,7 +100,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleOpenManageCoursesModal = (curriculum: Curriculum) => {
-    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+    if (!currentRole || (currentRole !== 'creator')) { // Only creator can manage courses
       showError("Vous n'êtes pas autorisé à gérer les cours d'un cursus.");
       return;
     }
@@ -110,7 +110,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleSaveCurriculumCourses = async () => {
-    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+    if (!currentRole || (currentRole !== 'creator')) { // Only creator can save courses
       showError("Vous n'êtes pas autorisé à sauvegarder les cours d'un cursus.");
       return;
     }
@@ -134,7 +134,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleEditCurriculum = (curriculum: Curriculum) => {
-    if (!currentRole || (currentRole !== 'administrator' && currentRole !== 'creator')) {
+    if (!currentRole || (currentRole !== 'creator')) { // Only creator can edit
       showError("Vous n'êtes pas autorisé à modifier un cursus.");
       return;
     }
@@ -159,14 +159,14 @@ const CurriculumManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'creator' && currentRole !== 'administrator') { // Only creators and administrators can access
+  if (currentRole !== 'creator') { // Only creators can access
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) et les administrateurs peuvent accéder à cette page.
+          Seuls les créateurs (professeurs) peuvent accéder à cette page.
         </p>
       </div>
     );

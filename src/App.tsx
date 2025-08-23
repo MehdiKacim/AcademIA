@@ -77,13 +77,10 @@ const AppWithThemeProvider = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/data-model" element={<DataModelViewer />} />
                     
-                    {/* Administrator-specific routes (consolidated) */}
+                    {/* Administrator-specific routes */}
                     <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                      <Route path="/curricula" element={<CurriculumManagementPage />} />
-                      <Route path="/classes" element={<ClassManagementPage />} />
-                      <Route path="/students" element={<StudentManagementPage />} />
                     </Route>
 
                     {/* Creator-specific routes */}
@@ -101,12 +98,28 @@ const AppWithThemeProvider = () => {
                       <Route path="/students" element={<StudentManagementPage />} />
                     </Route>
 
+                    {/* Routes accessible by Creator AND Tutor */}
+                    <Route element={<ProtectedRoute allowedRoles={['creator', 'tutor']} />}>
+                      {/* These pages are already covered by specific creator/tutor routes above,
+                          but if there were shared pages, they would go here.
+                          For now, ensure no administrator access to these. */}
+                    </Route>
+
                     {/* Redirect for students trying to access restricted pages */}
                     {currentRole === 'student' && (
                       <>
                         <Route path="/create-course" element={<Navigate to="/courses" replace />} />
                         <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
+                      </>
+                    )}
+                    {/* Redirect for administrators trying to access creator/tutor pages */}
+                    {currentRole === 'administrator' && (
+                      <>
+                        <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/students" element={<Navigate to="/dashboard" replace />} />
