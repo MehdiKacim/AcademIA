@@ -214,14 +214,20 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
     role_id_to_update = roleData.id;
   }
 
+  const payload: any = {
+    ...updatedProfile,
+    role_id: role_id_to_update, // Use role_id for DB update
+    role: undefined, // Remove role from payload to avoid sending it to DB
+    // Explicitly set optional fields to null if they are undefined or empty string
+    establishment_id: updatedProfile.establishment_id === '' ? null : updatedProfile.establishment_id,
+    enrollment_start_date: updatedProfile.enrollment_start_date === '' ? null : updatedProfile.enrollment_start_date,
+    enrollment_end_date: updatedProfile.enrollment_end_date === '' ? null : updatedProfile.enrollment_end_date,
+    theme: updatedProfile.theme === '' ? null : updatedProfile.theme,
+  };
+
   const { error } = await supabase
     .from('profiles')
-    .update({
-      ...updatedProfile,
-      role_id: role_id_to_update, // Use role_id for DB update
-      role: undefined, // Remove role from payload to avoid sending it to DB
-      class_id: undefined, // Ensure class_id is not sent in update payload
-    })
+    .update(payload)
     .eq('id', updatedProfile.id!);
     // Removed .select().single() to avoid PGRST116 error if no row is returned by RLS or query
   if (error) {
