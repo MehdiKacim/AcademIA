@@ -80,11 +80,20 @@ const AppWithThemeProvider = () => {
                     {/* Administrator-specific routes */}
                     <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
+                    </Route>
+
+                    {/* Director/Deputy Director specific routes (can also access some admin pages) */}
+                    <Route element={<ProtectedRoute allowedRoles={['director', 'deputy_director']} />}>
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                      <Route path="/curricula" element={<CurriculumManagementPage />} />
+                      <Route path="/classes" element={<ClassManagementPage />} />
+                      <Route path="/students" element={<StudentManagementPage />} />
+                      {/* Directors/Deputy Directors can also access AdminUserManagementPage but with restricted capabilities */}
+                      <Route path="/admin-users" element={<AdminUserManagementPage />} />
                     </Route>
 
                     {/* Creator-specific routes */}
-                    <Route element={<ProtectedRoute allowedRoles={['creator']} />}>
+                    <Route element={<ProtectedRoute allowedRoles={['professeur']} />}> {/* Changed 'creator' to 'professeur' */}
                       <Route path="/create-course" element={<CreateCourse />} />
                       <Route path="/create-course/:courseId" element={<CreateCourse />} />
                       <Route path="/classes" element={<ClassManagementPage />} />
@@ -98,13 +107,6 @@ const AppWithThemeProvider = () => {
                       <Route path="/students" element={<StudentManagementPage />} />
                     </Route>
 
-                    {/* Routes accessible by Creator AND Tutor */}
-                    <Route element={<ProtectedRoute allowedRoles={['creator', 'tutor']} />}>
-                      {/* These pages are already covered by specific creator/tutor routes above,
-                          but if there were shared pages, they would go here.
-                          For now, ensure no administrator access to these. */}
-                    </Route>
-
                     {/* Redirect for students trying to access restricted pages */}
                     {currentRole === 'student' && (
                       <>
@@ -116,13 +118,17 @@ const AppWithThemeProvider = () => {
                         <Route path="/students" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
-                    {/* Redirect for administrators trying to access creator/tutor pages */}
-                    {currentRole === 'administrator' && (
+                    {/* Redirect for professeurs/tutors trying to access admin-only pages */}
+                    {(currentRole === 'professeur' || currentRole === 'tutor') && (
+                      <>
+                        <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
+                      </>
+                    )}
+                    {/* Redirect for directors/deputy_directors trying to access creator-only pages */}
+                    {(currentRole === 'director' || currentRole === 'deputy_director') && (
                       <>
                         <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
                   </Route>
@@ -146,7 +152,7 @@ const App = () => (
   <RoleProvider>
     <CourseChatProvider>
       <AppWithThemeProvider />
-    </CourseChatProvider>
+    </CourseChatChatProvider>
   </RoleProvider>
 );
 

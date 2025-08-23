@@ -15,6 +15,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { Establishment, EstablishmentType, Profile } from "@/lib/dataModels"; // Import Profile
 import { updateEstablishmentInStorage } from "@/lib/courseData";
 import { getProfilesByRole } from '@/lib/studentData'; // Import getProfilesByRole
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface EditEstablishmentDialogProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface EditEstablishmentDialogProps {
 }
 
 const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: EditEstablishmentDialogProps) => {
+  const { currentRole } = useRole(); // Get currentRole
   const [name, setName] = useState(establishment.name);
   const [type, setType] = useState<EstablishmentType>(establishment.type);
   const [address, setAddress] = useState(establishment.address || '');
@@ -69,6 +71,10 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
   }, [isOpen, establishment]);
 
   const handleSave = async () => {
+    if (currentRole !== 'administrator') { // Only administrator can save
+      showError("Vous n'êtes pas autorisé à modifier un établissement.");
+      return;
+    }
     if (!name.trim()) {
       showError("Le nom de l'établissement est requis.");
       return;
@@ -139,13 +145,14 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
+              disabled={currentRole !== 'administrator'} // Only admin can edit
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="type" className="text-right">
               Type
             </Label>
-            <Select value={type} onValueChange={(value: EstablishmentType) => setType(value)}>
+            <Select value={type} onValueChange={(value: EstablishmentType) => setType(value)} disabled={currentRole !== 'administrator'}>
               <SelectTrigger id="type" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un type" />
               </SelectTrigger>
@@ -166,6 +173,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               onChange={(e) => setAddress(e.target.value)}
               className="col-span-3"
               required
+              disabled={currentRole !== 'administrator'} // Only admin can edit
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -177,13 +185,14 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="col-span-3"
+              disabled={currentRole !== 'administrator'} // Only admin can edit
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="director" className="text-right">
               Directeur
             </Label>
-            <Select value={directorId} onValueChange={setDirectorId}>
+            <Select value={directorId} onValueChange={setDirectorId} disabled={currentRole !== 'administrator'}>
               <SelectTrigger id="director" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur" />
               </SelectTrigger>
@@ -200,7 +209,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
             <Label htmlFor="deputyDirector" className="text-right">
               Directeur Adjoint
             </Label>
-            <Select value={deputyDirectorId || "none"} onValueChange={(value) => setDeputyDirectorId(value === "none" ? undefined : value)}>
+            <Select value={deputyDirectorId || "none"} onValueChange={(value) => setDeputyDirectorId(value === "none" ? undefined : value)} disabled={currentRole !== 'administrator'}>
               <SelectTrigger id="deputyDirector" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur adjoint" />
               </SelectTrigger>
@@ -224,11 +233,12 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               className="col-span-3"
+              disabled={currentRole !== 'administrator'} // Only admin can edit
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSave} disabled={isLoading}>
+          <Button onClick={handleSave} disabled={isLoading || currentRole !== 'administrator'}>
             {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
           </Button>
         </DialogFooter>

@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast";
 import { Curriculum, Establishment } from "@/lib/dataModels";
 import { updateCurriculumInStorage, loadEstablishments } from "@/lib/courseData";
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface EditCurriculumDialogProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface EditCurriculumDialogProps {
 }
 
 const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurriculumDialogProps) => {
+  const { currentUserProfile, currentRole } = useRole(); // Get currentUserProfile and currentRole
   const [name, setName] = useState(curriculum.name);
   const [description, setDescription] = useState(curriculum.description || '');
   const [establishmentId, setEstablishmentId] = useState(curriculum.establishment_id);
@@ -46,12 +48,21 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
   }, [isOpen, curriculum]);
 
   const handleSave = async () => {
+    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur, director, deputy_director, administrator can save
+      showError("Vous n'êtes pas autorisé à modifier un cursus.");
+      return;
+    }
     if (!name.trim()) {
       showError("Le nom du cursus est requis.");
       return;
     }
     if (!establishmentId) {
       showError("L'établissement est requis.");
+      return;
+    }
+    // Director/Deputy Director can only edit curricula from their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && establishmentId !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier des cursus que de votre établissement.");
       return;
     }
 
@@ -79,6 +90,10 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
       setIsLoading(false);
     }
   };
+
+  const establishmentsToDisplay = currentRole === 'administrator'
+    ? establishments
+    : establishments.filter(est => est.id === currentUserProfile?.establishment_id);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -117,12 +132,16 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
             <Label htmlFor="establishment" className="text-right">
               Établissement
             </Label>
-            <Select value={establishmentId} onValueChange={setEstablishmentId}>
+            <Select 
+              value={establishmentId} 
+              onValueChange={setEstablishmentId}
+              disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+            >
               <SelectTrigger id="establishment" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un établissement" />
               </SelectTrigger>
               <SelectContent>
-                {establishments.map(est => (
+                {establishmentsToDisplay.map(est => (
                   <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
                 ))}
               </SelectContent>

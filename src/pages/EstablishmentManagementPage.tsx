@@ -143,18 +143,22 @@ const EstablishmentManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'administrator') { // Only administrator can access
+  if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) { // Only administrator, director, deputy_director can access
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les administrateurs peuvent accéder à cette page.
+          Seuls les administrateurs, directeurs et directeurs adjoints peuvent accéder à cette page.
         </p>
       </div>
     );
   }
+
+  const establishmentsToDisplay = currentRole === 'administrator'
+    ? establishments
+    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
 
   return (
     <div className="space-y-8">
@@ -165,93 +169,110 @@ const EstablishmentManagementPage = () => {
         Ajoutez, modifiez ou supprimez des établissements scolaires.
       </p>
 
+      {currentRole === 'administrator' && ( // Only administrators can add establishments
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-6 w-6 text-primary" /> Ajouter un établissement
+            </CardTitle>
+            <CardDescription>Créez un nouvel établissement.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="new-establishment-name">Nom du nouvel établissement</Label>
+              <Input
+                id="new-establishment-name"
+                placeholder="Nom du nouvel établissement"
+                value={newEstablishmentName}
+                onChange={(e) => setNewEstablishmentName(e.target.value)}
+              />
+              <Label htmlFor="new-establishment-type">Type d'établissement</Label>
+              <Select value={newEstablishmentType} onValueChange={(value: EstablishmentType) => setNewEstablishmentType(value)}>
+                <SelectTrigger id="new-establishment-type">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {establishmentTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Label htmlFor="new-establishment-address">Adresse</Label>
+              <Input
+                id="new-establishment-address"
+                placeholder="Adresse de l'établissement"
+                value={newEstablishmentAddress}
+                onChange={(e) => setNewEstablishmentAddress(e.target.value)}
+              />
+              <Label htmlFor="new-establishment-phone">Numéro de téléphone (facultatif)</Label>
+              <Input
+                id="new-establishment-phone"
+                placeholder="Ex: 0123456789"
+                value={newEstablishmentPhoneNumber}
+                onChange={(e) => setNewEstablishmentPhoneNumber(e.target.value)}
+              />
+              <Label htmlFor="new-establishment-director">Directeur (obligatoire)</Label>
+              <Select value={newEstablishmentDirectorId} onValueChange={setNewEstablishmentDirectorId}>
+                <SelectTrigger id="new-establishment-director">
+                  <SelectValue placeholder="Sélectionner un directeur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {directors.map(director => (
+                    <SelectItem key={director.id} value={director.id}>
+                      {director.first_name} {director.last_name} (@{director.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Label htmlFor="new-establishment-deputy-director">Directeur Adjoint (facultatif)</Label>
+              <Select value={newEstablishmentDeputyDirectorId || "none"} onValueChange={(value) => setNewEstablishmentDeputyDirectorId(value === "none" ? undefined : value)}>
+                <SelectTrigger id="new-establishment-deputy-director">
+                  <SelectValue placeholder="Sélectionner un directeur adjoint" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun</SelectItem>
+                  {deputyDirectors.map(deputy => (
+                    <SelectItem key={deputy.id} value={deputy.id}>
+                      {deputy.first_name} {deputy.last_name} (@{deputy.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleAddEstablishment} disabled={!newEstablishmentName.trim() || !newEstablishmentType || !newEstablishmentAddress.trim() || !newEstablishmentDirectorId}>
+                <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-primary" /> Établissements
+            <Building2 className="h-6 w-6 text-primary" /> Liste des Établissements
           </CardTitle>
-          <CardDescription>Ajoutez, modifiez ou supprimez des établissements.</CardDescription>
+          <CardDescription>Visualisez et gérez les établissements.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="new-establishment-name">Nom du nouvel établissement</Label>
-            <Input
-              id="new-establishment-name"
-              placeholder="Nom du nouvel établissement"
-              value={newEstablishmentName}
-              onChange={(e) => setNewEstablishmentName(e.target.value)}
-            />
-            <Label htmlFor="new-establishment-type">Type d'établissement</Label>
-            <Select value={newEstablishmentType} onValueChange={(value: EstablishmentType) => setNewEstablishmentType(value)}>
-              <SelectTrigger id="new-establishment-type">
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-              <SelectContent>
-                {establishmentTypes.map(type => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Label htmlFor="new-establishment-address">Adresse</Label>
-            <Input
-              id="new-establishment-address"
-              placeholder="Adresse de l'établissement"
-              value={newEstablishmentAddress}
-              onChange={(e) => setNewEstablishmentAddress(e.target.value)}
-            />
-            <Label htmlFor="new-establishment-phone">Numéro de téléphone (facultatif)</Label>
-            <Input
-              id="new-establishment-phone"
-              placeholder="Ex: 0123456789"
-              value={newEstablishmentPhoneNumber}
-              onChange={(e) => setNewEstablishmentPhoneNumber(e.target.value)}
-            />
-            <Label htmlFor="new-establishment-director">Directeur (obligatoire)</Label>
-            <Select value={newEstablishmentDirectorId} onValueChange={setNewEstablishmentDirectorId}>
-              <SelectTrigger id="new-establishment-director">
-                <SelectValue placeholder="Sélectionner un directeur" />
-              </SelectTrigger>
-              <SelectContent>
-                {directors.map(director => (
-                  <SelectItem key={director.id} value={director.id}>
-                    {director.first_name} {director.last_name} (@{director.username})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Label htmlFor="new-establishment-deputy-director">Directeur Adjoint (facultatif)</Label>
-            <Select value={newEstablishmentDeputyDirectorId || "none"} onValueChange={(value) => setNewEstablishmentDeputyDirectorId(value === "none" ? undefined : value)}>
-              <SelectTrigger id="new-establishment-deputy-director">
-                <SelectValue placeholder="Sélectionner un directeur adjoint" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun</SelectItem>
-                {deputyDirectors.map(deputy => (
-                  <SelectItem key={deputy.id} value={deputy.id}>
-                    {deputy.first_name} {deputy.last_name} (@{deputy.username})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleAddEstablishment} disabled={!newEstablishmentName.trim() || !newEstablishmentType || !newEstablishmentAddress.trim() || !newEstablishmentDirectorId}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
-            </Button>
-          </div>
           <div className="space-y-2 mt-4">
-            {establishments.length === 0 ? (
-              <p className="text-muted-foreground">Aucun établissement créé.</p>
+            {establishmentsToDisplay.length === 0 ? (
+              <p className="text-muted-foreground">Aucun établissement à afficher.</p>
             ) : (
-              establishments.map((est) => (
+              establishmentsToDisplay.map((est) => (
                 <Card key={est.id} className="p-3 border rounded-md">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{est.name}</span>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEditEstablishment(est)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {currentRole === 'administrator' && ( // Only administrator can edit
+                        <Button variant="outline" size="sm" onClick={() => handleEditEstablishment(est)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {currentRole === 'administrator' && ( // Only administrator can delete
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-muted-foreground">

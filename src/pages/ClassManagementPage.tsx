@@ -81,11 +81,7 @@ const ClassManagementPage = () => {
   
   // --- Class Management ---
   const handleAddClass = async () => {
-    if (!currentUserProfile) {
-      showError("Vous devez être connecté pour ajouter une classe.");
-      return;
-    }
-    if (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, director, deputy_director, administrator can add
+    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à ajouter une classe.");
       return;
     }
@@ -100,6 +96,11 @@ const ClassManagementPage = () => {
     }
     if (selectedCurriculum.establishment_id !== newClassEstablishmentId) {
       showError("Le cursus sélectionné n'appartient pas à l'établissement choisi.");
+      return;
+    }
+    // Director/Deputy Director can only add classes to their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && newClassEstablishmentId !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez ajouter des classes que pour votre établissement.");
       return;
     }
 
@@ -130,14 +131,26 @@ const ClassManagementPage = () => {
   };
 
   const handleDeleteClass = async (id: string) => {
-    if (!currentUserProfile) {
-      showError("Vous devez être connecté pour supprimer une classe.");
-      return;
-    }
-    if (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, director, deputy_director, administrator can delete
+    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à supprimer une classe.");
       return;
     }
+    const classToDelete = classes.find(cls => cls.id === id);
+    if (!classToDelete) {
+      showError("Classe introuvable.");
+      return;
+    }
+    // Professeur can only delete classes they manage
+    if (currentRole === 'professeur' && !classToDelete.creator_ids.includes(currentUserProfile.id)) {
+      showError("Vous ne pouvez supprimer que les classes que vous gérez.");
+      return;
+    }
+    // Director/Deputy Director can only delete classes from their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && classToDelete.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez supprimer des classes que de votre établissement.");
+      return;
+    }
+
     try {
       await deleteClassFromStorage(id);
       setClasses(await loadClasses()); // Re-fetch to get the updated list
@@ -156,12 +169,18 @@ const ClassManagementPage = () => {
   };
 
   const handleEditClass = (cls: Class) => {
-    if (!currentUserProfile) {
-      showError("Vous devez être connecté pour modifier une classe.");
+    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
+      showError("Vous n'êtes pas autorisé à modifier une classe.");
       return;
     }
-    if (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, director, deputy_director, administrator can edit
-      showError("Vous n'êtes pas autorisé à modifier une classe.");
+    // Professeur can only edit classes they manage
+    if (currentRole === 'professeur' && !cls.creator_ids.includes(currentUserProfile.id)) {
+      showError("Vous ne pouvez modifier que les classes que vous gérez.");
+      return;
+    }
+    // Director/Deputy Director can only edit classes from their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier des classes que de votre établissement.");
       return;
     }
     setCurrentClassToEdit(cls);
@@ -177,8 +196,18 @@ const ClassManagementPage = () => {
   };
 
   const filteredClasses = classSearchQuery.trim() === ''
-    ? classes.filter(cls => (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator'))) // Professeur, Tutor, Director, Deputy Director, Administrator can see
-    : classes.filter(cls => (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
+    ? classes.filter(cls => (currentUserProfile && (
+        (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id)) ||
+        (currentRole === 'tutor' && cls.establishment_id === currentUserProfile.establishment_id) || // Tutors see classes in their establishment
+        ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id === currentUserProfile.establishment_id) ||
+        (currentRole === 'administrator')
+      )))
+    : classes.filter(cls => (currentUserProfile && (
+        (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id)) ||
+        (currentRole === 'tutor' && cls.establishment_id === currentUserProfile.establishment_id) ||
+        ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id === currentUserProfile.establishment_id) ||
+        (currentRole === 'administrator')
+      )) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
@@ -196,7 +225,7 @@ const ClassManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, tutor, director, deputy_director, administrator can access
+  if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -209,6 +238,14 @@ const ClassManagementPage = () => {
     );
   }
 
+  const establishmentsToDisplay = currentRole === 'administrator'
+    ? establishments
+    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
+
+  const curriculaToDisplay = currentRole === 'administrator'
+    ? curricula
+    : curricula.filter(cur => cur.establishment_id === currentUserProfile.establishment_id);
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -218,68 +255,78 @@ const ClassManagementPage = () => {
         Créez et gérez des classes, et visualisez les élèves qui y sont affectés.
       </p>
 
+      {(currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can add
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-6 w-6 text-primary" /> Ajouter une nouvelle classe
+            </CardTitle>
+            <CardDescription>Créez de nouvelles classes.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="new-class-name">Nom de la classe</Label>
+              <Input
+                id="new-class-name"
+                placeholder="Ex: Terminale S1"
+                value={newClassName}
+                onChange={(e) => setNewClassName(e.target.value)}
+              />
+              <Label htmlFor="new-class-establishment">Établissement</Label>
+              <Select 
+                value={newClassEstablishmentId} 
+                onValueChange={setNewClassEstablishmentId}
+                disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+              >
+                <SelectTrigger id="new-class-establishment">
+                  <SelectValue placeholder="Sélectionner un établissement" />
+                </SelectTrigger>
+                <SelectContent>
+                  {establishmentsToDisplay.map(est => (
+                    <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Label htmlFor="new-class-curriculum">Cursus</Label>
+              <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
+                <SelectTrigger id="new-class-curriculum">
+                  <SelectValue placeholder="Sélectionner un cursus" />
+                </SelectTrigger>
+                <SelectContent>
+                  {curriculaToDisplay.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
+                    <SelectItem key={cur.id} value={cur.id}>
+                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Label htmlFor="new-class-school-year">Année scolaire</Label>
+              <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
+                <SelectTrigger id="new-class-school-year">
+                  <SelectValue placeholder="Sélectionner l'année scolaire" />
+                </SelectTrigger>
+                <SelectContent>
+                  {schoolYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
+                <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+          
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" /> Classes
+            <Users className="h-6 w-6 text-primary" /> Liste de toutes les classes
           </CardTitle>
-          <CardDescription>Créez de nouvelles classes et gérez les existantes.</CardDescription>
+          <CardDescription>Visualisez et gérez les classes existantes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {(currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can add
-            <>
-              <h3 className="text-lg font-semibold">Ajouter une nouvelle classe</h3>
-              <div className="grid gap-2">
-                <Label htmlFor="new-class-name">Nom de la classe</Label>
-                <Input
-                  id="new-class-name"
-                  placeholder="Ex: Terminale S1"
-                  value={newClassName}
-                  onChange={(e) => setNewClassName(e.target.value)}
-                />
-                <Label htmlFor="new-class-establishment">Établissement</Label>
-                <Select value={newClassEstablishmentId} onValueChange={setNewClassEstablishmentId}>
-                  <SelectTrigger id="new-class-establishment">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {establishments.map(est => (
-                      <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Label htmlFor="new-class-curriculum">Cursus</Label>
-                <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
-                  <SelectTrigger id="new-class-curriculum">
-                    <SelectValue placeholder="Sélectionner un cursus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {curricula.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
-                      <SelectItem key={cur.id} value={cur.id}>
-                        {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Label htmlFor="new-class-school-year">Année scolaire</Label>
-                <Select value={newClassSchoolYear} onValueChange={setNewClassSchoolYear}>
-                  <SelectTrigger id="new-class-school-year">
-                    <SelectValue placeholder="Sélectionner l'année scolaire" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {schoolYears.map(year => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYear.trim()}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
-                </Button>
-              </div>
-              <h3 className="text-lg font-semibold mt-6">Liste de toutes les classes</h3>
-            </>
-          )}
-          
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
@@ -314,7 +361,7 @@ const ClassManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
                       <Users className="h-4 w-4 mr-1" /> Voir les élèves
                     </Button>
-                    {(currentUserProfile && cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can edit/delete
+                    {((currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can edit/delete
                       <>
                         <Button variant="outline" size="sm" onClick={() => handleEditClass(cls)}>
                           <Edit className="h-4 w-4" />
