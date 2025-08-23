@@ -52,7 +52,7 @@ const Messages = () => {
 
     setIsLoadingProfiles(true);
     const profiles = await getAllProfiles();
-    setAllProfiles(profiles.filter(p => p.id !== currentUserId));
+    setAllProfiles(profiles); // DO NOT FILTER OUT CURRENT USER HERE
     
     const recent = await getRecentConversations(currentUserId);
     setRecentConversations(recent);
@@ -201,7 +201,7 @@ const Messages = () => {
       console.log("[Messages] Unarchive successful. fetchAllData called directly.");
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
-      showError(`Erreur lors du désarchivage: ${error.message}`);
+      showError(`Erreur lors du désarchivage: ${err.message}`);
     }
   };
 
