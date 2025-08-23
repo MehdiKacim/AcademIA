@@ -126,7 +126,7 @@ const AdminUserManagementPage = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'gestion_admin')) { // Allow gestion_admin to create
       showError("Vous n'êtes pas autorisé à créer des utilisateurs.");
       return;
     }
@@ -211,6 +211,10 @@ const AdminUserManagementPage = () => {
 
   // --- Edit User Logic ---
   const handleEditUser = (user: Profile) => {
+    if (currentRole === 'gestion_admin' && !['director', 'deputy_director'].includes(user.role)) {
+      showError("Vous n'êtes autorisé à modifier que les directeurs et directeurs adjoints.");
+      return;
+    }
     setUserToEdit(user);
     setEditFirstName(user.first_name || '');
     setEditLastName(user.last_name || '');
@@ -258,8 +262,12 @@ const AdminUserManagementPage = () => {
   };
 
   const handleSaveEditedUser = async () => {
-    if (!userToEdit || !currentUserProfile || currentRole !== 'administrator') {
+    if (!userToEdit || !currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'gestion_admin')) {
       showError("Vous n'êtes pas autorisé à modifier cet utilisateur.");
+      return;
+    }
+    if (currentRole === 'gestion_admin' && !['director', 'deputy_director'].includes(userToEdit.role)) {
+      showError("Vous n'êtes autorisé à modifier que les directeurs et directeurs adjoints.");
       return;
     }
     if (!editFirstName.trim() || !editLastName.trim() || !editUsername.trim() || !editEmail.trim() || !editRole || (editRole !== 'student' && !editEstablishmentId && editRole !== 'administrator' && editRole !== 'gestion_admin')) {
@@ -334,7 +342,7 @@ const AdminUserManagementPage = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!currentUserProfile || currentRole !== 'administrator') {
+    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can delete
       showError("Vous n'êtes pas autorisé à supprimer des utilisateurs.");
       return;
     }
@@ -363,6 +371,14 @@ const AdminUserManagementPage = () => {
     }
   };
 
+  const rolesForCreation = currentRole === 'administrator'
+    ? ['student', 'creator', 'tutor', 'director', 'deputy_director', 'gestion_admin', 'administrator']
+    : ['director', 'deputy_director']; // gestion_admin can only create these
+
+  const rolesForEdit = currentRole === 'administrator'
+    ? ['student', 'creator', 'tutor', 'director', 'deputy_director', 'gestion_admin', 'administrator']
+    : ['director', 'deputy_director']; // gestion_admin can only edit these
+
   if (isLoadingUser) {
     return (
       <div className="text-center py-20">
@@ -376,14 +392,14 @@ const AdminUserManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'administrator') {
+  if (currentRole !== 'administrator' && currentRole !== 'gestion_admin') {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les administrateurs peuvent accéder à cette page.
+          Seuls les administrateurs et les administrateurs de gestion peuvent accéder à cette page.
         </p>
       </div>
     );
@@ -392,10 +408,10 @@ const AdminUserManagementPage = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Utilisateurs (Admin)
+        Gestion des Utilisateurs ({currentRole === 'administrator' ? 'Admin' : 'Admin Gestion'})
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Créez, modifiez et supprimez tous les types d'utilisateurs sur la plateforme.
+        {currentRole === 'administrator' ? "Créez, modifiez et supprimez tous les types d'utilisateurs sur la plateforme." : "Créez et modifiez les directeurs et directeurs adjoints des établissements."}
       </p>
 
       {/* Section: Créer un nouvel utilisateur */}
@@ -447,13 +463,17 @@ const AdminUserManagementPage = () => {
                 <SelectValue placeholder="Sélectionner un rôle" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="student">Élève</SelectItem>
-                <SelectItem value="creator">Créateur (Professeur)</SelectItem>
-                <SelectItem value="tutor">Tuteur</SelectItem>
-                <SelectItem value="director">Directeur</SelectItem>
-                <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
-                <SelectItem value="gestion_admin">Admin Gestion (Employé AcademIA)</SelectItem>
-                <SelectItem value="administrator">Administrateur (Super Admin)</SelectItem>
+                {rolesForCreation.map(role => (
+                  <SelectItem key={role} value={role}>
+                    {role === 'student' ? 'Élève' :
+                     role === 'creator' ? 'Créateur (Professeur)' :
+                     role === 'tutor' ? 'Tuteur' :
+                     role === 'director' ? 'Directeur' :
+                     role === 'deputy_director' ? 'Directeur Adjoint' :
+                     role === 'gestion_admin' ? 'Admin Gestion (Employé AcademIA)' :
+                     'Administrateur (Super Admin)'}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {(newUserRole !== 'student' && newUserRole !== 'administrator' && newUserRole !== 'gestion_admin') && (
@@ -546,12 +566,16 @@ const AdminUserManagementPage = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                    <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {(currentRole === 'administrator' || (currentRole === 'gestion_admin' && ['director', 'deputy_director'].includes(user.role))) && (
+                      <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {currentRole === 'administrator' && ( // Only administrator can delete
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </Card>
               ))
@@ -607,25 +631,29 @@ const AdminUserManagementPage = () => {
                 <Select value={editRole} onValueChange={(value: Profile['role']) => {
                   setEditRole(value);
                   if (value === 'student' || value === 'administrator' || value === 'gestion_admin') setEditEstablishmentId('');
-                }}>
+                }} disabled={currentRole === 'gestion_admin' && !['director', 'deputy_director'].includes(userToEdit.role)}> {/* Disable role change for gestion_admin if not director/deputy_director */}
                   <SelectTrigger id="editRole" className="col-span-3">
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="student">Élève</SelectItem>
-                    <SelectItem value="creator">Créateur (Professeur)</SelectItem>
-                    <SelectItem value="tutor">Tuteur</SelectItem>
-                    <SelectItem value="director">Directeur</SelectItem>
-                    <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
-                    <SelectItem value="gestion_admin">Admin Gestion (Employé AcademIA)</SelectItem>
-                    <SelectItem value="administrator">Administrateur (Super Admin)</SelectItem>
+                    {rolesForEdit.map(role => (
+                      <SelectItem key={role} value={role}>
+                        {role === 'student' ? 'Élève' :
+                         role === 'creator' ? 'Créateur (Professeur)' :
+                         role === 'tutor' ? 'Tuteur' :
+                         role === 'director' ? 'Directeur' :
+                         role === 'deputy_director' ? 'Directeur Adjoint' :
+                         role === 'gestion_admin' ? 'Admin Gestion (Employé AcademIA)' :
+                         'Administrateur (Super Admin)'}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               {(editRole !== 'student' && editRole !== 'administrator' && editRole !== 'gestion_admin') && (
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="editEstablishment" className="text-right">Établissement</Label>
-                  <Select value={editEstablishmentId} onValueChange={setEditEstablishmentId}>
+                  <Select value={editEstablishmentId} onValueChange={setEditEstablishmentId} disabled={currentRole === 'gestion_admin' && !['director', 'deputy_director'].includes(userToEdit.role)}> {/* Disable establishment change for gestion_admin if not director/deputy_director */}
                     <SelectTrigger id="editEstablishment" className="col-span-3">
                       <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>

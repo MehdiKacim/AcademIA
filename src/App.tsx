@@ -88,6 +88,7 @@ const AppWithThemeProvider = () => {
                     {/* Gestion Admin-specific routes */}
                     <Route element={<ProtectedRoute allowedRoles={['administrator', 'gestion_admin']} />}>
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                      <Route path="/admin-users" element={<AdminUserManagementPage />} /> {/* Gestion Admin can also manage users (limited) */}
                     </Route>
 
                     {/* Creator-specific routes */}

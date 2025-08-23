@@ -283,6 +283,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onClick: () => setCurrentNavLevel('gestion'),
           items: [
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
+            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // Added for gestion_admin
           ],
         },
       ];
