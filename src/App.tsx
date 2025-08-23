@@ -17,8 +17,8 @@ import AllNotes from "./pages/AllNotes";
 import EstablishmentManagementPage from "./pages/EstablishmentManagementPage";
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
-import StudentManagementPage from "./pages/StudentManagementPage"; // Updated import
-import AdminUserManagementPage from "./pages/AdminUserManagementPage"; // New import
+import StudentManagementPage from "./pages/StudentManagementPage";
+import AdminUserManagementPage from "./pages/AdminUserManagementPage";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
@@ -64,8 +64,9 @@ const AppWithThemeProvider = () => {
               <Routes>
                 <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
-                <Route element={<ProtectedRoute />}>
+                <Route element={<ProtectedRoute />}> {/* Base protected route for all logged-in users */}
                   <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
+                    {/* Common routes for all authenticated users */}
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -77,41 +78,31 @@ const AppWithThemeProvider = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/data-model" element={<DataModelViewer />} />
                     
-                    {/* Administrator-specific routes */}
-                    <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
+                    {/* Routes accessible by Administrator, Director, Deputy Director */}
+                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director']} />}>
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                    </Route>
+
+                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur */}
+                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur']} />}>
                       <Route path="/curricula" element={<CurriculumManagementPage />} />
+                    </Route>
+
+                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur, Tutor */}
+                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur', 'tutor']} />}>
                       <Route path="/classes" element={<ClassManagementPage />} />
                       <Route path="/students" element={<StudentManagementPage />} />
                     </Route>
 
-                    {/* Director/Deputy Director specific routes */}
-                    <Route element={<ProtectedRoute allowedRoles={['director', 'deputy_director']} />}>
-                      <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                      <Route path="/curricula" element={<CurriculumManagementPage />} />
-                      <Route path="/classes" element={<ClassManagementPage />} />
-                      <Route path="/students" element={<StudentManagementPage />} />
-                      {/* Directors/Deputy Directors can also access AdminUserManagementPage but with restricted capabilities */}
-                      <Route path="/admin-users" element={<AdminUserManagementPage />} />
-                    </Route>
-
-                    {/* Professeur-specific routes */}
+                    {/* Routes accessible by Professeur only */}
                     <Route element={<ProtectedRoute allowedRoles={['professeur']} />}>
                       <Route path="/create-course" element={<CreateCourse />} />
                       <Route path="/create-course/:courseId" element={<CreateCourse />} />
-                      <Route path="/classes" element={<ClassManagementPage />} />
-                      <Route path="/students" element={<StudentManagementPage />} />
-                      <Route path="/curricula" element={<CurriculumManagementPage />} />
                     </Route>
 
-                    {/* Tutor-specific routes */}
-                    <Route element={<ProtectedRoute allowedRoles={['tutor']} />}>
-                      <Route path="/classes" element={<ClassManagementPage />} />
-                      <Route path="/students" element={<StudentManagementPage />} />
-                    </Route>
-
-                    {/* Redirect for students trying to access restricted pages */}
+                    {/* Specific redirects for roles that shouldn't access certain pages, even if the base ProtectedRoute allows it */}
+                    {/* These are for UX, to redirect from a page that might be technically accessible but semantically wrong */}
                     {currentRole === 'student' && (
                       <>
                         <Route path="/create-course" element={<Navigate to="/courses" replace />} />
@@ -122,17 +113,15 @@ const AppWithThemeProvider = () => {
                         <Route path="/students" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
-                    {/* Redirect for professeurs/tutors trying to access admin/director-only pages */}
+                    {/* Directors/Deputy Directors should not access professeur-only pages like create-course */}
+                    {(currentRole === 'director' || currentRole === 'deputy_director') && (
+                      <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
+                    )}
+                    {/* Professeurs/Tutors should not access admin/director-only pages like establishments or admin-users */}
                     {(currentRole === 'professeur' || currentRole === 'tutor') && (
                       <>
                         <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
-                      </>
-                    )}
-                    {/* Redirect for directors/deputy_directors trying to access professeur-only pages */}
-                    {(currentRole === 'director' || currentRole === 'deputy_director') && (
-                      <>
-                        <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
                   </Route>
