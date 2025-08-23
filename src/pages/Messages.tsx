@@ -207,13 +207,6 @@ const Messages = () => {
   const availableContactsForNewChat = useMemo(() => {
     if (!currentUserProfile) return [];
 
-    // No longer filtering out contacts already in existing conversations
-    // const contactsInAllConversations = new Set(
-    //   [...recentConversations, ...archivedConversations].map(msg =>
-    //     msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
-    //   )
-    // );
-
     let filteredContacts: Profile[] = [];
     let potentialContacts = allProfiles.filter(p => p.id !== currentUserProfile.id);
 
@@ -244,10 +237,11 @@ const Messages = () => {
       // Add students from managed classes
       filteredContacts.push(...potentialContactsForProf.filter(p => p.role === 'student' && studentIdsInManagedClasses.has(p.id)));
 
-      // Add directors/deputy directors from professor's establishment
+      // Add other professors, tutors, directors, and deputy directors from professor's establishment
       if (currentUserProfile.establishment_id) {
         filteredContacts.push(...potentialContactsForProf.filter(p => 
-          (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === currentUserProfile.establishment_id
+          (p.role === 'director' || p.role === 'deputy_director' || p.role === 'professeur' || p.role === 'tutor') && // Added 'professeur' and 'tutor'
+          p.establishment_id === currentUserProfile.establishment_id
         ));
       }
     } else if (currentRole === 'tutor') {
@@ -290,7 +284,7 @@ const Messages = () => {
     // Remove duplicates and sort
     const uniqueContacts = Array.from(new Map(finalFilteredContacts.map(item => [item.id, item])).values());
     return uniqueContacts.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
-  }, [allProfiles, currentUserProfile, currentRole, recentConversations, archivedConversations, establishments, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear]);
+  }, [allProfiles, currentUserProfile, currentRole, establishments, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear]);
 
 
   if (isLoadingUser || isLoadingProfiles) {
