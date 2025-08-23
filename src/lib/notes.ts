@@ -141,7 +141,7 @@ export const deleteNote = async (userId: string, noteKey: string, index: number)
   return getNotes(userId, noteKey); // Re-fetch all notes to ensure consistency
 };
 
-// --- Fonctions pour la vue globale des notes ---
+-- --- Fonctions pour la vue globale des notes ---
 
 interface ParsedNoteKey {
   entityType: EntityType;
@@ -242,7 +242,7 @@ export const getAllNotesData = async (userId: string, courses: Course[]): Promis
   return aggregatedNotes;
 };
 
-// Reset function for notes (for development/testing)
+-- Reset function for notes (for development/testing)
 export const resetNotes = async () => {
   const { error } = await supabase.from('notes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) console.error("Error resetting notes:", error);

@@ -9,7 +9,7 @@ export type EntityType = 'course' | 'module' | 'section';
  * @returns Un tableau de promesses résolues en IDs de cours accessibles.
  */
 export const getAccessibleCourseIdsForStudent = async (studentProfileId: string): Promise<string[]> => {
-  // 1. Get the student's current class enrollments for the current school year
+  -- 1. Get the student's current class enrollments for the current school year
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
   const currentSchoolYear = `${currentYear}-${nextYear}`;
@@ -21,13 +21,13 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
     .eq('enrollment_year', currentSchoolYear); // Filter by current school year
 
   if (enrollmentsError || !enrollments || enrollments.length === 0) {
-    // console.warn("Student not enrolled in any class for the current school year, no courses accessible.");
+    -- console.warn("Student not enrolled in any class for the current school year, no courses accessible.");
     return [];
   }
 
   const classIds = enrollments.map(e => e.class_id);
 
-  // 2. Get the classes to find their curriculum_ids
+  -- 2. Get the classes to find their curriculum_ids
   const { data: classesData, error: classesError } = await supabase
     .from('classes')
     .select('curriculum_id')
@@ -40,7 +40,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
 
   const curriculumIds = classesData.map(c => c.curriculum_id);
 
-  // 3. Get the curricula to find their course_ids
+  -- 3. Get the curricula to find their course_ids
   const { data: curriculaData, error: curriculaError } = await supabase
     .from('curricula')
     .select('course_ids')
@@ -51,7 +51,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
     return [];
   }
 
-  // Aggregate all unique course IDs
+  -- Aggregate all unique course IDs
   const accessibleCourseIds = new Set<string>();
   curriculaData.forEach(curriculum => {
     curriculum.course_ids.forEach((courseId: string) => accessibleCourseIds.add(courseId));
@@ -61,7 +61,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
 };
 
 
-// --- Course Management ---
+-- --- Course Management ---
 export const loadCourses = async (userId?: string, userRole?: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'): Promise<Course[]> => {
   let query = supabase.from('courses').select('*, subjects(name)'); // Select subject name
 
@@ -72,12 +72,12 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'profe
     }
     query = query.in('id', accessibleCourseIds);
   }
-  // For professeurs, they should only see courses they created
+  -- For professeurs, they should only see courses they created
   if (userRole === 'professeur' && userId) {
     query = query.eq('creator_id', userId);
   }
-  // For tutors, directors, deputy_directors, and administrators, they can see all courses
-  // No additional filtering needed here as RLS policies handle creation/update permissions.
+  -- For tutors, directors, deputy_directors, and administrators, they can see all courses
+  -- No additional filtering needed here as RLS policies handle creation/update permissions.
 
   const { data, error } = await query;
 
@@ -85,7 +85,7 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'profe
     console.error("Error loading courses:", error);
     return [];
   }
-  // Map snake_case from DB to camelCase for frontend if necessary, or adjust frontend to use snake_case
+  -- Map snake_case from DB to camelCase for frontend if necessary, or adjust frontend to use snake_case
   return data.map((course: any) => ({
     id: course.id,
     title: course.title,
@@ -94,7 +94,7 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'profe
     skills_to_acquire: course.skills_to_acquire || [],
     image_url: course.image_url || undefined,
     subject_id: course.subject_id || undefined, // Changed from category
-    // category: course.subjects?.name || undefined, // Can derive category from subject name if needed for display
+    -- category: course.subjects?.name || undefined, // Can derive category from subject name if needed for display
     difficulty: course.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: course.created_at || undefined,
     creator_id: course.creator_id || undefined,
@@ -197,7 +197,7 @@ export const getAllCoursesByCreatorId = async (creatorId: string): Promise<Cours
     skills_to_acquire: course.skills_to_acquire || [],
     image_url: course.image_url || undefined,
     subject_id: course.subject_id || undefined, // Changed from category
-    // category: course.subjects?.name || undefined,
+    -- category: course.subjects?.name || undefined,
     difficulty: course.difficulty as 'Débutant' | 'Intermédiaire' | 'Avancé' || undefined,
     created_at: course.created_at || undefined,
     creator_id: course.creator_id || undefined,
@@ -205,7 +205,7 @@ export const getAllCoursesByCreatorId = async (creatorId: string): Promise<Cours
 };
 
 
-// --- Curriculum Management ---
+-- --- Curriculum Management ---
 export const loadCurricula = async (): Promise<Curriculum[]> => {
   const { data, error } = await supabase
     .from('curricula')
@@ -287,7 +287,7 @@ export const deleteCurriculumFromStorage = async (curriculumId: string): Promise
   }
 };
 
-// --- Establishment Management ---
+-- --- Establishment Management ---
 export const loadEstablishments = async (): Promise<Establishment[]> => {
   const { data, error } = await supabase
     .from('establishments')
@@ -384,7 +384,7 @@ export const deleteEstablishmentFromStorage = async (establishmentId: string): P
   }
 };
 
-// --- Subject Management (New) ---
+-- --- Subject Management (New) ---
 export const loadSubjects = async (establishmentId?: string): Promise<Subject[]> => {
   let query = supabase.from('subjects').select('*');
   if (establishmentId) {
@@ -437,7 +437,7 @@ export const deleteSubjectFromStorage = async (subjectId: string): Promise<void>
 };
 
 
-// --- Class Management ---
+-- --- Class Management ---
 export const loadClasses = async (): Promise<Class[]> => {
   const { data, error } = await supabase
     .from('classes')
@@ -524,7 +524,7 @@ export const deleteClassFromStorage = async (classId: string): Promise<void> => 
   }
 };
 
-// --- Class Subject Management (New) ---
+-- --- Class Subject Management (New) ---
 export const loadClassSubjects = async (classId?: string): Promise<ClassSubject[]> => {
   let query = supabase.from('class_subjects').select('*, subjects(name)');
   if (classId) {
@@ -568,7 +568,7 @@ export const deleteClassSubjectFromStorage = async (classSubjectId: string): Pro
   }
 };
 
-// --- Professor Subject Assignment Management (New) ---
+-- --- Professor Subject Assignment Management (New) ---
 export const loadProfessorSubjectAssignments = async (professorId?: string, classId?: string, schoolYear?: string): Promise<ProfessorSubjectAssignment[]> => {
   let query = supabase.from('professor_subject_assignments').select('*, subjects(name), classes(name)');
   if (professorId) {
@@ -610,6 +610,26 @@ export const addProfessorSubjectAssignmentToStorage = async (newAssignment: Omit
   return data;
 };
 
+export const updateProfessorSubjectAssignmentInStorage = async (updatedAssignment: ProfessorSubjectAssignment): Promise<ProfessorSubjectAssignment | null> => {
+  const { data, error } = await supabase
+    .from('professor_subject_assignments')
+    .update({
+      professor_id: updatedAssignment.professor_id,
+      subject_id: updatedAssignment.subject_id,
+      class_id: updatedAssignment.class_id,
+      school_year: updatedAssignment.school_year,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', updatedAssignment.id)
+    .select()
+    .single();
+  if (error) {
+    console.error("Error updating professor subject assignment:", error);
+    throw error;
+  }
+  return data;
+};
+
 export const deleteProfessorSubjectAssignmentFromStorage = async (assignmentId: string): Promise<void> => {
   const { error } = await supabase
     .from('professor_subject_assignments')
@@ -622,7 +642,7 @@ export const deleteProfessorSubjectAssignmentFromStorage = async (assignmentId: 
 };
 
 
-// New helper function to get establishment address by ID
+-- New helper function to get establishment address by ID
 export const getEstablishmentAddress = async (establishmentId: string): Promise<string | undefined> => {
   const { data, error } = await supabase
     .from('establishments')
@@ -637,7 +657,7 @@ export const getEstablishmentAddress = async (establishmentId: string): Promise<
 };
 
 
-// Reset functions for all data types (for development/testing)
+-- Reset functions for all data types (for development/testing)
 export const resetCourses = async () => {
   const { error } = await supabase.from('courses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) console.error("Error resetting courses:", error);

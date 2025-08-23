@@ -3,7 +3,7 @@ import { resetProfiles, resetStudentCourseProgress, resetStudentClassEnrollments
 import { resetNotes } from "./notes";
 
 export const clearAllAppData = async () => {
-  // Call specific reset functions for each data type using Supabase
+  -- Call specific reset functions for each data type using Supabase
   await resetNotes();
   await resetStudentCourseProgress();
   await resetStudentClassEnrollments(); // New: Reset student class enrollments

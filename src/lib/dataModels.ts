@@ -14,7 +14,6 @@ export interface Profile {
   email: string; // Added email to Profile interface
   role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
   establishment_id?: string; // New: Link to parent establishment for students, professeurs, tutors, directors, deputy_directors
-  // class_id?: string; // Removed: Link to the student's class (if applicable) - now handled by student_class_enrollments
   enrollment_start_date?: string; // New: Start date of enrollment in establishment
   enrollment_end_date?: string; // New: End date of enrollment in establishment
   theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
@@ -77,6 +76,7 @@ export interface ClassSubject { // New: Class-Subject liaison
   id: string;
   class_id: string;
   subject_id: string;
+  subject_name?: string; // For convenience when fetching
   created_at?: string;
 }
 
@@ -84,7 +84,9 @@ export interface ProfessorSubjectAssignment { // New: Professor-Subject-Class-Ye
   id: string;
   professor_id: string;
   subject_id: string;
+  subject_name?: string; // For convenience when fetching
   class_id: string;
+  class_name?: string; // For convenience when fetching
   school_year: string;
   created_at?: string;
 }
