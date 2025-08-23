@@ -366,10 +366,10 @@ export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrol
  * @param enrollment L'objet d'affectation de classe.
  * @returns L'affectation de classe ajoutée/mise à jour.
  */
-export const upsertStudentClassEnrollment = async (enrollment: StudentClassEnrollment): Promise<StudentClassEnrollment | null> => {
+export const upsertStudentClassEnrollment = async (enrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at'>): Promise<StudentClassEnrollment | null> => {
   const { data, error } = await supabase
     .from('student_class_enrollments')
-    .upsert(enrollment)
+    .upsert(enrollment as any) // Cast to any to allow upsert without 'id' if it's new
     .select()
     .single();
   if (error) {

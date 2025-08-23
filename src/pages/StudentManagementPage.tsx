@@ -65,8 +65,6 @@ const StudentManagementPage = () => {
   const [selectedStudentForClassAssignment, setSelectedStudentForClassAssignment] = useState<Profile | null>(null);
   const [classToAssign, setClassToAssign] = useState<string>("");
   const [enrollmentYear, setEnrollmentYear] = useState<string>('');
-  const [classEnrollmentStartDate, setClassEnrollmentStartDate] = useState<Date | undefined>(undefined);
-  const [classEnrollmentEndDate, setClassEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [openStudentSelectClass, setOpenStudentSelectClass] = useState(false);
   const [isSearchingUserClass, setIsSearchingUserClass] = useState(false);
   const debounceTimeoutRefClass = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -253,8 +251,8 @@ const StudentManagementPage = () => {
       showError("Veuillez sélectionner une classe.");
       return;
     }
-    if (!enrollmentYear || !classEnrollmentStartDate || !classEnrollmentEndDate) {
-      showError("Veuillez spécifier l'année scolaire et les dates de début/fin d'inscription à la classe.");
+    if (!enrollmentYear) {
+      showError("Veuillez spécifier l'année scolaire.");
       return;
     }
     if (selectedStudentForClassAssignment.role !== 'student') {
@@ -296,13 +294,10 @@ const StudentManagementPage = () => {
     }
 
     try {
-      const newEnrollment: StudentClassEnrollment = {
-        id: `enrollment-${Date.now()}`, // Supabase will generate
+      const newEnrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at'> = {
         student_id: selectedStudentForClassAssignment.id,
         class_id: classToAssign,
         enrollment_year: enrollmentYear,
-        start_date: classEnrollmentStartDate.toISOString().split('T')[0],
-        end_date: classEnrollmentEndDate.toISOString().split('T')[0],
       };
       const savedEnrollment = await upsertStudentClassEnrollment(newEnrollment);
 
@@ -324,8 +319,6 @@ const StudentManagementPage = () => {
     setSelectedStudentForClassAssignment(null);
     setClassToAssign("");
     setEnrollmentYear('');
-    setClassEnrollmentStartDate(undefined);
-    setClassEnrollmentEndDate(undefined);
     setOpenStudentSelectClass(false);
   };
 
@@ -808,62 +801,10 @@ const StudentManagementPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="class-enrollment-start-date" className="text-base font-semibold mb-2 block mt-4">Date de début d'inscription à la classe</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !classEnrollmentStartDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarDays className="mr-2 h-4 w-4" />
-                          {classEnrollmentStartDate ? format(classEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={classEnrollmentStartDate}
-                          onSelect={setClassEnrollmentStartDate}
-                          initialFocus
-                          locale={fr}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div>
-                    <Label htmlFor="class-enrollment-end-date" className="text-base font-semibold mb-2 block mt-4">Date de fin d'inscription à la classe</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !classEnrollmentEndDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarDays className="mr-2 h-4 w-4" />
-                          {classEnrollmentEndDate ? format(classEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={classEnrollmentEndDate}
-                          onSelect={setClassEnrollmentEndDate}
-                          initialFocus
-                          locale={fr}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentYear || !classEnrollmentStartDate || !classEnrollmentEndDate}>
+                  <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentYear}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Inscrire à cette classe
                   </Button>
                   <Button variant="outline" onClick={handleClearClassAssignmentForm}>
@@ -950,7 +891,6 @@ const StudentManagementPage = () => {
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYears.map(year => (
                     <SelectItem key={year} value={year}>{year}</SelectItem>
                   ))}

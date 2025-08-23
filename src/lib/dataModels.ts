@@ -70,8 +70,6 @@ export interface StudentClassEnrollment { // New interface for student-class lia
   student_id: string; // Link to the student's Profile
   class_id: string; // Link to the Class
   enrollment_year: string; // School year of enrollment (e.g., "2023-2024")
-  start_date: string; // Start date of enrollment in this class for this year
-  end_date: string; // End date of enrollment in this class for this year
   created_at?: string;
   updated_at?: string;
 }
