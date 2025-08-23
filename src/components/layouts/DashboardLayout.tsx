@@ -100,7 +100,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     const isModifierPressed = event.ctrlKey || event.metaKey; // Ctrl for Windows/Linux, Cmd for Mac
 
     // AdminModal can be opened regardless of currentUserProfile status
-    if (isModifierPressed && event.shiftKey && event.key === 'U') { // New shortcut: Ctrl + Shift + U
+    if (isModifierPressed && event.shiftKey && event.key === 'S') { // New shortcut: Ctrl + Shift + S
       event.preventDefault();
       setIsAdminModalOpen(true);
     } else if (currentUserProfile && isModifierPressed && event.key === 'f') {
