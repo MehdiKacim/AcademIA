@@ -139,9 +139,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const isModifierPressed = event.ctrlKey || event.metaKey;
+    const isModifierPressed = event.ctrlKey || event.metaKey; // Ctrl for Windows/Linux, Cmd for Mac
 
-    if (isModifierPressed && event.key === 'u') { // Shortcut for AdminModal
+    if (isModifierPressed && event.shiftKey && event.key === 'A') { // New shortcut: Ctrl + Shift + A
       event.preventDefault();
       setIsAdminModalOpen(true);
     }
