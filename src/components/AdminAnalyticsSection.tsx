@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AdminStatCard from './analytics/AdminStatCard';
-import UserDistributionChart from './analytics/UserDistributionChart';
-import PedagogicalStructureChart from './analytics/PedagogicalStructureChart';
-import EstablishmentDetailList from './analytics/EstablishmentDetailList';
+import UserDistributionModal from './analytics/UserDistributionModal';
+import PedagogicalStructureModal from './analytics/PedagogicalStructureModal';
+import EstablishmentDetailModal from './analytics/EstablishmentDetailModal';
 import { Profile, Class, Curriculum, Establishment } from "@/lib/dataModels";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Users, LayoutList, Building2, BarChart2 } from "lucide-react";
 
 interface AdminAnalyticsSectionProps {
   establishments: Establishment[];
@@ -13,41 +16,23 @@ interface AdminAnalyticsSectionProps {
 }
 
 const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles }: AdminAnalyticsSectionProps) => {
+  const [isUserDistributionModalOpen, setIsUserDistributionModalOpen] = useState(false);
+  const [isPedagogicalStructureModalOpen, setIsPedagogicalStructureModalOpen] = useState(false);
+  const [isEstablishmentDetailModalOpen, setIsEstablishmentDetailModalOpen] = useState(false);
 
-  const getRoleCountForEstablishment = (establishmentId: string, role: Profile['role']) => {
-    return allProfiles.filter(p => p.establishment_id === establishmentId && p.role === role).length;
+  const getRoleCount = (role: Profile['role']) => {
+    return allProfiles.filter(p => p.role === role).length;
   };
 
-  const getCurriculumCountForEstablishment = (establishmentId: string) => {
-    return curricula.filter(c => c.establishment_id === establishmentId).length;
-  };
-
-  const getClassCountForEstablishment = (establishmentId: string) => {
-    return classes.filter(c => c.establishment_id === establishmentId).length;
-  };
-
-  const establishmentData = establishments.map(est => {
-    const students = getRoleCountForEstablishment(est.id, 'student');
-    const professeurs = getRoleCountForEstablishment(est.id, 'professeur');
-    const tutors = getRoleCountForEstablishment(est.id, 'tutor');
-    const directors = getRoleCountForEstablishment(est.id, 'director');
-    const deputyDirectors = getRoleCountForEstablishment(est.id, 'deputy_director');
-    
-    return {
-      name: est.name,
-      students: students,
-      professeurs: professeurs,
-      tutors: tutors,
-      directors: directors,
-      deputyDirectors: deputyDirectors,
-      curricula: getCurriculumCountForEstablishment(est.id),
-      classes: getClassCountForEstablishment(est.id),
-    };
-  });
+  const totalStudents = getRoleCount('student');
+  const totalProfesseurs = getRoleCount('professeur');
+  const totalTutors = getRoleCount('tutor');
+  const totalCurricula = curricula.length;
+  const totalClasses = classes.length;
 
   return (
     <>
-      <p className="text-lg text-muted-foreground mb-8">Vue d'overview des statistiques par établissement.</p>
+      <p className="text-lg text-muted-foreground mb-8">Vue d'ensemble des statistiques par établissement.</p>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <AdminStatCard
           title="Total Établissements"
@@ -57,18 +42,93 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         <AdminStatCard
           title="Total Directeurs"
           description="Nombre total de directeurs sur la plateforme."
-          value={allProfiles.filter(p => p.role === 'director').length}
+          value={getRoleCount('director')}
         />
         <AdminStatCard
           title="Total Directeurs Adjoints"
           description="Nombre total de directeurs adjoints sur la plateforme."
-          value={allProfiles.filter(p => p.role === 'deputy_director').length}
+          value={getRoleCount('deputy_director')}
+        />
+        <AdminStatCard
+          title="Total Élèves"
+          description="Nombre total d'élèves inscrits."
+          value={totalStudents}
+        />
+        <AdminStatCard
+          title="Total Professeurs"
+          description="Nombre total de professeurs."
+          value={totalProfesseurs}
+        />
+        <AdminStatCard
+          title="Total Tuteurs"
+          description="Nombre total de tuteurs."
+          value={totalTutors}
+        />
+        <AdminStatCard
+          title="Total Cursus"
+          description="Nombre total de cursus créés."
+          value={totalCurricula}
+        />
+        <AdminStatCard
+          title="Total Classes"
+          description="Nombre total de classes créées."
+          value={totalClasses}
         />
 
-        <UserDistributionChart data={establishmentData} />
-        <PedagogicalStructureChart data={establishmentData} />
-        <EstablishmentDetailList data={establishmentData} />
+        {/* Widgets to open modals for detailed views */}
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setIsUserDistributionModalOpen(true)}>
+          <CardHeader className="flex flex-row items-center gap-3 pb-3">
+            <Users className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Distribution des Utilisateurs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Voir la répartition des rôles par établissement.</CardDescription>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setIsPedagogicalStructureModalOpen(true)}>
+          <CardHeader className="flex flex-row items-center gap-3 pb-3">
+            <LayoutList className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Structure Pédagogique</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Voir le nombre de cursus et classes par établissement.</CardDescription>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setIsEstablishmentDetailModalOpen(true)}>
+          <CardHeader className="flex flex-row items-center gap-3 pb-3">
+            <Building2 className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Détail des Établissements</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Voir toutes les statistiques détaillées par établissement.</CardDescription>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Modals for detailed views */}
+      <UserDistributionModal
+        isOpen={isUserDistributionModalOpen}
+        onClose={() => setIsUserDistributionModalOpen(false)}
+        establishments={establishments}
+        allProfiles={allProfiles}
+      />
+      <PedagogicalStructureModal
+        isOpen={isPedagogicalStructureModalOpen}
+        onClose={() => setIsPedagogicalStructureModalOpen(false)}
+        establishments={establishments}
+        curricula={curricula}
+        classes={classes}
+      />
+      <EstablishmentDetailModal
+        isOpen={isEstablishmentDetailModalOpen}
+        onClose={() => setIsEstablishmentDetailModalOpen(false)}
+        establishments={establishments}
+        curricula={curricula}
+        classes={classes}
+        allProfiles={allProfiles}
+      />
     </>
   );
 };
