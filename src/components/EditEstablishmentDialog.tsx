@@ -36,8 +36,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
   const [isLoading, setIsLoading] = useState(false);
   const [directors, setDirectors] = useState<Profile[]>([]);
   const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]);
-  const [currentDirectorName, setCurrentDirectorName] = useState<string | null>(null);
-  const [currentDeputyDirectorName, setCurrentDeputyDirectorName] = useState<string | null>(null);
+  // Removed currentDirectorName and currentDeputyDirectorName states as SelectValue will handle display
 
   const establishmentTypes: EstablishmentType[] = [
     'Maternelle',
@@ -69,23 +68,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
       setDirectorId(establishment.director_id);
       setDeputyDirectorId(establishment.deputy_director_id);
       setContactEmail(establishment.contact_email || '');
-
-      // Resolve current director/deputy director names
-      const resolveNames = async () => {
-        if (establishment.director_id) {
-          const directorProfile = await getProfileById(establishment.director_id);
-          setCurrentDirectorName(directorProfile ? `${directorProfile.first_name} ${directorProfile.last_name}` : 'Directeur inconnu');
-        } else {
-          setCurrentDirectorName(null);
-        }
-        if (establishment.deputy_director_id) {
-          const deputyDirectorProfile = await getProfileById(establishment.deputy_director_id);
-          setCurrentDeputyDirectorName(deputyDirectorProfile ? `${deputyDirectorProfile.first_name} ${deputyDirectorProfile.last_name}` : 'Directeur Adjoint inconnu');
-        } else {
-          setCurrentDeputyDirectorName(null);
-        }
-      };
-      resolveNames();
+      // No need to resolve names here, SelectValue will do it
     }
   }, [isOpen, establishment]);
 
@@ -204,9 +187,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
             </Label>
             <Select value={directorId || "none"} onValueChange={(value) => setDirectorId(value === "none" ? undefined : value)} disabled={currentRole !== 'administrator'}>
               <SelectTrigger id="director" className="col-span-3">
-                <SelectValue placeholder="Sélectionner un directeur">
-                  {directorId ? (currentDirectorName || "Chargement...") : "Aucun"}
-                </SelectValue>
+                <SelectValue placeholder="Sélectionner un directeur" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Aucun</SelectItem>
@@ -224,9 +205,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
             </Label>
             <Select value={deputyDirectorId || "none"} onValueChange={(value) => setDeputyDirectorId(value === "none" ? undefined : value)} disabled={currentRole !== 'administrator'}>
               <SelectTrigger id="deputyDirector" className="col-span-3">
-                <SelectValue placeholder="Sélectionner un directeur adjoint">
-                  {deputyDirectorId ? (currentDeputyDirectorName || "Chargement...") : "Aucun"}
-                </SelectValue>
+                <SelectValue placeholder="Sélectionner un directeur adjoint" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Aucun</SelectItem>
