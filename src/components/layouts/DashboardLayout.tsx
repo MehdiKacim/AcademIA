@@ -22,7 +22,7 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import FloatingAiAChatButton from "@/components/FloatingAiAPersistentChat";
+import FloatingAiAPersistentChat from "@/components/FloatingAiAPersistentChat";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
@@ -283,6 +283,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('gestion-etablissement'),
           items: [
+            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // For creating profs/students
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
@@ -495,7 +496,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAChatButton isVisible={isFloatingButtonActuallyVisible} />}
+      {currentUserProfile && <FloatingAiAPersistentChat isVisible={isFloatingButtonActuallyVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
