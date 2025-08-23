@@ -41,7 +41,6 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const [showCreateAdminForm, setShowCreateAdminForm] = useState(false);
-  const [showCreateProfessorForm, setShowCreateProfessorForm] = useState(false);
 
   // State for initial admin creation form
   const [adminFirstName, setAdminFirstName] = useState('');
@@ -56,31 +55,22 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const debounceTimeoutRefUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // State for professor creation form
-  const [profFirstName, setProfFirstName] = useState('');
-  const [profLastName, setProfLastName] = useState('');
-  const [profUsername, setProfUsername] = useState('');
-  const [profEmail, setProfEmail] = useState('');
-  const [profPassword, setProfPassword] = useState('');
-  const [profRole, setProfRole] = useState<'creator' | 'tutor' | 'director' | 'deputy_director'>('creator'); // Added new roles
-  const [profEstablishmentId, setProfEstablishmentId] = useState<string>('');
-  const [isCreatingProfessor, setIsCreatingProfessor] = useState(false);
-
-  const [profUsernameAvailabilityStatus, setProfUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const [profEmailAvailabilityStatus, setProfEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const debounceTimeoutRefProfUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debounceTimeoutRefProfEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
-
   useEffect(() => {
-    const fetchEstablishments = async () => {
-      setEstablishments(await loadEstablishments());
-    };
-    if (isAuthenticated) {
-      fetchEstablishments();
+    // Clear authentication state when modal closes
+    if (!isOpen) {
+      setIsAuthenticated(false);
+      setPassword('');
+      setShowCreateAdminForm(false);
+      // Reset new admin form fields
+      setAdminFirstName('');
+      setAdminLastName('');
+      setAdminUsername('');
+      setAdminEmail('');
+      setAdminPassword('');
+      setUsernameAvailabilityStatus('idle');
+      setEmailAvailabilityStatus('idle');
     }
-  }, [isAuthenticated]);
+  }, [isOpen]);
 
 
   const handleAuthenticate = () => {
@@ -107,31 +97,29 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   };
 
   // Admin creation form validation and submission
-  const validateUsername = useCallback(async (username: string, isProfForm: boolean = false) => {
-    const setStatus = isProfForm ? setProfUsernameAvailabilityStatus : setUsernameAvailabilityStatus;
+  const validateUsername = useCallback(async (username: string) => {
     if (username.length < 3) {
-      setStatus('idle');
+      setUsernameAvailabilityStatus('idle');
       return false;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      setStatus('idle');
+      setUsernameAvailabilityStatus('idle');
       return false;
     }
-    setStatus('checking');
+    setUsernameAvailabilityStatus('checking');
     const isTaken = await checkUsernameExists(username);
-    setStatus(isTaken ? 'taken' : 'available');
+    setUsernameAvailabilityStatus(isTaken ? 'taken' : 'available');
     return !isTaken;
   }, []);
 
-  const validateEmail = useCallback(async (email: string, isProfForm: boolean = false) => {
-    const setStatus = isProfForm ? setProfEmailAvailabilityStatus : setEmailAvailabilityStatus;
+  const validateEmail = useCallback(async (email: string) => {
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setStatus('idle');
+      setEmailAvailabilityStatus('idle');
       return false;
     }
-    setStatus('checking');
+    setEmailAvailabilityStatus('checking');
     const isTaken = await checkEmailExists(email);
-    setStatus(isTaken ? 'taken' : 'available');
+    setEmailAvailabilityStatus(isTaken ? 'taken' : 'available');
     return !isTaken;
   }, []);
 
@@ -210,88 +198,6 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       showError(`Une erreur inattendue est survenue: ${error.message}`);
     } finally {
       setIsCreatingAdmin(false);
-    }
-  };
-
-  // Professor creation form validation and submission
-  const handleProfUsernameChange = (value: string) => {
-    setProfUsername(value);
-    if (debounceTimeoutRefProfUsername.current) clearTimeout(debounceTimeoutRefProfUsername.current);
-    if (value.trim() === '') {
-      setProfUsernameAvailabilityStatus('idle');
-      return;
-    }
-    debounceTimeoutRefProfUsername.current = setTimeout(() => {
-      validateUsername(value, true);
-    }, 500);
-  };
-
-  const handleProfEmailChange = (value: string) => {
-    setProfEmail(value);
-    if (debounceTimeoutRefProfEmail.current) clearTimeout(debounceTimeoutRefProfEmail.current);
-    if (value.trim() === '') {
-      setProfEmailAvailabilityStatus('idle');
-      return;
-    }
-    debounceTimeoutRefProfEmail.current = setTimeout(() => {
-      validateEmail(value, true);
-    }, 500);
-  };
-
-  const handleCreateProfessor = async () => {
-    if (!profFirstName.trim() || !profLastName.trim() || !profUsername.trim() || !profEmail.trim() || !profPassword.trim() || !profRole || !profEstablishmentId) {
-      showError("Tous les champs sont requis pour créer le professeur.");
-      return;
-    }
-    if (profPassword.trim().length < 6) {
-      showError("Le mot de passe doit contenir au moins 6 caractères.");
-      return;
-    }
-    if (profUsernameAvailabilityStatus === 'taken' || profEmailAvailabilityStatus === 'taken') {
-      showError("Le nom d'utilisateur ou l'email est déjà pris.");
-      return;
-    }
-    if (profUsernameAvailabilityStatus === 'checking' || profEmailAvailabilityStatus === 'checking') {
-      showError("Veuillez attendre la vérification de la disponibilité du nom d'utilisateur et de l'email.");
-      return;
-    }
-
-    setIsCreatingProfessor(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-user-with-role', {
-        body: {
-          email: profEmail.trim(),
-          password: profPassword.trim(),
-          first_name: profFirstName.trim(),
-          last_name: profLastName.trim(),
-          username: profUsername.trim(),
-          role: profRole, // Use the selected role
-          establishment_id: profEstablishmentId, // Pass the selected establishment ID
-        },
-      });
-
-      if (error) {
-        console.error("Error creating professor via Edge Function:", error);
-        showError(`Erreur lors de la création du professeur: ${error.message}`);
-        return;
-      }
-      
-      showSuccess(`${profRole === 'creator' ? 'Créateur' : 'Tuteur'} ${profFirstName} ${profLastName} créé avec succès !`);
-      setProfFirstName('');
-      setProfLastName('');
-      setProfUsername('');
-      setProfEmail('');
-      setProfPassword('');
-      setProfRole('creator');
-      setProfEstablishmentId(''); // Clear establishment selection
-      setProfUsernameAvailabilityStatus('idle');
-      setProfEmailAvailabilityStatus('idle');
-      setShowCreateProfessorForm(false);
-    } catch (error: any) {
-      console.error("Unexpected error creating professor:", error);
-      showError(`Une erreur inattendue est survenue: ${error.message}`);
-    } finally {
-      setIsCreatingProfessor(false);
     }
   };
 
@@ -380,79 +286,9 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               </div>
             )}
 
-            <Button 
-              onClick={() => setShowCreateProfessorForm(prev => !prev)} 
-              className="w-full justify-between" 
-              variant="outline"
-            >
-              <div className="flex items-center gap-2">
-                <UserRoundPlus className="h-4 w-4" /> Créer un utilisateur (Créateur/Tuteur/Directeur)
-              </div>
-              {showCreateProfessorForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <Button onClick={handleClearAllData} className="w-full" variant="destructive">
+              <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
             </Button>
-
-            {showCreateProfessorForm && (
-              <div className="space-y-4 p-4 border rounded-md bg-muted/20">
-                <p className="text-sm text-muted-foreground">
-                  Créez un nouveau compte pour un créateur de contenu, un tuteur, un directeur ou un directeur adjoint.
-                </p>
-                <Input
-                  placeholder="Prénom"
-                  value={profFirstName}
-                  onChange={(e) => setProfFirstName(e.target.value)}
-                />
-                <Input
-                  placeholder="Nom"
-                  value={profLastName}
-                  onChange={(e) => setProfLastName(e.target.value)}
-                />
-                <InputWithStatus
-                  placeholder="Nom d'utilisateur"
-                  value={profUsername}
-                  onChange={(e) => handleProfUsernameChange(e.target.value)}
-                  status={profUsernameAvailabilityStatus}
-                  errorMessage={profUsernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-                />
-                <InputWithStatus
-                  type="email"
-                  placeholder="Email"
-                  value={profEmail}
-                  onChange={(e) => handleProfEmailChange(e.target.value)}
-                  status={profEmailAvailabilityStatus}
-                  errorMessage={profEmailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-                />
-                <Input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={profPassword}
-                  onChange={(e) => setProfPassword(e.target.value)}
-                />
-                <Select value={profRole} onValueChange={(value: 'creator' | 'tutor' | 'director' | 'deputy_director') => setProfRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un rôle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="creator">Créateur (Professeur)</SelectItem>
-                    <SelectItem value="tutor">Tuteur</SelectItem>
-                    <SelectItem value="director">Directeur</SelectItem>
-                    <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={profEstablishmentId} onValueChange={setProfEstablishmentId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {establishments.map(est => (
-                      <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleCreateProfessor} className="w-full" disabled={isCreatingProfessor || profUsernameAvailabilityStatus === 'checking' || profEmailAvailabilityStatus === 'checking' || !profEstablishmentId}>
-                  {isCreatingProfessor ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserRoundPlus className="h-4 w-4 mr-2" />} Créer l'utilisateur
-                </Button>
-              </div>
-            )}
 
             <Button onClick={onClose} className="w-full" variant="secondary">
               Fermer

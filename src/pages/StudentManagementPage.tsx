@@ -31,14 +31,14 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 import { useRole } from '@/contexts/RoleContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 
-const AdminStudentAndEnrollmentManagementPage = () => {
+const StudentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ const AdminStudentAndEnrollmentManagementPage = () => {
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
 
-  // States for assign student to establishment section
+  // States for assign student to establishment section (Admin only)
   const [studentSearchInputEst, setStudentSearchInputEst] = useState('');
   const [selectedStudentForEstAssignment, setSelectedStudentForEstAssignment] = useState<Profile | null>(null);
   const [establishmentToAssign, setEstablishmentToAssign] = useState<string>("");
@@ -104,8 +104,25 @@ const AdminStudentAndEnrollmentManagementPage = () => {
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
   const handleRemoveStudentFromClass = async (enrollmentId: string) => {
-    if (!currentUserProfile || currentRole !== 'administrator') { // Only admin can remove
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'creator' && currentRole !== 'tutor')) {
       showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
+      return;
+    }
+
+    const enrollmentToDelete = allStudentClassEnrollments.find(e => e.id === enrollmentId);
+    if (!enrollmentToDelete) {
+      showError("Inscription introuvable.");
+      return;
+    }
+    const classOfEnrollment = classes.find(cls => cls.id === enrollmentToDelete.class_id);
+    if (!classOfEnrollment) {
+      showError("Classe associée introuvable.");
+      return;
+    }
+
+    // Permission check: Admin can remove from any class. Creator/Tutor can only remove from classes they manage.
+    if (currentRole !== 'administrator' && !classOfEnrollment.creator_ids.includes(currentUserProfile.id)) {
+      showError("Vous ne pouvez retirer des élèves que des classes que vous gérez.");
       return;
     }
 
@@ -124,7 +141,7 @@ const AdminStudentAndEnrollmentManagementPage = () => {
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
-  // Debounced search for student to assign to establishment
+  // Debounced search for student to assign to establishment (Admin only)
   useEffect(() => {
     if (debounceTimeoutRefEst.current) {
       clearTimeout(debounceTimeoutRefEst.current);
@@ -217,7 +234,7 @@ const AdminStudentAndEnrollmentManagementPage = () => {
   };
 
   const handleAssignStudentToClass = async () => {
-    if (!currentUserProfile || currentRole !== 'administrator') { // Only admin can assign to any class
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'creator' && currentRole !== 'tutor')) {
       showError("Vous n'êtes pas autorisé à affecter des élèves à des classes.");
       return;
     }
@@ -242,11 +259,20 @@ const AdminStudentAndEnrollmentManagementPage = () => {
       return;
     }
     const selectedClass = classes.find(cls => cls.id === classToAssign);
+    if (!selectedClass) {
+      showError("Classe sélectionnée introuvable.");
+      return;
+    }
     if (selectedClass?.establishment_id !== selectedStudentForClassAssignment.establishment_id) {
       showError("La classe sélectionnée n'appartient pas à l'établissement de l'élève.");
       return;
     }
 
+    // Permission check: Admin can assign to any class. Creator/Tutor can only assign to classes they manage.
+    if (currentRole !== 'administrator' && !selectedClass.creator_ids.includes(currentUserProfile.id)) {
+      showError("Vous ne pouvez affecter des élèves qu'aux classes que vous gérez.");
+      return;
+    }
 
     const existingEnrollment = allStudentClassEnrollments.find(
       e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.enrollment_year === enrollmentYear
@@ -343,11 +369,18 @@ const AdminStudentAndEnrollmentManagementPage = () => {
   const studentsToDisplay = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
 
-    if (selectedEstablishmentFilter && selectedEstablishmentFilter !== 'all') {
+    // Filter by classes/establishments managed by the current user (if not admin)
+    if (currentRole !== 'administrator' && currentUserProfile) {
+      const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).map(cls => cls.id);
+      const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => managedClassIds.includes(e.class_id)).map(e => e.student_id));
+      students = students.filter(s => studentIdsInManagedClasses.has(s.id));
+    }
+
+    if (selectedEstablishmentFilter !== 'all' && selectedEstablishmentFilter !== null) {
       students = students.filter(s => s.establishment_id === selectedEstablishmentFilter);
     }
 
-    if (selectedClassFilter && selectedClassFilter !== 'all') {
+    if (selectedClassFilter !== 'all' && selectedClassFilter !== null) {
       const studentIdsInClass = new Set(allStudentClassEnrollments.filter(e => e.class_id === selectedClassFilter).map(e => e.student_id));
       students = students.filter(s => studentIdsInClass.has(s.id));
     }
@@ -362,7 +395,10 @@ const AdminStudentAndEnrollmentManagementPage = () => {
       );
     }
     return students;
-  }, [allProfiles, selectedEstablishmentFilter, selectedClassFilter, studentSearchQuery, allStudentClassEnrollments]);
+  }, [allProfiles, currentUserProfile, currentRole, classes, allStudentClassEnrollments, selectedEstablishmentFilter, selectedClassFilter, studentSearchQuery]);
+
+  const currentYear = new Date().getFullYear();
+  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
   if (isLoadingUser) {
     return (
@@ -377,208 +413,207 @@ const AdminStudentAndEnrollmentManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'administrator') { // Only administrators can access this page
+  if (currentRole !== 'administrator' && currentRole !== 'creator' && currentRole !== 'tutor') {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les administrateurs peuvent accéder à cette page.
+          Seuls les administrateurs, créateurs (professeurs) et tuteurs peuvent accéder à cette page.
         </p>
       </div>
     );
   }
 
-  const currentYear = new Date().getFullYear();
-  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
-
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Élèves et Inscriptions (Admin)
+        Gestion des Élèves
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Recherchez des élèves et gérez leurs affectations aux établissements et aux classes.
+        {currentRole === 'administrator' ? "Recherchez des élèves et gérez leurs affectations aux établissements et aux classes." : "Gérez les affectations des élèves aux classes que vous supervisez."}
       </p>
 
-      {/* Section: Affecter un élève à un établissement */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <School className="h-6 w-6 text-primary" /> Affecter un élève à un établissement
-          </CardTitle>
-          <CardDescription>Affectez un élève à un établissement pour une période donnée.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <Label htmlFor="select-student-for-est-assignment" className="text-base font-semibold mb-2 block">1. Sélectionner l'élève</Label>
-            <Popover open={openStudentSelectEst} onOpenChange={setOpenStudentSelectEst}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openStudentSelectEst}
-                  className="w-full justify-between"
-                  id="select-student-for-est-assignment"
-                >
-                  {selectedStudentForEstAssignment ? `${selectedStudentForEstAssignment.first_name} ${selectedStudentForEstAssignment.last_name} (@${selectedStudentForEstAssignment.username})` : "Rechercher un élève..."}
-                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                <Command>
-                  <CommandInput
-                    placeholder="Rechercher par nom d'utilisateur..."
-                    value={studentSearchInputEst}
-                    onValueChange={(value) => {
-                      setStudentSearchInputEst(value);
-                      setIsSearchingUserEst(true);
-                    }}
-                  />
-                  <CommandList>
-                    {isSearchingUserEst && studentSearchInputEst.trim() !== '' ? (
-                      <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
-                      </CommandEmpty>
-                    ) : filteredStudentsForEstDropdown.length === 0 && studentSearchInputEst.trim() !== '' ? (
-                      <CommandEmpty className="py-2 text-center text-muted-foreground">
-                        Aucun élève trouvé pour "{studentSearchInputEst}".
-                      </CommandEmpty>
-                    ) : (
-                      <CommandGroup>
-                        {filteredStudentsForEstDropdown.map((profile) => (
-                          <CommandItem
-                            key={profile.id}
-                            value={profile.username}
-                            onSelect={() => {
-                              setSelectedStudentForEstAssignment(profile);
-                              setStudentSearchInputEst(profile.username);
-                              setEstablishmentToAssign(profile.establishment_id || "");
-                              setEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
-                              setEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
-                              setOpenStudentSelectEst(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {profile.first_name} {profile.last_name} (@{profile.username})
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {selectedStudentForEstAssignment && (
-            <div className="p-4 border rounded-md bg-muted/20 space-y-3">
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-green-500" />
-                <p className="font-medium text-lg">{selectedStudentForEstAssignment.first_name} {selectedStudentForEstAssignment.last_name}</p>
-              </div>
-              <p className="text-sm text-muted-foreground">Email : {selectedStudentForEstAssignment.email}</p>
-              <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForEstAssignment.username}</p>
-              {selectedStudentForEstAssignment.establishment_id ? (
-                <p className="text-sm text-muted-foreground">
-                  Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForEstAssignment.establishment_id)}</span>
-                  {selectedStudentForEstAssignment.enrollment_start_date && selectedStudentForEstAssignment.enrollment_end_date && (
-                    <span> (Du {format(parseISO(selectedStudentForEstAssignment.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(selectedStudentForEstAssignment.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
-                  )}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
-              )}
-
-              <div>
-                <Label htmlFor="establishment-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir l'établissement d'affectation</Label>
-                <Select value={establishmentToAssign} onValueChange={setEstablishmentToAssign}>
-                  <SelectTrigger id="establishment-to-assign" className="w-full">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {establishments.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="enrollment-start-date" className="text-base font-semibold mb-2 block mt-4">Date de début d'inscription</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !enrollmentStartDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={enrollmentStartDate}
-                        onSelect={setEnrollmentStartDate}
-                        initialFocus
-                        locale={fr}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label htmlFor="enrollment-end-date" className="text-base font-semibold mb-2 block mt-4">Date de fin d'inscription</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !enrollmentEndDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={enrollmentEndDate}
-                        onSelect={setEnrollmentEndDate}
-                        initialFocus
-                        locale={fr}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleAssignStudentToEstablishment} disabled={!establishmentToAssign || !enrollmentStartDate || !enrollmentEndDate}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> Affecter à cet établissement
-                </Button>
-                <Button variant="outline" onClick={handleClearEstAssignmentForm}>
-                  <XCircle className="h-4 w-4 mr-2" /> Effacer le formulaire
-                </Button>
-              </div>
+      {/* Section: Affecter un élève à un établissement (Admin only) */}
+      {currentRole === 'administrator' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <School className="h-6 w-6 text-primary" /> Affecter un élève à un établissement
+            </CardTitle>
+            <CardDescription>Affectez un élève à un établissement pour une période donnée.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <Label htmlFor="select-student-for-est-assignment" className="text-base font-semibold mb-2 block">1. Sélectionner l'élève</Label>
+              <Popover open={openStudentSelectEst} onOpenChange={setOpenStudentSelectEst}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openStudentSelectEst}
+                    className="w-full justify-between"
+                    id="select-student-for-est-assignment"
+                  >
+                    {selectedStudentForEstAssignment ? `${selectedStudentForEstAssignment.first_name} ${selectedStudentForEstAssignment.last_name} (@${selectedStudentForEstAssignment.username})` : "Rechercher un élève..."}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Rechercher par nom d'utilisateur..."
+                      value={studentSearchInputEst}
+                      onValueChange={(value) => {
+                        setStudentSearchInputEst(value);
+                        setIsSearchingUserEst(true);
+                      }}
+                    />
+                    <CommandList>
+                      {isSearchingUserEst && studentSearchInputEst.trim() !== '' ? (
+                        <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
+                        </CommandEmpty>
+                      ) : filteredStudentsForEstDropdown.length === 0 && studentSearchInputEst.trim() !== '' ? (
+                        <CommandEmpty className="py-2 text-center text-muted-foreground">
+                          Aucun élève trouvé pour "{studentSearchInputEst}".
+                        </CommandEmpty>
+                      ) : (
+                        <CommandGroup>
+                          {filteredStudentsForEstDropdown.map((profile) => (
+                            <CommandItem
+                              key={profile.id}
+                              value={profile.username}
+                              onSelect={() => {
+                                setSelectedStudentForEstAssignment(profile);
+                                setStudentSearchInputEst(profile.username);
+                                setEstablishmentToAssign(profile.establishment_id || "");
+                                setEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
+                                setEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
+                                setOpenStudentSelectEst(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {profile.first_name} {profile.last_name} (@{profile.username})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {selectedStudentForEstAssignment && (
+              <div className="p-4 border rounded-md bg-muted/20 space-y-3">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-green-500" />
+                  <p className="font-medium text-lg">{selectedStudentForEstAssignment.first_name} {selectedStudentForEstAssignment.last_name}</p>
+                </div>
+                <p className="text-sm text-muted-foreground">Email : {selectedStudentForEstAssignment.email}</p>
+                <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForEstAssignment.username}</p>
+                {selectedStudentForEstAssignment.establishment_id ? (
+                  <p className="text-sm text-muted-foreground">
+                    Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForEstAssignment.establishment_id)}</span>
+                    {selectedStudentForEstAssignment.enrollment_start_date && selectedStudentForEstAssignment.enrollment_end_date && (
+                      <span> (Du {format(parseISO(selectedStudentForEstAssignment.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(selectedStudentForEstAssignment.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
+                )}
+
+                <div>
+                  <Label htmlFor="establishment-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir l'établissement d'affectation</Label>
+                  <Select value={establishmentToAssign} onValueChange={setEstablishmentToAssign}>
+                    <SelectTrigger id="establishment-to-assign" className="w-full">
+                      <SelectValue placeholder="Sélectionner un établissement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {establishments.map(est => (
+                        <SelectItem key={est.id} value={est.id}>
+                          {est.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="enrollment-start-date" className="text-base font-semibold mb-2 block mt-4">Date de début d'inscription</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !enrollmentStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={enrollmentStartDate}
+                          onSelect={setEnrollmentStartDate}
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label htmlFor="enrollment-end-date" className="text-base font-semibold mb-2 block mt-4">Date de fin d'inscription</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !enrollmentEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={enrollmentEndDate}
+                          onSelect={setEnrollmentEndDate}
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                  <Button onClick={handleAssignStudentToEstablishment} disabled={!establishmentToAssign || !enrollmentStartDate || !enrollmentEndDate}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Affecter à cet établissement
+                  </Button>
+                  <Button variant="outline" onClick={handleClearEstAssignmentForm}>
+                    <XCircle className="h-4 w-4 mr-2" /> Effacer le formulaire
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Section: Affecter un élève à une classe */}
       <Card>
@@ -675,11 +710,16 @@ const AdminStudentAndEnrollmentManagementPage = () => {
                     <SelectValue placeholder="Sélectionner une classe" />
                   </SelectTrigger>
                   <SelectContent>
-                    {classes.filter(cls => cls.establishment_id === selectedStudentForClassAssignment.establishment_id).map(cls => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
-                      </SelectItem>
-                    ))}
+                    {classes
+                      .filter(cls => 
+                        (currentRole === 'administrator' || (currentUserProfile && cls.creator_ids.includes(currentUserProfile.id))) &&
+                        (!selectedStudentForClassAssignment.establishment_id || cls.establishment_id === selectedStudentForClassAssignment.establishment_id)
+                      )
+                      .map(cls => (
+                        <SelectItem key={cls.id} value={cls.id}>
+                          {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -769,9 +809,9 @@ const AdminStudentAndEnrollmentManagementPage = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" /> Liste de tous les élèves
+            <GraduationCap className="h-6 w-6 text-primary" /> Mes Élèves
           </CardTitle>
-          <CardDescription>Visualisez et gérez tous les élèves.</CardDescription>
+          <CardDescription>Visualisez et gérez les élèves de vos classes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -821,11 +861,16 @@ const AdminStudentAndEnrollmentManagementPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les classes</SelectItem>
-                  {classes.filter(cls => !selectedEstablishmentFilter || cls.establishment_id === selectedEstablishmentFilter).map(cls => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
-                    </SelectItem>
-                  ))}
+                  {classes
+                    .filter(cls => 
+                      (currentRole === 'administrator' || (currentUserProfile && cls.creator_ids.includes(currentUserProfile.id))) &&
+                      (!selectedEstablishmentFilter || cls.establishment_id === selectedEstablishmentFilter)
+                    )
+                    .map(cls => (
+                      <SelectItem key={cls.id} value={cls.id}>
+                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -881,9 +926,11 @@ const AdminStudentAndEnrollmentManagementPage = () => {
                       <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {currentRole === 'administrator' && (
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 );
@@ -896,4 +943,4 @@ const AdminStudentAndEnrollmentManagementPage = () => {
   );
 };
 
-export default AdminStudentAndEnrollmentManagementPage;
+export default StudentManagementPage;

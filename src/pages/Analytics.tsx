@@ -115,6 +115,7 @@ const Analytics = () => {
           allStudentCourseProgresses={studentCourseProgresses}
           allClasses={classes}
           allCurricula={curricula}
+          selectedEstablishmentId={selectedEstablishmentId} // Pass establishment filter
         />
       );
     } else if (currentRole === 'tutor') {
@@ -158,7 +159,7 @@ const Analytics = () => {
 
       {(currentRole === 'creator' || currentRole === 'tutor' || currentRole === 'administrator') && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"> {/* Adjusted grid for 3 filters */}
-          {currentRole === 'administrator' && (
+          {(currentRole === 'administrator' || currentRole === 'creator') && ( // Only admin and creator can filter by establishment
             <div>
               <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
               <Select value={selectedEstablishmentId} onValueChange={(value) => {

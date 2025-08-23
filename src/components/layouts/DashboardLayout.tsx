@@ -264,13 +264,14 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('administration'),
           items: [
+            { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' }, // New link
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
-            // Removed "Cursus" link
-            // Removed "Classes" link
-            // Removed "Gestion Élèves" link
+            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
+            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/analytics?view=overview", label: "Analytiques Globales", icon: LayoutDashboard, type: 'link' },
           ],
         },
-        // Removed "Analytiques" section for administrator
       ];
     }
     return baseItems;

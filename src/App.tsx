@@ -17,7 +17,8 @@ import AllNotes from "./pages/AllNotes";
 import EstablishmentManagementPage from "./pages/EstablishmentManagementPage";
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
-import CreatorAndTutorStudentManagementPage from "./pages/CreatorAndTutorStudentManagementPage";
+import StudentManagementPage from "./pages/StudentManagementPage"; // Updated import
+import AdminUserManagementPage from "./pages/AdminUserManagementPage"; // New import
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
@@ -64,7 +65,7 @@ const AppWithThemeProvider = () => {
                 <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
                 <Route element={<ProtectedRoute />}>
-                  <Route element={<DashboardLayout />}>
+                  <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -76,23 +77,42 @@ const AppWithThemeProvider = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/data-model" element={<DataModelViewer />} />
                     
+                    {/* Admin-specific routes */}
                     <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
+                      <Route path="/admin-users" element={<AdminUserManagementPage />} /> {/* New Admin User Management */}
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                      <Route path="/curricula" element={<CurriculumManagementPage />} />
+                      <Route path="/classes" element={<ClassManagementPage />} />
+                      <Route path="/students" element={<StudentManagementPage />} /> {/* Admin can also manage students here */}
                     </Route>
 
-                    <Route element={<ProtectedRoute allowedRoles={['creator']} />}> {/* Only creators can manage curricula and create courses */}
-                      <Route path="/curricula" element={<CurriculumManagementPage />} />
+                    {/* Creator-specific routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['creator']} />}>
                       <Route path="/create-course" element={<CreateCourse />} />
                       <Route path="/create-course/:courseId" element={<CreateCourse />} />
-                    </Route>
-
-                    <Route element={<ProtectedRoute allowedRoles={['creator', 'tutor']} />}>
+                      {/* Creator can also manage classes and students via StudentManagementPage */}
                       <Route path="/classes" element={<ClassManagementPage />} />
-                      <Route path="/students" element={<CreatorAndTutorStudentManagementPage />} />
+                      <Route path="/students" element={<StudentManagementPage />} />
+                      <Route path="/curricula" element={<CurriculumManagementPage />} /> {/* Creators can also manage curricula */}
                     </Route>
 
+                    {/* Tutor-specific routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['tutor']} />}>
+                      {/* Tutor can manage classes and students via StudentManagementPage */}
+                      <Route path="/classes" element={<ClassManagementPage />} />
+                      <Route path="/students" element={<StudentManagementPage />} />
+                    </Route>
+
+                    {/* Redirect for students trying to access creator/admin pages */}
                     {currentRole === 'student' && (
-                      <Route path="/create-course" element={<Navigate to="/courses" replace />} />
+                      <>
+                        <Route path="/create-course" element={<Navigate to="/courses" replace />} />
+                        <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
+                      </>
                     )}
                   </Route>
                 </Route>

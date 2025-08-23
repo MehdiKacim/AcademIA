@@ -36,25 +36,28 @@ serve(async (req) => {
     const { email, password, first_name, last_name, username, role: newUserRole, establishment_id } = await req.json(); // Added establishment_id
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole
-    if (invokingUserRole === 'administrator') {
-      // Admins can create any role (student, creator, tutor, director, deputy_director, administrator)
-      if (!['student', 'creator', 'tutor', 'administrator', 'director', 'deputy_director'].includes(newUserRole)) {
-        return new Response(JSON.stringify({ error: 'Administrators can only create student, creator, tutor, director, deputy_director, or administrator roles.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        });
-      }
-    } else if (invokingUserRole === 'creator') {
-      // Creators can only create student roles
-      if (newUserRole !== 'student') {
-        return new Response(JSON.stringify({ error: 'Creators can only create student roles.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        });
-      }
-    } else {
-      // Other roles (like student, tutor, director, deputy_director) cannot create users via this function
-      return new Response(JSON.stringify({ error: 'Forbidden: Your role does not permit user creation.' }), {
+    let isAllowed = false;
+    switch (invokingUserRole) {
+      case 'administrator':
+        // Admins can create any role
+        isAllowed = ['student', 'creator', 'tutor', 'director', 'deputy_director', 'administrator'].includes(newUserRole);
+        break;
+      case 'director':
+      case 'deputy_director':
+        // Directors and Deputy Directors can create creators (professors) and tutors
+        isAllowed = ['creator', 'tutor'].includes(newUserRole);
+        break;
+      case 'creator':
+        // Creators can only create student roles
+        isAllowed = newUserRole === 'student';
+        break;
+      default:
+        // Other roles (like student, tutor) cannot create users via this function
+        isAllowed = false;
+    }
+
+    if (!isAllowed) {
+      return new Response(JSON.stringify({ error: `Forbidden: Your role (${invokingUserRole}) does not permit creating users with role '${newUserRole}'.` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
       });

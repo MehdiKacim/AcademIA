@@ -199,7 +199,7 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle>Élèves Supervisés</CardTitle>
               <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
-            </CardHeader>
+            </CardDescription>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalSupervisedStudents}</p>
               <p className="text-sm text-muted-foreground">élèves au total.</p>
@@ -243,6 +243,8 @@ const Dashboard = () => {
       const totalStudents = allProfiles.filter(p => p.role === 'student').length;
       const totalCreators = allProfiles.filter(p => p.role === 'creator').length;
       const totalTutors = allProfiles.filter(p => p.role === 'tutor').length;
+      const totalDirectors = allProfiles.filter(p => p.role === 'director').length;
+      const totalDeputyDirectors = allProfiles.filter(p => p.role === 'deputy_director').length;
       const totalUsers = allProfiles.length;
 
       return (
@@ -266,7 +268,9 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalUsers}</p>
-              <p className="text-sm text-muted-foreground">Créateurs: {totalCreators}, Tuteurs: {totalTutors}, Élèves: {totalStudents}</p>
+              <p className="text-sm text-muted-foreground">
+                Créateurs: {totalCreators}, Tuteurs: {totalTutors}, Directeurs: {totalDirectors}, Directeurs Adjoints: {totalDeputyDirectors}, Élèves: {totalStudents}
+              </p>
               <Link to="/admin-users" className="mt-4 block">
                 <Button variant="outline" className="w-full">Gérer les utilisateurs</Button>
               </Link>
