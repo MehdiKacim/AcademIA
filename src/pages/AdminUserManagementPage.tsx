@@ -32,7 +32,7 @@ const AdminUserManagementPage = () => {
   const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [newUserRole, setNewUserRole] = useState<'creator' | 'tutor' | 'student'>('creator'); // Admin creates creator/tutor/student
+  const [newUserRole, setNewUserRole] = useState<'creator' | 'tutor' | 'student' | 'administrator'>('creator'); // Admin can now create administrators
   const [isCreatingUser, setIsCreatingUser] = useState(false);
 
   const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
@@ -150,7 +150,7 @@ const AdminUserManagementPage = () => {
       setNewUsername('');
       setNewEmail('');
       setNewPassword('');
-      setNewUserRole('creator');
+      setNewUserRole('creator'); // Reset to default
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
       setAllUsers(await getAllProfiles()); // Refresh user list
@@ -316,11 +316,12 @@ const AdminUserManagementPage = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
-            <Select value={newUserRole} onValueChange={(value: 'creator' | 'tutor' | 'student') => setNewUserRole(value)}>
+            <Select value={newUserRole} onValueChange={(value: 'creator' | 'tutor' | 'student' | 'administrator') => setNewUserRole(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un rôle" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="administrator">Administrateur</SelectItem> {/* Added Administrator role */}
                 <SelectItem value="creator">Créateur (Professeur)</SelectItem>
                 <SelectItem value="tutor">Tuteur</SelectItem>
                 <SelectItem value="student">Élève</SelectItem>

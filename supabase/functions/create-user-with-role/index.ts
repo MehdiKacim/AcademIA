@@ -50,9 +50,9 @@ serve(async (req) => {
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole
     if (invokingUserRole === 'administrator') {
-      // Admins can create any role (student, creator, tutor)
-      if (!['student', 'creator', 'tutor'].includes(newUserRole)) {
-        return new Response(JSON.stringify({ error: 'Administrators can only create student, creator, or tutor roles.' }), {
+      // Admins can create any role (student, creator, tutor, administrator)
+      if (!['student', 'creator', 'tutor', 'administrator'].includes(newUserRole)) {
+        return new Response(JSON.stringify({ error: 'Administrators can only create student, creator, tutor, or administrator roles.' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 403,
         });

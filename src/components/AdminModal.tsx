@@ -59,42 +59,6 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
     }
   };
 
-  const handleCreateAdministrator = async () => {
-    const email = prompt("Entrez l'email du nouvel administrateur:");
-    const newPassword = prompt("Entrez le mot de passe du nouvel administrateur:");
-    const firstName = prompt("Entrez le prénom du nouvel administrateur:");
-    const lastName = prompt("Entrez le nom du nouvel administrateur:");
-    const username = prompt("Entrez le nom d'utilisateur du nouvel administrateur:");
-
-    if (!email || !newPassword || !firstName || !lastName || !username) {
-      showError("Tous les champs sont requis pour créer un administrateur.");
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-user-with-role', {
-        body: {
-          email: email.trim(),
-          password: newPassword.trim(),
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          username: username.trim(),
-          role: 'administrator',
-        },
-      });
-
-      if (error) {
-        console.error("Error creating administrator via Edge Function:", error);
-        showError(`Erreur lors de la création de l'administrateur: ${error.message}`);
-        return;
-      }
-      showSuccess(`Administrateur ${firstName} ${lastName} créé avec succès !`);
-    } catch (error: any) {
-      console.error("Unexpected error creating administrator:", error);
-      showError(`Une erreur inattendue est survenue: ${error.message}`);
-    }
-  };
-
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
     <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80">
       <Header className="mb-4 text-center">
@@ -126,9 +90,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
             <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full" variant="outline">
               <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
             </Button>
-            <Button onClick={handleCreateAdministrator} className="w-full" variant="outline">
-              <UserPlus className="h-4 w-4 mr-2" /> Créer un administrateur
-            </Button>
+            {/* Le bouton de création d'administrateur est déplacé vers AdminUserManagementPage */}
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Effacer toutes les données
             </Button>
