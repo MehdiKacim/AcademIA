@@ -121,11 +121,10 @@ serve(async (req) => {
       DROP POLICY IF EXISTS "Administrators can delete profiles" ON public.profiles;
       DROP POLICY IF EXISTS "Creators and Tutors can view student profiles" ON public.profiles;
 
-      -- Create only the basic self-select policy for SELECT operations
+      -- Create secure policies for each operation, using JWT claims for current user's role
       CREATE POLICY "profiles_select_policy" ON public.profiles
       FOR SELECT TO authenticated USING (auth.uid() = id);
 
-      -- Keep INSERT, UPDATE, DELETE policies as they are not causing the SELECT recursion
       CREATE POLICY "profiles_insert_policy" ON public.profiles
       FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
@@ -135,14 +134,23 @@ serve(async (req) => {
       CREATE POLICY "profiles_delete_policy" ON public.profiles
       FOR DELETE TO authenticated USING (auth.uid() = id);
 
+      CREATE POLICY "Administrators can view all profiles" ON public.profiles
+      FOR SELECT USING (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = 'administrator');
+
       CREATE POLICY "Administrators can insert profiles" ON public.profiles
-      FOR INSERT WITH CHECK (public.get_user_role(auth.uid()) = 'administrator');
+      FOR INSERT WITH CHECK (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = 'administrator');
 
       CREATE POLICY "Administrators can update all profiles" ON public.profiles
-      FOR UPDATE USING (public.get_user_role(auth.uid()) = 'administrator');
+      FOR UPDATE USING (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = 'administrator');
 
       CREATE POLICY "Administrators can delete profiles" ON public.profiles
-      FOR DELETE USING (public.get_user_role(auth.uid()) = 'administrator');
+      FOR DELETE USING (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = 'administrator');
+
+      CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles
+      FOR SELECT USING (
+        (public.get_user_role(id) = 'student'::public.user_role) AND
+        (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = ANY (ARRAY['creator'::public.user_role, 'tutor'::public.user_role, 'administrator'::public.user_role]))
+      );
 
       -- Create or replace handle_new_user function
       CREATE OR REPLACE FUNCTION public.handle_new_user()
