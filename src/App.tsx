@@ -29,13 +29,14 @@ import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { CourseChatProvider } from "./contexts/CourseChatContext"; // Import CourseChatProvider
+import AdminModal from "./components/AdminModal"; // Import AdminModal here
 
 const queryClient = new QueryClient();
 
 // A wrapper component to get the theme from useRole and pass it to ThemeProvider
 const AppWithThemeProvider = () => {
   const { currentUserProfile, isLoadingUser, currentRole } = useRole();
-  // Removed local showSplash state, will rely solely on isLoadingUser for splash screen
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // State for AdminModal, now in App.tsx
 
   // Determine the initial theme based on user profile or system preference
   const initialTheme = currentUserProfile?.theme || "system";
@@ -72,7 +73,7 @@ const AppWithThemeProvider = () => {
 
                 {/* Protected routes requiring authentication */}
                 <Route element={<ProtectedRoute />}> {/* All child routes require login */}
-                  <Route element={<DashboardLayout />}>
+                  <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}> {/* Pass setIsAdminModalOpen */}
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -116,6 +117,7 @@ const AppWithThemeProvider = () => {
               </Routes>
             </BrowserRouter>
           )}
+          <AdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} /> {/* Render AdminModal here */}
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>

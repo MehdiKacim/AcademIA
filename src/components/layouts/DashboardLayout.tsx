@@ -30,15 +30,18 @@ import { Message } from "@/lib/dataModels";
 import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
-import { useCourseChat } from "@/contexts/CourseChatContext";
-import AdminModal from "@/components/AdminModal"; // Import the new AdminModal
+// import AdminModal from "@/components/AdminModal"; // AdminModal is now imported in App.tsx
 
-const DashboardLayout = () => {
+interface DashboardLayoutProps {
+  setIsAdminModalOpen: (isOpen: boolean) => void; // New prop
+}
+
+const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
   const { currentUserProfile, currentRole, signOut } = useRole();
   const { isChatOpen } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // State for AdminModal
+  // const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // Moved to App.tsx
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -96,16 +99,15 @@ const DashboardLayout = () => {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const isModifierPressed = event.ctrlKey || event.metaKey;
 
-    if (currentUserProfile) {
-      if (isModifierPressed && event.key === 'f') {
-        event.preventDefault();
-        setIsSearchOverlayOpen(true);
-      } else if (isModifierPressed && event.key === 'u') { // New shortcut for AdminModal
-        event.preventDefault();
-        setIsAdminModalOpen(true);
-      }
+    // AdminModal can be opened regardless of currentUserProfile status
+    if (isModifierPressed && event.key === 'u') { // New shortcut for AdminModal
+      event.preventDefault();
+      setIsAdminModalOpen(true);
+    } else if (currentUserProfile && isModifierPressed && event.key === 'f') {
+      event.preventDefault();
+      setIsSearchOverlayOpen(true);
     }
-  }, [currentUserProfile]);
+  }, [currentUserProfile, setIsAdminModalOpen]); // Add setIsAdminModalOpen to dependencies
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -330,14 +332,14 @@ const DashboardLayout = () => {
   const handleLogoClick = useCallback(() => {
     logoTapCountRef.current += 1;
     if (logoTapCountRef.current >= 10) {
-      setIsAdminModalOpen(true);
+      setIsAdminModalOpen(true); // Use the prop
       logoTapCountRef.current = 0; // Reset count after opening
     }
     // Reset tap count after a short delay if not enough taps
     setTimeout(() => {
       logoTapCountRef.current = 0;
     }, 1000); // 1 second to reset tap count
-  }, []);
+  }, [setIsAdminModalOpen]); // Add setIsAdminModalOpen to dependencies
 
   // Démarrer le timer au montage du composant
   useEffect(() => {
@@ -460,7 +462,7 @@ const DashboardLayout = () => {
       {/* DataModelModal is now opened from AdminModal */}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
-      {currentUserProfile && <AdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} />} {/* Render AdminModal */}
+      {/* AdminModal is now rendered in App.tsx */}
     </div>
   );
 };
