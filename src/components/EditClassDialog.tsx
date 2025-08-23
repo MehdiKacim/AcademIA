@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { showSuccess, showError } from "@/utils/toast";
 import { Class, Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { updateClassInStorage, loadCurricula, loadEstablishments, getEstablishmentAddress } from "@/lib/courseData"; // Import loadEstablishments and getEstablishmentAddress
-import { useRole } from '@/contexts/RoleContext';
 
 interface EditClassDialogProps {
   isOpen: boolean;
@@ -24,7 +23,6 @@ interface EditClassDialogProps {
 }
 
 const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDialogProps) => {
-  const { currentUserProfile, currentRole } = useRole();
   const [name, setName] = useState(classToEdit.name);
   const [curriculumId, setCurriculumId] = useState(classToEdit.curriculum_id);
   const [establishmentId, setEstablishmentId] = useState(classToEdit.establishment_id || ''); // New state
@@ -51,10 +49,6 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
   }, [isOpen, classToEdit]);
 
   const handleSave = async () => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
-      showError("Vous n'êtes pas autorisé à modifier une classe.");
-      return;
-    }
     if (!name.trim()) {
       showError("Le nom de la classe est requis.");
       return;
@@ -69,17 +63,6 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       }
     if (!schoolYear.trim()) {
       showError("L'année scolaire est requise.");
-      return;
-    }
-
-    // Permission check: Professeur can only edit classes they manage.
-    if (currentRole === 'professeur' && !classToEdit.creator_ids.includes(currentUserProfile.id)) {
-      showError("Vous ne pouvez modifier que les classes que vous gérez.");
-      return;
-    }
-    // Permission check: Director/Deputy Director can only edit classes from their own establishment.
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && classToEdit.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez modifier des classes que de votre établissement.");
       return;
     }
 
@@ -112,22 +95,6 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
-  const isAdministrator = currentRole === 'administrator';
-  const isDirectorOrDeputyDirector = currentRole === 'director' || currentRole === 'deputy_director';
-  const isProfesseur = currentRole === 'professeur';
-
-  const canEdit = isAdministrator || 
-                  (isDirectorOrDeputyDirector && classToEdit.establishment_id === currentUserProfile?.establishment_id) ||
-                  (isProfesseur && classToEdit.creator_ids.includes(currentUserProfile?.id || ''));
-
-  const establishmentsToDisplay = isAdministrator
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile?.establishment_id);
-
-  const curriculaToDisplay = isAdministrator
-    ? curricula
-    : curricula.filter(cur => cur.establishment_id === currentUserProfile?.establishment_id);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -148,23 +115,18 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
               required
-              disabled={!canEdit}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="establishment" className="text-right">
               Établissement
             </Label>
-            <Select 
-              value={establishmentId} 
-              onValueChange={setEstablishmentId}
-              disabled={!isAdministrator} // Only admin can change establishment
-            >
+            <Select value={establishmentId} onValueChange={setEstablishmentId}>
               <SelectTrigger id="establishment" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un établissement" />
               </SelectTrigger>
               <SelectContent>
-                {establishmentsToDisplay.map(est => (
+                {establishments.map(est => (
                   <SelectItem key={est.id} value={est.id}>
                     {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
                   </SelectItem>
@@ -176,16 +138,12 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
             <Label htmlFor="curriculum" className="text-right">
               Cursus
             </Label>
-            <Select 
-              value={curriculumId} 
-              onValueChange={setCurriculumId}
-              disabled={!canEdit}
-            >
+            <Select value={curriculumId} onValueChange={setCurriculumId}>
               <SelectTrigger id="curriculum" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un cursus" />
               </SelectTrigger>
               <SelectContent>
-                {curriculaToDisplay.filter(cur => !establishmentId || cur.establishment_id === establishmentId).map(cur => (
+                {curricula.filter(cur => !establishmentId || cur.establishment_id === establishmentId).map(cur => (
                   <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -195,11 +153,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
             <Label htmlFor="schoolYear" className="text-right">
               Année scolaire
             </Label>
-            <Select 
-              value={schoolYear} 
-              onValueChange={setSchoolYear}
-              disabled={!canEdit}
-            >
+            <Select value={schoolYear} onValueChange={setSchoolYear}>
               <SelectTrigger id="schoolYear" className="col-span-3">
                 <SelectValue placeholder="Sélectionner l'année scolaire" />
               </SelectTrigger>
@@ -212,7 +166,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSave} disabled={isLoading || !canEdit}>
+          <Button onClick={handleSave} disabled={isLoading}>
             {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
           </Button>
         </DialogFooter>

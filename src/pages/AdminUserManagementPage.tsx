@@ -75,15 +75,6 @@ const AdminUserManagementPage = () => {
     fetchData();
   }, [currentUserProfile]);
 
-  // Set default establishment for directors/deputy directors when creating new users
-  useEffect(() => {
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id) {
-      setNewUserEstablishmentId(currentUserProfile.establishment_id);
-    } else {
-      setNewUserEstablishmentId('');
-    }
-  }, [currentRole, currentUserProfile?.establishment_id]);
-
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   // --- New User Creation Logic ---
@@ -160,8 +151,8 @@ const AdminUserManagementPage = () => {
 
     // Role-based creation restrictions
     if (currentRole === 'director' || currentRole === 'deputy_director') {
-      if (!['professeur', 'student', 'tutor'].includes(newUserRole)) { // Directors can create professeurs, tutors, and students
-        showError("Les directeurs ne peuvent créer que des professeurs, tuteurs ou des élèves.");
+      if (!['professeur', 'student'].includes(newUserRole)) {
+        showError("Les directeurs ne peuvent créer que des professeurs ou des élèves.");
         return;
       }
       if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) { // If an establishment is selected, it must be their own
@@ -203,11 +194,7 @@ const AdminUserManagementPage = () => {
       setNewUserEmail('');
       setNewUserPassword('');
       setNewUserRole('student');
-      setNewUserEstablishmentId(
-        (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
-          ? currentUserProfile.establishment_id
-          : ''
-      ); // Reset to default for director/deputy director
+      setNewUserEstablishmentId('');
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
       setAllUsers(await getAllProfiles());
@@ -489,10 +476,6 @@ const AdminUserManagementPage = () => {
     );
   }
 
-  const establishmentsToDisplay = currentRole === 'administrator'
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
-
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -587,7 +570,8 @@ const AdminUserManagementPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Aucun</SelectItem>
-                      {establishmentsToDisplay
+                      {establishments
+                        .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                         .map(est => (
                           <SelectItem key={est.id} value={est.id}>
                             {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
@@ -597,7 +581,7 @@ const AdminUserManagementPage = () => {
                   </Select>
                 )}
               </div>
-              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newUserRole === 'professeur' || newUserRole === 'tutor' || newUserRole === 'director' || newUserRole === 'deputy_director') && !newUserEstablishmentId)}>
+              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newUserRole === 'professeur' || newUserRole === 'tutor') && !newUserEstablishmentId)}>
                 {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
               </Button>
             </CardContent>
@@ -657,12 +641,13 @@ const AdminUserManagementPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les établissements</SelectItem>
-                  {establishmentsToDisplay
+                  {establishments
+                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                     .map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                          </SelectItem>
-                        ))}
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -793,7 +778,8 @@ const AdminUserManagementPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Aucun</SelectItem>
-                      {establishmentsToDisplay
+                      {establishments
+                        .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                         .map(est => (
                           <SelectItem key={est.id} value={est.id}>
                             {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
@@ -804,7 +790,7 @@ const AdminUserManagementPage = () => {
                 </div>
               )}
             </div>
-            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || ((editRole === 'professeur' || editRole === 'tutor' || editRole === 'director' || editRole === 'deputy_director') && !editEstablishmentId)}>
+            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || ((editRole === 'professeur' || editRole === 'tutor') && !editEstablishmentId)}>
               {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
             </Button>
           </DialogContent>
