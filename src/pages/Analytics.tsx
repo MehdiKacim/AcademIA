@@ -12,7 +12,8 @@ import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData";
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
 import TutorAnalyticsSection from "@/components/TutorAnalyticsSection";
-import AdminAnalyticsSection from "@/components/AdminAnalyticsSection";
+import EstablishmentAdminAnalyticsSection from "@/components/EstablishmentAdminAnalyticsSection"; // Renamed import
+import GlobalAdminAnalyticsSection from "@/components/GlobalAdminAnalyticsSection"; // New import
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -133,15 +134,26 @@ const Analytics = () => {
         />
       );
     } else if (currentRole === 'administrator') {
-      return (
-        <AdminAnalyticsSection
-          establishments={establishments}
-          curricula={curricula}
-          classes={classes}
-          allProfiles={allProfiles}
-          selectedEstablishmentFilter={selectedEstablishmentFilter} // Pass the filter here
-        />
-      );
+      if (selectedEstablishmentFilter && selectedEstablishmentFilter !== 'all') {
+        return (
+          <EstablishmentAdminAnalyticsSection // Render specific section
+            establishments={establishments}
+            curricula={curricula}
+            classes={classes}
+            allProfiles={allProfiles}
+            selectedEstablishmentFilter={selectedEstablishmentFilter}
+          />
+        );
+      } else {
+        return (
+          <GlobalAdminAnalyticsSection // Render global section
+            establishments={establishments}
+            curricula={curricula}
+            classes={classes}
+            allProfiles={allProfiles}
+          />
+        );
+      }
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
       return (
         <CreatorAnalyticsSection
@@ -167,9 +179,9 @@ const Analytics = () => {
         {currentRole === 'student' ? 'Mes Analytiques' : currentRole === 'professeur' ? 'Analytiques des Cours' : currentRole === 'tutor' ? 'Suivi des Élèves' : currentRole === 'administrator' ? 'Analytiques Globales' : 'Analytiques de l\'Établissement'}
       </h1>
 
-      {(currentRole === 'administrator' || currentRole === 'creator' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director') && (
+      {(currentRole === 'administrator' || currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director') && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {(currentRole === 'administrator' || currentRole === 'creator' || currentRole === 'director' || currentRole === 'deputy_director') && (
+          {(currentRole === 'administrator' || currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director') && (
             <div>
               <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
               <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {

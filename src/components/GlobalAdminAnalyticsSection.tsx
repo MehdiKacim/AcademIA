@@ -11,15 +11,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, LayoutList, Building2, BarChart2, User, GraduationCap, PenTool, BriefcaseBusiness, School } from "lucide-react";
 
-interface AdminAnalyticsSectionProps {
+interface GlobalAdminAnalyticsSectionProps {
   establishments: Establishment[];
   curricula: Curriculum[];
   classes: Class[];
   allProfiles: Profile[];
-  selectedEstablishmentFilter?: string; // New prop for filtering
 }
 
-const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles, selectedEstablishmentFilter }: AdminAnalyticsSectionProps) => {
+const GlobalAdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles }: GlobalAdminAnalyticsSectionProps) => {
   const [isUserDistributionModalOpen, setIsUserDistributionModalOpen] = useState(false);
   const [isPedagogicalStructureModalOpen, setIsPedagogicalStructureModalOpen] = useState(false);
   const [isEstablishmentDetailModalOpen, setIsEstablishmentDetailModalOpen] = useState(false);
@@ -33,58 +32,29 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
   const [isCurriculumListModalOpen, setIsCurriculumListModalOpen] = useState(false);
   const [isClassListModalOpen, setIsClassListModalOpen] = useState(false);
 
-  // Filter data based on selectedEstablishmentFilter
-  const filteredEstablishments = selectedEstablishmentFilter
-    ? establishments.filter(est => est.id === selectedEstablishmentFilter)
-    : establishments;
-
-  const filteredCurricula = selectedEstablishmentFilter
-    ? curricula.filter(cur => cur.establishment_id === selectedEstablishmentFilter)
-    : curricula;
-
-  const filteredClasses = selectedEstablishmentFilter
-    ? classes.filter(cls => cls.establishment_id === selectedEstablishmentFilter)
-    : classes;
-
-  const filteredProfiles = selectedEstablishmentFilter
-    ? allProfiles.filter(p => p.establishment_id === selectedEstablishmentFilter)
-    : allProfiles;
-
   const getRoleCount = (role: Profile['role']) => {
-    return filteredProfiles.filter(p => p.role === role).length;
+    return allProfiles.filter(p => p.role === role).length;
   };
 
   const getRoleProfiles = (role: Profile['role']) => {
-    return filteredProfiles.filter(p => p.role === role);
+    return allProfiles.filter(p => p.role === role);
   };
-
-  const totalStudents = getRoleCount('student');
-  const totalProfesseurs = getRoleCount('professeur');
-  const totalTutors = getRoleCount('tutor');
-  const totalDirectors = getRoleCount('director');
-  const totalDeputyDirectors = getRoleCount('deputy_director');
-  const totalCurricula = filteredCurricula.length;
-  const totalClasses = filteredClasses.length;
-
-  const currentEstablishmentName = selectedEstablishmentFilter
-    ? establishments.find(est => est.id === selectedEstablishmentFilter)?.name || 'Établissement Inconnu'
-    : 'Tous les Établissements';
 
   return (
     <>
-      <p className="text-lg text-muted-foreground mb-8">Vue d'ensemble des statistiques pour {currentEstablishmentName}.</p>
+      <p className="text-lg text-muted-foreground mb-8">Vue d'ensemble des statistiques pour tous les établissements.</p>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <AdminStatCard
-          title={selectedEstablishmentFilter ? "Établissement Actuel" : "Total Établissements"}
-          description={selectedEstablishmentFilter ? "Établissement sélectionné." : "Nombre d'établissements gérés."}
-          value={selectedEstablishmentFilter ? currentEstablishmentName : filteredEstablishments.length}
+          title="Total Établissements"
+          description="Nombre d'établissements gérés."
+          value={establishments.length}
           icon={Building2}
           onClick={() => setIsEstablishmentDetailModalOpen(true)}
         />
         <AdminStatCard
           title="Personnel de Direction"
           description="Directeurs et Directeurs Adjoints."
-          value={totalDirectors + totalDeputyDirectors}
+          value={getRoleCount('director') + getRoleCount('deputy_director')}
           icon={BriefcaseBusiness}
           onClick={() => {
             setIsDirectorListModalOpen(true);
@@ -93,7 +63,7 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         <AdminStatCard
           title="Personnel Pédagogique"
           description="Professeurs et Tuteurs."
-          value={totalProfesseurs + totalTutors}
+          value={getRoleCount('professeur') + getRoleCount('tutor')}
           icon={Users}
           onClick={() => {
             setIsProfesseurListModalOpen(true);
@@ -102,21 +72,21 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         <AdminStatCard
           title="Total Élèves"
           description="Nombre total d'élèves inscrits."
-          value={totalStudents}
+          value={getRoleCount('student')}
           icon={GraduationCap}
           onClick={() => setIsStudentListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Cursus"
           description="Nombre total de cursus créés."
-          value={totalCurricula}
+          value={curricula.length}
           icon={LayoutList}
           onClick={() => setIsCurriculumListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Classes"
           description="Nombre total de classes créées."
-          value={totalClasses}
+          value={classes.length}
           icon={Users}
           onClick={() => setIsClassListModalOpen(true)}
         />
@@ -157,23 +127,23 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
       <UserDistributionModal
         isOpen={isUserDistributionModalOpen}
         onClose={() => setIsUserDistributionModalOpen(false)}
-        establishments={filteredEstablishments}
-        allProfiles={filteredProfiles}
+        establishments={establishments}
+        allProfiles={allProfiles}
       />
       <PedagogicalStructureModal
         isOpen={isPedagogicalStructureModalOpen}
         onClose={() => setIsPedagogicalStructureModalOpen(false)}
-        establishments={filteredEstablishments}
-        curricula={filteredCurricula}
-        classes={filteredClasses}
+        establishments={establishments}
+        curricula={curricula}
+        classes={classes}
       />
       <EstablishmentDetailModal
         isOpen={isEstablishmentDetailModalOpen}
         onClose={() => setIsEstablishmentDetailModalOpen(false)}
-        establishments={filteredEstablishments}
-        curricula={filteredCurricula}
-        classes={filteredClasses}
-        allProfiles={filteredProfiles}
+        establishments={establishments}
+        curricula={curricula}
+        classes={classes}
+        allProfiles={allProfiles}
       />
 
       {/* New list modals */}
@@ -183,7 +153,7 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         title="Liste des Directeurs"
         description="Tous les directeurs enregistrés sur la plateforme."
         users={getRoleProfiles('director')}
-        establishments={establishments} // Use all establishments for name resolution
+        establishments={establishments}
       />
       <UserListModal
         isOpen={isDeputyDirectorListModalOpen}
@@ -191,7 +161,7 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         title="Liste des Directeurs Adjoints"
         description="Tous les directeurs adjoints enregistrés sur la plateforme."
         users={getRoleProfiles('deputy_director')}
-        establishments={establishments} // Use all establishments for name resolution
+        establishments={establishments}
       />
       <UserListModal
         isOpen={isStudentListModalOpen}
@@ -199,7 +169,7 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         title="Liste des Élèves"
         description="Tous les élèves enregistrés sur la plateforme."
         users={getRoleProfiles('student')}
-        establishments={establishments} // Use all establishments for name resolution
+        establishments={establishments}
       />
       <UserListModal
         isOpen={isProfesseurListModalOpen}
@@ -207,7 +177,7 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         title="Liste des Professeurs"
         description="Tous les professeurs enregistrés sur la plateforme."
         users={getRoleProfiles('professeur')}
-        establishments={establishments} // Use all establishments for name resolution
+        establishments={establishments}
       />
       <UserListModal
         isOpen={isTutorListModalOpen}
@@ -215,27 +185,27 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
         title="Liste des Tuteurs"
         description="Tous les tuteurs enregistrés sur la plateforme."
         users={getRoleProfiles('tutor')}
-        establishments={establishments} // Use all establishments for name resolution
+        establishments={establishments}
       />
       <CurriculumListModal
         isOpen={isCurriculumListModalOpen}
         onClose={() => setIsCurriculumListModalOpen(false)}
         title="Liste des Cursus"
         description="Tous les cursus disponibles sur la plateforme."
-        curricula={filteredCurricula}
-        establishments={establishments} // Use all establishments for name resolution
+        curricula={curricula}
+        establishments={establishments}
       />
       <ClassListModal
         isOpen={isClassListModalOpen}
         onClose={() => setIsClassListModalOpen(false)}
         title="Liste des Classes"
         description="Toutes les classes créées sur la plateforme."
-        classes={filteredClasses}
-        curricula={curricula} // Use all curricula for name resolution
-        establishments={establishments} // Use all establishments for name resolution
+        classes={classes}
+        curricula={curricula}
+        establishments={establishments}
       />
     </>
   );
 };
 
-export default AdminAnalyticsSection;
+export default GlobalAdminAnalyticsSection;
