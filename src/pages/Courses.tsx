@@ -54,7 +54,7 @@ const Courses = () => {
           isCompleted: isCompleted,
         };
       });
-    } else if (currentRole === 'professeur') { // Changed from 'creator'
+    } else if (currentRole === 'professeur') {
       return filtered.map(course => ({
         ...course,
         status: Math.random() > 0.5 ? "Publié" : "Brouillon", // Dummy status
@@ -155,7 +155,7 @@ const Courses = () => {
           </div>
         </>
       );
-    } else if (currentRole === 'professeur') { // Changed from 'creator'
+    } else if (currentRole === 'professeur') {
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Gérez les cours que vous avez créés.</p>

@@ -120,7 +120,7 @@ const StudentManagementPage = () => {
       return;
     }
 
-    // Permission check: Professeur/Tutor can only remove from classes they manage.
+    // Permission check: Professeur can only remove from classes they manage.
     if (currentRole === 'professeur' && !classOfEnrollment.creator_ids.includes(currentUserProfile.id)) {
       showError("Vous ne pouvez retirer des élèves que des classes que vous gérez.");
       return;
@@ -694,128 +694,127 @@ const StudentManagementPage = () => {
                         </CommandGroup>
                       )}
                   </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
+                </PopoverContent>
+              </Popover>
+            </div>
 
-          {selectedStudentForClassAssignment && (
-            <div className="p-4 border rounded-md bg-muted/20 space-y-3">
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-green-500" />
-                <p className="font-medium text-lg">{selectedStudentForClassAssignment.first_name} {selectedStudentForClassAssignment.last_name}</p>
-              </div>
-              <p className="text-sm text-muted-foreground">Email : {selectedStudentForClassAssignment.email}</p>
-              <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForClassAssignment.username}</p>
-              {selectedStudentForClassAssignment.establishment_id ? (
-                <p className="text-sm text-muted-foreground">
-                  Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForClassAssignment.establishment_id)}</span>
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
-              )}
+            {selectedStudentForClassAssignment && (
+              <div className="p-4 border rounded-md bg-muted/20 space-y-3">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-green-500" />
+                  <p className="font-medium text-lg">{selectedStudentForClassAssignment.first_name} {selectedStudentForClassAssignment.last_name}</p>
+                </div>
+                <p className="text-sm text-muted-foreground">Email : {selectedStudentForClassAssignment.email}</p>
+                <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForClassAssignment.username}</p>
+                {selectedStudentForClassAssignment.establishment_id ? (
+                  <p className="text-sm text-muted-foreground">
+                    Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForClassAssignment.establishment_id)}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
+                )}
 
-              <div>
-                <Label htmlFor="class-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir la classe d'affectation</Label>
-                <Select value={classToAssign} onValueChange={setClassToAssign}>
-                  <SelectTrigger id="class-to-assign" className="w-full">
-                    <SelectValue placeholder="Sélectionner une classe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes
-                      .filter(cls => 
-                        (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && // Only classes managed by current professeur/director/deputy_director/administrator
-                        (!selectedStudentForClassAssignment.establishment_id || cls.establishment_id === selectedStudentForClassAssignment.establishment_id)
-                      )
-                      .map(cls => (
-                        <SelectItem key={cls.id} value={cls.id}>
-                          {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="enrollment-year" className="text-base font-semibold mb-2 block mt-4">Année scolaire</Label>
-                  <Select value={enrollmentYear} onValueChange={setEnrollmentYear}>
-                    <SelectTrigger id="enrollment-year" className="w-full">
-                      <SelectValue placeholder="Sélectionner l'année scolaire" />
+                  <Label htmlFor="class-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir la classe d'affectation</Label>
+                  <Select value={classToAssign} onValueChange={setClassToAssign}>
+                    <SelectTrigger id="class-to-assign" className="w-full">
+                      <SelectValue placeholder="Sélectionner une classe" />
                     </SelectTrigger>
                     <SelectContent>
-                      {schoolYears.map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
+                      {classes
+                        .filter(cls => 
+                          (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && // Only classes managed by current professeur/director/deputy_director/administrator
+                          (!selectedStudentForClassAssignment.establishment_id || cls.establishment_id === selectedStudentForClassAssignment.establishment_id)
+                        )
+                        .map(cls => (
+                          <SelectItem key={cls.id} value={cls.id}>
+                            {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="class-enrollment-start-date" className="text-base font-semibold mb-2 block mt-4">Date de début d'inscription à la classe</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !classEnrollmentStartDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {classEnrollmentStartDate ? format(classEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={classEnrollmentStartDate}
-                        onSelect={setClassEnrollmentStartDate}
-                        initialFocus
-                        locale={fr}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label htmlFor="class-enrollment-end-date" className="text-base font-semibold mb-2 block mt-4">Date de fin d'inscription à la classe</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !classEnrollmentEndDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {classEnrollmentEndDate ? format(classEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={classEnrollmentEndDate}
-                        onSelect={setClassEnrollmentEndDate}
-                        initialFocus
-                        locale={fr}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
 
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentYear || !classEnrollmentStartDate || !classEnrollmentEndDate}>
-                  <PlusCircle className="h-4 w-4 mr-2" /> Inscrire à cette classe
-                </Button>
-                <Button variant="outline" onClick={handleClearClassAssignmentForm}>
-                  <XCircle className="h-4 w-4 mr-2" /> Effacer le formulaire
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="enrollment-year" className="text-base font-semibold mb-2 block mt-4">Année scolaire</Label>
+                    <Select value={enrollmentYear} onValueChange={setEnrollmentYear}>
+                      <SelectTrigger id="enrollment-year" className="w-full">
+                        <SelectValue placeholder="Sélectionner l'année scolaire" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {schoolYears.map(year => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="class-enrollment-start-date" className="text-base font-semibold mb-2 block mt-4">Date de début d'inscription à la classe</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !classEnrollmentStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {classEnrollmentStartDate ? format(classEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={classEnrollmentStartDate}
+                          onSelect={setClassEnrollmentStartDate}
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label htmlFor="class-enrollment-end-date" className="text-base font-semibold mb-2 block mt-4">Date de fin d'inscription à la classe</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !classEnrollmentEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {classEnrollmentEndDate ? format(classEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={classEnrollmentEndDate}
+                          onSelect={setClassEnrollmentEndDate}
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                  <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentYear || !classEnrollmentStartDate || !classEnrollmentEndDate}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Inscrire à cette classe
+                  </Button>
+                  <Button variant="outline" onClick={handleClearClassAssignmentForm}>
+                    <XCircle className="h-4 w-4 mr-2" /> Effacer le formulaire
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
 
       {/* Section: Liste de tous les élèves */}
       <Card>
@@ -872,7 +871,6 @@ const StudentManagementPage = () => {
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les classes</SelectItem>
                   {classes
                     .filter(cls => 
                       (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && // Only classes managed by current professeur/director/deputy_director/administrator

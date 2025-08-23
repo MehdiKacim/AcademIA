@@ -458,7 +458,7 @@ const AdminUserManagementPage = () => {
                 {rolesForCreation.map(role => (
                   <SelectItem key={role} value={role}>
                     {role === 'student' ? 'Élève' :
-                     role === 'professeur' ? 'Professeur' : // Changed from 'Créateur (Professeur)'
+                     role === 'professeur' ? 'Professeur' :
                      role === 'tutor' ? 'Tuteur' :
                      role === 'director' ? 'Directeur' :
                      role === 'deputy_director' ? 'Directeur Adjoint' :
@@ -514,7 +514,7 @@ const AdminUserManagementPage = () => {
                 <SelectContent>
                   <SelectItem value="all">Tous les rôles</SelectItem>
                   <SelectItem value="student">Élève</SelectItem>
-                  <SelectItem value="professeur">Professeur</SelectItem> {/* Changed from 'Créateur (Professeur)' */}
+                  <SelectItem value="professeur">Professeur</SelectItem>
                   <SelectItem value="tutor">Tuteur</SelectItem>
                   <SelectItem value="director">Directeur</SelectItem>
                   <SelectItem value="deputy_director">Directeur Adjoint</SelectItem>
@@ -629,7 +629,7 @@ const AdminUserManagementPage = () => {
                     {rolesForEdit.map(role => (
                       <SelectItem key={role} value={role}>
                         {role === 'student' ? 'Élève' :
-                         role === 'professeur' ? 'Professeur' : // Changed from 'Créateur (Professeur)'
+                         role === 'professeur' ? 'Professeur' :
                          role === 'tutor' ? 'Tuteur' :
                          role === 'director' ? 'Directeur' :
                          role === 'deputy_director' ? 'Directeur Adjoint' :

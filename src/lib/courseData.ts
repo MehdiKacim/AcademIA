@@ -57,7 +57,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
 
 
 // --- Course Management ---
-export const loadCourses = async (userId?: string, userRole?: 'student' | 'creator' | 'tutor'): Promise<Course[]> => {
+export const loadCourses = async (userId?: string, userRole?: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'): Promise<Course[]> => {
   let query = supabase.from('courses').select('*');
 
   if (userRole === 'student' && userId) {
@@ -67,7 +67,7 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'creat
     }
     query = query.in('id', accessibleCourseIds);
   }
-  // For creators and tutors, they can see all courses (or courses they created/are associated with)
+  // For professeurs and tutors, they can see all courses (or courses they created/are associated with)
   // For now, we'll let them see all courses, as RLS policies handle creation/update permissions.
 
   const { data, error } = await query;

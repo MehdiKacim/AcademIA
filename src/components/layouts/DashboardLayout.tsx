@@ -195,7 +195,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           ],
         },
       ];
-    } else if (currentRole === 'professeur') { // Changed from 'creator'
+    } else if (currentRole === 'professeur') {
       return [
         ...baseItems,
         {
@@ -256,7 +256,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           ],
         },
       ];
-    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') { // Administrator, Director, Deputy Director now have core admin/management links
+    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') {
       return [
         ...baseItems,
         {
