@@ -55,7 +55,7 @@ const CurriculumManagementPage = () => {
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   const handleAddCurriculum = async () => {
-    if (!currentRole || (currentRole !== 'creator')) { // Only creator can add
+    if (!currentRole || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur, director, deputy_director, administrator can add
       showError("Vous n'êtes pas autorisé à ajouter un cursus.");
       return;
     }
@@ -85,7 +85,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleDeleteCurriculum = async (id: string) => {
-    if (!currentRole || (currentRole !== 'creator')) { // Only creator can delete
+    if (!currentRole || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur, director, deputy_director, administrator can delete
       showError("Vous n'êtes pas autorisé à supprimer un cursus.");
       return;
     }
@@ -100,7 +100,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleOpenManageCoursesModal = (curriculum: Curriculum) => {
-    if (!currentRole || (currentRole !== 'creator')) { // Only creator can manage courses
+    if (!currentRole || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur, director, deputy_director, administrator can manage courses
       showError("Vous n'êtes pas autorisé à gérer les cours d'un cursus.");
       return;
     }
@@ -110,7 +110,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleSaveCurriculumCourses = async () => {
-    if (!currentRole || (currentRole !== 'creator')) { // Only creator can save courses
+    if (!currentRole || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur, director, deputy_director, administrator can save courses
       showError("Vous n'êtes pas autorisé à sauvegarder les cours d'un cursus.");
       return;
     }
@@ -134,7 +134,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleEditCurriculum = (curriculum: Curriculum) => {
-    if (!currentRole || (currentRole !== 'creator')) { // Only creator can edit
+    if (!currentRole || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur, director, deputy_director, administrator can edit
       showError("Vous n'êtes pas autorisé à modifier un cursus.");
       return;
     }
@@ -159,14 +159,14 @@ const CurriculumManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'creator') { // Only creators can access
+  if (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, director, deputy_director, administrator can access
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) peuvent accéder à cette page.
+          Seuls les professeurs, directeurs et administrateurs peuvent accéder à cette page.
         </p>
       </div>
     );
@@ -212,7 +212,7 @@ const CurriculumManagementPage = () => {
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Cursus
             </Button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 mt-4">
             {establishments.length === 0 ? (
               <p className="text-muted-foreground">Veuillez d'abord créer un établissement pour ajouter des cursus.</p>
             ) : (

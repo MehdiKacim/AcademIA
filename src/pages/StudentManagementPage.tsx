@@ -104,7 +104,7 @@ const StudentManagementPage = () => {
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
   const handleRemoveStudentFromClass = async (enrollmentId: string) => {
-    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) { // Only creator/tutor can remove
+    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur/tutor/director/deputy_director/administrator can remove
       showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
       return;
     }
@@ -120,11 +120,17 @@ const StudentManagementPage = () => {
       return;
     }
 
-    // Permission check: Creator/Tutor can only remove from classes they manage.
-    if (!classOfEnrollment.creator_ids.includes(currentUserProfile.id)) {
+    // Permission check: Professeur/Tutor can only remove from classes they manage.
+    if (currentRole === 'professeur' && !classOfEnrollment.creator_ids.includes(currentUserProfile.id)) {
       showError("Vous ne pouvez retirer des élèves que des classes que vous gérez.");
       return;
     }
+    // Permission check: Director/Deputy Director can only remove from classes in their establishment.
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && classOfEnrollment.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez retirer des élèves que des classes de votre établissement.");
+      return;
+    }
+
 
     try {
       await deleteStudentClassEnrollment(enrollmentId);
@@ -182,9 +188,47 @@ const StudentManagementPage = () => {
   }, [studentSearchInputClass]);
 
   const handleAssignStudentToEstablishment = async () => {
-    // This section is now only for administrators, so it should not be reachable by creator/tutor
-    showError("Vous n'êtes pas autorisé à affecter des élèves à des établissements.");
-    return;
+    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can assign to establishment
+      showError("Vous n'êtes pas autorisé à affecter des élèves à des établissements.");
+      return;
+    }
+    if (!selectedStudentForEstAssignment) {
+      showError("Veuillez d'abord sélectionner un élève.");
+      return;
+    }
+    if (!establishmentToAssign) {
+      showError("Veuillez sélectionner un établissement.");
+      return;
+    }
+    if (!enrollmentStartDate || !enrollmentEndDate) {
+      showError("Veuillez spécifier les dates de début et de fin d'inscription.");
+      return;
+    }
+    if (selectedStudentForEstAssignment.role !== 'student') {
+      showError("Seuls les profils d'élèves peuvent être affectés à un établissement.");
+      return;
+    }
+
+    try {
+      const updatedProfile: Partial<Profile> = {
+        id: selectedStudentForEstAssignment.id,
+        establishment_id: establishmentToAssign,
+        enrollment_start_date: enrollmentStartDate.toISOString().split('T')[0],
+        enrollment_end_date: enrollmentEndDate.toISOString().split('T')[0],
+      };
+      const savedProfile = await updateProfile(updatedProfile);
+
+      if (savedProfile) {
+        setAllProfiles(await getAllProfiles()); // Refresh profiles
+        showSuccess(`Élève ${selectedStudentForEstAssignment.first_name} ${selectedStudentForEstAssignment.last_name} affecté à l'établissement ${getEstablishmentName(establishmentToAssign)} !`);
+        handleClearEstAssignmentForm();
+      } else {
+        showError("Échec de l'affectation de l'élève à l'établissement.");
+      }
+    } catch (error: any) {
+      console.error("Error assigning student to establishment:", error);
+      showError(`Erreur lors de l'affectation de l'élève: ${error.message}`);
+    }
   };
 
   const handleClearEstAssignmentForm = () => {
@@ -197,7 +241,7 @@ const StudentManagementPage = () => {
   };
 
   const handleAssignStudentToClass = async () => {
-    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) { // Only creator/tutor can assign
+    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur/tutor/director/deputy_director/administrator can assign
       showError("Vous n'êtes pas autorisé à affecter des élèves à des classes.");
       return;
     }
@@ -231,9 +275,14 @@ const StudentManagementPage = () => {
       return;
     }
 
-    // Permission check: Creator/Tutor can only assign to classes they manage.
-    if (!selectedClass.creator_ids.includes(currentUserProfile.id)) {
+    // Permission check: Professeur can only assign to classes they manage.
+    if (currentRole === 'professeur' && !selectedClass.creator_ids.includes(currentUserProfile.id)) {
       showError("Vous ne pouvez affecter des élèves qu'aux classes que vous gérez.");
+      return;
+    }
+    // Permission check: Director/Deputy Director can only assign to classes in their establishment.
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && selectedClass.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez affecter des élèves qu'aux classes de votre établissement.");
       return;
     }
 
@@ -281,9 +330,29 @@ const StudentManagementPage = () => {
   };
 
   const handleDeleteStudent = async (studentProfileId: string) => {
-    // This section is now only for administrators, so it should not be reachable by creator/tutor
-    showError("Vous n'êtes pas autorisé à supprimer des élèves.");
-    return;
+    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can delete
+      showError("Vous n'êtes pas autorisé à supprimer des élèves.");
+      return;
+    }
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet élève ? Cette action est irréversible et supprimera également son compte utilisateur et toutes les données associées.")) {
+      try {
+        const { error: authError } = await supabase.auth.admin.deleteUser(studentProfileId);
+        if (authError) {
+          console.error("Error deleting user from auth.users:", authError);
+          showError(`Erreur lors de la suppression du compte utilisateur: ${authError.message}`);
+          return;
+        }
+        
+        // The profile and enrollments should be cascade deleted by DB foreign keys
+        // Re-fetch all data to update the UI
+        setAllProfiles(await getAllProfiles());
+        setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+        showSuccess("Élève et compte supprimés !");
+      } catch (error: any) {
+        console.error("Error deleting student:", error);
+        showError(`Erreur lors de la suppression de l'élève: ${error.message}`);
+      }
+    }
   };
 
   const filteredStudentsForEstDropdown = studentSearchInputEst.trim() === ''
@@ -308,11 +377,16 @@ const StudentManagementPage = () => {
     let students = allProfiles.filter(p => p.role === 'student');
 
     // Filter by classes/establishments managed by the current user (if not admin)
-    if (currentUserProfile) { // currentRole is already checked in the main guard
+    if (currentUserProfile && currentRole !== 'administrator') {
       const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).map(cls => cls.id);
       const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => managedClassIds.includes(e.class_id)).map(e => e.student_id));
       students = students.filter(s => studentIdsInManagedClasses.has(s.id));
     }
+    // For Director/Deputy Director, filter by establishment
+    if (currentUserProfile && (currentRole === 'director' || currentRole === 'deputy_director')) {
+      students = students.filter(s => s.establishment_id === currentUserProfile.establishment_id);
+    }
+
 
     if (selectedEstablishmentFilter !== 'all' && selectedEstablishmentFilter !== null) {
       students = students.filter(s => s.establishment_id === selectedEstablishmentFilter);
@@ -351,14 +425,14 @@ const StudentManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'creator' && currentRole !== 'tutor') { // Only creators and tutors can access
+  if (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, tutor, director, deputy_director, administrator can access
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) et les tuteurs peuvent accéder à cette page.
+          Seuls les professeurs, tuteurs, directeurs et administrateurs peuvent accéder à cette page.
         </p>
       </div>
     );
@@ -373,8 +447,8 @@ const StudentManagementPage = () => {
         Gérez les affectations des élèves aux classes que vous supervisez.
       </p>
 
-      {/* Section: Affecter un élève à un établissement (Admin only) - Hidden for creator/tutor */}
-      {false && ( // This section is now explicitly hidden for creator/tutor
+      {/* Section: Affecter un élève à un établissement (Admin only) */}
+      {currentRole === 'administrator' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -650,7 +724,7 @@ const StudentManagementPage = () => {
                   <SelectContent>
                     {classes
                       .filter(cls => 
-                        (currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)) && // Only classes managed by current creator/tutor
+                        (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && // Only classes managed by current professeur/director/deputy_director/administrator
                         (!selectedStudentForClassAssignment.establishment_id || cls.establishment_id === selectedStudentForClassAssignment.establishment_id)
                       )
                       .map(cls => (
@@ -801,7 +875,7 @@ const StudentManagementPage = () => {
                   <SelectItem value="all">Toutes les classes</SelectItem>
                   {classes
                     .filter(cls => 
-                      (currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)) && // Only classes managed by current creator/tutor
+                      (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && // Only classes managed by current professeur/director/deputy_director/administrator
                       (!selectedEstablishmentFilter || cls.establishment_id === selectedEstablishmentFilter)
                     )
                     .map(cls => (
@@ -856,7 +930,7 @@ const StudentManagementPage = () => {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                      {currentClassEnrollment && (
+                      {currentClassEnrollment && (currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can remove
                         <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(currentClassEnrollment.id)}>
                           <UserX className="h-4 w-4 mr-1" /> Retirer de la classe
                         </Button>
@@ -864,7 +938,7 @@ const StudentManagementPage = () => {
                       <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </Button>
-                      {false && ( // Delete button is now explicitly hidden for creator/tutor
+                      {currentRole === 'administrator' && ( // Only administrator can delete
                         <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>

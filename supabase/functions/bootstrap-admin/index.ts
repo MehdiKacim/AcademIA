@@ -20,11 +20,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // IMPORTANT: This function assumes the 'public.roles' table and 'role_id' column in 'public.profiles'
-    // along with their RLS policies and the 'handle_new_user' trigger are already set up in the database.
-    // The database schema setup should be done manually via the Supabase SQL editor or migrations.
-    // This function's sole purpose is to create an initial administrator user.
-
     const { data: newUserData, error: signUpError } = await supabaseAdminClient.auth.admin.createUser({
       email,
       password,

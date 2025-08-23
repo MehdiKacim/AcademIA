@@ -40,15 +40,15 @@ serve(async (req) => {
     switch (invokingUserRole) {
       case 'administrator':
         // Administrator can create any role
-        isAllowed = ['student', 'creator', 'tutor', 'director', 'deputy_director', 'administrator'].includes(newUserRole);
+        isAllowed = ['student', 'professeur', 'tutor', 'director', 'deputy_director', 'administrator'].includes(newUserRole);
         break;
       case 'director':
       case 'deputy_director':
-        // Directors and Deputy Directors can create creators (professors) and tutors
-        isAllowed = ['creator', 'tutor'].includes(newUserRole);
+        // Directors and Deputy Directors can create professeurs and tutors
+        isAllowed = ['professeur', 'tutor'].includes(newUserRole);
         break;
-      case 'creator':
-        // Creators can only create student roles
+      case 'professeur':
+        // Professors can only create student roles
         isAllowed = newUserRole === 'student';
         break;
       default:

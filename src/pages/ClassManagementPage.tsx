@@ -85,7 +85,7 @@ const ClassManagementPage = () => {
       showError("Vous devez être connecté pour ajouter une classe.");
       return;
     }
-    if (currentRole !== 'creator') { // Only creator can add
+    if (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, director, deputy_director, administrator can add
       showError("Vous n'êtes pas autorisé à ajouter une classe.");
       return;
     }
@@ -134,7 +134,7 @@ const ClassManagementPage = () => {
       showError("Vous devez être connecté pour supprimer une classe.");
       return;
     }
-    if (currentRole !== 'creator') { // Only creator can delete
+    if (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, director, deputy_director, administrator can delete
       showError("Vous n'êtes pas autorisé à supprimer une classe.");
       return;
     }
@@ -160,7 +160,7 @@ const ClassManagementPage = () => {
       showError("Vous devez être connecté pour modifier une classe.");
       return;
     }
-    if (currentRole !== 'creator') { // Only creator can edit
+    if (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, director, deputy_director, administrator can edit
       showError("Vous n'êtes pas autorisé à modifier une classe.");
       return;
     }
@@ -177,8 +177,8 @@ const ClassManagementPage = () => {
   };
 
   const filteredClasses = classSearchQuery.trim() === ''
-    ? classes.filter(cls => (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'tutor'))) // Creator or Tutor can see
-    : classes.filter(cls => (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'tutor')) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
+    ? classes.filter(cls => (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator'))) // Professeur, Tutor, Director, Deputy Director, Administrator can see
+    : classes.filter(cls => (currentUserProfile && (cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator')) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
@@ -196,14 +196,14 @@ const ClassManagementPage = () => {
     );
   }
 
-  if (currentRole !== 'creator' && currentRole !== 'tutor') { // Only creators and tutors can access
+  if (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator') { // Only professeur, tutor, director, deputy_director, administrator can access
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les créateurs (professeurs) et les tuteurs peuvent accéder à cette page.
+          Seuls les professeurs, tuteurs, directeurs et administrateurs peuvent accéder à cette page.
         </p>
       </div>
     );
@@ -226,7 +226,7 @@ const ClassManagementPage = () => {
           <CardDescription>Créez de nouvelles classes et gérez les existantes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {(currentRole === 'creator') && ( // Only creator can add
+          {(currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can add
             <>
               <h3 className="text-lg font-semibold">Ajouter une nouvelle classe</h3>
               <div className="grid gap-2">
@@ -314,7 +314,7 @@ const ClassManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
                       <Users className="h-4 w-4 mr-1" /> Voir les élèves
                     </Button>
-                    {(currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)) && ( // Only creator can edit/delete
+                    {(currentUserProfile && cls.creator_ids.includes(currentUserProfile.id) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can edit/delete
                       <>
                         <Button variant="outline" size="sm" onClick={() => handleEditClass(cls)}>
                           <Edit className="h-4 w-4" />

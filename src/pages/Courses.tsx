@@ -54,7 +54,7 @@ const Courses = () => {
           isCompleted: isCompleted,
         };
       });
-    } else if (currentRole === 'creator') {
+    } else if (currentRole === 'professeur') { // Changed from 'creator'
       return filtered.map(course => ({
         ...course,
         status: Math.random() > 0.5 ? "Publié" : "Brouillon", // Dummy status
@@ -88,14 +88,14 @@ const Courses = () => {
 
   const renderCoursesContent = () => {
     if (currentRole === 'student') {
-      if (!currentUserProfile?.class_id) {
+      if (!currentUserProfile?.establishment_id) { // Changed from class_id to establishment_id
         return (
           <div className="text-center py-20">
             <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               Cours non accessibles
             </h1>
             <p className="text-lg text-muted-foreground">
-              Vous n'êtes pas encore affecté à une classe. Veuillez contacter votre administrateur.
+              Vous n'êtes pas encore affecté à un établissement. Veuillez contacter votre administrateur.
             </p>
           </div>
         );
@@ -104,7 +104,7 @@ const Courses = () => {
         <>
           <p className="text-lg text-muted-foreground mb-8">Voici les cours disponibles. Cliquez sur un cours pour voir sa progression par modules.</p>
           {coursesToDisplay.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche ou accessible via votre classe.</p>
+            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche ou accessible via votre établissement.</p>
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => {
@@ -155,7 +155,7 @@ const Courses = () => {
           </div>
         </>
       );
-    } else if (currentRole === 'creator') {
+    } else if (currentRole === 'professeur') { // Changed from 'creator'
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Gérez les cours que vous avez créés.</p>
@@ -176,7 +176,7 @@ const Courses = () => {
                     <Link to={`/create-course/${course.id}`}>
                       <Button variant="outline">Modifier</Button>
                     </Link>
-                    <Link to={`/analytics?view=course-performance&courseId=${course.id}`}> {/* Updated Link */}
+                    <Link to={`/analytics?view=course-performance&courseId=${course.id}`}>
                       <Button variant="secondary">Voir les statistiques</Button>
                     </Link>
                   </div>
@@ -221,7 +221,7 @@ const Courses = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        {currentRole === 'student' ? 'Mes Cours' : currentRole === 'creator' ? 'Gestion des Cours' : 'Cours des Élèves'}
+        {currentRole === 'student' ? 'Mes Cours' : currentRole === 'professeur' ? 'Gestion des Cours' : 'Cours des Élèves'}
       </h1>
       {renderCoursesContent()}
     </div>

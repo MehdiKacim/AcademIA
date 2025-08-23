@@ -12,8 +12,8 @@ export interface Profile {
   last_name: string;
   username: string;
   email: string; // Added email to Profile interface
-  role: 'student' | 'creator' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Removed 'gestion_admin' role
-  establishment_id?: string; // New: Link to parent establishment for students, creators, tutors, directors, deputy_directors
+  role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
+  establishment_id?: string; // New: Link to parent establishment for students, professeurs, tutors, directors, deputy_directors
   enrollment_start_date?: string; // New: Start date of enrollment in establishment
   enrollment_end_date?: string; // New: End date of enrollment in establishment
   theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
@@ -58,7 +58,7 @@ export interface Class {
   id: string; // UUID
   name: string;
   curriculum_id: string; // Link to parent curriculum
-  creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'creator')
+  creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
   establishment_id?: string; // New: Link to parent establishment
   school_year?: string; // New: School year for the class (e.g., "2023-2024")
   created_at?: string;
@@ -131,7 +131,7 @@ export interface Course {
   category?: string;
   difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
   created_at?: string;
-  creator_id?: string; // Added creator_id to link courses to creators
+  creator_id?: string; // Added creator_id to link courses to professeurs
 }
 
 export interface Note {

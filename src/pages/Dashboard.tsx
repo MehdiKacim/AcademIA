@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses, loadClasses, loadEstablishments, loadCurricula } from "@/lib/courseData"; // Load classes for creator/tutor
+import { loadCourses, loadClasses, loadEstablishments, loadCurricula } from "@/lib/courseData"; // Load classes for professeur/tutor
 import { getAllStudentCourseProgress, getAllProfiles } from "@/lib/studentData"; // Import Supabase function
 import { Course, StudentCourseProgress, Profile, Class, Establishment, Curriculum } from "@/lib/dataModels"; // Import types
 import React, { useState, useEffect } from "react";
@@ -18,8 +18,8 @@ const Dashboard = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // For creator/tutor to count students
-  const [classes, setClasses] = useState<Class[]>([]); // For creator/tutor to count students in classes
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // For professeur/tutor to count students
+  const [classes, setClasses] = useState<Class[]>([]); // For professeur/tutor to count students in classes
   const [establishments, setEstablishments] = useState<Establishment[]>([]); // For admin
   const [curricula, setCurricula] = useState<Curriculum[]>([]); // For admin
 
@@ -135,7 +135,7 @@ const Dashboard = () => {
           </Card>
         </div>
       );
-    } else if (currentRole === 'creator') {
+    } else if (currentRole === 'professeur') { // Changed from 'creator'
       const createdCourses = courses.filter(c => c.creator_id === currentUserProfile.id);
       const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.sections.length > 0)).length; // Heuristic: has at least one section
       
@@ -236,12 +236,12 @@ const Dashboard = () => {
           </Card>
         </div>
       );
-    } else if (currentRole === 'administrator') {
+    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') { // Administrator, Director, Deputy Director
       const totalEstablishments = establishments.length;
       const totalCurricula = curricula.length;
       const totalClasses = classes.length;
       const totalStudents = allProfiles.filter(p => p.role === 'student').length;
-      const totalCreators = allProfiles.filter(p => p.role === 'creator').length;
+      const totalProfesseurs = allProfiles.filter(p => p.role === 'professeur').length; // Changed from creator
       const totalTutors = allProfiles.filter(p => p.role === 'tutor').length;
       const totalDirectors = allProfiles.filter(p => p.role === 'director').length;
       const totalDeputyDirectors = allProfiles.filter(p => p.role === 'deputy_director').length;
@@ -269,7 +269,7 @@ const Dashboard = () => {
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalUsers}</p>
               <p className="text-sm text-muted-foreground">
-                Créateurs: {totalCreators}, Tuteurs: {totalTutors}, Directeurs: {totalDirectors}, Directeurs Adjoints: {totalDeputyDirectors}, Élèves: {totalStudents}
+                Professeurs: {totalProfesseurs}, Tuteurs: {totalTutors}, Directeurs: {totalDirectors}, Directeurs Adjoints: {totalDeputyDirectors}, Élèves: {totalStudents}
               </p>
               <Link to="/admin-users" className="mt-4 block">
                 <Button variant="outline" className="w-full">Gérer les utilisateurs</Button>
@@ -308,7 +308,7 @@ const Dashboard = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Tableau de bord {currentUserProfile?.first_name} {currentUserProfile?.last_name} ({currentRole === 'student' ? 'Élève' : currentRole === 'creator' ? 'Créateur' : currentRole === 'tutor' ? 'Tuteur' : 'Administrateur'})
+        Tableau de bord {currentUserProfile?.first_name} {currentUserProfile?.last_name} ({currentRole === 'student' ? 'Élève' : currentRole === 'professeur' ? 'Professeur' : currentRole === 'tutor' ? 'Tuteur' : currentRole === 'director' ? 'Directeur' : currentRole === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'})
       </h1>
       {renderDashboardContent()}
     </div>

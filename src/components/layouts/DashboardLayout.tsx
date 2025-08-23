@@ -22,7 +22,7 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import FloatingAiAChatButton from "@/components/FloatingAiAChatButton"; // Corrected import path
+import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
@@ -195,7 +195,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           ],
         },
       ];
-    } else if (currentRole === 'creator') {
+    } else if (currentRole === 'professeur') { // Changed from 'creator'
       return [
         ...baseItems,
         {
@@ -216,7 +216,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/curricula", label: "Mes Cursus", icon: LayoutList, type: 'link' }, // Added for creator
+            { to: "/curricula", label: "Mes Cursus", icon: LayoutList, type: 'link' },
           ],
         },
         {
@@ -256,7 +256,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           ],
         },
       ];
-    } else if (currentRole === 'administrator') { // Administrator now has only core admin links
+    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') { // Administrator, Director, Deputy Director now have core admin/management links
       return [
         ...baseItems,
         {
@@ -267,6 +267,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/admin-users", label: "Gestion des Utilisateurs", icon: UserRoundCog, type: 'link' },
             { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
+            { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
+            { to: "/classes", label: "Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link' },
             { to: "/analytics?view=overview", label: "Analytiques Globales", icon: LayoutDashboard, type: 'link' },
           ],
         },
