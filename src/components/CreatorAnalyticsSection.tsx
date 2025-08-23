@@ -301,7 +301,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
                   <Legend />
                   <Line type="monotone" dataKey="activeStudents" stroke="hsl(var(--primary))" name="Élèves Actifs" />
                   <Line type="monotone" dataKey="newEnrollments" stroke="hsl(var(--secondary))" name="Nouvelles Inscriptions" />
-                </BarChart>
+                </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
