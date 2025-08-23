@@ -90,7 +90,7 @@ serve(async (req) => {
       -- Create or replace get_user_role function (SECURITY DEFINER to bypass RLS for role lookup)
       CREATE OR REPLACE FUNCTION public.get_user_role(user_id UUID)
       RETURNS public.user_role
-      LANGUAGE plpgsql
+      LANGUAGE PLPGSQL
       SECURITY DEFINER
       SET search_path = auth, public -- Search auth schema first
       AS $$
@@ -148,7 +148,7 @@ serve(async (req) => {
 
       CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles
       FOR SELECT USING (
-        (public.get_user_role(id) = 'student'::public.user_role) AND
+        (role = 'student'::public.user_role) AND -- Directly use the role column from the profiles table
         (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = ANY (ARRAY['creator'::public.user_role, 'tutor'::public.user_role, 'administrator'::public.user_role]))
       );
 
