@@ -10,14 +10,46 @@ import { User as SupabaseUser } from '@supabase/supabase-js'; // Import Supabase
 export const getProfileById = async (id: string): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      id,
+      first_name,
+      last_name,
+      username,
+      email,
+      establishment_id,
+      enrollment_start_date,
+      enrollment_end_date,
+      theme,
+      created_at,
+      updated_at,
+      roles(name)
+    `) // Select role_id and join to get role_name from roles table
     .eq('id', id)
     .single();
+
   if (error) {
     console.error("Error fetching profile by ID:", error);
     return null;
   }
-  return data;
+
+  if (!data) return null;
+
+  // Map the fetched data to the Profile interface
+  return {
+    id: data.id,
+    first_name: data.first_name,
+    last_name: data.last_name,
+    username: data.username,
+    email: data.email,
+    // Assuming roles is an object with a name property
+    role: (data.roles as { name: string } | null)?.name as Profile['role'] || 'student',
+    establishment_id: data.establishment_id,
+    enrollment_start_date: data.enrollment_start_date,
+    enrollment_end_date: data.enrollment_end_date,
+    theme: data.theme,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
 };
 
 /**
@@ -28,7 +60,20 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
 export const findProfileByUsername = async (username: string): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      id,
+      first_name,
+      last_name,
+      username,
+      email,
+      establishment_id,
+      enrollment_start_date,
+      enrollment_end_date,
+      theme,
+      created_at,
+      updated_at,
+      roles(name)
+    `)
     .eq('username', username)
     .maybeSingle();
 
@@ -36,7 +81,21 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
     console.error("Error finding profile by username:", error);
     return null;
   }
-  return data;
+  if (!data) return null;
+  return {
+    id: data.id,
+    first_name: data.first_name,
+    last_name: data.last_name,
+    username: data.username,
+    email: data.email,
+    role: (data.roles as { name: string } | null)?.name as Profile['role'] || 'student',
+    establishment_id: data.establishment_id,
+    enrollment_start_date: data.enrollment_start_date,
+    enrollment_end_date: data.enrollment_end_date,
+    theme: data.theme,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
 };
 
 /**
@@ -74,7 +133,20 @@ export const checkUsernameExists = async (username: string): Promise<boolean> =>
 export const findProfileByEmail = async (email: string): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      id,
+      first_name,
+      last_name,
+      username,
+      email,
+      establishment_id,
+      enrollment_start_date,
+      enrollment_end_date,
+      theme,
+      created_at,
+      updated_at,
+      roles(name)
+    `)
     .eq('email', email)
     .maybeSingle();
 
@@ -82,7 +154,21 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
     console.error("Error finding profile by email:", error);
     return null;
   }
-  return data;
+  if (!data) return null;
+  return {
+    id: data.id,
+    first_name: data.first_name,
+    last_name: data.last_name,
+    username: data.username,
+    email: data.email,
+    role: (data.roles as { name: string } | null)?.name as Profile['role'] || 'student',
+    establishment_id: data.establishment_id,
+    enrollment_start_date: data.enrollment_start_date,
+    enrollment_end_date: data.enrollment_end_date,
+    theme: data.theme,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
 };
 
 /**
@@ -113,10 +199,29 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
 };
 
 export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<Profile | null> => {
+  // If role is being updated, get the role_id
+  let role_id_to_update: string | undefined;
+  if (updatedProfile.role) {
+    const { data: roleData, error: roleError } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('name', updatedProfile.role)
+      .single();
+    if (roleError) {
+      console.error("Error fetching role_id for update:", roleError);
+      throw roleError;
+    }
+    role_id_to_update = roleData.id;
+  }
+
   const { error } = await supabase
     .from('profiles')
-    .update(updatedProfile)
-    .eq('id', updatedProfile.id);
+    .update({
+      ...updatedProfile,
+      role_id: role_id_to_update, // Use role_id for DB update
+      role: undefined, // Remove role from payload to avoid sending it to DB
+    })
+    .eq('id', updatedProfile.id!);
     // Removed .select().single() to avoid PGRST116 error if no row is returned by RLS or query
   if (error) {
     console.error("Error updating profile:", error);
@@ -140,12 +245,38 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
 export const getAllProfiles = async (): Promise<Profile[]> => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*');
+    .select(`
+      id,
+      first_name,
+      last_name,
+      username,
+      email,
+      establishment_id,
+      enrollment_start_date,
+      enrollment_end_date,
+      theme,
+      created_at,
+      updated_at,
+      roles(name)
+    `);
   if (error) {
     console.error("Error fetching all profiles:", error);
     return [];
   }
-  return data;
+  return data.map((p: any) => ({
+    id: p.id,
+    first_name: p.first_name,
+    last_name: p.last_name,
+    username: p.username,
+    email: p.email,
+    role: (p.roles as { name: string } | null)?.name as Profile['role'] || 'student',
+    establishment_id: p.establishment_id,
+    enrollment_start_date: p.enrollment_start_date,
+    enrollment_end_date: p.enrollment_end_date,
+    theme: p.theme,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+  }));
 };
 
 export const getAllStudents = async (): Promise<Profile[]> => {

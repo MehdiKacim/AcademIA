@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Profile } from '@/lib/dataModels'; // Import Profile interface
 import { updateProfile } from '@/lib/studentData'; // Import updateProfile
 import { showError } from '@/utils/toast'; // Import showError for diagnostic message
+import { getProfileById } from '@/lib/studentData'; // Import getProfileById
 
 interface RoleContextType {
   currentUserProfile: Profile | null;
@@ -36,23 +37,18 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
 
     if (userSession.user && !userSession.user.email_confirmed_at) {
       console.warn("DIAGNOSTIC: User email is NOT confirmed:", userSession.user.email);
-      // Temporarily show an error to highlight this to the user
+      // Temporarily show an an error to highlight this to the user
       showError("DIAGNOSTIC: Votre email n'est pas confirmé. Veuillez vérifier vos paramètres Supabase (Email Confirm).");
     } else if (userSession.user) {
       console.log("DIAGNOSTIC: User email IS confirmed:", userSession.user.email);
     }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error("Error fetching user profile:", error);
+    const profile = await getProfileById(userId); // Use the updated getProfileById
+    
+    if (profile) {
+      setCurrentUserProfile(profile);
+    } else {
       setCurrentUserProfile(null);
-    } else if (data) {
-      setCurrentUserProfile(data);
     }
     setIsLoadingUser(false);
   };

@@ -17,6 +17,13 @@ interface AuthUser {
   // ... autres champs d'authentification
 }
     `,
+    "public.roles": `
+// Table d'énumération des rôles utilisateurs
+interface Role {
+  id: string; // UUID, clé primaire
+  name: 'student' | 'creator' | 'tutor' | 'administrator'; // Nom du rôle
+}
+    `,
     "public.profiles": `
 // Table des profils utilisateurs (étudiants, créateurs, tuteurs)
 // Liée à auth.users par l'ID.
@@ -26,8 +33,8 @@ interface Profile {
   last_name: string;
   username: string;
   email: string; // Email added to profile
-  role: 'student' | 'creator' | 'tutor';
-  class_id?: string; // UUID, pour les étudiants, référence public.classes(id)
+  role: 'student' | 'creator' | 'tutor' | 'administrator'; // Le rôle est maintenant résolu via la jointure avec 'roles'
+  establishment_id?: string; // UUID, pour les étudiants, référence public.establishments(id)
   theme?: 'light' | 'dark' | 'system'; // Préférence de thème de l'utilisateur
   created_at: string;
   updated_at: string;
@@ -58,19 +65,6 @@ interface Class {
   name: string;
   curriculum_id: string; // UUID, référence public.curricula(id)
   creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'creator')
-  created_at: string;
-}
-    `,
-    "public.courses": `
-interface Course {
-  id: string; // UUID
-  title: string;
-  description: string;
-  modules: Module[]; // JSONB, structure imbriquée de modules
-  skills_to_acquire: string[]; // JSONB, liste de chaînes
-  image_url?: string;
-  category?: string;
-  difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
   created_at: string;
 }
     `,
@@ -159,6 +153,7 @@ interface Document {
   const getIcon = (modelName: string) => {
     switch (modelName) {
       case 'Auth.users (Supabase)': return <Lock className="h-5 w-5 text-primary" />;
+      case 'public.roles': return <Users className="h-5 w-5 text-primary" />; // New icon for roles
       case 'public.profiles': return <User className="h-5 w-5 text-primary" />;
       case 'public.establishments': return <School className="h-5 w-5 text-primary" />;
       case 'public.curricula': return <LayoutList className="h-5 w-5 text-primary" />;
