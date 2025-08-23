@@ -461,7 +461,7 @@ export const loadClasses = async (): Promise<Class[]> => {
   }));
 };
 
-export const addClassToStorage = async (newClass: Omit<Class, 'id' | 'created_at'>): Promise<Class | null> => {
+export const addClassToStorage = async (newClass: Omit<Class, 'id' | 'created_at' | 'school_year_name'>): Promise<Class | null> => {
   const { data, error } = await supabase
     .from('classes')
     .insert({
@@ -604,7 +604,7 @@ export const loadProfessorSubjectAssignments = async (professorId?: string, clas
   }));
 };
 
-export const addProfessorSubjectAssignmentToStorage = async (newAssignment: Omit<ProfessorSubjectAssignment, 'id' | 'created_at'>): Promise<ProfessorSubjectAssignment | null> => {
+export const addProfessorSubjectAssignmentToStorage = async (newAssignment: Omit<ProfessorSubjectAssignment, 'id' | 'created_at' | 'subject_name' | 'class_name' | 'school_year_name'>): Promise<ProfessorSubjectAssignment | null> => {
   const { data, error } = await supabase
     .from('professor_subject_assignments')
     .insert(newAssignment)
@@ -676,6 +676,18 @@ export const getActiveSchoolYear = async (): Promise<SchoolYear | null> => {
 };
 
 export const addSchoolYear = async (newSchoolYear: Omit<SchoolYear, 'id' | 'created_at' | 'updated_at'>): Promise<SchoolYear | null> => {
+  // Deactivate all other school years if the new one is set to active
+  if (newSchoolYear.is_active) {
+    const { error: deactivateError } = await supabase
+      .from('school_years')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('is_active', true);
+    if (deactivateError) {
+      console.error("Error deactivating previous active school year:", deactivateError);
+      throw deactivateError;
+    }
+  }
+
   const { data, error } = await supabase
     .from('school_years')
     .insert(newSchoolYear)
@@ -689,6 +701,19 @@ export const addSchoolYear = async (newSchoolYear: Omit<SchoolYear, 'id' | 'crea
 };
 
 export const updateSchoolYear = async (updatedSchoolYear: SchoolYear): Promise<SchoolYear | null> => {
+  // If this school year is being set to active, deactivate all others
+  if (updatedSchoolYear.is_active) {
+    const { error: deactivateError } = await supabase
+      .from('school_years')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .neq('id', updatedSchoolYear.id) // Exclude the current one
+      .eq('is_active', true);
+    if (deactivateError) {
+      console.error("Error deactivating other active school years:", deactivateError);
+      throw deactivateError;
+    }
+  }
+
   const { data, error } = await supabase
     .from('school_years')
     .update({
@@ -706,6 +731,17 @@ export const updateSchoolYear = async (updatedSchoolYear: SchoolYear): Promise<S
     throw error;
   }
   return data;
+};
+
+export const deleteSchoolYear = async (schoolYearId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('school_years')
+    .delete()
+    .eq('id', schoolYearId);
+  if (error) {
+    console.error("Error deleting school year:", error);
+    throw error;
+  }
 };
 
 // New helper function to get establishment address by ID

@@ -77,6 +77,7 @@ export interface Class {
   creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
   establishment_id?: string; // New: Link to parent establishment
   school_year_id: string; // Changed: Link to SchoolYear
+  school_year_name?: string; // For convenience when fetching
   created_at?: string;
 }
 
@@ -96,6 +97,7 @@ export interface ProfessorSubjectAssignment { // New: Professor-Subject-Class-Ye
   class_id: string;
   class_name?: string; // For convenience when fetching
   school_year_id: string; // Changed: Link to SchoolYear
+  school_year_name?: string; // For convenience when fetching
   created_at?: string;
 }
 
@@ -104,6 +106,7 @@ export interface StudentClassEnrollment { // New interface for student-class lia
   student_id: string; // Link to the student's Profile
   class_id: string; // Link to the Class
   school_year_id: string; // Changed: Link to SchoolYear
+  school_year_name?: string; // For convenience when fetching
   created_at?: string;
   updated_at?: string;
 }
