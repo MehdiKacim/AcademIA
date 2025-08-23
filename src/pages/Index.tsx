@@ -269,7 +269,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
           <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">
             Un parcours d'apprentissage unique, guidé par l'intelligence
             artificielle, pour une maîtrise complète.
-          </p>
+            </p>
           <div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"
           >
