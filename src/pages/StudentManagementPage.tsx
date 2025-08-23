@@ -483,40 +483,48 @@ const StudentManagementPage = () => {
                       }}
                     />
                     <CommandList>
-                      {isSearchingUserEst && studentSearchInputEst.trim() !== '' ? (
-                        <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
-                        </CommandEmpty>
-                      ) : filteredStudentsForEstDropdown.length === 0 && studentSearchInputEst.trim() !== '' ? (
-                        <CommandEmpty className="py-2 text-center text-muted-foreground">
-                          Aucun élève trouvé pour "{studentSearchInputEst}".
-                        </CommandEmpty>
-                      ) : (
-                        <CommandGroup>
-                          {filteredStudentsForEstDropdown.map((profile) => (
-                            <CommandItem
-                              key={profile.id}
-                              value={profile.username}
-                              onSelect={() => {
-                                setSelectedStudentForEstAssignment(profile);
-                                setStudentSearchInputEst(profile.username);
-                                setEstablishmentToAssign(profile.establishment_id || "");
-                                setEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
-                                setEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
-                                setOpenStudentSelectEst(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {profile.first_name} {profile.last_name} (@{profile.username})
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      )}
+                      {(() => {
+                        if (isSearchingUserEst && studentSearchInputEst.trim() !== '') {
+                          return (
+                            <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
+                            </CommandEmpty>
+                          );
+                        } else if (filteredStudentsForEstDropdown.length === 0 && studentSearchInputEst.trim() !== '') {
+                          return (
+                            <CommandEmpty className="py-2 text-center text-muted-foreground">
+                              Aucun élève trouvé pour "{studentSearchInputEst}".
+                            </CommandEmpty>
+                          );
+                        } else {
+                          return (
+                            <CommandGroup>
+                              {filteredStudentsForEstDropdown.map((profile) => (
+                                <CommandItem
+                                  key={profile.id}
+                                  value={profile.username}
+                                  onSelect={() => {
+                                    setSelectedStudentForEstAssignment(profile);
+                                    setStudentSearchInputEst(profile.username);
+                                    setEstablishmentToAssign(profile.establishment_id || "");
+                                    setEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
+                                    setEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
+                                    setOpenStudentSelectEst(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {profile.first_name} {profile.last_name} (@{profile.username})
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          );
+                        }
+                      })()}
                     </CommandList>
                   </Command>
                 </PopoverContent>
@@ -662,41 +670,50 @@ const StudentManagementPage = () => {
                     }}
                   />
                   <CommandList>
-                    {isSearchingUserClass && studentSearchInputClass.trim() !== '' ? (
-                      <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
-                      </CommandEmpty>
-                    ) : filteredStudentsForClassDropdown.length === 0 && studentSearchInputClass.trim() !== '' ? (
-                        <CommandEmpty className="py-2 text-center text-muted-foreground">
-                          Aucun élève trouvé pour "{studentSearchInputClass}".
-                        </CommandEmpty>
-                      ) : (
-                        <CommandGroup>
-                          {filteredStudentsForClassDropdown.map((profile) => (
-                            <CommandItem
-                              key={profile.id}
-                              value={profile.username}
-                              onSelect={() => {
-                                setSelectedStudentForClassAssignment(profile);
-                                setStudentSearchInputClass(profile.username);
-                                setOpenStudentSelectClass(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedStudentForClassAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {profile.first_name} {profile.last_name} (@{profile.username})
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      )}
+                    {(() => {
+                      if (isSearchingUserClass && studentSearchInputClass.trim() !== '') {
+                        return (
+                          <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
+                          </CommandEmpty>
+                        );
+                      } else if (filteredStudentsForClassDropdown.length === 0 && studentSearchInputClass.trim() !== '') {
+                        return (
+                          <CommandEmpty className="py-2 text-center text-muted-foreground">
+                            Aucun élève trouvé pour "{studentSearchInputClass}".
+                          </CommandEmpty>
+                        );
+                      } else {
+                        return (
+                          <CommandGroup>
+                            {filteredStudentsForClassDropdown.map((profile) => (
+                              <CommandItem
+                                key={profile.id}
+                                value={profile.username}
+                                onSelect={() => {
+                                  setSelectedStudentForClassAssignment(profile);
+                                  setStudentSearchInputClass(profile.username);
+                                  setOpenStudentSelectClass(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedStudentForClassAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {profile.first_name} {profile.last_name} (@{profile.username})
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        );
+                      }
+                    })()}
                   </CommandList>
-                </PopoverContent>
-              </Popover>
-            </div>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
 
             {selectedStudentForClassAssignment && (
               <div className="p-4 border rounded-md bg-muted/20 space-y-3">
