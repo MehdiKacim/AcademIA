@@ -27,6 +27,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge"; // Import Badge
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"; // Added Dialog imports
 
 const SchoolYearManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
