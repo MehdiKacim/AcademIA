@@ -196,7 +196,7 @@ const Messages = () => {
       await fetchAllData();
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
-      showError(`Erreur lors du désarchivage: ${error.message}`);
+      showError(`Erreur lors du désarchivage: ${err.message}`);
     }
   };
 
@@ -214,63 +214,97 @@ const Messages = () => {
     );
 
     let filteredContacts: Profile[] = [];
+    let potentialContacts = allProfiles.filter(p => p.id !== currentUserProfile.id);
 
     if (currentRole === 'student') {
+      console.log("DEBUG (Student): currentUserProfile.id:", currentUserProfile.id);
+      console.log("DEBUG (Student): currentSchoolYear:", currentSchoolYear);
+      console.log("DEBUG (Student): currentUserProfile.establishment_id:", currentUserProfile.establishment_id);
+
       const studentEnrollments = allStudentClassEnrollments.filter(e => e.student_id === currentUserProfile.id && e.enrollment_year === currentSchoolYear);
       const studentClassIds = studentEnrollments.map(e => e.class_id);
-      const studentEstablishmentId = currentUserProfile.establishment_id;
+      console.log("DEBUG (Student): Student's Class IDs for current school year:", studentClassIds);
 
       // Add professeurs from student's classes
       const professeursInClasses = new Set<string>();
       classes.filter(cls => studentClassIds.includes(cls.id)).forEach(cls => {
         cls.creator_ids.forEach(creatorId => professeursInClasses.add(creatorId));
       });
-      filteredContacts.push(...allProfiles.filter(p => p.role === 'professeur' && professeursInClasses.has(p.id)));
+      filteredContacts.push(...potentialContacts.filter(p => p.role === 'professeur' && professeursInClasses.has(p.id)));
+      console.log("DEBUG (Student): Professeurs from student's classes added:", filteredContacts.filter(p => p.role === 'professeur').map(p => p.username));
 
       // Add directors/deputy directors from student's establishment
-      if (studentEstablishmentId) {
-        filteredContacts.push(...allProfiles.filter(p => 
-          (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === studentEstablishmentId
+      if (currentUserProfile.establishment_id) {
+        filteredContacts.push(...potentialContacts.filter(p => 
+          (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === currentUserProfile.establishment_id
         ));
+        console.log("DEBUG (Student): Directors/Deputy Directors from student's establishment added:", filteredContacts.filter(p => p.role === 'director' || p.role === 'deputy_director').map(p => p.username));
       }
-    } else if (currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') {
-      let potentialContacts = allProfiles.filter(p => p.id !== currentUserProfile.id);
+    } else if (currentRole === 'professeur') {
+        console.log("DEBUG (Professeur): currentUserProfile.id:", currentUserProfile.id);
+        console.log("DEBUG (Professeur): currentSchoolYear:", currentSchoolYear);
+        console.log("DEBUG (Professeur): currentUserProfile.establishment_id:", currentUserProfile.establishment_id);
 
-      if (currentRole === 'professeur') {
-        const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id) && cls.school_year === currentSchoolYear).map(cls => cls.id);
-        const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => managedClassIds.includes(e.class_id)).map(e => e.student_id));
+        const managedClassIds = classes.filter(cls => {
+            const isCreator = cls.creator_ids.includes(currentUserProfile.id);
+            const isCurrentYear = cls.school_year === currentSchoolYear;
+            console.log(`DEBUG (Professeur): Class ${cls.name} (ID: ${cls.id}) - Creator: ${isCreator}, Year: ${isCurrentYear}`);
+            return isCreator && isCurrentYear;
+        }).map(cls => cls.id);
+        console.log("DEBUG (Professeur): Managed Class IDs for current school year:", managedClassIds);
+
+        const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => {
+            const isInManagedClass = managedClassIds.includes(e.class_id);
+            const isCurrentYearEnrollment = e.enrollment_year === currentSchoolYear;
+            console.log(`DEBUG (Professeur): Enrollment (Student: ${e.student_id}, Class: ${e.class_id}, Year: ${e.enrollment_year}) - In Managed Class: ${isInManagedClass}, Current Year Enrollment: ${isCurrentYearEnrollment}`);
+            return isInManagedClass && isCurrentYearEnrollment;
+        }).map(e => e.student_id));
+        console.log("DEBUG (Professeur): Student IDs in Managed Classes for current school year:", Array.from(studentIdsInManagedClasses));
         
         // Add students from managed classes
         filteredContacts.push(...potentialContacts.filter(p => p.role === 'student' && studentIdsInManagedClasses.has(p.id)));
+        console.log("DEBUG (Professeur): Students from managed classes added:", filteredContacts.filter(p => p.role === 'student').map(p => p.username));
 
         // Add directors/deputy directors from professor's establishment
         if (currentUserProfile.establishment_id) {
           filteredContacts.push(...potentialContacts.filter(p => 
             (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === currentUserProfile.establishment_id
           ));
+          console.log("DEBUG (Professeur): Directors/Deputy Directors from establishment added:", filteredContacts.filter(p => p.role === 'director' || p.role === 'deputy_director').map(p => p.username));
         }
-      } else if (currentRole === 'tutor') {
+    } else if (currentRole === 'tutor') {
+        console.log("DEBUG (Tutor): currentUserProfile.id:", currentUserProfile.id);
+        console.log("DEBUG (Tutor): currentSchoolYear:", currentSchoolYear);
+        console.log("DEBUG (Tutor): currentUserProfile.establishment_id:", currentUserProfile.establishment_id);
+
         // Add students from tutor's establishment
         if (currentUserProfile.establishment_id) {
           const studentIdsInEstablishment = new Set(allStudentClassEnrollments.filter(e => 
             classes.some(cls => cls.id === e.class_id && cls.establishment_id === currentUserProfile.establishment_id && cls.school_year === currentSchoolYear)
           ).map(e => e.student_id));
           filteredContacts.push(...potentialContacts.filter(p => p.role === 'student' && studentIdsInEstablishment.has(p.id)));
+          console.log("DEBUG (Tutor): Students from establishment added:", filteredContacts.filter(p => p.role === 'student').map(p => p.username));
 
           // Add directors/deputy directors from tutor's establishment
           filteredContacts.push(...potentialContacts.filter(p => 
             (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === currentUserProfile.establishment_id
           ));
+          console.log("DEBUG (Tutor): Directors/Deputy Directors from establishment added:", filteredContacts.filter(p => p.role === 'director' || p.role === 'deputy_director').map(p => p.username));
         }
-      } else if (currentRole === 'director' || currentRole === 'deputy_director') {
+    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
+        console.log("DEBUG (Director/Deputy Director): currentUserProfile.id:", currentUserProfile.id);
+        console.log("DEBUG (Director/Deputy Director): currentUserProfile.establishment_id:", currentUserProfile.establishment_id);
+
         // Add all users from director's establishment
         if (currentUserProfile.establishment_id) {
           filteredContacts.push(...potentialContacts.filter(p => p.establishment_id === currentUserProfile.establishment_id));
+          console.log("DEBUG (Director/Deputy Director): All users from establishment added:", filteredContacts.map(p => p.username));
         }
-      } else if (currentRole === 'administrator') {
+    } else if (currentRole === 'administrator') {
+        console.log("DEBUG (Administrator): currentUserProfile.id:", currentUserProfile.id);
         // Add all users (except self)
         filteredContacts.push(...potentialContacts);
-      }
+        console.log("DEBUG (Administrator): All potential contacts added:", filteredContacts.map(p => p.username));
     }
 
     // Apply search query if any
@@ -284,12 +318,15 @@ const Messages = () => {
         p.email?.toLowerCase().includes(lowerCaseQuery)
       );
     }
+    console.log("DEBUG: Contacts after search query filter:", finalFilteredContacts.map(p => p.username));
 
     // Filter out contacts already in existing conversations
     finalFilteredContacts = finalFilteredContacts.filter(p => !contactsInAllConversations.has(p.id));
+    console.log("DEBUG: Contacts after filtering out existing conversations:", finalFilteredContacts.map(p => p.username));
 
     // Remove duplicates and sort
     const uniqueContacts = Array.from(new Map(finalFilteredContacts.map(item => [item.id, item])).values());
+    console.log("DEBUG: Unique contacts before sorting:", uniqueContacts.map(p => p.username));
     return uniqueContacts.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
   }, [allProfiles, currentUserProfile, currentRole, recentConversations, archivedConversations, establishments, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear]);
 
