@@ -38,6 +38,7 @@ const Messages = () => {
   const [selectedCurriculumId, setSelectedCurriculumId] = useState<string>("");
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [searchStudentQuery, setSearchStudentQuery] = useState('');
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true); // New loading state for profiles
 
   const currentUserId = currentUserProfile?.id;
 
@@ -48,8 +49,10 @@ const Messages = () => {
       return;
     }
 
+    setIsLoadingProfiles(true);
     const profiles = await getAllProfiles();
     setAllProfiles(profiles.filter(p => p.id !== currentUserId));
+    setIsLoadingProfiles(false);
 
     const recent = await getRecentConversations(currentUserId);
     setRecentConversations(recent);
@@ -117,30 +120,33 @@ const Messages = () => {
   }, [currentUserId, currentRole]);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const contactId = params.get('contactId');
-    const courseId = params.get('courseId');
-    const courseTitle = params.get('courseTitle');
+    // Only attempt to set selected contact if profiles are loaded
+    if (allProfiles.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const contactId = params.get('contactId');
+      const courseId = params.get('courseId');
+      const courseTitle = params.get('courseTitle');
 
-    if (contactId && allProfiles.length > 0) {
-      const contact = allProfiles.find(p => p.id === contactId);
-      if (contact) {
-        setSelectedContact(contact);
-        if (courseId) setInitialCourseContext({ id: courseId, title: courseTitle || `Cours ID: ${courseId}` });
-        const isContactArchived = archivedConversations.some(msg => {
-          const otherUserId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
-          return otherUserId === contactId;
-        });
-        if (isContactArchived && currentUserId) {
-          console.log(`[Messages] Contact ${contact.first_name} selected via URL, was archived. Attempting to unarchive.`);
-          unarchiveConversation(currentUserId, contactId).then(() => {
-            fetchAllData(); // Re-fetch to update lists
-            showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
-          }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
+      if (contactId) {
+        const contact = allProfiles.find(p => p.id === contactId);
+        if (contact) {
+          setSelectedContact(contact);
+          if (courseId) setInitialCourseContext({ id: courseId, title: courseTitle || `Cours ID: ${courseId}` });
+          const isContactArchived = archivedConversations.some(msg => {
+            const otherUserId = msg.sender_id === currentUserId ? msg.receiver_id : msg.sender_id;
+            return otherUserId === contactId;
+          });
+          if (isContactArchived && currentUserId) {
+            console.log(`[Messages] Contact ${contact.first_name} selected via URL, was archived. Attempting to unarchive.`);
+            unarchiveConversation(currentUserId, contactId).then(() => {
+              fetchAllData(); // Re-fetch to update lists
+              showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
+            }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
+          }
         }
       }
     }
-  }, [location.search, allProfiles, archivedConversations, currentUserId]);
+  }, [location.search, allProfiles, archivedConversations, currentUserId]); // Depend on allProfiles
 
   const handleSelectContact = (contact: Profile, courseId?: string, courseTitle?: string) => {
     console.log("[Messages] handleSelectContact called for:", contact.username);
@@ -260,7 +266,7 @@ const Messages = () => {
   }, [allProfiles, currentUserProfile, recentConversations, archivedConversations, currentRole]);
 
 
-  if (isLoadingUser) {
+  if (isLoadingUser || isLoadingProfiles) { // Check isLoadingProfiles as well
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
