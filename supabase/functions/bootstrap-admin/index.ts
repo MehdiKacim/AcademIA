@@ -87,32 +87,43 @@ serve(async (req) => {
       -- Enable RLS (REQUIRED for security) if not already enabled
       ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-      -- Create secure policies for each operation if they don't exist
-      CREATE POLICY IF NOT EXISTS "profiles_select_policy" ON public.profiles 
+      -- Drop existing policies before recreating them to ensure idempotency
+      DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "profiles_insert_policy" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "profiles_update_policy" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "profiles_delete_policy" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "Administrators can view all profiles" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "Administrators can insert profiles" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "Administrators can update all profiles" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "Administrators can delete profiles" ON public.profiles;
+      DROP POLICY IF NOT EXISTS "Creators and Tutors can view student profiles" ON public.profiles;
+
+      -- Create secure policies for each operation
+      CREATE POLICY "profiles_select_policy" ON public.profiles 
       FOR SELECT TO authenticated USING (auth.uid() = id);
 
-      CREATE POLICY IF NOT EXISTS "profiles_insert_policy" ON public.profiles 
+      CREATE POLICY "profiles_insert_policy" ON public.profiles 
       FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
-      CREATE POLICY IF NOT EXISTS "profiles_update_policy" ON public.profiles 
+      CREATE POLICY "profiles_update_policy" ON public.profiles 
       FOR UPDATE TO authenticated USING (auth.uid() = id);
 
-      CREATE POLICY IF NOT EXISTS "profiles_delete_policy" ON public.profiles 
+      CREATE POLICY "profiles_delete_policy" ON public.profiles 
       FOR DELETE TO authenticated USING (auth.uid() = id);
 
-      CREATE POLICY IF NOT EXISTS "Administrators can view all profiles" ON public.profiles 
+      CREATE POLICY "Administrators can view all profiles" ON public.profiles 
       FOR SELECT USING (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
 
-      CREATE POLICY IF NOT EXISTS "Administrators can insert profiles" ON public.profiles 
-      FOR INSERT USING (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
+      CREATE POLICY "Administrators can insert profiles" ON public.profiles 
+      FOR INSERT WITH CHECK (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
 
-      CREATE POLICY IF NOT EXISTS "Administrators can update all profiles" ON public.profiles 
+      CREATE POLICY "Administrators can update all profiles" ON public.profiles 
       FOR UPDATE USING (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
 
-      CREATE POLICY IF NOT EXISTS "Administrators can delete profiles" ON public.profiles 
+      CREATE POLICY "Administrators can delete profiles" ON public.profiles 
       FOR DELETE USING (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
 
-      CREATE POLICY IF NOT EXISTS "Creators and Tutors can view student profiles" ON public.profiles 
+      CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles 
       FOR SELECT USING (((role = 'student'::user_role) AND (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = ANY (ARRAY['creator'::user_role, 'tutor'::user_role, 'administrator'::user_role]))))));
 
       -- Create or replace handle_new_user function
