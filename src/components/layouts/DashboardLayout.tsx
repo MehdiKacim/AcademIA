@@ -96,11 +96,13 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   useEffect(() => {
     let channel: any;
-    const fetchUnreadCount = async () => {
+    const fetchAndSubscribeUnreadCount = async () => {
       if (currentUserProfile?.id) {
-        const count = await getUnreadMessageCount(currentUserProfile.id);
-        setUnreadMessages(count);
+        // Initial fetch
+        const initialCount = await getUnreadMessageCount(currentUserProfile.id);
+        setUnreadMessages(initialCount);
 
+        // Set up real-time listener
         channel = supabase
           .channel(`unread_messages_${currentUserProfile.id}`)
           .on(
@@ -111,8 +113,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               table: 'messages',
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
-            (payload) => {
-              setUnreadMessages(prev => prev + 1);
+            async (payload) => {
+              // Re-fetch count on new message to ensure accuracy
+              const newCount = await getUnreadMessageCount(currentUserProfile.id);
+              setUnreadMessages(newCount);
             }
           )
           .on(
@@ -123,21 +127,17 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               table: 'messages',
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
-            (payload) => {
-              const updatedMessage = payload.new as Message;
-              if (updatedMessage.is_read && !updatedMessage.is_archived && (payload.old as Message)?.is_read === false) {
-                setUnreadMessages(prev => Math.max(0, prev - 1));
-              }
-              if (updatedMessage.is_archived && (payload.old as Message)?.is_read === false && !updatedMessage.is_read) {
-                 setUnreadMessages(prev => Math.max(0, prev - 1));
-              }
+            async (payload) => {
+              // Re-fetch count on message update (read status, archive status) to ensure accuracy
+              const newCount = await getUnreadMessageCount(currentUserProfile.id);
+              setUnreadMessages(newCount);
             }
           )
           .subscribe();
       }
     };
 
-    fetchUnreadCount();
+    fetchAndSubscribeUnreadCount();
 
     return () => {
       if (channel) {
