@@ -7,10 +7,10 @@ import { showError } from "@/utils/toast";
 
 interface LoginFormProps {
   onSuccess: () => void;
-  onSwitchToSignup: () => void; // New prop to switch to signup
+  // onSwitchToSignup: () => void; // Removed prop
 }
 
-export const LoginForm = ({ onSuccess, onSwitchToSignup }: LoginFormProps) => {
+export const LoginForm = ({ onSuccess }: LoginFormProps) => { // Removed onSwitchToSignup from props
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +33,7 @@ export const LoginForm = ({ onSuccess, onSwitchToSignup }: LoginFormProps) => {
   };
 
   return (
-    <form onSubmit={handleLogin} className="grid gap-4"> {/* Added form tag and onSubmit handler */}
+    <form onSubmit={handleLogin} className="grid gap-4">
       <div className="grid gap-2">
         <Label htmlFor="login-email">Email</Label>
         <Input
@@ -57,15 +57,10 @@ export const LoginForm = ({ onSuccess, onSwitchToSignup }: LoginFormProps) => {
           autoComplete="current-password" // Added autocomplete
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}> {/* Changed to type="submit" */}
+      <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Connexion en cours..." : "Se connecter"}
       </Button>
-      <div className="text-sm text-muted-foreground text-center mt-2">
-        Pas de compte?{" "}
-        <Button variant="link" onClick={onSwitchToSignup} className="p-0 h-auto text-primary hover:underline">
-          Créer un compte
-        </Button>
-      </div>
+      {/* Removed signup link */}
     </form>
   );
 };
