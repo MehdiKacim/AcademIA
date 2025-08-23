@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2 } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2, BookText, UserCog, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -247,15 +247,29 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
       roleSpecificItems.push(
         {
-          icon: BriefcaseBusiness,
-          label: "Gestion Établissement",
+          icon: BookText, // Icon for pedagogical management
+          label: "Gestion Pédagogique",
           type: 'trigger',
           items: [
-            { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
             { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
+          ],
+        },
+        {
+          icon: UserCog, // Icon for administrative management
+          label: "Gestion Administrative",
+          type: 'trigger',
+          items: [
+            { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' }, // Changed label
             { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
+          ],
+        },
+        {
+          icon: TrendingUp, // Icon for analytics
+          label: "Analytiques",
+          type: 'trigger',
+          items: [
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
