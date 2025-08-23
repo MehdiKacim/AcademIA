@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays } from "lucide-react"; // Added CalendarDays icon
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck } from "lucide-react"; // Added UserCheck icon
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -197,7 +197,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
             { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
             { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' }, // New item
+            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
           ],
         },
         {
@@ -220,7 +220,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' }, // New item
+            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
           ],
         },
         {
@@ -246,8 +246,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
             { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' }, // New item
+            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
             { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
+            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' }, // New item
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
@@ -262,8 +263,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
             { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion des Élèves par Classe", icon: BookMarked, type: 'link' }, // New item
-            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' }, // Added here
+            { to: "/pedagogical-management", label: "Gestion des Élèves par Classe", icon: BookMarked, type: 'link' },
+            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
+            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' }, // New item
           ],
         },
         {
