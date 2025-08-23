@@ -30,7 +30,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
 
   const classIds = enrollments.map(e => e.class_id);
 
-  // 2. Get the classes to find their curriculum_ids
+  // 2. Get the classes to find their curriculum_id
   const { data: classesData, error: classesError } = await supabase
     .from('classes')
     .select('curriculum_id')
@@ -736,7 +736,8 @@ export const updateSchoolYear = async (updatedSchoolYear: SchoolYear): Promise<S
 export const deleteSchoolYear = async (schoolYearId: string): Promise<void> => {
   const { error } = await supabase
     .from('school_years')
-    .delete();
+    .delete()
+    .eq('id', schoolYearId); // Corrected to delete only the specified ID
   if (error) {
     console.error("Error deleting school year:", error);
     throw error;
