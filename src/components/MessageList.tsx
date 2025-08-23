@@ -32,6 +32,12 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
 
   const currentUserId = currentUserProfile?.id;
 
+  // Debugging logs
+  console.log(`[MessageList Debug] Rendering with isArchivedView: ${isArchivedView}`);
+  console.log(`[MessageList Debug] Received recentMessages (${recentMessages.length}):`, recentMessages.map(m => ({ id: m.id, sender: m.sender_id, receiver: m.receiver_id, content: m.content, is_archived: m.is_archived })));
+  console.log(`[MessageList Debug] Received allProfiles (${allProfiles.length}):`, allProfiles.map(p => ({ id: p.id, username: p.username, role: p.role })));
+
+
   // Calculate unread counts whenever recentMessages or currentUserId changes
   useEffect(() => {
     if (!currentUserId) return;
@@ -54,7 +60,9 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
 
   const getContactProfile = (message: Message) => {
     const contactId = message.sender_id === currentUserId ? message.receiver_id : message.sender_id;
-    return allProfiles.find(p => p.id === contactId);
+    const profile = allProfiles.find(p => p.id === contactId);
+    console.log(`[MessageList Debug] For message ID ${message.id}, contactId: ${contactId}, found profile:`, profile ? { id: profile.id, username: profile.username } : 'null');
+    return profile;
   };
 
   // Long press logic for mobile
@@ -110,7 +118,10 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
           <div className="space-y-2">
             {recentMessages.map((message) => {
               const contactProfile = getContactProfile(message);
-              if (!contactProfile) return null;
+              if (!contactProfile) {
+                console.warn(`[MessageList Debug] Skipping message ${message.id} because contact profile not found.`);
+                return null;
+              }
 
               const unreadCount = unreadCounts.get(contactProfile.id) || 0;
 
