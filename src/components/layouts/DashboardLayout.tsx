@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import AiAPersistentChat from "@/components/AiAPersistent/Chat";
+import AiAPersistentChat from "@/components/AiAPersistentChat"; // Corrected import path
 import FloatingAiAPersistentChat from "@/components/FloatingAiAPersistentChat";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
