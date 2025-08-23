@@ -559,7 +559,7 @@ const StudentManagementPage = () => {
                     <SelectContent>
                       {establishments.map(est => (
                         <SelectItem key={est.id} value={est.id}>
-                          {est.name}
+                          {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -865,7 +865,7 @@ const StudentManagementPage = () => {
                   <SelectItem value="all">Tous les établissements</SelectItem>
                   {establishments.map(est => (
                     <SelectItem key={est.id} value={est.id}>
-                      {est.name}
+                      {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
                     </SelectItem>
                   ))}
                 </SelectContent>
