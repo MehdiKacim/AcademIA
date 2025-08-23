@@ -3,13 +3,13 @@ import AdminStatCard from './analytics/AdminStatCard';
 import UserDistributionModal from './analytics/UserDistributionModal';
 import PedagogicalStructureModal from './analytics/PedagogicalStructureModal';
 import EstablishmentDetailModal from './analytics/EstablishmentDetailModal';
-import UserListModal from './analytics/UserListModal'; // New import
-import CurriculumListModal from './analytics/CurriculumListModal'; // New import
-import ClassListModal from './analytics/ClassListModal'; // New import
+import UserListModal from './analytics/UserListModal';
+import CurriculumListModal from './analytics/CurriculumListModal';
+import ClassListModal from './analytics/ClassListModal';
 import { Profile, Class, Curriculum, Establishment } from "@/lib/dataModels";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, LayoutList, Building2, BarChart2, User, GraduationCap, PenTool, BriefcaseBusiness, School } from "lucide-react"; // New icons
+import { Users, LayoutList, Building2, BarChart2, User, GraduationCap, PenTool, BriefcaseBusiness, School, UsersRound } from "lucide-react"; // Added UsersRound icon
 
 interface AdminAnalyticsSectionProps {
   establishments: Establishment[];
@@ -23,7 +23,7 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
   const [isPedagogicalStructureModalOpen, setIsPedagogicalStructureModalOpen] = useState(false);
   const [isEstablishmentDetailModalOpen, setIsEstablishmentDetailModalOpen] = useState(false);
 
-  // New states for list modals
+  // States for list modals
   const [isDirectorListModalOpen, setIsDirectorListModalOpen] = useState(false);
   const [isDeputyDirectorListModalOpen, setIsDeputyDirectorListModalOpen] = useState(false);
   const [isStudentListModalOpen, setIsStudentListModalOpen] = useState(false);
@@ -80,18 +80,24 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
           onClick={() => setIsEstablishmentDetailModalOpen(true)}
         />
         <AdminStatCard
-          title="Total Directeurs"
-          description="Nombre total de directeurs sur la plateforme."
-          value={getRoleCount('director')}
+          title="Personnel de Direction"
+          description="Directeurs et Directeurs Adjoints."
+          value={getRoleCount('director') + getRoleCount('deputy_director')}
           icon={BriefcaseBusiness}
-          onClick={() => setIsDirectorListModalOpen(true)}
+          onClick={() => {
+            setIsDirectorListModalOpen(true); // Open modal for directors
+            setIsDeputyDirectorListModalOpen(true); // Open modal for deputy directors (or combine into one list modal)
+          }}
         />
         <AdminStatCard
-          title="Total Directeurs Adjoints"
-          description="Nombre total de directeurs adjoints sur la plateforme."
-          value={getRoleCount('deputy_director')}
-          icon={BriefcaseBusiness}
-          onClick={() => setIsDeputyDirectorListModalOpen(true)}
+          title="Personnel Pédagogique"
+          description="Professeurs et Tuteurs."
+          value={getRoleCount('professeur') + getRoleCount('tutor')}
+          icon={UsersRound}
+          onClick={() => {
+            setIsProfesseurListModalOpen(true); // Open modal for professeurs
+            setIsTutorListModalOpen(true); // Open modal for tutors (or combine into one list modal)
+          }}
         />
         <AdminStatCard
           title="Total Élèves"
@@ -99,20 +105,6 @@ const AdminAnalyticsSection = ({ establishments, curricula, classes, allProfiles
           value={getRoleCount('student')}
           icon={GraduationCap}
           onClick={() => setIsStudentListModalOpen(true)}
-        />
-        <AdminStatCard
-          title="Total Professeurs"
-          description="Nombre total de professeurs."
-          value={getRoleCount('professeur')}
-          icon={PenTool}
-          onClick={() => setIsProfesseurListModalOpen(true)}
-        />
-        <AdminStatCard
-          title="Total Tuteurs"
-          description="Nombre total de tuteurs."
-          value={getRoleCount('tutor')}
-          icon={User}
-          onClick={() => setIsTutorListModalOpen(true)}
         />
         <AdminStatCard
           title="Total Cursus"
