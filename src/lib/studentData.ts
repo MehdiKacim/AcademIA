@@ -458,16 +458,16 @@ export const getUserEmail = (profile: Profile): string => {
 
 // Reset functions (for development/testing)
 export const resetProfiles = async () => {
-  const { error } = await supabase.from('profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except a dummy ID if needed
+  const { error } = await supabase.from('profiles').delete(); // Delete all except a dummy ID if needed
   if (error) console.error("Error resetting profiles:", error);
 };
 
 export const resetStudentCourseProgress = async () => {
-  const { error } = await supabase.from('student_course_progress').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('student_course_progress').delete();
   if (error) console.error("Error resetting student course progress:", error);
 };
 
 export const resetStudentClassEnrollments = async () => {
-  const { error } = await supabase.from('student_class_enrollments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('student_class_enrollments').delete();
   if (error) console.error("Error resetting student class enrollments:", error);
 };

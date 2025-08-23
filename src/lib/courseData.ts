@@ -736,8 +736,7 @@ export const updateSchoolYear = async (updatedSchoolYear: SchoolYear): Promise<S
 export const deleteSchoolYear = async (schoolYearId: string): Promise<void> => {
   const { error } = await supabase
     .from('school_years')
-    .delete()
-    .eq('id', schoolYearId);
+    .delete();
   if (error) {
     console.error("Error deleting school year:", error);
     throw error;
@@ -761,41 +760,41 @@ export const getEstablishmentAddress = async (establishmentId: string): Promise<
 
 // Reset functions for all data types (for development/testing)
 export const resetCourses = async () => {
-  const { error } = await supabase.from('courses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('courses').delete();
   if (error) console.error("Error resetting courses:", error);
 };
 
 export const resetCurricula = async () => {
-  const { error } = await supabase.from('curricula').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('curricula').delete();
   if (error) console.error("Error resetting curricula:", error);
 };
 
 export const resetEstablishments = async () => {
-  const { error } = await supabase.from('establishments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('establishments').delete();
   if (error) console.error("Error resetting establishments:", error);
 };
 
 export const resetClasses = async () => {
-  const { error } = await supabase.from('classes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('classes').delete();
   if (error) console.error("Error resetting classes:", error);
 };
 
 export const resetSubjects = async () => {
-  const { error } = await supabase.from('subjects').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('subjects').delete();
   if (error) console.error("Error resetting subjects:", error);
 };
 
 export const resetClassSubjects = async () => {
-  const { error } = await supabase.from('class_subjects').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('class_subjects').delete();
   if (error) console.error("Error resetting class subjects:", error);
 };
 
 export const resetProfessorSubjectAssignments = async () => {
-  const { error } = await supabase.from('professor_subject_assignments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('professor_subject_assignments').delete();
   if (error) console.error("Error resetting professor subject assignments:", error);
 };
 
 export const resetSchoolYears = async () => {
-  const { error } = await supabase.from('school_years').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('school_years').delete();
   if (error) console.error("Error resetting school years:", error);
 };

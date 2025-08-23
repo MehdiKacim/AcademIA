@@ -245,6 +245,6 @@ export const getAllNotesData = async (userId: string, courses: Course[]): Promis
 
 // Reset function for notes (for development/testing)
 export const resetNotes = async () => {
-  const { error } = await supabase.from('notes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const { error } = await supabase.from('notes').delete();
   if (error) console.error("Error resetting notes:", error);
 };
