@@ -344,7 +344,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {navItemsToDisplayForDesktop().map((item) => {
+            {getMainNavItems().map((item) => { {/* Corrected here */}
               const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
               const isTriggerActive = item.type === 'trigger' && (
                 currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-') ||
