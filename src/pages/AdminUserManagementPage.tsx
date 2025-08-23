@@ -77,6 +77,15 @@ const AdminUserManagementPage = () => {
     fetchData();
   }, [currentUserProfile]);
 
+  // Set default establishment filter for directors/deputy directors
+  useEffect(() => {
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id) {
+      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
+    } else if (currentRole === 'administrator') {
+      setSelectedEstablishmentFilter('all');
+    }
+  }, [currentRole, currentUserProfile?.establishment_id]);
+
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   // --- New User Creation Logic ---
@@ -160,25 +169,27 @@ const AdminUserManagementPage = () => {
       return;
     }
 
+    let finalEstablishmentId = newUserEstablishmentId;
+
     // Role-based creation restrictions
     if (currentRole === 'director' || currentRole === 'deputy_director') {
-      if (!['professeur', 'student'].includes(newUserRole)) {
-        showError("Les directeurs ne peuvent créer que des professeurs ou des élèves.");
+      if (!['professeur', 'tutor', 'student'].includes(newUserRole)) { // Added 'tutor'
+        showError("Les directeurs ne peuvent créer que des professeurs, tuteurs ou des élèves.");
         return;
       }
-      // If an establishment is selected, it must be their own
+      // If an establishment is selected, it must match their own
       if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) { 
         showError("Vous ne pouvez créer des utilisateurs que pour votre établissement.");
         return;
       }
       // If creating a professeur or student, and no establishment is selected, default to current user's establishment
-      if ((newUserRole === 'professeur' || newUserRole === 'student') && !newUserEstablishmentId && currentUserProfile.establishment_id) {
-        setNewUserEstablishmentId(currentUserProfile.establishment_id);
+      if ((newUserRole === 'professeur' || newUserRole === 'tutor' || newUserRole === 'student') && !newUserEstablishmentId && currentUserProfile.establishment_id) {
+        finalEstablishmentId = currentUserProfile.establishment_id; // Use this directly for the invoke call
       }
     }
 
     // For 'professeur' and 'tutor' roles, establishment_id is still required
-    if ((newUserRole === 'professeur' || newUserRole === 'tutor') && !newUserEstablishmentId) {
+    if ((newUserRole === 'professeur' || newUserRole === 'tutor') && !finalEstablishmentId) {
       showError("L'établissement est requis pour les rôles de professeur et tuteur.");
       return;
     }
@@ -193,7 +204,7 @@ const AdminUserManagementPage = () => {
           last_name: newUserLastName.trim(),
           username: newUserUsername.trim(),
           role: newUserRole,
-          establishment_id: newUserEstablishmentId || undefined, // Pass undefined if empty
+          establishment_id: finalEstablishmentId || undefined, // Pass undefined if empty
         },
       });
 
@@ -234,7 +245,9 @@ const AdminUserManagementPage = () => {
     if (selectedRoleFilter !== 'all') {
       users = users.filter(u => u.role === selectedRoleFilter);
     }
-    if (selectedEstablishmentFilter !== 'all') {
+    // Only apply establishment filter if it's not 'all' AND the current user is an administrator
+    // Directors/Deputy Directors already have their list filtered by their establishment above.
+    if (currentRole === 'administrator' && selectedEstablishmentFilter !== 'all') {
       users = users.filter(u => u.establishment_id === selectedEstablishmentFilter);
     }
 
@@ -638,7 +651,7 @@ const AdminUserManagementPage = () => {
                   </Select>
                 )}
               </div>
-              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newUserRole === 'professeur' || newUserRole === 'tutor') && !newUserEstablishmentId)}>
+              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newUserRole === 'professeur' || newUserRole === 'tutor') && !newUserEstablishmentId && !(currentRole === 'director' || currentRole === 'deputy_director'))}>
                 {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
               </Button>
             </CardContent>
@@ -838,7 +851,7 @@ const AdminUserManagementPage = () => {
                   <Label htmlFor="editEstablishment" className="text-right">Établissement</Label>
                   <Select 
                     value={editEstablishmentId || "none"} 
-                    onValueChange={(value) => setEditEstablishmentId(value === "none" ? '' : value)}
+                    onValueChange={(value) => setEditEstablishmentId(value === "none" ? '' : value)} 
                     disabled={currentRole === 'director' || currentRole === 'deputy_director'}
                   >
                     <SelectTrigger id="editEstablishment" className="col-span-3">
@@ -858,7 +871,7 @@ const AdminUserManagementPage = () => {
                 </div>
               )}
             </div>
-            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || ((editRole === 'professeur' || editRole === 'tutor') && !editEstablishmentId)}>
+            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || ((editRole === 'professeur' || editRole === 'tutor') && !editEstablishmentId && !(currentRole === 'director' || currentRole === 'deputy_director'))}>
               {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
             </Button>
           </DialogContent>
