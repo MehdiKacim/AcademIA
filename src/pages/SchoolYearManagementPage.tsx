@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge"; // Import Badge
 
 const SchoolYearManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
