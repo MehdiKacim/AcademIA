@@ -22,6 +22,10 @@ export const sendMessage = async (
   let fileUrl: string | undefined;
   let messageId: string | undefined;
 
+  // IMPORTANT: Unarchive the conversation for both sender and receiver when a new message is sent.
+  // This ensures that sending a message to an archived conversation brings it back to "Recent".
+  await unarchiveConversation(senderId, receiverId);
+
   // First, insert the message to get an ID for the file path
   const { data: messageData, error: messageError } = await supabase
     .from('messages')
@@ -31,7 +35,7 @@ export const sendMessage = async (
       course_id: courseId,
       content: content,
       is_read: false,
-      is_archived: false, // New messages are not archived by default
+      is_archived: false, // New messages are not archived by default, but the unarchiveConversation call above handles the conversation state.
     })
     .select()
     .single();
