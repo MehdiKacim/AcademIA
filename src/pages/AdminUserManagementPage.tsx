@@ -573,7 +573,9 @@ const AdminUserManagementPage = () => {
                       {establishments
                         .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                         .map(est => (
-                          <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                          </SelectItem>
                         ))}
                     </SelectContent>
                   </Select>
@@ -643,7 +645,7 @@ const AdminUserManagementPage = () => {
                     .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                     .map(est => (
                       <SelectItem key={est.id} value={est.id}>
-                        {est.name}
+                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -779,7 +781,9 @@ const AdminUserManagementPage = () => {
                       {establishments
                         .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
                         .map(est => (
-                          <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                          </SelectItem>
                         ))}
                     </SelectContent>
                   </Select>

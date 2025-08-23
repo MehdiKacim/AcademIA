@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast";
 import { Curriculum, Establishment } from "@/lib/dataModels";
-import { updateCurriculumInStorage, loadEstablishments } from "@/lib/courseData";
+import { updateCurriculumInStorage, loadEstablishments, getEstablishmentAddress } from "@/lib/courseData";
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface EditCurriculumDialogProps {
@@ -142,7 +142,9 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
               </SelectTrigger>
               <SelectContent>
                 {establishmentsToDisplay.map(est => (
-                  <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                  <SelectItem key={est.id} value={est.id}>
+                    {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
 import { Class, Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
-import { updateClassInStorage, loadCurricula, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
+import { updateClassInStorage, loadCurricula, loadEstablishments, getEstablishmentAddress } from "@/lib/courseData"; // Import loadEstablishments and getEstablishmentAddress
 
 interface EditClassDialogProps {
   isOpen: boolean;
@@ -127,7 +127,9 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
               </SelectTrigger>
               <SelectContent>
                 {establishments.map(est => (
-                  <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                  <SelectItem key={est.id} value={est.id}>
+                    {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

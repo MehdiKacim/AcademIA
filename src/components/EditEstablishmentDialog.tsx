@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
 import { Establishment, EstablishmentType, Profile } from "@/lib/dataModels";
-import { updateEstablishmentInStorage } from "@/lib/courseData";
+import { updateEstablishmentInStorage, getEstablishmentAddress } from "@/lib/courseData";
 import { getProfilesByRole } from '@/lib/studentData';
 import { useRole } from '@/contexts/RoleContext';
 

@@ -17,6 +17,7 @@ import {
   addEstablishmentToStorage,
   deleteEstablishmentFromStorage,
   loadCurricula,
+  getEstablishmentAddress,
 } from '@/lib/courseData';
 import { useRole } from '@/contexts/RoleContext';
 import EditEstablishmentDialog from '@/components/EditEstablishmentDialog';

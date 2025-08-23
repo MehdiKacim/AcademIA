@@ -469,6 +469,21 @@ export const deleteClassFromStorage = async (classId: string): Promise<void> => 
   }
 };
 
+// New helper function to get establishment address by ID
+export const getEstablishmentAddress = async (establishmentId: string): Promise<string | undefined> => {
+  const { data, error } = await supabase
+    .from('establishments')
+    .select('address')
+    .eq('id', establishmentId)
+    .single();
+  if (error) {
+    console.error("Error fetching establishment address:", error);
+    return undefined;
+  }
+  return data?.address || undefined;
+};
+
+
 // Reset functions for all data types (for development/testing)
 export const resetCourses = async () => {
   const { error } = await supabase.from('courses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
