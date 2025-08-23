@@ -195,7 +195,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/curricula", label: "Mes Cursus", icon: LayoutList, type: 'link' },
+            { to: "/curricula", label: "Gestion Cursus & Matières", icon: LayoutList, type: 'link' }, // Updated label
           ],
         },
         {
@@ -240,6 +240,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
             { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
+            { to: "/curricula", label: "Gestion Cursus & Matières", icon: LayoutList, type: 'link' }, // Updated label
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
@@ -251,7 +252,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           label: "Gestion Pédagogique",
           type: 'trigger',
           items: [
-            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/curricula", label: "Gestion Cursus & Matières", icon: LayoutList, type: 'link' }, // Updated label
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
           ],
