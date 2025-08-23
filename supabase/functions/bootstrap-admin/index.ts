@@ -87,29 +87,6 @@ serve(async (req) => {
       -- Enable RLS (REQUIRED for security)
       ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-      -- Create or replace get_user_role function (SECURITY DEFINER to bypass RLS for role lookup)
-      CREATE OR REPLACE FUNCTION public.get_user_role(user_id UUID)
-      RETURNS public.user_role
-      LANGUAGE PLPGSQL
-      SECURITY DEFINER
-      SET search_path = auth, public -- Search auth schema first
-      AS $$
-      DECLARE
-        user_role_text TEXT;
-        user_role public.user_role;
-      BEGIN
-        -- Query auth.users directly to get the role from raw_user_meta_data
-        SELECT raw_user_meta_data ->> 'role' INTO user_role_text
-        FROM auth.users
-        WHERE id = user_id;
-
-        -- Cast the text role to the user_role enum
-        user_role := COALESCE(user_role_text::public.user_role, 'student'::public.user_role);
-        
-        RETURN user_role;
-      END;
-      $$;
-
       -- Drop ALL existing policies on public.profiles before recreating them
       DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
       DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
@@ -128,7 +105,7 @@ serve(async (req) => {
       CREATE POLICY "Allow all authenticated users to read profiles" ON public.profiles
       FOR SELECT TO authenticated USING (true);
 
-      -- Keep INSERT, UPDATE, DELETE policies as they were
+      -- Keep basic INSERT, UPDATE, DELETE policies
       CREATE POLICY "profiles_insert_policy" ON public.profiles
       FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
@@ -137,21 +114,6 @@ serve(async (req) => {
 
       CREATE POLICY "profiles_delete_policy" ON public.profiles
       FOR DELETE TO authenticated USING (auth.uid() = id);
-
-      CREATE POLICY "Administrators can insert profiles" ON public.profiles
-      FOR INSERT WITH CHECK (public.get_user_role(auth.uid()) = 'administrator');
-
-      CREATE POLICY "Administrators can update all profiles" ON public.profiles
-      FOR UPDATE USING (public.get_user_role(auth.uid()) = 'administrator');
-
-      CREATE POLICY "Administrators can delete profiles" ON public.profiles
-      FOR DELETE USING (public.get_user_role(auth.uid()) = 'administrator');
-
-      CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles
-      FOR SELECT USING (
-        (role = 'student'::public.user_role) AND
-        (((auth.jwt() -> 'user_metadata' ->> 'role')::public.user_role) = ANY (ARRAY['creator'::public.user_role, 'tutor'::public.user_role, 'administrator'::public.user_role]))
-      );
 
       -- Create or replace handle_new_user function
       CREATE OR REPLACE FUNCTION public.handle_new_user()
