@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays } from "lucide-react";
-import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment } from "@/lib/dataModels";
+import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -24,6 +24,7 @@ import {
   loadClasses,
   loadCurricula,
   loadEstablishments,
+  loadSchoolYears,
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -58,12 +59,13 @@ const PedagogicalManagementPage = () => {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
+  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
 
   // States for assign student to class section
   const [studentSearchInputClass, setStudentSearchInputClass] = useState('');
   const [selectedStudentForClassAssignment, setSelectedStudentForClassAssignment] = useState<Profile | null>(null);
   const [classToAssign, setClassToAssign] = useState<string>("");
-  const [enrollmentYear, setEnrollmentYear] = useState<string>(getCurrentSchoolYear());
+  const [enrollmentSchoolYearId, setEnrollmentSchoolYearId] = useState<string>(""); // Changed to schoolYearId
   const [openStudentSelectClass, setOpenStudentSelectClass] = useState(false);
   const [isSearchingUserClass, setIsSearchingUserClass] = useState(false);
   const debounceTimeoutRefClass = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -72,7 +74,7 @@ const PedagogicalManagementPage = () => {
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
   const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | null>(null);
-  const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(getCurrentSchoolYear());
+  const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null); // Changed to schoolYearFilter
 
   // Get classId from URL for initial filtering
   const classIdFromUrl = searchParams.get('classId');
@@ -84,6 +86,7 @@ const PedagogicalManagementPage = () => {
       setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+      setSchoolYears(await loadSchoolYears());
     };
     fetchData();
   }, [currentUserProfile]);
@@ -97,10 +100,24 @@ const PedagogicalManagementPage = () => {
     }
   }, [classIdFromUrl]);
 
+  // Set default school year for new enrollment and filter
+  useEffect(() => {
+    const activeYear = schoolYears.find(sy => sy.is_active);
+    if (activeYear) {
+      setEnrollmentSchoolYearId(activeYear.id);
+      setSelectedSchoolYearFilter(activeYear.id);
+    } else if (schoolYears.length > 0) {
+      // Fallback to the most recent year if no active one
+      setEnrollmentSchoolYearId(schoolYears[0].id);
+      setSelectedSchoolYearFilter(schoolYears[0].id);
+    }
+  }, [schoolYears]);
+
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
-
+  const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
+  
   const handleRemoveStudentFromClass = async (enrollmentId: string) => {
     if (!currentUserProfile || !['professeur', 'tutor', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
@@ -182,7 +199,7 @@ const PedagogicalManagementPage = () => {
       showError("Veuillez sélectionner une classe.");
       return;
     }
-    if (!enrollmentYear) {
+    if (!enrollmentSchoolYearId) { // Changed to schoolYearId
       showError("Veuillez spécifier l'année scolaire.");
       return;
     }
@@ -221,7 +238,7 @@ const PedagogicalManagementPage = () => {
     }
 
     const existingEnrollment = allStudentClassEnrollments.find(
-      e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.enrollment_year === enrollmentYear
+      e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.school_year_id === enrollmentSchoolYearId // Changed to schoolYearId
     );
 
     if (existingEnrollment) {
@@ -230,16 +247,16 @@ const PedagogicalManagementPage = () => {
     }
 
     try {
-      const newEnrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at'> = {
+      const newEnrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at' | 'school_year_name'> = {
         student_id: selectedStudentForClassAssignment.id,
         class_id: classToAssign,
-        enrollment_year: enrollmentYear,
+        school_year_id: enrollmentSchoolYearId, // Changed to schoolYearId
       };
       const savedEnrollment = await upsertStudentClassEnrollment(newEnrollment);
 
       if (savedEnrollment) {
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
-        showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign)} pour ${enrollmentYear} !`);
+        showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign)} pour ${getSchoolYearName(enrollmentSchoolYearId)} !`); // Changed to schoolYearId
         handleClearClassAssignmentForm();
       } else {
         showError("Échec de l'inscription de l'élève à la classe.");
@@ -254,7 +271,8 @@ const PedagogicalManagementPage = () => {
     setStudentSearchInputClass('');
     setSelectedStudentForClassAssignment(null);
     setClassToAssign("");
-    setEnrollmentYear(getCurrentSchoolYear());
+    const activeYear = schoolYears.find(sy => sy.is_active);
+    setEnrollmentSchoolYearId(activeYear ? activeYear.id : (schoolYears.length > 0 ? schoolYears[0].id : "")); // Reset to active or first year
     setOpenStudentSelectClass(false);
   };
 
@@ -271,7 +289,7 @@ const PedagogicalManagementPage = () => {
     if (!selectedClassFilter || !selectedSchoolYearFilter) return [];
 
     const enrollmentsInClassAndYear = allStudentClassEnrollments.filter(
-      e => e.class_id === selectedClassFilter && e.enrollment_year === selectedSchoolYearFilter
+      e => e.class_id === selectedClassFilter && e.school_year_id === selectedSchoolYearFilter // Changed to schoolYearId
     );
     const studentIdsInClassAndYear = new Set(enrollmentsInClassAndYear.map(e => e.student_id));
 
@@ -289,8 +307,7 @@ const PedagogicalManagementPage = () => {
     return students;
   }, [allProfiles, allStudentClassEnrollments, selectedClassFilter, selectedSchoolYearFilter, studentSearchQuery]);
 
-  const currentYear = new Date().getFullYear();
-  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
+  const schoolYearsOptions = schoolYears.map(sy => ({ value: sy.id, label: sy.name }));
 
   if (isLoadingUser) {
     return (
@@ -448,7 +465,7 @@ const PedagogicalManagementPage = () => {
                         )
                         .map(cls => (
                           <SelectItem key={cls.id} value={cls.id}>
-                            {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
+                            {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -457,14 +474,14 @@ const PedagogicalManagementPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="enrollment-year" className="text-base font-semibold mb-2 block mt-4">Année scolaire</Label>
-                    <Select value={enrollmentYear} onValueChange={setEnrollmentYear}>
-                      <SelectTrigger id="enrollment-year" className="w-full">
+                    <Label htmlFor="enrollment-school-year" className="text-base font-semibold mb-2 block mt-4">Année scolaire</Label>
+                    <Select value={enrollmentSchoolYearId} onValueChange={setEnrollmentSchoolYearId}>
+                      <SelectTrigger id="enrollment-school-year" className="w-full">
                         <SelectValue placeholder="Sélectionner l'année scolaire" />
                       </SelectTrigger>
                       <SelectContent>
-                        {schoolYears.map(year => (
-                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        {schoolYearsOptions.map(year => (
+                          <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -472,7 +489,7 @@ const PedagogicalManagementPage = () => {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentYear}>
+                  <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentSchoolYearId}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Inscrire à cette classe
                   </Button>
                   <Button variant="outline" onClick={handleClearClassAssignmentForm}>
@@ -549,7 +566,7 @@ const PedagogicalManagementPage = () => {
                     )
                     .map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {cls.school_year}
+                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -562,8 +579,8 @@ const PedagogicalManagementPage = () => {
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
                 <SelectContent>
-                  {schoolYears.map(year => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  {schoolYearsOptions.map(year => (
+                    <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -578,7 +595,7 @@ const PedagogicalManagementPage = () => {
               </p>
             ) : (
               studentsInSelectedClassAndYear.map((profile) => {
-                const currentEnrollment = allStudentClassEnrollments.find(e => e.student_id === profile.id && e.class_id === selectedClassFilter && e.enrollment_year === selectedSchoolYearFilter);
+                const currentEnrollment = allStudentClassEnrollments.find(e => e.student_id === profile.id && e.class_id === selectedClassFilter && e.school_year_id === selectedSchoolYearFilter);
                 const currentClass = currentEnrollment ? classes.find(c => c.id === currentEnrollment.class_id) : undefined;
 
                 return (
@@ -598,7 +615,7 @@ const PedagogicalManagementPage = () => {
                       )}
                       {currentClass ? (
                         <p className="text-xs text-muted-foreground">
-                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {currentClass.school_year}
+                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {getSchoolYearName(currentClass.school_year_id)}
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground italic">Non affecté à une classe pour l'année scolaire en cours</p>
