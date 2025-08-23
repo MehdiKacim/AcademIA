@@ -22,7 +22,7 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import FloatingAiAChatButton from "@/components/FloatingAiAPersistentChat";
+import FloatingAiAChatButton from "@/components/FloatingAiAChatButton"; // Corrected import path
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
