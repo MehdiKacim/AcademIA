@@ -12,6 +12,7 @@ import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData";
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
 import TutorAnalyticsSection from "@/components/TutorAnalyticsSection";
+import AdminAnalyticsSection from "@/components/AdminAnalyticsSection"; // New import
 import React, { useState, useEffect } from "react"; // Import useState and useEffect
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -31,9 +32,9 @@ const Analytics = () => {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
 
-  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
-  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string | undefined>(undefined);
-  const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string | undefined>(undefined); // New state for admin filter
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string | undefined>(undefined);
+  const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | undefined>(undefined);
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | undefined>(undefined); // New state for admin filter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,9 +50,9 @@ const Analytics = () => {
 
   // Reset filters when role changes or on initial load
   useEffect(() => {
-    setSelectedClassId(undefined);
-    setSelectedCurriculumId(undefined);
-    setSelectedEstablishmentId(undefined); // Reset establishment filter
+    setSelectedClassFilter(undefined);
+    setSelectedCurriculumFilter(undefined);
+    setSelectedEstablishmentFilter(undefined); // Reset establishment filter
   }, [currentRole]);
 
   if (isLoadingUser) {
@@ -107,15 +108,15 @@ const Analytics = () => {
       return (
         <CreatorAnalyticsSection
           view={view}
-          selectedClassId={selectedClassId}
-          selectedCurriculumId={selectedCurriculumId}
+          selectedClassId={selectedClassFilter}
+          selectedCurriculumId={selectedCurriculumFilter}
           selectedCourseId={courseIdFromUrl} // Pass courseId from URL
           allCourses={courses}
           allProfiles={allProfiles}
           allStudentCourseProgresses={studentCourseProgresses}
           allClasses={classes}
           allCurricula={curricula}
-          selectedEstablishmentId={selectedEstablishmentId} // Pass establishment filter
+          selectedEstablishmentId={selectedEstablishmentFilter} // Pass establishment filter
         />
       );
     } else if (currentRole === 'tutor') {
@@ -126,19 +127,28 @@ const Analytics = () => {
           allClasses={classes}
           allCurricula={curricula}
           view={view}
-          selectedClassId={selectedClassId}
-          selectedCurriculumId={selectedCurriculumId}
+          selectedClassId={selectedClassFilter}
+          selectedCurriculumId={selectedCurriculumFilter}
           onSendMessageToUser={handleSendMessageToUser} // Pass the new prop
         />
       );
     } else if (currentRole === 'administrator') { // New: Administrator Analytics
-      // For administrators, we'll pass all data and let the section filter as needed
+      return (
+        <AdminAnalyticsSection
+          establishments={establishments}
+          curricula={curricula}
+          classes={classes}
+          allProfiles={allProfiles}
+        />
+      );
+    } else if (currentRole === 'director' || currentRole === 'deputy_director') { // Director, Deputy Director
+      // For directors/deputy directors, they see analytics for their establishment
       return (
         <CreatorAnalyticsSection // Re-using CreatorAnalyticsSection for now, it has filters
           view={view}
-          selectedClassId={selectedClassId}
-          selectedCurriculumId={selectedCurriculumId}
-          selectedEstablishmentId={selectedEstablishmentId} // Pass establishment filter
+          selectedClassId={selectedClassFilter}
+          selectedCurriculumId={selectedCurriculumFilter}
+          selectedEstablishmentId={currentUserProfile.establishment_id} // Filter by current user's establishment
           selectedCourseId={courseIdFromUrl}
           allCourses={courses}
           allProfiles={allProfiles}
@@ -154,72 +164,80 @@ const Analytics = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        {currentRole === 'student' ? 'Mes Analytiques' : currentRole === 'creator' ? 'Analytiques des Cours' : currentRole === 'tutor' ? 'Suivi des Élèves' : 'Analytiques Globales'}
+        {currentRole === 'student' ? 'Mes Analytiques' : currentRole === 'professeur' ? 'Analytiques des Cours' : currentRole === 'tutor' ? 'Suivi des Élèves' : currentRole === 'administrator' ? 'Analytiques Globales' : 'Analytiques de l\'Établissement'}
       </h1>
 
-      {(currentRole === 'creator' || currentRole === 'tutor' || currentRole === 'administrator') && (
+      {(currentRole === 'creator' || currentRole === 'tutor' || currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"> {/* Adjusted grid for 3 filters */}
-          {(currentRole === 'administrator' || currentRole === 'creator') && ( // Only admin and creator can filter by establishment
+          {(currentRole === 'administrator' || currentRole === 'creator' || currentRole === 'director' || currentRole === 'deputy_director') && ( // Only admin, creator, director, deputy_director can filter by establishment
             <div>
               <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
-              <Select value={selectedEstablishmentId} onValueChange={(value) => {
-                setSelectedEstablishmentId(value === "all" ? undefined : value);
-                setSelectedCurriculumId(undefined); // Reset curriculum when establishment changes
-                setSelectedClassId(undefined); // Reset class when establishment changes
-              }}>
+              <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {
+                setSelectedEstablishmentFilter(value === "all" ? undefined : value);
+                setSelectedCurriculumFilter(undefined); // Reset curriculum when establishment changes
+                setSelectedClassFilter(undefined); // Reset class when establishment changes
+              }}
+              disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Directors/Deputy Directors can't change establishment filter
+              >
                 <SelectTrigger id="select-establishment">
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les établissements</SelectItem>
-                  {establishments.map(est => (
-                    <SelectItem key={est.id} value={est.id}>
-                      {est.name}
-                    </SelectItem>
-                  ))}
+                  {establishments
+                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id) // Filter for directors/deputy directors
+                    .map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
           )}
-          <div>
-            <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
-            <Select value={selectedCurriculumId} onValueChange={(value) => {
-              setSelectedCurriculumId(value === "all" ? undefined : value);
-              setSelectedClassId(undefined); // Reset class when curriculum changes
-            }}>
-              <SelectTrigger id="select-curriculum">
-                <SelectValue placeholder="Tous les cursus" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les cursus</SelectItem>
-                {curricula
-                  .filter(cur => !selectedEstablishmentId || cur.establishment_id === selectedEstablishmentId)
-                  .map(cur => (
-                    <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="select-class">Filtrer par Classe</Label>
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger id="select-class">
-                <SelectValue placeholder="Toutes les classes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les classes</SelectItem>
-                {classes
-                  .filter(cls => !selectedCurriculumId || selectedCurriculumId === 'all' || cls.curriculum_id === selectedCurriculumId)
-                  .map(cls => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getCurriculumName(cls.curriculum_id)})
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {(currentRole !== 'administrator') && ( // Admin doesn't need curriculum/class filters here, as their analytics are global by establishment
+            <>
+              <div>
+                <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
+                <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
+                  setSelectedCurriculumFilter(value === "all" ? undefined : value);
+                  setSelectedClassFilter(undefined); // Reset class when curriculum changes
+                }}>
+                  <SelectTrigger id="select-curriculum">
+                    <SelectValue placeholder="Tous les cursus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les cursus</SelectItem>
+                    {curricula
+                      .filter(cur => !selectedEstablishmentFilter || cur.establishment_id === selectedEstablishmentFilter)
+                      .map(cur => (
+                        <SelectItem key={cur.id} value={cur.id}>
+                          {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="select-class">Filtrer par Classe</Label>
+                <Select value={selectedClassFilter || "all"} onValueChange={setSelectedClassFilter}>
+                  <SelectTrigger id="select-class">
+                    <SelectValue placeholder="Toutes les classes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les classes</SelectItem>
+                    {classes
+                      .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)
+                      .map(cls => (
+                        <SelectItem key={cls.id} value={cls.id}>
+                          {cls.name} ({getCurriculumName(cls.curriculum_id)})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
         </div>
       )}
 

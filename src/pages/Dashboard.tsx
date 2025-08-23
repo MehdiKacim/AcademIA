@@ -236,23 +236,17 @@ const Dashboard = () => {
           </Card>
         </div>
       );
-    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') { // Administrator, Director, Deputy Director
+    } else if (currentRole === 'administrator') { // Administrator
       const totalEstablishments = establishments.length;
-      const totalCurricula = curricula.length;
-      const totalClasses = classes.length;
-      const totalStudents = allProfiles.filter(p => p.role === 'student').length;
-      const totalProfesseurs = allProfiles.filter(p => p.role === 'professeur').length; // Changed from creator
-      const totalTutors = allProfiles.filter(p => p.role === 'tutor').length;
       const totalDirectors = allProfiles.filter(p => p.role === 'director').length;
       const totalDeputyDirectors = allProfiles.filter(p => p.role === 'deputy_director').length;
-      const totalUsers = allProfiles.length;
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Établissements Gérés</CardTitle>
-              <CardDescription>Nombre total d'établissements.</CardDescription>
+              <CardDescription>Nombre total d'établissements sur la plateforme.</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalEstablishments}</p>
@@ -263,14 +257,70 @@ const Dashboard = () => {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Utilisateurs Totaux</CardTitle>
-              <CardDescription>Nombre total d'utilisateurs sur la plateforme.</CardDescription>
+              <CardTitle>Directeurs</CardTitle>
+              <CardDescription>Nombre total de directeurs sur la plateforme.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{totalUsers}</p>
-              <p className="text-sm text-muted-foreground">
-                Professeurs: {totalProfesseurs}, Tuteurs: {totalTutors}, Directeurs: {totalDirectors}, Directeurs Adjoints: {totalDeputyDirectors}, Élèves: {totalStudents}
-              </p>
+              <p className="text-2xl font-bold text-primary">{totalDirectors}</p>
+              <Link to="/admin-users" className="mt-4 block">
+                <Button variant="outline" className="w-full">Gérer les directeurs</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Directeurs Adjoints</CardTitle>
+              <CardDescription>Nombre total de directeurs adjoints sur la plateforme.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{totalDeputyDirectors}</p>
+              <Link to="/admin-users" className="mt-4 block">
+                <Button variant="outline" className="w-full">Gérer les directeurs adjoints</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Analytiques Globales</CardTitle>
+              <CardDescription>Accédez aux statistiques détaillées par établissement.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/analytics?view=global-admin" className="mt-4 block">
+                <Button className="w-full">Voir les analytiques globales</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    } else if (currentRole === 'director' || currentRole === 'deputy_director') { // Director, Deputy Director
+      const myEstablishment = establishments.find(est => est.id === currentUserProfile.establishment_id);
+      const studentsInMyEstablishment = allProfiles.filter(p => p.role === 'student' && p.establishment_id === currentUserProfile.establishment_id).length;
+      const professeursInMyEstablishment = allProfiles.filter(p => p.role === 'professeur' && p.establishment_id === currentUserProfile.establishment_id).length;
+      const classesInMyEstablishment = classes.filter(cls => cls.establishment_id === currentUserProfile.establishment_id).length;
+      const curriculaInMyEstablishment = curricula.filter(cur => cur.establishment_id === currentUserProfile.establishment_id).length;
+
+      return (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Mon Établissement</CardTitle>
+              <CardDescription>Vue d'ensemble de {myEstablishment?.name || 'votre établissement'}.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{myEstablishment?.name || 'N/A'}</p>
+              <p className="text-sm text-muted-foreground">Type: {myEstablishment?.type || 'N/A'}</p>
+              <Link to="/establishments" className="mt-4 block">
+                <Button className="w-full">Gérer l'établissement</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Personnel & Élèves</CardTitle>
+              <CardDescription>Nombre de professeurs et d'élèves.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">{professeursInMyEstablishment} Professeurs, {studentsInMyEstablishment} Élèves</p>
               <Link to="/admin-users" className="mt-4 block">
                 <Button variant="outline" className="w-full">Gérer les utilisateurs</Button>
               </Link>
@@ -279,10 +329,10 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Structure Pédagogique</CardTitle>
-              <CardDescription>Vue d'overview des cursus et classes.</CardDescription>
+              <CardDescription>Cursus et classes de votre établissement.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{totalCurricula} Cursus, {totalClasses} Classes</p>
+              <p className="text-2xl font-bold text-primary">{curriculaInMyEstablishment} Cursus, {classesInMyEstablishment} Classes</p>
               <Link to="/curricula" className="mt-4 block">
                 <Button variant="outline" className="w-full">Gérer les cursus et classes</Button>
               </Link>
@@ -290,12 +340,12 @@ const Dashboard = () => {
           </Card>
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>Analytiques Générales</CardTitle>
-              <CardDescription>Accédez aux statistiques globales de la plateforme.</CardDescription>
+              <CardTitle>Analytiques de l'Établissement</CardTitle>
+              <CardDescription>Accédez aux statistiques détaillées de votre établissement.</CardDescription>
             </CardHeader>
             <CardContent>
               <Link to="/analytics?view=overview" className="mt-4 block">
-                <Button className="w-full">Voir les analytiques globales</Button>
+                <Button className="w-full">Voir les analytiques</Button>
               </Link>
             </CardContent>
           </Card>
