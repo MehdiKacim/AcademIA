@@ -195,7 +195,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/curricula", label: "Gestion Cursus & Matières", icon: LayoutList, type: 'link' }, // Updated label
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' }, // New item for subjects
           ],
         },
         {
@@ -240,7 +241,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
             { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
-            { to: "/curricula", label: "Gestion Cursus & Matières", icon: LayoutList, type: 'link' }, // Updated label
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' }, // New item for subjects
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
@@ -248,26 +250,27 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
       roleSpecificItems.push(
         {
-          icon: BookText, // Icon for pedagogical management
+          icon: BookText,
           label: "Gestion Pédagogique",
           type: 'trigger',
           items: [
-            { to: "/curricula", label: "Gestion Cursus & Matières", icon: LayoutList, type: 'link' }, // Updated label
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' }, // New item for subjects
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
           ],
         },
         {
-          icon: UserCog, // Icon for administrative management
+          icon: UserCog,
           label: "Gestion Administrative",
           type: 'trigger',
           items: [
-            { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' }, // Changed label
+            { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' },
             { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
           ],
         },
         {
-          icon: TrendingUp, // Icon for analytics
+          icon: TrendingUp,
           label: "Analytiques",
           type: 'trigger',
           items: [

@@ -439,7 +439,7 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => appendSection({ title: "", content: "", type: "text", url: "", isCompleted: false })}
+          onClick={() => appendSection({ title: "", content: "Contenu de la nouvelle section.", type: "text", url: "", isCompleted: false })}
         >
           <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une section
         </Button>
