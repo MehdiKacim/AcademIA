@@ -239,9 +239,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           type: 'trigger',
           items: [
             { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
-            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
-            { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
             { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
