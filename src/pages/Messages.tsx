@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, Search, Archive } from "lucide-react";
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
-import { Profile, Message, Establishment, Curriculum, Class } from '@/lib/dataModels';
+import { Profile, Message, Establishment, Curriculum, Class, StudentClassEnrollment } from '@/lib/dataModels';
 import { useRole } from '@/contexts/RoleContext';
-import { getAllProfiles } from '@/lib/studentData';
+import { getAllProfiles, getAllStudentClassEnrollments } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from '@/lib/utils';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { loadEstablishments, loadCurricula, loadClasses } from '@/lib/courseData';
+
+// Helper to get the current school year
+const getCurrentSchoolYear = () => {
+  const currentMonth = new Date().getMonth(); // 0-indexed (0 = Jan, 8 = Sep, 11 = Dec)
+  const currentYear = new Date().getFullYear();
+  if (currentMonth >= 8) { // September to December
+    return `${currentYear}-${currentYear + 1}`;
+  } else { // January to August
+    return `${currentYear - 1}-${currentYear}`;
+  }
+};
 
 const Messages = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -34,45 +45,41 @@ const Messages = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
+
   const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string>("");
   const [selectedCurriculumId, setSelectedCurriculumId] = useState<string>("");
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [searchStudentQuery, setSearchStudentQuery] = useState('');
-  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true); // New loading state for profiles
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
 
   const currentUserId = currentUserProfile?.id;
+  const currentSchoolYear = getCurrentSchoolYear();
 
   const fetchAllData = async () => {
-    console.log("[Messages] fetchAllData called.");
     if (!currentUserId) {
-      console.log("[Messages] currentUserId is null, skipping fetchAllData.");
-      setIsLoadingProfiles(false); // Ensure loading state is false if no user
+      setIsLoadingProfiles(false);
       return;
     }
 
     setIsLoadingProfiles(true);
     const profiles = await getAllProfiles();
-    setAllProfiles(profiles); // DO NOT FILTER OUT CURRENT USER HERE
+    setAllProfiles(profiles);
     
     const recent = await getRecentConversations(currentUserId);
     setRecentConversations(recent);
-    console.log("[Messages] Fetched recent conversations (after fetchAllData):", recent.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
 
     const archived = await getArchivedConversations(currentUserId);
     setArchivedConversations(archived);
-    console.log("[Messages] Fetched archived conversations (after fetchAllData):", archived.map(m => ({ id: m.id, content: m.content, is_archived: m.is_archived })));
 
     const totalUnread = await getUnreadMessageCount(currentUserId);
     setUnreadMessageCount(totalUnread);
-    console.log("[Messages] Fetched unread message count (after fetchAllData):", totalUnread);
 
-    if (currentRole === 'creator' || currentRole === 'tutor') {
-      setEstablishments(await loadEstablishments());
-      setCurricula(await loadCurricula());
-      setClasses(await loadClasses());
-    }
-    setIsLoadingProfiles(false); // Set loading state to false AFTER all profiles and messages are fetched
-    console.log("[Messages] fetchAllData completed.");
+    setEstablishments(await loadEstablishments());
+    setCurricula(await loadCurricula());
+    setClasses(await loadClasses());
+    setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+    setIsLoadingProfiles(false);
   };
 
   useEffect(() => {
@@ -91,8 +98,7 @@ const Messages = () => {
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
           (payload) => {
-            console.log("[Messages] Realtime INSERT event received:", payload);
-            fetchAllData(); // Re-fetch all data on new message
+            fetchAllData();
           }
         )
         .on(
@@ -104,8 +110,6 @@ const Messages = () => {
             filter: `or(sender_id=eq.${currentUserId},receiver_id=eq.${currentUserId})`
           },
           (payload) => {
-            console.log("[Messages] Realtime UPDATE event received:", payload);
-            // Re-fetch all data on any relevant update (archiving, read status, content change)
             fetchAllData();
           }
         )
@@ -114,14 +118,12 @@ const Messages = () => {
 
     return () => {
       if (channel) {
-        console.log("[Messages] Unsubscribing from realtime channel.");
         supabase.removeChannel(channel);
       }
     };
   }, [currentUserId, currentRole]);
 
   useEffect(() => {
-    // Only attempt to set selected contact if profiles are loaded
     if (allProfiles.length > 0) {
       const params = new URLSearchParams(location.search);
       const contactId = params.get('contactId');
@@ -138,19 +140,17 @@ const Messages = () => {
             return otherUserId === contactId;
           });
           if (isContactArchived && currentUserId) {
-            console.log(`[Messages] Contact ${contact.first_name} selected via URL, was archived. Attempting to unarchive.`);
             unarchiveConversation(currentUserId, contactId).then(() => {
-              fetchAllData(); // Re-fetch to update lists
+              fetchAllData();
               showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
             }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
           }
         }
       }
     }
-  }, [location.search, allProfiles, archivedConversations, currentUserId]); // Depend on allProfiles
+  }, [location.search, allProfiles, archivedConversations, currentUserId]);
 
   const handleSelectContact = (contact: Profile, courseId?: string, courseTitle?: string) => {
-    console.log("[Messages] handleSelectContact called for:", contact.username);
     setSelectedContact(contact);
     setInitialCourseContext({ id: courseId, title: courseTitle });
     navigate(`/messages?contactId=${contact.id}${courseId ? `&courseId=${courseId}` : ''}${courseTitle ? `&courseTitle=${courseTitle}` : ''}`, { replace: true });
@@ -161,9 +161,8 @@ const Messages = () => {
         return otherUserId === contact.id;
       });
       if (isContactArchived) {
-        console.log(`[Messages] Contact ${contact.first_name} selected, was archived. Attempting to unarchive.`);
         unarchiveConversation(currentUserId, contact.id).then(() => {
-          fetchAllData(); // Re-fetch to update lists
+          fetchAllData();
           showSuccess(`Conversation avec ${contact.first_name} désarchivée.`);
         }).catch(err => showError(`Erreur lors du désarchivage: ${err.message}`));
       }
@@ -171,7 +170,6 @@ const Messages = () => {
   };
 
   const handleArchive = async (contactId: string) => {
-    console.log("[Messages] handleArchive called for contactId:", contactId);
     if (!currentUserId) {
       console.error("[Messages] currentUserId is null, cannot archive.");
       return;
@@ -179,9 +177,8 @@ const Messages = () => {
     try {
       await archiveConversation(currentUserId, contactId);
       showSuccess("Conversation archivée !");
-      setSelectedContact(null); // Deselect if current chat is archived
-      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
-      console.log("[Messages] Archive successful. fetchAllData called directly.");
+      setSelectedContact(null);
+      await fetchAllData();
     } catch (error: any) {
       console.error("[Messages] Error during archiving:", error);
       showError(`Erreur lors de l'archivage: ${error.message}`);
@@ -189,7 +186,6 @@ const Messages = () => {
   };
 
   const handleUnarchive = async (contactId: string) => {
-    console.log("[Messages] handleUnarchive called for contactId:", contactId);
     if (!currentUserId) {
       console.error("[Messages] currentUserId is null, cannot unarchive.");
       return;
@@ -197,11 +193,10 @@ const Messages = () => {
     try {
       await unarchiveConversation(currentUserId, contactId);
       showSuccess("Conversation désarchivée !");
-      await fetchAllData(); // Explicitly call fetchAllData to update the lists immediately
-      console.log("[Messages] Unarchive successful. fetchAllData called directly.");
+      await fetchAllData();
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
-      showError(`Erreur lors du désarchivage: ${err.message}`);
+      showError(`Erreur lors du désarchivage: ${error.message}`);
     }
   };
 
@@ -209,65 +204,97 @@ const Messages = () => {
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
-  const filteredStudentsForNewChat = useMemo(() => {
-    if (!currentUserProfile || (currentRole !== 'creator' && currentRole !== 'tutor')) return [];
+  const availableContactsForNewChat = useMemo(() => {
+    if (!currentUserProfile) return [];
 
-    let students = allProfiles.filter(p => p.role === 'student');
+    const contactsInAllConversations = new Set(
+      [...recentConversations, ...archivedConversations].map(msg =>
+        msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
+      )
+    );
 
-    if (selectedEstablishmentId && selectedEstablishmentId !== '') {
-      const curriculaInEstablishment = curricula.filter(c => c.establishment_id === selectedEstablishmentId);
-      const classIdsInEstablishment = new Set(classes.filter(cls => curriculaInEstablishment.some(cur => cur.id === cls.curriculum_id)).map(cls => cls.id));
-      students = students.filter(s => s.class_id && classIdsInEstablishment.has(s.class_id));
+    let filteredContacts: Profile[] = [];
+
+    if (currentRole === 'student') {
+      const studentEnrollments = allStudentClassEnrollments.filter(e => e.student_id === currentUserProfile.id && e.enrollment_year === currentSchoolYear);
+      const studentClassIds = studentEnrollments.map(e => e.class_id);
+      const studentEstablishmentId = currentUserProfile.establishment_id;
+
+      // Add professeurs from student's classes
+      const professeursInClasses = new Set<string>();
+      classes.filter(cls => studentClassIds.includes(cls.id)).forEach(cls => {
+        cls.creator_ids.forEach(creatorId => professeursInClasses.add(creatorId));
+      });
+      filteredContacts.push(...allProfiles.filter(p => p.role === 'professeur' && professeursInClasses.has(p.id)));
+
+      // Add directors/deputy directors from student's establishment
+      if (studentEstablishmentId) {
+        filteredContacts.push(...allProfiles.filter(p => 
+          (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === studentEstablishmentId
+        ));
+      }
+    } else if (currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') {
+      let potentialContacts = allProfiles.filter(p => p.id !== currentUserProfile.id);
+
+      if (currentRole === 'professeur') {
+        const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id) && cls.school_year === currentSchoolYear).map(cls => cls.id);
+        const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => managedClassIds.includes(e.class_id)).map(e => e.student_id));
+        
+        // Add students from managed classes
+        filteredContacts.push(...potentialContacts.filter(p => p.role === 'student' && studentIdsInManagedClasses.has(p.id)));
+
+        // Add directors/deputy directors from professor's establishment
+        if (currentUserProfile.establishment_id) {
+          filteredContacts.push(...potentialContacts.filter(p => 
+            (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === currentUserProfile.establishment_id
+          ));
+        }
+      } else if (currentRole === 'tutor') {
+        // Add students from tutor's establishment
+        if (currentUserProfile.establishment_id) {
+          const studentIdsInEstablishment = new Set(allStudentClassEnrollments.filter(e => 
+            classes.some(cls => cls.id === e.class_id && cls.establishment_id === currentUserProfile.establishment_id && cls.school_year === currentSchoolYear)
+          ).map(e => e.student_id));
+          filteredContacts.push(...potentialContacts.filter(p => p.role === 'student' && studentIdsInEstablishment.has(p.id)));
+
+          // Add directors/deputy directors from tutor's establishment
+          filteredContacts.push(...potentialContacts.filter(p => 
+            (p.role === 'director' || p.role === 'deputy_director') && p.establishment_id === currentUserProfile.establishment_id
+          ));
+        }
+      } else if (currentRole === 'director' || currentRole === 'deputy_director') {
+        // Add all users from director's establishment
+        if (currentUserProfile.establishment_id) {
+          filteredContacts.push(...potentialContacts.filter(p => p.establishment_id === currentUserProfile.establishment_id));
+        }
+      } else if (currentRole === 'administrator') {
+        // Add all users (except self)
+        filteredContacts.push(...potentialContacts);
+      }
     }
 
-    if (selectedCurriculumId && selectedCurriculumId !== '') {
-      const classesInCurriculum = classes.filter(cls => cls.curriculum_id === selectedCurriculumId);
-      const classIdsInCurriculum = new Set(classesInCurriculum.map(cls => cls.id));
-      students = students.filter(s => s.class_id && classIdsInCurriculum.has(s.class_id));
-    }
-
-    if (selectedClassId && selectedClassId !== '') {
-      students = students.filter(s => s.class_id === selectedClassId);
-    }
-
+    // Apply search query if any
+    let finalFilteredContacts = filteredContacts;
     if (searchStudentQuery.trim()) {
       const lowerCaseQuery = searchStudentQuery.toLowerCase();
-      students = students.filter(s =>
-        s.first_name?.toLowerCase().includes(lowerCaseQuery) ||
-        s.last_name?.toLowerCase().includes(lowerCaseQuery) ||
-        s.username?.toLowerCase().includes(lowerCaseQuery) ||
-        s.email?.toLowerCase().includes(lowerCaseQuery)
+      finalFilteredContacts = finalFilteredContacts.filter(p =>
+        p.first_name?.toLowerCase().includes(lowerCaseQuery) ||
+        p.last_name?.toLowerCase().includes(lowerCaseQuery) ||
+        p.username?.toLowerCase().includes(lowerCaseQuery) ||
+        p.email?.toLowerCase().includes(lowerCaseQuery)
       );
     }
 
-    const contactsInAllConversations = new Set(
-      [...recentConversations, ...archivedConversations].map(msg =>
-        msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
-      )
-    );
-    students = students.filter(s => !contactsInAllConversations.has(s.id));
+    // Filter out contacts already in existing conversations
+    finalFilteredContacts = finalFilteredContacts.filter(p => !contactsInAllConversations.has(p.id));
 
-    return students;
-  }, [allProfiles, currentUserProfile, currentRole, selectedEstablishmentId, selectedCurriculumId, selectedClassId, searchStudentQuery, establishments, curricula, classes, recentConversations, archivedConversations]);
+    // Remove duplicates and sort
+    const uniqueContacts = Array.from(new Map(finalFilteredContacts.map(item => [item.id, item])).values());
+    return uniqueContacts.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
+  }, [allProfiles, currentUserProfile, currentRole, recentConversations, archivedConversations, establishments, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear]);
 
 
-  const availableContactsForStudentNewChat = useMemo(() => {
-    if (!currentUserProfile || currentRole !== 'student') return [];
-
-    const contactsInAllConversations = new Set(
-      [...recentConversations, ...archivedConversations].map(msg =>
-        msg.sender_id === currentUserProfile.id ? msg.receiver_id : msg.sender_id
-      )
-    );
-
-    return allProfiles.filter(profile =>
-      profile.id !== currentUserProfile.id &&
-      !contactsInAllConversations.has(profile.id)
-    );
-  }, [allProfiles, currentUserProfile, recentConversations, archivedConversations, currentRole]);
-
-
-  if (isLoadingUser || isLoadingProfiles) { // Check isLoadingProfiles as well
+  if (isLoadingUser || isLoadingProfiles) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -293,8 +320,6 @@ const Messages = () => {
     );
   }
 
-  console.log("[Messages.tsx Render] allProfiles before passing to MessageList:", allProfiles);
-
   return (
     <div className="space-y-8 h-[calc(100vh-120px)] flex flex-col">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -310,107 +335,122 @@ const Messages = () => {
           "flex flex-col",
           isMobile ? (selectedContact ? "hidden" : "flex-grow") : "w-full md:w-1/3 flex-shrink-0"
         )}>
-          {(currentRole === 'creator' || currentRole === 'tutor') && (
+          {(currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && (
             <div className="p-4 border-b border-border space-y-4">
-              <h3 className="text-lg font-semibold">Démarrer une nouvelle conversation avec un élève</h3>
+              <h3 className="text-lg font-semibold">Démarrer une nouvelle conversation</h3>
               <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
-                  <Select value={selectedEstablishmentId} onValueChange={(value) => {
-                    setSelectedEstablishmentId(value === "all" ? "" : value);
-                    setSelectedCurriculumId("");
-                    setSelectedClassId("");
-                  }}>
-                    <SelectTrigger id="select-establishment">
-                      <SelectValue placeholder="Tous les établissements" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les établissements</SelectItem>
-                      {establishments.map(est => (
-                        <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
-                  <Select value={selectedCurriculumId} onValueChange={(value) => {
-                    setSelectedCurriculumId(value === "all" ? "" : value);
-                    setSelectedClassId("");
-                  }}>
-                    <SelectTrigger id="select-curriculum">
-                      <SelectValue placeholder="Tous les cursus" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les cursus</SelectItem>
-                      {curricula
-                        .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === '' || cur.establishment_id === selectedEstablishmentId)
-                        .map(cur => (
-                          <SelectItem key={cur.id} value={cur.id}>
-                            {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="select-class">Filtrer par Classe</Label>
-                  <Select value={selectedClassId} onValueChange={(value) => setSelectedClassId(value === "all" ? "" : value)}>
-                    <SelectTrigger id="select-class">
-                      <SelectValue placeholder="Toutes les classes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les classes</SelectItem>
-                      {classes
-                        .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
-                        .map(cls => (
-                          <SelectItem key={cls.id} value={cls.id}>
-                            {cls.name} ({getCurriculumName(cls.curriculum_id)})
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Filters for Professeur/Tutor/Director/Deputy Director/Admin */}
+                {(currentRole === 'professeur' || currentRole === 'tutor') && (
+                  <>
+                    <div>
+                      <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
+                      <Select value={selectedEstablishmentId} onValueChange={(value) => {
+                        setSelectedEstablishmentId(value === "all" ? "" : value);
+                        setSelectedCurriculumId("");
+                        setSelectedClassId("");
+                      }}>
+                        <SelectTrigger id="select-establishment">
+                          <SelectValue placeholder="Tous les établissements" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tous les établissements</SelectItem>
+                          {establishments.map(est => (
+                            <SelectItem key={est.id} value={est.id}>{est.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
+                      <Select value={selectedCurriculumId} onValueChange={(value) => {
+                        setSelectedCurriculumId(value === "all" ? "" : value);
+                        setSelectedClassId("");
+                      }}>
+                        <SelectTrigger id="select-curriculum">
+                          <SelectValue placeholder="Tous les cursus" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tous les cursus</SelectItem>
+                          {curricula
+                            .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === '' || cur.establishment_id === selectedEstablishmentId)
+                            .map(cur => (
+                              <SelectItem key={cur.id} value={cur.id}>
+                                {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="select-class">Filtrer par Classe</Label>
+                      <Select value={selectedClassId} onValueChange={(value) => setSelectedClassId(value === "all" ? "" : value)}>
+                        <SelectTrigger id="select-class">
+                          <SelectValue placeholder="Toutes les classes" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Toutes les classes</SelectItem>
+                          {classes
+                            .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
+                            .map(cls => (
+                              <SelectItem key={cls.id} value={cls.id}>
+                                {cls.name} ({getCurriculumName(cls.curriculum_id)})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
-                    placeholder="Rechercher un élève par nom ou pseudo..."
+                    placeholder="Rechercher un contact par nom ou pseudo..."
                     className="pl-10"
                     value={searchStudentQuery}
                     onChange={(e) => setSearchStudentQuery(e.target.value)}
                   />
                 </div>
-                {filteredStudentsForNewChat.length > 0 && (
+                {availableContactsForNewChat.length > 0 && (
                   <div>
-                    <Label htmlFor="new-chat-select-professional">Sélectionner un élève</Label>
+                    <Label htmlFor="new-chat-select-contact">Sélectionner un contact</Label>
                     <Select onValueChange={(value) => {
                       const contact = allProfiles.find(p => p.id === value);
                       if (contact) handleSelectContact(contact);
                       else showError("Contact non trouvé.");
                     }}>
-                      <SelectTrigger id="new-chat-select-professional">
-                        <SelectValue placeholder="Sélectionner un élève" />
+                      <SelectTrigger id="new-chat-select-contact">
+                        <SelectValue placeholder="Sélectionner un contact" />
                       </SelectTrigger>
                       <SelectContent>
-                        {filteredStudentsForNewChat.map(profile => (
+                        {availableContactsForNewChat.map(profile => (
                           <SelectItem key={profile.id} value={profile.id}>
-                            {profile.first_name} {profile.last_name} (@{profile.username})
+                            {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 )}
-                {searchStudentQuery.trim() !== '' && filteredStudentsForNewChat.length === 0 && (
-                  <p className="text-muted-foreground text-sm text-center">Aucun élève trouvé avec ces critères.</p>
+                {searchStudentQuery.trim() !== '' && availableContactsForNewChat.length === 0 && (
+                  <p className="text-muted-foreground text-sm text-center">Aucun contact trouvé avec ces critères.</p>
                 )}
               </div>
             </div>
           )}
 
           {currentRole === 'student' && (
-            <div className="p-4 border-b border-border">
-              <Label htmlFor="new-chat-select-student">Démarrer une nouvelle conversation</Label>
+            <div className="p-4 border-b border-border space-y-4">
+              <h3 className="text-lg font-semibold">Démarrer une nouvelle conversation</h3>
+              <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher un contact par nom ou pseudo..."
+                    className="pl-10"
+                    value={searchStudentQuery}
+                    onChange={(e) => setSearchStudentQuery(e.target.value)}
+                  />
+                </div>
+              <Label htmlFor="new-chat-select-student">Sélectionner un contact</Label>
               <Select onValueChange={(value) => {
                 const contact = allProfiles.find(p => p.id === value);
                 if (contact) handleSelectContact(contact);
@@ -420,17 +460,20 @@ const Messages = () => {
                   <SelectValue placeholder="Sélectionner un contact" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableContactsForStudentNewChat.length === 0 ? (
+                  {availableContactsForNewChat.length === 0 ? (
                     <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
                   ) : (
-                    availableContactsForStudentNewChat.map(profile => (
+                    availableContactsForNewChat.map(profile => (
                       <SelectItem key={profile.id} value={profile.id}>
-                        {profile.first_name} {profile.last_name} (@{profile.username})
+                        {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'}
                       </SelectItem>
                     ))
                   )}
                 </SelectContent>
               </Select>
+              {searchStudentQuery.trim() !== '' && availableContactsForNewChat.length === 0 && (
+                  <p className="text-muted-foreground text-sm text-center">Aucun contact trouvé avec ces critères.</p>
+                )}
             </div>
           )}
 
@@ -451,7 +494,6 @@ const Messages = () => {
             </Button>
           </div>
 
-          {/* Dynamic key to force re-render */}
           {allProfiles.length > 0 && (
             <MessageList
               key={`${showArchived}-${recentConversations.length}-${archivedConversations.length}-${allProfiles.length}`}
