@@ -20,145 +20,23 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // --- Ensure database schema exists (user_role enum, profiles table, handle_new_user trigger) ---
-    // This is crucial if the database has been wiped or is new.
-    const schemaSetupSql = `
-      -- Create user_role enum if it doesn't exist
-      DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-          CREATE TYPE public.user_role AS ENUM ('student', 'creator', 'tutor', 'administrator');
-        END IF;
-      END $$;
+    const { data: newUserData, error: signUpError } = await supabaseAdminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true, // Set to true to avoid email confirmation for admin-created users
+      user_metadata: {
+        first_name,
+        last_name,
+        username,
+        role: 'administrator', // Always create an administrator for this bootstrap function
+      },
+    });
 
-      -- Create profiles table if it doesn't exist
-      CREATE TABLE IF NOT EXISTS public.profiles (
-        id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-        first_name TEXT,
-        last_name TEXT,
-        username TEXT,
-        email TEXT,
-        role public.user_role DEFAULT 'student'::public.user_role NOT NULL,
-        establishment_id UUID,
-        enrollment_start_date DATE,
-        enrollment_end_date DATE,
-        theme TEXT DEFAULT 'system'::text,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        PRIMARY KEY (id)
-      );
-
-      -- Add missing columns to profiles table if they don't exist (for robustness against older schemas)
-      DO $$ BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='first_name') THEN
-          ALTER TABLE public.profiles ADD COLUMN first_name TEXT;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='last_name') THEN
-          ALTER TABLE public.profiles ADD COLUMN last_name TEXT;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='username') THEN
-          ALTER TABLE public.profiles ADD COLUMN username TEXT;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='email') THEN
-          ALTER TABLE public.profiles ADD COLUMN email TEXT;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='role') THEN
-          ALTER TABLE public.profiles ADD COLUMN role public.user_role DEFAULT 'student'::public.user_role NOT NULL;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='establishment_id') THEN
-          ALTER TABLE public.profiles ADD COLUMN establishment_id UUID;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='enrollment_start_date') THEN
-          ALTER TABLE public.profiles ADD COLUMN enrollment_start_date DATE;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='enrollment_end_date') THEN
-          ALTER TABLE public.profiles ADD COLUMN enrollment_end_date DATE;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='theme') THEN
-          ALTER TABLE public.profiles ADD COLUMN theme TEXT DEFAULT 'system'::text;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='created_at') THEN
-          ALTER TABLE public.profiles ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='updated_at') THEN
-          ALTER TABLE public.profiles ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
-        END IF;
-      END $$;
-
-      -- Enable RLS (REQUIRED for security) if not already enabled
-      ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
-      -- Drop existing policies before recreating them to ensure idempotency
-      DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "profiles_insert_policy" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "profiles_update_policy" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "profiles_delete_policy" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "Administrators can view all profiles" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "Administrators can insert profiles" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "Administrators can update all profiles" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "Administrators can delete profiles" ON public.profiles;
-      DROP POLICY IF NOT EXISTS "Creators and Tutors can view student profiles" ON public.profiles;
-
-      -- Create secure policies for each operation
-      CREATE POLICY "profiles_select_policy" ON public.profiles 
-      FOR SELECT TO authenticated USING (auth.uid() = id);
-
-      CREATE POLICY "profiles_insert_policy" ON public.profiles 
-      FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
-
-      CREATE POLICY "profiles_update_policy" ON public.profiles 
-      FOR UPDATE TO authenticated USING (auth.uid() = id);
-
-      CREATE POLICY "profiles_delete_policy" ON public.profiles 
-      FOR DELETE TO authenticated USING (auth.uid() = id);
-
-      CREATE POLICY "Administrators can view all profiles" ON public.profiles 
-      FOR SELECT USING (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
-
-      CREATE POLICY "Administrators can insert profiles" ON public.profiles 
-      FOR INSERT WITH CHECK (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
-
-      CREATE POLICY "Administrators can update all profiles" ON public.profiles 
-      FOR UPDATE USING (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
-
-      CREATE POLICY "Administrators can delete profiles" ON public.profiles 
-      FOR DELETE USING (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'administrator'::user_role))));
-
-      CREATE POLICY "Creators and Tutors can view student profiles" ON public.profiles 
-      FOR SELECT USING (((role = 'student'::user_role) AND (EXISTS ( SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = ANY (ARRAY['creator'::user_role, 'tutor'::user_role, 'administrator'::user_role]))))));
-
-      -- Create or replace handle_new_user function
-      CREATE OR REPLACE FUNCTION public.handle_new_user()
-      RETURNS TRIGGER
-      LANGUAGE PLPGSQL
-      SECURITY DEFINER SET search_path = ''
-      AS $$
-      BEGIN
-        INSERT INTO public.profiles (id, first_name, last_name, username, email, role)
-        VALUES (
-          new.id, 
-          new.raw_user_meta_data ->> 'first_name', 
-          new.raw_user_meta_data ->> 'last_name',
-          new.raw_user_meta_data ->> 'username',
-          new.email,
-          COALESCE((new.raw_user_meta_data ->> 'role')::public.user_role, 'student'::public.user_role)
-        );
-        RETURN new;
-      END;
-      $$;
-
-      -- Drop and recreate trigger to ensure it's always up-to-date
-      DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-      CREATE TRIGGER on_auth_user_created
-        AFTER INSERT ON auth.users
-        FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-    `;
-
-    const { error: schemaError } = await supabaseAdminClient.rpc('execute_sql', { sql: schemaSetupSql });
-    if (schemaError) {
-      console.error("Error setting up database schema:", schemaError);
-      return new Response(JSON.stringify({ error: 'Internal Server Error: Could not set up database schema.' }), {
+    if (signUpError) {
+      console.error("Error creating user with admin client:", signUpError);
+      return new Response(JSON.stringify({ error: signUpError.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 400,
       });
     }
 
