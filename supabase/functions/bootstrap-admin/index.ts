@@ -47,6 +47,43 @@ serve(async (req) => {
         PRIMARY KEY (id)
       );
 
+      -- Add missing columns to profiles table if they don't exist (for robustness against older schemas)
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='first_name') THEN
+          ALTER TABLE public.profiles ADD COLUMN first_name TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='last_name') THEN
+          ALTER TABLE public.profiles ADD COLUMN last_name TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='username') THEN
+          ALTER TABLE public.profiles ADD COLUMN username TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='email') THEN
+          ALTER TABLE public.profiles ADD COLUMN email TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='role') THEN
+          ALTER TABLE public.profiles ADD COLUMN role public.user_role DEFAULT 'student'::public.user_role NOT NULL;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='establishment_id') THEN
+          ALTER TABLE public.profiles ADD COLUMN establishment_id UUID;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='enrollment_start_date') THEN
+          ALTER TABLE public.profiles ADD COLUMN enrollment_start_date DATE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='enrollment_end_date') THEN
+          ALTER TABLE public.profiles ADD COLUMN enrollment_end_date DATE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='theme') THEN
+          ALTER TABLE public.profiles ADD COLUMN theme TEXT DEFAULT 'system'::text;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='created_at') THEN
+          ALTER TABLE public.profiles ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='updated_at') THEN
+          ALTER TABLE public.profiles ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+        END IF;
+      END $$;
+
       -- Enable RLS (REQUIRED for security) if not already enabled
       ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
@@ -111,48 +148,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Internal Server Error: Could not set up database schema.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
-      });
-    }
-    // --- End schema setup ---
-
-    // Check if an administrator already exists
-    const { data: existingAdmins, error: checkError } = await supabaseAdminClient
-      .from('profiles')
-      .select('id')
-      .eq('role', 'administrator');
-
-    if (checkError) {
-      console.error("Error checking for existing administrators:", checkError);
-      return new Response(JSON.stringify({ error: 'Internal Server Error: Could not check for existing administrators.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-
-    if (existingAdmins && existingAdmins.length > 0) {
-      return new Response(JSON.stringify({ error: 'An administrator already exists. Cannot create initial administrator.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
-      });
-    }
-
-    const { data: newUserData, error: signUpError } = await supabaseAdminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // Set to true to avoid email confirmation for admin-created users
-      user_metadata: {
-        first_name,
-        last_name,
-        username,
-        role: 'administrator', // Always create as administrator
-      },
-    });
-
-    if (signUpError) {
-      console.error("Error creating user with admin client:", signUpError);
-      return new Response(JSON.stringify({ error: signUpError.message }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
       });
     }
 
