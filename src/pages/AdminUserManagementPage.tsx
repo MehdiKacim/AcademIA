@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, UserPlus, UserCheck, Loader2, Check, XCircle, Mail, Search, Edit, Trash2, UserRoundCog, ChevronDown, ChevronUp } from "lucide-react";
+import { PlusCircle, UserPlus, UserCheck, Loader2, Check, XCircle, Mail, Search, Edit, Trash2, UserRoundCog, ChevronDown, ChevronUp, Building2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, checkUsernameExists, checkEmailExists, deleteProfile, updateProfile, getProfileById } from '@/lib/studentData';
@@ -22,9 +22,11 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { loadEstablishments } from '@/lib/courseData';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const AdminUserManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser, fetchUserProfile } = useRole();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
@@ -79,8 +81,14 @@ const AdminUserManagementPage = () => {
 
   // --- New User Creation Logic ---
   const validateUsername = useCallback(async (username: string, currentUserId?: string) => {
-    if (username.length < 3) return false;
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) return false;
+    if (username.length < 3) {
+      setUsernameAvailabilityStatus('idle');
+      return false;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setUsernameAvailabilityStatus('idle');
+      return false;
+    }
     setUsernameAvailabilityStatus('checking');
     const isTaken = await checkUsernameExists(username);
     if (isTaken && (!currentUserId || allUsers.find(u => u.username === username)?.id !== currentUserId)) {
@@ -92,7 +100,10 @@ const AdminUserManagementPage = () => {
   }, [allUsers]);
 
   const validateEmail = useCallback(async (email: string, currentUserId?: string) => {
-    if (!/\S+@\S+\.\S+/.test(email)) return false;
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailAvailabilityStatus('idle');
+      return false;
+    }
     setEmailAvailabilityStatus('checking');
     const isTaken = await checkEmailExists(email);
     if (isTaken && (!currentUserId || allUsers.find(u => u.email === email)?.id !== currentUserId)) {
@@ -155,9 +166,14 @@ const AdminUserManagementPage = () => {
         showError("Les directeurs ne peuvent créer que des professeurs ou des élèves.");
         return;
       }
-      if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) { // If an establishment is selected, it must be their own
+      // If an establishment is selected, it must be their own
+      if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) { 
         showError("Vous ne pouvez créer des utilisateurs que pour votre établissement.");
         return;
+      }
+      // If creating a professeur or student, and no establishment is selected, default to current user's establishment
+      if ((newUserRole === 'professeur' || newUserRole === 'student') && !newUserEstablishmentId && currentUserProfile.establishment_id) {
+        setNewUserEstablishmentId(currentUserProfile.establishment_id);
       }
     }
 
@@ -361,7 +377,7 @@ const AdminUserManagementPage = () => {
         const { error: emailUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, { email: editEmail.trim() });
         if (emailUpdateError) {
           console.error("Error updating user email in auth.users:", emailUpdateError);
-          showError(`Erreur lors de la mise à jour de l'email de l'utilisateur: ${emailUpdateError.message}`);
+          showError(`Erreur lors de la mise à jour de l'email: ${emailUpdateError.message}`);
           setIsSavingEdit(false);
           return;
         }
@@ -438,6 +454,47 @@ const AdminUserManagementPage = () => {
         showError(`Erreur lors de la suppression de l'utilisateur: ${error.message}`);
       }
     }
+  };
+
+  const handleUnassignFromEstablishment = async (userId: string, userName: string) => {
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
+      showError("Vous n'êtes pas autorisé à désaffecter des utilisateurs d'un établissement.");
+      return;
+    }
+    const userToUnassign = allUsers.find(u => u.id === userId);
+    if (!userToUnassign) {
+      showError("Utilisateur introuvable.");
+      return;
+    }
+    if (!userToUnassign.establishment_id) {
+      showError("Cet utilisateur n'est pas affecté à un établissement.");
+      return;
+    }
+    // Directors/Deputy Directors can only unassign users from their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && userToUnassign.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez désaffecter que les utilisateurs de votre établissement.");
+      return;
+    }
+    if (window.confirm(`Êtes-vous sûr de vouloir désaffecter ${userName} de son établissement ?`)) {
+      try {
+        const updatedProfile: Partial<Profile> = {
+          id: userId,
+          establishment_id: undefined, // Set to undefined to clear the foreign key
+          enrollment_start_date: undefined,
+          enrollment_end_date: undefined,
+        };
+        await updateProfile(updatedProfile);
+        setAllUsers(await getAllProfiles());
+        showSuccess(`${userName} a été désaffecté de son établissement.`);
+      } catch (error: any) {
+        console.error("Error unassigning user from establishment:", error);
+        showError(`Erreur lors de la désaffectation: ${error.message}`);
+      }
+    }
+  };
+
+  const handleSendMessageToUser = (userId: string) => {
+    navigate(`/messages?contactId=${userId}`);
   };
 
   const rolesForCreation: Profile['role'][] = 
@@ -665,10 +722,21 @@ const AdminUserManagementPage = () => {
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground">Rôle: <span className="font-semibold">{user.role === 'professeur' ? 'Professeur' : user.role === 'student' ? 'Élève' : user.role === 'tutor' ? 'Tuteur' : user.role === 'director' ? 'Directeur' : user.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur (Super Admin)'}</span></p>
                     {user.establishment_id && (
-                      <p className="text-xs text-muted-foreground">Établissement: {getEstablishmentName(user.establishment_id)}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Building2 className="h-3 w-3" /> Établissement: {getEstablishmentName(user.establishment_id)}
+                      </p>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                    <Button variant="outline" size="sm" onClick={() => handleSendMessageToUser(user.id)}>
+                      <Mail className="h-4 w-4 mr-1" /> Message
+                    </Button>
+                    {/* Unassign from Establishment button */}
+                    {user.establishment_id && (currentRole === 'administrator' || ((currentRole === 'director' || currentRole === 'deputy_director') && user.establishment_id === currentUserProfile.establishment_id)) && (
+                      <Button variant="outline" size="sm" onClick={() => handleUnassignFromEstablishment(user.id, `${user.first_name} ${user.last_name}`)}>
+                        <UserX className="h-4 w-4 mr-1" /> Désaffecter
+                      </Button>
+                    )}
                     {/* Edit button visibility and permissions */}
                     {((currentRole === 'administrator') || 
                       ((currentRole === 'director' || currentRole === 'deputy_director') && 

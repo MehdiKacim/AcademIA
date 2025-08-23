@@ -75,6 +75,7 @@ const StudentManagementPage = () => {
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
   const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | null>(null);
+  const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null); // New state for school year filter
 
   // Get classId from URL for initial filtering
   const classIdFromUrl = searchParams.get('classId');
@@ -143,7 +144,6 @@ const StudentManagementPage = () => {
   };
 
   const handleSendMessageToStudent = (studentProfile: Profile) => {
-    openChat(`J'ai une question concernant l'élève ${studentProfile.first_name} ${studentProfile.last_name}.`);
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
@@ -355,6 +355,43 @@ const StudentManagementPage = () => {
     }
   };
 
+  const handleUnassignStudentFromEstablishment = async (studentId: string, studentName: string) => {
+    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
+      showError("Vous n'êtes pas autorisé à désaffecter des élèves d'un établissement.");
+      return;
+    }
+    const studentToUnassign = allProfiles.find(p => p.id === studentId);
+    if (!studentToUnassign) {
+      showError("Élève introuvable.");
+      return;
+    }
+    if (!studentToUnassign.establishment_id) {
+      showError("Cet élève n'est pas affecté à un établissement.");
+      return;
+    }
+    // Directors/Deputy Directors can only unassign students from their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && studentToUnassign.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez désaffecter que les élèves de votre établissement.");
+      return;
+    }
+    if (window.confirm(`Êtes-vous sûr de vouloir désaffecter ${studentName} de son établissement ?`)) {
+      try {
+        const updatedProfile: Partial<Profile> = {
+          id: studentId,
+          establishment_id: undefined, // Set to undefined to clear the foreign key
+          enrollment_start_date: undefined,
+          enrollment_end_date: undefined,
+        };
+        await updateProfile(updatedProfile);
+        setAllProfiles(await getAllProfiles());
+        showSuccess(`${studentName} a été désaffecté de son établissement.`);
+      } catch (error: any) {
+        console.error("Error unassigning student from establishment:", error);
+        showError(`Erreur lors de la désaffectation: ${error.message}`);
+      }
+    }
+  };
+
   const filteredStudentsForEstDropdown = studentSearchInputEst.trim() === ''
     ? allProfiles.filter(p => p.role === 'student').slice(0, 10)
     : allProfiles.filter(p =>
@@ -397,6 +434,11 @@ const StudentManagementPage = () => {
       students = students.filter(s => studentIdsInClass.has(s.id));
     }
 
+    if (selectedSchoolYearFilter !== 'all' && selectedSchoolYearFilter !== null) {
+      const studentIdsInYear = new Set(allStudentClassEnrollments.filter(e => e.enrollment_year === selectedSchoolYearFilter).map(e => e.student_id));
+      students = students.filter(s => studentIdsInYear.has(s.id));
+    }
+
     if (studentSearchQuery.trim()) {
       const lowerCaseQuery = studentSearchQuery.toLowerCase();
       students = students.filter(s =>
@@ -407,7 +449,7 @@ const StudentManagementPage = () => {
       );
     }
     return students;
-  }, [allProfiles, currentUserProfile, currentRole, classes, allStudentClassEnrollments, selectedEstablishmentFilter, selectedClassFilter, studentSearchQuery]);
+  }, [allProfiles, currentUserProfile, currentRole, classes, allStudentClassEnrollments, selectedEstablishmentFilter, selectedClassFilter, selectedSchoolYearFilter, studentSearchQuery]);
 
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
@@ -901,11 +943,25 @@ const StudentManagementPage = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex-shrink-0 sm:w-1/3">
+              <Label htmlFor="school-year-filter">Filtrer par Année Scolaire</Label>
+              <Select value={selectedSchoolYearFilter || "all"} onValueChange={(value) => setSelectedSchoolYearFilter(value === "all" ? null : value)}>
+                <SelectTrigger id="school-year-filter">
+                  <SelectValue placeholder="Toutes les années" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les années</SelectItem>
+                  {schoolYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             {studentsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                {studentSearchQuery.trim() === '' && !selectedClassFilter && !selectedEstablishmentFilter
+                {studentSearchQuery.trim() === '' && !selectedClassFilter && !selectedEstablishmentFilter && !selectedSchoolYearFilter
                   ? "Aucun élève à afficher. Utilisez la recherche ou les filtres."
                   : "Aucun élève trouvé pour votre recherche ou vos filtres."}
               </p>
@@ -945,9 +1001,14 @@ const StudentManagementPage = () => {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                      {currentClassEnrollment && (currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can remove
-                        <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(currentClassEnrollment.id)}>
+                      {currentEnrollments.length > 0 && (currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can remove
+                        <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(currentEnrollments[0].id)}> {/* Assuming one active enrollment for simplicity */}
                           <UserX className="h-4 w-4 mr-1" /> Retirer de la classe
+                        </Button>
+                      )}
+                      {profile.establishment_id && (currentRole === 'administrator' || ((currentRole === 'director' || currentRole === 'deputy_director') && profile.establishment_id === currentUserProfile?.establishment_id)) && (
+                        <Button variant="outline" size="sm" onClick={() => handleUnassignStudentFromEstablishment(profile.id, `${profile.first_name} ${profile.last_name}`)}>
+                          <School className="h-4 w-4 mr-1" /> Désaffecter de l'établissement
                         </Button>
                       )}
                       <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
