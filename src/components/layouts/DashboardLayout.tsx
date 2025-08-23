@@ -22,7 +22,7 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import FloatingAiAChatButton from "@/components/FloatingAiAChatButton";
+import FloatingAiAChatButton from "@/components/FloatingAiAPersistentChat";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
@@ -344,50 +344,84 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {getMainNavItems().map((item) => { {/* Corrected here */}
+            {getMainNavItems().map((item) => {
               const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
               const isTriggerActive = item.type === 'trigger' && (
                 currentNavLevel === item.label.toLowerCase().replace(/\s/g, '-') ||
                 getIsParentTriggerActive(item)
               );
 
-              return item.type === 'link' && item.to ? (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={() =>
-                    cn(
+              if (item.type === 'link' && item.to) {
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={() =>
+                      cn(
+                        "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                        isLinkActive
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-accent hover:text-accent-foreground"
+                      )
+                    }
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              } else if (item.type === 'trigger' && item.items) { // Handle trigger with sub-items for desktop dropdown
+                return (
+                  <DropdownMenu key={item.label}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                          isTriggerActive
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {item.items.map((subItem) => (
+                        <DropdownMenuItem key={subItem.to} onClick={() => navigate(subItem.to)}>
+                          <subItem.icon className="mr-2 h-4 w-4" />
+                          {subItem.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              } else if (item.type === 'trigger' && item.onClick) { // Handle simple trigger without sub-items
+                return (
+                  <Button
+                    key={item.label}
+                    variant="ghost"
+                    onClick={item.onClick}
+                    className={cn(
                       "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isLinkActive
+                      isTriggerActive
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-accent hover:text-accent-foreground"
-                    )
-                  }
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                      {item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              ) : item.type === 'trigger' && item.onClick ? (
-                <Button
-                  key={item.label}
-                  variant="ghost"
-                  onClick={item.onClick}
-                  className={cn(
-                    "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                    isTriggerActive
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                </Button>
-              ) : null
+                    )}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Button>
+                );
+              }
+              return null;
             })}
           </nav>
         )}
