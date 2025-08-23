@@ -20,8 +20,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // --- Ensure database schema exists (user_role enum, profiles table, handle_new_user trigger) ---
-    // This is crucial if the database has been wiped or is new.
+    // --- Ensure database schema exists (roles table, profiles table, handle_new_user trigger) ---
     const schemaSetupSql = `
       -- Drop existing trigger and function first to avoid conflicts
       DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -40,13 +39,6 @@ serve(async (req) => {
 
       -- Disable RLS temporarily on profiles to allow schema changes
       ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
-
-      -- Drop the user_role enum if it exists, as we're moving to a table
-      DO $$ BEGIN
-        IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-          DROP TYPE public.user_role CASCADE; -- CASCADE will drop dependent objects like the column in profiles
-        END IF;
-      END $$;
 
       -- Create public.roles table
       CREATE TABLE IF NOT EXISTS public.roles (
@@ -137,15 +129,32 @@ serve(async (req) => {
       -- Re-enable RLS
       ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+      -- Drop ALL existing policies on public.profiles before recreating them
+      DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "profiles_delete_policy" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can view all profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can insert profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can update all profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Administrators can delete profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Creators and Tutors can view student profiles" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+
+      -- Drop the get_user_role function as it will no longer be used in RLS policies
+      DROP FUNCTION IF EXISTS public.get_user_role(UUID);
+
       -- Re-add RLS policies using auth.uid() and auth.jwt() -> 'user_metadata' ->> 'role'
       -- And for target row role check, join with public.roles
-      CREATE POLICY "Users can view their own profile" ON public.profiles
+      CREATE POLICY "Users can view their own profile" ON public.profiles 
       FOR SELECT TO authenticated USING (auth.uid() = id);
 
-      CREATE POLICY "Users can insert their own profile" ON public.profiles
+      CREATE POLICY "Users can insert their own profile" ON public.profiles 
       FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
-      CREATE POLICY "Users can update their own profile" ON public.profiles
+      CREATE POLICY "Users can update their own profile" ON public.profiles 
       FOR UPDATE TO authenticated USING (auth.uid() = id);
 
       CREATE POLICY "Administrators can view all profiles" ON public.profiles

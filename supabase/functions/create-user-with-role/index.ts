@@ -12,18 +12,17 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization')!;
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: authHeader },
+          headers: { Authorization: req.headers.get('Authorization')! },
         },
       }
     );
 
-    // 1. Get the role of the user invoking this function using the RPC function
+    // 1. Get the role of the user invoking this function from their JWT
     const { data: { user: invokingUser }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !invokingUser) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Could not get invoking user.' }), {
@@ -32,17 +31,8 @@ serve(async (req) => {
       });
     }
 
-    const { data: invokingUserRoleData, error: rpcError } = await supabaseClient.rpc('get_user_role', { user_id: invokingUser.id });
+    const invokingUserRole = invokingUser.user_metadata.role as string; // Get role directly from JWT
 
-    if (rpcError || !invokingUserRoleData) {
-      console.error("Error fetching invoking user role via RPC:", rpcError);
-      return new Response(JSON.stringify({ error: 'Unauthorized: Could not get invoking user role.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
-
-    const invokingUserRole = invokingUserRoleData; // rpc returns the role directly
     const { email, password, first_name, last_name, username, role: newUserRole } = await req.json();
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole
@@ -84,7 +74,7 @@ serve(async (req) => {
         first_name,
         last_name,
         username,
-        role: newUserRole,
+        role: newUserRole, // Pass the role name to user_metadata for handle_new_user trigger
       },
     });
 
