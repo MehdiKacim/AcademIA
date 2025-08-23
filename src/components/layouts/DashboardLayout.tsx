@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, UserPlus, Building2 } from "lucide-react"; // Added Building2 for establishments
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2 } from "lucide-react"; // Removed UserPlus
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -30,10 +30,9 @@ import { Message } from "@/lib/dataModels";
 import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
-// import AdminModal from "@/components/AdminModal"; // AdminModal is now imported in App.tsx
 
 interface DashboardLayoutProps {
-  setIsAdminModalOpen: (isOpen: boolean) => void; // New prop
+  setIsAdminModalOpen: (isOpen: boolean) => void; // Keep this prop as Index.tsx still uses it
 }
 
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
@@ -41,7 +40,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const { currentUserProfile, currentRole, signOut } = useRole();
   const { isChatOpen } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  // const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // Moved to App.tsx
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -49,21 +47,19 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const location = useLocation();
 
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
-  const [isFloatingButtonVisible, setIsFloatingButtonVisible] = useState(true); // État pour la visibilité du bouton
-  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Réf pour le timer de masquage automatique
-  const logoTapCountRef = useRef(0); // Ref pour le compteur de taps sur le logo
+  const [isFloatingButtonVisible, setIsFloatingButtonVisible] = useState(true);
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logoTapCountRef = useRef(0);
 
-  // Fonction pour démarrer le timer de masquage automatique
   const startAutoHideTimer = useCallback(() => {
     if (autoHideTimerRef.current) {
       clearTimeout(autoHideTimerRef.current);
     }
     autoHideTimerRef.current = setTimeout(() => {
       setIsFloatingButtonVisible(false);
-    }, 5000); // Masquer après 5 secondes d'inactivité
+    }, 5000);
   }, []);
 
-  // Fonction pour réinitialiser le timer et afficher le bouton
   const resetAndShowButton = useCallback(() => {
     setIsFloatingButtonVisible(true);
     startAutoHideTimer();
@@ -76,7 +72,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false);
-    // The RoleContext's onAuthStateChange listener will handle navigation to dashboard
   };
 
   useEffect(() => {
@@ -97,17 +92,16 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const isModifierPressed = event.ctrlKey || event.metaKey; // Ctrl for Windows/Linux, Cmd for Mac
+    const isModifierPressed = event.ctrlKey || event.metaKey;
 
-    // AdminModal can be opened regardless of currentUserProfile status
-    if (isModifierPressed && event.shiftKey && event.key === 'S') { // New shortcut: Ctrl + Shift + S
+    if (isModifierPressed && event.shiftKey && event.key === 'S') {
       event.preventDefault();
       setIsAdminModalOpen(true);
     } else if (currentUserProfile && isModifierPressed && event.key === 'f') {
       event.preventDefault();
       setIsSearchOverlayOpen(true);
     }
-  }, [currentUserProfile, setIsAdminModalOpen]); // Add setIsAdminModalOpen to dependencies
+  }, [currentUserProfile, setIsAdminModalOpen]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -220,7 +214,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onClick: () => setCurrentNavLevel('gestion'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' }, // Renamed and updated path
+            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
           ],
         },
         {
@@ -245,7 +239,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onClick: () => setCurrentNavLevel('suivi'),
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' }, // Renamed and updated path
+            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
           ],
         },
         {
@@ -256,11 +250,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           items: [
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
             { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
-            { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link' }, // Changed icon to BarChart2
+            { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link' },
           ],
         },
       ];
-    } else if (currentRole === 'administrator') { // New Administrator role
+    } else if (currentRole === 'administrator') {
       return [
         ...baseItems,
         {
@@ -269,11 +263,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           type: 'trigger',
           onClick: () => setCurrentNavLevel('administration'),
           items: [
-            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' }, // Changed icon to Building2
+            { to: "/establishments", label: "Établissements", icon: Building2, type: 'link' },
             { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link' },
             { to: "/classes", label: "Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' }, // Admin student management
-            { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserPlus, type: 'link' }, // Admin user management
+            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
+            // Removed "Gestion Utilisateurs" link
           ],
         },
         {
@@ -318,30 +312,25 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     return mainItems;
   };
 
-  // Gérer le défilement pour réinitialiser le timer
   const handleScroll = useCallback(() => {
     resetAndShowButton();
   }, [resetAndShowButton]);
 
-  // Gérer le clic sur la zone principale pour réinitialiser le timer
   const handleClick = useCallback(() => {
     resetAndShowButton();
   }, [resetAndShowButton]);
 
-  // Gérer les clics sur le logo pour le déclencheur mobile de l'AdminModal
   const handleLogoClick = useCallback(() => {
     logoTapCountRef.current += 1;
     if (logoTapCountRef.current >= 10) {
-      setIsAdminModalOpen(true); // Use the prop
-      logoTapCountRef.current = 0; // Reset count after opening
+      setIsAdminModalOpen(true);
+      logoTapCountRef.current = 0;
     }
-    // Reset tap count after a short delay if not enough taps
     setTimeout(() => {
       logoTapCountRef.current = 0;
-    }, 1000); // 1 second to reset tap count
-  }, [setIsAdminModalOpen]); // Add setIsAdminModalOpen to dependencies
+    }, 1000);
+  }, [setIsAdminModalOpen]);
 
-  // Démarrer le timer au montage du composant
   useEffect(() => {
     startAutoHideTimer();
     return () => {
@@ -351,13 +340,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [startAutoHideTimer]);
 
-  // Le bouton flottant doit être visible si isFloatingButtonVisible est vrai ET que le chat n'est PAS ouvert
   const isFloatingButtonActuallyVisible = isFloatingButtonVisible && !isChatOpen;
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40"> {/* Removed overflow-x-hidden */}
+    <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
-        <Logo onLogoClick={handleLogoClick} /> {/* Pass the new prop */}
+        <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {navItemsToDisplayForDesktop().map((item) => {
@@ -445,7 +433,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       <main
         className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}
         onScroll={handleScroll}
-        onClick={handleClick} // Ajout du gestionnaire de clic
+        onClick={handleClick}
       >
         <Outlet />
       </main>
@@ -457,12 +445,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </footer>
       <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAChatButton isVisible={isFloatingButtonActuallyVisible} />}
+      {currentUserProfile && <FloatingAiAPersistentChat isVisible={isFloatingButtonActuallyVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
-      {/* DataModelModal is now opened from AdminModal */}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
-      {/* AdminModal is now rendered in App.tsx */}
     </div>
   );
 };

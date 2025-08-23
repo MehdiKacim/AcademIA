@@ -15,11 +15,9 @@ import {
   Target,
   MessageCircleMore,
   Home,
-  LogIn, // Keep LogIn for the main button
-  UserPlus, // Keep UserPlus for the main button
+  LogIn,
   Download,
-  Info, // Import Info icon for About section
-  Loader2, // Import Loader2 for loading state
+  Info,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -27,13 +25,13 @@ import BottomNavigationBar from "@/components/BottomNavigationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
-import AuthModal from "@/components/AuthModal"; // Import AuthModal
-import AboutModal from "@/components/AboutModal"; // Import AboutModal
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
-import { supabase } from "@/integrations/supabase/client"; // Import supabase
+import AuthModal from "@/components/AuthModal";
+import AboutModal from "@/components/AboutModal";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface IndexProps {
-  setIsAdminModalOpen: (isOpen: boolean) => void; // New prop
+  setIsAdminModalOpen: (isOpen: boolean) => void; // Keep this prop as it's used for the shortcut
 }
 
 const Index = ({ setIsAdminModalOpen }: IndexProps) => {
@@ -47,9 +45,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const { currentUserProfile } = useRole();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for AuthModal
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
-  const logoTapCountRef = useRef(0); // Ref pour le compteur de taps sur le logo
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const logoTapCountRef = useRef(0);
 
   // Fetch latest APK release data using TanStack Query
   // This query is no longer needed as the APK download button is removed.
@@ -65,9 +63,6 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
     enabled: false, // Disable fetching APK data as it's no longer used
   });
-
-  // Removed the useEffect that was causing the redirection issue.
-  // The redirection for logged-in users is now handled at the App.tsx level.
 
   useEffect(() => {
     const observerOptions = {
@@ -86,13 +81,11 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
 
-    // Observe only the remaining sections
     if (sectionRefs.accueil.current) observer.observe(sectionRefs.accueil.current);
     if (sectionRefs.aiaBot.current) observer.observe(sectionRefs.aiaBot.current);
     if (sectionRefs.methodologie.current) observer.observe(sectionRefs.methodologie.current);
 
     return () => {
-      // Disconnect observer from all refs
       if (sectionRefs.accueil.current) observer.unobserve(sectionRefs.accueil.current);
       if (sectionRefs.aiaBot.current) observer.unobserve(sectionRefs.aiaBot.current);
       if (sectionRefs.methodologie.current) observer.unobserve(sectionRefs.methodologie.current);
@@ -100,8 +93,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   }, []);
 
   const handleAuthSuccess = () => {
-    setIsAuthModalOpen(false); // Close auth modal on success
-    // The RoleContext's onAuthStateChange listener will handle navigation to dashboard
+    setIsAuthModalOpen(false);
   };
 
   const methodology = [
@@ -135,13 +127,12 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'accueil', type: 'trigger' },
     { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'aiaBot', type: 'trigger' },
     { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'methodologie', type: 'trigger' },
-    // Removed "À propos" from main navigation
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const isModifierPressed = event.ctrlKey || event.metaKey; // Ctrl for Windows/Linux, Cmd for Mac
+    const isModifierPressed = event.ctrlKey || event.metaKey;
 
-    if (isModifierPressed && event.shiftKey && event.key === 'S') { // New shortcut: Ctrl + Shift + S
+    if (isModifierPressed && event.shiftKey && event.key === 'S') {
       event.preventDefault();
       setIsAdminModalOpen(true);
     }
@@ -154,17 +145,15 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     };
   }, [handleKeyDown]);
 
-  // Gérer les clics sur le logo pour le déclencheur mobile de l'AdminModal
   const handleLogoClick = useCallback(() => {
     logoTapCountRef.current += 1;
     if (logoTapCountRef.current >= 10) {
       setIsAdminModalOpen(true);
-      logoTapCountRef.current = 0; // Reset count after opening
+      logoTapCountRef.current = 0;
     }
-    // Reset tap count after a short delay if not enough taps
     setTimeout(() => {
       logoTapCountRef.current = 0;
-    }, 1000); // 1 second to reset tap count
+    }, 1000);
   }, [setIsAdminModalOpen]);
 
   return (
@@ -205,12 +194,10 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <ThemeToggle />
-          {/* Mobile-only About button (icon only) */}
           <Button variant="outline" size="icon" onClick={() => setIsAboutModalOpen(true)} className="md:hidden">
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
           </Button>
-          {/* Desktop-only About button (text + icon) */}
           <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="hidden md:flex">
             <Info className="h-5 w-5 mr-2" /> À propos
           </Button>
@@ -244,7 +231,6 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              {/* Le bouton de téléchargement de l'APK a été supprimé */}
             </div>
           </div>
         </section>

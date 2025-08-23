@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,24 +18,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Users } from "lucide-react"; // Import Users icon
+import { Lock, Database, UserPlus, Eraser, Code, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import DataModelModal from './DataModelModal'; // Import DataModelModal
-import { clearAllAppData } from '@/lib/dataReset'; // Import clearAllAppData
+import DataModelModal from './DataModelModal';
+import { clearAllAppData } from '@/lib/dataReset';
+import InputWithStatus from './InputWithStatus'; // Import InputWithStatus
+import { checkUsernameExists, checkEmailExists } from '@/lib/studentData'; // Import check functions
 
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigateToAdminUserManagement: () => void; // New prop for navigation
 }
 
 const ADMIN_PASSWORD = "Mehkac95!"; // Password for admin access
 
-const AdminModal = ({ isOpen, onClose, onNavigateToAdminUserManagement }: AdminModalProps) => {
+const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const isMobile = useIsMobile();
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false); // State for DataModelModal
+  const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
+
+  // State for initial admin creation form
+  const [adminFirstName, setAdminFirstName] = useState('');
+  const [adminLastName, setAdminLastName] = useState('');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
+
+  const [usernameAvailabilityStatus, setUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [emailAvailabilityStatus, setEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const debounceTimeoutRefUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleAuthenticate = () => {
     if (password === ADMIN_PASSWORD) {
@@ -52,11 +66,105 @@ const AdminModal = ({ isOpen, onClose, onNavigateToAdminUserManagement }: AdminM
       try {
         await clearAllAppData();
         showSuccess("Toutes les données ont été effacées ! L'application va se recharger.");
-        window.location.reload(); // Force a full page reload to re-initialize all data
+        window.location.reload();
       } catch (error: any) {
         console.error("Error clearing all app data:", error);
         showError(`Erreur lors de l'effacement des données: ${error.message}`);
       }
+    }
+  };
+
+  const validateUsername = useCallback(async (username: string) => {
+    if (username.length < 3) return false;
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) return false;
+    setUsernameAvailabilityStatus('checking');
+    const isTaken = await checkUsernameExists(username);
+    setUsernameAvailabilityStatus(isTaken ? 'taken' : 'available');
+    return !isTaken;
+  }, []);
+
+  const validateEmail = useCallback(async (email: string) => {
+    if (!/\S+@\S+\.\S+/.test(email)) return false;
+    setEmailAvailabilityStatus('checking');
+    const isTaken = await checkEmailExists(email);
+    setEmailAvailabilityStatus(isTaken ? 'taken' : 'available');
+    return !isTaken;
+  }, []);
+
+  const handleAdminUsernameChange = (value: string) => {
+    setAdminUsername(value);
+    if (debounceTimeoutRefUsername.current) clearTimeout(debounceTimeoutRefUsername.current);
+    if (value.trim() === '') {
+      setUsernameAvailabilityStatus('idle');
+      return;
+    }
+    debounceTimeoutRefUsername.current = setTimeout(() => {
+      validateUsername(value);
+    }, 500);
+  };
+
+  const handleAdminEmailChange = (value: string) => {
+    setAdminEmail(value);
+    if (debounceTimeoutRefEmail.current) clearTimeout(debounceTimeoutRefEmail.current);
+    if (value.trim() === '') {
+      setEmailAvailabilityStatus('idle');
+      return;
+    }
+    debounceTimeoutRefEmail.current = setTimeout(() => {
+      validateEmail(value);
+    }, 500);
+  };
+
+  const handleCreateInitialAdmin = async () => {
+    if (!adminFirstName.trim() || !adminLastName.trim() || !adminUsername.trim() || !adminEmail.trim() || !adminPassword.trim()) {
+      showError("Tous les champs sont requis pour créer l'administrateur.");
+      return;
+    }
+    if (adminPassword.trim().length < 6) {
+      showError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+    if (usernameAvailabilityStatus === 'taken' || emailAvailabilityStatus === 'taken') {
+      showError("Le nom d'utilisateur ou l'email est déjà pris.");
+      return;
+    }
+    if (usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking') {
+      showError("Veuillez attendre la vérification de la disponibilité du nom d'utilisateur et de l'email.");
+      return;
+    }
+
+    setIsCreatingAdmin(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('bootstrap-admin', {
+        body: {
+          email: adminEmail.trim(),
+          password: adminPassword.trim(),
+          first_name: adminFirstName.trim(),
+          last_name: adminLastName.trim(),
+          username: adminUsername.trim(),
+        },
+      });
+
+      if (error) {
+        console.error("Error creating initial admin via Edge Function:", error);
+        showError(`Erreur lors de la création de l'administrateur: ${error.message}`);
+        return;
+      }
+      
+      showSuccess(`Administrateur ${adminFirstName} ${adminLastName} créé avec succès !`);
+      setAdminFirstName('');
+      setAdminLastName('');
+      setAdminUsername('');
+      setAdminEmail('');
+      setAdminPassword('');
+      setUsernameAvailabilityStatus('idle');
+      setEmailAvailabilityStatus('idle');
+      onClose(); // Close modal after successful creation
+    } catch (error: any) {
+      console.error("Unexpected error creating initial admin:", error);
+      showError(`Une erreur inattendue est survenue: ${error.message}`);
+    } finally {
+      setIsCreatingAdmin(false);
     }
   };
 
@@ -91,9 +199,50 @@ const AdminModal = ({ isOpen, onClose, onNavigateToAdminUserManagement }: AdminM
             <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full" variant="outline">
               <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
             </Button>
-            <Button onClick={() => { onNavigateToAdminUserManagement(); onClose(); }} className="w-full" variant="outline">
-              <Users className="h-4 w-4 mr-2" /> Gérer les utilisateurs
-            </Button>
+            
+            <div className="space-y-4 p-4 border rounded-md bg-muted/20">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-primary" /> Créer un administrateur initial
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
+              </p>
+              <Input
+                placeholder="Prénom"
+                value={adminFirstName}
+                onChange={(e) => setAdminFirstName(e.target.value)}
+              />
+              <Input
+                placeholder="Nom"
+                value={adminLastName}
+                onChange={(e) => setAdminLastName(e.target.value)}
+              />
+              <InputWithStatus
+                placeholder="Nom d'utilisateur"
+                value={adminUsername}
+                onChange={(e) => handleAdminUsernameChange(e.target.value)}
+                status={usernameAvailabilityStatus}
+                errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+              />
+              <InputWithStatus
+                type="email"
+                placeholder="Email"
+                value={adminEmail}
+                onChange={(e) => handleAdminEmailChange(e.target.value)}
+                status={emailAvailabilityStatus}
+                errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+              />
+              <Input
+                type="password"
+                placeholder="Mot de passe"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+              />
+              <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
+                {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
+              </Button>
+            </div>
+
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Effacer toutes les données
             </Button>

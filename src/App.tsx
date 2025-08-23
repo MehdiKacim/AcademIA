@@ -17,9 +17,7 @@ import AllNotes from "./pages/AllNotes";
 import EstablishmentManagementPage from "./pages/EstablishmentManagementPage";
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
-import AdminStudentAndEnrollmentManagementPage from "./pages/AdminStudentAndEnrollmentManagementPage";
 import CreatorAndTutorStudentManagementPage from "./pages/CreatorAndTutorStudentManagementPage";
-import AdminUserManagementPage from "./pages/AdminUserManagementPage";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
@@ -36,24 +34,9 @@ const queryClient = new QueryClient();
 const AppWithThemeProvider = () => {
   const { currentUserProfile, isLoadingUser, currentRole } = useRole();
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [shouldNavigateToAdminUsers, setShouldNavigateToAdminUsers] = useState(false); // New state for navigation
 
   // Determine the initial theme based on user profile or system preference
   const initialTheme = currentUserProfile?.theme || "system";
-
-  const handleNavigateToAdminUserManagement = () => {
-    setIsAdminModalOpen(false);
-    setShouldNavigateToAdminUsers(true); // Trigger navigation
-  };
-
-  // Reset navigation flag after it's been triggered
-  useEffect(() => {
-    if (shouldNavigateToAdminUsers) {
-      // This useEffect runs after render, so the Navigate component would have been processed.
-      // We reset the flag here to prevent continuous navigation attempts.
-      setShouldNavigateToAdminUsers(false);
-    }
-  }, [shouldNavigateToAdminUsers]);
 
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="class">
@@ -77,12 +60,11 @@ const AppWithThemeProvider = () => {
             <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />
           ) : (
             <BrowserRouter>
-              {shouldNavigateToAdminUsers && <Navigate to="/admin-users" replace />} {/* Conditional Navigate */}
               <Routes>
                 <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
                 <Route element={<ProtectedRoute />}>
-                  <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
+                  <Route element={<DashboardLayout />}> {/* Removed setIsAdminModalOpen prop */}
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
@@ -96,7 +78,7 @@ const AppWithThemeProvider = () => {
                     
                     <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                      <Route path="/admin-users" element={<AdminUserManagementPage />} />
+                      {/* Removed /admin-users route */}
                     </Route>
 
                     <Route element={<ProtectedRoute allowedRoles={['administrator', 'creator']} />}>
@@ -123,7 +105,7 @@ const AppWithThemeProvider = () => {
           <AdminModal 
             isOpen={isAdminModalOpen} 
             onClose={() => setIsAdminModalOpen(false)} 
-            onNavigateToAdminUserManagement={handleNavigateToAdminUserManagement}
+            // Removed onNavigateToAdminUserManagement prop
           />
         </TooltipProvider>
       </QueryClientProvider>
