@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react";
+import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react"; // Added ArrowRight
 import { NavItem } from "@/lib/dataModels";
 import {
   Drawer,
@@ -93,7 +93,7 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
   ];
 
   // If not logged in, replace "Profile" with "Authentification"
-  const dynamicFixedBottomNavItems = currentUser
+  const dynamicFixedBottomNavItems: NavItem[] = currentUser
     ? fixedBottomNavItems
     : fixedBottomNavItems.map(item =>
         item.label === "Profil"
@@ -149,8 +149,9 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden">
-        {dynamicFixedBottomNavItems.map((item) => {
-          const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+        {dynamicFixedBottomNavItems.map((item: NavItem) => { // Explicitly type item as NavItem
+          // Ensure item.to is only accessed if item.type is 'link'
+          const isLinkActive = item.type === 'link' && item.to && (location.pathname + location.search).startsWith(item.to);
 
           if (item.type === 'link' && item.to) {
             return (

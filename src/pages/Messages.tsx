@@ -40,6 +40,7 @@ const Messages = () => {
   const [archivedConversations, setArchivedConversations] = useState<Message[]>([]);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [initialCourseContext, setInitialCourseContext] = useState<{ id?: string; title?: string }>({});
+
   const [showArchived, setShowArchived] = useState(false);
 
   const [establishments, setEstablishments] = useState<Establishment[]>([]);

@@ -33,7 +33,6 @@ import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { CourseChatProvider } from "./contexts/CourseChatContext";
 import AdminModal from "./components/AdminModal";
-import { Profile as UserProfileType } from './lib/dataModels'; // Import Profile type for allowedRoles
 
 const queryClient = new QueryClient();
 

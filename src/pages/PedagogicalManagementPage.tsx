@@ -280,9 +280,9 @@ const PedagogicalManagementPage = () => {
     ? allProfiles.filter(p => p.role === 'student').slice(0, 10)
     : allProfiles.filter(p =>
         p.role === 'student' &&
-        (p.username.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
-        p.first_name.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
-        p.last_name.toLowerCase().includes(studentSearchInputClass.toLowerCase()))
+        (p.username?.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
+        p.first_name?.toLowerCase().includes(studentSearchInputClass.toLowerCase()) ||
+        p.last_name?.toLowerCase().includes(studentSearchInputClass.toLowerCase()))
       ).slice(0, 10);
 
   const studentsInSelectedClassAndYear = React.useMemo(() => {
@@ -413,7 +413,7 @@ const PedagogicalManagementPage = () => {
                                 value={profile.username}
                                 onSelect={() => {
                                   setSelectedStudentForClassAssignment(profile);
-                                  setStudentSearchInputClass(profile.username);
+                                  setStudentSearchInputClass(profile.username || '');
                                   setOpenStudentSelectClass(false);
                                 }}
                               >
@@ -618,7 +618,7 @@ const PedagogicalManagementPage = () => {
                       )}
                       {currentClass ? (
                         <p className="text-xs text-muted-foreground">
-                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {getSchoolYearName(currentClass.school_year_id)}
+                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {currentClass.school_year_name}
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground italic">Non affecté à une classe pour l'année scolaire en cours</p>

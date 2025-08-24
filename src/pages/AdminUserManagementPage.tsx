@@ -426,7 +426,7 @@ const AdminUserManagementPage = () => {
       // If role changed, update in auth.users metadata
       if (editRole !== userToEdit.role) {
         const { error: roleUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, {
-          user_metadata: { ...userToEdit.user_metadata, role: editRole }
+          user_metadata: { ...userToEdit.user_metadata, role: editRole } as { [key: string]: any } // Cast to allow dynamic properties
         });
         if (roleUpdateError) {
           console.error("Error updating user role in auth.users metadata:", roleUpdateError);
@@ -560,7 +560,7 @@ const AdminUserManagementPage = () => {
     );
   }
 
-  if (!currentUserProfile || !['administrator', 'director', 'deputy_director'].includes(currentRole || '')) {
+  if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -664,7 +664,7 @@ const AdminUserManagementPage = () => {
                   <Select 
                     value={newUserEstablishmentId || "none"} 
                     onValueChange={(value) => setNewUserEstablishmentId(value === "none" ? '' : value)}
-                    disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable if director
+                    disabled={currentRole === 'director' || currentRole === 'deputy_director'}
                   >
                     <SelectTrigger id="new-user-establishment">
                       <SelectValue placeholder="Sélectionner un établissement" />

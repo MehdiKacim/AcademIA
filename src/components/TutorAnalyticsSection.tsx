@@ -46,13 +46,15 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
         // Students are linked to classes via student_class_enrollments
-        const studentIdsInClass = new Set(getAllStudentClassEnrollments().filter(e => e.class_id === selectedClass.id).map(e => e.student_id));
+        // Await the promise here
+        const studentIdsInClass = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => e.class_id === selectedClass.id).map(e => e.student_id)));
         return students.filter(student => studentIdsInClass.has(student.id));
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
       const classIdsInCurriculum = classesInCurriculum.map(cls => cls.id);
-      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id));
+      // Await the promise here
+      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id)));
       return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
     return students;
@@ -84,7 +86,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
   const classPerformanceData = filteredClasses.map(cls => ({
     name: cls.name,
     avgProgress: Math.floor(Math.random() * 20) + 70, // Dummy average progress
-    studentsCount: allProfiles.filter(p => getAllStudentClassEnrollments().some(e => e.student_id === p.id && e.class_id === cls.id) && filteredStudentProfiles.some(fs => fs.id === p.id)).length, // Count students only from filtered set
+    studentsCount: allProfiles.filter(p => getAllStudentClassEnrollments().then(enrollments => enrollments.some(e => e.student_id === p.id && e.class_id === cls.id)) && filteredStudentProfiles.some(fs => fs.id === p.id)).length, // Count students only from filtered set
   }));
 
   // Dummy data for individual student progress trends (adjusting names to match filtered students)

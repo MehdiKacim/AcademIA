@@ -52,7 +52,6 @@ const StudentManagementPage = () => {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
-  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
 
   // States for new student creation form
   const [newStudentFirstName, setNewStudentFirstName] = useState('');
@@ -296,6 +295,7 @@ const StudentManagementPage = () => {
       const updatedProfile: Partial<Profile> = {
         id: selectedStudentForEstAssignment.id,
         establishment_id: establishmentToAssign,
+        // These fields are now directly on Profile
         enrollment_start_date: enrollmentStartDate.toISOString().split('T')[0],
         enrollment_end_date: enrollmentEndDate.toISOString().split('T')[0],
       };
@@ -394,9 +394,9 @@ const StudentManagementPage = () => {
     ? allProfiles.filter(p => p.role === 'student').slice(0, 10)
     : allProfiles.filter(p =>
         p.role === 'student' &&
-        (p.username.toLowerCase().includes(studentSearchInputEst.toLowerCase()) ||
-        p.first_name.toLowerCase().includes(studentSearchInputEst.toLowerCase()) ||
-        p.last_name.toLowerCase().includes(studentSearchInputEst.toLowerCase()))
+        (p.username?.toLowerCase().includes(studentSearchInputEst.toLowerCase()) ||
+        p.first_name?.toLowerCase().includes(studentSearchInputEst.toLowerCase()) ||
+        p.last_name?.toLowerCase().includes(studentSearchInputEst.toLowerCase()))
       ).slice(0, 10);
 
   const studentsToDisplay = React.useMemo(() => {
@@ -649,7 +649,7 @@ const StudentManagementPage = () => {
                                   value={profile.username}
                                   onSelect={() => {
                                     setSelectedStudentForEstAssignment(profile);
-                                    setStudentSearchInputEst(profile.username);
+                                    setStudentSearchInputEst(profile.username || '');
                                     setEstablishmentToAssign(profile.establishment_id || "");
                                     setEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
                                     setEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
@@ -661,7 +661,7 @@ const StudentManagementPage = () => {
                                       "mr-2 h-4 w-4",
                                       selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
                                     )}
-                                />
+                                  />
                                   {profile.first_name} {profile.last_name} (@{profile.username})
                                 </CommandItem>
                               ))}
@@ -835,8 +835,8 @@ const StudentManagementPage = () => {
                   const cls = classes.find(c => c.id === e.class_id);
                   const currentYear = new Date().getFullYear();
                   const nextYear = currentYear + 1;
-                  const currentSchoolYear = `${currentYear}-${nextYear}`;
-                  return cls?.school_year_name === currentSchoolYear; // Check for current school year
+                  const currentSchoolYearName = `${currentYear}-${nextYear}`;
+                  return cls?.school_year_name === currentSchoolYearName; // Check for current school year
                 });
                 const currentClass = currentClassEnrollment ? classes.find(c => c.id === currentClassEnrollment.class_id) : undefined;
 

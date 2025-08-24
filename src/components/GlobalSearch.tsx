@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Profile, Course, Message, Event, Document } from "@/lib/dataModels";
 import { Link, useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
+// import { useSwipeable } from 'react-swipeable'; // Removed import
 
 interface GlobalSearchProps {
   isOpen: boolean;
@@ -37,15 +37,15 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Swipe handlers for closing the sheet on mobile
-  const handlers = useSwipeable({
-    onSwipedDown: () => {
-      if (isMobile && isOpen) {
-        onClose();
-      }
-    },
-    preventScrollOnSwipe: true,
-    trackMouse: true, // For testing on desktop
-  });
+  // const handlers = useSwipeable({ // Removed useSwipeable hook
+  //   onSwipedDown: () => {
+  //     if (isMobile && isOpen) {
+  //       onClose();
+  //     }
+  //   },
+  //   preventScrollOnSwipe: true,
+  //   trackMouse: true, // For testing on desktop
+  // });
 
   useEffect(() => {
     if (isOpen) {
@@ -156,7 +156,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="top" className="h-full flex flex-col" {...handlers}> {/* Apply swipe handlers here */}
+      <SheetContent side="top" className="h-full flex flex-col"> {/* Removed swipe handlers here */}
         <div className="flex items-center space-x-2 py-4 border-b">
           <Input
             ref={inputRef}

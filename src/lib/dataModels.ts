@@ -98,7 +98,7 @@ export interface ProfessorSubjectAssignment { // New: Professor-Subject-Class-Ye
   subject_name?: string; // For convenience when fetching
   class_id: string;
   class_name?: string; // For convenience when fetching
-  school_year_id: string; // Changed: Link to SchoolYear
+  school_year_id: string;
   school_year_name?: string; // For convenience when fetching
   created_at?: string;
 }
@@ -220,5 +220,5 @@ export interface NavItem {
   type: 'link' | 'trigger';
   items?: { to: string; label: string; icon: ElementType; type: 'link' }[];
   badge?: number; // New: for unread message count
-  description?: string; // New: Optional description for drawer items
+  description?: string; // Added description for drawer items
 }

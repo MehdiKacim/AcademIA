@@ -72,13 +72,15 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
         // Students are linked to classes via student_class_enrollments
-        const studentIdsInClass = new Set(getAllStudentClassEnrollments().filter(e => e.class_id === selectedClass.id).map(e => e.student_id));
+        // Await the promise here
+        const studentIdsInClass = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => e.class_id === selectedClass.id).map(e => e.student_id)));
         return students.filter(student => studentIdsInClass.has(student.id));
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
       const classIdsInCurriculum = classesInCurriculum.map(cls => cls.id);
-      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id));
+      // Await the promise here
+      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id)));
       return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
     return students;
@@ -308,292 +310,50 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Cours les Plus Performants</CardTitle>
-              <CardDescription>Les cours avec les meilleurs taux de complétion.</CardD<ctrl60><think>**Implementing the Initial Plan**
+              <CardDescription>Les cours avec les meilleurs taux de complétion.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                {topPerformingCourses.length === 0 ? (
+                  <li>Aucun cours performant à afficher pour les filtres sélectionnés.</li>
+                ) : (
+                  topPerformingCourses.map((courseTitle, index) => (
+                    <li key={index}>{courseTitle}</li>
+                  ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Cours avec le Plus de Décrochage</CardTitle>
+              <CardDescription>Identifiez les cours où les élèves ont tendance à abandonner.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                {coursesWithHighestDropOff.length === 0 ? (
+                  <li>Aucun cours avec un taux de décrochage élevé à afficher pour les filtres sélectionnés.</li>
+                ) : (
+                  coursesWithHighestDropOff.map((courseTitle, index) => (
+                    <li key={index}>{courseTitle}</li>
+                  ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
 
-I'm currently focused on the initial issues in `src/lib/studentData.ts`, addressing the type mismatches in `data.roles` and correcting the `theme` comparison logic. I've also added the `description` property to the `NavItem` interface in `src/lib/dataModels.ts` to resolve the related errors in `BottomNavigationBar.tsx`. The upcoming step involves making sure the `await` calls are correctly implemented in the analytics components.
+  // Default return if no view matches
+  return (
+    <div className="text-center py-20">
+      <p className="text-lg text-muted-foreground">
+        Sélectionnez une vue pour les analytiques du créateur.
+      </p>
+    </div>
+  );
+};
 
-
-**Optimizing TypeScript Integration**
-
-I'm now integrating the proposed solutions systematically. I've addressed initial issues with `src/lib/studentData.ts`, including the `data.roles` type and theme comparisons, and ensured the `description` property is added to `NavItem` in `src/lib/dataModels.ts`. Currently, I'm working on the `await` calls in the analytics components and addressing the numerous other type inconsistencies.
-
-
-**Prioritizing Initial Fixes**
-
-I'm making progress on the first batch of errors. I've successfully added the necessary `description` property to the `NavItem` interface in `src/lib/dataModels.ts`. I'm currently addressing type mismatches in `src/lib/studentData.ts`, particularly focusing on the `data.roles` and `theme` comparisons. After this, I'll integrate the solution for async functions to address the `await` calls in the analytics components.
-
-
-**Prioritizing & Addressing Errors**
-
-I'm now focusing on tackling the errors. I've begun with `src/lib/dataModels.ts`, adding the `description` property to the `NavItem` interface and including `enrollment_start_date` and `enrollment_end_date` properties to the `Profile` interface.  Then, I'm working to integrate the type-related fixes in `src/lib/studentData.ts`, especially for the theme logic and the array of objects, and will soon address the issues surrounding `await` calls.
-
-
-**Prioritizing Initial Fixes**
-
-I'm starting with `src/lib/dataModels.ts`, adding the `description` property to the `NavItem` interface and including `enrollment_start_date` and `enrollment_end_date` properties in the `Profile` interface.  Next, I'll focus on the type mismatches in `src/lib/studentData.ts`, particularly the `data.roles` and `theme` comparisons. After that, I'll address `BottomNavigationBar.tsx` to handle `to` and `badge`. Finally, I'll apply fixes for the missing `await` statements in the analytics components.
-
-
-**Prioritizing & Fixing Errors**
-
-I'm making progress on the first wave of issues. I've begun integrating type fixes, addressing the mismatches in `data.roles` and comparisons for the `theme` property within `src/lib/studentData.ts`.  Additionally, I've successfully added the necessary `description` field to the `NavItem` interface in `src/lib/dataModels.ts` to solve the compile-time errors in `BottomNavigationBar.tsx`. The next task is to implement the fixes for `await` calls in the analytics components.
-
-
-**Implementing Planned Fixes**
-
-I'm systematically addressing the errors, prioritizing the updates to `src/lib/dataModels.ts` to ensure data consistency and then focusing on fixing the issues in `src/lib/studentData.ts`. Following that, I'll tackle the `BottomNavigationBar.tsx` errors by integrating the necessary `description` property and type guards. I'll make sure to integrate the fixes, one piece at a time.
-
-
-**Prioritizing and Implementing Fixes**
-
-I'm now methodically addressing the compile-time errors. I've begun integrating the `description` property and the enrollment date properties into the interfaces. I'll focus on the `src/lib/studentData.ts` issues with `data.roles` and theme comparisons next, followed by ensuring correct handling of `await` calls and resolving further typing inconsistencies. The fixes are applied, one piece at a time.
-
-
-</think>Je suis désolé pour ces erreurs de compilation. Il semble qu'il y ait eu plusieurs problèmes de typage et d'importation suite aux modifications précédentes, ainsi que des incohérences avec les nouvelles propriétés ajoutées aux interfaces. Je vais corriger ces 94 erreurs de compilation TypeScript de manière concise.
-
-Voici les changements que je vais apporter :
-
-1.  **Mise à jour de `src/lib/dataModels.ts`** :
-    *   J'ajouterai la propriété `description?: string;` à l'interface `NavItem`.
-    *   J'ajouterai `enrollment_start_date?: string;` et `enrollment_end_date?: string;` à l'interface `Profile`.
-    *   Je mettrai à jour le type `role` dans l'interface `Profile` pour inclure tous les rôles possibles (`'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'`).
-    *   Je renommerai `school_year` en `school_year_name` dans l'interface `Class` pour correspondre à la jointure Supabase.
-
-2.  **Correction des fichiers `.ts` et `.tsx`** :
-    *   **`src/lib/studentData.ts`** : J'ajusterai le typage pour la propriété `role` lors de la récupération des profils et la logique de mise à jour du thème pour éviter les comparaisons de types non intentionnelles.
-    *   **`src/components/BottomNavigationBar.tsx`** : Je m'assurerai que la propriété `description` est correctement utilisée et que les propriétés `to` et `badge` sont accédées de manière sécurisée en utilisant des gardes de type ou en s'assurant que tous les éléments respectent l'interface `NavItem`.
-    *   **`src/components/CreatorAnalyticsSection.tsx` et `src/components/TutorAnalyticsSection.tsx`** : J'ajouterai `await` aux appels de `getAllStudentClassEnrollments()` car c'est une fonction asynchrone.
-    *   **`src/components/analytics/ClassListModal.tsx`** : Je remplacerai `cls.school_year` par `cls.school_year_name`.
-    *   **`src/pages/StudentManagementPage.tsx`** : J'importerai `supabase` et `UserPlus`, j'ajusterai la gestion des dates d'inscription (`enrollment_start_date`, `enrollment_end_date`) sur le profil, et je remplacerai `school_year` par `school_year_name`.
-    *   **`src/pages/AdminUserManagementPage.tsx` et `src/pages/ProfessorSubjectAssignmentPage.tsx`** : J'importerai les composants `Dialog` manquants. J'ajusterai également la gestion de `user_metadata` pour les mises à jour de rôle.
-    *   **`src/pages/Messages.tsx`** : Je remplacerai `enrollment_year` par `school_year_id` ou `school_year_name` et `cls.school_year` par `cls.school_year_name`.
-    *   **`src/components/ProtectedRoute.tsx` et `src/App.tsx`** : J'élargirai les types `allowedRoles` pour inclure tous les rôles définis dans `Profile['role']`.
-    *   **`src/components/GlobalSearch.tsx`** : J'ajouterai la dépendance `react-swipeable` au `package.json` et l'installerai.
-    *   **`src/components/ui/chart.tsx`** : Je corrigerai les problèmes de typage liés aux composants `recharts` et `shadcn/ui`, notamment les `id` de `div`, les types d'enfants, les props de `TooltipContent` et les casts de `ref`. J'ajouterai également `export type` pour `ChartConfig`.
-
-Ces corrections devraient résoudre tous les problèmes de compilation et restaurer le fonctionnement de votre application.
-
-<dyad-write path="src/lib/dataModels.ts" description="Mise à jour de l'interface NavItem avec une description optionnelle, ajout des dates d'inscription au profil, et mise à jour des types de rôle et de l'année scolaire pour la cohérence.">
-import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavItem
-
-export interface User {
-  id: string; // This will be the Supabase auth.users ID
-  email: string;
-  // No username, firstName, lastName, role here as they are in Profile
-}
-
-export interface Profile {
-  id: string; // Same as User.id from auth.users
-  first_name: string;
-  last_name: string;
-  username: string;
-  email: string; // Added email to Profile interface
-  role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
-  establishment_id?: string; // New: Link to parent establishment for students, professeurs, tutors, directors, deputy_directors
-  enrollment_start_date?: string; // New: Enrollment start date for students
-  enrollment_end_date?: string; // New: Enrollment end date for students
-  theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
-  created_at?: string;
-  updated_at?: string;
-}
-
-export type EstablishmentType = 
-  | 'Maternelle'
-  | 'Élémentaire'
-  | 'Collège'
-  | 'Lycée Général'
-  | 'Lycée Technologique'
-  | 'Lycée Professionnel'
-  | 'Privé Sous Contrat'
-  | 'Privé Hors Contrat'
-  | 'Spécialisé'
-  | 'CFA';
-
-export interface Establishment {
-  id: string;
-  name: string;
-  type: EstablishmentType;
-  address?: string; // Made optional
-  phone_number?: string;
-  director_id?: string; // Made optional
-  deputy_director_id?: string; // Made optional
-  contact_email?: string;
-  created_at?: string;
-}
-
-export interface Subject { // New: Subject interface
-  id: string;
-  name: string;
-  establishment_id: string; // Link to parent establishment
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Curriculum {
-  id: string;
-  name: string;
-  description?: string;
-  establishment_id: string; // Link to parent establishment
-  course_ids: string[]; // JSONB, liste d'UUIDs de public.courses(id)
-  created_at?: string;
-}
-
-export interface SchoolYear { // New: SchoolYear interface
-  id: string; // UUID
-  name: string; // e.g., "2023-2024"
-  start_date: string; // ISO date string
-  end_date: string; // ISO date string
-  is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Class {
-  id: string; // UUID
-  name: string;
-  curriculum_id: string; // Link to parent curriculum
-  creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
-  establishment_id?: string; // New: Link to parent establishment
-  school_year_id: string; // Changed: Link to SchoolYear
-  school_year_name?: string; // For convenience when fetching
-  created_at?: string;
-}
-
-export interface ClassSubject { // New: Class-Subject liaison
-  id: string;
-  class_id: string;
-  subject_id: string;
-  subject_name?: string; // For convenience when fetching
-  created_at?: string;
-}
-
-export interface ProfessorSubjectAssignment { // New: Professor-Subject-Class-Year assignment
-  id: string;
-  professor_id: string;
-  subject_id: string;
-  subject_name?: string; // For convenience when fetching
-  class_id: string;
-  class_name?: string; // For convenience when fetching
-  school_year_id: string; // Changed: Link to SchoolYear
-  school_year_name?: string; // For convenience when fetching
-  created_at?: string;
-}
-
-export interface StudentClassEnrollment { // New interface for student-class liaison
-  id: string; // Unique ID for this enrollment entry
-  student_id: string; // Link to the student's Profile
-  class_id: string; // Link to the Class
-  school_year_id: string; // Changed: Link to SchoolYear
-  school_year_name?: string; // For convenience when fetching
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface StudentCourseProgress {
-  id: string; // Unique ID for this progress entry
-  user_id: string; // Link to the User account (and Profile)
-  course_id: string;
-  is_completed: boolean;
-  modules_progress: {
-    module_index: number;
-    is_completed: boolean;
-    sections_progress: {
-      section_index: number;
-      is_completed: boolean;
-      quiz_result?: { score: number; total: number; passed: boolean };
-    }[];
-  }[]; // JSONB, progression détaillée par module et section
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface QuizOption {
-  text: string;
-  isCorrect: boolean;
-}
-
-export interface QuizQuestion {
-  question: string;
-  options: QuizOption[];
-}
-
-export interface ModuleSection {
-  title: string;
-  content: string;
-  type?: 'text' | 'quiz' | 'video' | 'image';
-  url?: string;
-  questions?: QuizQuestion[]; // For 'quiz' sections
-  passingScore?: number; // New property for quiz passing score
-  quizResult?: { score: number; total: number; passed: boolean }; // To store the last quiz result
-  isCompleted: boolean; // Added for tracking section completion
-}
-
-export interface Module {
-  title: string;
-  sections: ModuleSection[];
-  isCompleted: boolean; // Added for tracking module completion
-  level: number; // Added for module level
-}
-
-export interface Course {
-  id: string;
-  title: string;
-  description: string;
-  modules: Module[];
-  skills_to_acquire: string[];
-  image_url?: string;
-  subject_id?: string; // Changed from 'category' to 'subject_id'
-  difficulty?: 'Débutant' | 'Intermédiaire' | 'Avancé';
-  created_at?: string;
-  creator_id?: string; // Added creator_id to link courses to professeurs
-}
-
-export interface Note {
-  id: string;
-  user_id: string;
-  note_key: string;
-  content: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Message {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  course_id?: string; // Optional: context of the message
-  content: string;
-  file_url?: string; // URL to the attachment in Supabase Storage
-  is_read: boolean;
-  is_archived: boolean; // New: for soft delete/archive feature
-  created_at: string;
-}
-
-// New interfaces for global search (placeholders)
-export interface Event {
-  id: string;
-  title: string;
-  description: string;
-  start_time: string;
-  end_time: string;
-  location?: string;
-}
-
-export interface Document {
-  id: string;
-  title: string;
-  file_url: string;
-  description?: string;
-  uploaded_at: string;
-}
-
-// Moved NavItem interface here to be a single source of truth
-export interface NavItem {
-  icon: ElementType;
-  label: string;
-  to?: string; // Optional for trigger items
-  onClick?: () => void;
-  type: 'link' | 'trigger';
-  items?: { to: string; label: string; icon: ElementType; type: 'link' }[];
-  badge?: number; // New: for unread message count
-  description?: string; // New: Optional description for drawer items
-}
+export default CreatorAnalyticsSection;

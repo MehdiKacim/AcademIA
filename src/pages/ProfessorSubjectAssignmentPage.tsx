@@ -505,7 +505,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
                 <SelectContent>
-                  {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
                   {establishmentsToDisplayForFilter.map(est => (
                     <SelectItem key={est.id} value={est.id}>
                       {est.name}
