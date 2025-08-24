@@ -121,21 +121,8 @@ const BottomNavigationBar = ({
           : item
       );
 
-  // Filter out items that are already in the fixed bottom nav
-  const drawerItems = React.useMemo(() => {
-    const fixedItemPaths = new Set(
-      fixedBottomNavItems.map((item) => item.to).filter(Boolean)
-    );
-    const fixedItemLabels = new Set(
-      fixedBottomNavItems.map((item) => item.label)
-    );
-
-    return allNavItemsForDrawer.filter(
-      (drawerItem) =>
-        (drawerItem.to && !fixedItemPaths.has(drawerItem.to)) ||
-        (!drawerItem.to && !fixedItemLabels.has(drawerItem.label))
-    );
-  }, [allNavItemsForDrawer, fixedBottomNavItems]);
+  // Use allNavItemsForDrawer directly for drawer items, no filtering needed here
+  const drawerItems = allNavItemsForDrawer;
 
   // Group and sort drawer items by category
   const groupedDrawerItems = React.useMemo(() => {

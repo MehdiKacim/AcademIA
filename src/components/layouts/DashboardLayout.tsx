@@ -155,6 +155,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     const items: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Accueil", type: 'link', category: "Général" },
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, category: "Général" },
+      { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), category: "Général" },
+      { to: "/profile", icon: User, label: "Mon profil", type: 'link', category: "Général" },
     ];
 
     if (currentRole === 'student') {
