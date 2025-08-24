@@ -30,6 +30,7 @@ import {
 import AuthMenu from "./AuthMenu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
 
 interface BottomNavigationBarProps {
   allNavItemsForDrawer: NavItem[];
@@ -190,6 +191,17 @@ const BottomNavigationBar = ({
     );
   }, [currentDrawerItems, searchQuery]);
 
+  // Swipe handlers for opening the "More" drawer on mobile
+  const swipeHandlers = useSwipeable({
+    onSwipedUp: () => {
+      if (isMobile && !isMoreDrawerOpen && !isProfileDrawerOpen && !isAuthDrawerOpen) {
+        setIsMoreDrawerOpen(true);
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackMouse: true, // For testing on desktop
+  });
+
   // Move the conditional return to the very end, after all hooks have been called
   if (!isMobile) {
     return null;
@@ -197,7 +209,10 @@ const BottomNavigationBar = ({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden">
+      <div
+        {...swipeHandlers} // Apply swipe handlers here
+        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden"
+      >
         {dynamicFixedBottomNavItems.map((item: NavItem) => { // Explicitly type item as NavItem
           // Ensure item.to is only accessed if item.type is 'link'
           const isLinkActive = item.type === 'link' && item.to && (location.pathname + location.search).startsWith(item.to);
