@@ -37,10 +37,8 @@ export function ThemeToggle() {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="light">Clair</SelectItem>
-        <SelectItem value="light-grey">Gris Clair</SelectItem>
-        <SelectItem value="blue-light">Bleu Clair</SelectItem>
-        <SelectItem value="green-light">Vert Clair</SelectItem>
-        <SelectItem value="purple-light">Violet Clair</SelectItem>
+        <SelectItem value="modern-blue">Bleu Moderne</SelectItem>
+        <SelectItem value="forest-green">Vert Forêt</SelectItem>
         <SelectItem value="dark">Sombre</SelectItem>
         <SelectItem value="system">Système</SelectItem>
       </SelectContent>
