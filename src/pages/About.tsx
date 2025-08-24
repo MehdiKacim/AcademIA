@@ -9,10 +9,11 @@ import { cn } from '@/lib/utils';
 const About = () => {
   const appVersion = packageJson.version;
 
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-  };
+  // Removed cardVariants as motion.div wrappers are being removed
+  // const cardVariants: Variants = {
+  //   hidden: { opacity: 0, y: 50 },
+  //   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  // };
 
   return (
     <div className="space-y-6 p-4">
@@ -34,7 +35,7 @@ const About = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <motion.div variants={cardVariants}>
+        {/* Removed motion.div wrapper */}
           <Card className="shadow-md h-full">
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
               <Info className="h-5 w-5 text-primary" />
@@ -57,9 +58,9 @@ const About = () => {
               </p>
             </CardContent>
           </Card>
-        </motion.div>
+        {/* Removed motion.div wrapper */}
 
-        <motion.div variants={cardVariants}>
+        {/* Removed motion.div wrapper */}
           <Card className="shadow-md h-full">
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
               <Code className="h-5 w-5 text-primary" />
@@ -74,9 +75,9 @@ const About = () => {
               </p>
             </CardContent>
           </Card>
-        </motion.div>
+        {/* Removed motion.div wrapper */}
 
-        <motion.div variants={cardVariants}>
+        {/* Removed motion.div wrapper */}
           <Card className="shadow-md h-full">
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
               <Heart className="h-5 w-5 text-primary" />
@@ -103,7 +104,7 @@ const About = () => {
               </a>
             </CardContent>
           </Card>
-        </motion.div>
+        {/* Removed motion.div wrapper */}
       </div>
     </div>
   );
