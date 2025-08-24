@@ -51,7 +51,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const location = useLocation();
 
   const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
-  const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true); // Renamed from isFloatingButtonVisible
+  const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoTapCountRef = useRef(0);
 
@@ -239,7 +239,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [startAutoHideTimer]);
 
-  const isAiAChatButtonVisible = !isChatOpen; // Use renamed state, removed redundant declaration
+  // Corrected visibility logic: visible if its own state is true AND chat is not open
+  const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -353,7 +354,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         unreadMessagesCount={unreadMessages}
       />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAPersistentChat isVisible={isAiAChatButtonVisible} />}
+      {currentUserProfile && <FloatingAiAPersistentChat isVisible={floatingAiAChatButtonVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
