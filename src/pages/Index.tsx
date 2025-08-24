@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate, useLocation } from "react-router-dom"; // Import useLocation
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Logo from "@/components/Logo";
 import {
   Card,
@@ -29,10 +29,10 @@ import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { NavItem } from "@/lib/dataModels"; // Import NavItem
+import { NavItem } from "@/lib/dataModels";
 
 interface IndexProps {
-  setIsAdminModalOpen: (isOpen: boolean) => void; // Keep this prop as it's used for the shortcut
+  setIsAdminModalOpen: (isOpen: boolean) => void;
 }
 
 const Index = ({ setIsAdminModalOpen }: IndexProps) => {
@@ -50,10 +50,8 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
   const logoTapCountRef = useRef(0);
-  const location = useLocation(); // Initialize useLocation
+  const location = useLocation();
 
-  // Fetch latest APK release data using TanStack Query
-  // This query is no longer needed as the APK download button is removed.
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
     queryKey: ['latestApkRelease'],
     queryFn: async () => {
@@ -63,8 +61,8 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
       }
       return data;
     },
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour
-    enabled: false, // Disable fetching APK data as it's no longer used
+    staleTime: 1000 * 60 * 60,
+    enabled: false,
   });
 
   useEffect(() => {
@@ -94,6 +92,25 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
       if (sectionRefs.methodologie.current) observer.unobserve(sectionRefs.methodologie.current);
     };
   }, []);
+
+  // New useEffect for scrolling to hash links
+  useEffect(() => {
+    if (location.hash) {
+      const element = document.getElementById(location.hash.substring(1)); // Remove '#'
+      if (element) {
+        const timer = setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100); // Small delay to ensure element is rendered
+        return () => clearTimeout(timer);
+      }
+    } else if (location.pathname === '/' && !location.hash) {
+      // If on root path with no hash, scroll to top or 'accueil'
+      const timer = setTimeout(() => {
+        sectionRefs.accueil.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash, location.pathname]);
 
   const handleAuthSuccess = () => {
     setIsAuthModalOpen(false);
@@ -169,7 +186,11 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {indexNavItems.map((item) => {
               if (item.type === 'link' && item.to) {
-                const isActive = (item.to === '/' && location.pathname === '/' && location.hash === '') || (item.to.startsWith('#') && location.hash === item.to);
+                // Refined isActive logic for header links
+                const isActive = 
+                  (item.to === '/' && location.pathname === '/' && !location.hash) || // Home link
+                  (item.to.startsWith('#') && location.pathname === '/' && location.hash === item.to); // Hash link on home page
+                
                 return (
                   <Link
                     key={item.to}
@@ -183,7 +204,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
                   </Link>
                 );
               }
-              return null; // Should not happen with current indexNavItems definition
+              return null;
             })}
           </nav>
         )}
@@ -292,15 +313,14 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         </Button>
       </footer>
 
-      {/* Always render BottomNavigationBar */}
       <BottomNavigationBar
-        allNavItemsForDrawer={indexNavItems} // Pass indexNavItems for non-logged-in users
-        currentUser={currentUserProfile} // Pass currentUserProfile (can be null)
+        allNavItemsForDrawer={indexNavItems}
+        currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
         isMoreDrawerOpen={isMoreDrawerOpen}
         setIsMoreDrawerOpen={setIsMoreDrawerOpen}
-        unreadMessagesCount={0} // No unread messages on index page
-        onOpenGlobalSearch={() => { /* No-op on index page */ }} // No global search on index page
+        unreadMessagesCount={0}
+        onOpenGlobalSearch={() => { /* No-op on index page */ }}
       />
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />

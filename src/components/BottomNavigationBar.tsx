@@ -73,14 +73,11 @@ const BottomNavigationBar = ({
   const navigate = useNavigate();
   const { signOut } = useRole();
 
-  // Removed isProfileDrawerOpen and isAuthDrawerOpen states
-
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerContent, setDrawerContent] = useState<'categories' | 'items'>('categories');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeCategoryIcon, setActiveCategoryIcon] = useState<React.ElementType | null>(null);
 
-  // Memoize fixedBottomNavItems to ensure its reference stability
   const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
     return [
       {
@@ -92,21 +89,19 @@ const BottomNavigationBar = ({
     ];
   }, []);
 
-  // Dynamically add "Recherche" or "Authentification" based on user status
   const dynamicFixedBottomNavItems: NavItem[] = currentUser
     ? [
         ...fixedBottomNavItems,
+        { icon: MessageSquare, label: "Messages", type: "link", to: "/messages", badge: unreadMessagesCount },
         { icon: Search, label: "Recherche", type: "trigger", onClick: onOpenGlobalSearch },
       ]
     : [
-        ...fixedBottomNavItems,
+        { to: "/", icon: Home, label: "Accueil", type: "link" }, // Home link for non-logged-in users
         { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Général", categoriesConfig["Général"].icon); } }
       ];
 
-  // The drawerItems are now simply allNavItemsForDrawer, as fixed items are no longer duplicated
   const drawerItems = allNavItemsForDrawer;
 
-  // Group and sort drawer items by category
   const groupedDrawerItems = React.useMemo(() => {
     const groups: { [key: string]: NavItem[] } = {};
     drawerItems.forEach(item => {
@@ -117,7 +112,6 @@ const BottomNavigationBar = ({
       groups[category].push(item);
     });
 
-    // Sort categories alphabetically, then items within categories by label
     return Object.keys(groups).sort().map(category => ({
       category,
       items: groups[category].sort((a, b) => a.label.localeCompare(b.label))
@@ -127,7 +121,6 @@ const BottomNavigationBar = ({
   const handleLogout = async () => {
     await signOut();
     navigate("/");
-    // Close the drawer after logout
     setIsMoreDrawerOpen(false);
     setDrawerContent('categories');
     setActiveCategory(null);
@@ -136,7 +129,6 @@ const BottomNavigationBar = ({
   };
 
   const handleAuthSuccess = () => {
-    // Close the drawer after successful login
     setIsMoreDrawerOpen(false);
     setDrawerContent('categories');
     setActiveCategory(null);
@@ -146,23 +138,17 @@ const BottomNavigationBar = ({
   };
 
   const handleDrawerItemClick = (item: NavItem) => {
-    console.log("Attempting to handle drawer item click:", item.label, "to:", item.to);
     if (item.type === 'link' && item.to) {
-      console.log("Navigating to:", item.to);
       navigate(item.to);
       setIsMoreDrawerOpen(false);
-      // Reset drawer state when navigating
       setDrawerContent('categories');
       setActiveCategory(null);
       setActiveCategoryIcon(null);
       setSearchQuery('');
     } else if (item.onClick) {
-      console.log("Triggering onClick for:", item.label);
       item.onClick();
-      // Do not close the drawer if it's a search trigger, as the overlay will handle closing
       if (item.label !== "Recherche") {
         setIsMoreDrawerOpen(false);
-        // Reset drawer state when triggering an action
         setDrawerContent('categories');
         setActiveCategory(null);
         setActiveCategoryIcon(null);
@@ -175,17 +161,16 @@ const BottomNavigationBar = ({
     setActiveCategory(categoryLabel);
     setActiveCategoryIcon(categoryIcon);
     setDrawerContent('items');
-    setSearchQuery(''); // Clear search when entering a category
+    setSearchQuery('');
   };
 
   const handleBackToCategories = () => {
     setDrawerContent('categories');
     setActiveCategory(null);
     setActiveCategoryIcon(null);
-    setSearchQuery(''); // Clear search when going back to categories
+    setSearchQuery('');
   };
 
-  // Filter items for display in the drawer based on search query and current view
   const filteredDisplayContent = React.useMemo(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
 
@@ -195,20 +180,19 @@ const BottomNavigationBar = ({
         group.items.some(item => item.label.toLowerCase().includes(lowerCaseQuery) || (item.description && item.description.toLowerCase().includes(lowerCaseQuery)))
       );
       return filteredCategories;
-    } else { // drawerContent === 'items'
+    } else {
       const currentCategoryItems = groupedDrawerItems.find(group => group.category === activeCategory)?.items || [];
       const filteredItems = currentCategoryItems.filter(item =>
         item.label.toLowerCase().includes(lowerCaseQuery) ||
         (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
       );
-      return [{ category: activeCategory || "Autres", items: filteredItems }]; // Wrap in an array for consistent rendering
+      return [{ category: activeCategory || "Autres", items: filteredItems }];
     }
   }, [groupedDrawerItems, searchQuery, drawerContent, activeCategory]);
 
-  // Swipe handlers for opening the "More" drawer on mobile
   const swipeHandlers = useSwipeable({
     onSwipedUp: () => {
-      if (isMobile && !isMoreDrawerOpen) { // Removed other drawer checks
+      if (isMobile && !isMoreDrawerOpen) {
         setIsMoreDrawerOpen(true);
       }
     },
@@ -216,7 +200,6 @@ const BottomNavigationBar = ({
     trackMouse: true,
   });
 
-  // Reset drawer state when it closes
   useEffect(() => {
     if (!isMoreDrawerOpen) {
       setDrawerContent('categories');
@@ -237,7 +220,10 @@ const BottomNavigationBar = ({
         className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden"
       >
         {dynamicFixedBottomNavItems.map((item: NavItem) => {
-          const isLinkActive = item.type === 'link' && item.to && (location.pathname + location.search).startsWith(item.to);
+          // Refined isLinkActive logic for fixed bottom nav items
+          const isLinkActive = 
+            (item.to === '/' && location.pathname === '/' && !location.hash) || // Home link
+            (item.to && !item.to.startsWith('#') && location.pathname.startsWith(item.to)); // Regular path link
 
           if (item.type === 'link' && item.to) {
             return (
@@ -247,7 +233,7 @@ const BottomNavigationBar = ({
                 className={({ isActive }) =>
                   cn(
                     "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 w-1/5",
-                    isActive
+                    isActive || isLinkActive // Use both for robustness, NavLink's isActive is usually better for paths
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
                   )
@@ -289,10 +275,6 @@ const BottomNavigationBar = ({
         </Button>
       </div>
 
-      {/* Removed Profile/Settings Drawer for Mobile */}
-      {/* Removed Authentication Drawer for Mobile */}
-
-      {/* "More" Navigation Drawer for Mobile (Quick Settings style with categories) */}
       <Drawer open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
         <DrawerContent side="bottom" className="h-[calc(100vh-68px)] mt-0 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
@@ -319,7 +301,7 @@ const BottomNavigationBar = ({
                 {drawerContent === 'items' ? `Éléments de la catégorie ${activeCategory}` : "Toutes les options de navigation."}
               </DrawerDescription>
             </DrawerHeader>
-            {currentUser && ( // Condition added here
+            {currentUser && (
               <div className="p-4 border-b border-border">
                 <Input
                   placeholder={drawerContent === 'categories' ? "Rechercher une catégorie ou un élément..." : `Rechercher dans ${activeCategory}...`}
@@ -337,8 +319,6 @@ const BottomNavigationBar = ({
                   <div key={group.category} className="space-y-2">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {drawerContent === 'categories' ? (
-                        // Display categories as buttons
-                        // Only show category button if it has items (or if search matches category label)
                         (group.items.length > 0 || (categoriesConfig[group.category]?.label.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== '')) && (
                           <Button
                             variant="outline"
@@ -354,9 +334,13 @@ const BottomNavigationBar = ({
                           </Button>
                         )
                       ) : (
-                        // Display items within the active category
                         group.items.map((item) => {
-                          const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                          // Refined isLinkActive logic for drawer items
+                          const isLinkActive = 
+                            (item.to === '/' && location.pathname === '/' && !location.hash) || // Home link
+                            (item.to?.startsWith('#') && location.pathname === '/' && location.hash === item.to) || // Hash link on home page
+                            (item.to && !item.to.startsWith('#') && location.pathname.startsWith(item.to)); // Regular path link
+                          
                           return (
                             <Button
                               key={item.to || item.label}
@@ -385,11 +369,9 @@ const BottomNavigationBar = ({
               )}
             </div>
             <DrawerFooter>
-              {/* Render AuthMenu if not logged in and in General category */}
               {!currentUser && drawerContent === 'items' && activeCategory === 'Général' && (
                 <AuthMenu onClose={() => setIsMoreDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
               )}
-              {/* Render Logout button if logged in and in General category */}
               {currentUser && drawerContent === 'items' && activeCategory === 'Général' && (
                 <Button
                   variant="destructive"
