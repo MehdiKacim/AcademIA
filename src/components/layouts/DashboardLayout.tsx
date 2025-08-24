@@ -64,7 +64,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // States for desktop category navigation
   const [desktopActiveCategory, setDesktopActiveCategory] = useState<string | null>(null);
-  const [desktopShowCategories, setDesktopShowCategories] = useState(true);
+  const [isDesktopCategoryOverlayOpen, setIsDesktopCategoryOverlayOpen] = useState(false); // New state for overlay
 
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -253,12 +253,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   // Handlers for desktop category navigation
   const handleDesktopCategoryClick = (categoryLabel: string) => {
     setDesktopActiveCategory(categoryLabel);
-    setDesktopShowCategories(false);
+    setIsDesktopCategoryOverlayOpen(true); // Open the overlay
   };
 
   const handleDesktopBackToCategories = () => {
     setDesktopActiveCategory(null);
-    setDesktopShowCategories(true);
+    setIsDesktopCategoryOverlayOpen(false); // Close the overlay
   };
 
   const handleLogoClick = useCallback(() => {
@@ -291,59 +291,24 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {desktopShowCategories ? (
-              // Render category buttons
-              Object.keys(groupedFullNavTree).sort().map(category => {
-                const categoryItems = groupedFullNavTree[category];
-                if (categoryItems.length === 0) return null; // Don't show empty categories
+            {/* Always render category buttons in the header for desktop */}
+            {Object.keys(groupedFullNavTree).sort().map(category => {
+              const categoryItems = groupedFullNavTree[category];
+              if (categoryItems.length === 0) return null; // Don't show empty categories
 
-                const categoryConfig = categoriesConfig[category] || categoriesConfig["Autres"];
-                return (
-                  <Button
-                    key={category}
-                    variant="ghost"
-                    onClick={() => handleDesktopCategoryClick(category)}
-                    className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
-                  >
-                    {React.createElement(categoryConfig.icon, { className: "mr-2 h-4 w-4" })}
-                    {categoryConfig.label}
-                  </Button>
-                );
-              })
-            ) : (
-              // Render items within the active category
-              <>
-                <Button variant="ghost" onClick={handleDesktopBackToCategories} className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Retour
+              const categoryConfig = categoriesConfig[category] || categoriesConfig["Autres"];
+              return (
+                <Button
+                  key={category}
+                  variant="ghost"
+                  onClick={() => handleDesktopCategoryClick(category)}
+                  className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                >
+                  {React.createElement(categoryConfig.icon, { className: "mr-2 h-4 w-4" })}
+                  {categoryConfig.label}
                 </Button>
-                {groupedFullNavTree[desktopActiveCategory!]?.map((item) => {
-                  const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-                  return (
-                    <NavLink
-                      key={item.to || item.label}
-                      to={item.to || '#'}
-                      onClick={item.onClick}
-                      className={() =>
-                        cn(
-                          "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                          isLinkActive
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-accent hover:text-accent-foreground"
-                        )
-                      }
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.label}
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                          {item.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </>
-            )}
+              );
+            })}
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
@@ -395,8 +360,63 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           )}
         </div>
       </header>
+
+      {/* Desktop Category Items Overlay (Full-width drawer) */}
+      {!isMobile && isDesktopCategoryOverlayOpen && desktopActiveCategory && (
+        <div className="fixed top-[68px] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8">
+          <div className="max-w-7xl mx-auto flex flex-col gap-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <ArrowLeft className="h-5 w-5 cursor-pointer" onClick={handleDesktopBackToCategories} />
+                {React.createElement(categoriesConfig[desktopActiveCategory]?.icon || Info, { className: "h-6 w-6 text-primary" })}
+                {categoriesConfig[desktopActiveCategory]?.label || desktopActiveCategory}
+              </h2>
+              <Button variant="ghost" onClick={handleDesktopBackToCategories}>
+                <X className="h-5 w-5 mr-2" /> Fermer
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {groupedFullNavTree[desktopActiveCategory]?.map((item) => {
+                const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                return (
+                  <NavLink
+                    key={item.to || item.label}
+                    to={item.to || '#'}
+                    onClick={() => {
+                      if (item.onClick) item.onClick();
+                      setIsDesktopCategoryOverlayOpen(false); // Close overlay on item click
+                    }}
+                    className={() =>
+                      cn(
+                        "flex flex-col items-center justify-center p-4 rounded-lg border text-center h-24",
+                        isLinkActive
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "hover:bg-accent hover:text-accent-foreground",
+                        "transition-all duration-200 ease-in-out"
+                      )
+                    }
+                  >
+                    <item.icon className="h-6 w-6 mb-2" />
+                    <span className="text-sm font-medium line-clamp-1">{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <main
-        className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}
+        className={cn(
+          "flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto",
+          isMobile && "pb-20",
+          !isMobile && isDesktopCategoryOverlayOpen && "pt-[calc(68px+1rem+100px)]" // Adjust padding when overlay is open (header height + overlay padding + approx. overlay content height)
+        )}
       >
         <Outlet />
       </main>
