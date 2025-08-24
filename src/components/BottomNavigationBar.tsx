@@ -21,6 +21,7 @@ import {
   PenTool, // Added PenTool icon
   NotebookText, // Added NotebookText icon
   School, // Added School icon
+  LayoutList, // Added LayoutList icon
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
