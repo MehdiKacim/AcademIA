@@ -9,8 +9,8 @@ const About = () => {
   const appVersion = packageJson.version;
 
   return (
-    <div className="space-y-6"> {/* Removed p-4, it's now handled by ScrollArea in AboutModal */}
-      <div className="text-center mb-8">
+    <> {/* Remplacé le div racine par un fragment */}
+      <div className="text-center mb-8"> {/* Ajout de mb-8 pour l'espacement */}
         <div className="mb-4 mx-auto w-fit">
           <Logo iconClassName="w-24 h-24" showText={false} />
         </div>
@@ -23,12 +23,12 @@ const About = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-        <Card className="shadow-md h-full flex-shrink-0">
+        <Card className="shadow-md"> {/* Supprimé h-full flex-shrink-0 */}
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Info className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Détails d'AcademIA</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-center prose dark:prose-invert"> {/* Removed overflow-hidden */}
+          <CardContent className="space-y-3 text-sm text-center prose dark:prose-invert">
             <p className="text-muted-foreground">
               <span className="font-medium text-foreground">Nom de l'application :</span> AcademIA
             </p>
@@ -46,7 +46,7 @@ const About = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md h-full flex-shrink-0">
+        <Card className="shadow-md"> {/* Supprimé h-full flex-shrink-0 */}
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Code className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Développeur</CardTitle>
@@ -61,7 +61,7 @@ const About = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md h-full flex-shrink-0">
+        <Card className="shadow-md"> {/* Supprimé h-full flex-shrink-0 */}
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Heart className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Connectez-vous avec le développeur</CardTitle>
@@ -88,7 +88,7 @@ const About = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </>
   );
 };
 
