@@ -31,8 +31,8 @@ import { Message } from "@/lib/dataModels";
 import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
-import SwipeUpIndicator from "@/components/SwipeUpIndicator";
-import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
+// Removed SwipeUpIndicator import
+// Removed useSwipeable import
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -332,18 +332,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen; // Use renamed state
 
   // Logic for SwipeUpIndicator visibility
-  const isSwipeUpIndicatorVisible = isMobile && currentUserProfile && !isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen;
-
-  // Swipe handlers for opening the "More" drawer on mobile
-  const swipeHandlers = useSwipeable({
-    onSwipedUp: () => {
-      if (isMobile && currentUserProfile && !isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen) {
-        setIsMoreDrawerOpen(true);
-      }
-    },
-    preventScrollOnSwipe: true,
-    trackMouse: true, // For testing on desktop
-  });
+  // The SwipeUpIndicator is now part of BottomNavigationBar, so this state is no longer needed here.
+  // const isSwipeUpIndicatorVisible = isMobile && currentUserProfile && !isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -468,7 +458,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </div>
       </header>
       <main
-        {...swipeHandlers} // Apply swipe handlers to the main content area
         className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}
       >
         <Outlet />
@@ -487,14 +476,13 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         isMoreDrawerOpen={isMoreDrawerOpen}
         setIsMoreDrawerOpen={setIsMoreDrawerOpen}
         unreadMessagesCount={unreadMessages}
-        onSwipeUpToOpenMoreDrawer={() => setIsMoreDrawerOpen(true)} // Pass the handler
       />
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <FloatingAiAPersistentChat isVisible={isAiAChatButtonVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
-      {isSwipeUpIndicatorVisible && <SwipeUpIndicator isVisible={isSwipeUpIndicatorVisible} />}
+      {/* Removed SwipeUpIndicator from here */}
     </div>
   );
 };

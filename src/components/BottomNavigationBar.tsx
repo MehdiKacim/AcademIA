@@ -10,6 +10,7 @@ import {
   Settings,
   Info,
   ArrowRight,
+  ChevronUp, // Import ChevronUp for the indicator
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
@@ -29,7 +30,7 @@ import {
 import AuthMenu from "./AuthMenu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-// Removed useSwipeable import as it will be handled in DashboardLayout
+import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
 
 interface BottomNavigationBarProps {
   allNavItemsForDrawer: NavItem[];
@@ -39,7 +40,7 @@ interface BottomNavigationBarProps {
   isMoreDrawerOpen: boolean;
   setIsMoreDrawerOpen: (isOpen: boolean) => void;
   unreadMessagesCount: number;
-  onSwipeUpToOpenMoreDrawer: () => void; // New prop for swipe-up gesture
+  // Removed onSwipeUpToOpenMoreDrawer as it's handled internally
 }
 
 const BottomNavigationBar = ({
@@ -50,7 +51,6 @@ const BottomNavigationBar = ({
   isMoreDrawerOpen,
   setIsMoreDrawerOpen,
   unreadMessagesCount,
-  onSwipeUpToOpenMoreDrawer, // Destructure new prop
 }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -136,6 +136,9 @@ const BottomNavigationBar = ({
           : item
       );
 
+  // Determine if the "More" slot should be shown (i.e., if there are more items for the drawer)
+  const showMoreSlot = getTopLevelDrawerItems().length > 0;
+
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -189,6 +192,17 @@ const BottomNavigationBar = ({
     );
   }, [currentDrawerItems, searchQuery]);
 
+  // Swipe handlers for opening the "More" drawer on mobile
+  const swipeHandlers = useSwipeable({
+    onSwipedUp: () => {
+      if (isMobile && !isMoreDrawerOpen && !isProfileDrawerOpen && !isAuthDrawerOpen) {
+        setIsMoreDrawerOpen(true);
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackMouse: true, // For testing on desktop
+  });
+
   // Move the conditional return to the very end, after all hooks have been called
   if (!isMobile) {
     return null;
@@ -197,6 +211,7 @@ const BottomNavigationBar = ({
   return (
     <>
       <div
+        {...swipeHandlers} // Apply swipe handlers here
         className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden"
       >
         {dynamicFixedBottomNavItems.map((item: NavItem) => { // Explicitly type item as NavItem
@@ -210,7 +225,7 @@ const BottomNavigationBar = ({
                 to={item.to}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 w-1/4", // Adjusted to w-1/4
+                    "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 w-1/5", // Use w-1/5 for even distribution
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
@@ -233,7 +248,7 @@ const BottomNavigationBar = ({
                 key={item.label}
                 variant="ghost"
                 onClick={item.onClick}
-                className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/4" // Adjusted to w-1/4
+                className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5" // Use w-1/5
               >
                 <item.icon className="h-5 w-5 mb-1" />
                 {item.label}
@@ -242,6 +257,17 @@ const BottomNavigationBar = ({
           }
           return null;
         })}
+
+        {showMoreSlot && ( // Render the swipe indicator button in the 5th slot
+          <Button
+            variant="ghost"
+            onClick={() => setIsMoreDrawerOpen(true)} // Click also opens the drawer
+            className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5"
+          >
+            <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" /> {/* Use ChevronUp directly */}
+            Menu
+          </Button>
+        )}
       </div>
 
       {/* Profile/Settings Drawer for Mobile */}
