@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 import Logo from "@/components/Logo";
 import {
   Card,
@@ -48,8 +48,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false); // NEW STATE
+  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
   const logoTapCountRef = useRef(0);
+  const location = useLocation(); // Initialize useLocation
 
   // Fetch latest APK release data using TanStack Query
   // This query is no longer needed as the APK download button is removed.
@@ -125,10 +126,10 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     },
   ];
 
-  const indexNavItems: NavItem[] = [ // Changed type to NavItem[]
-    { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/' }, // Changed to link type with 'to'
-    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#aiaBot' }, // Changed to link type with 'to'
-    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#methodologie' }, // Changed to link type with 'to'
+  const indexNavItems: NavItem[] = [
+    { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/' },
+    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#aiaBot' },
+    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#methodologie' },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -300,15 +301,16 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         </Button>
       </footer>
 
-      {currentUserProfile && ( // Condition added here
-        <BottomNavigationBar
-          allNavItemsForDrawer={indexNavItems} // Pass indexNavItems here
-          currentUser={currentUserProfile}
-          onOpenAboutModal={() => setIsAboutModalOpen(true)}
-          isMoreDrawerOpen={isMoreDrawerOpen} // Pass new state
-          setIsMoreDrawerOpen={setIsMoreDrawerOpen} // Pass new setter
-        />
-      )}
+      {/* Always render BottomNavigationBar, it will adapt its content */}
+      <BottomNavigationBar
+        allNavItemsForDrawer={indexNavItems}
+        currentUser={currentUserProfile} // Pass currentUserProfile (can be null)
+        onOpenAboutModal={() => setIsAboutModalOpen(true)}
+        isMoreDrawerOpen={isMoreDrawerOpen}
+        setIsMoreDrawerOpen={setIsMoreDrawerOpen}
+        unreadMessagesCount={0} // No unread messages on index page
+        onOpenGlobalSearch={() => { /* No-op on index page */ }} // No global search on index page
+      />
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
