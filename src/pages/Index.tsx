@@ -127,9 +127,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   ];
 
   const indexNavItems: NavItem[] = [
-    { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/' },
-    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#aiaBot' },
-    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#methodologie' },
+    { label: "Accueil", icon: Home, type: 'link', to: '/' },
+    { label: "AiA Bot", icon: MessageCircleMore, type: 'link', to: '#aiaBot' },
+    { label: "Méthodologie", icon: SlidersHorizontal, type: 'link', to: '#methodologie' },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -169,30 +169,21 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {indexNavItems.map((item) => {
               if (item.type === 'link' && item.to) {
+                const isActive = (item.to === '/' && location.pathname === '/' && location.hash === '') || (item.to.startsWith('#') && location.hash === item.to);
                 return (
                   <Link
                     key={item.to}
                     to={item.to}
                     className={cn(
                       "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      location.pathname === item.to ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                      isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {item.label}
                   </Link>
                 );
               }
-              // Fallback for trigger type if needed, though indexNavItems are now all 'link'
-              return (
-                <Button
-                  key={item.label}
-                  variant="ghost"
-                  onClick={item.onClick}
-                  className={cn(activeSection === item.label.toLowerCase().replace(' ', '') ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}
-                >
-                  {item.label}
-                </Button>
-              );
+              return null; // Should not happen with current indexNavItems definition
             })}
           </nav>
         )}
