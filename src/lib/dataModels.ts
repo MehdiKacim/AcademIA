@@ -217,8 +217,8 @@ export interface NavItem {
   label: string;
   to?: string; // Optional for trigger items
   onClick?: () => void;
-  type: 'link' | 'trigger';
-  items?: { to: string; label: string; icon: ElementType; type: 'link' }[];
+  type: 'link' | 'trigger'; // 'trigger' type will now be used for top-level items that open the drawer
+  category?: string; // New: for grouping items in the drawer
   badge?: number; // New: for unread message count
   description?: string; // Added description for drawer items
 }

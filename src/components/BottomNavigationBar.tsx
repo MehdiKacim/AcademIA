@@ -40,7 +40,6 @@ interface BottomNavigationBarProps {
   isMoreDrawerOpen: boolean;
   setIsMoreDrawerOpen: (isOpen: boolean) => void;
   unreadMessagesCount: number;
-  // Removed onSwipeUpToOpenMoreDrawer as it's handled internally
 }
 
 const BottomNavigationBar = ({
@@ -60,15 +59,6 @@ const BottomNavigationBar = ({
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
 
-  const [currentDrawerItems, setCurrentDrawerItems] = useState<NavItem[]>([]);
-  const [drawerTitle, setDrawerTitle] = useState("Menu");
-  const [drawerDescription, setDrawerDescription] =
-    useState("Toutes les options de navigation.");
-  const [drawerHistory, setDrawerHistory] = useState<{
-    items: NavItem[];
-    title: string;
-    description: string;
-  }[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Memoize fixedBottomNavItems to ensure its reference stability
@@ -102,7 +92,17 @@ const BottomNavigationBar = ({
     ];
   }, [onOpenGlobalSearch, unreadMessagesCount, setIsProfileDrawerOpen]);
 
-  const getTopLevelDrawerItems = React.useCallback(() => {
+  // If not logged in, replace "Profil" with "Authentification"
+  const dynamicFixedBottomNavItems: NavItem[] = currentUser
+    ? fixedBottomNavItems
+    : fixedBottomNavItems.map(item =>
+        item.label === "Profil"
+          ? { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => setIsAuthDrawerOpen(true) }
+          : item
+      );
+
+  // Filter out items that are already in the fixed bottom nav
+  const drawerItems = React.useMemo(() => {
     const fixedItemPaths = new Set(
       fixedBottomNavItems.map((item) => item.to).filter(Boolean)
     );
@@ -117,27 +117,23 @@ const BottomNavigationBar = ({
     );
   }, [allNavItemsForDrawer, fixedBottomNavItems]);
 
-  React.useEffect(() => {
-    if (isMoreDrawerOpen) {
-      setCurrentDrawerItems(getTopLevelDrawerItems());
-      setDrawerTitle("Menu");
-      setDrawerDescription("Toutes les options de navigation.");
-      setDrawerHistory([]);
-      setSearchQuery("");
-    }
-  }, [isMoreDrawerOpen, getTopLevelDrawerItems]);
+  // Group and sort drawer items by category
+  const groupedDrawerItems = React.useMemo(() => {
+    const groups: { [key: string]: NavItem[] } = {};
+    drawerItems.forEach(item => {
+      const category = item.category || "Autres";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(item);
+    });
 
-  // If not logged in, replace "Profil" with "Authentification"
-  const dynamicFixedBottomNavItems: NavItem[] = currentUser
-    ? fixedBottomNavItems
-    : fixedBottomNavItems.map(item =>
-        item.label === "Profil"
-          ? { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => setIsAuthDrawerOpen(true) }
-          : item
-      );
-
-  // Determine if the "More" slot should be shown (i.e., if there are more items for the drawer)
-  const showMoreSlot = getTopLevelDrawerItems().length > 0;
+    // Sort categories alphabetically, then items within categories by label
+    return Object.keys(groups).sort().map(category => ({
+      category,
+      items: groups[category].sort((a, b) => a.label.localeCompare(b.label))
+    }));
+  }, [drawerItems]);
 
   const handleLogout = async () => {
     await signOut();
@@ -154,43 +150,31 @@ const BottomNavigationBar = ({
     if (item.type === 'link' && item.to) {
       navigate(item.to);
       setIsMoreDrawerOpen(false);
-    } else if (item.type === 'trigger' && item.items) {
-      // Save current state to history
-      setDrawerHistory(prev => [...prev, { items: currentDrawerItems, title: drawerTitle, description: drawerDescription }]);
-      // Navigate to sub-items
-      setCurrentDrawerItems(item.items);
-      setDrawerTitle(item.label);
-      setDrawerDescription(item.description || `Options pour ${item.label}`);
-      setSearchQuery(''); // Clear search when drilling down
     } else if (item.onClick) {
       item.onClick();
       setIsMoreDrawerOpen(false);
     }
   };
 
-  const handleBackInDrawer = () => {
-    const previousState = drawerHistory.pop();
-    if (previousState) {
-      setCurrentDrawerItems(previousState.items);
-      setDrawerTitle(previousState.title);
-      setDrawerDescription(previousState.description);
-      setDrawerHistory([...drawerHistory]); // Update history to trigger re-render
-      setSearchQuery(''); // Clear search when going back
-    }
-  };
-
   // Filter items for display in the drawer based on search query
   const filteredDisplayItems = React.useMemo(() => {
     if (!searchQuery.trim()) {
-      return currentDrawerItems;
+      return groupedDrawerItems;
     }
     const lowerCaseQuery = searchQuery.toLowerCase();
-    return currentDrawerItems.filter(item =>
-      item.label.toLowerCase().includes(lowerCaseQuery) ||
-      (item.description && item.description.toLowerCase().includes(lowerCaseQuery)) ||
-      (item.items && item.items.some(subItem => subItem.label.toLowerCase().includes(lowerCaseQuery)))
-    );
-  }, [currentDrawerItems, searchQuery]);
+    const filteredGroups: { category: string; items: NavItem[] }[] = [];
+
+    groupedDrawerItems.forEach(group => {
+      const filteredItems = group.items.filter(item =>
+        item.label.toLowerCase().includes(lowerCaseQuery) ||
+        (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
+      );
+      if (filteredItems.length > 0) {
+        filteredGroups.push({ category: group.category, items: filteredItems });
+      }
+    });
+    return filteredGroups;
+  }, [groupedDrawerItems, searchQuery]);
 
   // Swipe handlers for opening the "More" drawer on mobile
   const swipeHandlers = useSwipeable({
@@ -258,16 +242,15 @@ const BottomNavigationBar = ({
           return null;
         })}
 
-        {showMoreSlot && ( // Render the swipe indicator button in the 5th slot
-          <Button
-            variant="ghost"
-            onClick={() => setIsMoreDrawerOpen(true)} // Click also opens the drawer
-            className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5"
-          >
-            <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" /> {/* Use ChevronUp directly */}
-            Menu
-          </Button>
-        )}
+        {/* Always render the swipe indicator button in the last slot */}
+        <Button
+          variant="ghost"
+          onClick={() => setIsMoreDrawerOpen(true)} // Click also opens the drawer
+          className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5"
+        >
+          <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" /> {/* Use ChevronUp directly */}
+          Menu
+        </Button>
       </div>
 
       {/* Profile/Settings Drawer for Mobile */}
@@ -346,13 +329,8 @@ const BottomNavigationBar = ({
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
             <DrawerHeader className="text-center">
               <div className="flex items-center justify-between">
-                {drawerHistory.length > 0 && (
-                  <Button variant="ghost" size="icon" onClick={handleBackInDrawer} className="absolute left-4">
-                    <ArrowLeft className="h-5 w-5" />
-                    <span className="sr-only">Retour</span>
-                  </Button>
-                )}
-                <DrawerTitle className={cn("flex-grow text-center", drawerHistory.length > 0 ? "ml-8" : "")}>{drawerTitle}</DrawerTitle>
+                {/* Removed back button as there's no nested navigation */}
+                <DrawerTitle className="flex-grow text-center">Menu</DrawerTitle>
                 <DrawerClose asChild>
                   <Button variant="ghost" size="icon" className="absolute right-4">
                     <X className="h-5 w-5" />
@@ -360,7 +338,7 @@ const BottomNavigationBar = ({
                   </Button>
                 </DrawerClose>
               </div>
-              <DrawerDescription className="text-center">{drawerDescription}</DrawerDescription>
+              <DrawerDescription className="text-center">Toutes les options de navigation.</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 border-b border-border">
               <Input
@@ -370,35 +348,39 @@ const BottomNavigationBar = ({
                 className="w-full"
               />
             </div>
-            <div className="flex-grow overflow-y-auto p-4 space-y-2">
+            <div className="flex-grow overflow-y-auto p-4 space-y-4"> {/* Increased space-y for better separation */}
               {filteredDisplayItems.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
               ) : (
-                filteredDisplayItems.map((item) => {
-                  const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-                  return (
-                    <Button
-                      key={item.to || item.label}
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start",
-                        isLinkActive ? "bg-accent text-accent-foreground" : ""
-                      )}
-                      onClick={() => handleDrawerItemClick(item)}
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.label}
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                          {item.badge}
-                        </span>
-                      )}
-                      {item.type === 'trigger' && item.items && (
-                        <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  );
-                })
+                filteredDisplayItems.map((group) => (
+                  <div key={group.category} className="space-y-2">
+                    <h3 className="text-sm font-semibold text-muted-foreground px-2 py-1 border-b border-muted/20">
+                      {group.category}
+                    </h3>
+                    {group.items.map((item) => {
+                      const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                      return (
+                        <Button
+                          key={item.to || item.label}
+                          variant="ghost"
+                          className={cn(
+                            "w-full justify-start",
+                            isLinkActive ? "bg-accent text-accent-foreground" : ""
+                          )}
+                          onClick={() => handleDrawerItemClick(item)}
+                        >
+                          <item.icon className="mr-2 h-4 w-4" />
+                          {item.label}
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                              {item.badge}
+                            </span>
+                          )}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ))
               )}
             </div>
             <DrawerFooter>

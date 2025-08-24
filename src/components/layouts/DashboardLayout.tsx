@@ -152,162 +152,72 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
-    const baseItems: NavItem[] = [
-      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
-      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages },
+    const items: NavItem[] = [
+      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link', category: "Général" },
+      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, category: "Général" },
     ];
 
-    const roleSpecificItems: NavItem[] = [];
-
     if (currentRole === 'student') {
-      roleSpecificItems.push(
-        {
-          icon: GraduationCap,
-          label: "Apprentissage",
-          type: 'trigger',
-          items: [
-            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
-            { to: "/all-notes", label: "Mes Notes", icon: NotebookText, type: 'link' },
-          ],
-        },
-        {
-          icon: BarChart2,
-          label: "Progression",
-          type: 'trigger',
-          items: [
-            { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
-            { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
-            { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link' },
-          ],
-        },
+      items.push(
+        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Apprentissage" },
+        { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link', category: "Apprentissage" },
+        { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link', category: "Progression" },
+        { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link', category: "Progression" },
+        { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link', category: "Progression" },
       );
     } else if (currentRole === 'professeur') {
-      roleSpecificItems.push(
-        {
-          icon: BookOpen,
-          label: "Contenu",
-          type: 'trigger',
-          items: [
-            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
-            { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
-          ],
-        },
-        {
-          icon: Users,
-          label: "Gestion",
-          type: 'trigger',
-          items: [
-            { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
-            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
-          ],
-        },
-        {
-          icon: BarChart2,
-          label: "Analytiques",
-          type: 'trigger',
-          items: [
-            { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
-            { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
-            { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link' },
-          ],
-        },
+      items.push(
+        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Contenu" },
+        { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link', category: "Contenu" },
+        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Gestion" },
+        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Gestion" },
+        { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link', category: "Gestion" },
+        { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link', category: "Gestion" },
+        { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link', category: "Gestion" },
+        { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
+        { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link', category: "Analytiques" },
+        { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link', category: "Analytiques" },
       );
     } else if (currentRole === 'tutor') {
-      roleSpecificItems.push(
-        {
-          icon: UsersRound,
-          label: "Suivi",
-          type: 'trigger',
-          items: [
-            { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
-            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
-          ],
-        },
-        {
-          icon: BarChart2,
-          label: "Analytiques",
-          type: 'trigger',
-          items: [
-            { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
-            { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
-            { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link' },
-          ],
-        },
+      items.push(
+        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Suivi" },
+        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Suivi" },
+        { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link', category: "Suivi" },
+        { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link', category: "Analytiques" },
+        { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link', category: "Analytiques" },
+        { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link', category: "Analytiques" },
       );
     } else if (currentRole === 'administrator') {
-      roleSpecificItems.push(
-        {
-          icon: BriefcaseBusiness,
-          label: "Administration",
-          type: 'trigger',
-          items: [
-            { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
-            { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
-            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
-            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
-            { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
-            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
-            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' },
-            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
-          ],
-        },
+      items.push(
+        { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link', category: "Administration" },
+        { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link', category: "Administration" },
+        { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link', category: "Administration" },
+        { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link', category: "Administration" },
+        { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link', category: "Administration" },
+        { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link', category: "Administration" },
+        { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link', category: "Administration" },
+        { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link', category: "Administration" },
+        { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
-      roleSpecificItems.push(
-        {
-          icon: BookText,
-          label: "Gestion Pédagogique",
-          type: 'trigger',
-          items: [
-            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
-            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
-            { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
-            { to: "/pedagogical-management", label: "Gestion des Élèves par Classe", icon: BookMarked, type: 'link' },
-            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
-            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' },
-          ],
-        },
-        {
-          icon: UserCog,
-          label: "Gestion Administrative",
-          type: 'trigger',
-          items: [
-            { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' },
-            { to: "/admin-users", label: "Gestion Professeurs", icon: UserRoundCog, type: 'link' },
-            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
-          ],
-        },
-        {
-          icon: TrendingUp,
-          label: "Analytiques",
-          type: 'trigger',
-          items: [
-            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
-          ],
-        },
+      items.push(
+        { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link', category: "Gestion Pédagogique" },
+        { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link', category: "Gestion Pédagogique" },
+        { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link', category: "Gestion Pédagogique" },
+        { to: "/pedagogical-management", label: "Gestion des Élèves par Classe", icon: BookMarked, type: 'link', category: "Gestion Pédagogique" },
+        { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link', category: "Gestion Pédagogique" },
+        { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link', category: "Gestion Pédagogique" },
+        { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link', category: "Gestion Administrative" },
+        { to: "/admin-users", label: "Gestion Professeurs", icon: UserRoundCog, type: 'link', category: "Gestion Administrative" },
+        { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link', category: "Gestion Administrative" },
+        { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
       );
     }
 
-    return [...baseItems, ...roleSpecificItems];
+    return items;
   }, [currentRole, unreadMessages]);
 
-  const getIsParentTriggerActive = (item: NavItem): boolean => {
-    if (item.type !== 'trigger' || !item.items) return false;
-
-    const currentFullPath = location.pathname + location.search;
-
-    return item.items.some(subItem => {
-      if (subItem.to) {
-        return currentFullPath.startsWith(subItem.to);
-      }
-      return false;
-    });
-  };
+  // Removed getIsParentTriggerActive as it's no longer needed for flat menu
 
   const handleLogoClick = useCallback(() => {
     logoTapCountRef.current += 1;
@@ -331,10 +241,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   const isAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen; // Use renamed state
 
-  // Logic for SwipeUpIndicator visibility
-  // The SwipeUpIndicator is now part of BottomNavigationBar, so this state is no longer needed here.
-  // const isSwipeUpIndicatorVisible = isMobile && currentUserProfile && !isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen;
-
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
@@ -343,62 +249,31 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {fullNavTree.map((item) => {
               const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-              const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
 
-              if (item.type === 'link' && item.to) {
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={() =>
-                      cn(
-                        "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                        isLinkActive
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-accent hover:text-accent-foreground"
-                      )
-                    }
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                        {item.badge}
-                      </span>
-                    )}
-                  </NavLink>
-                );
-              } else if (item.type === 'trigger' && item.items) {
-                return (
-                  <DropdownMenu key={item.label}>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                          isTriggerActive
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-accent hover:text-accent-foreground"
-                        )}
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="z-[1000]">
-                      <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {item.items.map(subItem => (
-                        <DropdownMenuItem key={subItem.to} onClick={() => navigate(subItem.to)}>
-                          <subItem.icon className="mr-2 h-4 w-4" />
-                          {subItem.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                );
-              }
-              return null;
+              // Render all items as simple links for desktop
+              return (
+                <NavLink
+                  key={item.to || item.label} // Use label as fallback key for non-link items if any
+                  to={item.to || '#'} // Fallback to '#' for non-link items
+                  onClick={item.onClick} // Keep onClick for trigger items
+                  className={() =>
+                    cn(
+                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                      isLinkActive
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-accent hover:text-accent-foreground"
+                    )
+                  }
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              );
             })}
           </nav>
         )}
@@ -482,7 +357,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
-      {/* Removed SwipeUpIndicator from here */}
     </div>
   );
 };
