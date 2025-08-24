@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck } from "lucide-react"; // Added UserCheck icon
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -162,14 +162,21 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: GraduationCap,
           label: "Apprentissage",
-          type: 'link', // Changed to link
-          to: "/courses", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
+            { to: "/all-notes", label: "Mes Notes", icon: NotebookText, type: 'link' },
+          ],
         },
         {
           icon: BarChart2,
           label: "Progression",
-          type: 'link', // Changed to link
-          to: "/analytics?view=personal", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
+            { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
+            { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link' },
+          ],
         },
       );
     } else if (currentRole === 'professeur') {
@@ -177,20 +184,33 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BookOpen,
           label: "Contenu",
-          type: 'link', // Changed to link
-          to: "/courses", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
+            { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
+          ],
         },
         {
           icon: Users,
           label: "Gestion",
-          type: 'link', // Changed to link
-          to: "/classes", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
+            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
+          ],
         },
         {
           icon: BarChart2,
           label: "Analytiques",
-          type: 'link', // Changed to link
-          to: "/analytics?view=overview", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
+            { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
+            { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link' },
+          ],
         },
       );
     } else if (currentRole === 'tutor') {
@@ -198,14 +218,22 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: UsersRound,
           label: "Suivi",
-          type: 'link', // Changed to link
-          to: "/classes", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
+            { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
+            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
+          ],
         },
         {
           icon: BarChart2,
           label: "Analytiques",
-          type: 'link', // Changed to link
-          to: "/analytics?view=student-monitoring", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
+            { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
+            { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link' },
+          ],
         },
       );
     } else if (currentRole === 'administrator') {
@@ -213,8 +241,18 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BriefcaseBusiness,
           label: "Administration",
-          type: 'link', // Changed to link
-          to: "/establishments", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
+            { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
+            { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
+            { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
+            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
+            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' },
+            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
+          ],
         },
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
@@ -222,20 +260,33 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BookText,
           label: "Gestion Pédagogique",
-          type: 'link', // Changed to link
-          to: "/curricula", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
+            { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
+            { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
+            { to: "/pedagogical-management", label: "Gestion des Élèves par Classe", icon: BookMarked, type: 'link' },
+            { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
+            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' },
+          ],
         },
         {
           icon: UserCog,
           label: "Gestion Administrative",
-          type: 'link', // Changed to link
-          to: "/establishments", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' },
+            { to: "/admin-users", label: "Gestion Professeurs", icon: UserRoundCog, type: 'link' },
+            { to: "/students", label: "Gestion Élèves", icon: GraduationCap, type: 'link' },
+          ],
         },
         {
           icon: TrendingUp,
           label: "Analytiques",
-          type: 'link', // Changed to link
-          to: "/analytics?view=establishment-admin", // Points to the first item in the group
+          type: 'trigger', // Revert to 'trigger'
+          items: [
+            { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
+          ],
         },
       );
     }
@@ -246,15 +297,17 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   // Function to flatten the navigation tree for the mobile "More" drawer
   const getAllFlattenedNavItems = (): NavItem[] => {
     const flattened: NavItem[] = [];
-    const fullTree = getFullNavTree(); // Get the full tree with direct links
+    const fullTree = getFullNavTree();
 
     fullTree.forEach(item => {
       if (item.type === 'link') {
         flattened.push(item);
       } else if (item.type === 'trigger' && item.items) {
-        // For mobile, we still want to show all sub-items in the drawer
-        // So, we add the parent as a trigger, and then its sub-items
-        flattened.push({ ...item, type: 'trigger' }); // Keep as trigger for mobile drawer
+        // Add the parent trigger itself as a navigable item if it has a 'to'
+        if (item.to) {
+          flattened.push({ ...item, type: 'link' }); // Convert trigger to link if it has a 'to'
+        }
+        // Add all sub-items
         item.items.forEach(subItem => flattened.push(subItem));
       }
     });
@@ -302,33 +355,64 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {getFullNavTree().map((item) => { // Use getFullNavTree for desktop
+            {getFullNavTree().map((item) => {
               const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-              // No need for isTriggerActive here as we're not using dropdowns for top-level items
-              
-              // All top-level items are now links
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={() =>
-                    cn(
-                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isLinkActive
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent hover:text-accent-foreground"
-                    )
-                  }
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                      {item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              );
+              const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
+
+              if (item.type === 'link' && item.to) {
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={() =>
+                      cn(
+                        "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                        isLinkActive
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-accent hover:text-accent-foreground"
+                      )
+                    }
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              } else if (item.type === 'trigger' && item.items) {
+                return (
+                  <DropdownMenu key={item.label}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                          isTriggerActive
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="z-[1000]">
+                      <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {item.items.map(subItem => (
+                        <DropdownMenuItem key={subItem.to} onClick={() => navigate(subItem.to)}>
+                          <subItem.icon className="mr-2 h-4 w-4" />
+                          {subItem.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              }
+              return null;
             })}
           </nav>
         )}
@@ -399,7 +483,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </Button>
       </footer>
       <BottomNavigationBar
-        allNavItemsForDrawer={getAllFlattenedNavItems()} // Pass all flattened items for the "More" drawer
+        allNavItemsForDrawer={getAllFlattenedNavItems()}
         onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
