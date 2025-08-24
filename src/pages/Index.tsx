@@ -29,6 +29,7 @@ import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { NavItem } from "@/lib/dataModels"; // Import NavItem
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void; // Keep this prop as it's used for the shortcut
@@ -47,6 +48,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false); // NEW STATE
   const logoTapCountRef = useRef(0);
 
   // Fetch latest APK release data using TanStack Query
@@ -123,10 +125,10 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     },
   ];
 
-  const indexNavItems: any[] = [
-    { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'accueil', type: 'trigger' },
-    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'aiaBot', type: 'trigger' },
-    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), isActive: activeSection === 'methodologie', type: 'trigger' },
+  const indexNavItems: NavItem[] = [ // Changed type to NavItem[]
+    { label: "Accueil", icon: Home, onClick: () => document.getElementById('accueil')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/' }, // Changed to link type with 'to'
+    { label: "AiA Bot", icon: MessageCircleMore, onClick: () => document.getElementById('aiaBot')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#aiaBot' }, // Changed to link type with 'to'
+    { label: "Méthodologie", icon: SlidersHorizontal, onClick: () => document.getElementById('methodologie')?.scrollIntoView({ behavior: 'smooth' }), type: 'link', to: '/#methodologie' }, // Changed to link type with 'to'
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -179,12 +181,13 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
                   </Link>
                 );
               }
+              // Fallback for trigger type if needed, though indexNavItems are now all 'link'
               return (
                 <Button
                   key={item.label}
                   variant="ghost"
                   onClick={item.onClick}
-                  className={cn(item.isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}
+                  className={cn(activeSection === item.label.toLowerCase().replace(' ', '') ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground', 'whitespace-nowrap')}
                 >
                   {item.label}
                 </Button>
@@ -297,7 +300,13 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         </Button>
       </footer>
 
-      <BottomNavigationBar navItems={indexNavItems} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
+      <BottomNavigationBar
+        allNavItemsForDrawer={indexNavItems} // Pass indexNavItems here
+        currentUser={currentUserProfile}
+        onOpenAboutModal={() => setIsAboutModalOpen(true)}
+        isMoreDrawerOpen={isMoreDrawerOpen} // Pass new state
+        setIsMoreDrawerOpen={setIsMoreDrawerOpen} // Pass new setter
+      />
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
