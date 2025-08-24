@@ -28,15 +28,15 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
-          <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
+        <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 max-w-md mx-auto"> {/* Appliquer max-w-md et mx-auto ici */}
+          <div className="w-full flex-grow flex flex-col"> {/* Retirer mx-auto et max-w-md d'ici */}
             <DrawerHeader className="text-center">
               <DrawerTitle className="text-center">À Propos d'AcademIA</DrawerTitle>
               <DrawerDescription className="text-center">
                 Découvrez les informations sur l'application et son développement.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="flex-grow overflow-y-auto p-4"> {/* Ensure this div handles scrolling */}
+            <div className="flex-grow overflow-y-auto p-4">
               <About />
             </div>
             <DrawerFooter>
@@ -59,7 +59,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
             Découvrez les informations sur l'application et son développement.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-grow overflow-y-auto pr-2"> {/* Ensure this div handles scrolling */}
+        <div className="flex-grow overflow-y-auto pr-2">
           <About />
         </div>
       </DialogContent>
