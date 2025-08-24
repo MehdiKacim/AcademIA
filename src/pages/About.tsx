@@ -4,9 +4,6 @@ import { Info, Code, Heart, Linkedin, Github } from "lucide-react";
 import packageJson from '../../package.json';
 import Logo from "@/components/Logo";
 import { motion, Variants } from 'framer-motion';
-import useEmblaCarousel, { EmblaOptionsType } from 'embla-carousel-react';
-import { EmblaCarouselArrowButton } from '@/components/EmblaCarouselArrowButtons';
-import { EmblaCarouselDotButton } from '@/components/EmblaCarouselDotButton';
 import { cn } from '@/lib/utils';
 
 const About = () => {
@@ -16,9 +13,6 @@ const About = () => {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };
-
-  const EMBLA_OPTIONS: EmblaOptionsType = { loop: false };
-  const [emblaRef, emblaApi] = useEmblaCarousel(EMBLA_OPTIONS);
 
   return (
     <div className="space-y-6 p-4">
@@ -39,90 +33,78 @@ const About = () => {
         </p>
       </div>
 
-      <div className="relative">
-        <div className="embla" ref={emblaRef}>
-          <div className="embla__container flex">
-            <div className="embla__slide flex-[0_0_100%] min-w-0"> {/* Removed p-2 here */}
-              <motion.div variants={cardVariants} className="p-2"> {/* Added p-2 here */}
-                <Card className="shadow-md">
-                  <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Info className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Détails Généraux</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm text-center">
-                    <p className="text-muted-foreground">
-                      <span className="font-medium text-foreground">Nom de l'application :</span> AcademIA
-                    </p>
-                    <p className="text-muted-foreground">
-                      <span className="font-medium text-foreground">Version :</span> {appVersion}
-                    </p>
-                    <p className="text-muted-foreground">
-                      <span className="font-medium text-foreground">Mentions Légales :</span>
-                      <br />
-                      &copy; {new Date().getFullYear()} AcademIA. Tous droits réservés.
-                      <br />
-                      Les contenus et fonctionnalités de cette application sont la propriété exclusive d'AcademIA.
-                      Toute reproduction ou distribution non autorisée est strictement interdite.
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div variants={cardVariants}>
+          <Card className="shadow-md h-full">
+            <CardHeader className="flex flex-row items-center gap-3 pb-3">
+              <Info className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Détails Généraux</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-center">
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Nom de l'application :</span> AcademIA
+              </p>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Version :</span> {appVersion}
+              </p>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Mentions Légales :</span>
+                <br />
+                &copy; {new Date().getFullYear()} AcademIA. Tous droits réservés.
+                <br />
+                Les contenus et fonctionnalités de cette application sont la propriété exclusive d'AcademIA.
+                Toute reproduction ou distribution non autorisée est strictement interdite.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-            <div className="embla__slide flex-[0_0_100%] min-w-0"> {/* Removed p-2 here */}
-              <motion.div variants={cardVariants} className="p-2"> {/* Added p-2 here */}
-                <Card className="shadow-md">
-                  <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Code className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Développeur</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm text-center">
-                    <p className="text-muted-foreground">
-                      <span className="font-medium text-foreground">Nom du développeur :</span> Mehdi Kacim
-                    </p>
-                    <p className="text-base font-semibold text-primary mt-2">
-                      Developed with love for you, for all ❤️
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
+        <motion.div variants={cardVariants}>
+          <Card className="shadow-md h-full">
+            <CardHeader className="flex flex-row items-center gap-3 pb-3">
+              <Code className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Développeur</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-center">
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Nom du développeur :</span> Mehdi Kacim
+              </p>
+              <p className="text-base font-semibold text-primary mt-2">
+                Developed with love for you, for all ❤️
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-            <div className="embla__slide flex-[0_0_100%] min-w-0"> {/* Removed p-2 here */}
-              <motion.div variants={cardVariants} className="p-2"> {/* Added p-2 here */}
-                <Card className="shadow-md">
-                  <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                    <Heart className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Connectez-vous avec le développeur</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap gap-4 pt-2 justify-center">
-                    <a
-                      href="https://www.linkedin.com/in/mehdi-kacim-333304142?originalSubdomain=fr"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-blue-500 hover:text-blue-700 transition-colors text-sm"
-                    >
-                      <Linkedin className="h-5 w-5" />
-                      LinkedIn
-                    </a>
-                    <a
-                      href="https://github.com/MehdiKacim"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-sm"
-                    >
-                      <Github className="h-5 w-5" />
-                      GitHub
-                    </a>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-        <EmblaCarouselArrowButton emblaApi={emblaApi} />
+        <motion.div variants={cardVariants}>
+          <Card className="shadow-md h-full">
+            <CardHeader className="flex flex-row items-center gap-3 pb-3">
+              <Heart className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Connectez-vous avec le développeur</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-4 pt-2 justify-center">
+              <a
+                href="https://www.linkedin.com/in/mehdi-kacim-333304142?originalSubdomain=fr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-blue-500 hover:text-blue-700 transition-colors text-sm"
+              >
+                <Linkedin className="h-5 w-5" />
+                LinkedIn
+              </a>
+              <a
+                href="https://github.com/MehdiKacim"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-sm"
+              >
+                <Github className="h-5 w-5" />
+                GitHub
+              </a>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
-      <EmblaCarouselDotButton emblaApi={emblaApi} />
     </div>
   );
 };

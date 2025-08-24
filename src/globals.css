@@ -90,17 +90,4 @@
     left: 0 !important;
     transform: none !important;
   }
-
-  /* Embla Carousel specific styles */
-  .embla__slide:last-of-type {
-    margin-left: 0 !important; /* Remove margin from the last slide */
-  }
-
-  /* Utility class for touch-action */
-  .touch-action-pan-y {
-    touch-action: pan-y;
-  }
-  .touch-action-pan-x {
-    touch-action: pan-x;
-  }
 }
