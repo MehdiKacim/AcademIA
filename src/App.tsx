@@ -40,8 +40,8 @@ const AppWithThemeProvider = () => {
   const { currentUserProfile, isLoadingUser, currentRole } = useRole();
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
-  // Determine the initial theme based on user profile or default to 'modern-blue'
-  const initialTheme = currentUserProfile?.theme || "modern-blue";
+  // Determine the initial theme based on user profile or default to 'dark'
+  const initialTheme = currentUserProfile?.theme || "dark";
 
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
