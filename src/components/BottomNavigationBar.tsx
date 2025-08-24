@@ -319,14 +319,16 @@ const BottomNavigationBar = ({
                 {drawerContent === 'items' ? `Éléments de la catégorie ${activeCategory}` : "Toutes les options de navigation."}
               </DrawerDescription>
             </DrawerHeader>
-            <div className="p-4 border-b border-border">
-              <Input
-                placeholder={drawerContent === 'categories' ? "Rechercher une catégorie ou un élément..." : `Rechercher dans ${activeCategory}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-              />
-            </div>
+            {currentUser && ( // Condition added here
+              <div className="p-4 border-b border-border">
+                <Input
+                  placeholder={drawerContent === 'categories' ? "Rechercher une catégorie ou un élément..." : `Rechercher dans ${activeCategory}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+            )}
             <div className="flex-grow overflow-y-auto p-4 space-y-4">
               {filteredDisplayContent.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
