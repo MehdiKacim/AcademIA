@@ -17,9 +17,9 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
       username,
       email,
       establishment_id,
+      theme,
       enrollment_start_date,
       enrollment_end_date,
-      theme,
       created_at,
       updated_at,
       roles(name)
@@ -41,12 +41,12 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
     last_name: data.last_name,
     username: data.username,
     email: data.email,
-    // Assuming roles is an object with a name property, but Supabase sometimes returns an array for joined tables
-    role: (data.roles as { name: Profile['role'] }[] | null)?.[0]?.name || 'student',
+    // Assuming roles is an object with a name property
+    role: (data.roles as { name: Profile['role'] })?.name || 'student',
     establishment_id: data.establishment_id,
+    theme: data.theme,
     enrollment_start_date: data.enrollment_start_date,
     enrollment_end_date: data.enrollment_end_date,
-    theme: data.theme,
     created_at: data.created_at,
     updated_at: data.updated_at,
   };
@@ -67,9 +67,9 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
       username,
       email,
       establishment_id,
+      theme,
       enrollment_start_date,
       enrollment_end_date,
-      theme,
       created_at,
       updated_at,
       roles(name)
@@ -88,11 +88,11 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
     last_name: data.last_name,
     username: data.username,
     email: data.email,
-    role: (data.roles as { name: Profile['role'] }[] | null)?.[0]?.name || 'student',
+    role: (data.roles as { name: Profile['role'] })?.name || 'student',
     establishment_id: data.establishment_id,
+    theme: data.theme,
     enrollment_start_date: data.enrollment_start_date,
     enrollment_end_date: data.enrollment_end_date,
-    theme: data.theme,
     created_at: data.created_at,
     updated_at: data.updated_at,
   };
@@ -140,9 +140,9 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
       username,
       email,
       establishment_id,
+      theme,
       enrollment_start_date,
       enrollment_end_date,
-      theme,
       created_at,
       updated_at,
       roles(name)
@@ -161,11 +161,11 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
     last_name: data.last_name,
     username: data.username,
     email: data.email,
-    role: (data.roles as { name: Profile['role'] }[] | null)?.[0]?.name || 'student',
+    role: (data.roles as { name: Profile['role'] })?.name || 'student',
     establishment_id: data.establishment_id,
+    theme: data.theme,
     enrollment_start_date: data.enrollment_start_date,
     enrollment_end_date: data.enrollment_end_date,
-    theme: data.theme,
     created_at: data.created_at,
     updated_at: data.updated_at,
   };
@@ -220,9 +220,9 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
     role: undefined, // Remove role from payload to avoid sending it to DB
     // Explicitly set optional fields to null if they are undefined or empty string
     establishment_id: updatedProfile.establishment_id === '' ? null : updatedProfile.establishment_id,
+    theme: updatedProfile.theme === undefined ? null : updatedProfile.theme, // Fixed comparison
     enrollment_start_date: updatedProfile.enrollment_start_date === '' ? null : updatedProfile.enrollment_start_date,
     enrollment_end_date: updatedProfile.enrollment_end_date === '' ? null : updatedProfile.enrollment_end_date,
-    theme: updatedProfile.theme === undefined ? null : updatedProfile.theme, // Corrected comparison
   };
 
   const { error } = await supabase
@@ -260,9 +260,9 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
       username,
       email,
       establishment_id,
+      theme,
       enrollment_start_date,
       enrollment_end_date,
-      theme,
       created_at,
       updated_at,
       roles(name)
@@ -278,11 +278,11 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
     last_name: p.last_name,
     username: p.username,
     email: p.email,
-    role: (p.roles as { name: Profile['role'] }[] | null)?.[0]?.name || 'student',
+    role: (p.roles as { name: Profile['role'] })?.name || 'student',
     establishment_id: p.establishment_id,
+    theme: p.theme,
     enrollment_start_date: p.enrollment_start_date,
     enrollment_end_date: p.enrollment_end_date,
-    theme: p.theme,
     created_at: p.created_at,
     updated_at: p.updated_at,
   }));
@@ -320,7 +320,7 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
     last_name: p.last_name,
     username: p.username,
     email: p.email,
-    role: (p.roles as { name: Profile['role'] }[] | null)?.[0]?.name || 'student',
+    role: (p.roles as { name: Profile['role'] })?.name || 'student',
     establishment_id: p.establishment_id,
     enrollment_start_date: p.enrollment_start_date,
     enrollment_end_date: p.enrollment_end_date,

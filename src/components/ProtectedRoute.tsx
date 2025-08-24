@@ -1,9 +1,10 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useRole } from '@/contexts/RoleContext';
+import { Profile } from '@/lib/dataModels'; // Import Profile to use its role type
 
 interface ProtectedRouteProps {
-  allowedRoles?: Array<'student' | 'creator' | 'tutor'>;
+  allowedRoles?: Array<Profile['role']>; // Use Profile['role'] for consistency
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {

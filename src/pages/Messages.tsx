@@ -15,17 +15,12 @@ import { getRecentConversations, getUnreadMessageCount, getArchivedConversations
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from '@/lib/utils';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { loadEstablishments, loadCurricula, loadClasses } from '@/lib/courseData';
+import { loadEstablishments, loadCurricula, loadClasses, getActiveSchoolYear } from '@/lib/courseData'; // Import getActiveSchoolYear
 
 // Helper to get the current school year
-const getCurrentSchoolYear = () => {
-  const currentMonth = new Date().getMonth(); // 0-indexed (0 = Jan, 8 = Sep, 11 = Dec)
-  const currentYear = new Date().getFullYear();
-  if (currentMonth >= 8) { // September to December
-    return `${currentYear}-${currentYear + 1}`;
-  } else { // January to August
-    return `${currentYear - 1}-${currentYear}`;
-  }
+const getCurrentSchoolYear = async () => {
+  const activeYear = await getActiveSchoolYear();
+  return activeYear ? activeYear.id : null;
 };
 
 const Messages = () => {
@@ -54,7 +49,7 @@ const Messages = () => {
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
 
   const currentUserId = currentUserProfile?.id;
-  const currentSchoolYear = getCurrentSchoolYear();
+  const [currentSchoolYearId, setCurrentSchoolYearId] = useState<string | null>(null);
 
   const fetchAllData = async () => {
     if (!currentUserId) {
@@ -79,6 +74,7 @@ const Messages = () => {
     setCurricula(await loadCurricula());
     setClasses(await loadClasses());
     setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+    setCurrentSchoolYearId(await getCurrentSchoolYear()); // Fetch current school year ID
     setIsLoadingProfiles(false);
   };
 
@@ -205,19 +201,19 @@ const Messages = () => {
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
   const availableContactsForNewChat = useMemo(() => {
-    if (!currentUserProfile) return [];
+    if (!currentUserProfile || !currentSchoolYearId) return [];
 
     let filteredContacts: Profile[] = [];
     let potentialContacts = allProfiles.filter(p => p.id !== currentUserProfile.id);
 
     if (currentRole === 'student') {
-      const studentEnrollments = allStudentClassEnrollments.filter(e => e.student_id === currentUserProfile.id && e.enrollment_year === currentSchoolYear);
+      const studentEnrollments = allStudentClassEnrollments.filter(e => e.student_id === currentUserProfile.id && e.school_year_id === currentSchoolYearId);
       const studentClassIds = studentEnrollments.map(e => e.class_id);
       const studentEstablishmentId = currentUserProfile.establishment_id;
 
       // Add professeurs from student's classes
       const professeursInClasses = new Set<string>();
-      classes.filter(cls => studentClassIds.includes(cls.id) && cls.school_year === currentSchoolYear).forEach(cls => {
+      classes.filter(cls => studentClassIds.includes(cls.id) && cls.school_year_id === currentSchoolYearId).forEach(cls => {
         cls.creator_ids.forEach(creatorId => professeursInClasses.add(creatorId));
       });
       filteredContacts.push(...potentialContacts.filter(p => p.role === 'professeur' && professeursInClasses.has(p.id)));
@@ -231,8 +227,8 @@ const Messages = () => {
     } else if (currentRole === 'professeur') {
       let potentialContactsForProf = allProfiles.filter(p => p.id !== currentUserProfile.id);
 
-      const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id) && cls.school_year === currentSchoolYear).map(cls => cls.id);
-      const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => managedClassIds.includes(e.class_id) && e.enrollment_year === currentSchoolYear).map(e => e.student_id));
+      const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id) && cls.school_year_id === currentSchoolYearId).map(cls => cls.id);
+      const studentIdsInManagedClasses = new Set(allStudentClassEnrollments.filter(e => managedClassIds.includes(e.class_id) && e.school_year_id === currentSchoolYearId).map(e => e.student_id));
       
       // Add students from managed classes
       filteredContacts.push(...potentialContactsForProf.filter(p => p.role === 'student' && studentIdsInManagedClasses.has(p.id)));
@@ -250,7 +246,7 @@ const Messages = () => {
       // Add students from tutor's establishment for the current school year
       if (currentUserProfile.establishment_id) {
         const studentIdsInEstablishment = new Set(allStudentClassEnrollments.filter(e => 
-          classes.some(cls => cls.id === e.class_id && cls.establishment_id === currentUserProfile.establishment_id && cls.school_year === currentSchoolYear)
+          classes.some(cls => cls.id === e.class_id && cls.establishment_id === currentUserProfile.establishment_id && cls.school_year_id === currentSchoolYearId)
         ).map(e => e.student_id));
         filteredContacts.push(...potentialContactsForTutor.filter(p => p.role === 'student' && studentIdsInEstablishment.has(p.id)));
 
@@ -276,7 +272,7 @@ const Messages = () => {
       finalFilteredContacts = finalFilteredContacts.filter(p =>
         p.first_name?.toLowerCase().includes(lowerCaseQuery) ||
         p.last_name?.toLowerCase().includes(lowerCaseQuery) ||
-        p.username?.toLowerCase().includes(lowerCaseQuery) ||
+        p.username?.toLowerCase().includes(lowerCaseQuery.replace('@', '')) ||
         p.email?.toLowerCase().includes(lowerCaseQuery)
       );
     }
@@ -284,7 +280,7 @@ const Messages = () => {
     // Remove duplicates and sort
     const uniqueContacts = Array.from(new Map(finalFilteredContacts.map(item => [item.id, item])).values());
     return uniqueContacts.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
-  }, [allProfiles, currentUserProfile, currentRole, establishments, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear]);
+  }, [allProfiles, currentUserProfile, currentRole, establishments, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYearId]);
 
 
   if (isLoadingUser || isLoadingProfiles) {

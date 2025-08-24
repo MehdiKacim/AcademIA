@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp } from "lucide-react";
-import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment } from "@/lib/dataModels";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react"; // Import UserPlus
+import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -26,6 +26,7 @@ import {
   loadClasses,
   loadCurricula,
   loadEstablishments,
+  loadSchoolYears, // Import loadSchoolYears
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -39,6 +40,7 @@ import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 import InputWithStatus from '@/components/InputWithStatus'; // Import InputWithStatus
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
+import { supabase } from '@/integrations/supabase/client'; // Import supabase
 
 const StudentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -50,7 +52,8 @@ const StudentManagementPage = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
-  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
+  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]); // New state for school years
 
   // States for new student creation form
   const [newStudentFirstName, setNewStudentFirstName] = useState('');
@@ -97,6 +100,7 @@ const StudentManagementPage = () => {
       setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+      setSchoolYears(await loadSchoolYears());
     };
     fetchData();
   }, [currentUserProfile]);
@@ -834,7 +838,7 @@ const StudentManagementPage = () => {
                   const currentYear = new Date().getFullYear();
                   const nextYear = currentYear + 1;
                   const currentSchoolYear = `${currentYear}-${nextYear}`;
-                  return cls?.school_year === currentSchoolYear; // Check for current school year
+                  return cls?.school_year_id === currentSchoolYear; // Check for current school year
                 });
                 const currentClass = currentClassEnrollment ? classes.find(c => c.id === currentClassEnrollment.class_id) : undefined;
 
@@ -855,7 +859,7 @@ const StudentManagementPage = () => {
                       )}
                       {currentClass ? (
                         <p className="text-xs text-muted-foreground">
-                          Classe actuelle: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {currentClass.school_year}
+                          Classe actuelle: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {getSchoolYearName(currentClass.school_year_id)}
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground italic">Non affecté à une classe pour l'année scolaire en cours</p>

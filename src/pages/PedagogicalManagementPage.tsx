@@ -447,6 +447,9 @@ const PedagogicalManagementPage = () => {
                 {selectedStudentForClassAssignment.establishment_id ? (
                   <p className="text-sm text-muted-foreground">
                     Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForClassAssignment.establishment_id)}</span>
+                    {selectedStudentForClassAssignment.enrollment_start_date && selectedStudentForClassAssignment.enrollment_end_date && (
+                      <span> (Du {format(parseISO(selectedStudentForClassAssignment.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(selectedStudentForClassAssignment.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
+                    )}
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>

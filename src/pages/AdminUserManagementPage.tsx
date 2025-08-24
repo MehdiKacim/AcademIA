@@ -23,6 +23,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { loadEstablishments } from '@/lib/courseData';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"; // Import Dialog components
 
 const AdminUserManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser, fetchUserProfile } = useRole();
@@ -166,7 +174,7 @@ const AdminUserManagementPage = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
+    if (!currentUserProfile || !['administrator', 'director', 'deputy_director'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à créer des utilisateurs.");
       return;
     }
@@ -405,7 +413,7 @@ const AdminUserManagementPage = () => {
       const savedProfile = await updateProfile(updatedProfileData);
 
       // If email changed, update in auth.users as well
-      if (editEmail.trim() !== userToEdit.email) {
+      if (editEmail.trim() !== (await supabase.auth.getUser()).data.user?.email) {
         const { error: emailUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, { email: editEmail.trim() });
         if (emailUpdateError) {
           console.error("Error updating user email in auth.users:", emailUpdateError);
@@ -418,7 +426,7 @@ const AdminUserManagementPage = () => {
       // If role changed, update in auth.users metadata
       if (editRole !== userToEdit.role) {
         const { error: roleUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, {
-          user_metadata: { ...userToEdit.user_metadata, role: editRole }
+          user_metadata: { ...userToEdit.user_metadata as Record<string, any>, role: editRole } // Cast to Record<string, any>
         });
         if (roleUpdateError) {
           console.error("Error updating user role in auth.users metadata:", roleUpdateError);
@@ -552,7 +560,7 @@ const AdminUserManagementPage = () => {
     );
   }
 
-  if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
+  if (!currentUserProfile || !['administrator', 'director', 'deputy_director'].includes(currentRole || '')) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
