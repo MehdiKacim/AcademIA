@@ -413,7 +413,7 @@ const AdminUserManagementPage = () => {
       const savedProfile = await updateProfile(updatedProfileData);
 
       // If email changed, update in auth.users as well
-      if (editEmail.trim() !== (await supabase.auth.getUser()).data.user?.email) {
+      if (editEmail.trim() !== userToEdit.email) {
         const { error: emailUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, { email: editEmail.trim() });
         if (emailUpdateError) {
           console.error("Error updating user email in auth.users:", emailUpdateError);
@@ -426,7 +426,7 @@ const AdminUserManagementPage = () => {
       // If role changed, update in auth.users metadata
       if (editRole !== userToEdit.role) {
         const { error: roleUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, {
-          user_metadata: { ...userToEdit.user_metadata as Record<string, any>, role: editRole } // Cast to Record<string, any>
+          user_metadata: { ...userToEdit.user_metadata, role: editRole }
         });
         if (roleUpdateError) {
           console.error("Error updating user role in auth.users metadata:", roleUpdateError);

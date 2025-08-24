@@ -150,7 +150,7 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
     <>
       <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden">
         {dynamicFixedBottomNavItems.map((item) => {
-          const isLinkActive = item.type === 'link' && item.to && (location.pathname + location.search).startsWith(item.to);
+          const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
 
           if (item.type === 'link' && item.to) {
             return (

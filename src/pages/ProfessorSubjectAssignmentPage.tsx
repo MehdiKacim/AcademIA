@@ -521,7 +521,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectValue placeholder="Tous les professeurs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les professeurs</SelectItem>
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
                       {prof.first_name} {prof.last_name}
@@ -553,7 +552,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les classes</SelectItem>
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getSchoolYearName(cls.school_year_id)})

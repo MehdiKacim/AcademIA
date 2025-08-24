@@ -4,7 +4,7 @@ import { useRole } from '@/contexts/RoleContext';
 import { Profile } from '@/lib/dataModels'; // Import Profile to use its role type
 
 interface ProtectedRouteProps {
-  allowedRoles?: Array<Profile['role']>; // Use Profile['role'] for consistency
+  allowedRoles?: Array<Profile['role']>; // Use Profile['role'] for allowedRoles
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {

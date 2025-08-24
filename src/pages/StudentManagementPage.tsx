@@ -26,7 +26,6 @@ import {
   loadClasses,
   loadCurricula,
   loadEstablishments,
-  loadSchoolYears, // Import loadSchoolYears
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -52,8 +51,8 @@ const StudentManagementPage = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
-  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
-  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]); // New state for school years
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
+  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
 
   // States for new student creation form
   const [newStudentFirstName, setNewStudentFirstName] = useState('');
@@ -100,7 +99,6 @@ const StudentManagementPage = () => {
       setEstablishments(await loadEstablishments());
       setAllProfiles(await getAllProfiles());
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
-      setSchoolYears(await loadSchoolYears());
     };
     fetchData();
   }, [currentUserProfile]);
@@ -663,7 +661,7 @@ const StudentManagementPage = () => {
                                       "mr-2 h-4 w-4",
                                       selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
                                     )}
-                                  />
+                                />
                                   {profile.first_name} {profile.last_name} (@{profile.username})
                                 </CommandItem>
                               ))}
@@ -838,7 +836,7 @@ const StudentManagementPage = () => {
                   const currentYear = new Date().getFullYear();
                   const nextYear = currentYear + 1;
                   const currentSchoolYear = `${currentYear}-${nextYear}`;
-                  return cls?.school_year_id === currentSchoolYear; // Check for current school year
+                  return cls?.school_year_name === currentSchoolYear; // Check for current school year
                 });
                 const currentClass = currentClassEnrollment ? classes.find(c => c.id === currentClassEnrollment.class_id) : undefined;
 
@@ -859,7 +857,7 @@ const StudentManagementPage = () => {
                       )}
                       {currentClass ? (
                         <p className="text-xs text-muted-foreground">
-                          Classe actuelle: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {getSchoolYearName(currentClass.school_year_id)}
+                          Classe actuelle: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {currentClass.school_year_name}
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground italic">Non affecté à une classe pour l'année scolaire en cours</p>
