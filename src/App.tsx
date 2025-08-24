@@ -44,7 +44,7 @@ const AppWithThemeProvider = () => {
   const initialTheme = currentUserProfile?.theme || "dark";
 
   return (
-    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
+    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="class"> {/* attribute="class" is important for .dark to work */}
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -160,13 +160,13 @@ const AppWithThemeProvider = () => {
                       <>
                         <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/classes" element={<Navigate to "/dashboard" replace />} />
+                        <Route path="/students" element={<Navigate to "/dashboard" replace />} />
+                        <Route path="/pedagogical-management" element={<Navigate to "/dashboard" replace />} />
+                        <Route path="/school-years" element={<Navigate to "/dashboard" replace />} />
+                        <Route path="/professor-assignments" element={<Navigate to "/dashboard" replace />} />
+                        <Route path="/analytics" element={<Navigate to "/dashboard" replace />} />
+                        <Route path="/create-course" element={<Navigate to "/dashboard" replace />} />
                       </>
                     )}
                   </Route>
