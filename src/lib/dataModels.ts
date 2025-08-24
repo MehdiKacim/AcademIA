@@ -14,6 +14,8 @@ export interface Profile {
   email: string; // Added email to Profile interface
   role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
   establishment_id?: string; // New: Link to parent establishment for students, professeurs, tutors, directors, deputy_directors
+  enrollment_start_date?: string; // New: Enrollment start date for students
+  enrollment_end_date?: string; // New: Enrollment end date for students
   theme?: 'light' | 'dark' | 'system'; // New: User's theme preference
   created_at?: string;
   updated_at?: string;
@@ -218,4 +220,5 @@ export interface NavItem {
   type: 'link' | 'trigger';
   items?: { to: string; label: string; icon: ElementType; type: 'link' }[];
   badge?: number; // New: for unread message count
+  description?: string; // Added description for drawer items
 }

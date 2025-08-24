@@ -55,8 +55,8 @@ const ClassListModal = ({ isOpen, onClose, title, description, classes, curricul
                           <Building2 className="h-3 w-3" /> {getEstablishmentName(cls.establishment_id)}
                         </p>
                       )}
-                      {cls.school_year && (
-                        <p className="text-xs text-muted-foreground">Année scolaire: {cls.school_year}</p>
+                      {cls.school_year_name && (
+                        <p className="text-xs text-muted-foreground">Année scolaire: {cls.school_year_name}</p>
                       )}
                     </div>
                   </CardContent>
