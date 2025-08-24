@@ -33,7 +33,7 @@
     --foreground: 210 40% 98%;
     --card: 222.2 84% 8%; /* Slightly lighter card background for distinction */
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 84% 8%; /* Changed to match card for better distinction */
     --popover-foreground: 210 40% 98%;
     --primary: 200 90% 70%; /* Adjusted for a lighter blue in dark mode */
     --primary-foreground: 222.2 47.4% 11.2%;

@@ -40,7 +40,6 @@ interface DashboardLayoutProps {
 
 // Define category metadata (icons, labels) - Moved here to be the source of truth
 const categoriesConfig: { [key: string]: { label: string; icon: React.ElementType } } = {
-  "Général": { label: "Général", icon: Home },
   "Apprentissage": { label: "Apprentissage", icon: BookOpen },
   "Progression": { label: "Progression", icon: TrendingUp },
   "Contenu": { label: "Contenu", icon: BookOpen },
@@ -166,82 +165,98 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
+    if (!currentRole) return []; // No navigation items if no role
+
     const items: NavItem[] = [
-      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link', category: "Général" },
-      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, category: "Général" },
-      { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), category: "Général" },
-      { to: "/profile", icon: User, label: "Mon profil", type: 'link', category: "Général" },
-      { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', category: "Général" },
-      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), category: "Général" }, // Added back here
+      // Universal items (will be filtered by role later)
+      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link', category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { to: "/profile", icon: User, label: "Mon profil", type: 'link', category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
     ];
 
     if (currentRole === 'student') {
       items.push(
-        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Apprentissage" },
-        { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link', category: "Apprentissage" },
-        { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link', category: "Progression" },
-        { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link', category: "Progression" },
-        { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link', category: "Progression" },
+        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Apprentissage", allowedRoles: ['student'] },
+        { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link', category: "Apprentissage", allowedRoles: ['student'] },
+        { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link', category: "Progression", allowedRoles: ['student'] },
+        { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link', category: "Progression", allowedRoles: ['student'] },
+        { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link', category: "Progression", allowedRoles: ['student'] },
       );
     } else if (currentRole === 'professeur') {
       items.push(
-        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Contenu" },
-        { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link', category: "Contenu" },
-        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Pédagogie" },
-        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Pédagogie" },
-        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link', category: "Pédagogie" },
-        { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie" },
-        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie" },
-        { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie" },
-        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie" },
-        { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
-        { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link', category: "Analytiques" },
-        { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link', category: "Analytiques" },
+        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Contenu", allowedRoles: ['professeur'] },
+        { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link', category: "Contenu", allowedRoles: ['professeur'] },
+        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
+        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
+        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
+        { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
+        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
+        { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
+        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
+        { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link', category: "Analytiques", allowedRoles: ['professeur'] },
+        { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link', category: "Analytiques", allowedRoles: ['professeur'] },
+        { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link', category: "Analytiques", allowedRoles: ['professeur'] },
       );
     } else if (currentRole === 'tutor') {
       items.push(
-        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Pédagogie" },
-        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Pédagogie" },
-        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie" },
-        { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link', category: "Analytiques" },
-        { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link', category: "Analytiques" },
-        { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link', category: "Analytiques" },
+        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Pédagogie", allowedRoles: ['tutor'] },
+        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Pédagogie", allowedRoles: ['tutor'] },
+        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie", allowedRoles: ['tutor'] },
+        { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link', category: "Analytiques", allowedRoles: ['tutor'] },
+        { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link', category: "Analytiques", allowedRoles: ['tutor'] },
+        { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link', category: "Analytiques", allowedRoles: ['tutor'] },
       );
     } else if (currentRole === 'administrator') {
       items.push(
-        { to: "/establishments", label: "Établissements", icon: Building2, type: 'link', category: "Administration" },
-        { to: "/admin-users", label: "Utilisateurs (Direction)", icon: UserRoundCog, type: 'link', category: "Administration" },
-        // Removed other pedagogical/analytics links for administrator
+        { to: "/establishments", label: "Établissements", icon: Building2, type: 'link', category: "Administration", allowedRoles: ['administrator'] },
+        { to: "/admin-users", label: "Utilisateurs (Direction)", icon: UserRoundCog, type: 'link', category: "Administration", allowedRoles: ['administrator'] },
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
       items.push(
-        { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link', category: "Administration" },
-        { to: "/admin-users", label: "Professeurs", icon: UserRoundCog, type: 'link', category: "Administration" },
-        { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link', category: "Administration" },
-        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link', category: "Pédagogie" },
-        { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie" },
-        { to: "/classes", label: "Classes", icon: Users, type: 'link', category: "Pédagogie" },
-        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie" },
-        { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie" },
-        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie" },
-        { to: "/analytics?view=establishment-admin", label: "Analytiques", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
+        { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link', category: "Administration", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/admin-users", label: "Professeurs", icon: UserRoundCog, type: 'link', category: "Administration", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link', category: "Administration", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/classes", label: "Classes", icon: Users, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
+        { to: "/analytics?view=establishment-admin", label: "Analytiques", icon: LayoutDashboard, type: 'link', category: "Analytiques", allowedRoles: ['director', 'deputy_director'] },
       );
     }
 
-    return items;
+    // Filter items based on currentRole
+    return items.filter(item => item.allowedRoles?.includes(currentRole));
   }, [currentRole, unreadMessages]);
 
   // Group fullNavTree items by category for desktop display
   const groupedFullNavTree = React.useMemo(() => {
     const groups: { [key: string]: NavItem[] } = {};
     fullNavTree.forEach(item => {
-      const category = item.category || "Autres";
+      const category = item.category || "Autres"; // Fallback to 'Autres' if no category
       if (!groups[category]) {
         groups[category] = [];
       }
       groups[category].push(item);
     });
-    return groups;
+
+    // Remove 'Accueil' category from desktop header categories, its items are handled separately
+    const { Accueil, ...restCategories } = categoriesConfig;
+    const filteredCategoriesConfig = { ...restCategories };
+
+    // Filter out empty categories
+    const filteredGroups: { [key: string]: NavItem[] } = {};
+    for (const category in groups) {
+      if (groups[category].length > 0 && category !== "Accueil") { // Exclude 'Accueil' from category buttons
+        filteredGroups[category] = groups[category];
+      }
+    }
+
+    return filteredGroups;
   }, [fullNavTree]);
 
   // Handlers for desktop category navigation
@@ -279,13 +294,27 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   // This line is now the only place where floatingAiAChatButtonVisible is derived.
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
+  // Universal items for desktop header (always visible if logged in)
+  const universalDesktopHeaderItems = React.useMemo(() => {
+    const items: NavItem[] = [
+      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link', allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { to: "/profile", icon: User, label: "Mon profil", type: 'link', allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
+    ];
+    return items.filter(item => item.allowedRoles?.includes(currentRole!));
+  }, [currentRole, unreadMessages]);
+
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
         <Logo onLogoClick={handleLogoClick} />
-        {!isMobile && (
+        {!isMobile && currentUserProfile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {/* Always render category buttons in the header for desktop */}
+            {/* Render category buttons in the header for desktop */}
             {Object.keys(groupedFullNavTree).sort().map(category => {
               const categoryItems = groupedFullNavTree[category];
               if (categoryItems.length === 0) return null; // Don't show empty categories
@@ -314,7 +343,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   <span className="sr-only">Recherche globale</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50"> {/* Added z-50 */}
                 <p>Recherche (Ctrl + F)</p>
               </TooltipContent>
             </Tooltip>
@@ -343,7 +372,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
+              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80 z-50"> {/* Added z-50 */}
                 <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/profile")}>

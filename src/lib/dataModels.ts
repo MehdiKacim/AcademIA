@@ -221,4 +221,5 @@ export interface NavItem {
   category?: string; // New: for grouping items in the drawer
   badge?: number; // New: for unread message count
   description?: string; // Added description for drawer items
+  allowedRoles?: Array<Profile['role']>; // New: Roles allowed to see this item
 }

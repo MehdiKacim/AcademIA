@@ -49,7 +49,7 @@ interface BottomNavigationBarProps {
 
 // Define category metadata (icons, labels) - Using the same config as DashboardLayout
 const categoriesConfig: { [key: string]: { label: string; icon: React.ElementType } } = {
-  "Général": { label: "Général", icon: Home },
+  "Accueil": { label: "Accueil", icon: Home }, // Keep for drawer grouping
   "Apprentissage": { label: "Apprentissage", icon: BookOpen },
   "Progression": { label: "Progression", icon: TrendingUp },
   "Contenu": { label: "Contenu", icon: BookOpen },
@@ -71,7 +71,7 @@ const BottomNavigationBar = ({
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useRole();
+  const { signOut, currentRole } = useRole();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerContent, setDrawerContent] = useState<'categories' | 'items'>('categories');
@@ -79,32 +79,22 @@ const BottomNavigationBar = ({
   const [activeCategoryIcon, setActiveCategoryIcon] = useState<React.ElementType | null>(null);
 
   const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
-    return [
-      {
-        to: "/dashboard",
-        icon: Home,
-        label: "Accueil",
-        type: "link",
-      },
-    ];
-  }, []);
-
-  const dynamicFixedBottomNavItems: NavItem[] = currentUser
-    ? [
-        ...fixedBottomNavItems,
-        { icon: MessageSquare, label: "Messages", type: "link", to: "/messages", badge: unreadMessagesCount },
-        { icon: Search, label: "Recherche", type: "trigger", onClick: onOpenGlobalSearch },
-      ]
-    : [
-        { to: "/", icon: Home, label: "Accueil", type: "link" }, // Home link for non-logged-in users
-        { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Général", categoriesConfig["Général"].icon); } }
+    if (!currentUser) {
+      return [
+        { to: "/", icon: Home, label: "Accueil", type: "link" },
+        { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", categoriesConfig["Accueil"].icon); } }
       ];
-
-  const drawerItems = allNavItemsForDrawer;
+    }
+    return [
+      { to: "/dashboard", icon: Home, label: "Accueil", type: "link" },
+      { icon: MessageSquare, label: "Messages", type: "link", to: "/messages", badge: unreadMessagesCount },
+      { icon: Search, label: "Recherche", type: "trigger", onClick: onOpenGlobalSearch },
+    ];
+  }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen]);
 
   const groupedDrawerItems = React.useMemo(() => {
     const groups: { [key: string]: NavItem[] } = {};
-    drawerItems.forEach(item => {
+    allNavItemsForDrawer.forEach(item => {
       const category = item.category || "Autres";
       if (!groups[category]) {
         groups[category] = [];
@@ -112,11 +102,15 @@ const BottomNavigationBar = ({
       groups[category].push(item);
     });
 
-    return Object.keys(groups).sort().map(category => ({
-      category,
-      items: groups[category].sort((a, b) => a.label.localeCompare(b.label))
-    }));
-  }, [drawerItems]);
+    // Filter out empty categories
+    const filteredGroups: { category: string; items: NavItem[] }[] = [];
+    for (const category in groups) {
+      if (groups[category].length > 0) {
+        filteredGroups.push({ category, items: groups[category].sort((a, b) => a.label.localeCompare(b.label)) });
+      }
+    }
+    return filteredGroups.sort((a, b) => a.category.localeCompare(b.category));
+  }, [allNavItemsForDrawer]);
 
   const handleLogout = async () => {
     await signOut();
@@ -147,7 +141,7 @@ const BottomNavigationBar = ({
       setSearchQuery('');
     } else if (item.onClick) {
       item.onClick();
-      if (item.label !== "Recherche") {
+      if (item.label !== "Recherche") { // Keep search overlay open if it's the search trigger
         setIsMoreDrawerOpen(false);
         setDrawerContent('categories');
         setActiveCategory(null);
@@ -219,7 +213,7 @@ const BottomNavigationBar = ({
         {...swipeHandlers}
         className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden"
       >
-        {dynamicFixedBottomNavItems.map((item: NavItem) => {
+        {fixedBottomNavItems.map((item: NavItem) => {
           // Refined isLinkActive logic for fixed bottom nav items
           const isLinkActive = 
             (item.to === '/' && location.pathname === '/' && !location.hash) || // Home link
@@ -276,7 +270,7 @@ const BottomNavigationBar = ({
       </div>
 
       <Drawer open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
-        <DrawerContent side="bottom" className="h-[calc(100vh-68px)] mt-0 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
+        <DrawerContent side="bottom" className="h-[calc(100vh-68px)] mt-0 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 z-50"> {/* Added z-50 */}
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
             <DrawerHeader className="text-center">
               <div className="flex items-center justify-between">
@@ -369,10 +363,10 @@ const BottomNavigationBar = ({
               )}
             </div>
             <DrawerFooter>
-              {!currentUser && drawerContent === 'items' && activeCategory === 'Général' && (
+              {!currentUser && drawerContent === 'items' && activeCategory === 'Accueil' && ( // Changed 'Général' to 'Accueil'
                 <AuthMenu onClose={() => setIsMoreDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
               )}
-              {currentUser && drawerContent === 'items' && activeCategory === 'Général' && (
+              {currentUser && drawerContent === 'items' && activeCategory === 'Accueil' && ( // Changed 'Général' to 'Accueil'
                 <Button
                   variant="destructive"
                   className="w-full justify-start"
