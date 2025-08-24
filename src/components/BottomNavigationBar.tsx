@@ -6,6 +6,8 @@ import {
   LogOut,
   MoreHorizontal,
   LogIn,
+  ArrowLeft, // Keep ArrowLeft as it's used in the drawer
+  X, // Keep X as it's used in the drawer
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
@@ -23,7 +25,8 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import AuthMenu from "./AuthMenu";
-import { Input } from "@/components/ui/input"; // Import Input for search
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button"; // Added this import
 
 interface BottomNavigationBarProps {
   allNavItemsForDrawer: NavItem[];
