@@ -8,6 +8,8 @@ import {
   LogIn,
   ArrowLeft, // Keep ArrowLeft as it's used in the drawer
   X, // Keep X as it's used in the drawer
+  Settings, // Added this import
+  Info, // Added this import
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
@@ -26,7 +28,7 @@ import {
 } from "@/components/ui/drawer";
 import AuthMenu from "./AuthMenu";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button"; // Added this import
+import { Button } from "@/components/ui/button";
 
 interface BottomNavigationBarProps {
   allNavItemsForDrawer: NavItem[];
