@@ -11,7 +11,7 @@ import { loadCourses } from "@/lib/courseData"; // Still load courses from Supab
 import { getProfileById, updateProfile, getStudentCourseProgress, upsertStudentCourseProgress, getAllStudentCourseProgress, getUserFullName } from "@/lib/studentData";
 import type { Profile } from "@/lib/dataModels"; // Import Profile as type
 import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import Course, StudentCourseProgress types
-import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock } from "lucide-react";
+import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock, BriefcaseBusiness } from "lucide-react"; // Added BriefcaseBusiness icon
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavigate
@@ -291,7 +291,7 @@ const Profile = () => {
       ].filter(alert => alert.studentId && studentCourseProgresses.some(s => s.user_id === alert.studentId)); // Filter out alerts for non-existent users or students not in filtered list
 
       return (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
           <Card className="lg:col-span-3">
             <CardHeader className="flex flex-row items-center justify-between space-x-4">
               <div className="flex items-center space-x-4">
@@ -359,6 +359,67 @@ const Profile = () => {
                     <span className="ml-auto text-xs italic">{alert.date}</span>
                   </li>
                 ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') {
+      console.log("[Profile Page] renderProfileContent: Rendering administrator/director/deputy_director profile.");
+      // For admin/director roles, we can show basic profile info and maybe some high-level stats
+      return (
+        <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
+          <Card className="lg:col-span-3">
+            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+              <div className="flex items-center space-x-4">
+                <BriefcaseBusiness className="h-12 w-12 text-primary" />
+                <div>
+                  <CardTitle className="text-3xl">{currentUserProfile.first_name} {currentUserProfile.last_name}</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" /> {currentUserProfile.email}
+                  </CardDescription>
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                    @{currentUserProfile.username}
+                  </CardDescription>
+                </div>
+              </div>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+                <Edit className="h-4 w-4 mr-2" /> Modifier le profil
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg text-muted-foreground">
+                Rôle actuel: {currentRole === 'administrator' ? 'Administrateur' : currentRole === 'director' ? 'Directeur' : 'Directeur Adjoint'}
+              </p>
+              {currentUserProfile.establishment_id && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Établissement: {currentUserProfile.establishment_id} {/* You might want to resolve the establishment name here */}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          {/* Add more admin/director specific cards here if needed, e.g., quick stats or links */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Accès Rapide</CardTitle>
+              <CardDescription>Liens utiles pour votre rôle.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {currentRole === 'administrator' && (
+                  <>
+                    <li><Link to="/admin-users" className="text-primary hover:underline">Gérer les utilisateurs</Link></li>
+                    <li><Link to="/establishments" className="text-primary hover:underline">Gérer les établissements</Link></li>
+                    <li><Link to="/analytics?view=establishment-admin" className="text-primary hover:underline">Voir les analytiques globales</Link></li>
+                  </>
+                )}
+                {(currentRole === 'director' || currentRole === 'deputy_director') && (
+                  <>
+                    <li><Link to="/admin-users" className="text-primary hover:underline">Gérer les professeurs</Link></li>
+                    <li><Link to="/students" className="text-primary hover:underline">Gérer les élèves</Link></li>
+                    <li><Link to="/analytics?view=establishment-admin" className="text-primary hover:underline">Voir les analytiques de l'établissement</Link></li>
+                  </>
+                )}
               </ul>
             </CardContent>
           </Card>
