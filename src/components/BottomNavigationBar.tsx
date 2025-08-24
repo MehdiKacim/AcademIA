@@ -10,6 +10,7 @@ import {
   X, // Keep X as it's used in the drawer
   Settings, // Added this import
   Info, // Added this import
+  ArrowRight, // Added this import
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
