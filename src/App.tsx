@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } => "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useNavigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -160,13 +160,13 @@ const AppWithThemeProvider = () => {
                       <>
                         <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/classes" element={<Navigate to "/dashboard" replace />} />
-                        <Route path="/students" element={<Navigate to "/dashboard" replace />} />
-                        <Route path="/pedagogical-management" element={<Navigate to "/dashboard" replace />} />
-                        <Route path="/school-years" element={<Navigate to "/dashboard" replace />} />
-                        <Route path="/professor-assignments" element={<Navigate to "/dashboard" replace />} />
-                        <Route path="/analytics" element={<Navigate to "/dashboard" replace />} />
-                        <Route path="/create-course" element={<Navigate to "/dashboard" replace />} />
+                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
                   </Route>
