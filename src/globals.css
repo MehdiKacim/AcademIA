@@ -8,27 +8,27 @@
   /* The default theme will now be handled by next-themes 'system' or 'dark' if no user preference */
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --background: 220 25% 12%; /* Very dark blue background */
+    --foreground: 210 40% 98%; /* Off-white text */
+    --card: 220 25% 15%; /* Slightly lighter dark blue for cards */
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 220 25% 15%;
     --popover-foreground: 210 40% 98%;
-    --primary: 200 90% 70%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 210 80% 60%; /* Vibrant blue for primary actions */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 220 20% 25%; /* Muted blue-grey for secondary elements */
     --secondary-foreground: 210 40% 98%;
     --success: 120 60% 40%;
     --success-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 220 20% 20%; /* Darker muted blue-grey */
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 220 20% 25%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 220 20% 30%; /* Medium dark blue for borders */
+    --input: 220 20% 30%;
+    --ring: 210 80% 60%;
   }
 
   /* New Theme: Modern Blue */
