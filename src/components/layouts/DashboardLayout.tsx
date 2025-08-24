@@ -31,7 +31,8 @@ import { Message } from "@/lib/dataModels";
 import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
-import SwipeUpIndicator from "@/components/SwipeUpIndicator"; // Import the new component
+import SwipeUpIndicator from "@/components/SwipeUpIndicator";
+import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -45,12 +46,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false); // New state for "More" drawer
+  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null); // State to manage drill-down navigation
-  const [isFloatingButtonVisible, setIsFloatingButtonVisible] = useState(true);
+  const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
+  const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true); // Renamed from isFloatingButtonVisible
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoTapCountRef = useRef(0);
 
@@ -59,12 +60,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       clearTimeout(autoHideTimerRef.current);
     }
     autoHideTimerRef.current = setTimeout(() => {
-      setIsFloatingButtonVisible(false);
+      setIsAiAChatButtonVisible(false);
     }, 5000);
   }, []);
 
   const resetAndShowButton = useCallback(() => {
-    setIsFloatingButtonVisible(true);
+    setIsAiAChatButtonVisible(true);
     startAutoHideTimer();
   }, [startAutoHideTimer]);
 
@@ -328,7 +329,21 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [startAutoHideTimer]);
 
-  const isFloatingButtonActuallyVisible = isFloatingButtonVisible && !isChatOpen;
+  const isAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen; // Use renamed state
+
+  // Logic for SwipeUpIndicator visibility
+  const isSwipeUpIndicatorVisible = isMobile && currentUserProfile && !isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen;
+
+  // Swipe handlers for opening the "More" drawer on mobile
+  const swipeHandlers = useSwipeable({
+    onSwipedUp: () => {
+      if (isMobile && currentUserProfile && !isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen) {
+        setIsMoreDrawerOpen(true);
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackMouse: true, // For testing on desktop
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -453,6 +468,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </div>
       </header>
       <main
+        {...swipeHandlers} // Apply swipe handlers to the main content area
         className={cn("flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto", isMobile && "pb-20")}
       >
         <Outlet />
@@ -470,13 +486,15 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
         isMoreDrawerOpen={isMoreDrawerOpen}
         setIsMoreDrawerOpen={setIsMoreDrawerOpen}
+        unreadMessagesCount={unreadMessages}
+        onSwipeUpToOpenMoreDrawer={() => setIsMoreDrawerOpen(true)} // Pass the handler
       />
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAPersistentChat isVisible={isFloatingButtonActuallyVisible} />}
+      {currentUserProfile && <FloatingAiAPersistentChat isVisible={isAiAChatButtonVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
-      {isMobile && <SwipeUpIndicator isVisible={!isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen} />}
+      {isSwipeUpIndicatorVisible && <SwipeUpIndicator isVisible={isSwipeUpIndicatorVisible} />}
     </div>
   );
 };

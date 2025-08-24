@@ -9,7 +9,7 @@ interface SwipeUpIndicatorProps {
 const SwipeUpIndicator = ({ isVisible }: SwipeUpIndicatorProps) => {
   return (
     <div className={cn(
-      "fixed bottom-20 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center transition-opacity duration-300 pointer-events-none",
+      "fixed bottom-[4.5rem] left-1/2 -translate-x-1/2 z-30 flex flex-col items-center transition-opacity duration-300 pointer-events-none",
       isVisible ? "opacity-100" : "opacity-0"
     )}>
       <ChevronUp className="h-8 w-8 text-muted-foreground animate-bounce-slow" />
