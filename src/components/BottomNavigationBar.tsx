@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowLeft, MessageSquare, User, Settings, LogOut, LogIn, Info } from "lucide-react"; // Import User, Settings, LogOut, LogIn, Info
+import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X } from "lucide-react";
 import { NavItem } from "@/lib/dataModels";
 import {
   Drawer,
@@ -13,106 +13,77 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerClose,
-  DrawerTrigger,
-} from "@/components/ui/drawer"; // Import Drawer components
-import { useRole } from "@/contexts/RoleContext"; // Corrected import path
-import AuthMenu from "./AuthMenu"; // Import the new AuthMenu component
+} from "@/components/ui/drawer";
+import { useRole } from "@/contexts/RoleContext";
+import AuthMenu from "./AuthMenu";
 
 interface BottomNavigationBarProps {
-  navItems: NavItem[];
+  allNavItemsForDrawer: NavItem[]; // All flattened navigation items for the "More" drawer
   onOpenGlobalSearch?: () => void;
   currentUser: any; // Profile type
-  onOpenAboutModal: () => void; // New prop for opening AboutModal
+  onOpenAboutModal: () => void;
+  isMoreDrawerOpen: boolean; // State for the "More" drawer
+  setIsMoreDrawerOpen: (isOpen: boolean) => void; // Setter for the "More" drawer
 }
 
-const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpenAboutModal }: BottomNavigationBarProps) => {
+const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, currentUser, onOpenAboutModal, isMoreDrawerOpen, setIsMoreDrawerOpen }: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize useNavigate
-  const { signOut } = useRole(); // Get signOut from useRole
+  const navigate = useNavigate();
+  const { signOut } = useRole();
 
-  const [currentMobileNavLevel, setCurrentMobileNavLevel] = useState<string | null>(null);
-  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false); // State for the profile drawer
-  const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false); // New state for auth drawer
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
+  const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
 
   if (!isMobile) {
-    return null; // Do not display on non-mobile screens
+    return null;
   }
 
-  const handleLogout = async () => { // Make it async
-    await signOut(); // Call the signOut function from context
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
-    setIsProfileDrawerOpen(false); // Close drawer after logout
+    setIsProfileDrawerOpen(false);
   };
 
   const handleAuthSuccess = () => {
-    setIsAuthDrawerOpen(false); // Close auth drawer on success
-    navigate("/dashboard"); // Redirect to dashboard after login/signup
+    setIsAuthDrawerOpen(false);
+    navigate("/dashboard");
   };
 
-  // Helper to determine if a parent trigger is active based on its children's routes
-  const getIsParentTriggerActive = (item: NavItem): boolean => {
-    if (item.type !== 'trigger' || !item.items) return false;
-    const currentFullPath = location.pathname + location.search;
-    return item.items.some(subItem => {
-      if (subItem.to) {
-        return currentFullPath.startsWith(subItem.to);
-      }
-      return false;
-    });
-  };
+  // Define the core fixed navigation items for the bottom bar
+  const fixedBottomNavItems: NavItem[] = [
+    { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
+    { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: allNavItemsForDrawer.find(item => item.to === "/messages")?.badge || 0 },
+    { icon: Search, label: "Recherche", type: 'trigger', onClick: onOpenGlobalSearch },
+    {
+      icon: User,
+      label: "Profil",
+      type: 'trigger',
+      onClick: () => setIsProfileDrawerOpen(true),
+    },
+  ];
 
-  let itemsToRender: NavItem[] = [];
+  // If not logged in, replace "Profile" with "Authentification"
+  const dynamicFixedBottomNavItems = currentUser
+    ? fixedBottomNavItems
+    : fixedBottomNavItems.map(item =>
+        item.label === "Profil"
+          ? { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => setIsAuthDrawerOpen(true) }
+          : item
+      );
 
-  if (currentMobileNavLevel) { // If in a drill-down state
-    const activeParentTrigger = navItems.find(item => item.label.toLowerCase().replace(/\s/g, '-') === currentMobileNavLevel && item.type === 'trigger');
-    if (activeParentTrigger && activeParentTrigger.items) {
-      itemsToRender = [
-        {
-          icon: ArrowLeft,
-          label: "Retour",
-          type: 'trigger',
-          onClick: () => setCurrentMobileNavLevel(null),
-        },
-        ...activeParentTrigger.items.map(subItem => ({ ...subItem, type: 'link' as const, icon: subItem.icon })),
-      ];
-    }
-  } else { // Top-level navigation
-    itemsToRender = navItems.map(item => {
-      if (item.type === 'trigger' && item.items) {
-        return {
-          ...item,
-          onClick: () => setCurrentMobileNavLevel(item.label.toLowerCase().replace(/\s/g, '-')),
-          to: undefined, // Triggers don't have a direct 'to' link
-        };
-      }
-      return item;
-    });
-    // Add a dedicated profile/settings button to the main mobile nav
-    if (currentUser) {
-      itemsToRender.push({
-        icon: User,
-        label: "Profil",
-        type: 'trigger', // Use trigger to open the drawer
-        onClick: () => setIsProfileDrawerOpen(true),
-      });
-    } else {
-      // Add "Authentification" button for unauthenticated users
-      itemsToRender.push({
-        icon: LogIn,
-        label: "Authentification", // Changed label to "Authentification"
-        type: 'trigger',
-        onClick: () => setIsAuthDrawerOpen(true),
-      });
-    }
-  }
+  // Add a "More" button if there are other items in allNavItemsForDrawer that are not in fixedBottomNavItems
+  const otherNavItems = allNavItemsForDrawer.filter(drawerItem =>
+    !dynamicFixedBottomNavItems.some(fixedItem => fixedItem.to === drawerItem.to || fixedItem.label === drawerItem.label)
+  );
+
+  const showMoreButton = otherNavItems.length > 0;
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden overflow-x-auto flex-nowrap">
-        {itemsToRender.map((item) => {
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden">
+        {dynamicFixedBottomNavItems.map((item) => {
           const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-          const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item); // Use the helper function
 
           if (item.type === 'link' && item.to) {
             return (
@@ -121,7 +92,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
                 to={item.to}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 min-w-[80px]",
+                    "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 w-1/5", // Use w-1/5 for even distribution
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
@@ -144,12 +115,7 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
                 key={item.label}
                 variant="ghost"
                 onClick={item.onClick}
-                className={cn(
-                  "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto flex-shrink-0 min-w-[80px]",
-                  isTriggerActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+                className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5" // Use w-1/5
               >
                 <item.icon className="h-5 w-5 mb-1" />
                 {item.label}
@@ -159,14 +125,14 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
           return null;
         })}
 
-        {onOpenGlobalSearch && !currentMobileNavLevel && currentUser && ( // Only show search if logged in and not in drill-down
+        {showMoreButton && (
           <Button
             variant="ghost"
-            onClick={onOpenGlobalSearch}
-            className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 min-w-[80px]"
+            onClick={() => setIsMoreDrawerOpen(true)}
+            className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5" // Use w-1/5
           >
-            <Search className="h-5 w-5 mb-1" />
-            Recherche
+            <MoreHorizontal className="h-5 w-5 mb-1" />
+            Menu
           </Button>
         )}
       </div>
@@ -174,7 +140,6 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
       {/* Profile/Settings Drawer for Mobile */}
       {currentUser && (
         <Drawer open={isProfileDrawerOpen} onOpenChange={setIsProfileDrawerOpen}>
-          {/* The DrawerTrigger is handled by the 'Profil' button's onClick */}
           <DrawerContent className="h-auto mt-24 rounded-t-lg backdrop-blur-lg bg-background/80">
             <div className="mx-auto w-full max-w-sm">
               <DrawerHeader className="text-left">
@@ -206,8 +171,8 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
                   variant="ghost"
                   className="w-full justify-start"
                   onClick={() => {
-                    onOpenAboutModal(); // Open AboutModal
-                    setIsProfileDrawerOpen(false); // Close profile drawer
+                    onOpenAboutModal();
+                    setIsProfileDrawerOpen(false);
                   }}
                 >
                   <Info className="mr-2 h-4 w-4" /> À propos
@@ -241,6 +206,53 @@ const BottomNavigationBar = ({ navItems, onOpenGlobalSearch, currentUser, onOpen
           </DrawerContent>
         </Drawer>
       )}
+
+      {/* "More" Navigation Drawer for Mobile */}
+      <Drawer open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
+        <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
+          <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
+            <DrawerHeader className="text-center">
+              <DrawerTitle className="text-center">Menu</DrawerTitle>
+              <DrawerDescription className="text-center">
+                Toutes les options de navigation.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="flex-grow overflow-y-auto p-4 space-y-2">
+              {allNavItemsForDrawer.map((item) => (
+                <Button
+                  key={item.to || item.label}
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start",
+                    (location.pathname + location.search).startsWith(item.to || '') ? "bg-accent text-accent-foreground" : ""
+                  )}
+                  onClick={() => {
+                    if (item.to) {
+                      navigate(item.to);
+                      setIsMoreDrawerOpen(false);
+                    }
+                  }}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.label}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                      {item.badge}
+                    </span>
+                  )}
+                </Button>
+              ))}
+            </div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline">
+                  <X className="h-4 w-4 mr-2" /> Fermer le menu
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 };

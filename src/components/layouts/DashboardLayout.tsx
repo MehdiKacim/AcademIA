@@ -44,6 +44,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false); // New state for "More" drawer
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -147,7 +148,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   }, [currentUserProfile?.id]);
 
 
-  const getMainNavItems = (includeAllSubItems = false): NavItem[] => {
+  // This function generates the full, structured navigation tree for desktop sidebar
+  const getFullNavTree = (): NavItem[] => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages },
@@ -248,7 +250,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
             { to: "/pedagogical-management", label: "Gestion Pédagogique", icon: BookMarked, type: 'link' },
             { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
-            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' }, // New item
+            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' },
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
         },
@@ -265,7 +267,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             { to: "/classes", label: "Gestion Classes", icon: Users, type: 'link' },
             { to: "/pedagogical-management", label: "Gestion des Élèves par Classe", icon: BookMarked, type: 'link' },
             { to: "/school-years", label: "Gestion Années Scolaires", icon: CalendarDays, type: 'link' },
-            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' }, // New item
+            { to: "/professor-assignments", label: "Affectations Professeurs", icon: UserCheck, type: 'link' },
           ],
         },
         {
@@ -289,37 +291,27 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       );
     }
 
-    const allTopLevelItems = [...baseItems, ...roleSpecificItems];
+    return [...baseItems, ...roleSpecificItems];
+  };
 
-    if (currentNavLevel && !isMobile) { // Apply drill-down logic only for desktop
-      const parentItem = allTopLevelItems.find(item => item.type === 'trigger' && item.label.toLowerCase().replace(/\s/g, '-') === currentNavLevel);
-      if (parentItem && parentItem.items) {
-        return [
-          {
-            icon: ArrowLeft,
-            label: "Retour",
-            type: 'trigger',
-            onClick: () => setCurrentNavLevel(null),
-          },
-          ...parentItem.items.map(subItem => ({ ...subItem, type: 'link' as const, icon: subItem.icon })),
-        ];
-      }
-    }
-    
-    // If not in a drill-down or on mobile, return top-level items
-    // If includeAllSubItems is true, flatten all sub-items for the useEffect that checks active parent
-    if (includeAllSubItems) {
-      const flattenedItems: NavItem[] = [];
-      allTopLevelItems.forEach(item => {
-        flattenedItems.push(item);
-        if (item.type === 'trigger' && item.items) {
-          item.items.forEach(subItem => flattenedItems.push(subItem));
+  // Function to flatten the navigation tree for the mobile "More" drawer
+  const getAllFlattenedNavItems = (): NavItem[] => {
+    const flattened: NavItem[] = [];
+    const fullTree = getFullNavTree();
+
+    fullTree.forEach(item => {
+      if (item.type === 'link') {
+        flattened.push(item);
+      } else if (item.type === 'trigger' && item.items) {
+        // Add the parent trigger itself as a navigable item if it has a 'to'
+        if (item.to) {
+          flattened.push({ ...item, type: 'link' }); // Convert trigger to link if it has a 'to'
         }
-      });
-      return flattenedItems;
-    }
-
-    return allTopLevelItems;
+        // Add all sub-items
+        item.items.forEach(subItem => flattened.push(subItem));
+      }
+    });
+    return flattened;
   };
 
   const getIsParentTriggerActive = (item: NavItem): boolean => {
@@ -363,7 +355,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {getMainNavItems().map((item) => {
+            {getFullNavTree().map((item) => { // Use getFullNavTree for desktop
               const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
               const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
 
@@ -390,22 +382,34 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     )}
                   </NavLink>
                 );
-              } else if (item.type === 'trigger') { // Handle trigger items for drill-down
+              } else if (item.type === 'trigger' && item.items) { // Handle trigger items for drill-down
                 return (
-                  <Button
-                    key={item.label}
-                    variant="ghost"
-                    onClick={item.onClick || (() => setCurrentNavLevel(item.label.toLowerCase().replace(/\s/g, '-')))}
-                    className={cn(
-                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isTriggerActive
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent hover:text-accent-foreground"
-                    )}
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                  </Button>
+                  <DropdownMenu key={item.label}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                          isTriggerActive
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {item.items.map(subItem => (
+                        <DropdownMenuItem key={subItem.to} onClick={() => navigate(subItem.to)}>
+                          <subItem.icon className="mr-2 h-4 w-4" />
+                          {subItem.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 );
               }
               return null;
@@ -478,7 +482,14 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           À propos
         </Button>
       </footer>
-      <BottomNavigationBar navItems={getMainNavItems()} onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined} currentUser={currentUserProfile} onOpenAboutModal={() => setIsAboutModalOpen(true)} />
+      <BottomNavigationBar
+        allNavItemsForDrawer={getAllFlattenedNavItems()} // Pass all flattened items for the "More" drawer
+        onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
+        currentUser={currentUserProfile}
+        onOpenAboutModal={() => setIsAboutModalOpen(true)}
+        isMoreDrawerOpen={isMoreDrawerOpen}
+        setIsMoreDrawerOpen={setIsMoreDrawerOpen}
+      />
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <FloatingAiAPersistentChat isVisible={isFloatingButtonActuallyVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
