@@ -38,6 +38,18 @@ interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
 }
 
+// Define category metadata (icons, labels) - Moved here to be the source of truth
+const categoriesConfig: { [key: string]: { label: string; icon: React.ElementType } } = {
+  "Général": { label: "Général", icon: Home },
+  "Apprentissage": { label: "Apprentissage", icon: BookOpen },
+  "Progression": { label: "Progression", icon: TrendingUp },
+  "Contenu": { label: "Contenu", icon: BookOpen },
+  "Pédagogie": { label: "Pédagogie", icon: Users },
+  "Analytiques": { label: "Analytiques", icon: BarChart2 },
+  "Administration": { label: "Administration", icon: BriefcaseBusiness },
+  "Autres": { label: "Autres", icon: Info }, // Fallback category
+};
+
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
   const { currentUserProfile, currentRole, signOut } = useRole();
@@ -50,7 +62,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [currentNavLevel, setCurrentNavLevel] = useState<string | null>(null);
+  // States for desktop category navigation
+  const [desktopActiveCategory, setDesktopActiveCategory] = useState<string | null>(null);
+  const [desktopShowCategories, setDesktopShowCategories] = useState(true);
+
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoTapCountRef = useRef(0);
@@ -149,7 +164,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [currentUserProfile?.id]);
 
-
   // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
     const items: NavItem[] = [
@@ -157,6 +171,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, category: "Général" },
       { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), category: "Général" },
       { to: "/profile", icon: User, label: "Mon profil", type: 'link', category: "Général" },
+      { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', category: "Général" },
+      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), category: "Général" },
     ];
 
     if (currentRole === 'student') {
@@ -221,7 +237,29 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     return items;
   }, [currentRole, unreadMessages]);
 
-  // Removed getIsParentTriggerActive as it's no longer needed for flat menu
+  // Group fullNavTree items by category for desktop display
+  const groupedFullNavTree = React.useMemo(() => {
+    const groups: { [key: string]: NavItem[] } = {};
+    fullNavTree.forEach(item => {
+      const category = item.category || "Autres";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(item);
+    });
+    return groups;
+  }, [fullNavTree]);
+
+  // Handlers for desktop category navigation
+  const handleDesktopCategoryClick = (categoryLabel: string) => {
+    setDesktopActiveCategory(categoryLabel);
+    setDesktopShowCategories(false);
+  };
+
+  const handleDesktopBackToCategories = () => {
+    setDesktopActiveCategory(null);
+    setDesktopShowCategories(true);
+  };
 
   const handleLogoClick = useCallback(() => {
     logoTapCountRef.current += 1;
@@ -253,34 +291,59 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {fullNavTree.map((item) => {
-              const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+            {desktopShowCategories ? (
+              // Render category buttons
+              Object.keys(groupedFullNavTree).sort().map(category => {
+                const categoryItems = groupedFullNavTree[category];
+                if (categoryItems.length === 0) return null; // Don't show empty categories
 
-              // Render all items as simple links for desktop
-              return (
-                <NavLink
-                  key={item.to || item.label} // Use label as fallback key for non-link items if any
-                  to={item.to || '#'} // Fallback to '#' for non-link items
-                  onClick={item.onClick} // Keep onClick for trigger items
-                  className={() =>
-                    cn(
-                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isLinkActive
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent hover:text-accent-foreground"
-                    )
-                  }
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                      {item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              );
-            })}
+                const categoryConfig = categoriesConfig[category] || categoriesConfig["Autres"];
+                return (
+                  <Button
+                    key={category}
+                    variant="ghost"
+                    onClick={() => handleDesktopCategoryClick(category)}
+                    className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {React.createElement(categoryConfig.icon, { className: "mr-2 h-4 w-4" })}
+                    {categoryConfig.label}
+                  </Button>
+                );
+              })
+            ) : (
+              // Render items within the active category
+              <>
+                <Button variant="ghost" onClick={handleDesktopBackToCategories} className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground">
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Retour
+                </Button>
+                {groupedFullNavTree[desktopActiveCategory!]?.map((item) => {
+                  const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                  return (
+                    <NavLink
+                      key={item.to || item.label}
+                      to={item.to || '#'}
+                      onClick={item.onClick}
+                      className={() =>
+                        cn(
+                          "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                          isLinkActive
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        )
+                      }
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="ml-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                          {item.badge}
+                        </span>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </>
+            )}
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
@@ -299,13 +362,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           )}
 
           <ThemeToggle />
-          <Button variant="outline" size="icon" onClick={() => setIsAboutModalOpen(true)} className="md:hidden">
-            <Info className="h-5 w-5" />
-            <span className="sr-only">À propos</span>
-          </Button>
-          <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="hidden md:flex">
-            <Info className="h-5 w-5 mr-2" /> À propos
-          </Button>
+          {/* Removed About button from main header, it's now in the drawer */}
           {!isMobile && !currentUserProfile && (
             <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
               <LogIn className="h-5 w-5 mr-2" /> Authentification

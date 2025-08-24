@@ -47,7 +47,7 @@ interface BottomNavigationBarProps {
   unreadMessagesCount: number;
 }
 
-// Define category metadata (icons, labels)
+// Define category metadata (icons, labels) - Using the same config as DashboardLayout
 const categoriesConfig: { [key: string]: { label: string; icon: React.ElementType } } = {
   "Général": { label: "Général", icon: Home },
   "Apprentissage": { label: "Apprentissage", icon: BookOpen },
@@ -73,8 +73,7 @@ const BottomNavigationBar = ({
   const navigate = useNavigate();
   const { signOut } = useRole();
 
-  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
-  const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
+  // Removed isProfileDrawerOpen and isAuthDrawerOpen states
 
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerContent, setDrawerContent] = useState<'categories' | 'items'>('categories');
@@ -91,37 +90,23 @@ const BottomNavigationBar = ({
         type: "link",
       },
       {
-        to: "/messages",
-        icon: MessageSquare,
-        label: "Messages",
-        type: "link",
-        badge: unreadMessagesCount,
-      },
-      {
         icon: Search,
         label: "Recherche",
         type: "trigger",
         onClick: onOpenGlobalSearch,
       },
-      {
-        icon: User,
-        label: "Profil",
-        type: "trigger",
-        onClick: () => setIsProfileDrawerOpen(true),
-      },
     ];
-  }, [onOpenGlobalSearch, unreadMessagesCount, setIsProfileDrawerOpen]);
+  }, [onOpenGlobalSearch]);
 
-  // If not logged in, replace "Profil" with "Authentification"
+  // If not logged in, add "Authentification" to the fixed bottom nav
   const dynamicFixedBottomNavItems: NavItem[] = currentUser
     ? fixedBottomNavItems
-    : fixedBottomNavItems.map(item =>
-        item.label === "Profil"
-          ? { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => setIsAuthDrawerOpen(true) }
-          : item
-      );
+    : [
+        ...fixedBottomNavItems,
+        { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Général", categoriesConfig["Général"].icon); } } // Open More drawer to General category
+      ];
 
-  // Use allNavItemsForDrawer directly for drawer items, no filtering needed here
+  // The drawerItems are now simply allNavItemsForDrawer, as fixed items are no longer duplicated
   const drawerItems = allNavItemsForDrawer;
 
   // Group and sort drawer items by category
@@ -145,11 +130,21 @@ const BottomNavigationBar = ({
   const handleLogout = async () => {
     await signOut();
     navigate("/");
-    setIsProfileDrawerOpen(false);
+    // Close the drawer after logout
+    setIsMoreDrawerOpen(false);
+    setDrawerContent('categories');
+    setActiveCategory(null);
+    setActiveCategoryIcon(null);
+    setSearchQuery('');
   };
 
   const handleAuthSuccess = () => {
-    setIsAuthDrawerOpen(false);
+    // Close the drawer after successful login
+    setIsMoreDrawerOpen(false);
+    setDrawerContent('categories');
+    setActiveCategory(null);
+    setActiveCategoryIcon(null);
+    setSearchQuery('');
     navigate("/dashboard");
   };
 
@@ -164,12 +159,15 @@ const BottomNavigationBar = ({
       setSearchQuery('');
     } else if (item.onClick) {
       item.onClick();
-      setIsMoreDrawerOpen(false);
-      // Reset drawer state when triggering an action
-      setDrawerContent('categories');
-      setActiveCategory(null);
-      setActiveCategoryIcon(null);
-      setSearchQuery('');
+      // Do not close the drawer if it's a search trigger, as the overlay will handle closing
+      if (item.label !== "Recherche") {
+        setIsMoreDrawerOpen(false);
+        // Reset drawer state when triggering an action
+        setDrawerContent('categories');
+        setActiveCategory(null);
+        setActiveCategoryIcon(null);
+        setSearchQuery('');
+      }
     }
   };
 
@@ -210,7 +208,7 @@ const BottomNavigationBar = ({
   // Swipe handlers for opening the "More" drawer on mobile
   const swipeHandlers = useSwipeable({
     onSwipedUp: () => {
-      if (isMobile && !isMoreDrawerOpen && !isProfileDrawerOpen && !isAuthDrawerOpen) {
+      if (isMobile && !isMoreDrawerOpen) { // Removed other drawer checks
         setIsMoreDrawerOpen(true);
       }
     },
@@ -291,73 +289,8 @@ const BottomNavigationBar = ({
         </Button>
       </div>
 
-      {/* Profile/Settings Drawer for Mobile */}
-      {currentUser && (
-        <Drawer open={isProfileDrawerOpen} onOpenChange={setIsProfileDrawerOpen}>
-          <DrawerContent side="bottom" className="h-auto max-h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
-            <div className="mx-auto w-full max-w-sm flex-grow flex flex-col">
-              <DrawerHeader className="text-left">
-                <DrawerTitle>Mon Compte</DrawerTitle>
-                <DrawerDescription>Gérez votre profil et vos paramètres.</DrawerDescription>
-              </DrawerHeader>
-              <div className="p-4 pb-0 space-y-2">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    navigate("/profile");
-                    setIsProfileDrawerOpen(false);
-                  }}
-                >
-                  <User className="mr-2 h-4 w-4" /> Mon profil
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    navigate("/settings");
-                    setIsProfileDrawerOpen(false);
-                  }}
-                >
-                  <Settings className="mr-2 h-4 w-4" /> Paramètres
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    onOpenAboutModal();
-                    setIsProfileDrawerOpen(false);
-                  }}
-                >
-                  <Info className="mr-2 h-4 w-4" /> À propos
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-                </Button>
-              </div>
-              <DrawerFooter>
-              </DrawerFooter>
-            </div>
-          </DrawerContent>
-        </Drawer>
-      )}
-
-      {/* Authentication Drawer for Mobile */}
-      {!currentUser && (
-        <Drawer open={isAuthDrawerOpen} onOpenChange={setIsAuthDrawerOpen}>
-          <DrawerContent side="bottom" className="h-auto mt-24 rounded-t-lg backdrop-blur-lg bg-background/80">
-            <div className="mx-auto w-full max-w-sm">
-              <AuthMenu onClose={() => setIsAuthDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
-              <DrawerFooter>
-              </DrawerFooter>
-            </div>
-          </DrawerContent>
-        </Drawer>
-      )}
+      {/* Removed Profile/Settings Drawer for Mobile */}
+      {/* Removed Authentication Drawer for Mobile */}
 
       {/* "More" Navigation Drawer for Mobile (Quick Settings style with categories) */}
       <Drawer open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
@@ -403,7 +336,8 @@ const BottomNavigationBar = ({
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {drawerContent === 'categories' ? (
                         // Display categories as buttons
-                        group.items.length > 0 && ( // Only show category button if it has items (or if search matches category label)
+                        // Only show category button if it has items (or if search matches category label)
+                        (group.items.length > 0 || (categoriesConfig[group.category]?.label.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== '')) && (
                           <Button
                             variant="outline"
                             className={cn(
@@ -449,6 +383,20 @@ const BottomNavigationBar = ({
               )}
             </div>
             <DrawerFooter>
+              {/* Render AuthMenu if not logged in and in General category */}
+              {!currentUser && drawerContent === 'items' && activeCategory === 'Général' && (
+                <AuthMenu onClose={() => setIsMoreDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
+              )}
+              {/* Render Logout button if logged in and in General category */}
+              {currentUser && drawerContent === 'items' && activeCategory === 'Général' && (
+                <Button
+                  variant="destructive"
+                  className="w-full justify-start"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                </Button>
+              )}
             </DrawerFooter>
           </div>
         </DrawerContent>
