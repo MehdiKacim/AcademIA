@@ -3,35 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-  /* The default light theme is now handled by next-themes 'system' or 'dark' if no user preference */
-  /* The :root block (default light theme) is removed to allow next-themes to manage the default light theme based on system preference,
-     which will fall back to 'modern-blue' if selected, or the browser's default if no specific light theme is chosen. */
-
-  /* Original dark theme restored to a deep navy blue palette */
-  .dark {
-    --background: 220 25% 12%; /* Deep navy blue background */
-    --foreground: 210 40% 98%; /* Off-white text */
-    --card: 220 25% 15%; /* Slightly lighter deep navy for cards */
-    --card-foreground: 210 40% 98%;
-    --popover: 220 25% 15%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 80% 60%; /* Vibrant blue for primary actions */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 220 20% 25%; /* Muted blue-grey for secondary elements */
-    --secondary-foreground: 210 40% 98%;
-    --success: 120 60% 40%;
-    --success-foreground: 210 40% 98%;
-    --muted: 220 20% 20%; /* Darker muted blue-grey */
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 220 20% 25%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 20% 30%; /* Medium dark blue for borders */
-    --input: 220 20% 30%;
-    --ring: 210 80% 60%;
-  }
-
   /* Theme: Modern Blue (light-ish theme with blue accents) */
   [data-theme="modern-blue"] {
     --background: 210 30% 92%; /* Light blue-grey background */
