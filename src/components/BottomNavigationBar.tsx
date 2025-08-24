@@ -10,7 +10,7 @@ import {
   Settings,
   Info,
   ArrowRight,
-  ChevronDown, // Import ChevronDown for the indicator
+  ChevronUp, // Changed to ChevronUp for swipe-up indicator
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
@@ -19,14 +19,14 @@ import { cn } from "@/lib/utils";
 import { NavItem } from "@/lib/dataModels";
 import { useRole } from "@/contexts/RoleContext";
 import {
-  Sheet, // Changed from Drawer
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"; // Changed from Drawer components
+  Drawer, // Changed back to Drawer
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer"; // Changed back to Drawer components
 import AuthMenu from "./AuthMenu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -178,7 +178,7 @@ const BottomNavigationBar = ({
 
   // Swipe handlers for opening the "More" drawer on mobile
   const swipeHandlers = useSwipeable({
-    onSwipedDown: () => { // Changed to onSwipedDown
+    onSwipedUp: () => { // Changed to onSwipedUp
       if (isMobile && !isMoreDrawerOpen && !isProfileDrawerOpen && !isAuthDrawerOpen) {
         setIsMoreDrawerOpen(true);
       }
@@ -248,20 +248,20 @@ const BottomNavigationBar = ({
           onClick={() => setIsMoreDrawerOpen(true)} // Click also opens the drawer
           className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5"
         >
-          <ChevronDown className="h-5 w-5 mb-1 animate-bounce-slow" /> {/* Changed to ChevronDown */}
+          <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" /> {/* Changed to ChevronUp */}
           Menu
         </Button>
       </div>
 
       {/* Profile/Settings Drawer for Mobile */}
       {currentUser && (
-        <Sheet open={isProfileDrawerOpen} onOpenChange={setIsProfileDrawerOpen}> {/* Changed to Sheet */}
-          <SheetContent side="top" className="h-auto max-h-[90vh] mt-0 rounded-b-lg flex flex-col backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
+        <Drawer open={isProfileDrawerOpen} onOpenChange={setIsProfileDrawerOpen}> {/* Changed to Drawer */}
+          <DrawerContent side="bottom" className="h-auto max-h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
             <div className="mx-auto w-full max-w-sm flex-grow flex flex-col">
-              <SheetHeader className="text-left">
-                <SheetTitle>Mon Compte</SheetTitle>
-                <SheetDescription>Gérez votre profil et vos paramètres.</SheetDescription>
-              </SheetHeader>
+              <DrawerHeader className="text-left">
+                <DrawerTitle>Mon Compte</DrawerTitle>
+                <DrawerDescription>Gérez votre profil et vos paramètres.</DrawerDescription>
+              </DrawerHeader>
               <div className="p-4 pb-0 space-y-2">
                 <Button
                   variant="ghost"
@@ -301,45 +301,44 @@ const BottomNavigationBar = ({
                   <LogOut className="mr-2 h-4 w-4" /> Déconnexion
                 </Button>
               </div>
-              <SheetFooter>
+              <DrawerFooter>
                 {/* Removed DrawerClose button as swipe-to-dismiss is enabled */}
-              </SheetFooter>
+              </DrawerFooter>
             </div>
-          </SheetContent>
-        </Sheet>
+          </DrawerContent>
+        </Drawer>
       )}
 
       {/* Authentication Drawer for Mobile */}
       {!currentUser && (
-        <Sheet open={isAuthDrawerOpen} onOpenChange={setIsAuthDrawerOpen}> {/* Changed to Sheet */}
-          <SheetContent side="top" className="h-auto mt-0 rounded-b-lg backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
+        <Drawer open={isAuthDrawerOpen} onOpenChange={setIsAuthDrawerOpen}> {/* Changed to Drawer */}
+          <DrawerContent side="bottom" className="h-auto mt-24 rounded-t-lg backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
             <div className="mx-auto w-full max-w-sm">
               <AuthMenu onClose={() => setIsAuthDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
-              <SheetFooter>
+              <DrawerFooter>
                 {/* Removed DrawerClose button as swipe-to-dismiss is enabled */}
-              </SheetFooter>
+              </DrawerFooter>
             </div>
-          </SheetContent>
-        </Sheet>
+          </DrawerContent>
+        </Drawer>
       )}
 
-      {/* "More" Navigation Sheet for Mobile */}
-      <Sheet open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
-        <SheetContent side="top" className="h-[90vh] mt-0 rounded-b-lg flex flex-col backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
+      {/* "More" Navigation Drawer for Mobile */}
+      <Drawer open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
+        <DrawerContent side="bottom" className="h-[90vh] mt-0 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
-            <SheetHeader className="text-center">
+            <DrawerHeader className="text-center">
               <div className="flex items-center justify-between">
-                {/* Removed back button as there's no nested navigation */}
-                <SheetTitle className="flex-grow text-center">Menu</SheetTitle>
-                <SheetClose asChild>
+                <DrawerTitle className="flex-grow text-center">Menu</DrawerTitle>
+                <DrawerClose asChild>
                   <Button variant="ghost" size="icon" className="absolute right-4">
                     <X className="h-5 w-5" />
                     <span className="sr-only">Fermer le menu</span>
                   </Button>
-                </SheetClose>
+                </DrawerClose>
               </div>
-              <SheetDescription className="text-center">Toutes les options de navigation.</SheetDescription>
-            </SheetHeader>
+              <DrawerDescription className="text-center">Toutes les options de navigation.</DrawerDescription>
+            </DrawerHeader>
             <div className="p-4 border-b border-border">
               <Input
                 placeholder="Rechercher dans le menu..."
@@ -348,7 +347,7 @@ const BottomNavigationBar = ({
                 className="w-full"
               />
             </div>
-            <div className="flex-grow overflow-y-auto p-4 space-y-4"> {/* Increased space-y for better separation */}
+            <div className="flex-grow overflow-y-auto p-4 space-y-4">
               {filteredDisplayItems.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
               ) : (
@@ -357,38 +356,41 @@ const BottomNavigationBar = ({
                     <h3 className="text-sm font-semibold text-muted-foreground px-2 py-1 border-b border-muted/20">
                       {group.category}
                     </h3>
-                    {group.items.map((item) => {
-                      const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-                      return (
-                        <Button
-                          key={item.to || item.label}
-                          variant="ghost"
-                          className={cn(
-                            "w-full justify-start",
-                            isLinkActive ? "bg-accent text-accent-foreground" : ""
-                          )}
-                          onClick={() => handleDrawerItemClick(item)}
-                        >
-                          <item.icon className="mr-2 h-4 w-4" />
-                          {item.label}
-                          {item.badge !== undefined && item.badge > 0 && (
-                            <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                              {item.badge}
-                            </span>
-                          )}
-                        </Button>
-                      );
-                    })}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4"> {/* Grid layout for items */}
+                      {group.items.map((item) => {
+                        const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                        return (
+                          <Button
+                            key={item.to || item.label}
+                            variant="outline" // Changed to outline for a tile-like appearance
+                            className={cn(
+                              "flex flex-col items-center justify-center h-24 w-full text-center p-2", // Fixed size for tiles
+                              isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
+                              "transition-all duration-200 ease-in-out"
+                            )}
+                            onClick={() => handleDrawerItemClick(item)}
+                          >
+                            <item.icon className="h-6 w-6 mb-2" /> {/* Larger icon */}
+                            <span className="text-xs font-medium line-clamp-2">{item.label}</span> {/* Smaller text, clamp to 2 lines */}
+                            {item.badge !== undefined && item.badge > 0 && (
+                              <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                {item.badge}
+                              </span>
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))
               )}
             </div>
-            <SheetFooter>
+            <DrawerFooter>
               {/* No need for a close button here, as it's in the header and swipe-to-dismiss is enabled */}
-            </SheetFooter>
+            </DrawerFooter>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 };
