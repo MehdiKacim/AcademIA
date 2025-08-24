@@ -1,10 +1,18 @@
-import React, { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import {
+  Home,
+  MessageSquare,
+  Search,
+  User,
+  LogOut,
+  MoreHorizontal,
+  LogIn,
+} from "lucide-react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import React, { useCallback, useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react"; // Added ArrowRight
+import { cn } from "@/lib/utils";
 import { NavItem } from "@/lib/dataModels";
+import { useRole } from "@/contexts/RoleContext";
 import {
   Drawer,
   DrawerContent,
@@ -14,20 +22,28 @@ import {
   DrawerFooter,
   DrawerClose,
 } from "@/components/ui/drawer";
-import { useRole } from "@/contexts/RoleContext";
 import AuthMenu from "./AuthMenu";
 import { Input } from "@/components/ui/input"; // Import Input for search
 
 interface BottomNavigationBarProps {
-  allNavItemsForDrawer: NavItem[]; // All nested navigation items for the "More" drawer
+  allNavItemsForDrawer: NavItem[];
   onOpenGlobalSearch?: () => void;
-  currentUser: any; // Profile type
+  currentUser?: { name?: string; id?: string };
   onOpenAboutModal: () => void;
-  isMoreDrawerOpen: boolean; // State for the "More" drawer
-  setIsMoreDrawerOpen: (isOpen: boolean) => void; // Setter for the "More" drawer
+  isMoreDrawerOpen: boolean;
+  setIsMoreDrawerOpen: (isOpen: boolean) => void;
+  unreadMessagesCount: number;
 }
 
-const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, currentUser, onOpenAboutModal, isMoreDrawerOpen, setIsMoreDrawerOpen }: BottomNavigationBarProps) => {
+const BottomNavigationBar = ({
+  allNavItemsForDrawer,
+  onOpenGlobalSearch,
+  currentUser,
+  onOpenAboutModal,
+  isMoreDrawerOpen,
+  setIsMoreDrawerOpen,
+  unreadMessagesCount,
+}: BottomNavigationBarProps) => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,50 +52,84 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
 
-  // State for drill-down navigation in "More" drawer
   const [currentDrawerItems, setCurrentDrawerItems] = useState<NavItem[]>([]);
   const [drawerTitle, setDrawerTitle] = useState("Menu");
-  const [drawerDescription, setDrawerDescription] = useState("Toutes les options de navigation.");
-  const [drawerHistory, setDrawerHistory] = useState<{ items: NavItem[], title: string, description: string }[]>([]);
-  const [searchQuery, setSearchQuery] = useState(''); // New state for search input
+  const [drawerDescription, setDrawerDescription] =
+    useState("Toutes les options de navigation.");
+  const [drawerHistory, setDrawerHistory] = useState<{
+    items: NavItem[];
+    title: string;
+    description: string;
+  }[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Define the core fixed navigation items for the bottom bar
-  const fixedBottomNavItems: NavItem[] = [
-    { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
-    { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: allNavItemsForDrawer.find(item => item.to === "/messages")?.badge || 0 },
-    { icon: Search, label: "Recherche", type: 'trigger', onClick: onOpenGlobalSearch },
-    {
-      icon: User,
-      label: "Profil",
-      type: 'trigger',
-      onClick: () => setIsProfileDrawerOpen(true),
-    },
-  ];
+  // Memoize fixedBottomNavItems to ensure its reference stability
+  const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
+    return [
+      {
+        to: "/dashboard",
+        icon: Home,
+        label: "Accueil",
+        type: "link",
+      },
+      {
+        to: "/messages",
+        icon: MessageSquare,
+        label: "Messages",
+        type: "link",
+        badge: unreadMessagesCount,
+      },
+      {
+        icon: Search,
+        label: "Recherche",
+        type: "trigger",
+        onClick: onOpenGlobalSearch,
+      },
+      {
+        icon: User,
+        label: "Profil",
+        type: "trigger",
+        onClick: () => setIsProfileDrawerOpen(true),
+      },
+    ];
+  }, [onOpenGlobalSearch, unreadMessagesCount, setIsProfileDrawerOpen]);
 
-  // Function to get top-level items for the drawer, excluding those already in the fixed bottom nav
   const getTopLevelDrawerItems = React.useCallback(() => {
-    const fixedItemPaths = new Set(fixedBottomNavItems.map(item => item.to).filter(Boolean));
-    const fixedItemLabels = new Set(fixedBottomNavItems.map(item => item.label));
-
-    return allNavItemsForDrawer.filter(drawerItem =>
-      (drawerItem.to && !fixedItemPaths.has(drawerItem.to)) || (!drawerItem.to && !fixedItemLabels.has(drawerItem.label))
+    const fixedItemPaths = new Set(
+      fixedBottomNavItems.map((item) => item.to).filter(Boolean)
     );
-  }, [allNavItemsForDrawer]);
+    const fixedItemLabels = new Set(
+      fixedBottomNavItems.map((item) => item.label)
+    );
 
-  // Initialize currentDrawerItems when the drawer opens
+    return allNavItemsForDrawer.filter(
+      (drawerItem) =>
+        (drawerItem.to && !fixedItemPaths.has(drawerItem.to)) ||
+        (!drawerItem.to && !fixedItemLabels.has(drawerItem.label))
+    );
+  }, [allNavItemsForDrawer, fixedBottomNavItems]);
+
   React.useEffect(() => {
     if (isMoreDrawerOpen) {
       setCurrentDrawerItems(getTopLevelDrawerItems());
       setDrawerTitle("Menu");
       setDrawerDescription("Toutes les options de navigation.");
       setDrawerHistory([]);
-      setSearchQuery(''); // Clear search when drawer opens
+      setSearchQuery("");
     }
   }, [isMoreDrawerOpen, getTopLevelDrawerItems]);
 
-  if (!isMobile) {
-    return null;
-  }
+  // If not logged in, replace "Profil" with "Authentification"
+  const dynamicFixedBottomNavItems: NavItem[] = currentUser
+    ? fixedBottomNavItems
+    : fixedBottomNavItems.map(item =>
+        item.label === "Profil"
+          ? { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => setIsAuthDrawerOpen(true) }
+          : item
+      );
+
+  // Determine if "More" button should be shown
+  const showMoreButton = getTopLevelDrawerItems().length > 0;
 
   const handleLogout = async () => {
     await signOut();
@@ -91,18 +141,6 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
     setIsAuthDrawerOpen(false);
     navigate("/dashboard");
   };
-
-  // If not logged in, replace "Profile" with "Authentification"
-  const dynamicFixedBottomNavItems: NavItem[] = currentUser
-    ? fixedBottomNavItems
-    : fixedBottomNavItems.map(item =>
-        item.label === "Profil"
-          ? { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => setIsAuthDrawerOpen(true) }
-          : item
-      );
-
-  // Determine if "More" button should be shown
-  const showMoreButton = getTopLevelDrawerItems().length > 0;
 
   const handleDrawerItemClick = (item: NavItem) => {
     if (item.type === 'link' && item.to) {
@@ -145,6 +183,11 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
       (item.items && item.items.some(subItem => subItem.label.toLowerCase().includes(lowerCaseQuery)))
     );
   }, [currentDrawerItems, searchQuery]);
+
+  // Move the conditional return to the very end, after all hooks have been called
+  if (!isMobile) {
+    return null;
+  }
 
   return (
     <>
