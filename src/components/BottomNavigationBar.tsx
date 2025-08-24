@@ -10,7 +10,7 @@ import {
   Settings,
   Info,
   ArrowRight,
-  ChevronUp, // Changed to ChevronUp for swipe-up indicator
+  ChevronUp, // Keep ChevronUp for swipe-up indicator
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
@@ -19,14 +19,14 @@ import { cn } from "@/lib/utils";
 import { NavItem } from "@/lib/dataModels";
 import { useRole } from "@/contexts/RoleContext";
 import {
-  Drawer, // Changed back to Drawer
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from "@/components/ui/drawer"; // Changed back to Drawer components
+  Sheet, // Changed from Drawer to Sheet for top-down opening
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet"; // Using Sheet components
 import AuthMenu from "./AuthMenu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -176,9 +176,9 @@ const BottomNavigationBar = ({
     return filteredGroups;
   }, [groupedDrawerItems, searchQuery]);
 
-  // Swipe handlers for opening the "More" drawer on mobile
+  // Swipe handlers for opening the "More" menu on mobile
   const swipeHandlers = useSwipeable({
-    onSwipedUp: () => { // Changed to onSwipedUp
+    onSwipedDown: () => { // Changed to onSwipedDown to open from top
       if (isMobile && !isMoreDrawerOpen && !isProfileDrawerOpen && !isAuthDrawerOpen) {
         setIsMoreDrawerOpen(true);
       }
@@ -245,23 +245,23 @@ const BottomNavigationBar = ({
         {/* Always render the swipe indicator button in the last slot */}
         <Button
           variant="ghost"
-          onClick={() => setIsMoreDrawerOpen(true)} // Click also opens the drawer
+          onClick={() => setIsMoreDrawerOpen(true)} // Click also opens the menu
           className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5"
         >
-          <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" /> {/* Changed to ChevronUp */}
+          <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" /> {/* Keep ChevronUp */}
           Menu
         </Button>
       </div>
 
-      {/* Profile/Settings Drawer for Mobile */}
+      {/* Profile/Settings Sheet for Mobile (top-down) */}
       {currentUser && (
-        <Drawer open={isProfileDrawerOpen} onOpenChange={setIsProfileDrawerOpen}> {/* Changed to Drawer */}
-          <DrawerContent side="bottom" className="h-auto max-h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
+        <Sheet open={isProfileDrawerOpen} onOpenChange={setIsProfileDrawerOpen}>
+          <SheetContent side="top" className="h-auto max-h-[90vh] mt-0 rounded-b-lg flex flex-col backdrop-blur-lg bg-background/80">
             <div className="mx-auto w-full max-w-sm flex-grow flex flex-col">
-              <DrawerHeader className="text-left">
-                <DrawerTitle>Mon Compte</DrawerTitle>
-                <DrawerDescription>Gérez votre profil et vos paramètres.</DrawerDescription>
-              </DrawerHeader>
+              <SheetHeader className="text-left">
+                <SheetTitle>Mon Compte</SheetTitle>
+                <SheetDescription>Gérez votre profil et vos paramètres.</SheetDescription>
+              </SheetHeader>
               <div className="p-4 pb-0 space-y-2">
                 <Button
                   variant="ghost"
@@ -301,44 +301,44 @@ const BottomNavigationBar = ({
                   <LogOut className="mr-2 h-4 w-4" /> Déconnexion
                 </Button>
               </div>
-              <DrawerFooter>
-                {/* Removed DrawerClose button as swipe-to-dismiss is enabled */}
-              </DrawerFooter>
+              <SheetFooter>
+                {/* Footer content if needed */}
+              </SheetFooter>
             </div>
-          </DrawerContent>
-        </Drawer>
+          </SheetContent>
+        </Sheet>
       )}
 
-      {/* Authentication Drawer for Mobile */}
+      {/* Authentication Sheet for Mobile (top-down) */}
       {!currentUser && (
-        <Drawer open={isAuthDrawerOpen} onOpenChange={setIsAuthDrawerOpen}> {/* Changed to Drawer */}
-          <DrawerContent side="bottom" className="h-auto mt-24 rounded-t-lg backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
+        <Sheet open={isAuthDrawerOpen} onOpenChange={setIsAuthDrawerOpen}>
+          <SheetContent side="top" className="h-auto mt-0 rounded-b-lg backdrop-blur-lg bg-background/80">
             <div className="mx-auto w-full max-w-sm">
               <AuthMenu onClose={() => setIsAuthDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
-              <DrawerFooter>
-                {/* Removed DrawerClose button as swipe-to-dismiss is enabled */}
-              </DrawerFooter>
+              <SheetFooter>
+                {/* Footer content if needed */}
+              </SheetFooter>
             </div>
-          </DrawerContent>
-        </Drawer>
+          </SheetContent>
+        </Sheet>
       )}
 
-      {/* "More" Navigation Drawer for Mobile */}
-      <Drawer open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
-        <DrawerContent side="bottom" className="h-[90vh] mt-0 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80"> {/* Adjusted styling */}
+      {/* "More" Navigation Sheet for Mobile (top-down, Quick Settings style) */}
+      <Sheet open={isMoreDrawerOpen} onOpenChange={setIsMoreDrawerOpen}>
+        <SheetContent side="top" className="h-[calc(100vh-68px)] mt-0 rounded-b-lg flex flex-col backdrop-blur-lg bg-background/80"> {/* Adjusted height */}
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
-            <DrawerHeader className="text-center">
+            <SheetHeader className="text-center">
               <div className="flex items-center justify-between">
-                <DrawerTitle className="flex-grow text-center">Menu</DrawerTitle>
-                <DrawerClose asChild>
+                <SheetTitle className="flex-grow text-center">Menu</SheetTitle>
+                <SheetClose asChild>
                   <Button variant="ghost" size="icon" className="absolute right-4">
                     <X className="h-5 w-5" />
                     <span className="sr-only">Fermer le menu</span>
                   </Button>
-                </DrawerClose>
+                </SheetClose>
               </div>
-              <DrawerDescription className="text-center">Toutes les options de navigation.</DrawerDescription>
-            </DrawerHeader>
+              <SheetDescription className="text-center">Toutes les options de navigation.</SheetDescription>
+            </SheetHeader>
             <div className="p-4 border-b border-border">
               <Input
                 placeholder="Rechercher dans le menu..."
@@ -353,16 +353,14 @@ const BottomNavigationBar = ({
               ) : (
                 filteredDisplayItems.map((group) => (
                   <div key={group.category} className="space-y-2">
-                    <h3 className="text-sm font-semibold text-muted-foreground px-2 py-1 border-b border-muted/20">
-                      {group.category}
-                    </h3>
+                    {/* Removed category header for Quick Settings look */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4"> {/* Grid layout for items */}
                       {group.items.map((item) => {
                         const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
                         return (
                           <Button
                             key={item.to || item.label}
-                            variant="outline" // Changed to outline for a tile-like appearance
+                            variant="outline" // Outline for a tile-like appearance
                             className={cn(
                               "flex flex-col items-center justify-center h-24 w-full text-center p-2", // Fixed size for tiles
                               isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
@@ -385,12 +383,12 @@ const BottomNavigationBar = ({
                 ))
               )}
             </div>
-            <DrawerFooter>
+            <SheetFooter>
               {/* No need for a close button here, as it's in the header and swipe-to-dismiss is enabled */}
-            </DrawerFooter>
+            </SheetFooter>
           </div>
-        </DrawerContent>
-      </Drawer>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
