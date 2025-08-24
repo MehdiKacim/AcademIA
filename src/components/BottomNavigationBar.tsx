@@ -18,7 +18,7 @@ import { useRole } from "@/contexts/RoleContext";
 import AuthMenu from "./AuthMenu";
 
 interface BottomNavigationBarProps {
-  allNavItemsForDrawer: NavItem[]; // All flattened navigation items for the "More" drawer
+  allNavItemsForDrawer: NavItem[]; // All nested navigation items for the "More" drawer
   onOpenGlobalSearch?: () => void;
   currentUser: any; // Profile type
   onOpenAboutModal: () => void;
@@ -44,7 +44,7 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
   // Initialize currentDrawerItems when the drawer opens
   React.useEffect(() => {
     if (isMoreDrawerOpen) {
-      setCurrentDrawerItems(allNavItemsForDrawer.filter(item => item.type === 'link' || (item.type === 'trigger' && item.items)));
+      setCurrentDrawerItems(allNavItemsForDrawer); // Use the full nested tree
       setDrawerTitle("Menu");
       setDrawerDescription("Toutes les options de navigation.");
       setDrawerHistory([]);
@@ -273,25 +273,31 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
               <DrawerDescription className="text-center">{drawerDescription}</DrawerDescription>
             </DrawerHeader>
             <div className="flex-grow overflow-y-auto p-4 space-y-2">
-              {currentDrawerItems.map((item) => (
-                <Button
-                  key={item.to || item.label}
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start",
-                    (location.pathname + location.search).startsWith(item.to || '') ? "bg-accent text-accent-foreground" : ""
-                  )}
-                  onClick={() => handleDrawerItemClick(item)}
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                      {item.badge}
-                    </span>
-                  )}
-                </Button>
-              ))}
+              {currentDrawerItems.map((item) => {
+                const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                return (
+                  <Button
+                    key={item.to || item.label}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start",
+                      isLinkActive ? "bg-accent text-accent-foreground" : ""
+                    )}
+                    onClick={() => handleDrawerItemClick(item)}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                        {item.badge}
+                      </span>
+                    )}
+                    {item.type === 'trigger' && item.items && (
+                      <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                );
+              })}
             </div>
             <DrawerFooter>
               {/* No need for a close button here, as it's in the header and swipe-to-dismiss is enabled */}

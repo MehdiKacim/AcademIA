@@ -162,7 +162,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: GraduationCap,
           label: "Apprentissage",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
             { to: "/all-notes", label: "Mes Notes", icon: NotebookText, type: 'link' },
@@ -171,7 +171,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BarChart2,
           label: "Progression",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link' },
             { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link' },
@@ -184,7 +184,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BookOpen,
           label: "Contenu",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/courses", label: "Mes Cours", icon: BookOpen, type: 'link' },
             { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link' },
@@ -193,7 +193,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: Users,
           label: "Gestion",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
@@ -205,7 +205,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BarChart2,
           label: "Analytiques",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link' },
             { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link' },
@@ -218,7 +218,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: UsersRound,
           label: "Suivi",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/classes", label: "Mes Classes", icon: Users, type: 'link' },
             { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link' },
@@ -228,7 +228,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BarChart2,
           label: "Analytiques",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link' },
             { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link' },
@@ -241,7 +241,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BriefcaseBusiness,
           label: "Administration",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/establishments", label: "Gestion Établissements", icon: Building2, type: 'link' },
             { to: "/admin-users", label: "Gestion Utilisateurs", icon: UserRoundCog, type: 'link' },
@@ -260,7 +260,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: BookText,
           label: "Gestion Pédagogique",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/curricula", label: "Gestion Cursus", icon: LayoutList, type: 'link' },
             { to: "/subjects", label: "Gestion Matières", icon: BookText, type: 'link' },
@@ -273,7 +273,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: UserCog,
           label: "Gestion Administrative",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link' },
             { to: "/admin-users", label: "Gestion Professeurs", icon: UserRoundCog, type: 'link' },
@@ -283,7 +283,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {
           icon: TrendingUp,
           label: "Analytiques",
-          type: 'trigger', // Revert to 'trigger'
+          type: 'trigger',
           items: [
             { to: "/analytics?view=establishment-admin", label: "Analytiques Établissement", icon: LayoutDashboard, type: 'link' },
           ],
@@ -295,24 +295,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   };
 
   // Function to flatten the navigation tree for the mobile "More" drawer
-  const getAllFlattenedNavItems = (): NavItem[] => {
-    const flattened: NavItem[] = [];
-    const fullTree = getFullNavTree();
-
-    fullTree.forEach(item => {
-      if (item.type === 'link') {
-        flattened.push(item);
-      } else if (item.type === 'trigger' && item.items) {
-        // Add the parent trigger itself as a navigable item if it has a 'to'
-        if (item.to) {
-          flattened.push({ ...item, type: 'link' }); // Convert trigger to link if it has a 'to'
-        }
-        // Add all sub-items
-        item.items.forEach(subItem => flattened.push(subItem));
-      }
-    });
-    return flattened;
-  };
+  // This function is now removed as the BottomNavigationBar will handle the nested structure directly.
+  // The BottomNavigationBar's `allNavItemsForDrawer` prop will receive the full nested tree.
 
   const getIsParentTriggerActive = (item: NavItem): boolean => {
     if (item.type !== 'trigger' || !item.items) return false;
@@ -483,7 +467,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </Button>
       </footer>
       <BottomNavigationBar
-        allNavItemsForDrawer={getAllFlattenedNavItems()}
+        allNavItemsForDrawer={getFullNavTree()} // Pass the full nested tree here
         onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
