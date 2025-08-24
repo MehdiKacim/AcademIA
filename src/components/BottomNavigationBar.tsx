@@ -17,6 +17,7 @@ import {
   BarChart2, // For Analytiques category
   BriefcaseBusiness, // For Administration category
   LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, BookMarked, CalendarDays, UserCheck, PlusSquare, ClipboardCheck, BotMessageSquare,
+  GraduationCap, // Added GraduationCap icon
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useCallback, useState, useEffect } from "react";
