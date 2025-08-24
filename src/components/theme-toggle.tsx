@@ -38,7 +38,6 @@ export function ThemeToggle() {
       <SelectContent>
         <SelectItem value="modern-blue">Bleu Moderne</SelectItem>
         <SelectItem value="dark">Sombre</SelectItem>
-        <SelectItem value="light-green">Vert Clair</SelectItem>
         <SelectItem value="dark-purple">Violet Sombre</SelectItem>
       </SelectContent>
     </Select>
