@@ -3,9 +3,10 @@
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { useRole } from "@/contexts/RoleContext"; // Import useRole
-
+import { useRole } from "@/contexts/RoleContext";
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Profile } from "@/lib/dataModels" // Import Profile type
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -18,20 +19,31 @@ export function ThemeToggle() {
     }
   }, [currentUserProfile?.theme, theme, setTheme]);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
+  const handleThemeChange = (newTheme: Profile['theme']) => {
     setTheme(newTheme);
     if (currentUserProfile) {
       updateUserTheme(newTheme); // Save to Supabase
     }
-    console.log("Theme toggled to:", newTheme);
+    console.log("Theme changed to:", newTheme);
   }
 
   return (
-    <Button variant="outline" size="icon" onClick={toggleTheme}>
-      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
-    </Button>
+    <Select value={theme} onValueChange={handleThemeChange}>
+      <SelectTrigger className="w-[180px]">
+        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <span className="sr-only">Toggle theme</span>
+        <SelectValue placeholder="Sélectionner un thème" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="light">Clair</SelectItem>
+        <SelectItem value="light-grey">Gris Clair</SelectItem>
+        <SelectItem value="blue-light">Bleu Clair</SelectItem>
+        <SelectItem value="green-light">Vert Clair</SelectItem>
+        <SelectItem value="purple-light">Violet Clair</SelectItem>
+        <SelectItem value="dark">Sombre</SelectItem>
+        <SelectItem value="system">Système</SelectItem>
+      </SelectContent>
+    </Select>
   )
 }

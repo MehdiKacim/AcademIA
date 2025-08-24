@@ -12,7 +12,7 @@ interface RoleContextType {
   setCurrentUserProfile: (profile: Profile | null) => void;
   currentRole: Profile['role'] | null; // Use Profile['role'] directly
   isLoadingUser: boolean; // New loading state
-  updateUserTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>; // New function to update theme
+  updateUserTheme: (theme: Profile['theme']) => Promise<void>; // Updated: New function to update theme, now accepts Profile['theme']
   signOut: () => Promise<void>; // Add signOut function
   fetchUserProfile: (userId: string) => Promise<void>; // Add fetchUserProfile
 }
@@ -77,7 +77,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const updateUserTheme = async (theme: 'light' | 'dark' | 'system') => {
+  const updateUserTheme = async (theme: Profile['theme']) => { // Updated type here
     if (currentUserProfile) {
       try {
         const updatedProfile = await updateProfile({ id: currentUserProfile.id, theme });
