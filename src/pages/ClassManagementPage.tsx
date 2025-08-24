@@ -291,7 +291,7 @@ const ClassManagementPage = () => {
                 <SelectTrigger id="new-class-establishment">
                   <SelectValue placeholder="Sélectionner un établissement" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {establishmentsToDisplay.map(est => (
                     <SelectItem key={est.id} value={est.id}>
                       {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
@@ -304,7 +304,7 @@ const ClassManagementPage = () => {
                 <SelectTrigger id="new-class-curriculum">
                   <SelectValue placeholder="Sélectionner un cursus" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {curriculaToDisplay.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
                     <SelectItem key={cur.id} value={cur.id}>
                       {cur.name} ({getEstablishmentName(cur.establishment_id)})
@@ -317,7 +317,7 @@ const ClassManagementPage = () => {
                 <SelectTrigger id="new-class-school-year">
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}

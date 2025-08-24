@@ -589,7 +589,7 @@ const AdminUserManagementPage = () => {
         await updateProfile(updatedProfile);
         setAllUsers(await getAllProfiles());
         showSuccess(`${userName} a été désaffecté de son établissement.`);
-      } catch (error: any) {
+      } catch (error: any) => {
         console.error("Error unassigning user from establishment:", error);
         showError(`Erreur lors de la désaffectation: ${error.message}`);
       }
@@ -721,7 +721,7 @@ const AdminUserManagementPage = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     {rolesForCreation.map(role => (
                       <SelectItem key={role} value={role}>
                         {role === 'student' ? 'Élève' :
@@ -744,7 +744,7 @@ const AdminUserManagementPage = () => {
                     <SelectTrigger id="new-user-establishment">
                       <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="none">Aucun</SelectItem>
                       {establishmentsToDisplayForNewUser.map(est => (
                           <SelectItem key={est.id} value={est.id}>
@@ -792,7 +792,7 @@ const AdminUserManagementPage = () => {
                 <SelectTrigger id="role-filter">
                   <SelectValue placeholder="Tous les rôles" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {(currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') ? (
                     <>
                       <SelectItem value="professeur">Professeur</SelectItem>
@@ -827,7 +827,7 @@ const AdminUserManagementPage = () => {
                 <SelectTrigger id="establishment-filter">
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   <SelectItem value="all">Tous les établissements</SelectItem>
                   {establishmentsToDisplayForFilter.map(est => (
                           <SelectItem key={est.id} value={est.id}>
@@ -895,7 +895,7 @@ const AdminUserManagementPage = () => {
       {/* Edit User Dialog */}
       {userToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
             <DialogHeader>
               <DialogTitle>Modifier l'utilisateur</DialogTitle>
               <DialogDescription>
@@ -956,7 +956,7 @@ const AdminUserManagementPage = () => {
                   <SelectTrigger id="editRole" className="col-span-3">
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     {(currentRole === 'director' || currentRole === 'deputy_director') ? (
                       <>
                         <SelectItem value="professeur">Professeur</SelectItem>
@@ -989,7 +989,7 @@ const AdminUserManagementPage = () => {
                     <SelectTrigger id="editEstablishment" className="col-span-3">
                       <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="none">Aucun</SelectItem>
                       {establishmentsToDisplayForNewUser.map(est => (
                           <SelectItem key={est.id} value={est.id}>

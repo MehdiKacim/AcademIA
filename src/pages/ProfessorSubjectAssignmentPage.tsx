@@ -606,7 +606,7 @@ const ProfessorSubjectAssignmentPage = () => {
       {/* Edit Assignment Dialog */}
       {currentAssignmentToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
             <DialogHeader>
               <DialogTitle>Modifier l'affectation</DialogTitle>
               <DialogDescription>

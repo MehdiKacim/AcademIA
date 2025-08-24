@@ -97,7 +97,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
         <DialogHeader>
           <DialogTitle>Modifier le cursus</DialogTitle>
           <DialogDescription>

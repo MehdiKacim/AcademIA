@@ -71,7 +71,7 @@ const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
         <DialogHeader>
           <DialogTitle>Ajouter une note rapide</DialogTitle>
           <DialogDescription>

@@ -212,7 +212,7 @@ const EstablishmentManagementPage = () => {
                     <SelectTrigger id="new-establishment-type">
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       {establishmentTypes.map(type => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
@@ -237,7 +237,7 @@ const EstablishmentManagementPage = () => {
                     <SelectTrigger id="new-establishment-director">
                       <SelectValue placeholder="Sélectionner un directeur" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="none">Aucun</SelectItem>
                       {directors.map(director => (
                         <SelectItem key={director.id} value={director.id}>
@@ -251,7 +251,7 @@ const EstablishmentManagementPage = () => {
                     <SelectTrigger id="new-establishment-deputy-director">
                       <SelectValue placeholder="Sélectionner un directeur adjoint" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="none">Aucun</SelectItem>
                       {deputyDirectors.map(deputy => (
                         <SelectItem key={deputy.id} value={deputy.id}>

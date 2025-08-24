@@ -88,7 +88,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
         <DialogHeader>
           <DialogTitle>Modifier le profil</DialogTitle>
           <DialogDescription>

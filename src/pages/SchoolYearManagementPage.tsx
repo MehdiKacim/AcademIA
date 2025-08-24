@@ -271,7 +271,7 @@ const SchoolYearManagementPage = () => {
                     {newSchoolYearStartDate ? format(newSchoolYearStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                   <Calendar
                     mode="single"
                     selected={newSchoolYearStartDate}
@@ -297,7 +297,7 @@ const SchoolYearManagementPage = () => {
                     {newSchoolYearEndDate ? format(newSchoolYearEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                   <Calendar
                     mode="single"
                     selected={newSchoolYearEndDate}
@@ -353,7 +353,7 @@ const SchoolYearManagementPage = () => {
 
       {currentYearToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
             <DialogHeader>
               <DialogTitle>Modifier l'année scolaire</DialogTitle>
               <DialogDescription>
@@ -388,7 +388,7 @@ const SchoolYearManagementPage = () => {
                       {editStartDate ? format(editStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                     <Calendar
                       mode="single"
                       selected={editStartDate}
@@ -414,7 +414,7 @@ const SchoolYearManagementPage = () => {
                       {editEndDate ? format(editEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                     <Calendar
                       mode="single"
                       selected={editEndDate}

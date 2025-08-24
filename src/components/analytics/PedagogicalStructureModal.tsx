@@ -34,7 +34,7 @@ const PedagogicalStructureModal = ({ isOpen, onClose, establishments, curricula,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-6">
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             Structure Pédagogique par Établissement

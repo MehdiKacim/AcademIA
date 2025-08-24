@@ -209,7 +209,7 @@ const SubjectManagementPage = () => {
                   <SelectTrigger id="new-subject-establishment">
                     <SelectValue placeholder="Sélectionner un établissement" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     <SelectItem value="none">Aucun</SelectItem>
                     {establishmentsToDisplay.map(est => (
                       <SelectItem key={est.id} value={est.id}>

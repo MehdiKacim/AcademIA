@@ -256,7 +256,7 @@ const CurriculumManagementPage = () => {
               <SelectTrigger id="curriculum-establishment">
                 <SelectValue placeholder="Sélectionner un établissement" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 {establishmentsToDisplay.map(est => (
                   <SelectItem key={est.id} value={est.id}>
                     {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
@@ -309,7 +309,7 @@ const CurriculumManagementPage = () => {
       {/* Manage Curriculum Courses Modal */}
       {isManageCoursesModalOpen && selectedCurriculumForCourses && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl">
+          <Card className="w-full max-w-2xl backdrop-blur-lg bg-background/80">
             <CardHeader>
               <CardTitle>Gérer les cours pour "{selectedCurriculumForCourses.name}"</CardTitle>
               <CardDescription>Sélectionnez les cours qui feront partie de ce cursus.</CardDescription>

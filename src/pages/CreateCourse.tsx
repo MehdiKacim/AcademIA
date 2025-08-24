@@ -248,7 +248,7 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                         <SelectValue placeholder="Sélectionnez un type" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="text">
                         <FileText className="inline-block h-4 w-4 mr-2" /> Texte
                       </SelectItem>
@@ -653,7 +653,7 @@ const CreateCourse = () => {
                         <SelectValue placeholder="Sélectionnez une matière" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       {subjects.length === 0 ? (
                         <SelectItem value="no-subjects" disabled>Aucune matière disponible</SelectItem>
                       ) : (
@@ -679,7 +679,7 @@ const CreateCourse = () => {
                         <SelectValue placeholder="Sélectionnez un niveau" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="Débutant">Débutant</SelectItem>
                       <SelectItem value="Intermédiaire">Intermédiaire</SelectItem>
                       <SelectItem value="Avancé">Avancé</SelectItem>

@@ -521,7 +521,7 @@ const StudentManagementPage = () => {
                   <SelectTrigger id="new-student-establishment">
                     <SelectValue placeholder="Sélectionner un établissement" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     <SelectItem value="none">Aucun</SelectItem>
                     {establishmentsToDisplayForNewStudent.map(est => (
                       <SelectItem key={est.id} value={est.id}>
@@ -545,7 +545,7 @@ const StudentManagementPage = () => {
                         {newStudentEnrollmentStartDate ? format(newStudentEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                       <Calendar
                         mode="single"
                         selected={newStudentEnrollmentStartDate}
@@ -571,7 +571,7 @@ const StudentManagementPage = () => {
                         {newStudentEnrollmentEndDate ? format(newStudentEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                       <Calendar
                         mode="single"
                         selected={newStudentEnrollmentEndDate}
@@ -583,7 +583,7 @@ const StudentManagementPage = () => {
                   </Popover>
                 </div>
               </div>
-              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || !newStudentEstablishmentId || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate}>
+              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newStudentRole === 'professeur' || newStudentRole === 'tutor' || newStudentRole === 'director' || newStudentRole === 'deputy_director') && !newStudentEstablishmentId && currentRole === 'administrator') || ((newStudentRole === 'student') && !newStudentEstablishmentId && (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor'))}>
                 {isCreatingStudent ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'élève
               </Button>
             </CardContent>
@@ -616,7 +616,7 @@ const StudentManagementPage = () => {
                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 backdrop-blur-lg bg-background/80">
                   <Command>
                     <CommandInput
                       placeholder="Rechercher par nom d'utilisateur..."
@@ -691,7 +691,7 @@ const StudentManagementPage = () => {
                     )}
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
+                  <p className className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
                 )}
 
                 <div>
@@ -700,7 +700,7 @@ const StudentManagementPage = () => {
                     <SelectTrigger id="establishment-to-assign" className="w-full">
                       <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       {establishments.map(est => (
                         <SelectItem key={est.id} value={est.id}>
                           {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
@@ -726,7 +726,7 @@ const StudentManagementPage = () => {
                           {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                         <Calendar
                           mode="single"
                           selected={enrollmentStartDate}
@@ -752,7 +752,7 @@ const StudentManagementPage = () => {
                           {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
                         <Calendar
                           mode="single"
                           selected={enrollmentEndDate}
@@ -800,15 +800,17 @@ const StudentManagementPage = () => {
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
-              <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {
-                setSelectedEstablishmentFilter(value === "all" ? null : value);
-              }}
-              disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
+              <Select 
+                value={selectedEstablishmentFilter || "all"} 
+                onValueChange={(value) => {
+                  setSelectedEstablishmentFilter(value === "all" ? null : value);
+                }}
+                disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
               >
                 <SelectTrigger id="establishment-filter">
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
                   {establishments
                     .filter(est => currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id)

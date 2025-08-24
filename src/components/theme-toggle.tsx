@@ -35,7 +35,7 @@ export function ThemeToggle() {
         <span className="sr-only">Toggle theme</span>
         <SelectValue placeholder="Sélectionner un thème" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="backdrop-blur-lg bg-background/80">
         <SelectItem value="light">Clair</SelectItem>
         <SelectItem value="dark">Sombre</SelectItem>
         <SelectItem value="dark-purple">Violet Sombre</SelectItem>
