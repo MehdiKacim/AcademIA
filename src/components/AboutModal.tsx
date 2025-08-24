@@ -28,7 +28,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
+        <DrawerContent className="h-[90vh] rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
             <DrawerHeader className="text-center">
               <DrawerTitle className="text-center">À Propos d'AcademIA</DrawerTitle>
