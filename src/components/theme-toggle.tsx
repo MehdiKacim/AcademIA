@@ -36,9 +36,7 @@ export function ThemeToggle() {
         <SelectValue placeholder="Sélectionner un thème" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="light">Clair</SelectItem>
         <SelectItem value="modern-blue">Bleu Moderne</SelectItem>
-        <SelectItem value="forest-green">Vert Forêt</SelectItem>
         <SelectItem value="dark">Sombre</SelectItem>
         <SelectItem value="system">Système</SelectItem>
       </SelectContent>

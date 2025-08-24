@@ -3,30 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root { /* Default 'light' theme, now slightly less bright */
-    --background: 210 30% 98%; /* Slightly darker than pure white */
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 220 80% 50%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-  }
+  /* Default 'light' theme removed as per user request */
+  /* Keeping .dark and [data-theme="modern-blue"] and [data-theme="forest-green"] */
+  /* The default theme will now be handled by next-themes 'system' or 'dark' if no user preference */
 
   .dark {
     --background: 222.2 84% 4.9%;
@@ -77,30 +56,7 @@
     --ring: 210 80% 40%;
   }
 
-  /* New Theme: Forest Green */
-  [data-theme="forest-green"] {
-    --background: 120 15% 90%; /* Light green-grey background */
-    --foreground: 120 10% 20%; /* Dark green text */
-    --card: 0 0% 100%;
-    --card-foreground: 120 10% 20%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 120 10% 20%;
-    --primary: 120 40% 35%; /* Deep forest green */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 120 10% 80%; /* Muted green */
-    --secondary-foreground: 120 10% 20%;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --muted: 120 10% 85%;
-    --muted-foreground: 120 5% 45%;
-    --accent: 120 10% 85%;
-    --accent-foreground: 120 10% 20%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 120 10% 75%;
-    --input: 120 10% 75%;
-    --ring: 120 40% 35%;
-  }
+  /* New Theme: Forest Green removed as per user request */
 }
 
 @layer base {

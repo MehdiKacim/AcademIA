@@ -16,7 +16,7 @@ export interface Profile {
   establishment_id?: string; // New: Link to parent establishment for students, professeurs, tutors, directors, deputy_directors
   enrollment_start_date?: string; // New: Enrollment start date for students
   enrollment_end_date?: string; // New: Enrollment end date for students
-  theme?: 'light' | 'dark' | 'system' | 'modern-blue' | 'forest-green'; // Updated: User's theme preference with new options
+  theme?: 'dark' | 'system' | 'modern-blue'; // Updated: User's theme preference with selected options
   created_at?: string;
   updated_at?: string;
 }
