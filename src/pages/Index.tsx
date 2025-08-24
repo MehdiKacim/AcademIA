@@ -300,13 +300,15 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         </Button>
       </footer>
 
-      <BottomNavigationBar
-        allNavItemsForDrawer={indexNavItems} // Pass indexNavItems here
-        currentUser={currentUserProfile}
-        onOpenAboutModal={() => setIsAboutModalOpen(true)}
-        isMoreDrawerOpen={isMoreDrawerOpen} // Pass new state
-        setIsMoreDrawerOpen={setIsMoreDrawerOpen} // Pass new setter
-      />
+      {currentUserProfile && ( // Condition added here
+        <BottomNavigationBar
+          allNavItemsForDrawer={indexNavItems} // Pass indexNavItems here
+          currentUser={currentUserProfile}
+          onOpenAboutModal={() => setIsAboutModalOpen(true)}
+          isMoreDrawerOpen={isMoreDrawerOpen} // Pass new state
+          setIsMoreDrawerOpen={setIsMoreDrawerOpen} // Pass new setter
+        />
+      )}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
