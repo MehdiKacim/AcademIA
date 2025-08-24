@@ -25,12 +25,17 @@ const Profile = () => {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate
 
+  console.log("[Profile Page] Rendering. isLoadingUser:", isLoadingUser, "currentUserProfile:", currentUserProfile, "currentRole:", currentRole);
+
   useEffect(() => {
     const fetchData = async () => {
+      console.log("[Profile Page] useEffect: Fetching courses and student progress...");
       const loadedCourses = await loadCourses();
       setCourses(loadedCourses);
+      console.log("[Profile Page] Loaded courses:", loadedCourses);
       const loadedProgresses = await getAllStudentCourseProgress();
       setStudentCourseProgresses(loadedProgresses);
+      console.log("[Profile Page] Loaded student progresses:", loadedProgresses);
     };
     fetchData();
   }, [currentUserProfile]); // Re-fetch if user profile changes
@@ -55,6 +60,7 @@ const Profile = () => {
   };
 
   if (isLoadingUser) {
+    console.log("[Profile Page] Displaying loading state.");
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -68,6 +74,7 @@ const Profile = () => {
   }
 
   if (!currentUserProfile) {
+    console.log("[Profile Page] Displaying 'Profile not found' state.");
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -81,7 +88,9 @@ const Profile = () => {
   }
 
   const renderProfileContent = () => {
+    console.log("[Profile Page] renderProfileContent: currentRole =", currentRole);
     if (currentRole === 'student') {
+      console.log("[Profile Page] renderProfileContent: Rendering student profile.");
       const studentProgress = studentCourseProgresses.filter(p => p.user_id === currentUserProfile.id);
 
       const enrolledCourses = courses.filter(c => studentProgress.some(ec => ec.course_id === c.id));
@@ -177,6 +186,7 @@ const Profile = () => {
         </div>
       );
     } else if (currentRole === 'professeur') {
+      console.log("[Profile Page] renderProfileContent: Rendering professeur profile.");
       const createdCourses = courses; // Assuming all courses are created by this creator for demo
       const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.sections.some(s => s.content))).length; // Check if any section has content as a proxy for 'published'
       const totalStudents = studentCourseProgresses.length; // Total students with any progress
@@ -271,6 +281,7 @@ const Profile = () => {
         </div>
       );
     } else if (currentRole === 'tutor') {
+      console.log("[Profile Page] renderProfileContent: Rendering tutor profile.");
       const supervisedStudents = studentCourseProgresses.slice(0, 2); // Taking first two for demo
       const studentsAtRisk = supervisedStudents.filter(s => s.modules_progress.some(mp => mp.sections_progress.some(sp => sp.quiz_result && !sp.quiz_result.passed))).length;
 
@@ -354,7 +365,8 @@ const Profile = () => {
         </div>
       );
     }
-    return null;
+    console.log("[Profile Page] renderProfileContent: No matching role found for rendering content. Current role:", currentRole);
+    return null; // Fallback if no role matches
   };
 
   return (
