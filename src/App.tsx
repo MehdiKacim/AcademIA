@@ -75,7 +75,6 @@ const AppWithThemeProvider = () => {
                     <Route path="/courses" element={<Courses />} />
                     <Route path="/courses/:courseId" element={<CourseDetail />} />
                     <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} />
-                    <Route path="/analytics" element={<Analytics />} />
                     <Route path="/all-notes" element={<AllNotes />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/profile" element={<Profile />} />
@@ -86,22 +85,33 @@ const AppWithThemeProvider = () => {
                     <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director']} />}>
                       <Route path="/admin-users" element={<AdminUserManagementPage />} />
                       <Route path="/establishments" element={<EstablishmentManagementPage />} />
+                    </Route>
+
+                    {/* Routes accessible by Director, Deputy Director */}
+                    <Route element={<ProtectedRoute allowedRoles={['director', 'deputy_director']} />}>
                       <Route path="/subjects" element={<SubjectManagementPage />} />
                       <Route path="/school-years" element={<SchoolYearManagementPage />} />
-                      <Route path="/professor-assignments" element={<ProfessorSubjectAssignmentPage />} /> {/* New route */}
-                    </Route>
-
-                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur */}
-                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur']} />}>
+                      <Route path="/professor-assignments" element={<ProfessorSubjectAssignmentPage />} />
                       <Route path="/curricula" element={<CurriculumManagementPage />} />
-                    </Route>
-
-                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur, Tutor */}
-                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur', 'tutor']} />}>
                       <Route path="/classes" element={<ClassManagementPage />} />
                       <Route path="/students" element={<StudentManagementPage />} />
                       <Route path="/pedagogical-management" element={<PedagogicalManagementPage />} />
+                      <Route path="/analytics" element={<Analytics />} />
                     </Route>
+
+                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur */}
+                    {/* Removed Administrator from /curricula */}
+                    {/* <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur']} />}>
+                      <Route path="/curricula" element={<CurriculumManagementPage />} />
+                    </Route> */}
+
+                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur, Tutor */}
+                    {/* Removed Administrator from /classes, /students, /pedagogical-management */}
+                    {/* <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur', 'tutor']} />}>
+                      <Route path="/classes" element={<ClassManagementPage />} />
+                      <Route path="/students" element={<StudentManagementPage />} />
+                      <Route path="/pedagogical-management" element={<PedagogicalManagementPage />} />
+                    </Route> */}
 
                     {/* Routes accessible by Professeur only */}
                     <Route element={<ProtectedRoute allowedRoles={['professeur']} />}>
@@ -122,7 +132,8 @@ const AppWithThemeProvider = () => {
                         <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} /> {/* New redirect */}
+                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
                     {/* Directors/Deputy Directors should not access professeur-only pages like create-course */}
@@ -136,7 +147,26 @@ const AppWithThemeProvider = () => {
                         <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} /> {/* New redirect */}
+                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
+                      </>
+                    )}
+                    {/* Administrator specific redirects */}
+                    {currentRole === 'administrator' && (
+                      <>
+                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
                       </>
                     )}
                   </Route>

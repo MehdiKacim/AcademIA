@@ -286,17 +286,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>Analytiques Globales</CardTitle>
-              <CardDescription>Accédez aux statistiques détaillées par établissement.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/analytics?view=establishment-admin" className="mt-4 block">
-                <Button className="w-full">Voir les analytiques globales</Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {/* Removed Global Analytics card for Administrator */}
         </div>
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') { // Director, Deputy Director

@@ -104,11 +104,16 @@ const AdminUserManagementPage = () => {
       setSelectedEstablishmentFilter(currentUserProfile?.establishment_id || 'all');
       setNewUserRole('professeur'); // Default new user role for directors
       setNewUserEstablishmentId(currentUserProfile?.establishment_id || ''); // Default new user establishment for directors
-    } else {
-      setSelectedRoleFilter('all');
-      setSelectedEstablishmentFilter('all');
-      setNewUserRole('student'); // Default new user role for admin
-      setNewUserEstablishmentId(''); // Default new user establishment for admin
+    } else if (currentRole === 'administrator') { // Admin specific defaults
+      setSelectedRoleFilter('all'); // Admin can see all roles by default
+      setSelectedEstablishmentFilter('all'); // Admin can see all establishments by default
+      setNewUserRole('director'); // Admin defaults to creating directors
+      setNewUserEstablishmentId(''); // Admin can choose establishment for new director
+    } else { // Professeur/Tutor defaults
+      setSelectedRoleFilter('student');
+      setSelectedEstablishmentFilter(currentUserProfile?.establishment_id || 'all');
+      setNewUserRole('student');
+      setNewUserEstablishmentId(currentUserProfile?.establishment_id || '');
     }
   }, [currentRole, currentUserProfile?.establishment_id]);
 
@@ -222,8 +227,13 @@ const AdminUserManagementPage = () => {
         return;
       }
     } else if (currentRole === 'administrator') {
+      // Admin can only create director, deputy_director, or other administrators
+      if (!['director', 'deputy_director', 'administrator'].includes(newUserRole)) {
+        showError("Les administrateurs ne peuvent créer que des directeurs, directeurs adjoints ou d'autres administrateurs.");
+        return;
+      }
       // For admin, if a role that requires establishment is selected, ensure establishment is provided
-      if ((newUserRole === 'professeur' || newUserRole === 'tutor' || newUserRole === 'director' || newUserRole === 'deputy_director') && !newUserEstablishmentId) {
+      if ((newUserRole === 'director' || newUserRole === 'deputy_director') && !newUserEstablishmentId) {
         showError("L'établissement est requis pour ce rôle.");
         return;
       }
@@ -257,7 +267,7 @@ const AdminUserManagementPage = () => {
       setNewUserPassword('');
       setNewUserRole(
         (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 
-        (currentRole === 'professeur' || currentRole === 'tutor') ? 'student' : 'student'
+        (currentRole === 'professeur' || currentRole === 'tutor') ? 'student' : 'director' // Admin defaults to director
       ); // Reset to default based on role
       setNewUserEstablishmentId(
         (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
@@ -283,6 +293,8 @@ const AdminUserManagementPage = () => {
     // Filter by current user's establishment if director/deputy director/professeur/tutor
     if (currentUserProfile && (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor')) {
       users = users.filter(u => u.establishment_id === currentUserProfile.establishment_id);
+    } else if (currentRole === 'administrator') {
+      // Admin sees all users by default, then filters by selectedEstablishmentFilter
     }
 
     // Apply role filter
@@ -321,6 +333,12 @@ const AdminUserManagementPage = () => {
       }
       if (['administrator', 'director', 'deputy_director'].includes(user.role)) {
         showError("Vous ne pouvez pas modifier un administrateur, un directeur ou un directeur adjoint.");
+        return;
+      }
+    } else if (currentRole === 'administrator') {
+      // Admin cannot edit student, professeur, tutor roles
+      if (['student', 'professeur', 'tutor'].includes(user.role)) {
+        showError("Les administrateurs ne peuvent pas modifier les élèves, professeurs ou tuteurs.");
         return;
       }
     }
@@ -405,6 +423,22 @@ const AdminUserManagementPage = () => {
       }
       if (!['professeur', 'student', 'tutor'].includes(editRole)) { // Directors can edit students, professeurs, tutors
         showError("Vous ne pouvez attribuer que les rôles de professeur, tuteur ou d'élève.");
+        return;
+      }
+    } else if (currentRole === 'administrator') {
+      // Admin cannot edit student, professeur, tutor roles
+      if (['student', 'professeur', 'tutor'].includes(userToEdit.role)) {
+        showError("Les administrateurs ne peuvent pas modifier les élèves, professeurs ou tuteurs.");
+        return;
+      }
+      // Admin can only assign director/deputy director to an establishment
+      if ((editRole === 'director' || editRole === 'deputy_director') && !editEstablishmentId) {
+        showError("L'établissement est requis pour les rôles de directeur et directeur adjoint.");
+        return;
+      }
+      // Admin cannot change role to student, professeur, tutor
+      if (['student', 'professeur', 'tutor'].includes(editRole)) {
+        showError("Les administrateurs ne peuvent pas attribuer les rôles d'élève, professeur ou tuteur.");
         return;
       }
     }
@@ -493,6 +527,12 @@ const AdminUserManagementPage = () => {
         showError("Vous ne pouvez pas supprimer un administrateur, un directeur ou un directeur adjoint.");
         return;
       }
+    } else if (currentRole === 'administrator') {
+      // Admin cannot delete student, professeur, tutor roles
+      if (['student', 'professeur', 'tutor'].includes(userRole)) {
+        showError("Les administrateurs ne peuvent pas supprimer les élèves, professeurs ou tuteurs.");
+        return;
+      }
     }
 
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible et supprimera également son compte utilisateur et toutes les données associées.")) {
@@ -532,6 +572,12 @@ const AdminUserManagementPage = () => {
       showError("Vous ne pouvez désaffecter que les utilisateurs de votre établissement.");
       return;
     }
+    // Admin cannot unassign student, professeur, tutor roles
+    if (currentRole === 'administrator' && ['student', 'professeur', 'tutor'].includes(userToUnassign.role)) {
+      showError("Les administrateurs ne peuvent pas désaffecter les élèves, professeurs ou tuteurs.");
+      return;
+    }
+
     if (window.confirm(`Êtes-vous sûr de vouloir désaffecter ${userName} de son établissement ?`)) {
       try {
         const updatedProfile: Partial<Profile> = {
@@ -556,14 +602,14 @@ const AdminUserManagementPage = () => {
 
   const rolesForCreation: Profile['role'][] = 
     currentRole === 'administrator'
-      ? ['student', 'professeur', 'tutor', 'director', 'deputy_director', 'administrator']
+      ? ['director', 'deputy_director', 'administrator'] // Admin can only create these roles
       : (currentRole === 'professeur' || currentRole === 'tutor')
         ? ['student']
         : ['professeur', 'tutor', 'student']; // Directors/Deputy Directors can create students, professeurs, tutors
 
   const rolesForEdit: Profile['role'][] = 
     currentRole === 'administrator'
-      ? ['student', 'professeur', 'tutor', 'director', 'deputy_director', 'administrator']
+      ? ['director', 'deputy_director', 'administrator'] // Admin can only edit these roles
       : (currentRole === 'professeur' || currentRole === 'tutor')
         ? ['student']
         : ['professeur', 'tutor', 'student']; // Directors/Deputy Directors can edit students, professeurs, tutors
@@ -664,7 +710,7 @@ const AdminUserManagementPage = () => {
                   onValueChange={(value: Profile['role']) => {
                     setNewUserRole(value);
                     // Reset establishment_id if role doesn't require it or if it's a director/deputy director/professeur/tutor
-                    if (value === 'student' || value === 'administrator' || value === 'director' || value === 'deputy_director') {
+                    if (value === 'student' || value === 'administrator') { // Admin can create other admins without establishment
                       setNewUserEstablishmentId('');
                     } else if (['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')) {
                       setNewUserEstablishmentId(currentUserProfile.establishment_id || '');
@@ -815,13 +861,13 @@ const AdminUserManagementPage = () => {
                       <Mail className="h-4 w-4 mr-1" /> Message
                     </Button>
                     {/* Unassign from Establishment button */}
-                    {user.establishment_id && (currentRole === 'administrator' || ((currentRole === 'director' || currentRole === 'deputy_director') && user.establishment_id === currentUserProfile.establishment_id)) && (
+                    {user.establishment_id && (currentRole === 'administrator' || ((currentRole === 'director' || currentRole === 'deputy_director') && user.establishment_id === currentUserProfile.establishment_id)) && !['student', 'professeur', 'tutor'].includes(user.role) && ( // Admin cannot unassign student/prof/tutor
                       <Button variant="outline" size="sm" onClick={() => handleUnassignFromEstablishment(user.id, `${user.first_name} ${user.last_name}`)}>
                         <UserX className="h-4 w-4 mr-1" /> Désaffecter
                       </Button>
                     )}
                     {/* Edit button visibility and permissions */}
-                    {((currentRole === 'administrator') || 
+                    {((currentRole === 'administrator' && !['student', 'professeur', 'tutor'].includes(user.role)) || // Admin can edit non-student/prof/tutor
                       ((currentRole === 'director' || currentRole === 'deputy_director') && 
                        user.establishment_id === currentUserProfile.establishment_id && 
                        !['administrator', 'director', 'deputy_director'].includes(user.role))) && (
@@ -830,7 +876,7 @@ const AdminUserManagementPage = () => {
                       </Button>
                     )}
                     {/* Delete button visibility and permissions */}
-                    {((currentRole === 'administrator') || 
+                    {((currentRole === 'administrator' && !['student', 'professeur', 'tutor'].includes(user.role)) || // Admin can delete non-student/prof/tutor
                       ((currentRole === 'director' || currentRole === 'deputy_director') && 
                        user.establishment_id === currentUserProfile.establishment_id && 
                        !['administrator', 'director', 'deputy_director'].includes(user.role))) && (
@@ -895,7 +941,7 @@ const AdminUserManagementPage = () => {
                   onValueChange={(value: Profile['role']) => {
                     setEditRole(value);
                     // Reset establishment_id if role doesn't require it or if it's a director/deputy director
-                    if (value === 'student' || value === 'administrator' || value === 'director' || value === 'deputy_director') {
+                    if (value === 'student' || value === 'administrator') {
                       setEditEstablishmentId('');
                     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
                       setEditEstablishmentId(currentUserProfile.establishment_id || '');
@@ -903,7 +949,8 @@ const AdminUserManagementPage = () => {
                   }}
                   disabled={
                     (currentRole === 'director' || currentRole === 'deputy_director') || // Disable for directors
-                    ['administrator', 'director', 'deputy_director'].includes(userToEdit?.role || '') // Also disable if editing admin/director
+                    ['administrator', 'director', 'deputy_director'].includes(userToEdit?.role || '') || // Also disable if editing admin/director
+                    (currentRole === 'administrator' && ['student', 'professeur', 'tutor'].includes(userToEdit?.role || '')) // Admin cannot change student/prof/tutor roles
                   }
                 >
                   <SelectTrigger id="editRole" className="col-span-3">

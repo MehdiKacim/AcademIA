@@ -210,14 +210,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     } else if (currentRole === 'administrator') {
       items.push(
         { to: "/establishments", label: "Établissements", icon: Building2, type: 'link', category: "Administration" },
-        { to: "/admin-users", label: "Utilisateurs", icon: UserRoundCog, type: 'link', category: "Administration" },
-        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link', category: "Pédagogie" },
-        { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie" },
-        { to: "/classes", label: "Classes", icon: Users, type: 'link', category: "Pédagogie" },
-        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie" },
-        { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie" },
-        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie" },
-        { to: "/analytics?view=establishment-admin", label: "Analytiques", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
+        { to: "/admin-users", label: "Utilisateurs (Direction)", icon: UserRoundCog, type: 'link', category: "Administration" },
+        // Removed other pedagogical/analytics links for administrator
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
       items.push(
