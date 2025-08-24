@@ -18,14 +18,15 @@ const About = () => {
   return (
     <div className="space-y-6 p-4">
       <div className="text-center mb-8">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+        {/* Removed motion.div wrapper */}
+        <div
+          // initial={{ opacity: 0, scale: 0.8 }} // Removed framer-motion props
+          // animate={{ opacity: 1, scale: 1 }} // Removed framer-motion props
+          // transition={{ duration: 0.8, ease: "easeOut" }} // Removed framer-motion props
           className="mb-4 mx-auto w-fit"
         >
           <Logo iconClassName="w-24 h-24" showText={false} />
-        </motion.div>
+        </div>
         <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center">
           Informations sur l'Application
         </h2>
@@ -34,9 +35,9 @@ const About = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full"> {/* Added w-full here */}
         {/* Removed motion.div wrapper */}
-          <Card className="shadow-md h-full">
+          <Card className="shadow-md h-full flex-shrink-0"> {/* Added flex-shrink-0 */}
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
               <Info className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Détails Généraux</CardTitle>
@@ -61,7 +62,7 @@ const About = () => {
         {/* Removed motion.div wrapper */}
 
         {/* Removed motion.div wrapper */}
-          <Card className="shadow-md h-full">
+          <Card className="shadow-md h-full flex-shrink-0"> {/* Added flex-shrink-0 */}
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
               <Code className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Développeur</CardTitle>
@@ -78,7 +79,7 @@ const About = () => {
         {/* Removed motion.div wrapper */}
 
         {/* Removed motion.div wrapper */}
-          <Card className="shadow-md h-full">
+          <Card className="shadow-md h-full flex-shrink-0"> {/* Added flex-shrink-0 */}
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
               <Heart className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Connectez-vous avec le développeur</CardTitle>
