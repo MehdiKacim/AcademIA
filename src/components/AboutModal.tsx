@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import About from "@/pages/About"; // Import the About page content
+import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -36,9 +37,9 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
                 Découvrez les informations sur l'application et son développement.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="flex-grow overflow-y-auto min-h-0"> {/* Removed p-4 here */}
+            <ScrollArea className="flex-grow min-h-0"> {/* Use ScrollArea directly here */}
               <About />
-            </div>
+            </ScrollArea>
             <DrawerFooter>
               {/* Footer content if needed, or just for spacing */}
             </DrawerFooter>
