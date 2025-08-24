@@ -3,9 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  /* Default 'light' theme removed as per user request */
-  /* Keeping .dark and [data-theme="modern-blue"] and [data-theme="forest-green"] */
-  /* The default theme will now be handled by next-themes 'system' or 'dark' if no user preference */
+  /* The default light theme is now handled by next-themes 'system' or 'dark' if no user preference */
+  /* The :root block is removed to allow next-themes to manage the default light theme based on system preference */
 
   .dark {
     --background: 220 25% 12%; /* Very dark blue background */
@@ -31,7 +30,7 @@
     --ring: 210 80% 60%;
   }
 
-  /* New Theme: Modern Blue */
+  /* Theme: Modern Blue (light-ish theme with blue accents) */
   [data-theme="modern-blue"] {
     --background: 210 30% 92%; /* Light blue-grey background */
     --foreground: 220 20% 15%; /* Darker text */
@@ -55,8 +54,6 @@
     --input: 210 20% 80%;
     --ring: 210 80% 40%;
   }
-
-  /* New Theme: Forest Green removed as per user request */
 }
 
 @layer base {
