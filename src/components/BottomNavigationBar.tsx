@@ -43,6 +43,19 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
   const [drawerHistory, setDrawerHistory] = useState<{ items: NavItem[], title: string, description: string }[]>([]);
   const [searchQuery, setSearchQuery] = useState(''); // New state for search input
 
+  // Define the core fixed navigation items for the bottom bar
+  const fixedBottomNavItems: NavItem[] = [
+    { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
+    { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: allNavItemsForDrawer.find(item => item.to === "/messages")?.badge || 0 },
+    { icon: Search, label: "Recherche", type: 'trigger', onClick: onOpenGlobalSearch },
+    {
+      icon: User,
+      label: "Profil",
+      type: 'trigger',
+      onClick: () => setIsProfileDrawerOpen(true),
+    },
+  ];
+
   // Function to get top-level items for the drawer, excluding those already in the fixed bottom nav
   const getTopLevelDrawerItems = React.useCallback(() => {
     const fixedItemPaths = new Set(fixedBottomNavItems.map(item => item.to).filter(Boolean));
@@ -78,19 +91,6 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
     setIsAuthDrawerOpen(false);
     navigate("/dashboard");
   };
-
-  // Define the core fixed navigation items for the bottom bar
-  const fixedBottomNavItems: NavItem[] = [
-    { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
-    { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: allNavItemsForDrawer.find(item => item.to === "/messages")?.badge || 0 },
-    { icon: Search, label: "Recherche", type: 'trigger', onClick: onOpenGlobalSearch },
-    {
-      icon: User,
-      label: "Profil",
-      type: 'trigger',
-      onClick: () => setIsProfileDrawerOpen(true),
-    },
-  ];
 
   // If not logged in, replace "Profile" with "Authentification"
   const dynamicFixedBottomNavItems: NavItem[] = currentUser
