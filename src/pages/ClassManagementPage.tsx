@@ -44,6 +44,7 @@ const ClassManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const { openChat } = useCourseChat();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Main states for data
   const [classes, setClasses] = useState<Class[]>([]);

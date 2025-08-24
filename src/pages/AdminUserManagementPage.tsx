@@ -589,7 +589,7 @@ const AdminUserManagementPage = () => {
         await updateProfile(updatedProfile);
         setAllUsers(await getAllProfiles());
         showSuccess(`${userName} a été désaffecté de son établissement.`);
-      } catch (error: any) => {
+      } catch (error: any) {
         console.error("Error unassigning user from establishment:", error);
         showError(`Erreur lors de la désaffectation: ${error.message}`);
       }
