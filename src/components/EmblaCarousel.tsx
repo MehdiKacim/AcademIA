@@ -13,8 +13,8 @@ export const EmblaCarousel = (props: PropType) => {
 
   return (
     <div className={cn("embla", className)}>
-      <div className="embla__viewport" ref={emblaRef}>
-        <div className="embla__container flex">
+      <div className="embla__viewport overflow-hidden px-4" ref={emblaRef}>
+        <div className="embla__container flex gap-4">
           {React.Children.map(children, (child, index) => (
             <div className="embla__slide flex-[0_0_100%] min-w-0" key={index}>
               {child}
