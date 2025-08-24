@@ -3,54 +3,53 @@
 @tailwind utilities;
 
 @layer base {
-  /* Theme: Modern Blue (light-ish theme with blue accents) */
-  [data-theme="modern-blue"] {
-    --background: 210 30% 92%; /* Light blue-grey background */
-    --foreground: 220 20% 15%; /* Darker text */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 15%;
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
-    --primary: 210 80% 40%; /* Stronger blue */
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 220 80% 50%; /* Adjusted for a more vibrant blue */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 20% 85%; /* Lighter blue-grey */
-    --secondary-foreground: 220 20% 15%;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --muted: 210 20% 90%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --success: 142.1 76.2% 36.3%; /* Green for success */
+    --success-foreground: 355.7 100% 97.3%; /* Text color for success */
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 20% 90%;
-    --accent-foreground: 220 20% 15%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 210 20% 80%;
-    --input: 210 20% 80%;
-    --ring: 210 80% 40%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
   }
 
-  /* Original dark theme restored to a deep navy blue palette */
   .dark {
-    --background: 220 25% 12%; /* Deep navy blue background */
-    --foreground: 210 40% 98%; /* Off-white text */
-    --card: 220 25% 15%; /* Slightly lighter deep navy for cards */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-    --popover: 220 25% 15%;
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 80% 60%; /* Vibrant blue for primary actions */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 220 20% 25%; /* Muted blue-grey for secondary elements */
+    --primary: 200 90% 70%; /* Adjusted for a lighter blue in dark mode */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-    --success: 120 60% 40%;
+    --success: 120 60% 40%; /* Slightly different green for dark mode */
     --success-foreground: 210 40% 98%;
-    --muted: 220 20% 20%; /* Darker muted blue-grey */
+    --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 220 20% 25%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 20% 30%; /* Medium dark blue for borders */
-    --input: 220 20% 30%;
-    --ring: 210 80% 60%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -60,6 +59,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Removed user-select: none; to improve mobile scrolling */
+  }
+
+  /* Removed overflow-x-hidden from html, body to allow horizontal scrolling */
+  /* Changed to overflow-x-hidden to prevent horizontal scroll on main body,
+     but allow internal components to scroll if needed */
+  html, body {
+    overflow-x: hidden; 
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */
