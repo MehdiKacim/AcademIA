@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft } from "lucide-react";
+import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react"; // Added ArrowRight
 import { NavItem } from "@/lib/dataModels";
 import {
   Drawer,
@@ -89,10 +89,9 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
       );
 
   // Filter out items that are already in the fixed bottom nav bar
-  const otherNavItems = allNavItemsForDrawer.filter(drawerItem =>
-    !dynamicFixedBottomNavItems.some(fixedItem => fixedItem.to === drawerItem.to || fixedItem.label === drawerItem.label)
-  );
-
+  // This logic is crucial for the "More" button visibility
+  const fixedItemLabels = new Set(dynamicFixedBottomNavItems.map(item => item.label));
+  const otherNavItems = allNavItemsForDrawer.filter(drawerItem => !fixedItemLabels.has(drawerItem.label));
   const showMoreButton = otherNavItems.length > 0;
 
   const handleDrawerItemClick = (item: NavItem) => {

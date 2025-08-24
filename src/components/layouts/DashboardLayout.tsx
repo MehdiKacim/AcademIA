@@ -31,6 +31,7 @@ import { Message } from "@/lib/dataModels";
 import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
+import SwipeUpIndicator from "@/components/SwipeUpIndicator"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -294,10 +295,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     return [...baseItems, ...roleSpecificItems];
   };
 
-  // Function to flatten the navigation tree for the mobile "More" drawer
-  // This function is now removed as the BottomNavigationBar will handle the nested structure directly.
-  // The BottomNavigationBar's `allNavItemsForDrawer` prop will receive the full nested tree.
-
   const getIsParentTriggerActive = (item: NavItem): boolean => {
     if (item.type !== 'trigger' || !item.items) return false;
 
@@ -467,7 +464,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </Button>
       </footer>
       <BottomNavigationBar
-        allNavItemsForDrawer={getFullNavTree()} // Pass the full nested tree here
+        allNavItemsForDrawer={getFullNavTree()}
         onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
@@ -479,6 +476,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
+      {isMobile && <SwipeUpIndicator isVisible={!isMoreDrawerOpen && !isChatOpen && !isSearchOverlayOpen && !isAuthModalOpen && !isAboutModalOpen} />}
     </div>
   );
 };
