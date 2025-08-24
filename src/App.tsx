@@ -22,7 +22,7 @@ import AdminUserManagementPage from "./pages/AdminUserManagementPage";
 import SubjectManagementPage from "./pages/SubjectManagementPage";
 import PedagogicalManagementPage from "./pages/PedagogicalManagementPage";
 import SchoolYearManagementPage from "./pages/SchoolYearManagementPage";
-import ProfessorSubjectAssignmentPage from "./pages/ProfessorSubjectAssignmentPage"; // New import
+import ProfessorSubjectAssignmentPage from "./pages/ProfessorSubjectAssignmentPage";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
@@ -33,18 +33,42 @@ import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { CourseChatProvider } from "./contexts/CourseChatContext";
 import AdminModal from "./components/AdminModal";
+import { loadNavItems } from "./lib/navItems"; // Import loadNavItems
+import { NavItem } from "./lib/dataModels"; // Import NavItem type
 
 const queryClient = new QueryClient();
 
 const AppWithThemeProvider = () => {
   const { currentUserProfile, isLoadingUser, currentRole } = useRole();
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [dynamicRoutes, setDynamicRoutes] = useState<NavItem[]>([]);
 
   // Determine the initial theme based on user profile or default to 'modern-blue'
   const initialTheme = currentUserProfile?.theme || "modern-blue";
 
+  useEffect(() => {
+    const fetchNavRoutes = async () => {
+      const items = await loadNavItems(currentRole);
+      // Flatten the tree to get all routes
+      const flattenAndFilterRoutes = (navItems: NavItem[]): NavItem[] => {
+        let routes: NavItem[] = [];
+        navItems.forEach(item => {
+          if (item.route && !item.route.startsWith('#') && !item.is_external) {
+            routes.push(item);
+          }
+          if (item.children) {
+            routes = routes.concat(flattenAndFilterRoutes(item.children));
+          }
+        });
+        return routes;
+      };
+      setDynamicRoutes(flattenAndFilterRoutes(items));
+    };
+    fetchNavRoutes();
+  }, [currentRole]); // Re-fetch routes when role changes
+
   return (
-    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme"> {/* attribute="data-theme" is important for themes to work with [data-theme="..."] selectors */}
+    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -68,107 +92,41 @@ const AppWithThemeProvider = () => {
               <Routes>
                 <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
-                <Route element={<ProtectedRoute />}> {/* Base protected route for all logged-in users */}
+                <Route element={<ProtectedRoute />}>
                   <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
-                    {/* Common routes for all authenticated users */}
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/courses" element={<Courses />} />
-                    <Route path="/courses/:courseId" element={<CourseDetail />} />
-                    <Route path="/courses/:courseId/modules/:moduleIndex" element={<ModuleDetail />} />
-                    <Route path="/all-notes" element={<AllNotes />} />
-                    <Route path="/messages" element={<Messages />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/data-model" element={<DataModelViewer />} />
-                    
-                    {/* Routes accessible by Administrator, Director, Deputy Director */}
-                    <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director']} />}>
-                      <Route path="/admin-users" element={<AdminUserManagementPage />} />
-                      <Route path="/establishments" element={<EstablishmentManagementPage />} />
-                    </Route>
-
-                    {/* Routes accessible by Director, Deputy Director */}
-                    <Route element={<ProtectedRoute allowedRoles={['director', 'deputy_director']} />}>
-                      <Route path="/subjects" element={<SubjectManagementPage />} />
-                      <Route path="/school-years" element={<SchoolYearManagementPage />} />
-                      <Route path="/professor-assignments" element={<ProfessorSubjectAssignmentPage />} />
-                      <Route path="/curricula" element={<CurriculumManagementPage />} />
-                      <Route path="/classes" element={<ClassManagementPage />} />
-                      <Route path="/students" element={<StudentManagementPage />} />
-                      <Route path="/pedagogical-management" element={<PedagogicalManagementPage />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                    </Route>
-
-                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur */}
-                    {/* Removed Administrator from /curricula */}
-                    {/* <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur']} />}>
-                      <Route path="/curricula" element={<CurriculumManagementPage />} />
-                    </Route> */}
-
-                    {/* Routes accessible by Administrator, Director, Deputy Director, Professeur, Tutor */}
-                    {/* Removed Administrator from /classes, /students, /pedagogical-management */}
-                    {/* <Route element={<ProtectedRoute allowedRoles={['administrator', 'director', 'deputy_director', 'professeur', 'tutor']} />}>
-                      <Route path="/classes" element={<ClassManagementPage />} />
-                      <Route path="/students" element={<StudentManagementPage />} />
-                      <Route path="/pedagogical-management" element={<PedagogicalManagementPage />} />
-                    </Route> */}
-
-                    {/* Routes accessible by Professeur only */}
-                    <Route element={<ProtectedRoute allowedRoles={['professeur']} />}>
-                      <Route path="/create-course" element={<CreateCourse />} />
-                      <Route path="/create-course/:courseId" element={<CreateCourse />} />
-                    </Route>
-
-                    {/* Specific redirects for roles that shouldn't access certain pages, even if the base ProtectedRoute allows it */}
-                    {/* These are for UX, to redirect from a page that might be technically accessible but semantically wrong */}
-                    {currentRole === 'student' && (
-                      <>
-                        <Route path="/create-course" element={<Navigate to="/courses" replace />} />
-                        <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
-                      </>
-                    )}
-                    {/* Directors/Deputy Directors should not access professeur-only pages like create-course */}
-                    {(currentRole === 'director' || currentRole === 'deputy_director') && (
-                      <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
-                    )}
-                    {/* Professeurs/Tutors should not access admin/director-only pages like establishments or admin-users */}
-                    {(currentRole === 'professeur' || currentRole === 'tutor') && (
-                      <>
-                        <Route path="/admin-users" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/establishments" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
-                      </>
-                    )}
-                    {/* Administrator specific redirects */}
-                    {currentRole === 'administrator' && (
-                      <>
-                        <Route path="/curricula" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/subjects" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/classes" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/students" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/pedagogical-management" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/school-years" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/professor-assignments" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/create-course" element={<Navigate to="/dashboard" replace />} />
-                      </>
-                    )}
+                    {/* Dynamically generated routes */}
+                    {dynamicRoutes.map(item => (
+                      <Route
+                        key={item.id}
+                        path={item.route}
+                        element={
+                          // Render component based on route, using a switch or map
+                          // This part needs to be manually mapped as element cannot be dynamic string
+                          item.route === "/dashboard" ? <Dashboard /> :
+                          item.route === "/courses" ? <Courses /> :
+                          item.route === "/create-course" ? <CreateCourse /> :
+                          item.route === "/create-course/:courseId" ? <CreateCourse /> :
+                          item.route === "/analytics" ? <Analytics /> :
+                          item.route === "/courses/:courseId" ? <CourseDetail /> :
+                          item.route === "/courses/:courseId/modules/:moduleIndex" ? <ModuleDetail /> :
+                          item.route === "/all-notes" ? <AllNotes /> :
+                          item.route === "/messages" ? <Messages /> :
+                          item.route === "/profile" ? <Profile /> :
+                          item.route === "/settings" ? <Settings /> :
+                          item.route === "/data-model" ? <DataModelViewer /> :
+                          item.route === "/establishments" ? <EstablishmentManagementPage /> :
+                          item.route === "/admin-users" ? <AdminUserManagementPage /> :
+                          item.route === "/subjects" ? <SubjectManagementPage /> :
+                          item.route === "/school-years" ? <SchoolYearManagementPage /> :
+                          item.route === "/professor-assignments" ? <ProfessorSubjectAssignmentPage /> :
+                          item.route === "/curricula" ? <CurriculumManagementPage /> :
+                          item.route === "/classes" ? <ClassManagementPage /> :
+                          item.route === "/students" ? <StudentManagementPage /> :
+                          item.route === "/pedagogical-management" ? <PedagogicalManagementPage /> :
+                          <NotFound /> // Fallback for unmapped dynamic routes
+                        }
+                      />
+                    ))}
                   </Route>
                 </Route>
 

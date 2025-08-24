@@ -27,12 +27,10 @@ import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from "@/lib/dataModels";
 import { NavItem } from "@/lib/dataModels";
 import AuthModal from "@/components/AuthModal";
 import AboutModal from "@/components/AboutModal";
-// Removed SwipeUpIndicator import
-// Removed useSwipeable import
+import { loadNavItems } from "@/lib/navItems"; // Import loadNavItems
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -40,6 +38,7 @@ interface DashboardLayoutProps {
 
 // Define category metadata (icons, labels) - Moved here to be the source of truth
 const categoriesConfig: { [key: string]: { label: string; icon: React.ElementType } } = {
+  "Accueil": { label: "Accueil", icon: Home },
   "Apprentissage": { label: "Apprentissage", icon: BookOpen },
   "Progression": { label: "Progression", icon: TrendingUp },
   "Contenu": { label: "Contenu", icon: BookOpen },
@@ -47,6 +46,11 @@ const categoriesConfig: { [key: string]: { label: string; icon: React.ElementTyp
   "Analytiques": { label: "Analytiques", icon: BarChart2 },
   "Administration": { label: "Administration", icon: BriefcaseBusiness },
   "Autres": { label: "Autres", icon: Info }, // Fallback category
+};
+
+// Map icon_name strings to Lucide React components
+const iconMap: { [key: string]: React.ElementType } = {
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
 };
 
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
@@ -63,11 +67,21 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // States for desktop category navigation
   const [desktopActiveCategory, setDesktopActiveCategory] = useState<string | null>(null);
-  const [isDesktopCategoryOverlayOpen, setIsDesktopCategoryOverlayOpen] = useState(false); // New state for overlay
+  const [isDesktopCategoryOverlayOpen, setIsDesktopCategoryOverlayOpen] = useState(false);
 
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoTapCountRef = useRef(0);
+
+  const [navItems, setNavItems] = useState<NavItem[]>([]); // State to store loaded nav items
+
+  useEffect(() => {
+    const fetchNavItems = async () => {
+      const loadedItems = await loadNavItems(currentRole);
+      setNavItems(loadedItems);
+    };
+    fetchNavItems();
+  }, [currentRole]); // Reload nav items when user role changes
 
   const startAutoHideTimer = useCallback(() => {
     if (autoHideTimerRef.current) {
@@ -115,11 +129,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     let channel: any;
     const fetchAndSubscribeUnreadCount = async () => {
       if (currentUserProfile?.id) {
-        // Initial fetch
         const initialCount = await getUnreadMessageCount(currentUserProfile.id);
         setUnreadMessages(initialCount);
 
-        // Set up real-time listener
         channel = supabase
           .channel(`unread_messages_${currentUserProfile.id}`)
           .on(
@@ -131,7 +143,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
             async (payload) => {
-              // Re-fetch count on new message to ensure accuracy
               const newCount = await getUnreadMessageCount(currentUserProfile.id);
               setUnreadMessages(newCount);
             }
@@ -145,7 +156,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
             async (payload) => {
-              // Re-fetch count on message update (read status, archive status) to ensure accuracy
               const newCount = await getUnreadMessageCount(currentUserProfile.id);
               setUnreadMessages(newCount);
             }
@@ -165,99 +175,47 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
-    if (!currentRole) return []; // No navigation items if no role
-
-    const items: NavItem[] = [
-      // Universal items (will be filtered by role later)
-      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link', category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { to: "/profile", icon: User, label: "Mon profil", type: 'link', category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), category: "Accueil", allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-    ];
-
-    if (currentRole === 'student') {
-      items.push(
-        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Apprentissage", allowedRoles: ['student'] },
-        { to: "/all-notes", icon: NotebookText, label: "Mes Notes", type: 'link', category: "Apprentissage", allowedRoles: ['student'] },
-        { to: "/analytics?view=personal", label: "Mes Statistiques", icon: UserRoundCog, type: 'link', category: "Progression", allowedRoles: ['student'] },
-        { to: "/analytics?view=quiz-performance", label: "Performance Quiz", icon: ClipboardCheck, type: 'link', category: "Progression", allowedRoles: ['student'] },
-        { to: "/analytics?view=aia-engagement", label: "Engagement AiA", icon: BotMessageSquare, type: 'link', category: "Progression", allowedRoles: ['student'] },
-      );
-    } else if (currentRole === 'professeur') {
-      items.push(
-        { to: "/courses", icon: BookOpen, label: "Mes Cours", type: 'link', category: "Contenu", allowedRoles: ['professeur'] },
-        { to: "/create-course", label: "Créer un cours", icon: PlusSquare, type: 'link', category: "Contenu", allowedRoles: ['professeur'] },
-        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
-        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
-        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
-        { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
-        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
-        { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
-        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie", allowedRoles: ['professeur'] },
-        { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link', category: "Analytiques", allowedRoles: ['professeur'] },
-        { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link', category: "Analytiques", allowedRoles: ['professeur'] },
-        { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link', category: "Analytiques", allowedRoles: ['professeur'] },
-      );
-    } else if (currentRole === 'tutor') {
-      items.push(
-        { to: "/classes", label: "Mes Classes", icon: Users, type: 'link', category: "Pédagogie", allowedRoles: ['tutor'] },
-        { to: "/students", label: "Mes Élèves", icon: GraduationCap, type: 'link', category: "Pédagogie", allowedRoles: ['tutor'] },
-        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie", allowedRoles: ['tutor'] },
-        { to: "/analytics?view=student-monitoring", label: "Suivi des Élèves", icon: UserRoundSearch, type: 'link', category: "Analytiques", allowedRoles: ['tutor'] },
-        { to: "/analytics?view=alerts", label: "Alertes & Recommandations", icon: BellRing, type: 'link', category: "Analytiques", allowedRoles: ['tutor'] },
-        { to: "/analytics?view=class-performance", label: "Performance par Classe", icon: BarChart2, type: 'link', category: "Analytiques", allowedRoles: ['tutor'] },
-      );
-    } else if (currentRole === 'administrator') {
-      items.push(
-        { to: "/establishments", label: "Établissements", icon: Building2, type: 'link', category: "Administration", allowedRoles: ['administrator'] },
-        { to: "/admin-users", label: "Utilisateurs (Direction)", icon: UserRoundCog, type: 'link', category: "Administration", allowedRoles: ['administrator'] },
-      );
-    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
-      items.push(
-        { to: "/establishments", label: "Mon Établissement", icon: Building2, type: 'link', category: "Administration", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/admin-users", label: "Professeurs", icon: UserRoundCog, type: 'link', category: "Administration", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/students", label: "Élèves", icon: GraduationCap, type: 'link', category: "Administration", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/curricula", label: "Cursus", icon: LayoutList, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/classes", label: "Classes", icon: Users, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie", allowedRoles: ['director', 'deputy_director'] },
-        { to: "/analytics?view=establishment-admin", label: "Analytiques", icon: LayoutDashboard, type: 'link', category: "Analytiques", allowedRoles: ['director', 'deputy_director'] },
-      );
-    }
-
-    // Filter items based on currentRole
-    return items.filter(item => item.allowedRoles?.includes(currentRole));
-  }, [currentRole, unreadMessages]);
+    // Augment navItems with badge for messages
+    return navItems.map(item => {
+      if (item.label === "Messages") {
+        return { ...item, badge: unreadMessages };
+      }
+      return item;
+    });
+  }, [navItems, unreadMessages]);
 
   // Group fullNavTree items by category for desktop display
   const groupedFullNavTree = React.useMemo(() => {
     const groups: { [key: string]: NavItem[] } = {};
     fullNavTree.forEach(item => {
-      const category = item.category || "Autres"; // Fallback to 'Autres' if no category
-      if (!groups[category]) {
-        groups[category] = [];
+      // For top-level items, use their label as category if they are root and have no children
+      // Otherwise, if they have children, they are a category
+      const categoryLabel = item.is_root && item.children && item.children.length > 0 ? item.label : (item.parent_id ? fullNavTree.find(p => p.id === item.parent_id)?.label : item.label);
+      
+      if (categoryLabel) {
+        if (!groups[categoryLabel]) {
+          groups[categoryLabel] = [];
+        }
+        // Add only direct children to categories, or the item itself if it's a root item without children
+        if (item.children && item.children.length > 0) {
+          groups[categoryLabel].push(...item.children);
+        } else if (item.is_root && !item.parent_id) {
+          groups[categoryLabel].push(item);
+        }
       }
-      groups[category].push(item);
     });
 
-    // Remove 'Accueil' category from desktop header categories, its items are handled separately
-    const { Accueil, ...restCategories } = categoriesConfig;
-    const filteredCategoriesConfig = { ...restCategories };
-
-    // Filter out empty categories
+    // Filter out empty categories and sort items within categories
     const filteredGroups: { [key: string]: NavItem[] } = {};
     for (const category in groups) {
-      if (groups[category].length > 0 && category !== "Accueil") { // Exclude 'Accueil' from category buttons
-        filteredGroups[category] = groups[category];
+      const items = groups[category].filter(item => item.allowed_roles.includes(currentRole));
+      if (items.length > 0) {
+        filteredGroups[category] = items.sort((a, b) => a.order_index - b.order_index);
       }
     }
 
     return filteredGroups;
-  }, [fullNavTree]);
+  }, [fullNavTree, currentRole]);
 
   // Handlers for desktop category navigation
   const handleDesktopCategoryClick = (categoryLabel: string) => {
@@ -290,8 +248,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [startAutoHideTimer]);
 
-  // Corrected visibility logic: visible if its own state is true AND chat is not open
-  // This line is now the only place where floatingAiAChatButtonVisible is derived.
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
   return (
@@ -303,9 +259,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             {/* Render category buttons in the header for desktop */}
             {Object.keys(groupedFullNavTree).sort().map(category => {
               const categoryItems = groupedFullNavTree[category];
-              if (categoryItems.length === 0) return null; // Don't show empty categories
+              if (categoryItems.length === 0) return null;
 
               const categoryConfig = categoriesConfig[category] || categoriesConfig["Autres"];
+              const IconComponent = iconMap[categoryConfig.icon.name] || Info; // Use iconMap
+
               return (
                 <Button
                   key={category}
@@ -313,7 +271,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   onClick={() => handleDesktopCategoryClick(category)}
                   className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
                 >
-                  {React.createElement(categoryConfig.icon, { className: "mr-2 h-4 w-4" })}
+                  {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
                   {categoryConfig.label}
                 </Button>
               );
@@ -329,14 +287,13 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   <span className="sr-only">Recherche globale</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50"> {/* Added z-50 */}
+              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
                 <p>Recherche (Ctrl + F)</p>
               </TooltipContent>
             </Tooltip>
           )}
 
           <ThemeToggle />
-          {/* Added About button directly in the desktop header */}
           {!isMobile && (
             <Button variant="outline" size="icon" onClick={() => setIsAboutModalOpen(true)}>
               <Info className="h-5 w-5" />
@@ -358,7 +315,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80 z-50"> {/* Added z-50 */}
+              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80 z-50">
                 <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/profile")}>
@@ -392,14 +349,24 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {groupedFullNavTree[desktopActiveCategory]?.map((item) => {
-                const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+                const IconComponent = iconMap[item.icon_name || 'Info'] || Info; // Use iconMap
+
                 return (
                   <NavLink
-                    key={item.to || item.label}
-                    to={item.to || '#'}
+                    key={item.id}
+                    to={item.route || '#'}
                     onClick={() => {
-                      if (item.onClick) item.onClick();
-                      setIsDesktopCategoryOverlayOpen(false); // Close overlay on item click
+                      // For trigger items, call onClick and close overlay
+                      if (item.label === "Recherche" && item.route === null) { // Special handling for search trigger
+                        setIsSearchOverlayOpen(true);
+                        setIsDesktopCategoryOverlayOpen(false);
+                      } else if (item.label === "À propos" && item.route === null) { // Special handling for about trigger
+                        setIsAboutModalOpen(true);
+                        setIsDesktopCategoryOverlayOpen(false);
+                      } else {
+                        setIsDesktopCategoryOverlayOpen(false); // Close overlay on item click
+                      }
                     }}
                     className={() =>
                       cn(
@@ -411,7 +378,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                       )
                     }
                   >
-                    <item.icon className="h-6 w-6 mb-2" />
+                    <IconComponent className="h-6 w-6 mb-2" />
                     <span className="text-sm font-medium line-clamp-1">{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
@@ -430,7 +397,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto",
           isMobile && "pb-20",
-          !isMobile && isDesktopCategoryOverlayOpen && "pt-[calc(68px+1rem+100px)]" // Adjust padding when overlay is open (header height + overlay padding + approx. overlay content height)
+          !isMobile && isDesktopCategoryOverlayOpen && "pt-[calc(68px+1rem+100px)]"
         )}
       >
         <Outlet />
@@ -442,7 +409,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </Button>
       </footer>
       <BottomNavigationBar
-        allNavItemsForDrawer={fullNavTree} // Pass fullNavTree for logged-in users
+        allNavItemsForDrawer={fullNavTree}
         onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}

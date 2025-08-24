@@ -30,6 +30,7 @@ import AboutModal from "@/components/AboutModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
+import { loadNavItems } from "@/lib/navItems"; // Import loadNavItems
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -43,7 +44,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     methodologie: useRef<HTMLDivElement>(null),
   };
 
-  const { currentUserProfile } = useRole();
+  const { currentUserProfile, currentRole } = useRole();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -51,6 +52,16 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
   const logoTapCountRef = useRef(0);
   const location = useLocation();
+
+  const [navItems, setNavItems] = useState<NavItem[]>([]); // State to store loaded nav items
+
+  useEffect(() => {
+    const fetchNavItems = async () => {
+      const loadedItems = await loadNavItems(currentRole);
+      setNavItems(loadedItems);
+    };
+    fetchNavItems();
+  }, [currentRole]); // Reload nav items when user role changes
 
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
     queryKey: ['latestApkRelease'],
@@ -144,9 +155,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   ];
 
   const indexNavItems: NavItem[] = [
-    { label: "Accueil", icon: Home, type: 'link', to: '/' },
-    { label: "AiA Bot", icon: MessageCircleMore, type: 'link', to: '#aiaBot' },
-    { label: "Méthodologie", icon: SlidersHorizontal, type: 'link', to: '#methodologie' },
+    { id: 'index-home', label: "Accueil", icon_name: 'Home', type: 'link', to: '/', is_root: true, allowed_roles: [] },
+    { id: 'index-aia', label: "AiA Bot", icon_name: 'MessageCircleMore', type: 'link', to: '#aiaBot', is_root: true, allowed_roles: [] },
+    { id: 'index-methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', type: 'link', to: '#methodologie', is_root: true, allowed_roles: [] },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -186,21 +197,22 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {indexNavItems.map((item) => {
               if (item.type === 'link' && item.to) {
-                // Refined isActive logic for header links
                 const isActive = 
-                  (item.to === '/' && location.pathname === '/' && !location.hash) || // Home link
-                  (item.to.startsWith('#') && location.pathname === '/' && location.hash === item.to); // Hash link on home page
+                  (item.to === '/' && location.pathname === '/' && !location.hash) ||
+                  (item.to.startsWith('#') && location.pathname === '/' && location.hash === item.to);
                 
+                const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+
                 return (
                   <Link
-                    key={item.to}
+                    key={item.id}
                     to={item.to}
                     className={cn(
                       "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
                       isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {item.label}
+                    <IconComponent className="mr-2 h-4 w-4" /> {item.label}
                   </Link>
                 );
               }
@@ -314,7 +326,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
       </footer>
 
       <BottomNavigationBar
-        allNavItemsForDrawer={indexNavItems}
+        allNavItemsForDrawer={navItems}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
         isMoreDrawerOpen={isMoreDrawerOpen}

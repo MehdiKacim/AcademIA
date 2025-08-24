@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code, Info } from "lucide-react"; // Import Code and Info icons
-import { ThemeToggle } from "@/components/theme-toggle"; // Import ThemeToggle
+import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code, Info, LayoutList } from "lucide-react"; // Import LayoutList icon
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
-import { clearAllAppData } from "@/lib/dataReset"; // Import the new utility
-import { Link } from 'react-router-dom'; // Import Link
-import AboutModal from "@/components/AboutModal"; // Import AboutModal
-import ChangePasswordDialog from "@/components/ChangePasswordDialog"; // Import ChangePasswordDialog
+import { clearAllAppData } from "@/lib/dataReset";
+import { Link } from 'react-router-dom';
+import AboutModal from "@/components/AboutModal";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 const Settings = () => {
+  const { currentRole } = useRole(); // Get currentRole
   const [language, setLanguage] = useState('fr');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [appNotifications, setAppNotifications] = useState(true);
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // State for AboutModal
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false); // State for ChangePasswordDialog
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
 
   const handleSavePreferences = () => {
-    // In a real app, you would save these preferences to a backend or localStorage
     console.log("Saving preferences:", { language, emailNotifications, appNotifications });
     showSuccess("Préférences enregistrées !");
   };
@@ -29,7 +30,7 @@ const Settings = () => {
     if (window.confirm("Êtes-vous sûr de vouloir effacer TOUTES les données de l'application ? Cette action est irréversible.")) {
       clearAllAppData();
       showSuccess("Toutes les données ont été effacées ! Veuillez rafraîchir la page.");
-      window.location.reload(); // Force a full page reload to re-initialize all data
+      window.location.reload();
     }
   };
 
@@ -79,7 +80,6 @@ const Settings = () => {
                 <SelectContent>
                   <SelectItem value="fr">Français</SelectItem>
                   <SelectItem value="en">English</SelectItem>
-                  {/* Add more languages as needed */}
                 </SelectContent>
               </Select>
             </div>
@@ -131,12 +131,19 @@ const Settings = () => {
           <Button variant="outline" onClick={() => setIsChangePasswordDialogOpen(true)}>
             Changer le mot de passe
           </Button>
-          <Link to="/data-model"> {/* Link to the new DataModelViewer page */}
+          <Link to="/data-model">
             <Button variant="outline" className="flex items-center gap-2">
               <Code className="h-4 w-4" /> Voir le modèle de données
             </Button>
           </Link>
-          <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="flex items-center gap-2"> {/* Changed to open AboutModal */}
+          {currentRole === 'administrator' && ( // Only show for administrators
+            <Link to="/admin-menu-management">
+              <Button variant="outline" className="flex items-center gap-2">
+                <LayoutList className="h-4 w-4" /> Gérer les menus
+              </Button>
+            </Link>
+          )}
+          <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="flex items-center gap-2">
             <Info className="h-4 w-4" /> À propos
           </Button>
           <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2">
