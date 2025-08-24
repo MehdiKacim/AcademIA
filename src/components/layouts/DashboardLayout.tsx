@@ -172,7 +172,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), category: "Général" },
       { to: "/profile", icon: User, label: "Mon profil", type: 'link', category: "Général" },
       { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', category: "Général" },
-      // Removed "À propos" from here
+      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), category: "Général" }, // Added back here
     ];
 
     if (currentRole === 'student') {
