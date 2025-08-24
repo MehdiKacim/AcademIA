@@ -4,10 +4,10 @@ import { Info, Code, Heart, Linkedin, Github } from "lucide-react";
 import packageJson from '../../package.json';
 import Logo from "@/components/Logo";
 import { motion, Variants } from 'framer-motion';
-import useEmblaCarousel, { EmblaOptionsType } from 'embla-carousel-react'; // Import useEmblaCarousel
-import { EmblaCarouselArrowButton } from '@/components/EmblaCarouselArrowButtons'; // Import arrow buttons
-import { EmblaCarouselDotButton } from '@/components/EmblaCarouselDotButton'; // Import dot buttons
-import { cn } from '@/lib/utils'; // Import cn
+import useEmblaCarousel, { EmblaOptionsType } from 'embla-carousel-react';
+import { EmblaCarouselArrowButton } from '@/components/EmblaCarouselArrowButtons';
+import { EmblaCarouselDotButton } from '@/components/EmblaCarouselDotButton';
+import { cn } from '@/lib/utils';
 
 const About = () => {
   const appVersion = packageJson.version;
@@ -42,19 +42,8 @@ const About = () => {
       <div className="relative">
         <div className="embla" ref={emblaRef}>
           <div className="embla__container flex">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.2,
-                  },
-                },
-              }}
-              className="embla__slide flex-[0_0_100%] min-w-0 p-2" // Added p-2 for spacing
-            >
-              <motion.div variants={cardVariants}>
+            <div className="embla__slide flex-[0_0_100%] min-w-0"> {/* Removed p-2 here */}
+              <motion.div variants={cardVariants} className="p-2"> {/* Added p-2 here */}
                 <Card className="shadow-md">
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
                     <Info className="h-5 w-5 text-primary" />
@@ -78,21 +67,10 @@ const About = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.2,
-                  },
-                },
-              }}
-              className="embla__slide flex-[0_0_100%] min-w-0 p-2" // Added p-2 for spacing
-            >
-              <motion.div variants={cardVariants}>
+            <div className="embla__slide flex-[0_0_100%] min-w-0"> {/* Removed p-2 here */}
+              <motion.div variants={cardVariants} className="p-2"> {/* Added p-2 here */}
                 <Card className="shadow-md">
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
                     <Code className="h-5 w-5 text-primary" />
@@ -108,21 +86,10 @@ const About = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.2,
-                  },
-                },
-              }}
-              className="embla__slide flex-[0_0_100%] min-w-0 p-2" // Added p-2 for spacing
-            >
-              <motion.div variants={cardVariants}>
+            <div className="embla__slide flex-[0_0_100%] min-w-0"> {/* Removed p-2 here */}
+              <motion.div variants={cardVariants} className="p-2"> {/* Added p-2 here */}
                 <Card className="shadow-md">
                   <CardHeader className="flex flex-row items-center gap-3 pb-3">
                     <Heart className="h-5 w-5 text-primary" />
@@ -150,7 +117,7 @@ const About = () => {
                   </CardContent>
                 </Card>
               </motion.div>
-            </motion.div>
+            </div>
           </div>
         </div>
         <EmblaCarouselArrowButton emblaApi={emblaApi} />
