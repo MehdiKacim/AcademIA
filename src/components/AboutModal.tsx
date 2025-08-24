@@ -37,7 +37,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
                 Découvrez les informations sur l'application et son développement.
               </DrawerDescription>
             </DrawerHeader>
-            <ScrollArea className="flex-grow min-h-0"> {/* Use ScrollArea directly here */}
+            <ScrollArea className="flex-grow min-h-0 p-4"> {/* Added p-4 here */}
               <About />
             </ScrollArea>
             <DrawerFooter className="flex-shrink-0">
