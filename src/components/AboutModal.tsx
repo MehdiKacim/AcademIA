@@ -36,7 +36,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
                 Découvrez les informations sur l'application et son développement.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="flex-grow overflow-y-auto p-4 h-full"> {/* Added h-full here */}
+            <div className="flex-grow overflow-y-auto p-4">
               <About />
             </div>
             <DrawerFooter>

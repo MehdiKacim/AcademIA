@@ -399,7 +399,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                         {item.label}
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
+                    <DropdownMenuContent align="start" className="z-[1000]"> {/* Added z-[1000] here */}
                       <DropdownMenuLabel>{item.label}</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       {item.items.map(subItem => (
