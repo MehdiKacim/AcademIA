@@ -28,7 +28,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent className="h-[90vh] rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
+        <DrawerContent className="max-h-[90vh] rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
             <DrawerHeader className="text-center">
               <DrawerTitle className="text-center">À Propos d'AcademIA</DrawerTitle>
@@ -36,7 +36,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
                 Découvrez les informations sur l'application et son développement.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="flex-grow overflow-y-auto p-4">
+            <div className="flex-grow overflow-y-auto p-4 min-h-0"> {/* Added min-h-0 here */}
               <About />
             </div>
             <DrawerFooter>
