@@ -150,7 +150,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
 
   // This function generates the full, structured navigation tree for desktop sidebar
-  const getFullNavTree = (): NavItem[] => {
+  const fullNavTree = React.useMemo((): NavItem[] => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", icon: Home, label: "Accueil", type: 'link' },
       { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages },
@@ -293,7 +293,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     }
 
     return [...baseItems, ...roleSpecificItems];
-  };
+  }, [currentRole, unreadMessages]);
 
   const getIsParentTriggerActive = (item: NavItem): boolean => {
     if (item.type !== 'trigger' || !item.items) return false;
@@ -336,7 +336,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {getFullNavTree().map((item) => {
+            {fullNavTree.map((item) => {
               const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
               const isTriggerActive = item.type === 'trigger' && getIsParentTriggerActive(item);
 
@@ -464,7 +464,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </Button>
       </footer>
       <BottomNavigationBar
-        allNavItemsForDrawer={getFullNavTree()}
+        allNavItemsForDrawer={fullNavTree}
         onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
