@@ -239,7 +239,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [startAutoHideTimer]);
 
-  const isAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen; // Use renamed state
+  const isAiAChatButtonVisible = !isChatOpen; // Use renamed state, removed redundant declaration
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
