@@ -18,7 +18,7 @@ import {
   LogIn,
   Download,
   Info,
-} from "lucide-react";
+} from "lucide-react"; // Import all necessary icons
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import BottomNavigationBar from "@/components/BottomNavigationBar";
@@ -35,6 +35,11 @@ import { loadNavItems } from "@/lib/navItems"; // Import loadNavItems
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
 }
+
+// Map icon_name strings to Lucide React components
+const iconMap: { [key: string]: React.ElementType } = {
+  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, // Add all icons used in this file
+};
 
 const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const [activeSection, setActiveSection] = useState('accueil');
@@ -155,9 +160,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   ];
 
   const indexNavItems: NavItem[] = [
-    { id: 'index-home', label: "Accueil", icon_name: 'Home', type: 'link', to: '/', is_root: true, allowed_roles: [] },
-    { id: 'index-aia', label: "AiA Bot", icon_name: 'MessageCircleMore', type: 'link', to: '#aiaBot', is_root: true, allowed_roles: [] },
-    { id: 'index-methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', type: 'link', to: '#methodologie', is_root: true, allowed_roles: [] },
+    { id: 'home-anon', label: "Accueil", icon_name: 'Home', type: 'link', to: '/', is_root: true, allowed_roles: [] },
+    { id: 'aia', label: "AiA Bot", icon_name: 'MessageCircleMore', type: 'link', to: '#aiaBot', is_root: true, allowed_roles: [] },
+    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', type: 'link', to: '#methodologie', is_root: true, allowed_roles: [] },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -208,11 +213,11 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
                     key={item.id}
                     to={item.to}
                     className={cn(
-                      "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                      "flex flex-col items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
                       isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    <IconComponent className="mr-2 h-4 w-4" /> {item.label}
+                    <IconComponent className="h-5 w-5 mb-1" /> {item.label}
                   </Link>
                 );
               }
