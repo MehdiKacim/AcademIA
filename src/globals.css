@@ -12,7 +12,7 @@
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 220 80% 50%; /* Adjusted for a more vibrant blue */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 210 40% 90%; /* Made secondary button background more distinct */
     --secondary-foreground: 222.2 47.4% 11.2%;
     --success: 142.1 76.2% 36.3%; /* Green for success */
     --success-foreground: 355.7 100% 97.3%; /* Text color for success */
@@ -22,8 +22,8 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 85%; /* Darker border for better visibility */
-    --input: 214.3 31.8% 85%; /* Darker input border */
+    --border: 214.3 31.8% 70%; /* Darker border for better visibility */
+    --input: 214.3 31.8% 70%; /* Darker input border */
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
   }
@@ -31,7 +31,7 @@
   [data-theme="dark"] {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 84% 8%; /* Slightly lighter card background for distinction */
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
@@ -51,8 +51,6 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
-
-  /* Removed [data-theme="modern-blue"] block */
 
   [data-theme="dark-purple"] {
     --background: 260 20% 15%; /* Dark purple background */
