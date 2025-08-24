@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react"; // Added ArrowRight
+import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft, ArrowRight } from "lucide-react";
 import { NavItem } from "@/lib/dataModels";
 import {
   Drawer,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/drawer";
 import { useRole } from "@/contexts/RoleContext";
 import AuthMenu from "./AuthMenu";
+import { Input } from "@/components/ui/input"; // Import Input for search
 
 interface BottomNavigationBarProps {
   allNavItemsForDrawer: NavItem[]; // All nested navigation items for the "More" drawer
@@ -40,16 +41,28 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
   const [drawerTitle, setDrawerTitle] = useState("Menu");
   const [drawerDescription, setDrawerDescription] = useState("Toutes les options de navigation.");
   const [drawerHistory, setDrawerHistory] = useState<{ items: NavItem[], title: string, description: string }[]>([]);
+  const [searchQuery, setSearchQuery] = useState(''); // New state for search input
+
+  // Function to get top-level items for the drawer, excluding those already in the fixed bottom nav
+  const getTopLevelDrawerItems = React.useCallback(() => {
+    const fixedItemPaths = new Set(fixedBottomNavItems.map(item => item.to).filter(Boolean));
+    const fixedItemLabels = new Set(fixedBottomNavItems.map(item => item.label));
+
+    return allNavItemsForDrawer.filter(drawerItem =>
+      (drawerItem.to && !fixedItemPaths.has(drawerItem.to)) || (!drawerItem.to && !fixedItemLabels.has(drawerItem.label))
+    );
+  }, [allNavItemsForDrawer]);
 
   // Initialize currentDrawerItems when the drawer opens
   React.useEffect(() => {
     if (isMoreDrawerOpen) {
-      setCurrentDrawerItems(allNavItemsForDrawer); // Use the full nested tree
+      setCurrentDrawerItems(getTopLevelDrawerItems());
       setDrawerTitle("Menu");
       setDrawerDescription("Toutes les options de navigation.");
       setDrawerHistory([]);
+      setSearchQuery(''); // Clear search when drawer opens
     }
-  }, [isMoreDrawerOpen, allNavItemsForDrawer]);
+  }, [isMoreDrawerOpen, getTopLevelDrawerItems]);
 
   if (!isMobile) {
     return null;
@@ -88,11 +101,8 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
           : item
       );
 
-  // Filter out items that are already in the fixed bottom nav bar
-  // This logic is crucial for the "More" button visibility
-  const fixedItemLabels = new Set(dynamicFixedBottomNavItems.map(item => item.label));
-  const otherNavItems = allNavItemsForDrawer.filter(drawerItem => !fixedItemLabels.has(drawerItem.label));
-  const showMoreButton = otherNavItems.length > 0;
+  // Determine if "More" button should be shown
+  const showMoreButton = getTopLevelDrawerItems().length > 0;
 
   const handleDrawerItemClick = (item: NavItem) => {
     if (item.type === 'link' && item.to) {
@@ -105,6 +115,7 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
       setCurrentDrawerItems(item.items);
       setDrawerTitle(item.label);
       setDrawerDescription(item.description || `Options pour ${item.label}`);
+      setSearchQuery(''); // Clear search when drilling down
     } else if (item.onClick) {
       item.onClick();
       setIsMoreDrawerOpen(false);
@@ -118,8 +129,22 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
       setDrawerTitle(previousState.title);
       setDrawerDescription(previousState.description);
       setDrawerHistory([...drawerHistory]); // Update history to trigger re-render
+      setSearchQuery(''); // Clear search when going back
     }
   };
+
+  // Filter items for display in the drawer based on search query
+  const filteredDisplayItems = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return currentDrawerItems;
+    }
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return currentDrawerItems.filter(item =>
+      item.label.toLowerCase().includes(lowerCaseQuery) ||
+      (item.description && item.description.toLowerCase().includes(lowerCaseQuery)) ||
+      (item.items && item.items.some(subItem => subItem.label.toLowerCase().includes(lowerCaseQuery)))
+    );
+  }, [currentDrawerItems, searchQuery]);
 
   return (
     <>
@@ -271,32 +296,44 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
               </div>
               <DrawerDescription className="text-center">{drawerDescription}</DrawerDescription>
             </DrawerHeader>
+            <div className="p-4 border-b border-border">
+              <Input
+                placeholder="Rechercher dans le menu..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
             <div className="flex-grow overflow-y-auto p-4 space-y-2">
-              {currentDrawerItems.map((item) => {
-                const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
-                return (
-                  <Button
-                    key={item.to || item.label}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start",
-                      isLinkActive ? "bg-accent text-accent-foreground" : ""
-                    )}
-                    onClick={() => handleDrawerItemClick(item)}
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
-                        {item.badge}
-                      </span>
-                    )}
-                    {item.type === 'trigger' && item.items && (
-                      <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                );
-              })}
+              {filteredDisplayItems.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
+              ) : (
+                filteredDisplayItems.map((item) => {
+                  const isLinkActive = item.to && (location.pathname + location.search).startsWith(item.to);
+                  return (
+                    <Button
+                      key={item.to || item.label}
+                      variant="ghost"
+                      className={cn(
+                        "w-full justify-start",
+                        isLinkActive ? "bg-accent text-accent-foreground" : ""
+                      )}
+                      onClick={() => handleDrawerItemClick(item)}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs">
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.type === 'trigger' && item.items && (
+                        <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  );
+                })
+              )}
             </div>
             <DrawerFooter>
               {/* No need for a close button here, as it's in the header and swipe-to-dismiss is enabled */}
