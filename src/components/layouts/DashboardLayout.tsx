@@ -294,20 +294,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   // This line is now the only place where floatingAiAChatButtonVisible is derived.
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
-  // Universal items for desktop header (always visible if logged in)
-  const universalDesktopHeaderItems = React.useMemo(() => {
-    const items: NavItem[] = [
-      { to: "/dashboard", icon: Home, label: "Accueil", type: 'link', allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { to: "/messages", icon: MessageSquare, label: "Messages", type: 'link', badge: unreadMessages, allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { to: "/profile", icon: User, label: "Mon profil", type: 'link', allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), allowedRoles: ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'] },
-    ];
-    return items.filter(item => item.allowedRoles?.includes(currentRole!));
-  }, [currentRole, unreadMessages]);
-
-
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
@@ -392,7 +378,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
       {/* Desktop Category Items Overlay (Full-width drawer) */}
       {!isMobile && isDesktopCategoryOverlayOpen && desktopActiveCategory && (
-        <div className="fixed top-[68px] left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8">
+        <div className="fixed top-[68px] left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8">
           <div className="max-w-7xl mx-auto flex flex-col gap-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
