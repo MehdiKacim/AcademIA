@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X } from "lucide-react";
+import { Search, Home, MessageSquare, User, Settings, LogOut, LogIn, Info, MoreHorizontal, X, ArrowLeft } from "lucide-react";
 import { NavItem } from "@/lib/dataModels";
 import {
   Drawer,
@@ -34,6 +34,22 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
 
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
+
+  // State for drill-down navigation in "More" drawer
+  const [currentDrawerItems, setCurrentDrawerItems] = useState<NavItem[]>([]);
+  const [drawerTitle, setDrawerTitle] = useState("Menu");
+  const [drawerDescription, setDrawerDescription] = useState("Toutes les options de navigation.");
+  const [drawerHistory, setDrawerHistory] = useState<{ items: NavItem[], title: string, description: string }[]>([]);
+
+  // Initialize currentDrawerItems when the drawer opens
+  React.useEffect(() => {
+    if (isMoreDrawerOpen) {
+      setCurrentDrawerItems(allNavItemsForDrawer.filter(item => item.type === 'link' || (item.type === 'trigger' && item.items)));
+      setDrawerTitle("Menu");
+      setDrawerDescription("Toutes les options de navigation.");
+      setDrawerHistory([]);
+    }
+  }, [isMoreDrawerOpen, allNavItemsForDrawer]);
 
   if (!isMobile) {
     return null;
@@ -72,12 +88,39 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
           : item
       );
 
-  // Add a "More" button if there are other items in allNavItemsForDrawer that are not in fixedBottomNavItems
+  // Filter out items that are already in the fixed bottom nav bar
   const otherNavItems = allNavItemsForDrawer.filter(drawerItem =>
     !dynamicFixedBottomNavItems.some(fixedItem => fixedItem.to === drawerItem.to || fixedItem.label === drawerItem.label)
   );
 
   const showMoreButton = otherNavItems.length > 0;
+
+  const handleDrawerItemClick = (item: NavItem) => {
+    if (item.type === 'link' && item.to) {
+      navigate(item.to);
+      setIsMoreDrawerOpen(false);
+    } else if (item.type === 'trigger' && item.items) {
+      // Save current state to history
+      setDrawerHistory(prev => [...prev, { items: currentDrawerItems, title: drawerTitle, description: drawerDescription }]);
+      // Navigate to sub-items
+      setCurrentDrawerItems(item.items);
+      setDrawerTitle(item.label);
+      setDrawerDescription(item.description || `Options pour ${item.label}`);
+    } else if (item.onClick) {
+      item.onClick();
+      setIsMoreDrawerOpen(false);
+    }
+  };
+
+  const handleBackInDrawer = () => {
+    const previousState = drawerHistory.pop();
+    if (previousState) {
+      setCurrentDrawerItems(previousState.items);
+      setDrawerTitle(previousState.title);
+      setDrawerDescription(previousState.description);
+      setDrawerHistory([...drawerHistory]); // Update history to trigger re-render
+    }
+  };
 
   return (
     <>
@@ -212,13 +255,25 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
         <DrawerContent className="h-[90vh] mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
             <DrawerHeader className="text-center">
-              <DrawerTitle className="text-center">Menu</DrawerTitle>
-              <DrawerDescription className="text-center">
-                Toutes les options de navigation.
-              </DrawerDescription>
+              <div className="flex items-center justify-between">
+                {drawerHistory.length > 0 && (
+                  <Button variant="ghost" size="icon" onClick={handleBackInDrawer} className="absolute left-4">
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="sr-only">Retour</span>
+                  </Button>
+                )}
+                <DrawerTitle className={cn("flex-grow text-center", drawerHistory.length > 0 ? "ml-8" : "")}>{drawerTitle}</DrawerTitle>
+                <DrawerClose asChild>
+                  <Button variant="ghost" size="icon" className="absolute right-4">
+                    <X className="h-5 w-5" />
+                    <span className="sr-only">Fermer le menu</span>
+                  </Button>
+                </DrawerClose>
+              </div>
+              <DrawerDescription className="text-center">{drawerDescription}</DrawerDescription>
             </DrawerHeader>
             <div className="flex-grow overflow-y-auto p-4 space-y-2">
-              {allNavItemsForDrawer.map((item) => (
+              {currentDrawerItems.map((item) => (
                 <Button
                   key={item.to || item.label}
                   variant="ghost"
@@ -226,12 +281,7 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
                     "w-full justify-start",
                     (location.pathname + location.search).startsWith(item.to || '') ? "bg-accent text-accent-foreground" : ""
                   )}
-                  onClick={() => {
-                    if (item.to) {
-                      navigate(item.to);
-                      setIsMoreDrawerOpen(false);
-                    }
-                  }}
+                  onClick={() => handleDrawerItemClick(item)}
                 >
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
@@ -244,11 +294,7 @@ const BottomNavigationBar = ({ allNavItemsForDrawer, onOpenGlobalSearch, current
               ))}
             </div>
             <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="outline">
-                  <X className="h-4 w-4 mr-2" /> Fermer le menu
-                </Button>
-              </DrawerClose>
+              {/* No need for a close button here, as it's in the header and swipe-to-dismiss is enabled */}
             </DrawerFooter>
           </div>
         </DrawerContent>
