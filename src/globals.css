@@ -53,31 +53,29 @@
   }
 
   [data-theme="modern-blue"] {
-    --background: 210 50% 98%; /* Very light blue background */
-    --foreground: 220 20% 15%; /* Darker blue-ish text */
-    --card: 210 40% 92%; /* Light blue for cards, slightly more saturated */
-    --card-foreground: 220 20% 15%;
+    --background: 210 40% 90%; /* Fond bleu clair plus prononcé */
+    --foreground: 220 20% 10%; /* Texte bleu foncé */
+    --card: 210 30% 85%; /* Cartes bleu moyen */
+    --card-foreground: 220 20% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
-    --primary: 200 90% 50%; /* Vibrant blue */
-    --primary-foreground: 0 0% 100%; /* White text on primary */
-    --secondary: 210 30% 85%; /* Muted blue secondary */
-    --secondary-foreground: 220 20% 15%;
+    --popover-foreground: 220 20% 10%;
+    --primary: 200 90% 40%; /* Bleu vif pour les accents */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 75%; /* Bleu plus doux pour les éléments secondaires */
+    --secondary-foreground: 220 20% 10%;
     --success: 142.1 76.2% 36.3%;
     --success-foreground: 355.7 100% 97.3%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    --muted: 210 30% 88%;
+    --muted-foreground: 215.4 16.3% 40%;
+    --accent: 210 30% 88%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 210 30% 80%; /* Blue border */
-    --input: 210 30% 80%;
-    --ring: 210 90% 50%;
+    --border: 210 25% 70%; /* Bordures bleues */
+    --input: 210 25% 70%;
+    --ring: 210 90% 40%;
     --radius: 0.5rem;
   }
-
-  /* Removed [data-theme="light-green"] block */
 
   [data-theme="dark-purple"] {
     --background: 260 20% 15%; /* Dark purple background */
