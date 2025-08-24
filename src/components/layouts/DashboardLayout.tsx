@@ -172,7 +172,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       { label: "Recherche", icon: Search, type: 'trigger', onClick: () => setIsSearchOverlayOpen(true), category: "Général" },
       { to: "/profile", icon: User, label: "Mon profil", type: 'link', category: "Général" },
       { to: "/settings", icon: Settings, label: "Paramètres", type: 'link', category: "Général" },
-      { label: "À propos", icon: Info, type: 'trigger', onClick: () => setIsAboutModalOpen(true), category: "Général" },
+      // Removed "À propos" from here
     ];
 
     if (currentRole === 'student') {
@@ -327,7 +327,13 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           )}
 
           <ThemeToggle />
-          {/* Removed About button from main header, it's now in the drawer */}
+          {/* Added About button directly in the desktop header */}
+          {!isMobile && (
+            <Button variant="outline" size="icon" onClick={() => setIsAboutModalOpen(true)}>
+              <Info className="h-5 w-5" />
+              <span className="sr-only">À propos</span>
+            </Button>
+          )}
           {!isMobile && !currentUserProfile && (
             <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
               <LogIn className="h-5 w-5 mr-2" /> Authentification
