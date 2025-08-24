@@ -240,6 +240,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   }, [startAutoHideTimer]);
 
   // Corrected visibility logic: visible if its own state is true AND chat is not open
+  // This line is now the only place where floatingAiAChatButtonVisible is derived.
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
   return (
