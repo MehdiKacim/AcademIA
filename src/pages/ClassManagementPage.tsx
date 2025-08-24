@@ -220,8 +220,7 @@ const ClassManagementPage = () => {
         (currentRole === 'administrator')
       )) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
-  const currentYear = new Date().getFullYear();
-  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
+  // Removed the problematic line: const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
   if (isLoadingUser) {
     return (
