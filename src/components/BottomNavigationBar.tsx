@@ -149,7 +149,9 @@ const BottomNavigationBar = ({
   };
 
   const handleDrawerItemClick = (item: NavItem) => {
+    console.log("Attempting to handle drawer item click:", item.label, "to:", item.to);
     if (item.type === 'link' && item.to) {
+      console.log("Navigating to:", item.to);
       navigate(item.to);
       setIsMoreDrawerOpen(false);
       // Reset drawer state when navigating
@@ -158,6 +160,7 @@ const BottomNavigationBar = ({
       setActiveCategoryIcon(null);
       setSearchQuery('');
     } else if (item.onClick) {
+      console.log("Triggering onClick for:", item.label);
       item.onClick();
       // Do not close the drawer if it's a search trigger, as the overlay will handle closing
       if (item.label !== "Recherche") {
