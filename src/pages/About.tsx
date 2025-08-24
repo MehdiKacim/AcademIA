@@ -14,7 +14,7 @@ const About = () => {
   };
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6"> {/* Removed p-4 from here */}
       <div className="text-center mb-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
