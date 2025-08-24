@@ -89,21 +89,18 @@ const BottomNavigationBar = ({
         label: "Accueil",
         type: "link",
       },
-      {
-        icon: Search,
-        label: "Recherche",
-        type: "trigger",
-        onClick: onOpenGlobalSearch,
-      },
     ];
-  }, [onOpenGlobalSearch]);
+  }, []);
 
-  // If not logged in, add "Authentification" to the fixed bottom nav
+  // Dynamically add "Recherche" or "Authentification" based on user status
   const dynamicFixedBottomNavItems: NavItem[] = currentUser
-    ? fixedBottomNavItems
+    ? [
+        ...fixedBottomNavItems,
+        { icon: Search, label: "Recherche", type: "trigger", onClick: onOpenGlobalSearch },
+      ]
     : [
         ...fixedBottomNavItems,
-        { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Général", categoriesConfig["Général"].icon); } } // Open More drawer to General category
+        { icon: LogIn, label: "Authentification", type: 'trigger', onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Général", categoriesConfig["Général"].icon); } }
       ];
 
   // The drawerItems are now simply allNavItemsForDrawer, as fixed items are no longer duplicated
