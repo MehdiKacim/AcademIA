@@ -10,7 +10,7 @@ import { getProfileById } from '@/lib/studentData'; // Import getProfileById
 interface RoleContextType {
   currentUserProfile: Profile | null;
   setCurrentUserProfile: (profile: Profile | null) => void;
-  currentRole: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director' | null; // Replaced 'creator' with 'professeur'
+  currentRole: Profile['role'] | null; // Use Profile['role'] directly
   isLoadingUser: boolean; // New loading state
   updateUserTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>; // New function to update theme
   signOut: () => Promise<void>; // Add signOut function

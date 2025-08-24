@@ -227,7 +227,7 @@ export const loadCurricula = async (): Promise<Curriculum[]> => {
   }));
 };
 
-export const addCurriculumToStorage = async (newCurriculum: Curriculum): Promise<Curriculum | null> => {
+export const addCurriculumToStorage = async (newCurriculum: Omit<Curriculum, 'id' | 'created_at'>): Promise<Curriculum | null> => {
   const { data, error } = await supabase
     .from('curricula')
     .insert({
@@ -312,7 +312,7 @@ export const loadEstablishments = async (): Promise<Establishment[]> => {
   }));
 };
 
-export const addEstablishmentToStorage = async (newEstablishment: Establishment): Promise<Establishment | null> => {
+export const addEstablishmentToStorage = async (newEstablishment: Omit<Establishment, 'id' | 'created_at'>): Promise<Establishment | null> => {
   const { data, error } = await supabase
     .from('establishments')
     .insert({

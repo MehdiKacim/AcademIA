@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2 } from "lucide-react";
-import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels"; // Import SchoolYear
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react"; // Import UserPlus
+import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -35,7 +35,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 import { useRole } from '@/contexts/RoleContext';
 import { useNavigate } from 'react-router-dom';
 import EditClassDialog from '@/components/EditClassDialog'; // Import the new dialog
@@ -57,10 +57,10 @@ const ClassManagementPage = () => {
   const [newClassName, setNewClassName] = useState('');
   const [newClassCurriculumId, setNewClassCurriculumId] = useState<string>("");
   const [newClassEstablishmentId, setNewClassEstablishmentId] = useState<string>(
-    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+    (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
       ? currentUserProfile.establishment_id
       : ''
-  ); // Pre-fill for directors/deputy directors
+  ); // Pre-fill for directors/deputy directors/professors/tutors
   const [newClassSchoolYearId, setNewClassSchoolYearId] = useState<string>(""); // Changed to schoolYearId
 
   // State for edit class dialog
@@ -89,7 +89,7 @@ const ClassManagementPage = () => {
   
   // --- Class Management ---
   const handleAddClass = async () => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
+    if (!currentUserProfile || !['professeur', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) { // Only professeur, director, deputy_director, administrator can add
       showError("Vous n'êtes pas autorisé à ajouter une classe.");
       return;
     }
@@ -106,8 +106,8 @@ const ClassManagementPage = () => {
       showError("Le cursus sélectionné n'appartient pas à l'établissement choisi.");
       return;
     }
-    // Director/Deputy Director can only add classes to their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && newClassEstablishmentId !== currentUserProfile.establishment_id) {
+    // Director/Deputy Director/Professeur can only add classes to their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && newClassEstablishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez ajouter des classes que pour votre établissement.");
       return;
     }
@@ -126,7 +126,7 @@ const ClassManagementPage = () => {
         setNewClassName('');
         setNewClassCurriculumId("");
         setNewClassEstablishmentId(
-          (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+          (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
             ? currentUserProfile.establishment_id
             : ''
         ); // Reset to pre-filled value
@@ -142,7 +142,7 @@ const ClassManagementPage = () => {
   };
 
   const handleDeleteClass = async (id: string) => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
+    if (!currentUserProfile || !['professeur', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) { // Only professeur, director, deputy_director, administrator can delete
       showError("Vous n'êtes pas autorisé à supprimer une classe.");
       return;
     }
@@ -180,7 +180,7 @@ const ClassManagementPage = () => {
   };
 
   const handleEditClass = (cls: Class) => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
+    if (!currentUserProfile || !['professeur', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) { // Only professeur, director, deputy_director, administrator can edit/delete
       showError("Vous n'êtes pas autorisé à modifier une classe.");
       return;
     }
@@ -221,7 +221,7 @@ const ClassManagementPage = () => {
       )) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
   const currentYear = new Date().getFullYear();
-  const schoolYearsOptions = schoolYears.map(sy => ({ value: sy.id, label: sy.name })); // Map school years for select options
+  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
   if (isLoadingUser) {
     return (
@@ -236,14 +236,14 @@ const ClassManagementPage = () => {
     );
   }
 
-  if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'tutor' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
+  if (!currentUserProfile || !['administrator', 'director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           Accès Restreint
         </h1>
         <p className="text-lg text-muted-foreground">
-          Seuls les professeurs, tuteurs, directeurs et administrateurs peuvent accéder à cette page.
+          Seuls les administrateurs, directeurs, directeurs adjoints, professeurs et tuteurs peuvent accéder à cette page.
         </p>
       </div>
     );
@@ -287,7 +287,7 @@ const ClassManagementPage = () => {
               <Select 
                 value={newClassEstablishmentId} 
                 onValueChange={setNewClassEstablishmentId}
-                disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+                disabled={currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor'} // Disable for directors/deputy directors/professors/tutors
               >
                 <SelectTrigger id="new-class-establishment">
                   <SelectValue placeholder="Sélectionner un établissement" />
@@ -319,8 +319,8 @@ const ClassManagementPage = () => {
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
                 <SelectContent>
-                  {schoolYearsOptions.map(year => (
-                    <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
+                  {schoolYears.map(year => (
+                    <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

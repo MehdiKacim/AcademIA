@@ -32,29 +32,72 @@ serve(async (req) => {
     }
 
     const invokingUserRole = invokingUser.user_metadata.role as string;
+    const invokingUserEstablishmentId = invokingUser.user_metadata.establishment_id as string | undefined;
 
     const { email, password, first_name, last_name, username, role: newUserRole, establishment_id, enrollment_start_date, enrollment_end_date } = await req.json();
 
     // 2. Role validation logic: Restrict newUserRole based on invokingUserRole
     let isAllowed = false;
+    let finalEstablishmentId = establishment_id; // Default to provided establishment_id
+
     switch (invokingUserRole) {
       case 'administrator':
         isAllowed = ['student', 'professeur', 'tutor', 'director', 'deputy_director', 'administrator'].includes(newUserRole);
+        // For admin, no establishment restriction on creation, they can assign to any
         break;
       case 'director':
       case 'deputy_director':
         // Directors and Deputy Directors can create professeurs, tutors, and students
         isAllowed = ['professeur', 'tutor', 'student'].includes(newUserRole);
-        // If an establishment_id is provided, it must match the invoking user's establishment
-        if (establishment_id && establishment_id !== invokingUser.user_metadata.establishment_id) {
+        // They can only create users for their own establishment
+        if (!invokingUserEstablishmentId) {
+          return new Response(JSON.stringify({ error: `Forbidden: Your role requires an establishment to create users.` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+        // If an establishment_id is provided in the request, it must match the invoking user's establishment
+        if (establishment_id && establishment_id !== invokingUserEstablishmentId) {
           return new Response(JSON.stringify({ error: `Forbidden: You can only create users for your own establishment.` }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
           });
         }
+        // Force the new user's establishment_id to be the invoking user's establishment_id
+        finalEstablishmentId = invokingUserEstablishmentId;
         break;
       case 'professeur':
         isAllowed = newUserRole === 'student';
+        // Professors can only create students for their own establishment
+        if (!invokingUserEstablishmentId) {
+          return new Response(JSON.stringify({ error: `Forbidden: Your role requires an establishment to create students.` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+        if (establishment_id && establishment_id !== invokingUserEstablishmentId) {
+          return new Response(JSON.stringify({ error: `Forbidden: You can only create students for your own establishment.` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+        finalEstablishmentId = invokingUserEstablishmentId;
+        break;
+      case 'tutor': // Tutors can also create students for their own establishment
+        isAllowed = newUserRole === 'student';
+        if (!invokingUserEstablishmentId) {
+          return new Response(JSON.stringify({ error: `Forbidden: Your role requires an establishment to create students.` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+        if (establishment_id && establishment_id !== invokingUserEstablishmentId) {
+          return new Response(JSON.stringify({ error: `Forbidden: You can only create students for your own establishment.` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+        finalEstablishmentId = invokingUserEstablishmentId;
         break;
       default:
         isAllowed = false;
@@ -82,7 +125,7 @@ serve(async (req) => {
         last_name,
         username,
         role: newUserRole,
-        establishment_id: establishment_id || null, // Pass null if undefined
+        establishment_id: finalEstablishmentId || null, // Use finalEstablishmentId
         enrollment_start_date: enrollment_start_date || null, // Pass null if undefined
         enrollment_end_date: enrollment_end_date || null, // Pass null if undefined
       },

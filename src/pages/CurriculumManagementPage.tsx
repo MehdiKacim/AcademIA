@@ -35,7 +35,7 @@ const CurriculumManagementPage = () => {
   // States for new curriculum form
   const [newCurriculumName, setNewCurriculumName] = useState('');
   const [newCurriculumEstablishmentId, setNewCurriculumEstablishmentId] = useState<string | undefined>(
-    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+    (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && currentUserProfile?.establishment_id
       ? currentUserProfile.establishment_id
       : undefined
   );
@@ -71,7 +71,7 @@ const CurriculumManagementPage = () => {
       showError("Le nom du cursus et l'établissement sont requis.");
       return;
     }
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && newCurriculumEstablishmentId !== currentUserProfile.establishment_id) {
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && newCurriculumEstablishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez ajouter des cursus que pour votre établissement.");
       return;
     }
@@ -88,7 +88,7 @@ const CurriculumManagementPage = () => {
         setCurricula(await loadCurricula());
         setNewCurriculumName('');
         setNewCurriculumEstablishmentId(
-          (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
+          (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && currentUserProfile?.establishment_id
             ? currentUserProfile.establishment_id
             : undefined
         );
@@ -112,7 +112,7 @@ const CurriculumManagementPage = () => {
       showError("Cursus introuvable.");
       return;
     }
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && curriculumToDelete.establishment_id !== currentUserProfile.establishment_id) {
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && curriculumToDelete.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez supprimer des cursus que de votre établissement.");
       return;
     }
@@ -132,7 +132,7 @@ const CurriculumManagementPage = () => {
       showError("Vous n'êtes pas autorisé à gérer les cours d'un cursus.");
       return;
     }
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && curriculum.establishment_id !== currentUserProfile.establishment_id) {
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && curriculum.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez gérer les cours que pour les cursus de votre établissement.");
       return;
     }
@@ -148,7 +148,7 @@ const CurriculumManagementPage = () => {
       return;
     }
     if (selectedCurriculumForCourses) {
-      if ((currentRole === 'director' || currentRole === 'deputy_director') && selectedCurriculumForCourses.establishment_id !== currentUserProfile.establishment_id) {
+      if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && selectedCurriculumForCourses.establishment_id !== currentUserProfile.establishment_id) {
         showError("Vous ne pouvez sauvegarder les cours que pour les cursus de votre établissement.");
         return;
       }
@@ -176,7 +176,7 @@ const CurriculumManagementPage = () => {
       showError("Vous n'êtes pas autorisé à modifier un cursus.");
       return;
     }
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && curriculum.establishment_id !== currentUserProfile.establishment_id) {
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && curriculum.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez modifier des cursus que de votre établissement.");
       return;
     }
@@ -251,7 +251,7 @@ const CurriculumManagementPage = () => {
             <Select
               value={newCurriculumEstablishmentId}
               onValueChange={setNewCurriculumEstablishmentId}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director'}
+              disabled={currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur'}
             >
               <SelectTrigger id="curriculum-establishment">
                 <SelectValue placeholder="Sélectionner un établissement" />

@@ -193,7 +193,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         { to: "/subjects", label: "Matières", icon: BookText, type: 'link', category: "Pédagogie" },
         { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie" },
         { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie" },
-        { to: "/professor-assignments", label: "Professeurs", icon: UserCheck, type: 'link', category: "Pédagogie" },
+        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie" },
         { to: "/analytics?view=overview", label: "Vue d'ensemble", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
         { to: "/analytics?view=course-performance", label: "Performance des Cours", icon: LineChart, type: 'link', category: "Analytiques" },
         { to: "/analytics?view=student-engagement", label: "Engagement Élèves", icon: UsersRound, type: 'link', category: "Analytiques" },
@@ -216,7 +216,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         { to: "/classes", label: "Classes", icon: Users, type: 'link', category: "Pédagogie" },
         { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie" },
         { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie" },
-        { to: "/professor-assignments", label: "Professeurs", icon: UserCheck, type: 'link', category: "Pédagogie" },
+        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie" },
         { to: "/analytics?view=establishment-admin", label: "Analytiques", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
@@ -229,7 +229,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         { to: "/classes", label: "Classes", icon: Users, type: 'link', category: "Pédagogie" },
         { to: "/pedagogical-management", label: "Élèves par Classe", icon: BookMarked, type: 'link', category: "Pédagogie" },
         { to: "/school-years", label: "Années Scolaires", icon: CalendarDays, type: 'link', category: "Pédagogie" },
-        { to: "/professor-assignments", label: "Professeurs", icon: UserCheck, type: 'link', category: "Pédagogie" },
+        { to: "/professor-assignments", label: "Affectations Profs", icon: UserCheck, type: 'link', category: "Pédagogie" },
         { to: "/analytics?view=establishment-admin", label: "Analytiques", icon: LayoutDashboard, type: 'link', category: "Analytiques" },
       );
     }
@@ -433,7 +433,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </Button>
       </footer>
       <BottomNavigationBar
-        allNavItemsForDrawer={fullNavTree}
+        allNavItemsForDrawer={fullNavTree} // Pass fullNavTree for logged-in users
         onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}

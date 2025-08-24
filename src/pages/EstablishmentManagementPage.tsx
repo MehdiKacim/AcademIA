@@ -114,13 +114,15 @@ const EstablishmentManagementPage = () => {
       showError("Vous n'êtes pas autorisé à supprimer un établissement.");
       return;
     }
-    try {
-      await deleteEstablishmentFromStorage(id);
-      setEstablishments(await loadEstablishments());
-      showSuccess("Établissement supprimé !");
-    } catch (error: any) {
-      console.error("Error deleting establishment:", error);
-      showError(`Erreur lors de la suppression de l'établissement: ${error.message}`);
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet établissement ? Cette action est irréversible.")) {
+      try {
+        await deleteEstablishmentFromStorage(id);
+        setEstablishments(await loadEstablishments());
+        showSuccess("Établissement supprimé !");
+      } catch (error: any) {
+        console.error("Error deleting establishment:", error);
+        showError(`Erreur lors de la suppression de l'établissement: ${error.message}`);
+      }
     }
   };
 

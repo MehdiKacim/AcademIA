@@ -60,8 +60,8 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
       showError("L'établissement est requis.");
       return;
     }
-    // Director/Deputy Director can only edit curricula from their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && establishmentId !== currentUserProfile.establishment_id) {
+    // Director/Deputy Director/Professeur can only edit curricula from their own establishment
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && establishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez modifier des cursus que de votre établissement.");
       return;
     }
@@ -135,7 +135,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
             <Select 
               value={establishmentId} 
               onValueChange={setEstablishmentId}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director'} // Disable for directors/deputy directors
+              disabled={currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur'} // Disable for directors/deputy directors/professors
             >
               <SelectTrigger id="establishment" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un établissement" />

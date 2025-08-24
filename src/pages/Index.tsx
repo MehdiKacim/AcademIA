@@ -301,9 +301,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         </Button>
       </footer>
 
-      {/* Always render BottomNavigationBar, it will adapt its content */}
+      {/* Always render BottomNavigationBar */}
       <BottomNavigationBar
-        allNavItemsForDrawer={indexNavItems}
+        allNavItemsForDrawer={indexNavItems} // Pass indexNavItems for non-logged-in users
         currentUser={currentUserProfile} // Pass currentUserProfile (can be null)
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
         isMoreDrawerOpen={isMoreDrawerOpen}
