@@ -153,7 +153,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
               <SelectTrigger id="establishment" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un établissement" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 {establishmentsToDisplay.map(est => (
                   <SelectItem key={est.id} value={est.id}>
                     {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
@@ -170,7 +170,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
               <SelectTrigger id="curriculum" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un cursus" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 {curriculaToDisplay.filter(cur => !establishmentId || cur.establishment_id === establishmentId).map(cur => (
                   <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
                 ))}
@@ -185,7 +185,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
               <SelectTrigger id="schoolYear" className="col-span-3">
                 <SelectValue placeholder="Sélectionner l'année scolaire" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 {schoolYears.map(year => (
                   <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                 ))}

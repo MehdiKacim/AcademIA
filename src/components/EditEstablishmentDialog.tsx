@@ -177,7 +177,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               <SelectTrigger id="type" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 {establishmentTypes.map(estType => (
                   <SelectItem key={estType} value={estType}>{estType}</SelectItem>
                 ))}
@@ -220,7 +220,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               <SelectTrigger id="director" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 <SelectItem value="none">Aucun</SelectItem>
                 {directors.map(director => (
                   <SelectItem key={director.id} value={director.id}>
@@ -242,7 +242,7 @@ const EditEstablishmentDialog = ({ isOpen, onClose, establishment, onSave }: Edi
               <SelectTrigger id="deputyDirector" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un directeur adjoint" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 <SelectItem value="none">Aucun</SelectItem>
                 {deputyDirectors.map(deputy => (
                   <SelectItem key={deputy.id} value={deputy.id}>

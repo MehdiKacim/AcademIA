@@ -140,7 +140,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
               <SelectTrigger id="establishment" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un établissement" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
                 {establishmentsToDisplay.map(est => (
                   <SelectItem key={est.id} value={est.id}>
                     {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}

@@ -125,7 +125,8 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
               <SelectTrigger id="establishment" className="col-span-3">
                 <SelectValue placeholder="Sélectionner un établissement" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectItem value="none">Aucun</SelectItem>
                 {establishmentsToDisplay.map(est => (
                   <SelectItem key={est.id} value={est.id}>
                     {est.name}

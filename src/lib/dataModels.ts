@@ -211,18 +211,18 @@ export interface Document {
   uploaded_at: string;
 }
 
-// Updated NavItem interface to match DB schema and support recursion
+// Updated NavItem interface for dynamic menu management
 export interface NavItem {
-  id: string;
+  id: string; // Unique ID from DB
   label: string;
-  route?: string; // Optional for category items or triggers without direct route
-  is_root: boolean;
-  allowed_roles: Array<Profile['role']>;
-  parent_id?: string; // UUID of parent NavItem
-  order_index: number;
-  icon_name?: string; // Name of Lucide React icon (e.g., 'Home', 'MessageSquare')
-  description?: string;
-  is_external?: boolean;
-  badge?: number; // For unread message count, etc. (runtime property, not stored in DB)
-  children?: NavItem[]; // For recursive structure (runtime property, populated on fetch)
+  route?: string; // Optional route for navigation
+  icon?: string; // Lucide icon name as string
+  is_root: boolean; // Is it a top-level menu item?
+  parent_id?: string; // For hierarchical menus
+  order_index: number; // For sorting
+  allowed_roles: Array<Profile['role']>; // Roles allowed to see this item
+  children?: NavItem[]; // Recursive children
+  onClick?: () => void; // For trigger items (e.g., opening modals)
+  badge?: number; // For unread message count
+  description?: string; // Added description for drawer items
 }

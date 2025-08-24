@@ -413,7 +413,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-professor">
                   <SelectValue placeholder="Sélectionner un professeur" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
                       {prof.first_name} {prof.last_name} (@{prof.username})
@@ -428,7 +428,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-subject">
                   <SelectValue placeholder="Sélectionner une matière" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
                       {sub.name} ({getEstablishmentName(sub.establishment_id)})
@@ -443,7 +443,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-class">
                   <SelectValue placeholder="Sélectionner une classe" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
@@ -458,7 +458,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-school-year">
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}
@@ -504,7 +504,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="establishment-filter">
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {establishmentsToDisplayForFilter.map(est => (
                     <SelectItem key={est.id} value={est.id}>
                       {est.name}
@@ -519,7 +519,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="professor-filter">
                   <SelectValue placeholder="Tous les professeurs" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
                       {prof.first_name} {prof.last_name}
@@ -534,7 +534,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="subject-filter">
                   <SelectValue placeholder="Toutes les matières" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   <SelectItem value="all">Toutes les matières</SelectItem>
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
@@ -550,7 +550,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="class-filter">
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getSchoolYearName(cls.school_year_id)})
@@ -565,7 +565,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="school-year-filter">
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
@@ -620,7 +620,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-professor">
                     <SelectValue placeholder="Sélectionner un professeur" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     {filteredProfessors.map(prof => (
                       <SelectItem key={prof.id} value={prof.id}>
                         {prof.first_name} {prof.last_name} (@{prof.username})
@@ -635,7 +635,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-subject">
                     <SelectValue placeholder="Sélectionner une matière" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     {filteredSubjects.map(sub => (
                       <SelectItem key={sub.id} value={sub.id}>
                         {sub.name} ({getEstablishmentName(sub.establishment_id)})
@@ -650,7 +650,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-class">
                     <SelectValue placeholder="Sélectionner une classe" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     {filteredClasses.map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
                         {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
@@ -665,7 +665,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-school-year">
                     <SelectValue placeholder="Sélectionner l'année scolaire" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
                     {schoolYears.map(year => (
                       <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                     ))}
