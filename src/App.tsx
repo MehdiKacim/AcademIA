@@ -44,7 +44,7 @@ const AppWithThemeProvider = () => {
   const initialTheme = currentUserProfile?.theme || "system";
 
   return (
-    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="class">
+    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
