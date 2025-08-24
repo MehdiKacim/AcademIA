@@ -40,7 +40,7 @@ const About = () => {
               <Info className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Détails Généraux</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-center prose dark:prose-invert">
+            <CardContent className="space-y-3 text-sm text-center prose dark:prose-invert overflow-hidden">
               <p className="text-muted-foreground">
                 <span className="font-medium text-foreground">Nom de l'application :</span> AcademIA
               </p>

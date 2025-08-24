@@ -31,7 +31,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
       <Drawer open={isOpen} onOpenChange={onClose}>
         <DrawerContent className="max-h-[90vh] rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80">
           <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
-            <DrawerHeader className="text-center">
+            <DrawerHeader className="text-center flex-shrink-0">
               <DrawerTitle className="text-center">À Propos d'AcademIA</DrawerTitle>
               <DrawerDescription className="text-center">
                 Découvrez les informations sur l'application et son développement.
@@ -40,7 +40,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
             <ScrollArea className="flex-grow min-h-0"> {/* Use ScrollArea directly here */}
               <About />
             </ScrollArea>
-            <DrawerFooter>
+            <DrawerFooter className="flex-shrink-0">
               {/* Footer content if needed, or just for spacing */}
             </DrawerFooter>
           </div>
