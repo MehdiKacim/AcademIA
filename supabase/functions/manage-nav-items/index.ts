@@ -88,6 +88,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Read the request body once at the beginning
+  const { action, payload } = await req.json();
+
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -99,32 +102,29 @@ serve(async (req) => {
       }
     );
 
-    // Verify user role for all actions except bootstrap_defaults (which uses service role key)
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      // Allow bootstrap_defaults without an authenticated user if it's the initial setup
-      // Otherwise, return unauthorized
-      const { action: peekAction } = await req.json(); // Peek at action
-      if (peekAction !== 'bootstrap_defaults') {
-        return new Response(JSON.stringify({ error: 'Unauthorized: User not authenticated.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        });
-      }
-    }
 
-    const userRole = user?.user_metadata.role as string;
-    if (userRole !== 'administrator' && req.method !== 'OPTIONS') { // Only admin can manage nav items, except for bootstrap
-      const { action: peekAction } = await req.json(); // Peek at action
-      if (peekAction !== 'bootstrap_defaults') {
+    // Permission check:
+    // 1. Allow 'bootstrap_defaults' if no user is authenticated (for initial setup)
+    // 2. For all other actions, or if 'bootstrap_defaults' is called with an authenticated user,
+    //    require the user to be an 'administrator'.
+    if (!user && action === 'bootstrap_defaults') {
+      // Proceed with bootstrap_defaults using service role key, no further user check needed here
+      // The rest of the function will use supabaseAdminClient
+    } else if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: User not authenticated.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    } else {
+      const userRole = user.user_metadata.role as string;
+      if (userRole !== 'administrator') {
         return new Response(JSON.stringify({ error: 'Forbidden: Only administrators can manage nav items.' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 403,
         });
       }
     }
-
-    const { action, payload } = await req.json();
 
     const supabaseAdminClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
