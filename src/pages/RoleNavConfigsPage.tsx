@@ -32,7 +32,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable';
+} from '@dnd-kit/core'; // Changed to @dnd-kit/core
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
@@ -404,7 +404,38 @@ const RoleNavConfigsPage = () => {
   const handleSaveEditedRoleConfig = async () => {
     if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
-    const finalParentId: string | null = editConfigParentId;
+    let finalParentId: string | null = editConfigParentId; // This is the ID from the dropdown
+
+    // Check if the selected parent is a new generic item (not yet configured for this role)
+    const selectedParentInfo = availableParentsForConfig.find(p => p.id === finalParentId);
+
+    if (selectedParentInfo?.isNew) {
+        // This means we need to create a role_nav_config for this generic item first
+        try {
+            const newParentConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+                nav_item_id: finalParentId!, // The ID of the generic item
+                role: selectedRoleFilter as Profile['role'],
+                parent_nav_item_id: null, // Initially, add it as a root item for the role
+                order_index: 9999, // A high number, will be re-indexed later
+            };
+            const addedConfig = await addRoleNavItemConfig(newParentConfig);
+            if (addedConfig) {
+                // Now, the generic item is configured for this role, and we can use its ID as the parent
+                // The actual parent_nav_item_id for the item being edited will be the generic item's ID
+                finalParentId = addedConfig.nav_item_id; // Use the generic item's ID as the parent
+                showSuccess(`Catégorie '${selectedParentInfo.label}' ajoutée au menu du rôle.`);
+            } else {
+                showError(`Échec de l'ajout de la catégorie '${selectedParentInfo.label}' au menu du rôle.`);
+                setIsSavingConfigEdit(false);
+                return;
+            }
+        } catch (error: any) {
+            console.error("Error adding new generic parent to role config:", error);
+            showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
+            setIsSavingConfigEdit(false);
+            return;
+        }
+    }
 
     if (finalParentId && finalParentId === currentItemToEdit.id) {
       showError("Un élément ne peut pas être son propre parent.");
@@ -590,9 +621,11 @@ const RoleNavConfigsPage = () => {
     }
 
     const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
+    const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
 
-    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
+    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
 
+    // 1. Add already configured categories that are valid parents
     allConfiguredItemsFlat.forEach(item => {
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
       const isNotSelf = item.id !== currentItemToEdit.id;
@@ -606,20 +639,41 @@ const RoleNavConfigsPage = () => {
           const parent = allConfiguredItemsFlat.find(i => i.id === currentParentId);
           currentParentId = parent?.parent_nav_item_id;
         }
-
         potentialParents.push({
           id: item.id,
           label: item.label,
           level: level,
           icon_name: item.icon_name,
           typeLabel: getItemTypeLabel(item.type),
+          isNew: false, // This is an existing configured parent
+        });
+      }
+    });
+
+    // 2. Add generic categories that are NOT YET configured for this role and are valid parents
+    allGenericNavItems.forEach(item => {
+      // Only consider if it's a category and not already configured for this role
+      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+      const isNotConfiguredForRole = !configuredItemIds.has(item.id);
+      const isNotSelf = item.id !== currentItemToEdit.id;
+      const isNotDescendant = !descendantsOfCurrentItem.has(item.id); // Check against descendants of currentItemToEdit
+
+      if (isCategory && isNotConfiguredForRole && isNotSelf && isNotDescendant) {
+        // For new generic items, assume level 0 for display in the dropdown
+        potentialParents.push({
+          id: item.id,
+          label: item.label,
+          level: 0, // Treat as a potential root-level parent for now
+          icon_name: item.icon_name,
+          typeLabel: getItemTypeLabel(item.type),
+          isNew: true, // This is a new generic parent to be configured
         });
       }
     });
 
     const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
     return sortedParents;
-  }, [currentItemToEdit, allConfiguredItemsFlat, getDescendantIds]);
+  }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds]);
 
   const getItemTypeLabel = (type: NavItem['type']) => {
     switch (type) {
