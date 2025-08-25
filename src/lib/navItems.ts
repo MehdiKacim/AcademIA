@@ -46,7 +46,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
 
-  console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, fetchedConfigs); // ADDED LOG HERE
+  console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, fetchedConfigs);
 
   const configs = fetchedConfigs as RoleNavItemConfig[];
   const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
@@ -60,12 +60,12 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         icon_name: config.nav_item.icon_name || undefined,
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
-        type: config.nav_item.type,
+        type: config.nav_item.type, // Ensure type is included
         children: [], // Initialize empty children array
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index,
         configId: config.id,
-        is_global: true, // All items are global now
+        // is_global is a frontend concept, not directly from DB here
       };
       navItemNodes.set(navItem.id, navItem);
     } else {
@@ -135,11 +135,11 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     icon_name: item.icon_name || undefined,
     description: item.description || undefined,
     is_external: item.is_external,
-    type: item.type,
+    type: item.type, // Ensure type is included
     children: [], // Children are built dynamically, not stored in raw item
     order_index: 0, // Default order for raw items
     parent_nav_item_id: undefined,
-    is_global: true, // All items are global now
+    // is_global is a frontend concept, not directly from DB here
   }));
 };
 
