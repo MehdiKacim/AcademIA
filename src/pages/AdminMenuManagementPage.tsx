@@ -48,6 +48,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
     import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'; // Import ContextMenu
     import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog'; // Import new dialog
+    import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
 
     // Map icon_name strings to Lucide React components
     const iconMap: { [key: string]: React.ElementType } = {
@@ -139,7 +140,8 @@ import React, { useState, useEffect, useCallback } from 'react';
               </div>
             </div>
           </ContextMenuTrigger>
-          {item.children && item.children.length > 0 && ( // Only show "Manage Children" for categories
+          {/* Show "Manage Children" for any item that is a category (no route) */}
+          {!item.route && (
             <ContextMenuContent className="w-auto p-1">
               <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
                 <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
@@ -583,7 +585,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           showSuccess("Élément de navigation réorganisé/déplacé !");
 
           await fetchAndStructureNavItems(); // Re-fetch and re-structure all items to update the UI
-        } catch (error: any) {
+        } catch (error: any) => {
           console.error("Error during drag and drop:", error);
           showError(`Erreur lors du glisser-déposer: ${error.message}`);
         } finally {
@@ -781,16 +783,18 @@ import React, { useState, useEffect, useCallback } from 'react';
                           <SelectValue placeholder="Sélectionner une icône" />
                         </SelectTrigger>
                         <SelectContent className="backdrop-blur-lg bg-background/80">
-                          {Object.keys(iconMap).sort().map(iconName => {
-                            const IconComponent = iconMap[iconName];
-                            return (
-                              <SelectItem key={iconName} value={iconName}>
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> {iconName}
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
+                          <ScrollArea className="h-40"> {/* Added ScrollArea */}
+                            {Object.keys(iconMap).sort().map(iconName => {
+                              const IconComponent = iconMap[iconName];
+                              return (
+                                <SelectItem key={iconName} value={iconName}>
+                                  <div className="flex items-center gap-2">
+                                    <IconComponent className="h-4 w-4" /> {iconName}
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </ScrollArea>
                         </SelectContent>
                       </Select>
                     </div>
@@ -825,18 +829,20 @@ import React, { useState, useEffect, useCallback } from 'react';
                         <SelectValue placeholder="Sélectionner un élément à ajouter" />
                       </SelectTrigger>
                       <SelectContent className="backdrop-blur-lg bg-background/80">
-                        {availableGenericItemsForAdd.length === 0 ? (
-                          <SelectItem value="no-items" disabled>Aucun élément disponible</SelectItem>
-                        ) : (
-                          availableGenericItemsForAdd.map(item => (
-                            <SelectItem key={item.id} value={item.id}>
-                              <div className="flex items-center gap-2">
-                                {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                {item.label} {item.route && `(${item.route})`}
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
+                        <ScrollArea className="h-40"> {/* Added ScrollArea */}
+                          {availableGenericItemsForAdd.length === 0 ? (
+                            <SelectItem value="no-items" disabled>Aucun élément disponible</SelectItem>
+                          ) : (
+                            availableGenericItemsForAdd.map(item => (
+                              <SelectItem key={item.id} value={item.id}>
+                                <div className="flex items-center gap-2">
+                                  {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
+                                  {item.label} {item.route && `(${item.route})`}
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </ScrollArea>
                       </SelectContent>
                     </Select>
                   </div>
@@ -910,16 +916,18 @@ import React, { useState, useEffect, useCallback } from 'react';
                         <SelectValue placeholder="Sélectionner une icône" />
                       </SelectTrigger>
                       <SelectContent className="backdrop-blur-lg bg-background/80">
-                        {Object.keys(iconMap).sort().map(iconName => {
-                          const IconComponent = iconMap[iconName];
-                          return (
-                            <SelectItem key={iconName} value={iconName}>
-                              <div className="flex items-center gap-2">
-                                <IconComponent className="h-4 w-4" /> {iconName}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
+                        <ScrollArea className="h-40"> {/* Added ScrollArea */}
+                          {Object.keys(iconMap).sort().map(iconName => {
+                            const IconComponent = iconMap[iconName];
+                            return (
+                              <SelectItem key={iconName} value={iconName}>
+                                <div className="flex items-center gap-2">
+                                  <IconComponent className="h-4 w-4" /> {iconName}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </ScrollArea>
                       </SelectContent>
                     </Select>
                   </div>
