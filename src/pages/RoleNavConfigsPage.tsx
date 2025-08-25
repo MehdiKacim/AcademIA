@@ -48,7 +48,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"; // Removed CommandInput
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Map icon_name strings to Lucide React components
@@ -212,7 +212,7 @@ const RoleNavConfigsPage = () => {
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
 
-  const [tempParentInput, setTempParentInput] = useState<string>(''); // New state for search/create input
+  // Removed tempParentInput as it's no longer needed for search
   const [openEditConfigParentSelect, setOpenEditConfigParentSelect] = useState(false);
 
   const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
@@ -401,8 +401,7 @@ const RoleNavConfigsPage = () => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
     setEditConfigParentId(config.parent_nav_item_id || null); // Use null for root
-    // Initialize tempParentInput with the label of the current parent, if any
-    setTempParentInput(config.parent_nav_item_id ? allGenericNavItems.find(i => i.id === config.parent_nav_item_id)?.label || '' : '');
+    // Removed tempParentInput initialization
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
     setOpenEditConfigParentSelect(false);
@@ -441,7 +440,7 @@ const RoleNavConfigsPage = () => {
       setIsEditConfigDialogOpen(false);
       setCurrentConfigToEdit(null);
       setCurrentItemToEdit(null);
-      setTempParentInput(''); // Reset temp input
+      // Removed tempParentInput reset
     } catch (error: any) {
       console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
@@ -811,26 +810,20 @@ const RoleNavConfigsPage = () => {
                   </PopoverTrigger>
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 backdrop-blur-lg bg-background/80">
                     <Command>
-                      <CommandInput
-                        placeholder="Rechercher une catégorie..."
-                        value={tempParentInput}
-                        onValueChange={setTempParentInput}
-                      />
+                      {/* Removed CommandInput */}
                       <CommandList>
                         <CommandGroup>
                           <CommandItem
                             value="none"
                             onSelect={() => {
                               setEditConfigParentId(null); // Explicitly set to null for root
-                              setTempParentInput('');
                               setOpenEditConfigParentSelect(false);
                             }}
                           >
                             <span>Aucun (élément racine)</span>
                           </CommandItem>
                           {availableParentsForConfig
-                            .filter(item => tempParentInput.trim() === '' || item.label.toLowerCase().includes(tempParentInput.toLowerCase()))
-                            .map((item) => {
+                            .map((item) => { // No filtering by tempParentInput
                             const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                             return (
                               <CommandItem
@@ -838,7 +831,6 @@ const RoleNavConfigsPage = () => {
                                 value={item.id} // Use item.id as value
                                 onSelect={() => {
                                   setEditConfigParentId(item.id);
-                                  setTempParentInput(item.label);
                                   setOpenEditConfigParentSelect(false);
                                 }}
                               >
@@ -849,9 +841,9 @@ const RoleNavConfigsPage = () => {
                               </CommandItem>
                             );
                           })}
-                          {availableParentsForConfig.filter(item => tempParentInput.trim() === '' || item.label.toLowerCase().includes(tempParentInput.toLowerCase())).length === 0 && tempParentInput.trim() !== '' && (
+                          {availableParentsForConfig.length === 0 && ( // Adjusted empty message
                             <CommandEmpty>
-                              <span>Aucune catégorie trouvée pour "{tempParentInput}".</span>
+                              <span>Aucune catégorie disponible.</span>
                             </CommandEmpty>
                           )}
                         </CommandGroup>
