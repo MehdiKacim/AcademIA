@@ -153,7 +153,6 @@ import React, { useState, useEffect, useCallback } from 'react';
     const AdminMenuManagementPage = () => {
       const { currentUserProfile, currentRole, isLoadingUser } = useRole();
       const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]); // All items from nav_items table
-      const [unconfiguredItems, setUnconfiguredItems] = useState<NavItem[]>([]); // Generic items not yet configured for selected role
       const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]); // Configured items for selected role
       const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
       const [establishments, setEstablishments] = useState<Establishment[]>([]); // All establishments
@@ -192,6 +191,10 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
       const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
 
+      // State for adding an item directly to the configured tree
+      const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+      const [availableGenericItemsForAdd, setAvailableGenericItemsForAdd] = useState<NavItem[]>([]);
+
 
       const sensors = useSensors(
         useSensor(PointerSensor),
@@ -227,8 +230,8 @@ import React, { useState, useEffect, useCallback } from 'react';
         setAllGenericNavItems(genericItems);
 
         if (selectedRoleFilter === 'all') {
-          setUnconfiguredItems(genericItems);
           setConfiguredItemsTree([]);
+          setAvailableGenericItemsForAdd(genericItems); // All generic items are available if no role selected
         } else {
           const role = selectedRoleFilter as Profile['role'];
           const establishmentId = selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter;
@@ -312,18 +315,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 
           setConfiguredItemsTree(finalRootItems);
 
-          // Determine unconfigured items (generic items not in roleConfigs for the current context)
-          const unconfigured: NavItem[] = [];
-          genericItems.forEach(genericItem => {
-            const isConfiguredForCurrentContext = allConfiguredItemsFlat.some(configuredItem =>
-              configuredItem.id === genericItem.id &&
-              (configuredItem.establishment_id === establishmentId || configuredItem.is_global)
-            );
-            if (!isConfiguredForCurrentContext) {
-              unconfigured.push(genericItem);
-            }
-          });
-          setUnconfiguredItems(unconfigured);
+          // Determine available generic items for adding (not yet configured for current context)
+          const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
+          const availableForAdd = genericItems.filter(genericItem => !configuredGenericItemIds.has(genericItem.id));
+          setAvailableGenericItemsForAdd(availableForAdd);
+          setSelectedGenericItemToAdd(null); // Reset selection
         }
       }, [selectedRoleFilter, selectedEstablishmentFilter, findItemInTree]);
 
@@ -349,13 +345,13 @@ import React, { useState, useEffect, useCallback } from 'react';
           const addedItem = await addNavItem(newItemData);
           showSuccess("Élément de navigation générique ajouté !");
 
-          // If a specific role is selected, also add a config for it
+          // If a specific role is selected, also add a config for it as a root item
           if (selectedRoleFilter !== 'all' && addedItem) {
             const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
               nav_item_id: addedItem.id,
               role: selectedRoleFilter as Profile['role'],
-              parent_nav_item_id: undefined, // No parent by default for new generic item config
-              order_index: 0, // Temporary, will be re-indexed by fetchAndStructureNavItems
+              parent_nav_item_id: null, // Add as a root item
+              order_index: configuredItemsTree.filter(item => item.is_root).length, // Add to end of root items
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter, // Use selected establishment
             };
             await addRoleNavItemConfig(newConfig);
@@ -491,40 +487,37 @@ import React, { useState, useEffect, useCallback } from 'react';
 
       const handleDragStart = (event: any) => {
         const { active } = event;
-        // Determine if dragging a generic item or a configured item
-        const genericItem = allGenericNavItems.find(i => i.id === active.id);
-        if (genericItem) {
-          setActiveDragItem(genericItem);
-          setActiveDragConfig(null);
+        // Only allow dragging of configured items within the configured tree
+        const configuredItem = findItemInTree(configuredItemsTree, active.id);
+        if (configuredItem && configuredItem.configId) {
+          const config = {
+            id: configuredItem.configId,
+            nav_item_id: configuredItem.id,
+            role: selectedRoleFilter as Profile['role'],
+            parent_nav_item_id: configuredItem.parent_nav_item_id,
+            order_index: configuredItem.order_index,
+            establishment_id: configuredItem.establishment_id,
+          };
+          setActiveDragItem(configuredItem);
+          setActiveDragConfig(config);
         } else {
-          // Find the configured item and its config
-          const configuredItem = findItemInTree(configuredItemsTree, active.id);
-          if (configuredItem && configuredItem.configId) {
-            const config = {
-              id: configuredItem.configId,
-              nav_item_id: configuredItem.id,
-              role: selectedRoleFilter as Profile['role'],
-              parent_nav_item_id: configuredItem.parent_nav_item_id,
-              order_index: configuredItem.order_index,
-              establishment_id: configuredItem.establishment_id,
-            };
-            setActiveDragItem(configuredItem);
-            setActiveDragConfig(config);
-          }
+          // If it's not a configured item, don't allow dragging in this context
+          setActiveDragItem(null);
+          setActiveDragConfig(null);
         }
       };
 
       const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
 
-        if (!activeDragItem || !over || active.id === over.id) {
+        if (!activeDragItem || !activeDragConfig || !over || active.id === over.id) {
           setActiveDragItem(null);
           setActiveDragConfig(null);
           return;
         }
 
-        const activeId = active.id as string; // This is configId if configured, or navItemId if generic
-        const overId = over.id as string; // This is configId if configured, or containerId if container
+        const activeConfigId = active.id as string;
+        const overId = over.id as string;
 
         try {
           // Prevent dragging/dropping global items when viewing a specific establishment
@@ -537,19 +530,8 @@ import React, { useState, useEffect, useCallback } from 'react';
           let newOrderIndex: number = 0;
 
           const overConfiguredItem = findItemInTree(configuredItemsTree, overId);
-          const overIsUnconfiguredContainer = overId === 'unconfigured-container';
           const overIsConfiguredRootContainer = overId === 'configured-container';
           const overIsConfiguredChildContainer = overId.startsWith('configured-container-children-of-');
-
-          if (overIsUnconfiguredContainer) {
-            // Dropped into the unconfigured list -> delete config
-            if (activeDragConfig) {
-              await deleteRoleNavItemConfig(activeDragConfig.id);
-              showSuccess("Élément retiré de la configuration du rôle !");
-            }
-            await fetchAndStructureNavItems(); // Re-fetch to update both lists
-            return;
-          }
 
           if (selectedRoleFilter === 'all') {
             showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
@@ -557,23 +539,18 @@ import React, { useState, useEffect, useCallback } from 'react';
           }
 
           if (overConfiguredItem) {
-            // Dropped ONTO an existing configured item
-            if (!overConfiguredItem.route) { // If the over item is a CATEGORY (no route), make active item its child
-              newParentNavItemId = overConfiguredItem.id;
-              newOrderIndex = overConfiguredItem.children?.length || 0; // Add to end of its children
-            } else { // If the over item is a LEAF (has a route), make active item its sibling
-              newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-              const siblings =
-                newParentNavItemId === null
-                  ? configuredItemsTree.filter((item) => item.is_root)
-                  : configuredItemsTree.find((item) => item.id === newParentNavItemId)
-                      ?.children || [];
-              const overItemIndex = siblings.findIndex(
-                (s) => s.configId === overId
-              );
-              newOrderIndex =
-                overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
-            }
+            // Dropped ONTO an existing configured item (as a sibling)
+            newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
+            const siblings =
+              newParentNavItemId === null
+                ? configuredItemsTree.filter((item) => item.is_root)
+                : configuredItemsTree.find((item) => item.id === newParentNavItemId)
+                    ?.children || [];
+            const overItemIndex = siblings.findIndex(
+              (s) => s.configId === overId
+            );
+            newOrderIndex =
+              overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
           } else if (overIsConfiguredRootContainer) {
             // Dropped into the root container (no specific parent)
             newParentNavItemId = null;
@@ -595,27 +572,15 @@ import React, { useState, useEffect, useCallback } from 'react';
             return;
           }
 
-          // Perform DB operations based on source and target
-          if (!activeDragConfig) { // From Unconfigured to Configured
-            const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-              nav_item_id: activeDragItem.id,
-              role: selectedRoleFilter as Profile['role'],
-              parent_nav_item_id: newParentNavItemId,
-              order_index: newOrderIndex,
-              establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
-            };
-            await addRoleNavItemConfig(newConfig);
-            showSuccess("Élément ajouté à la configuration du rôle !");
-          } else { // Within Configured (reorder or change parent)
-            const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-              ...activeDragConfig,
-              parent_nav_item_id: newParentNavItemId,
-              order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
-              establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
-            };
-            await updateRoleNavItemConfig(updatedConfig);
-            showSuccess("Élément de navigation réorganisé/déplacé !");
-          }
+          // Update the existing configured item
+          const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+            ...activeDragConfig,
+            parent_nav_item_id: newParentNavItemId,
+            order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
+            establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
+          };
+          await updateRoleNavItemConfig(updatedConfig);
+          showSuccess("Élément de navigation réorganisé/déplacé !");
 
           await fetchAndStructureNavItems(); // Re-fetch and re-structure all items to update the UI
         } catch (error: any) {
@@ -630,6 +595,35 @@ import React, { useState, useEffect, useCallback } from 'react';
       const handleManageChildren = (parentItem: NavItem) => {
         setSelectedParentForChildrenManagement(parentItem);
         setIsManageChildrenDialogOpen(true);
+      };
+
+      const handleAddSelectedGenericItemToMenu = async () => {
+        if (!selectedGenericItemToAdd || selectedRoleFilter === 'all') {
+          showError("Veuillez sélectionner un élément générique et un rôle.");
+          return;
+        }
+
+        const genericItem = allGenericNavItems.find(item => item.id === selectedGenericItemToAdd);
+        if (!genericItem) {
+          showError("Élément générique introuvable.");
+          return;
+        }
+
+        try {
+          const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+            nav_item_id: genericItem.id,
+            role: selectedRoleFilter as Profile['role'],
+            parent_nav_item_id: null, // Add as a root item by default
+            order_index: configuredItemsTree.filter(item => item.is_root).length, // Add to end of root items
+            establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
+          };
+          await addRoleNavItemConfig(newConfig);
+          showSuccess(`'${genericItem.label}' ajouté au menu !`);
+          await fetchAndStructureNavItems(); // Refresh lists
+        } catch (error: any) {
+          console.error("Error adding generic item to menu:", error);
+          showError(`Erreur lors de l'ajout au menu: ${error.message}`);
+        }
       };
 
       const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
@@ -814,44 +808,52 @@ import React, { useState, useEffect, useCallback } from 'react';
           </Collapsible>
 
           {selectedRoleFilter !== 'all' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-8">
+              {/* New section for adding available generic items to the menu */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <LayoutList className="h-6 w-6 text-primary" /> Éléments non configurés pour {selectedRoleFilter}
-                    {selectedEstablishmentFilter !== 'all' && ` (${establishments.find(e => e.id === selectedEstablishmentFilter)?.name || 'Global'})`}
+                    <PlusCircle className="h-6 w-6 text-primary" /> Ajouter un élément disponible au menu
                   </CardTitle>
-                  <CardDescription>Faites glisser les éléments ici pour les ajouter au menu de {selectedRoleFilter}.</CardDescription>
+                  <CardDescription>Sélectionnez un élément générique et ajoutez-le comme élément racine au menu de {selectedRoleFilter}.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                    {renderNavItemsList(unconfiguredItems, 0, 'unconfigured-container')}
-                    <DragOverlay>
-                      {activeDragItem ? (
-                        <SortableNavItem
-                          item={activeDragItem}
-                          level={0}
-                          onEditGenericItem={handleEditGenericNavItem}
-                          onEditRoleConfig={handleEditRoleConfig}
-                          onDelete={handleDeleteGenericNavItem}
-                          onManageChildren={handleManageChildren}
-                          isDragging={true}
-                          isDraggableAndDeletable={true} // Always draggable/deletable in unconfigured list
-                          selectedRoleFilter={selectedRoleFilter}
-                        />
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="add-generic-item-select">Élément générique</Label>
+                    <Select value={selectedGenericItemToAdd || ""} onValueChange={setSelectedGenericItemToAdd}>
+                      <SelectTrigger id="add-generic-item-select">
+                        <SelectValue placeholder="Sélectionner un élément à ajouter" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80">
+                        {availableGenericItemsForAdd.length === 0 ? (
+                          <SelectItem value="no-items" disabled>Aucun élément disponible</SelectItem>
+                        ) : (
+                          availableGenericItemsForAdd.map(item => (
+                            <SelectItem key={item.id} value={item.id}>
+                              <div className="flex items-center gap-2">
+                                {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
+                                {item.label} {item.route && `(${item.route})`}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleAddSelectedGenericItemToMenu} disabled={!selectedGenericItemToAdd}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter au menu
+                  </Button>
                 </CardContent>
               </Card>
 
+              {/* Configured Items Tree (now full width) */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {selectedRoleFilter}
                     {selectedEstablishmentFilter !== 'all' && ` (${establishments.find(e => e.id === selectedEstablishmentFilter)?.name || 'Global'})`}
                   </CardTitle>
-                  <CardDescription>Réorganisez les éléments par glisser-déposer. Faites glisser ici pour les retirer.</CardDescription>
+                  <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
