@@ -207,6 +207,9 @@ const GenericNavItemsPage = () => {
     );
   }
 
+  const routes = allGenericNavItems.filter(item => item.type === 'route').sort((a, b) => a.label.localeCompare(b.label));
+  const categoriesAndActions = allGenericNavItems.filter(item => item.type === 'category_or_action').sort((a, b) => a.label.localeCompare(b.label));
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -307,50 +310,119 @@ const GenericNavItemsPage = () => {
           <CardDescription>Visualisez et gérez les définitions de base des éléments de navigation.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-80 w-full rounded-md border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
-                  <th className="p-2 text-left font-semibold">Libellé</th>
-                  <th className="p-2 text-left font-semibold">Type</th>
-                  <th className="p-2 text-left font-semibold">Route/Action</th>
-                  <th className="p-2 text-left font-semibold">Icône</th>
-                  <th className="p-2 text-left font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allGenericNavItems.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-4 text-center text-muted-foreground">Aucun élément générique à afficher.</td>
-                  </tr>
-                ) : (
-                  allGenericNavItems.map(item => {
-                    const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                    return (
-                      <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                        <td className="p-2">{item.label}</td>
-                        <td className="p-2">{getItemTypeLabel(item.type)}</td>
-                        <td className="p-2">{item.route || '-'}</td>
-                        <td className="p-2">
-                          <div className="flex items-center gap-2">
-                            <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
-                          </div>
-                        </td>
-                        <td className="p-2 flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </td>
+          <div className="space-y-6">
+            {/* Routes Section */}
+            <Collapsible defaultOpen={true}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <LinkIcon className="h-5 w-5 text-primary" /> Routes ({routes.length})
+                  </h3>
+                  <ChevronDown className="h-5 w-5 collapsible-icon" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <ScrollArea className="h-auto max-h-80 w-full rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
+                        <th className="p-2 text-left font-semibold">Libellé</th>
+                        <th className="p-2 text-left font-semibold">Route</th>
+                        <th className="p-2 text-left font-semibold">Icône</th>
+                        <th className="p-2 text-left font-semibold">Actions</th>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </ScrollArea>
+                    </thead>
+                    <tbody>
+                      {routes.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune route générique à afficher.</td>
+                        </tr>
+                      ) : (
+                        routes.map(item => {
+                          const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                          return (
+                            <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                              <td className="p-2">{item.label}</td>
+                              <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
+                              <td className="p-2">
+                                <div className="flex items-center gap-2">
+                                  <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
+                                </div>
+                              </td>
+                              <td className="p-2 flex gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </ScrollArea>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Categories/Actions Section */}
+            <Collapsible defaultOpen={true}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <LayoutList className="h-5 w-5 text-primary" /> Catégories / Actions ({categoriesAndActions.length})
+                  </h3>
+                  <ChevronDown className="h-5 w-5 collapsible-icon" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <ScrollArea className="h-auto max-h-80 w-full rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
+                        <th className="p-2 text-left font-semibold">Libellé</th>
+                        <th className="p-2 text-left font-semibold">Route/Action</th>
+                        <th className="p-2 text-left font-semibold">Icône</th>
+                        <th className="p-2 text-left font-semibold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categoriesAndActions.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune catégorie/action générique à afficher.</td>
+                        </tr>
+                      ) : (
+                        categoriesAndActions.map(item => {
+                          const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                          return (
+                            <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                              <td className="p-2">{item.label}</td>
+                              <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
+                              <td className="p-2">
+                                <div className="flex items-center gap-2">
+                                  <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
+                                </div>
+                              </td>
+                              <td className="p-2 flex gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </ScrollArea>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         </CardContent>
       </Card>
 
