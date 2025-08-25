@@ -201,13 +201,18 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         setDesktopActiveCategoryItems([]);
       };
 
+      // Log the items that are actually being rendered in the header
+      const headerNavItems = fullNavTree.filter(item => item.parent_nav_item_id === null);
+      console.log("[DashboardLayout] Header Nav Items (filtered for parent_nav_item_id === null):", headerNavItems);
+
+
       return (
         <div className="flex flex-col min-h-screen bg-muted/40">
           <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
             <Logo />
-            {!isMobile && currentUserProfile && fullNavTree.length > 0 && ( // Use fullNavTree directly
+            {!isMobile && currentUserProfile && headerNavItems.length > 0 && ( // Use headerNavItems here
               <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-                {fullNavTree.filter(item => item.parent_nav_item_id === null).map(item => { // Only top-level items
+                {headerNavItems.map(item => { // Only top-level items
                   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                   const isCategory = item.route === null; // Determine if it's a category
 
