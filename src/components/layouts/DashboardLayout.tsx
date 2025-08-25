@@ -69,6 +69,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         const fetchNavItems = async () => {
           const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id); // Pass unreadMessages and establishment_id
           setNavItems(loadedItems);
+          console.log("[DashboardLayout] Fetched navItems:", loadedItems); // Add this log
         };
         fetchNavItems();
       }, [currentRole, unreadMessages, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessages, or establishment changes
