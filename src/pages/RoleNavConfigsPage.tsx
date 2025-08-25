@@ -869,11 +869,12 @@ const RoleNavConfigsPage = () => {
                             <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{tempParentInput}"</span>
                           </CommandItem>
                         )}
-                        {availableParentsForConfig.length === 0 && tempParentInput.trim() === '' && (
+                        {/* Corrected: Show all available parents when search input is empty */}
+                        {availableParentsForConfig.length === 0 && tempParentInput.trim() === '' ? (
                           <CommandEmpty>
                             <span>Aucune catégorie trouvée.</span>
                           </CommandEmpty>
-                        )}
+                        ) : null}
                         <CommandGroup>
                           <CommandItem
                             value="none"
@@ -936,6 +937,7 @@ const RoleNavConfigsPage = () => {
           allGenericNavItems={allGenericNavItems}
           allConfiguredItemsFlat={allConfiguredItemsFlat}
           onChildrenUpdated={fetchAndStructureNavItems}
+          getDescendantIds={getDescendantIds} {/* Pass getDescendantIds as a prop */}
         />
       )}
     </div>

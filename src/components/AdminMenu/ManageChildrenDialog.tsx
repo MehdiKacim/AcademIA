@@ -69,7 +69,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 100 : 'auto',
+    zIndex: isDragging ? 100 : 'auto', // Bring dragged item to front
     opacity: isDragging ? 0.8 : 1,
     paddingLeft: `${level * 20}px`,
   };
@@ -123,9 +123,10 @@ interface ManageChildrenDialogProps {
   allGenericNavItems: NavItem[];
   allConfiguredItemsFlat: NavItem[]; // New prop: flat list of all configured items for the current role/establishment
   onChildrenUpdated: () => void;
+  getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>; // Add as prop
 }
 
-const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated }: ManageChildrenDialogProps) => { // Removed selectedEstablishmentFilter
+const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated, getDescendantIds }: ManageChildrenDialogProps) => { // Removed selectedEstablishmentFilter
   const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
@@ -150,21 +151,6 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
 
-  // Helper to get all descendants of an item
-  const getDescendantIds = useCallback((item: NavItem, allItems: NavItem[]): Set<string> => {
-    const descendants = new Set<string>();
-    const queue: NavItem[] = [...(item.children || [])];
-    while (queue.length > 0) {
-      const current = queue.shift();
-      if (current) {
-        descendants.add(current.id);
-        const childrenOfCurrent = allItems.filter(i => i.parent_nav_item_id === current.id);
-        childrenOfCurrent.forEach(child => queue.push(child));
-      }
-    }
-    return descendants;
-  }, []);
-
   useEffect(() => {
     if (isOpen && parentItem) {
       console.log("[ManageChildrenDialog] Effect triggered. parentItem:", parentItem);
@@ -175,23 +161,20 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       // 1. Not the parent itself
       // 2. Not already a direct child of this parent
       // 3. Not already a descendant of this parent (to prevent circular dependency)
-      // 4. Not already configured anywhere in the current role/establishment's menu tree
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
-      const descendantsOfParent = getDescendantIds(parentItem, allGenericNavItems);
-      const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id)); // IDs of all items already in the menu
+      const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat); // Use the passed getDescendantIds and allConfiguredItemsFlat
 
       const filteredAvailable = allGenericNavItems.filter(
         item => item.id !== parentItem.id && // Cannot be the parent itself
                 !currentChildIds.has(item.id) && // Not already a direct child
-                !descendantsOfParent.has(item.id) && // Not already a descendant
-                !configuredItemIds.has(item.id) // Not already configured anywhere in the menu
+                !descendantsOfParent.has(item.id) // Not already a descendant
       );
       console.log("[ManageChildrenDialog] Filtered available children for add:", filteredAvailable);
       setAvailableChildrenForAdd(filteredAvailable);
       setCurrentChildren(parentItem.children || []);
       setSelectedGenericItemToAdd(null); // Reset selection
     }
-  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds]);
+  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds]); // Add getDescendantIds to deps
 
   const handleDragStart = (event: any) => {
     const { active } = event;
@@ -260,19 +243,36 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       return;
     }
 
+    // Check if the item is already configured for this role
+    const existingConfiguredItem = allConfiguredItemsFlat.find(item => item.id === genericItem.id);
+
     try {
-      const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-        nav_item_id: genericItem.id,
-        role: selectedRoleFilter,
-        parent_nav_item_id: parentItem.id,
-        order_index: currentChildren.length,
-      };
-      await addRoleNavItemConfig(newConfig);
-      showSuccess(`'${genericItem.label}' ajouté comme sous-élément !`);
-      onChildrenUpdated();
+      if (existingConfiguredItem) {
+        // Scenario: Move an already configured item
+        const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+          id: existingConfiguredItem.configId!, // Use the existing configId
+          nav_item_id: genericItem.id,
+          role: selectedRoleFilter,
+          parent_nav_item_id: parentItem.id,
+          order_index: currentChildren.length, // Add to the end of current children
+        };
+        await updateRoleNavItemConfig(updatedConfig);
+        showSuccess(`'${genericItem.label}' déplacé sous '${parentItem.label}' !`);
+      } else {
+        // Scenario: Add a new configuration for this generic item
+        const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+          nav_item_id: genericItem.id,
+          role: selectedRoleFilter,
+          parent_nav_item_id: parentItem.id,
+          order_index: currentChildren.length,
+        };
+        await addRoleNavItemConfig(newConfig);
+        showSuccess(`'${genericItem.label}' ajouté comme sous-élément !`);
+      }
+      onChildrenUpdated(); // Refresh parent component's state
     } catch (error: any) {
-      console.error("Error adding generic item as child:", error);
-      showError(`Erreur lors de l'ajout du sous-élément: ${error.message}`);
+      console.error("Error adding/moving generic item as child:", error);
+      showError(`Erreur lors de l'opération: ${error.message}`);
     }
   };
 
@@ -462,11 +462,13 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               <SelectValue placeholder="Sélectionner un type" />
                             </SelectTrigger>
                             <SelectContent className="backdrop-blur-lg bg-background/80">
-                              {navItemTypes.map(type => (
-                                <SelectItem key={type} value={type}>
-                                  {getItemTypeLabel(type)}
-                                </SelectItem>
-                              ))}
+                              <ScrollArea className="h-40">
+                                {navItemTypes.map(type => (
+                                  <SelectItem key={type} value={type}>
+                                    {getItemTypeLabel(type)}
+                                  </SelectItem>
+                                ))}
+                              </ScrollArea>
                             </SelectContent>
                           </Select>
                         </div>
