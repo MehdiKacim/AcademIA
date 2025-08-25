@@ -115,7 +115,7 @@ import {
         console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Input allNavItemsForDrawer:", allNavItemsForDrawer);
         if (!currentUser) {
           return [
-            { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_external: false, order_index: 0 },
+            // Removed 'Accueil' entry as requested
             { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_external: false, onClick: onOpenAuthModal, order_index: 1 } // Direct call to onOpenAuthModal
           ];
         }
@@ -237,8 +237,7 @@ import {
             {...swipeHandlers}
             className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden"
           >
-            {/* Only show fixed bottom nav items if user is NOT authenticated */}
-            {!currentUser && fixedBottomNavItems.map((item: NavItem) => {
+            {fixedBottomNavItems.map((item: NavItem) => {
               const isLinkActive = 
                 (item.route === '/' && location.pathname === '/' && !location.hash) ||
                 (item.route && !item.route.startsWith('#') && location.pathname.startsWith(item.route));
@@ -250,7 +249,8 @@ import {
                   to={item.route || '#'}
                   className={({ isActive }) =>
                     cn(
-                      "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 w-1/5",
+                      "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0",
+                      fixedBottomNavItems.length === 1 ? "w-full" : "w-1/5", // Make full width if only one item
                       isActive || isLinkActive
                         ? "text-primary"
                         : "text-muted-foreground hover:text-foreground"
@@ -274,7 +274,7 @@ import {
               onClick={() => setIsMoreDrawerOpen(true)}
               className={cn(
                 "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0",
-                currentUser ? "w-full" : "w-1/5" // Make it full width if only one button
+                fixedBottomNavItems.length === 0 ? "w-full" : "w-1/5" // Make it full width if no other fixed items
               )}
             >
               <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" />
