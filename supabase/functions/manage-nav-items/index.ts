@@ -10,87 +10,14 @@ const corsHeaders = {
 const DEFAULT_NAV_ITEMS_BY_ROLE = {
   administrator: [
     { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
-    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
-    { item: { label: 'Recherche', route: null, icon_name: 'Search', description: "Recherche globale dans l'application", is_external: false } },
-    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false } },
-    { item: { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false } },
-    { item: { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false } },
-    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false }, parentLabel: 'Système' },
-    // Removed 'Gestion des Établissements'
-    { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false } },
   ],
-  student: [
-    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
-    { item: { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false } },
-    { item: { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false } },
-    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
-    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=personal', icon_name: 'LineChart', description: "Consultez vos statistiques personnelles", is_external: false } },
-    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } }, // Trigger for chat
-    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
-  ],
-  professeur: [
-    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
-    { item: { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false } },
-    { item: { label: 'Créer un cours', route: '/create-course', icon_name: 'PlusSquare', description: "Créez un nouveau cours", is_external: false } },
-    { item: { label: 'Gestion des classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
-    { item: { label: 'Gestion des affectations professeurs-matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
-    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
-    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques de vos cours", is_external: false } },
-    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
-    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
-  ],
-  tutor: [
-    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
-    { item: { label: 'Mes élèves', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
-    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
-    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=student-monitoring', icon_name: 'LineChart', description: "Consultez les statistiques de vos élèves", is_external: false } },
-    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
-    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
-  ],
-  director: [
-    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
-    { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false } },
-    // Removed 'Gestion des Établissements'
-    { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false } },
-    { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false } },
-    { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
-    { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
-    { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
-    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
-    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
-    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } }, // Changed view
-    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
-    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
-  ],
-  deputy_director: [
-    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
-    { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false } },
-    // Removed 'Gestion des Établissements'
-    { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false } },
-    { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false } },
-    { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
-    { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
-    { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
-    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
-    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
-    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } }, // Changed view
-    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
-    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
-  ],
+  // Clearing default nav items for other roles as per request
+  student: [],
+  professeur: [],
+  tutor: [],
+  director: [],
+  deputy_director: [],
 };
 
 serve(async (req) => {
@@ -177,10 +104,19 @@ serve(async (req) => {
 
         const defaultItemsForRole = DEFAULT_NAV_ITEMS_BY_ROLE[bootstrapRole];
         if (!defaultItemsForRole || defaultItemsForRole.length === 0) {
-          return new Response(JSON.stringify({ error: `No default items defined for role: ${bootstrapRole}` }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          });
+          // If no default items, just delete existing configs and return success
+          const { error: deleteConfigsError } = await supabaseAdminClient
+            .from('role_nav_configs')
+            .delete()
+            .eq('role', bootstrapRole);
+
+          if (deleteConfigsError) {
+            console.error(`[Edge Function] Error deleting existing role nav configs for ${bootstrapRole}:`, deleteConfigsError);
+            throw deleteConfigsError;
+          }
+          console.log(`[Edge Function] Deleted existing role nav configs for ${bootstrapRole}. No new items to insert.`);
+          data = []; // Return empty data
+          break; // Exit switch case
         }
 
         // Step 1: Delete existing configs for this role to ensure a clean slate
