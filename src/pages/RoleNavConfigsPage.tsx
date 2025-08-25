@@ -48,7 +48,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"; // Removed CommandInput
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Map icon_name strings to Lucide React components
@@ -401,7 +401,6 @@ const RoleNavConfigsPage = () => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
     setEditConfigParentId(config.parent_nav_item_id || null); // Use null for root
-    // Removed tempParentInput initialization
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
     setOpenEditConfigParentSelect(false);
@@ -440,7 +439,6 @@ const RoleNavConfigsPage = () => {
       setIsEditConfigDialogOpen(false);
       setCurrentConfigToEdit(null);
       setCurrentItemToEdit(null);
-      // Removed tempParentInput reset
     } catch (error: any) {
       console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
@@ -810,7 +808,6 @@ const RoleNavConfigsPage = () => {
                   </PopoverTrigger>
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 backdrop-blur-lg bg-background/80">
                     <Command>
-                      {/* Removed CommandInput */}
                       <CommandList>
                         <CommandGroup>
                           <CommandItem
@@ -823,7 +820,7 @@ const RoleNavConfigsPage = () => {
                             <span>Aucun (élément racine)</span>
                           </CommandItem>
                           {availableParentsForConfig
-                            .map((item) => { // No filtering by tempParentInput
+                            .map((item) => {
                             const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                             return (
                               <CommandItem
@@ -841,7 +838,7 @@ const RoleNavConfigsPage = () => {
                               </CommandItem>
                             );
                           })}
-                          {availableParentsForConfig.length === 0 && ( // Adjusted empty message
+                          {availableParentsForConfig.length === 0 && (
                             <CommandEmpty>
                               <span>Aucune catégorie disponible.</span>
                             </CommandEmpty>
