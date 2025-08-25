@@ -808,7 +808,7 @@ const RoleNavConfigsPage = () => {
       {/* Edit Role Config Dialog */}
       {currentConfigToEdit && currentItemToEdit && (
         <Dialog open={isEditConfigDialogOpen} onOpenChange={setIsEditConfigDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] bg-card z-[100]"> {/* Changed bg-background/80 backdrop-blur-lg to bg-card and added z-[100] */}
+          <DialogContent className="sm:max-w-[600px] bg-card z-[100]">
             <DialogHeader>
               <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
               <DialogDescription>
@@ -832,7 +832,7 @@ const RoleNavConfigsPage = () => {
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card z-[100]"> {/* Changed bg-background/80 backdrop-blur-lg to bg-card and added z-[100] */}
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card z-[101]"> {/* Increased z-index here */}
                     <Command>
                       <CommandList>
                         <CommandGroup>
