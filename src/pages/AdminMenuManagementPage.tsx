@@ -228,6 +228,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [availableGenericItemsForAdd, setAvailableGenericItemsForAdd] = useState<NavItem[]>([]);
       // New state to hold the ID of the selected parent for new config
       const [selectedParentIdForNewConfig, setSelectedParentIdForNewConfig] = useState<string | null>(null);
+      // NEW: State for icon of new parent category created on the fly
+      const [newParentCategoryIconName, setNewParentCategoryIconName] = useState('LayoutList');
 
 
       // NEW: Separate state for the edit dialog's parent input
@@ -526,11 +528,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         let finalParentId: string | null = null;
         if (editConfigParentInput.trim() !== '') {
-          // Check if parent category exists
+          // Check if newConfigParentInput (label) corresponds to an existing category
           let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && !item.route);
 
           if (!parentItem) {
-            // Create new generic category if it doesn't exist
+            // If not found, it means the user typed a new category name, so create it
             const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
               label: editConfigParentInput.trim(),
               route: null, // It's a category
@@ -769,7 +771,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 route: null,
                 description: `Catégorie générée automatiquement pour '${addConfigParentInput.trim()}'`,
                 is_external: false,
-                icon_name: 'LayoutList',
+                icon_name: newParentCategoryIconName, // Use the selected icon for the new category
             };
             parentItem = await addNavItem(newCategory);
             if (!parentItem) {
@@ -805,6 +807,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           setAddConfigParentInput(''); // Reset parent input
           setSelectedParentIdForNewConfig(null); // Reset selected parent ID
           setOpenAddConfigParentSelect(false);
+          setNewParentCategoryIconName('LayoutList'); // Reset icon selection
         } catch (error: any) {
           console.error("Error adding generic item to menu:", error);
           showError(`Erreur lors de l'ajout au menu: ${error.message}`);
@@ -1113,7 +1116,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                   <PlusCircle className="mr-2 h-4 w-4" /> Créer la catégorie "{addConfigParentInput}"
                                 </CommandItem>
                               ) : (
-                                "Aucune catégorie trouvée."
+                                <span>Aucune catégorie trouvée.</span> // Wrapped in span
                               )}
                             </CommandEmpty>
                             <CommandGroup>
@@ -1140,7 +1143,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     }}
                                   >
                                     <div className="flex items-center gap-2">
-                                      {Array(item.level).fill('—').join('')}
+                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>} {/* Wrapped in span */}
                                       <IconComponentToRender className="h-4 w-4" /> {item.label}
                                     </div>
                                   </CommandItem>
@@ -1151,6 +1154,28 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                         </Command>
                       </PopoverContent>
                     </Popover>
+                  </div>
+                  <div>
+                    <Label htmlFor="new-parent-category-icon">Icône pour la nouvelle catégorie parente (si créée)</Label>
+                    <Select value={newParentCategoryIconName} onValueChange={setNewParentCategoryIconName}>
+                      <SelectTrigger id="new-parent-category-icon">
+                        <SelectValue placeholder="Sélectionner une icône" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80">
+                        <ScrollArea className="h-40">
+                          {Object.keys(iconMap).sort().map(iconName => {
+                            const IconComponent = iconMap[iconName];
+                            return (
+                              <SelectItem key={iconName} value={iconName}>
+                                <div className="flex items-center gap-2">
+                                  <IconComponent className="h-4 w-4" /> {iconName}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Button onClick={handleAddSelectedGenericItemToMenu} disabled={!selectedGenericItemToAdd}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Ajouter au menu
@@ -1300,7 +1325,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                   <PlusCircle className="mr-2 h-4 w-4" /> Créer la catégorie "{editConfigParentInput}"
                                 </CommandItem>
                               ) : (
-                                "Aucune catégorie trouvée."
+                                <span>Aucune catégorie trouvée.</span> // Wrapped in span
                               )}
                             </CommandEmpty>
                             <CommandGroup>
@@ -1327,7 +1352,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     }}
                                   >
                                     <div className="flex items-center gap-2">
-                                      {Array(item.level).fill('—').join('')}
+                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>} {/* Wrapped in span */}
                                       <IconComponentToRender className="h-4 w-4" /> {item.label}
                                     </div>
                                   </CommandItem>
