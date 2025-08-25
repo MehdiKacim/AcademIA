@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Button } from "@/components/ui/button";
     import { Input } from "@/components/ui/input";
     import { Label } from "@/components/ui/label";
-    import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe } from "lucide-react";
+    import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2 } from "lucide-react";
     import { NavItem, Profile, RoleNavItemConfig, Establishment } from "@/lib/dataModels"; // Import RoleNavItemConfig, Establishment
     import { showSuccess, showError } from "@/utils/toast";
     import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole } from "@/lib/navItems"; // Use new functions
@@ -563,17 +563,33 @@ import React, { useState, useEffect, useCallback } from 'react';
               newOrderIndex = overConfiguredItem.children?.length || 0; // Add to end of its children
             } else { // If the over item is a LEAF (has a route), make active item its sibling
               newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-              newOrderIndex = overConfiguredItem.order_index + 1; // Insert after it
+              const siblings =
+                newParentNavItemId === null
+                  ? configuredItemsTree.filter((item) => item.is_root)
+                  : configuredItemsTree.find((item) => item.id === newParentNavItemId)
+                      ?.children || [];
+              const overItemIndex = siblings.findIndex(
+                (s) => s.configId === overId
+              );
+              newOrderIndex =
+                overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
             }
           } else if (overIsConfiguredRootContainer) {
             // Dropped into the root container (no specific parent)
             newParentNavItemId = null;
-            newOrderIndex = configuredItemsTree.filter(item => item.is_root).length; // Add to end of root items
+            newOrderIndex = configuredItemsTree.filter((item) => item.is_root)
+              .length;
           } else if (overIsConfiguredChildContainer) {
             // Dropped into a specific child container (e.g., children of a category)
-            newParentNavItemId = overId.replace('configured-container-children-of-', '');
-            const parentItem = findItemInTree(configuredItemsTree, newParentNavItemId);
-            newOrderIndex = parentItem?.children?.length || 0; // Add to end of its children
+            newParentNavItemId = overId.replace(
+              'configured-container-children-of-',
+              ''
+            );
+            const parentItem = findItemInTree(
+              configuredItemsTree,
+              newParentNavItemId
+            );
+            newOrderIndex = parentItem?.children?.length || 0;
           } else {
             showError("Cible de dépôt non valide.");
             return;
