@@ -192,7 +192,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       icon_name?: string; // Lucide icon name as string
       description?: string; // Added description for drawer items
       is_external: boolean; // Is it an external link?
-      type: 'route' | 'category' | 'action'; // New: Type of nav item
+      type: 'route' | 'category_or_action'; // Updated: Replaced 'category' and 'action' with 'category_or_action'
       children?: NavItem[]; // Recursive children (built in frontend)
       onClick?: () => void; // For trigger items (e.g., opening modals)
       badge?: number; // For unread message count

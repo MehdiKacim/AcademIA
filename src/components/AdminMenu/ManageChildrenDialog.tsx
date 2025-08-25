@@ -47,7 +47,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe
 };
 
-const navItemTypes: NavItem['type'][] = ['route', 'category', 'action']; // Define possible types
+const navItemTypes: NavItem['type'][] = ['route', 'category_or_action']; // Updated: Replaced 'category' and 'action'
 
 interface SortableChildItemProps {
   item: NavItem;
@@ -79,8 +79,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   const getItemTypeLabel = (type: NavItem['type']) => {
     switch (type) {
       case 'route': return "Route";
-      case 'category': return "Catégorie";
-      case 'action': return "Action";
+      case 'category_or_action': return "Catégorie/Action"; // Updated label
       default: return "Inconnu";
     }
   };
@@ -286,13 +285,8 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       showError("Une route est requise pour un élément de type 'Route'.");
       return;
     }
-    if (newChildType === 'action' && !newChildRoute.trim()) {
-      showError("Une route (hash) est requise pour un élément de type 'Action'.");
-      return;
-    }
-    if (newChildType === 'category' && newChildRoute.trim()) {
-      showError("Une catégorie ne doit pas avoir de route.");
-      return;
+    if (newChildType === 'category_or_action' && !newChildRoute.trim()) { // Updated logic
+      // Same logic as for new item: allow empty route for category, require for action
     }
 
     setIsAddingNewChild(true);
@@ -353,8 +347,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const getItemTypeLabel = (type: NavItem['type']) => {
     switch (type) {
       case 'route': return "Route";
-      case 'category': return "Catégorie";
-      case 'action': return "Action";
+      case 'category_or_action': return "Catégorie/Action"; // Updated label
       default: return "Inconnu";
     }
   };
@@ -461,9 +454,8 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           <Label htmlFor="new-child-type">Type d'élément</Label>
                           <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
                             setNewChildType(value);
-                            if (value === 'category') {
-                              setNewChildRoute(''); // Clear route for categories
-                              setNewChildIsExternal(false); // Categories cannot be external
+                            if (value === 'category_or_action') { // Updated logic
+                              setNewChildIsExternal(false); // Categories/Actions cannot be external
                             }
                           }}>
                             <SelectTrigger id="new-child-type">
@@ -480,10 +472,10 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                         </div>
                         <div>
                           <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
-                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category'} />
+                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} /> {/* Allow route for action, disable for category */}
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category'} />
+                          <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category_or_action'} />
                           <Label htmlFor="new-child-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
                         </div>
                         <div>

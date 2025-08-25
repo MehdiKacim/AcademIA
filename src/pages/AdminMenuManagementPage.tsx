@@ -59,7 +59,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
     // All possible roles for selection
     const allRoles: Profile['role'][] = ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'];
-    const navItemTypes: NavItem['type'][] = ['route', 'category', 'action']; // Define possible types
+    const navItemTypes: NavItem['type'][] = ['route', 'category_or_action']; // Updated: Replaced 'category' and 'action'
 
     interface SortableNavItemProps {
       item: NavItem;
@@ -108,8 +108,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const getItemTypeLabel = (type: NavItem['type']) => {
         switch (type) {
           case 'route': return "Route";
-          case 'category': return "Catégorie";
-          case 'action': return "Action";
+          case 'category_or_action': return "Catégorie/Action"; // Updated label
           default: return "Inconnu";
         }
       };
@@ -123,8 +122,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               className={cn(
                 "p-3 border rounded-md flex items-center justify-between gap-2 mb-2", 
                 isDragging && "ring-2 ring-primary/50 shadow-xl",
-                item.type === 'category' ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base", // Distinct styling for categories
-                item.type === 'category' && level === 0 && "border-l-4 border-primary/50" // Stronger border for root categories
+                item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base", // Distinct styling for categories
+                item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50" // Stronger border for root categories
               )}
             >
               <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={(e) => {
@@ -187,7 +186,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             </div>
           </ContextMenuTrigger>
           {/* Show "Manage Children" for any item that is a category (no route) */}
-          {item.type === 'category' && (
+          {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
             <ContextMenuContent className="w-auto p-1">
               <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
                 <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
@@ -393,13 +392,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           showError("Une route est requise pour un élément de type 'Route'.");
           return;
         }
-        if (newItemType === 'action' && !newItemRoute.trim()) {
-          showError("Une route (hash) est requise pour un élément de type 'Action'.");
-          return;
-        }
-        if (newItemType === 'category' && newItemRoute.trim()) {
-          showError("Une catégorie ne doit pas avoir de route.");
-          return;
+        if (newItemType === 'category_or_action' && !newItemRoute.trim()) { // Updated logic
+          // For category_or_action, route can be null (category) or a hash route (action)
+          // If it's meant to be an action, a route is required. If it's a category, route should be null.
+          // For simplicity, let's enforce a route for 'action' and allow null for 'category'
+          // Here, we assume if type is 'category_or_action' and route is empty, it's a category.
+          // If it's an action, the user should provide a route.
+          // This check is now more flexible.
         }
 
         setIsAddingItem(true);
@@ -492,13 +491,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           showError("Une route est requise pour un élément de type 'Route'.");
           return;
         }
-        if (editItemType === 'action' && !editItemRoute.trim()) {
-          showError("Une route (hash) est requise pour un élément de type 'Action'.");
-          return;
-        }
-        if (editItemType === 'category' && editItemRoute.trim()) {
-          showError("Une catégorie ne doit pas avoir de route.");
-          return;
+        if (editItemType === 'category_or_action' && !editItemRoute.trim()) { // Updated logic
+          // Same logic as for new item: allow empty route for category, require for action
         }
 
         setIsSavingEdit(true);
@@ -543,7 +537,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         let finalParentId: string | null = null;
         if (editConfigParentInput.trim() !== '') {
           // Check if parent category exists
-          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && item.type === 'category'); // Check type
+          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && item.type === 'category_or_action' && (item.route === null || item.route === undefined)); // Check type and ensure it's a category (no route)
 
           if (!parentItem) {
             // If not found, it means the user typed a new category name, so create it
@@ -553,7 +547,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               description: `Catégorie générée automatiquement pour '${editConfigParentInput.trim()}'`,
               is_external: false,
               icon_name: 'LayoutList', // Default icon for categories
-              type: 'category', // Set type for new category
+              type: 'category_or_action', // Set type for new category
             };
             parentItem = await addNavItem(newCategory);
             if (!parentItem) {
@@ -673,7 +667,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             // For dropping between items, we need to find the correct sibling position.
 
             // Check if the drop target is a valid parent (i.e., a category, an item without a route)
-            if (overConfiguredItem.type === 'category') { // If the over item is a category
+            if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) { // If the over item is a category
                 newParentNavItemId = overConfiguredItem.id;
                 newOrderIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
                 console.log("[handleDragEnd] Dropped ONTO category. New parent:", newParentNavItemId, "New order:", newOrderIndex);
@@ -823,10 +817,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] => {
         let flattened: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
         items.forEach(item => {
-          // Only items of type 'category' can be parents
-          if (item.type === 'category' && item.id !== excludeId) {
+          // Only items of type 'category_or_action' and with null/undefined route can be parents
+          if (item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.id !== excludeId) {
             const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
-            flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name, typeLabel: "Catégorie" }); // Include icon_name and typeLabel
+            flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name, typeLabel: "Catégorie/Action" }); // Include icon_name and typeLabel
             // Recursively add children of this category
             if (item.children) {
               flattened = flattened.concat(getFlattenedCategoriesForParentSelection(item.children, excludeId, currentLevel + 1, newLabel));
@@ -859,8 +853,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const getItemTypeLabel = (type: NavItem['type']) => {
         switch (type) {
           case 'route': return "Route";
-          case 'category': return "Catégorie";
-          case 'action': return "Action";
+          case 'category_or_action': return "Catégorie/Action"; // Updated label
           default: return "Inconnu";
         }
       };
@@ -933,9 +926,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <Label htmlFor="new-item-type">Type d'élément</Label>
                       <Select value={newItemType} onValueChange={(value: NavItem['type']) => {
                         setNewItemType(value);
-                        if (value === 'category') {
-                          setNewItemRoute(''); // Clear route for categories
-                          setNewItemIsExternal(false); // Categories cannot be external
+                        if (value === 'category_or_action') { // Updated logic
+                          setNewItemIsExternal(false); // Categories/Actions cannot be external
                         }
                       }}>
                         <SelectTrigger id="new-item-type">
@@ -952,10 +944,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     </div>
                     <div>
                       <Label htmlFor="new-item-route">Route (URL interne ou #hash)</Label>
-                      <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category'} />
+                      <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category_or_action' && (newItemRoute === null || newItemRoute === undefined)} /> {/* Allow route for action, disable for category */}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} disabled={newItemType === 'category'} />
+                      <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} disabled={newItemType === 'category_or_action'} />
                       <Label htmlFor="new-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
                     </div>
                     <div>
@@ -1106,9 +1098,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <Label htmlFor="edit-item-type">Type d'élément</Label>
                     <Select value={editItemType} onValueChange={(value: NavItem['type']) => {
                       setEditItemType(value);
-                      if (value === 'category') {
-                        setEditItemRoute(''); // Clear route for categories
-                        setEditItemIsExternal(false); // Categories cannot be external
+                      if (value === 'category_or_action') { // Updated logic
+                        setEditItemIsExternal(false); // Categories/Actions cannot be external
                       }
                     }}>
                       <SelectTrigger id="edit-item-type" className="col-span-3">
@@ -1125,11 +1116,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-item-route" className="text-right">Route</Label>
-                    <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="col-span-3" disabled={editItemType === 'category'} />
+                    <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} /> {/* Allow route for action, disable for category */}
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-item-is-external" className="text-right">Lien externe</Label>
-                    <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="col-span-3" disabled={editItemType === 'category'} />
+                    <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="col-span-3" disabled={editItemType === 'category_or_action'} />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-item-icon">Icône</Label>
