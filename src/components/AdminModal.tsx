@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus } from "lucide-react";
+import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus, LayoutList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal';
 import { clearAllAppData } from '@/lib/dataReset';
@@ -27,6 +27,7 @@ import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
 import { Establishment } from '@/lib/dataModels'; // Import Establishment type
+import { recreateAdminNavigationDefaults } from '@/lib/navItems'; // Import the new function
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -201,6 +202,24 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
     }
   };
 
+  const handleRecreateAdminNav = async () => {
+    if (window.confirm("Êtes-vous SÛR de vouloir réinitialiser la navigation de l'administrateur ? Cela supprimera TOUS les éléments de menu et les configurations, puis les recréera par défaut. Cette action est irréversible pour la navigation.")) {
+      try {
+        setIsCreatingAdmin(true); // Use a loading state
+        await recreateAdminNavigationDefaults();
+        showSuccess("Navigation administrateur réinitialisée avec succès !");
+        onClose();
+        // Force a full page reload to ensure the new navigation structure is loaded
+        window.location.reload();
+      } catch (error: any) {
+        console.error("Error recreating admin navigation:", error);
+        showError(`Erreur lors de la réinitialisation de la navigation: ${error.message}`);
+      } finally {
+        setIsCreatingAdmin(false);
+      }
+    }
+  };
+
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
     <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80">
       <Header className="mb-4 text-center">
@@ -285,6 +304,15 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                 </Button>
               </div>
             )}
+
+            <Button 
+              onClick={handleRecreateAdminNav} 
+              className="w-full justify-between" 
+              variant="outline"
+              disabled={isCreatingAdmin}
+            >
+              {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <LayoutList className="h-4 w-4 mr-2" />} Réinitialiser la Navigation Admin
+            </Button>
 
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données

@@ -456,3 +456,25 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
     throw error;
   }
 };
+
+/**
+ * Réinitialise et recrée tous les éléments de navigation génériques et les configurations de rôle par défaut pour l'administrateur.
+ * Cette fonction est une mesure de "réparation d'urgence" pour s'assurer que le menu de l'administrateur est toujours fonctionnel.
+ * Elle supprime TOUS les nav_items et role_nav_configs existants, puis réinsère les valeurs par défaut.
+ */
+export const recreateAdminNavigationDefaults = async (): Promise<void> => {
+  console.warn("[recreateAdminNavigationDefaults] Initiating full reset and re-creation of admin navigation defaults.");
+  try {
+    // Supprimer toutes les configurations de rôle (cela est important pour éviter les conflits d'ID si nav_items sont recréés)
+    await resetRoleNavConfigs();
+    // Supprimer tous les éléments de navigation génériques (cela devrait cascader et supprimer les role_nav_configs restants si la FK est bien configurée)
+    await resetNavItems();
+    
+    // Réinsérer les éléments de navigation génériques et les configurations de rôle par défaut pour l'administrateur
+    await insertDefaultAdminNavItems();
+    console.log("[recreateAdminNavigationDefaults] Admin navigation defaults successfully re-created.");
+  } catch (error) {
+    console.error("[recreateAdminNavigationDefaults] Error during re-creation of admin navigation defaults:", error);
+    throw error;
+  }
+};
