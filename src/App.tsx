@@ -14,7 +14,7 @@ import Analytics from "./pages/Analytics";
 import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
-import EstablishmentManagementPage from "./pages/EstablishmentManagementPage";
+// Removed EstablishmentManagementPage import
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
 import StudentManagementPage from "./pages/StudentManagementPage";
@@ -59,7 +59,7 @@ const AuthenticatedAppRoutes = () => {
     "/profile": Profile,
     "/settings": Settings,
     "/data-model": DataModelViewer,
-    "/establishments": EstablishmentManagementPage,
+    // Removed "/establishments": EstablishmentManagementPage,
     "/admin-users": AdminUserManagementPage,
     "/subjects": SubjectManagementPage,
     "/school-years": SchoolYearManagementPage,
