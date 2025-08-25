@@ -8,7 +8,7 @@ import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import Ro
  */
 const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
   console.warn("[insertDefaultAdminNavItems] Inserting default items for administrator.");
-  const defaultNavItems: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>[] = [
+  const defaultNavItemsData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>[] = [
     { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false },
     { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false },
     { label: 'Recherche', route: null, icon_name: 'Search', description: "Recherche globale dans l'application", is_external: false }, // This will be a trigger item
@@ -29,18 +29,38 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
     { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false },
   ];
 
-  const { data: insertedNavItems, error: insertError } = await supabase
-    .from('nav_items')
-    .insert(defaultNavItems)
-    .select();
+  const navItemMap = new Map<string, string>(); // Map label to nav_item_id
 
-  if (insertError) {
-    console.error("Error inserting default nav items:", insertError);
-    throw insertError;
+  // Ensure all generic nav_items exist and get their IDs
+  for (const itemData of defaultNavItemsData) {
+    const { data: existingItem, error: fetchError } = await supabase
+      .from('nav_items')
+      .select('id')
+      .eq('label', itemData.label)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error(`Error checking for existing nav item '${itemData.label}':`, fetchError);
+      throw fetchError;
+    }
+
+    if (existingItem) {
+      navItemMap.set(itemData.label, existingItem.id);
+    } else {
+      const { data: newItem, error: insertItemError } = await supabase
+        .from('nav_items')
+        .insert(itemData)
+        .select('id')
+        .single();
+      if (insertItemError) {
+        console.error(`Error inserting nav item '${itemData.label}':`, insertItemError);
+        throw insertItemError;
+      }
+      navItemMap.set(itemData.label, newItem.id);
+    }
   }
 
   const defaultRoleConfigs: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
-  const navItemMap = new Map(insertedNavItems.map(item => [item.label, item.id]));
 
   // Root items
   defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Tableau de bord')!, role: 'administrator', parent_nav_item_id: null, order_index: 0, establishment_id: null });
@@ -95,19 +115,21 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
 
-  // Step 1: Ensure generic nav_items exist
-  let genericNavItems = await loadAllNavItemsRaw();
-  if (genericNavItems.length === 0 && userRole === 'administrator') {
-    console.warn("[loadNavItems] No generic nav_items found. Attempting to insert default admin nav items (which also creates generic items).");
-    try {
-      // Reset configs first to avoid conflicts if only nav_items were deleted
-      await resetRoleNavConfigsForRole('administrator'); 
-      await insertDefaultAdminNavItems(); // This inserts both nav_items and role_nav_configs
-      genericNavItems = await loadAllNavItemsRaw(); // Reload generic items
-      console.log("[loadNavItems] Re-loaded generic nav_items after default insertion (count):", genericNavItems.length);
-    } catch (e) {
-      console.error("[loadNavItems] Failed to insert default admin nav items:", e);
-      return [];
+  // Step 1: Ensure generic nav_items exist and are complete for administrator
+  if (userRole === 'administrator') {
+    const genericItemsCount = (await loadAllNavItemsRaw()).length;
+    const EXPECTED_GENERIC_ITEM_COUNT = 18; // Based on defaultNavItemsData in insertDefaultAdminNavItems
+
+    if (genericItemsCount < EXPECTED_GENERIC_ITEM_COUNT) {
+      console.warn(`[loadNavItems] Generic nav_items are incomplete (${genericItemsCount} found, ${EXPECTED_GENERIC_ITEM_COUNT} expected). Attempting to ensure all generic items are present.`);
+      try {
+        // This will ensure all generic items are in nav_items table
+        await insertDefaultAdminNavItems(); 
+        console.log("[loadNavItems] Ensured generic nav_items are present.");
+      } catch (e) {
+        console.error("[loadNavItems] Failed to ensure generic nav items are present:", e);
+        return [];
+      }
     }
   }
 
@@ -453,28 +475,6 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
   const { error } = await supabase.from('role_nav_configs').delete().eq('role', role);
   if (error) {
     console.error(`Error resetting role nav configs for role ${role}:`, error);
-    throw error;
-  }
-};
-
-/**
- * Réinitialise et recrée tous les éléments de navigation génériques et les configurations de rôle par défaut pour l'administrateur.
- * Cette fonction est une mesure de "réparation d'urgence" pour s'assurer que le menu de l'administrateur est toujours fonctionnel.
- * Elle supprime TOUS les nav_items et role_nav_configs existants, puis réinsère les valeurs par défaut.
- */
-export const recreateAdminNavigationDefaults = async (): Promise<void> => {
-  console.warn("[recreateAdminNavigationDefaults] Initiating full reset and re-creation of admin navigation defaults.");
-  try {
-    // Supprimer toutes les configurations de rôle (cela est important pour éviter les conflits d'ID si nav_items sont recréés)
-    await resetRoleNavConfigs();
-    // Supprimer tous les éléments de navigation génériques (cela devrait cascader et supprimer les role_nav_configs restants si la FK est bien configurée)
-    await resetNavItems();
-    
-    // Réinsérer les éléments de navigation génériques et les configurations de rôle par défaut pour l'administrateur
-    await insertDefaultAdminNavItems();
-    console.log("[recreateAdminNavigationDefaults] Admin navigation defaults successfully re-created.");
-  } catch (error) {
-    console.error("[recreateAdminNavigationDefaults] Error during re-creation of admin navigation defaults:", error);
     throw error;
   }
 };
