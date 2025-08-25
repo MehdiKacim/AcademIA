@@ -585,7 +585,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           showSuccess("Élément de navigation réorganisé/déplacé !");
 
           await fetchAndStructureNavItems(); // Re-fetch and re-structure all items to update the UI
-        } catch (error: any) => {
+        } catch (error: any) {
           console.error("Error during drag and drop:", error);
           showError(`Erreur lors du glisser-déposer: ${error.message}`);
         } finally {
