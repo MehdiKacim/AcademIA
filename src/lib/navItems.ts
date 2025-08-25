@@ -222,6 +222,8 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
       navItemMap.set(itemData.label, newItem.id);
     }
   }
+  console.log("[ensureDefaultNavItemsForRole] navItemMap after generic item processing:", navItemMap);
+
 
   // Step 2: Build the hierarchical structure for default configs and assign order_index
   const structuredDefaultItems: NavItem[] = [];
@@ -259,6 +261,9 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
               currentItem.parent_nav_item_id = parentNavItemId;
               parentItem.children?.push(currentItem);
             }
+          } else {
+            console.warn(`[ensureDefaultNavItemsForRole] Parent label '${parentLabel}' not found in navItemMap for item '${itemData.label}'. It will be treated as a root item.`);
+            structuredDefaultItems.push(currentItem); // Treat as root if parent not found
           }
         } else {
           structuredDefaultItems.push(currentItem); // Root item
@@ -266,12 +271,15 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
       }
     }
   });
+  console.log("[ensureDefaultNavItemsForRole] Structured default items (before order assignment):", structuredDefaultItems);
+
 
   // Third pass: assign order_index based on the structured tree
   const assignOrderIndices = (items: NavItem[], parentId: string | null) => {
     items.sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically for consistent default order
     items.forEach((item, index) => {
       item.order_index = index;
+      item.parent_nav_item_id = parentId === null ? undefined : parentId; // Ensure parent_nav_item_id is undefined for root items
       if (item.children && item.children.length > 0) {
         assignOrderIndices(item.children, item.id);
       }
@@ -279,6 +287,8 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
   };
 
   assignOrderIndices(structuredDefaultItems, null);
+  console.log("[ensureDefaultNavItemsForRole] Structured default items (after order assignment):", structuredDefaultItems);
+
 
   // Flatten the structuredDefaultItems back into a list for DB insertion/update
   const flattenedConfigsForDb: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
@@ -287,7 +297,7 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
       flattenedConfigsForDb.push({
         nav_item_id: item.id,
         role: role,
-        parent_nav_item_id: item.parent_nav_item_id || null,
+        parent_nav_item_id: item.parent_nav_item_id || null, // Ensure null for root items
         order_index: item.order_index,
       });
       if (item.children) {
@@ -296,6 +306,8 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
     });
   };
   flattenTree(structuredDefaultItems);
+  console.log("[ensureDefaultNavItemsForRole] Flattened configs for DB:", flattenedConfigsForDb);
+
 
   // Step 3: Compare with existing configs and perform DB upserts
   const existingRoleConfigs = await getRoleNavItemConfigsByRole(role);
