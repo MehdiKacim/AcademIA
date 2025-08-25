@@ -19,6 +19,7 @@ import {
   Download,
   Info,
   BotMessageSquare, // Added BotMessageSquare for AiA Bot
+  UserCog, // Added UserCog for Admin button
 } from "lucide-react"; // Import all necessary icons
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,7 @@ interface IndexProps {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, // Add all icons used in this file
+  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, UserCog, // Add all icons used in this file
 };
 
 const Index = ({ setIsAdminModalOpen }: IndexProps) => {
@@ -238,6 +239,14 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               <LogIn className="h-5 w-5 mr-2" /> Authentification
             </Button>
           )}
+          {/* Temporary Admin Button */}
+          <Button variant="outline" size="icon" onClick={() => setIsAdminModalOpen(true)} className="md:hidden">
+            <UserCog className="h-5 w-5" />
+            <span className="sr-only">Admin</span>
+          </Button>
+          <Button variant="outline" onClick={() => setIsAdminModalOpen(true)} className="hidden md:flex">
+            <UserCog className="h-5 w-5 mr-2" /> Admin
+          </Button>
         </div>
       </header>
 
