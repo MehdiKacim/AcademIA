@@ -937,7 +937,7 @@ const RoleNavConfigsPage = () => {
           allGenericNavItems={allGenericNavItems}
           allConfiguredItemsFlat={allConfiguredItemsFlat}
           onChildrenUpdated={fetchAndStructureNavItems}
-          getDescendantIds={getDescendantIds} {/* Pass getDescendantIds as a prop */}
+          getDescendantIds={getDescendantIds}
         />
       )}
     </div>
