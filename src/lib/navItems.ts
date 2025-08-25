@@ -180,7 +180,7 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
 };
 
 // New function to ensure default nav items and configs for a given role
-const ensureDefaultNavItemsForRole = async (role: Profile['role'], establishmentId: string | null = null): Promise<void> => {
+export const ensureDefaultNavItemsForRole = async (role: Profile['role'], establishmentId: string | null = null): Promise<void> => {
   console.log(`[ensureDefaultNavItemsForRole] Ensuring default nav items for role: ${role}, establishment: ${establishmentId}`);
 
   const defaultItemsForRole = DEFAULT_NAV_ITEMS_BY_ROLE[role];

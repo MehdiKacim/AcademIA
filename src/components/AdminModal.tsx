@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus, LayoutList } from "lucide-react";
+import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus, LayoutList, RefreshCw } from "lucide-react"; // Added RefreshCw icon
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal';
 import { clearAllAppData } from '@/lib/dataReset';
@@ -27,7 +27,7 @@ import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
 import { Establishment } from '@/lib/dataModels'; // Import Establishment type
-// Removed import for recreateAdminNavigationDefaults
+import { ensureDefaultNavItemsForRole } from '@/lib/navItems'; // Import ensureDefaultNavItemsForRole
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -185,6 +185,10 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       }
       
       showSuccess(`Administrateur ${adminFirstName} ${adminLastName} créé avec succès !`);
+      // After creating the admin, ensure their default navigation items are set up
+      await ensureDefaultNavItemsForRole('administrator', null);
+      showSuccess("Navigation administrateur par défaut configurée !");
+
       setAdminFirstName('');
       setAdminLastName('');
       setAdminUsername('');
@@ -202,7 +206,19 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
     }
   };
 
-  // Removed handleRecreateAdminNav function
+  const handleRecreateAdminNav = async () => {
+    if (window.confirm("Êtes-vous sûr de vouloir recréer les éléments de navigation par défaut pour l'administrateur ? Cela écrasera toutes les configurations existantes pour le rôle 'administrateur'.")) {
+      try {
+        await ensureDefaultNavItemsForRole('administrator', null);
+        showSuccess("Navigation administrateur par défaut recréée !");
+        onClose(); // Close modal after action
+        window.location.reload(); // Reload to apply new navigation
+      } catch (error: any) {
+        console.error("Error recreating admin navigation defaults:", error);
+        showError(`Erreur lors de la recréation de la navigation: ${error.message}`);
+      }
+    }
+  };
 
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
     <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80">
@@ -289,7 +305,9 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               </div>
             )}
 
-            {/* Removed the "Réinitialiser la Navigation Admin" button */}
+            <Button onClick={handleRecreateAdminNav} className="w-full" variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" /> Recréer la Navigation Admin
+            </Button>
 
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
