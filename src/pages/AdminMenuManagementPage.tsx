@@ -177,6 +177,18 @@ import React, { useState, useEffect, useCallback } from 'react';
         fetchEstablishments();
       }, []);
 
+      // Helper to find an item in the tree by its configId or id
+      const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
+        for (const item of items) {
+          if (item.configId === targetId || item.id === targetId) return item;
+          if (item.children) {
+            const foundChild = findItemInTree(item.children, targetId);
+            if (foundChild) return foundChild;
+          }
+        }
+        return undefined;
+      }, []);
+
       const fetchAndStructureNavItems = useCallback(async () => {
         const genericItems = await loadAllNavItemsRaw();
         setAllGenericNavItems(genericItems);
@@ -191,7 +203,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           );
 
           const configuredMap = new Map<string, NavItem>();
-          const unconfigured: NavItem[] = [];
+          const allConfiguredItemsFlat: NavItem[] = [];
 
           const genericItemMap = new Map<string, NavItem>();
           genericItems.forEach(item => genericItemMap.set(item.id, { ...item, children: [] }));
@@ -210,12 +222,11 @@ import React, { useState, useEffect, useCallback } from 'react';
                 is_global: config.establishment_id === null, // Indicate if it's a global config
               };
               configuredMap.set(configuredItem.id, configuredItem);
+              allConfiguredItemsFlat.push(configuredItem);
             }
           });
 
           // Rebuild the tree and re-index
-          const allConfiguredItemsFlat: NavItem[] = Array.from(configuredMap.values());
-
           // Group items by parent_nav_item_id
           const groupedByParent = new Map<string | null, NavItem[]>();
           allConfiguredItemsFlat.forEach(item => {
@@ -269,20 +280,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 
           setConfiguredItemsTree(finalRootItems);
 
-          // Determine unconfigured items (generic items not in roleConfigs)
+          // Determine unconfigured items (generic items not in roleConfigs for the current context)
+          const unconfigured: NavItem[] = [];
           genericItems.forEach(genericItem => {
-            // An item is unconfigured if it's not in the configuredMap for the current role/establishment
-            // AND it's not a global item (unless selectedEstablishmentFilter is 'all')
-            const isConfiguredForCurrentContext = allConfiguredItemsFlat.some(configuredItem => configuredItem.id === genericItem.id && configuredItem.establishment_id === (selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter));
-            const isGlobalConfigured = allConfiguredItemsFlat.some(configuredItem => configuredItem.id === genericItem.id && configuredItem.is_global);
-
-            if (!isConfiguredForCurrentContext && !(isGlobalConfigured && selectedEstablishmentFilter !== 'all')) {
+            const isConfiguredForCurrentContext = allConfiguredItemsFlat.some(configuredItem =>
+              configuredItem.id === genericItem.id &&
+              (configuredItem.establishment_id === (selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter) || configuredItem.is_global)
+            );
+            if (!isConfiguredForCurrentContext) {
               unconfigured.push(genericItem);
             }
           });
           setUnconfiguredItems(unconfigured);
         }
-      }, [selectedRoleFilter, selectedEstablishmentFilter]);
+      }, [selectedRoleFilter, selectedEstablishmentFilter, findItemInTree]);
 
       useEffect(() => {
         fetchAndStructureNavItems();
@@ -459,7 +470,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           setActiveDragConfig(null);
         } else {
           // Find the configured item and its config
-          const configuredItem = configuredItemsTree.find(item => item.configId === active.id);
+          const configuredItem = findItemInTree(configuredItemsTree, active.id);
           if (configuredItem && configuredItem.configId) {
             const config = {
               id: configuredItem.configId,
@@ -497,34 +508,36 @@ import React, { useState, useEffect, useCallback } from 'react';
             return;
           }
 
-          // Determine the target parent for the active item
           let newParentNavItemId: string | null = null;
           let newOrderIndex: number = 0;
-          let targetList: NavItem[] = [];
 
-          // Find the actual item being dropped over (could be a configured item or a container)
-          const overConfiguredItem = configuredItemsTree.find(item => item.configId === overId);
-          const overUnconfiguredItem = unconfiguredItems.find(item => item.id === overId);
+          const overItem = findItemInTree(configuredItemsTree, overId);
+          const overIsContainer = overId.endsWith('-container'); // Simple heuristic for container IDs
 
-          if (overConfiguredItem) {
-            // Dropped onto an existing configured item
-            if (!overConfiguredItem.route) { // Dropped onto a category (make it a child)
-              newParentNavItemId = overConfiguredItem.id;
-              targetList = overConfiguredItem.children || [];
-              newOrderIndex = targetList.length; // Add to the end of children
-            } else { // Dropped onto a regular item (make it a sibling)
-              newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-              targetList = (newParentNavItemId === null) ? configuredItemsTree.filter(item => item.is_root) : (configuredItemsTree.find(item => item.id === newParentNavItemId)?.children || []);
-              newOrderIndex = overConfiguredItem.order_index + 1; // Insert after the over item
+          if (overIsContainer) {
+            if (overId === 'configured-container') { // Dropped into root container
+              newParentNavItemId = null;
+              newOrderIndex = configuredItemsTree.filter(item => item.is_root).length;
+            } else if (overId.startsWith('configured-container-children-of-')) { // Dropped into a child container
+              newParentNavItemId = overId.replace('configured-container-children-of-', '');
+              const parentItem = findItemInTree(configuredItemsTree, newParentNavItemId);
+              newOrderIndex = parentItem?.children?.length || 0;
+            } else if (overId === 'unconfigured-container') {
+              // Dropped back into unconfigured list, handled by deletion below
+            } else {
+              showError("Cible de dépôt de conteneur non valide.");
+              return;
             }
-          } else if (overId === 'configured-container') { // Dropped into the root of the configured list
-            newParentNavItemId = null;
-            targetList = configuredItemsTree.filter(item => item.is_root);
-            newOrderIndex = targetList.length; // Add to the end of root items
+          } else if (overItem) { // Dropped onto an existing item
+            if (!overItem.route) { // Dropped onto a category item (make it a child)
+              newParentNavItemId = overItem.id;
+              newOrderIndex = overItem.children?.length || 0;
+            } else { // Dropped onto a leaf item (make it a sibling)
+              newParentNavItemId = overItem.parent_nav_item_id || null;
+              newOrderIndex = overItem.order_index + 1;
+            }
           } else if (overId === 'unconfigured-container') {
-            // Dropped into the unconfigured list, handled by deletion below
-          } else if (overUnconfiguredItem) { // Dropped onto an unconfigured item (reorder within unconfigured)
-            // This case is handled by local state update for unconfiguredItems
+            // Dropped back into unconfigured list, handled by deletion below
           } else {
             showError("Cible de dépôt non valide.");
             return;
@@ -548,9 +561,9 @@ import React, { useState, useEffect, useCallback } from 'react';
           } else if (activeDragConfig && overId === 'unconfigured-container') { // From Configured to Unconfigured
             await deleteRoleNavItemConfig(activeDragConfig.id);
             successMessage = "Élément retiré de la configuration du rôle !";
-          } else if (activeDragConfig && activeDragItem) { // Within Configured (reorder or change parent)
+          } else if (activeConfig && activeDragItem) { // Within Configured (reorder or change parent)
             const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-              ...activeDragConfig,
+              ...activeConfig,
               parent_nav_item_id: newParentNavItemId,
               order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
@@ -572,29 +585,6 @@ import React, { useState, useEffect, useCallback } from 'react';
           setActiveDragItem(null);
           setActiveDragConfig(null);
         }
-      };
-
-      // Helper to find a configured item and its parent in the tree
-      const findConfigItemAndParent = (items: NavItem[], targetConfigId: string, role: Profile['role'], parent: NavItem | null = null): { item: NavItem | null, config: RoleNavItemConfig | null, parent: NavItem | null, index: number } => {
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          if (item.configId === targetConfigId) {
-            const config = {
-              id: item.configId,
-              nav_item_id: item.id,
-              role: role,
-              parent_nav_item_id: item.parent_nav_item_id,
-              order_index: item.order_index,
-              establishment_id: item.establishment_id,
-            };
-            return { item, config, parent, index: i };
-          }
-          if (item.children && item.children.length > 0) {
-            const found = findConfigItemAndParent(item.children, targetConfigId, role, item);
-            if (found.item) return found;
-          }
-        }
-        return { item: null, config: null, parent: null, index: -1 };
       };
 
       const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
