@@ -204,7 +204,7 @@ const RoleNavConfigsPage = () => {
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
   const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
-  const [editConfigParentId, setEditConfigParentId] = useState<string | null | undefined>(undefined); // Can be null for root, undefined for new
+  const [editConfigParentId, setEditConfigParentId] = useState<string | null>(null); // Can be null for root
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
   const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false);
 
@@ -398,8 +398,9 @@ const RoleNavConfigsPage = () => {
   const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
-    setEditConfigParentId(config.parent_nav_item_id || null); // Set to null if no parent
-    setTempParentInput(item.parent_nav_item_id ? allGenericNavItems.find(i => i.id === item.parent_nav_item_id)?.label || '' : ''); // Use allGenericNavItems for label
+    setEditConfigParentId(config.parent_nav_item_id || null); // Use null for root
+    // Initialize tempParentInput with the label of the current parent, if any
+    setTempParentInput(config.parent_nav_item_id ? allGenericNavItems.find(i => i.id === config.parent_nav_item_id)?.label || '' : '');
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
     setOpenEditConfigParentSelect(false);
@@ -412,7 +413,7 @@ const RoleNavConfigsPage = () => {
     const trimmedTempParentInput = tempParentInput.trim();
 
     if (trimmedTempParentInput !== '') {
-      // If a new category is to be created or an existing one selected via input
+      // Try to find an existing parent by label
       let parentItem = allGenericNavItems.find(item => 
         item.label.toLowerCase() === trimmedTempParentInput.toLowerCase() && 
         item.type === 'category_or_action' && 
