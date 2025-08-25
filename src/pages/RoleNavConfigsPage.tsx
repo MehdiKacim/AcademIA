@@ -305,6 +305,7 @@ const RoleNavConfigsPage = () => {
         items.sort((a, b) => a.order_index - b.order_index);
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
+          // Only update if order or parent has actually changed
           if (item.order_index !== i || (item.parent_nav_item_id || null) !== parentId) {
             const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
               id: item.configId!,
@@ -552,21 +553,15 @@ const RoleNavConfigsPage = () => {
           return;
         }
 
+        // If dropping on a category, make it a child. Otherwise, make it a sibling.
         if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) {
-          // Dropped over a category, make it a child of this category
           newParentNavItemId = overConfiguredItem.id;
-          // Temporary index, actual order will be fixed by sortAndReindex
-          tempOrderIndex = (overConfiguredItem.children?.length || 0); 
         } else {
-          // Dropped over a regular item (which must be a route or action with route), make it a sibling of overConfiguredItem
           newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-          // Temporary index, actual order will be fixed by sortAndReindex
-          tempOrderIndex = overConfiguredItem.order_index; // Or any other temporary value
         }
       } else if (overIsRootContainer) {
         // Dropped on the root container
         newParentNavItemId = null;
-        tempOrderIndex = allConfiguredItemsFlat.filter(item => item.parent_nav_item_id === null).length;
       } else if (overIsChildContainer) {
         // Dropped on an empty child container (e.g., an empty category's drop zone)
         newParentNavItemId = overId.replace('configured-container-children-of-', '');
@@ -586,7 +581,6 @@ const RoleNavConfigsPage = () => {
           showError("Vous ne pouvez pas placer un élément sous une route.");
           return;
         }
-        tempOrderIndex = parentItem?.children?.length || 0;
       } else {
         showError("Cible de dépôt non valide.");
         return;
@@ -598,7 +592,7 @@ const RoleNavConfigsPage = () => {
         nav_item_id: activeDragConfig.nav_item_id,
         role: activeDragConfig.role,
         parent_nav_item_id: newParentNavItemId,
-        order_index: tempOrderIndex, // Temporary index
+        order_index: tempOrderIndex, // Temporary index, will be re-calculated by fetchAndStructureNavItems
       };
       await updateRoleNavItemConfig(updatedConfig);
       showSuccess("Élément de navigation réorganisé/déplacé !");
@@ -893,7 +887,7 @@ const RoleNavConfigsPage = () => {
                             return (
                               <CommandItem
                                 key={item.id}
-                                value={item.label}
+                                value={item.id} // Use item.id as value
                                 onSelect={() => {
                                   setEditConfigParentId(item.id);
                                   setTempParentInput(item.label);
