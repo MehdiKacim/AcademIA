@@ -91,7 +91,7 @@ import {
         if (currentUser) { // Only load dynamic nav items if user is authenticated
           const fetchNavItems = async () => {
             console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
-            const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
+            const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id);
             setDynamicNavItems(loadedItems);
             console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
           };
@@ -100,7 +100,7 @@ import {
           setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
           console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
         }
-      }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
+      }, [currentRole, unreadMessagesCount, currentUserProfile?.establishment_id, currentUser]);
 
       const handleCategoryClick = useCallback((categoryLabel: string, categoryIcon: React.ElementType) => {
         setActiveCategoryLabel(categoryLabel);
