@@ -208,7 +208,7 @@ const RoleNavConfigsPage = () => {
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
   const [editConfigParentId, setEditConfigParentId] = useState<string | null>(null); // Can be null for root
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
-  const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false);
+  const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false); // Corrected state variable name
 
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
@@ -451,7 +451,7 @@ const RoleNavConfigsPage = () => {
       return;
     }
 
-    setIsSavingEdit(true);
+    setIsSavingConfigEdit(true); // Corrected state setter name
     try {
       const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
         id: currentConfigToEdit.id,
@@ -471,7 +471,7 @@ const RoleNavConfigsPage = () => {
       console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
     } finally {
-      setIsSavingEdit(false);
+      setIsSavingConfigEdit(false); // Corrected state setter name
     }
   };
 
