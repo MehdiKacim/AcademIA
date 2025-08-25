@@ -77,7 +77,7 @@ const Settings = () => {
                 <SelectTrigger id="language" className="w-[180px]">
                   <SelectValue placeholder="Sélectionner une langue" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   <SelectItem value="fr">Français</SelectItem>
                   <SelectItem value="en">English</SelectItem>
                 </SelectContent>
