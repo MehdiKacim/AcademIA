@@ -219,6 +219,7 @@ export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promis
  * @returns La configuration ajoutée.
  */
 export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
+  console.log("[addRoleNavItemConfig] Adding new config:", newConfig); // Diagnostic log
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'create_config', payload: newConfig }, // New action for config
   });
@@ -236,6 +237,7 @@ export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'i
  * @returns La configuration mise à jour.
  */
 export const updateRoleNavItemConfig = async (updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
+  console.log("[updateRoleNavItemConfig] Updating config:", updatedConfig); // Diagnostic log
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'update_config', payload: updatedConfig }, // New action for config
   });

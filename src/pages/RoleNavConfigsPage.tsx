@@ -213,8 +213,6 @@ const RoleNavConfigsPage = () => {
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
 
-  // Removed openEditConfigParentSelect state as it's no longer needed with standard Select
-
   const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
 
   const sensors = useSensors(
@@ -289,6 +287,8 @@ const RoleNavConfigsPage = () => {
         }
       });
       setAllConfiguredItemsFlat(allConfiguredItemsFlatList);
+      console.log("[RoleNavConfigsPage] allConfiguredItemsFlatList after fetch:", allConfiguredItemsFlatList);
+
 
       const groupedByParent = new Map<string | null, NavItem[]>();
       allConfiguredItemsFlatList.forEach(item => {
@@ -308,7 +308,7 @@ const RoleNavConfigsPage = () => {
               id: item.configId!,
               nav_item_id: item.id,
               role: role,
-              parent_nav_item_id: parentId,
+              parent_nav_item_id: parentId, // <--- This is the parentId passed to sortAndReindex
               order_index: i,
             };
             await updateRoleNavItemConfig(updatedConfig);
@@ -399,11 +399,11 @@ const RoleNavConfigsPage = () => {
     setEditConfigParentId(config.parent_nav_item_id || null);
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
-    // Removed setOpenEditConfigParentSelect(false);
   };
 
   const handleSaveEditedRoleConfig = async () => {
-    console.log("[handleSaveEditedRoleConfig] Function called. Is setIsSavingConfigEdit defined?", typeof setIsSavingConfigEdit !== 'undefined');
+    console.log("[handleSaveEditedRoleConfig] Function called.");
+    console.log("[handleSaveEditedRoleConfig] isSavingConfigEdit state:", isSavingConfigEdit); // Diagnostic log
     if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
     let finalParentId: string | null = editConfigParentId; // This is the ID from the dropdown
@@ -460,6 +460,7 @@ const RoleNavConfigsPage = () => {
         parent_nav_item_id: finalParentId,
         order_index: editConfigOrderIndex,
       };
+      console.log("[handleSaveEditedRoleConfig] Updating config with parent_nav_item_id:", updatedConfigData.parent_nav_item_id); // Diagnostic log
       await updateRoleNavItemConfig(updatedConfigData);
       showSuccess("Configuration de rôle mise à jour !");
       await fetchAndStructureNavItems();
