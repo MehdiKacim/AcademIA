@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
     import {
       Card,
       CardContent,
@@ -1038,7 +1038,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                       </SelectTrigger>
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <SelectItem value="none">Aucun</SelectItem>
-                        {availableParentsForConfig.filter(p => p.id !== currentItemToEdit.id).map(item => (
+                        {availableParentsForConfig.map(item => (
                           <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>
                         ))}
                       </SelectContent>
