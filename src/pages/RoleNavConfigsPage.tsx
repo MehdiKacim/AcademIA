@@ -839,6 +839,7 @@ const RoleNavConfigsPage = () => {
                           <CommandItem
                             value="none"
                             onSelect={() => {
+                              console.log("Selected item: none (root)");
                               setEditConfigParentId(null); // Explicitly set to null for root
                               setOpenEditConfigParentSelect(false);
                             }}
@@ -853,9 +854,11 @@ const RoleNavConfigsPage = () => {
                                 key={item.id}
                                 value={item.id} // Use item.id as value
                                 onSelect={() => {
+                                  console.log("Selected item:", item.id, item.label);
                                   setEditConfigParentId(item.id);
                                   setOpenEditConfigParentSelect(false);
                                 }}
+                                onMouseUp={() => console.log("CommandItem clicked:", item.id, item.label)}
                               >
                                 <div className="flex items-center gap-2">
                                   {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
