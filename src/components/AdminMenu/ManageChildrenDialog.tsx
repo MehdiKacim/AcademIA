@@ -160,6 +160,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       // 2. Not already a direct child of this parent
       // 3. Not already a descendant of this parent (to prevent circular dependency)
       // 4. Not already configured anywhere in the current role/establishment's menu tree
+      // 5. MUST have a route (i.e., it's a link, not a category)
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
       const descendantsOfParent = getDescendantIds(parentItem, allGenericNavItems);
       const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id)); // IDs of all items already in the menu
@@ -168,7 +169,8 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         item => item.id !== parentItem.id && // Cannot be the parent itself
                 !currentChildIds.has(item.id) && // Not already a direct child
                 !descendantsOfParent.has(item.id) && // Not already a descendant
-                !configuredItemIds.has(item.id) // Not already configured anywhere in the menu
+                !configuredItemIds.has(item.id) && // Not already configured anywhere in the menu
+                item.route // MUST have a route
       );
       setAvailableChildrenForAdd(filteredAvailable);
       setCurrentChildren(parentItem.children || []);
@@ -266,12 +268,16 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       showError("Le libellé est requis.");
       return;
     }
+    if (!newChildRoute.trim()) { // A new child added here must have a route
+      showError("La route est requise pour un nouvel élément enfant.");
+      return;
+    }
 
     setIsAddingNewChild(true);
     try {
       const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
         label: newChildLabel.trim(),
-        route: newChildRoute.trim() || null,
+        route: newChildRoute.trim(), // Route is now mandatory
         description: newChildDescription.trim() || null,
         is_external: newChildIsExternal,
         icon_name: newChildIconName || null,
@@ -374,7 +380,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                <span>{item.label} {item.route && `(${item.route})`}</span>
+                                <span>{item.label} {item.route && `(${item.route})`}</span> {/* Show route for clarity */}
                               </div>
                             </SelectItem>
                           ))
@@ -420,8 +426,8 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           <Input id="new-child-label" value={newChildLabel} onChange={(e) => setNewChildLabel(e.target.value)} required />
                         </div>
                         <div>
-                          <Label htmlFor="new-child-route">Route (URL interne ou #hash, laisser vide pour catégorie/déclencheur)</Label>
-                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} />
+                          <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label> {/* Updated label */}
+                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} required /> {/* Made required */}
                         </div>
                         <div className="flex items-center space-x-2">
                           <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} />
@@ -454,7 +460,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           <Textarea id="new-child-description" value={newChildDescription} onChange={(e) => setNewChildDescription(e.target.value)} />
                         </div>
                       </div>
-                      <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}>
+                      <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim() || !newChildRoute.trim()}> {/* Updated disabled condition */}
                         {isAddingNewChild ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et ajouter
                       </Button>
                     </CardContent>
