@@ -482,54 +482,77 @@ const StudentManagementPage = () => {
           <CollapsibleContent>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  placeholder="Prénom"
-                  value={newStudentFirstName}
-                  onChange={(e) => setNewStudentFirstName(e.target.value)}
-                />
-                <Input
-                  placeholder="Nom"
-                  value={newStudentLastName}
-                  onChange={(e) => setNewStudentLastName(e.target.value)}
-                />
-                <InputWithStatus
-                  placeholder="Nom d'utilisateur"
-                  value={newStudentUsername}
-                  onChange={(e) => handleNewStudentUsernameChange(e.target.value)}
-                  status={usernameAvailabilityStatus}
-                  errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-                />
-                <InputWithStatus
-                  type="email"
-                  placeholder="Email"
-                  value={newStudentEmail}
-                  onChange={(e) => handleNewStudentEmailChange(e.target.value)}
-                  status={emailAvailabilityStatus}
-                  errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-                />
-                <Input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={newStudentPassword}
-                  onChange={(e) => setNewStudentPassword(e.target.value)}
-                />
-                <Select 
-                  value={newStudentEstablishmentId || "none"} 
-                  onValueChange={(value) => setNewStudentEstablishmentId(value === "none" ? '' : value)}
-                  disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
-                >
-                  <SelectTrigger id="new-student-establishment">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
-                    <SelectItem value="none">Aucun</SelectItem>
-                    {establishmentsToDisplayForNewStudent.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Label htmlFor="new-student-label">Prénom</Label>
+                  <Input
+                    id="new-student-label"
+                    placeholder="Prénom"
+                    value={newStudentFirstName}
+                    onChange={(e) => setNewStudentFirstName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-student-last-name">Nom</Label>
+                  <Input
+                    id="new-student-last-name"
+                    placeholder="Nom"
+                    value={newStudentLastName}
+                    onChange={(e) => setNewStudentLastName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-student-username">Nom d'utilisateur</Label>
+                  <InputWithStatus
+                    id="new-student-username"
+                    placeholder="Nom d'utilisateur"
+                    value={newStudentUsername}
+                    onChange={(e) => handleNewStudentUsernameChange(e.target.value)}
+                    status={usernameAvailabilityStatus}
+                    errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-student-email">Email</Label>
+                  <InputWithStatus
+                    id="new-student-email"
+                    type="email"
+                    placeholder="Email"
+                    value={newStudentEmail}
+                    onChange={(e) => handleNewStudentEmailChange(e.target.value)}
+                    status={emailAvailabilityStatus}
+                    errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-student-password">Mot de passe</Label>
+                  <Input
+                    id="new-student-password"
+                    type="password"
+                    placeholder="Mot de passe"
+                    value={newStudentPassword}
+                    onChange={(e) => setNewStudentPassword(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-student-establishment">Établissement</Label>
+                  <Select 
+                    value={newStudentEstablishmentId || "none"} 
+                    onValueChange={(value) => setNewStudentEstablishmentId(value === "none" ? '' : value)}
+                    disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
+                  >
+                    <SelectTrigger id="new-student-establishment">
+                      <SelectValue placeholder="Sélectionner un établissement" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                      <SelectItem value="none"><span>Aucun</span></SelectItem>
+                      {establishmentsToDisplayForNewStudent.map(est => (
+                        <SelectItem key={est.id} value={est.id}>
+                          <span>{est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label htmlFor="new-student-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
                   <Popover>
@@ -583,7 +606,7 @@ const StudentManagementPage = () => {
                   </Popover>
                 </div>
               </div>
-              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newStudentRole === 'professeur' || newStudentRole === 'tutor' || newStudentRole === 'director' || newStudentRole === 'deputy_director') && !newStudentEstablishmentId && currentRole === 'administrator') || ((newStudentRole === 'student') && !newStudentEstablishmentId && (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor'))}>
+              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || !newStudentEstablishmentId || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate}>
                 {isCreatingStudent ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'élève
               </Button>
             </CardContent>
@@ -631,13 +654,13 @@ const StudentManagementPage = () => {
                         if (isSearchingUserEst && studentSearchInputEst.trim() !== '') {
                           return (
                             <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
+                              <Loader2 className="h-4 w-4 animate-spin" /> <span>Recherche...</span>
                             </CommandEmpty>
                           );
                         } else if (filteredStudentsForEstDropdown.length === 0 && studentSearchInputEst.trim() !== '') {
                           return (
                             <CommandEmpty className="py-2 text-center text-muted-foreground">
-                              Aucun élève trouvé pour "{studentSearchInputEst}".
+                              <span>Aucun élève trouvé pour "{studentSearchInputEst}".</span>
                             </CommandEmpty>
                           );
                         } else {
@@ -662,7 +685,7 @@ const StudentManagementPage = () => {
                                       selectedStudentForEstAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
                                     )}
                                   />
-                                  {profile.first_name} {profile.last_name} (@{profile.username})
+                                  <span>{profile.first_name} {profile.last_name} (@{profile.username})</span>
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -691,7 +714,7 @@ const StudentManagementPage = () => {
                     )}
                   </p>
                 ) : (
-                  <p className className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
+                  <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
                 )}
 
                 <div>
@@ -703,7 +726,7 @@ const StudentManagementPage = () => {
                     <SelectContent className="backdrop-blur-lg bg-background/80">
                       {establishments.map(est => (
                         <SelectItem key={est.id} value={est.id}>
-                          {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                          <span>{est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -811,12 +834,12 @@ const StudentManagementPage = () => {
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
                 <SelectContent className="backdrop-blur-lg bg-background/80">
-                  {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
+                  {currentRole === 'administrator' && <SelectItem value="all"><span>Tous les établissements</span></SelectItem>}
                   {establishments
                     .filter(est => currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id)
                     .map(est => (
                       <SelectItem key={est.id} value={est.id}>
-                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
+                        <span>{est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}</span>
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -827,8 +850,8 @@ const StudentManagementPage = () => {
             {studentsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
                 {studentSearchQuery.trim() === '' && !selectedEstablishmentFilter
-                  ? "Aucun élève à afficher. Utilisez la recherche ou les filtres."
-                  : "Aucun élève trouvé pour votre recherche ou vos filtres."}
+                  ? <span>Aucun élève à afficher. Utilisez la recherche ou les filtres.</span>
+                  : <span>Aucun élève trouvé pour votre recherche ou vos filtres.</span>}
               </p>
             ) : (
               studentsToDisplay.map((profile) => {

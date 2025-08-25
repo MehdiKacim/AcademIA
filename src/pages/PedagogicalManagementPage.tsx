@@ -395,13 +395,13 @@ const PedagogicalManagementPage = () => {
                       if (isSearchingUserClass && studentSearchInputClass.trim() !== '') {
                         return (
                           <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" /> Recherche...
+                            <Loader2 className="h-4 w-4 animate-spin" /> <span>Recherche...</span>
                           </CommandEmpty>
                         );
                       } else if (filteredStudentsForClassDropdown.length === 0 && studentSearchInputClass.trim() !== '') {
                         return (
                           <CommandEmpty className="py-2 text-center text-muted-foreground">
-                            Aucun élève trouvé pour "{studentSearchInputClass}".
+                            <span>Aucun élève trouvé pour "{studentSearchInputClass}".</span>
                           </CommandEmpty>
                         );
                       } else {
@@ -423,7 +423,7 @@ const PedagogicalManagementPage = () => {
                                     selectedStudentForClassAssignment?.id === profile.id ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {profile.first_name} {profile.last_name} (@{profile.username})
+                                <span>{profile.first_name} {profile.last_name} (@{profile.username})</span>
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -534,7 +534,7 @@ const PedagogicalManagementPage = () => {
                 <SelectTrigger id="establishment-filter">
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
                   {establishments
                     .filter(est => currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id)
@@ -562,7 +562,7 @@ const PedagogicalManagementPage = () => {
                 <SelectTrigger id="class-filter">
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
                   {classesToDisplayForFilter
                     .filter(cls => 
                       (!selectedEstablishmentFilter || cls.establishment_id === selectedEstablishmentFilter)
@@ -581,7 +581,8 @@ const PedagogicalManagementPage = () => {
                 <SelectTrigger id="school-year-filter">
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYearsOptions.map(year => (
                     <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                   ))}
@@ -593,8 +594,8 @@ const PedagogicalManagementPage = () => {
             {studentsInSelectedClassAndYear.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
                 {studentSearchQuery.trim() === '' && !selectedClassFilter && !selectedEstablishmentFilter && !selectedSchoolYearFilter
-                  ? "Aucun élève à afficher. Utilisez la recherche ou les filtres."
-                  : "Aucun élève trouvé pour votre recherche ou vos filtres."}
+                  ? <span>Aucun élève à afficher. Utilisez la recherche ou les filtres.</span>
+                  : <span>Aucun élève trouvé pour votre recherche ou vos filtres.</span>}
               </p>
             ) : (
               studentsInSelectedClassAndYear.map((profile) => {

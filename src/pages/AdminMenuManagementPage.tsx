@@ -231,6 +231,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
       const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
 
+      // NEW: Separate state for the edit dialog's parent input
+      const [editConfigParentInput, setEditConfigParentInput] = useState<string>('');
+      // NEW: Separate state for the edit dialog's Popover open state
+      const [openEditConfigParentSelect, setOpenEditConfigParentSelect] = useState(false);
+
+
       // New state for expanded items in the tree view
       const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
 
@@ -515,7 +521,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         let finalParentId: string | null = null;
         if (editConfigParentInput.trim() !== '') {
           // Check if parent category exists
-          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentParentInput.trim().toLowerCase() && !item.route);
+          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && !item.route);
 
           if (!parentItem) {
             // If not found, it means the user typed a new category name, so create it
@@ -835,11 +841,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         return filteredParents;
       }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds]);
 
-      const availableParentsForNewConfig = useMemo(() => {
-        // When adding a new item, any existing category can be a parent
-        return getFlattenedCategoriesForParentSelection(configuredItemsTree);
-      }, [configuredItemsTree, getFlattenedCategoriesForParentSelection]);
-
 
       return (
         <div className="space-y-8">
@@ -882,7 +883,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               </div>
               <div>
                 <Label htmlFor="establishment-filter">Établissement</Label>
-                <Select value={selectedEstablishmentFilter} onOnValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)} disabled={selectedRoleFilter === 'all'}>
+                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)} disabled={selectedRoleFilter === 'all'}>
                   <SelectTrigger id="establishment-filter">
                     <SelectValue placeholder="Tous les établissements (Global)" />
                   </SelectTrigger>
@@ -1104,10 +1105,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     setOpenEditConfigParentSelect(false);
                                   }}
                                 >
-                                  <PlusCircle className="mr-2 h-4 w-4" /> Créer la catégorie "{editConfigParentInput}"
+                                  <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{editConfigParentInput}"</span>
                                 </CommandItem>
                               ) : (
-                                <span>Aucune catégorie trouvée.</span> // Wrapped in span
+                                <span>Aucune catégorie trouvée.</span>
                               )}
                             </CommandEmpty>
                             <CommandGroup>
@@ -1119,7 +1120,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                   setOpenEditConfigParentSelect(false);
                                 }}
                               >
-                                Aucun (élément racine)
+                                <span>Aucun (élément racine)</span>
                               </CommandItem>
                               {availableParentsForConfig.map((item) => {
                                 const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
@@ -1134,8 +1135,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     }}
                                   >
                                     <div className="flex items-center gap-2">
-                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>} {/* Wrapped in span */}
-                                      <IconComponentToRender className="h-4 w-4" /> {item.label}
+                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
+                                      <IconComponentToRender className="h-4 w-4" /> <span>{item.label}</span>
                                     </div>
                                   </CommandItem>
                                 );

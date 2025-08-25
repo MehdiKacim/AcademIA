@@ -324,7 +324,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const renderChildItemsList = (items: NavItem[], containerId: string, isDraggableAndDeletable: boolean, onRemove?: (configId: string) => void) => {
     return (
       <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
-        {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2">Déposez des éléments ici</p>}
+        {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2"><span>Déposez des éléments ici</span></p>}
         <SortableContext items={items.map(item => item.configId || item.id)} strategy={verticalListSortingStrategy}>
           {items.map(item => (
             <SortableChildItem
@@ -368,13 +368,13 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                     <SelectContent className="backdrop-blur-lg bg-background/80">
                       <ScrollArea className="h-40">
                         {availableChildrenForAdd.length === 0 ? (
-                          <SelectItem value="no-items" disabled>Aucun élément disponible</SelectItem>
+                          <SelectItem value="no-items" disabled><span>Aucun élément disponible</span></SelectItem>
                         ) : (
                           availableChildrenForAdd.map(item => (
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                {item.label} {item.route && `(${item.route})`}
+                                <span>{item.label} {item.route && `(${item.route})`}</span>
                               </div>
                             </SelectItem>
                           ))
@@ -440,7 +440,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                                   return (
                                     <SelectItem key={iconName} value={iconName}>
                                       <div className="flex items-center gap-2">
-                                        <IconComponent className="h-4 w-4" /> {iconName}
+                                        <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
                                       </div>
                                     </SelectItem>
                                   );
