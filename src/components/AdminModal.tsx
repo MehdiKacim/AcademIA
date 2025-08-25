@@ -25,9 +25,10 @@ import { clearAllAppData } from '@/lib/dataReset';
 import InputWithStatus from './InputWithStatus';
 import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+// Removed loadEstablishments import
 import { Establishment, Profile } from '@/lib/dataModels'; // Import Establishment type, Profile
 import { bootstrapDefaultNavItemsForRole } from '@/lib/navItems'; // Import bootstrapDefaultNavItemsForRole
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible components
 
 interface AdminModalProps {
   isOpen: boolean;
