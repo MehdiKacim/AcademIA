@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils'; // Import cn for conditional styling
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -310,13 +311,13 @@ const GenericNavItemsPage = () => {
           <CardDescription>Visualisez et gérez les définitions de base des éléments de navigation.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {/* Routes Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Added grid for side-by-side */}
+            {/* Categories/Actions Section (moved to first column) */}
             <Collapsible defaultOpen={true}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between p-0">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <LinkIcon className="h-5 w-5 text-primary" /> Routes ({routes.length})
+                    <LayoutList className="h-5 w-5 text-primary" /> Catégories / Actions ({categoriesAndActions.length})
                   </h3>
                   <ChevronDown className="h-5 w-5 collapsible-icon" />
                 </Button>
@@ -327,18 +328,18 @@ const GenericNavItemsPage = () => {
                     <thead>
                       <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
                         <th className="p-2 text-left font-semibold">Libellé</th>
-                        <th className="p-2 text-left font-semibold">Route</th>
+                        <th className="p-2 text-left font-semibold">Route/Action</th>
                         <th className="p-2 text-left font-semibold">Icône</th>
                         <th className="p-2 text-left font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {routes.length === 0 ? (
+                      {categoriesAndActions.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune route générique à afficher.</td>
+                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune catégorie/action générique à afficher.</td>
                         </tr>
                       ) : (
-                        routes.map(item => {
+                        categoriesAndActions.map(item => {
                           const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                           return (
                             <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
@@ -367,12 +368,12 @@ const GenericNavItemsPage = () => {
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Categories/Actions Section */}
+            {/* Routes Section (moved to second column) */}
             <Collapsible defaultOpen={true}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between p-0">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <LayoutList className="h-5 w-5 text-primary" /> Catégories / Actions ({categoriesAndActions.length})
+                    <LinkIcon className="h-5 w-5 text-primary" /> Routes ({routes.length})
                   </h3>
                   <ChevronDown className="h-5 w-5 collapsible-icon" />
                 </Button>
@@ -383,18 +384,18 @@ const GenericNavItemsPage = () => {
                     <thead>
                       <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
                         <th className="p-2 text-left font-semibold">Libellé</th>
-                        <th className="p-2 text-left font-semibold">Route/Action</th>
+                        <th className="p-2 text-left font-semibold">Route</th>
                         <th className="p-2 text-left font-semibold">Icône</th>
                         <th className="p-2 text-left font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {categoriesAndActions.length === 0 ? (
+                      {routes.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune catégorie/action générique à afficher.</td>
+                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune route générique à afficher.</td>
                         </tr>
                       ) : (
-                        categoriesAndActions.map(item => {
+                        routes.map(item => {
                           const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                           return (
                             <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
