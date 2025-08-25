@@ -105,6 +105,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
       const hasChildren = item.children && item.children.length > 0;
 
+      const getItemTypeLabel = (item: NavItem) => {
+        if (item.route === null) return "Catégorie";
+        if (item.route && item.route.startsWith('#')) return "Action"; // Assuming hash routes are actions
+        if (item.route) return "Route";
+        return "Inconnu";
+      };
+
       return (
         <ContextMenu>
           <ContextMenuTrigger asChild>
@@ -155,6 +162,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 )}
                 <IconComponent className="h-5 w-5 text-primary" />
                 <span className="font-medium">{item.label}</span>
+                <span className="text-sm text-muted-foreground italic">({getItemTypeLabel(item)})</span>
                 {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
                 {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
                 {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
@@ -565,6 +573,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
       const handleDragStart = (event: any) => {
         const { active } = event;
+
         // Only allow dragging of configured items within the configured tree
         const configuredItem = findItemInTree(configuredItemsTree, active.id);
         if (configuredItem && configuredItem.configId) {
@@ -600,10 +609,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           let newParentNavItemId: string | null = null;
           let newOrderIndex: number = 0;
 
-          const overConfiguredItem = findItemInTree(configuredItemsTree, overId);
-          const overIsConfiguredRootContainer = overId === 'configured-container';
-          const overIsConfiguredChildContainer = overId.startsWith('configured-container-children-of-');
-
           if (selectedRoleFilter === 'all') {
             showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
             return;
@@ -611,7 +616,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
           console.log("[handleDragEnd] Active item:", activeDragItem);
           console.log("[handleDragEnd] Over ID:", overId);
-          console.log("[handleDragEnd] Over configured item:", overConfiguredItem);
+
+          const overConfiguredItem = findItemInTree(configuredItemsTree, overId);
+          const overIsConfiguredRootContainer = overId === 'configured-container';
+          const overIsConfiguredChildContainer = overId.startsWith('configured-container-children-of-');
 
           if (overConfiguredItem) {
             // Prevent circular dependency: an item cannot be its own parent or a descendant of itself
@@ -779,13 +787,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       }
 
       // Helper to flatten the tree for parent selection, excluding self and descendants
-      const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string }[] => {
-        let flattened: { id: string; label: string; level: number; icon_name?: string }[] = [];
+      const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] => {
+        let flattened: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
         items.forEach(item => {
           // Only items without a route (categories) can be parents
           if (!item.route && item.id !== excludeId) {
             const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
-            flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name }); // Include icon_name
+            flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name, typeLabel: "Catégorie" }); // Include icon_name and typeLabel
             // Recursively add children of this category
             if (item.children) {
               flattened = flattened.concat(getFlattenedCategoriesForParentSelection(item.children, excludeId, currentLevel + 1, newLabel));
@@ -814,6 +822,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         return filteredParents;
       }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds]);
 
+      const getItemTypeLabel = (item: NavItem) => {
+        if (item.route === null) return "Catégorie";
+        if (item.route && item.route.startsWith('#')) return "Action";
+        if (item.route) return "Route";
+        return "Inconnu";
+      };
 
       return (
         <div className="space-y-8">
@@ -921,6 +935,64 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               </CollapsibleContent>
             </Card>
           </Collapsible>
+
+          {/* Section: Éléments de navigation génériques (Tableau) */}
+          {selectedRoleFilter === 'all' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutList className="h-6 w-6 text-primary" /> Tous les éléments de navigation génériques
+                </CardTitle>
+                <CardDescription>Liste de tous les éléments de navigation de base disponibles.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-80 w-full rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
+                        <th className="p-2 text-left font-semibold">Libellé</th>
+                        <th className="p-2 text-left font-semibold">Type</th>
+                        <th className="p-2 text-left font-semibold">Route/Action</th>
+                        <th className="p-2 text-left font-semibold">Icône</th>
+                        <th className="p-2 text-left font-semibold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allGenericNavItems.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="p-4 text-center text-muted-foreground">Aucun élément générique à afficher.</td>
+                        </tr>
+                      ) : (
+                        allGenericNavItems.map(item => {
+                          const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                          return (
+                            <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                              <td className="p-2">{item.label}</td>
+                              <td className="p-2">{getItemTypeLabel(item)}</td>
+                              <td className="p-2">{item.route || '-'}</td>
+                              <td className="p-2">
+                                <div className="flex items-center gap-2">
+                                  <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
+                                </div>
+                              </td>
+                              <td className="p-2 flex gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
 
           {selectedRoleFilter !== 'all' && (
             <div className="grid grid-cols-1 gap-8">
@@ -1094,7 +1166,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                   >
                                     <div className="flex items-center gap-2">
                                       {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
-                                      <IconComponentToRender className="h-4 w-4" /> <span>{item.label}</span>
+                                      <IconComponentToRender className="h-4 w-4" /> <span>{item.label} ({item.typeLabel})</span>
                                     </div>
                                   </CommandItem>
                                 );
