@@ -94,7 +94,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   const attachChildren = (items: NavItem[]) => {
     items.forEach(item => {
       if (childrenOf[item.id]) {
-        item.children = childrenOf[item.id].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+        item.children = childrenOf[item.id].sort((a, b) => a.order_index - b.order_index);
         attachChildren(item.children);
       }
       if (item.route === '/messages') {
@@ -105,7 +105,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   attachChildren(rootItems);
 
-  rootItems.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+  rootItems.sort((a, b) => a.order_index - b.order_index);
   console.log("[loadNavItems] Final structured nav items:", rootItems);
 
   return rootItems;
@@ -133,7 +133,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     is_root: true, // All raw items are considered root in the generic list
     description: item.description || undefined,
     is_external: item.is_external,
-    children: [],
+    children: [], // Children are built dynamically, not stored in raw item
     order_index: 0, // Default order for raw items
     // parent_nav_item_id and establishment_id are not part of raw nav_items
   }));

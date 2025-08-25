@@ -179,7 +179,6 @@ import React, { useState, useEffect, useCallback } from 'react';
         setAllGenericNavItems(genericItems);
 
         if (selectedRoleFilter === 'all') {
-          // When 'all' is selected, show all generic items as unconfigured
           setUnconfiguredItems(genericItems);
           setConfiguredItemsTree([]);
         } else {
@@ -191,57 +190,81 @@ import React, { useState, useEffect, useCallback } from 'react';
           const configuredMap = new Map<string, NavItem>();
           const unconfigured: NavItem[] = [];
 
-          // First, create a map of all generic items
           const genericItemMap = new Map<string, NavItem>();
           genericItems.forEach(item => genericItemMap.set(item.id, { ...item, children: [] }));
 
-          // Populate configured items based on role configs
           roleConfigs.forEach(config => {
             const genericItem = genericItemMap.get(config.nav_item_id);
             if (genericItem) {
               const configuredItem: NavItem = {
                 ...genericItem,
                 children: [],
-                // Store config ID on the item for easier access in DND/edit
+                is_root: !config.parent_nav_item_id, // Explicitly set based on parent_nav_item_id
                 configId: config.id,
-                parent_nav_item_id: config.parent_nav_item_id || undefined, // Store parent_nav_item_id from config
-                order_index: config.order_index, // Store order_index from config
-                establishment_id: config.establishment_id || undefined, // Store establishment_id from config
+                parent_nav_item_id: config.parent_nav_item_id || undefined,
+                order_index: config.order_index,
+                establishment_id: config.establishment_id || undefined,
               };
               configuredMap.set(configuredItem.id, configuredItem);
             }
           });
 
-          // Build the configured tree
-          const rootConfiguredItems: NavItem[] = [];
-          const childrenOfConfigured: { [key: string]: NavItem[] } = {};
+          // Rebuild the tree and re-index
+          const allConfiguredItemsFlat: NavItem[] = Array.from(configuredMap.values());
 
-          configuredMap.forEach(item => {
-            if (item.parent_nav_item_id && configuredMap.has(item.parent_nav_item_id)) {
-              if (!childrenOfConfigured[item.parent_nav_item_id]) {
-                childrenOfConfigured[item.parent_nav_item_id] = [];
-              }
-              childrenOfConfigured[item.parent_nav_item_id].push(item);
-            } else {
-              rootConfiguredItems.push(item);
+          // Group items by parent_nav_item_id
+          const groupedByParent = new Map<string | null, NavItem[]>();
+          allConfiguredItemsFlat.forEach(item => {
+            const parentId = item.parent_nav_item_id || null;
+            if (!groupedByParent.has(parentId)) {
+              groupedByParent.set(parentId, []);
             }
+            groupedByParent.get(parentId)?.push(item);
           });
 
-          // Attach children and sort
-          const attachConfiguredChildren = (items: NavItem[]) => {
-            items.forEach(item => {
-              if (childrenOfConfigured[item.id]) {
-                item.children = childrenOfConfigured[item.id].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-                attachConfiguredChildren(item.children);
+          // Function to sort and re-index a list of items and update DB
+          const sortAndReindex = async (items: NavItem[], parentId: string | null) => {
+            items.sort((a, b) => a.order_index - b.order_index); // Sort by current order
+            for (let i = 0; i < items.length; i++) {
+              const item = items[i];
+              if (item.order_index !== i || item.parent_nav_item_id !== parentId) {
+                const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+                  id: item.configId!,
+                  nav_item_id: item.id,
+                  role: selectedRoleFilter as Profile['role'],
+                  parent_nav_item_id: parentId,
+                  order_index: i,
+                  establishment_id: item.establishment_id,
+                };
+                await updateRoleNavItemConfig(updatedConfig); // Update DB
+                item.order_index = i; // Update local item
+                item.parent_nav_item_id = parentId; // Update local item
+                item.is_root = (parentId === null); // Update local item
               }
-            });
+            }
           };
-          attachConfiguredChildren(rootConfiguredItems);
-          rootConfiguredItems.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
-          setConfiguredItemsTree(rootConfiguredItems);
+          // Process root items
+          const rootItemsToProcess = groupedByParent.get(null) || [];
+          await sortAndReindex(rootItemsToProcess, null);
+          const finalRootItems: NavItem[] = [...rootItemsToProcess];
 
-          // Determine unconfigured items (generic items not in roleConfigs)
+          // Recursively process children
+          const processChildren = async (parentItem: NavItem) => {
+            const children = groupedByParent.get(parentItem.id) || [];
+            await sortAndReindex(children, parentItem.id);
+            parentItem.children = children;
+            for (const child of children) {
+              await processChildren(child);
+            }
+          };
+
+          for (const rootItem of finalRootItems) {
+            await processChildren(rootItem);
+          }
+
+          setConfiguredItemsTree(finalRootItems);
+
           genericItems.forEach(genericItem => {
             if (!configuredMap.has(genericItem.id)) {
               unconfigured.push(genericItem);
@@ -249,7 +272,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           });
           setUnconfiguredItems(unconfigured);
         }
-      }, [selectedRoleFilter, selectedEstablishmentFilter]); // Re-run when selectedRoleFilter or selectedEstablishmentFilter changes
+      }, [selectedRoleFilter, selectedEstablishmentFilter]);
 
       useEffect(() => {
         fetchAndStructureNavItems();
@@ -260,14 +283,12 @@ import React, { useState, useEffect, useCallback } from 'react';
           showError("Le libellé est requis.");
           return;
         }
-        // Removed newItemIsRoot check
 
         setIsAddingItem(true);
         try {
-          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index'> = {
+          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root'> = {
             label: newItemLabel.trim(),
             route: newItemRoute.trim() || null,
-            // is_root: newItemIsRoot, // Removed
             description: newItemDescription.trim() || null,
             is_external: newItemIsExternal,
             icon_name: newItemIconName || null,
@@ -281,7 +302,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               nav_item_id: addedItem.id,
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: undefined, // No parent by default for new generic item config
-              order_index: 0, // Default order for new config
+              order_index: 0, // Temporary, will be re-indexed by fetchAndStructureNavItems
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter, // Use selected establishment
             };
             await addRoleNavItemConfig(newConfig);
@@ -292,7 +313,6 @@ import React, { useState, useEffect, useCallback } from 'react';
           // Reset form
           setNewItemLabel('');
           setNewItemRoute('');
-          // setNewItemIsRoot(false); // Removed
           setNewItemIconName('');
           setNewItemDescription('');
           setNewItemIsExternal(false);
@@ -335,7 +355,6 @@ import React, { useState, useEffect, useCallback } from 'react';
         setCurrentItemToEdit(item);
         setEditItemLabel(item.label);
         setEditItemRoute(item.route || '');
-        // setEditItemIsRoot(item.is_root); // Removed
         setEditItemIconName(item.icon_name || '');
         setEditItemDescription(item.description || '');
         setEditItemIsExternal(item.is_external || false);
@@ -351,11 +370,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsSavingEdit(true);
         try {
-          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index'> = {
+          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root'> = {
             id: currentItemToEdit.id,
             label: editItemLabel.trim(),
             route: editItemRoute.trim() || null,
-            // is_root: editItemIsRoot, // Removed
             description: editItemDescription.trim() || null,
             is_external: editItemIsExternal,
             icon_name: editItemIconName || null,
@@ -429,7 +447,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               nav_item_id: configuredItem.id,
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: configuredItem.parent_nav_item_id,
-              order_index: configuredItem.order_index || 0,
+              order_index: configuredItem.order_index,
               establishment_id: configuredItem.establishment_id,
             };
             setActiveDragItem(configuredItem);
@@ -447,128 +465,62 @@ import React, { useState, useEffect, useCallback } from 'react';
           return;
         }
 
-        const activeId = active.id as string; // This is configId if configured, or navItemId if generic
-        const overId = over.id as string; // This is configId if configured, or containerId if container
+        const activeId = active.id as string;
+        const overId = over.id as string;
 
         let successMessage = "Élément de navigation mis à jour !";
         let errorMessage = "Erreur lors de la mise à jour de l'élément.";
 
         try {
-          // Case 1: Dragging from Unconfigured to Configured list
-          if (unconfiguredItems.some(item => item.id === activeId) && (overId === 'configured-container' || configuredItemsTree.some(item => item.configId === overId || item.children?.some(c => c.configId === overId)))) {
+          // Find the active item's current config (if it's a configured item)
+          const activeConfig = activeDragConfig;
+
+          // Determine the target parent for the active item
+          let newParentNavItemId: string | null = null;
+          const overConfiguredItem = configuredItemsTree.find(item => item.configId === overId);
+
+          if (overConfiguredItem && !overConfiguredItem.route && overConfiguredItem.id !== activeDragItem.id) { // Dropped ONTO a category item (potential parent)
+            newParentNavItemId = overConfiguredItem.id;
+          } else if (overId === 'configured-container') { // Dropped into empty root area
+            newParentNavItemId = null;
+          } else if (overConfiguredItem) { // Dropped ONTO a non-category item (treat as sibling of its parent)
+            newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
+          } else if (unconfiguredItems.some(item => item.id === activeId) && overId === 'unconfigured-container') {
+            // Dropped back into unconfigured list, no DB update needed for parent/order
+            // This case is handled by deleting the config below
+          } else {
+            showError("Cible de dépôt non valide.");
+            return;
+          }
+
+          // Perform DB operations based on source and target
+          if (!activeConfig && activeDragItem) { // From Unconfigured to Configured
             if (selectedRoleFilter === 'all') {
               showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
               return;
             }
-            // Create a new role_nav_config entry
-            let newOrderIndex = 0; // Default order
-            let parentNavItemId: string | null = null;
-
-            if (overId !== 'configured-container') {
-              // Dropped onto an existing configured item, make it a sibling
-              const overConfiguredItem = configuredItemsTree.find(item => item.configId === overId || item.children?.some(c => c.configId === overId));
-              if (overConfiguredItem) {
-                parentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-                // Find the correct order index relative to siblings
-                const siblings = configuredItemsTree.filter(item => item.parent_nav_item_id === parentNavItemId);
-                newOrderIndex = siblings.findIndex(item => item.configId === overId) + 1;
-                if (newOrderIndex === 0) newOrderIndex = siblings.length; // If dropped before first, put at end
-              }
-            }
-
             const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
               nav_item_id: activeDragItem.id,
               role: selectedRoleFilter as Profile['role'],
-              parent_nav_item_id: parentNavItemId,
-              order_index: newOrderIndex,
+              parent_nav_item_id: newParentNavItemId,
+              order_index: 0, // Temporary, will be re-indexed by fetchAndStructureNavItems
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
             };
             await addRoleNavItemConfig(newConfig);
             successMessage = "Élément ajouté à la configuration du rôle !";
-          }
-          // Case 2: Dragging from Configured to Unconfigured list
-          else if (activeDragConfig && overId === 'unconfigured-container') {
-            // Delete the role_nav_config entry
-            await deleteRoleNavItemConfig(activeDragConfig.id);
+          } else if (activeConfig && overId === 'unconfigured-container') { // From Configured to Unconfigured
+            await deleteRoleNavItemConfig(activeConfig.id);
             successMessage = "Élément retiré de la configuration du rôle !";
-          }
-          // Case 3: Reordering within the Configured list
-          else if (activeDragConfig && (overId === 'configured-container' || configuredItemsTree.some(item => item.configId === overId || item.children?.some(c => c.configId === overId)))) {
-            const { item: activeFound, config: activeConfigFound, parent: activeParent, index: activeIndex } = findConfigItemAndParent(configuredItemsTree, activeId, selectedRoleFilter as Profile['role']);
-            const { item: overFound, config: overConfigFound, parent: overParent, index: overIndex } = findConfigItemAndParent(configuredItemsTree, overId, selectedRoleFilter as Profile['role']);
-
-            if (activeFound && activeConfigFound && overFound && overConfigFound) {
-              let sourceList = activeParent ? activeParent.children : configuredItemsTree;
-              let destinationList = overParent ? overParent.children : configuredItemsTree;
-
-              if (sourceList === destinationList) { // Moving within the same parent/level
-                const newOrder = arrayMove(sourceList, activeIndex, overIndex);
-                // Update order_index for all affected items
-                for (let i = 0; i < newOrder.length; i++) {
-                  const item = newOrder[i];
-                  const config = {
-                    id: item.configId!,
-                    nav_item_id: item.id,
-                    role: selectedRoleFilter as Profile['role'],
-                    parent_nav_item_id: item.parent_nav_item_id,
-                    order_index: i,
-                    establishment_id: item.establishment_id,
-                  };
-                  await updateRoleNavItemConfig(config);
-                }
-              } else { // Moving to a different parent/level (make it a sibling of overItem)
-                // Remove from old parent's children
-                if (activeParent) {
-                  activeParent.children = activeParent.children.filter(item => item.configId !== activeId);
-                  // Re-index remaining siblings
-                  for (let i = 0; i < activeParent.children.length; i++) {
-                    const item = activeParent.children[i];
-                    const config = {
-                      id: item.configId!,
-                      nav_item_id: item.id,
-                      role: selectedRoleFilter as Profile['role'],
-                      parent_nav_item_id: item.parent_nav_item_id,
-                      order_index: i,
-                      establishment_id: item.establishment_id,
-                    };
-                    await updateRoleNavItemConfig(config);
-                  }
-                } else { // Was a root item
-                  setConfiguredItemsTree(prev => prev.filter(item => item.configId !== activeId));
-                }
-
-                // Add to new parent's children (as sibling of overItem)
-                const newDestinationList = [...destinationList];
-                newDestinationList.splice(overIndex, 0, { ...activeFound, parent_nav_item_id: overParent?.id || undefined, order_index: overIndex, establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter }); // Temporarily add
-                // Re-index all items in the new destination list
-                for (let i = 0; i < newDestinationList.length; i++) {
-                  const item = newDestinationList[i];
-                  const config = {
-                    id: item.configId!,
-                    nav_item_id: item.id,
-                    role: selectedRoleFilter as Profile['role'],
-                    parent_nav_item_id: overParent?.id || null, // All items in this list get the same parent
-                    order_index: i,
-                    establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
-                  };
-                  await updateRoleNavItemConfig(config);
-                }
-              }
-            }
-            successMessage = "Ordre de navigation mis à jour !";
-          }
-          // Case 4: Reordering within Unconfigured list
-          else if (unconfiguredItems.some(item => item.id === activeId) && unconfiguredItems.some(item => item.id === overId)) {
-            // No DB update needed for unconfigured list reordering, only local state
-            const oldIndex = unconfiguredItems.findIndex(item => item.id === activeId);
-            const newIndex = unconfiguredItems.findIndex(item => item.id === overId);
-            if (oldIndex !== -1 && newIndex !== -1) {
-              const newUnconfigured = arrayMove(unconfiguredItems, oldIndex, newIndex);
-              setUnconfiguredItems(newUnconfigured);
-            }
-            successMessage = "Liste non configurée réorganisée.";
-          }
-          else {
+          } else if (activeConfig && activeDragItem) { // Within Configured (reorder or change parent)
+            const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+              ...activeConfig,
+              parent_nav_item_id: newParentNavItemId,
+              order_index: 0, // Temporary, will be re-indexed by fetchAndStructureNavItems
+              establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
+            };
+            await updateRoleNavItemConfig(updatedConfig);
+            successMessage = "Élément de navigation réorganisé/déplacé !";
+          } else {
             errorMessage = "Action de glisser-déposer non valide.";
             showError(errorMessage);
             return;
@@ -595,7 +547,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               nav_item_id: item.id,
               role: role,
               parent_nav_item_id: item.parent_nav_item_id,
-              order_index: item.order_index || 0,
+              order_index: item.order_index,
               establishment_id: item.establishment_id,
             };
             return { item, config, parent, index: i };

@@ -114,7 +114,7 @@ import {
           ];
         }
         // For authenticated users, use dynamicNavItems
-        const rootItems = dynamicNavItems.filter(item => item.is_root && !item.parent_nav_item_id);
+        const rootItems = dynamicNavItems.filter(item => item.is_root);
 
         const messagesItem = rootItems.find(item => item.label === "Messagerie");
         const searchItem = rootItems.find(item => item.label === "Recherche");
