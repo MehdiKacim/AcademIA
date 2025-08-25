@@ -80,7 +80,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         };
         const flattenedRoutes = flattenAndFilterRoutes(loadedNavItems);
         setDynamicRoutes(flattenedRoutes);
-        console.log("[RoleContext] Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes);
+        console.log("[RoleContext] Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes.map(r => r.route)); // <-- ADDED LOG HERE
       } catch (navError) {
         console.error("[RoleContext] Error loading nav items:", navError);
         showError("Erreur lors du chargement des menus de navigation.");

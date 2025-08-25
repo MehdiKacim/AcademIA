@@ -71,6 +71,11 @@ const AuthenticatedAppRoutes = () => {
     "/admin-menu-management/role-configs": RoleNavConfigsPage, // New route
   };
 
+  useEffect(() => {
+    console.log("[App.tsx] routeComponentMap keys:", Object.keys(routeComponentMap));
+    console.log("[App.tsx] dynamicRoutes from RoleContext:", dynamicRoutes.map(r => r.route));
+  }, [dynamicRoutes]); // Log when dynamicRoutes change
+
   if (isLoadingUser) {
     return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
   }
@@ -103,6 +108,7 @@ const AuthenticatedAppRoutes = () => {
                 {/* Dynamically generated routes */}
                 {dynamicRoutes.map(item => {
                   const Component = routeComponentMap[item.route!];
+                  console.log(`[App.tsx] Mapping route: ${item.route} to Component: ${Component ? Component.name : 'NOT_FOUND'}`); // <-- ADDED LOG HERE
                   return Component ? (
                     <Route
                       key={item.id}
