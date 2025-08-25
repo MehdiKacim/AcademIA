@@ -1,3 +1,5 @@
+console.log("[DashboardLayout.tsx] Module loaded."); // Early log to confirm file loading
+
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";

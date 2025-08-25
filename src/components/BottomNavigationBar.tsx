@@ -1,3 +1,5 @@
+console.log("[BottomNavigationBar.tsx] Module loaded."); // Early log to confirm file loading
+
 import {
       Home,
       MessageSquare,

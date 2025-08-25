@@ -1,3 +1,5 @@
+console.log("[navItems.ts] Module loaded."); // Early log to confirm file loading
+
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import RoleNavItemConfig
 
@@ -696,7 +698,12 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
   }
 };
 
-// Call this function to recreate default admin navigation
-ensureDefaultNavItemsForRole('administrator')
-  .then(() => console.log("Default administrator navigation ensured."))
-  .catch(error => console.error("Failed to ensure default administrator navigation:", error));
+console.log("[navItems.ts] Attempting to ensure default administrator navigation on module load.");
+(async () => {
+  try {
+    await ensureDefaultNavItemsForRole('administrator');
+    console.log("[navItems.ts] Default administrator navigation ensured successfully on module load.");
+  } catch (error) {
+    console.error("[navItems.ts] Failed to ensure default administrator navigation on module load:", error);
+  }
+})();

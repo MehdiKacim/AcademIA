@@ -1,3 +1,5 @@
+console.log("[RoleContext.tsx] Module loaded."); // Early log to confirm file loading
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
