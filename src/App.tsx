@@ -39,7 +39,6 @@ const queryClient = new QueryClient();
 
 // This component will now be the direct child of RoleProvider
 const AuthenticatedAppRoutes = () => {
-  console.log("[AuthenticatedAppRoutes] Rendering AuthenticatedAppRoutes, attempting to useRole.");
   const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
@@ -128,10 +127,13 @@ const AuthenticatedAppRoutes = () => {
 };
 
 const App = () => (
-  <RoleProvider>
-    {console.log("[App] RoleProvider is rendered.")}
-    <AuthenticatedAppRoutes />
-  </RoleProvider>
+  <QueryClientProvider client={queryClient}>
+    <RoleProvider>
+      <CourseChatProvider>
+        <AuthenticatedAppRoutes />
+      </CourseChatProvider>
+    </RoleProvider>
+  </QueryClientProvider>
 );
 
 export default App;
