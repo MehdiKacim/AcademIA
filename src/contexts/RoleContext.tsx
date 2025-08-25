@@ -88,7 +88,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         };
         const flattenedRoutes = flattenAndFilterRoutes(loadedNavItems);
         setDynamicRoutes(flattenedRoutes);
-        console.log("[RoleContext] Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes.map(r => r.route)); // <-- ADDED LOG HERE
+        console.log("[RoleContext] fetchUserProfile: Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes.map(r => r.route)); // <-- ADDED LOG HERE
       } catch (navError) {
         console.error("[RoleContext] Error loading nav items:", navError);
         showError("Erreur lors du chargement des menus de navigation.");
@@ -102,6 +102,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       setNavItems([]);
       setDynamicRoutes([]);
     }
+    console.log("[RoleContext] fetchUserProfile: Setting isLoadingUser to false. Final dynamicRoutes (map):", dynamicRoutes.map(r => r.route)); // Add this line
     setIsLoadingUser(false);
     console.log("[RoleContext] fetchUserProfile: Finished for userId:", userId);
   }, []); // No dependencies needed for useCallback as it's only called once or on auth state change

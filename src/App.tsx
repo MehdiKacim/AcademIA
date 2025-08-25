@@ -75,12 +75,17 @@ const App = () => {
 
     useEffect(() => {
       console.log("[App.tsx] routeComponentMap keys:", Object.keys(routeComponentMap));
-      console.log("[App.tsx] dynamicRoutes from RoleContext:", dynamicRoutes.map(r => r.route));
-    }, [dynamicRoutes]); // Log when dynamicRoutes change
+      console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
+      console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
+    }, [dynamicRoutes, currentUserProfile]); // Log when dynamicRoutes or currentUserProfile change
 
     if (isLoadingUser) {
+      console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
       return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
     }
+
+    console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is false. Rendering BrowserRouter. Current dynamicRoutes:", dynamicRoutes.map(r => r.route)); // Add this line
+    console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile); // Add this line
 
     return (
       <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
