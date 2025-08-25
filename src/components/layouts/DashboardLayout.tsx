@@ -223,10 +223,26 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 
       const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
+      // New handler for desktop category clicks
+      const handleDesktopCategoryClick = (categoryLabel: string, categoryIcon: React.ElementType, items: NavItem[]) => {
+        setDesktopActiveCategoryLabel(categoryLabel);
+        setDesktopActiveCategoryIcon(categoryIcon);
+        setDesktopActiveCategoryItems(items);
+        setIsDesktopCategoryOverlayOpen(true);
+      };
+
+      // New handler to go back from desktop category items to categories
+      const handleDesktopBackToCategories = () => {
+        setIsDesktopCategoryOverlayOpen(false);
+        setDesktopActiveCategoryLabel(null);
+        setDesktopActiveCategoryIcon(null);
+        setDesktopActiveCategoryItems([]);
+      };
+
       return (
         <div className="flex flex-col min-h-screen bg-muted/40">
           <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
-            <Logo onLogoClick={handleLogoClick} />
+            <Logo /> {/* Removed onLogoClick prop */}
             {!isMobile && currentUserProfile && groupedFullNavTree.length > 0 && (
               <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
                 {/* Render category buttons in the header for desktop */}
