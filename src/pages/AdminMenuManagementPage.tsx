@@ -273,6 +273,73 @@ const AdminMenuManagementPage = () => {
     }
   };
 
+  const handleMoveNavItem = useCallback(async (id: string, newParentId: string | undefined, newIndex: number) => {
+    const updatedNavItems = [...navItems]; // Create a mutable copy
+
+    // Find the item being moved
+    const itemToMoveIndex = updatedNavItems.findIndex(item => item.id === id);
+    if (itemToMoveIndex === -1) return;
+    const [itemToMove] = updatedNavItems.splice(itemToMoveIndex, 1);
+
+    // Update its properties
+    itemToMove.parent_id = newParentId || null;
+    itemToMove.is_root = newParentId === undefined;
+    itemToMove.order_index = newIndex; // This will be re-indexed later
+
+    // Insert it at the new position
+    updatedNavItems.splice(newIndex, 0, itemToMove);
+
+    // Re-index all items to ensure correct order_index and parent_id consistency
+    const reindexAndStructure = (items: NavItem[], currentParentId: string | null = null, currentLevel: number = 0): NavItem[] => {
+      const childrenMap = new Map<string | null, NavItem[]>();
+      items.forEach(item => {
+        const parent = item.parent_id || null;
+        if (!childrenMap.has(parent)) {
+          childrenMap.set(parent, []);
+        }
+        childrenMap.get(parent)?.push(item);
+      });
+
+      const sortedItems = (childrenMap.get(currentParentId) || []).sort((a, b) => a.order_index - b.order_index);
+
+      sortedItems.forEach((item, index) => {
+        item.order_index = index;
+        item.parent_id = currentParentId;
+        item.is_root = currentParentId === null;
+        item.children = reindexAndStructure(items, item.id, currentLevel + 1);
+      });
+      return sortedItems;
+    };
+
+    const newStructuredNavItems = reindexAndStructure(updatedNavItems, null);
+
+    // Flatten the new structured items for database update
+    const flattenItems = (items: NavItem[]): NavItem[] => {
+      let flat: NavItem[] = [];
+      items.forEach(item => {
+        flat.push(item);
+        if (item.children) {
+          flat = flat.concat(flattenItems(item.children));
+        }
+      });
+      return flat;
+    };
+
+    const itemsToUpdateInDb = flattenItems(newStructuredNavItems);
+
+    try {
+      for (const item of itemsToUpdateInDb) {
+        await updateNavItem(item);
+      }
+      showSuccess("Élément de navigation déplacé et réorganisé !");
+      await fetchNavItems(); // Fetch the fully updated and structured list
+    } catch (error: any) {
+      console.error("Error moving nav item:", error);
+      showError(`Erreur lors du déplacement de l'élément: ${error.message}`);
+    }
+  }, [navItems, fetchNavItems]);
+
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
