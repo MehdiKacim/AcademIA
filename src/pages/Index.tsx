@@ -334,6 +334,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         allNavItemsForDrawer={[]} // Pass empty array as nav items are now static for index
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)} // Pass the handler here
         isMoreDrawerOpen={isMoreDrawerOpen}
         setIsMoreDrawerOpen={setIsMoreDrawerOpen}
         unreadMessagesCount={0}

@@ -58,6 +58,7 @@ import {
       onOpenGlobalSearch?: () => void;
       currentUser?: { name?: string; id?: string };
       onOpenAboutModal: () => void;
+      onOpenAuthModal: () => void; // New prop
       isMoreDrawerOpen: boolean;
       setIsMoreDrawerOpen: (isOpen: boolean) => void;
       unreadMessagesCount: number;
@@ -73,6 +74,7 @@ import {
       onOpenGlobalSearch,
       currentUser,
       onOpenAboutModal,
+      onOpenAuthModal, // Use new prop
       isMoreDrawerOpen,
       setIsMoreDrawerOpen,
       unreadMessagesCount,
@@ -116,11 +118,11 @@ import {
         if (!currentUser) {
           return [
             { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_external: false, order_index: 0 },
-            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_external: false, onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); }, order_index: 1 }
+            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_external: false, onClick: onOpenAuthModal, order_index: 1 } // Direct call to onOpenAuthModal
           ];
         }
         // For authenticated users, use dynamicNavItems
-        const rootItems = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null);
+        const rootItems = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
         console.log("[BottomNavigationBar] fixedBottomNavItems: Root items from allNavItemsForDrawer:", rootItems);
 
         const messagesItem = rootItems.find(item => item.label === "Messagerie");
@@ -133,7 +135,7 @@ import {
         ].filter(Boolean) as NavItem[];
         console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Result:", baseItems);
         return baseItems;
-      }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, allNavItemsForDrawer, handleCategoryClick]);
+      }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, allNavItemsForDrawer, handleCategoryClick, onOpenAuthModal]);
 
       // This memo now prepares the list of items to display in the drawer,
       // distinguishing between top-level direct links and categories.
@@ -152,10 +154,10 @@ import {
           ].sort((a, b) => a.order_index - b.order_index);
         } else if (drawerContent === 'categories') {
           // For authenticated users, show top-level items (direct links or categories)
-          itemsToFilter = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null);
+          itemsToFilter = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
         } else if (drawerContent === 'items' && activeCategoryLabel) {
           // Show children of the active category
-          const activeCategory = allNavItemsForDrawer.find(item => item.label === activeCategoryLabel && item.route === null);
+          const activeCategory = allNavItemsForDrawer.find(item => item.label === activeCategoryLabel && (item.route === null || item.route === undefined));
           itemsToFilter = activeCategory?.children || [];
         }
         console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Items before filtering by search:", itemsToFilter);
@@ -335,7 +337,7 @@ import {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {currentDrawerItemsToDisplay.map((item) => {
                         const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                        const isCategory = item.route === null;
+                        const isCategory = item.route === null || item.route === undefined;
                         const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
 
                         return (
@@ -369,9 +371,7 @@ import {
                   )}
                 </div>
                 <DrawerFooter>
-                  {!currentUser && drawerContent === 'items' && activeCategoryLabel === 'Accueil' && (
-                    <AuthMenu onClose={() => setIsMoreDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
-                  )}
+                  {/* Removed AuthMenu from here */}
                   {currentUser && drawerContent === 'categories' && ( // Show logout only in top-level categories view for authenticated users
                     <Button
                       variant="destructive"
