@@ -358,6 +358,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           }
 
           setConfiguredItemsTree(finalRootItems);
+          console.log("[AdminMenuManagementPage] Configured items tree rebuilt:", finalRootItems);
+
 
           // Determine available generic items for adding (not yet configured for current context)
           const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
@@ -526,6 +528,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             order_index: editConfigOrderIndex,
             establishment_id: editConfigEstablishmentId === 'all' ? null : editConfigEstablishmentId, // Save establishment_id
           };
+          console.log("[AdminMenuManagementPage] Saving updated config:", updatedConfigData);
           await updateRoleNavItemConfig(updatedConfigData);
           showSuccess("Configuration de rôle mise à jour !");
           await fetchAndStructureNavItems(); // Refresh list
@@ -593,6 +596,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             return;
           }
 
+          console.log("[handleDragEnd] Active item:", activeDragItem);
+          console.log("[handleDragEnd] Over ID:", overId);
+          console.log("[handleDragEnd] Over configured item:", overConfiguredItem);
+
           if (overConfiguredItem) {
             // Prevent circular dependency: an item cannot be its own parent or a descendant of itself
             if (activeDragItem.id === overConfiguredItem.id) {
@@ -609,6 +616,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             if (!overConfiguredItem.route) { // If the over item is a category (no route)
                 newParentNavItemId = overConfiguredItem.id;
                 newOrderIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
+                console.log("[handleDragEnd] Dropped ONTO category. New parent:", newParentNavItemId, "New order:", newOrderIndex);
             } else { // If the over item is a leaf node (has a route) or a root item with a route
                 newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
                 const siblings =
@@ -621,12 +629,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 );
                 newOrderIndex =
                     overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
+                console.log("[handleDragEnd] Dropped BETWEEN items. New parent:", newParentNavItemId, "New order:", newOrderIndex);
             }
           } else if (overIsConfiguredRootContainer) {
             // Dropped into the root container (no specific parent)
             newParentNavItemId = null;
             newOrderIndex = configuredItemsTree.filter((item) => item.is_root)
               .length;
+            console.log("[handleDragEnd] Dropped into root container. New parent:", newParentNavItemId, "New order:", newOrderIndex);
           } else if (overIsConfiguredChildContainer) {
             // Dropped into a specific child container (e.g., children of a category)
             newParentNavItemId = overId.replace(
@@ -650,6 +660,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             }
 
             newOrderIndex = parentItem?.children?.length || 0;
+            console.log("[handleDragEnd] Dropped into child container. New parent:", newParentNavItemId, "New order:", newOrderIndex);
           } else {
             showError("Cible de dépôt non valide.");
             return;
@@ -662,6 +673,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
             establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
           };
+          console.log("[handleDragEnd] Updating config with:", updatedConfig);
           await updateRoleNavItemConfig(updatedConfig);
           showSuccess("Élément de navigation réorganisé/déplacé !");
 
@@ -794,7 +806,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
       const availableParentsForConfig = useMemo(() => {
         if (!currentItemToEdit) return [];
-        const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree, currentItemToEdit.id);
+        const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree);
         const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
 
         return allPotentialParents.filter(parent =>
