@@ -98,6 +98,8 @@ const AuthenticatedAppRoutes = () => {
 
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
+                {/* Redirect for the parent category route */}
+                <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
                 {/* Dynamically generated routes */}
                 {dynamicRoutes.map(item => {
                   const Component = routeComponentMap[item.route!];
