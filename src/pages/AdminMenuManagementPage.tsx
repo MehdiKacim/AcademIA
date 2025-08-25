@@ -788,13 +788,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       }
 
       // Helper to flatten the tree for parent selection, excluding self and descendants
-      const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number }[] => {
-        let flattened: { id: string; label: string; level: number }[] = [];
+      const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string }[] => {
+        let flattened: { id: string; label: string; level: number; icon_name?: string }[] = [];
         items.forEach(item => {
           // Only categories (no route) can be parents
           if (!item.route && item.id !== excludeId) {
             const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
-            flattened.push({ id: item.id, label: newLabel, level: currentLevel });
+            flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name }); // Include icon_name
             // Recursively add children of this category
             if (item.children) {
               flattened = flattened.concat(getFlattenedCategoriesForParentSelection(item.children, excludeId, currentLevel + 1, newLabel));
@@ -972,7 +972,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                             availableGenericItemsForAdd.map(item => (
                               <SelectItem key={item.id} value={item.id}>
                                 <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> {item.label} {item.route && `(${item.route})`}
+                                  {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
+                                  {item.label} {item.route && `(${item.route})`}
                                 </div>
                               </SelectItem>
                             ))
@@ -1101,12 +1102,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       </SelectTrigger>
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <SelectItem value="none">Aucun</SelectItem>
-                        {availableParentsForConfig.map(item => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {/* Indent parent options for better hierarchy visualization */}
-                            {Array(item.level).fill('—').join('')} {item.label}
-                          </SelectItem>
-                        ))}
+                        {availableParentsForConfig.map(item => {
+                          const IconComponent = item.icon_name ? iconMap[item.icon_name] || Info : Info; // Define IconComponent here
+                          return (
+                            <SelectItem key={item.id} value={item.id}>
+                              <div className="flex items-center gap-2">
+                                {Array(item.level).fill('—').join('')}
+                                <IconComponent className="h-4 w-4" /> {item.label}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
