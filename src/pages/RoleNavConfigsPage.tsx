@@ -32,7 +32,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/core'; // Changed to @dnd-kit/core
+} from '@dnd-kit/sortable'; // Corrected import path for SortableContext and useSortable
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
@@ -866,7 +866,7 @@ const RoleNavConfigsPage = () => {
                               >
                                 <div className="flex items-center gap-2">
                                   {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
-                                  <IconComponentToRender className="h-4 w-4" /> <span>{item.label} ({item.typeLabel})</span>
+                                  <IconComponentToRender className="h-4 w-4" /> <span>{item.label} ({item.typeLabel}) {item.isNew && "(Nouveau)"}</span>
                                 </div>
                               </CommandItem>
                             );
