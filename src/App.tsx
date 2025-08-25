@@ -38,7 +38,7 @@ import React, { useState, useEffect } from 'react';
 
     const queryClient = new QueryClient();
 
-    const AppWithThemeProvider = () => {
+    const AppContent = () => { // Renamed from AppWithThemeProvider
       const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole(); // Get dynamicRoutes from useRole
       const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
       // Removed useNavigate here
@@ -130,7 +130,7 @@ import React, { useState, useEffect } from 'react';
     const App = () => (
       <RoleProvider>
         <CourseChatProvider>
-          <AppWithThemeProvider />
+          <AppContent /> {/* Renamed AppWithThemeProvider to AppContent */}
         </CourseChatProvider>
       </RoleProvider>
     );
