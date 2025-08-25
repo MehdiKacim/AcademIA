@@ -10,7 +10,9 @@ const corsHeaders = {
 const DEFAULT_NAV_ITEMS_BY_ROLE = {
   administrator: [
     { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false, type: 'route' } },
-    { item: { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false, type: 'route' } },
+    { item: { label: 'Gestion des Menus', route: null, icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false, type: 'category_or_action' } },
+    { item: { label: 'Éléments de navigation', route: '/admin-menu-management/generic-items', icon_name: 'LayoutList', description: "Gérez les définitions de base des éléments de navigation", is_external: false, type: 'route' }, parentLabel: 'Gestion des Menus' },
+    { item: { label: 'Configuration par rôle', route: '/admin-menu-management/role-configs', icon_name: 'UserRoundCog', description: "Configurez les menus pour chaque rôle utilisateur", is_external: false, type: 'route' }, parentLabel: 'Gestion des Menus' },
   ],
   // Clearing default nav items for other roles as per request
   student: [],

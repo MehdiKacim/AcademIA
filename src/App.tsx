@@ -14,7 +14,6 @@ import Analytics from "./pages/Analytics";
 import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import AllNotes from "./pages/AllNotes";
-// Removed EstablishmentManagementPage import
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
 import ClassManagementPage from "./pages/ClassManagementPage";
 import StudentManagementPage from "./pages/StudentManagementPage";
@@ -33,7 +32,8 @@ import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { CourseChatProvider } from "./contexts/CourseChatContext";
 import AdminModal from "./components/AdminModal";
-import AdminMenuManagementPage from "./pages/AdminMenuManagementPage"; // Import the new page
+import GenericNavItemsPage from "./pages/GenericNavItemsPage"; // Import new page
+import RoleNavConfigsPage from "./pages/RoleNavConfigsPage"; // Import new page
 
 const queryClient = new QueryClient();
 
@@ -59,7 +59,6 @@ const AuthenticatedAppRoutes = () => {
     "/profile": Profile,
     "/settings": Settings,
     "/data-model": DataModelViewer,
-    // Removed "/establishments": EstablishmentManagementPage,
     "/admin-users": AdminUserManagementPage,
     "/subjects": SubjectManagementPage,
     "/school-years": SchoolYearManagementPage,
@@ -68,7 +67,8 @@ const AuthenticatedAppRoutes = () => {
     "/classes": ClassManagementPage,
     "/students": StudentManagementPage,
     "/pedagogical-management": PedagogicalManagementPage,
-    "/admin-menu-management": AdminMenuManagementPage,
+    "/admin-menu-management/generic-items": GenericNavItemsPage, // New route
+    "/admin-menu-management/role-configs": RoleNavConfigsPage, // New route
   };
 
   if (isLoadingUser) {
