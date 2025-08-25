@@ -234,14 +234,25 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [currentUserProfile?.id]);
 
+  // This useEffect now handles both initial timer and resetting on activity
   useEffect(() => {
-    startAutoHideTimer();
+    startAutoHideTimer(); // Initial hide timer
+
+    // Add event listeners for user activity to reset the timer and show the button
+    window.addEventListener('mousemove', resetAndShowButton);
+    window.addEventListener('keydown', resetAndShowButton);
+    window.addEventListener('scroll', resetAndShowButton);
+
     return () => {
       if (autoHideTimerRef.current) {
         clearTimeout(autoHideTimerRef.current);
       }
+      // Clean up event listeners
+      window.removeEventListener('mousemove', resetAndShowButton);
+      window.removeEventListener('keydown', resetAndShowButton);
+      window.removeEventListener('scroll', resetAndShowButton);
     };
-  }, [startAutoHideTimer]);
+  }, [startAutoHideTimer, resetAndShowButton]); // Add resetAndShowButton to dependencies
 
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
