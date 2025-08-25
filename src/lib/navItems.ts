@@ -2,6 +2,98 @@ import { supabase } from "@/integrations/supabase/client";
 import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import RoleNavItemConfig
 
 /**
+ * Insère les éléments de navigation et les configurations de rôle par défaut pour un administrateur.
+ * Cette fonction est appelée si aucune configuration n'est trouvée pour le rôle 'administrator'.
+ * @returns Un tableau des configurations de rôle nouvellement insérées.
+ */
+const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
+  console.warn("[insertDefaultAdminNavItems] Inserting default items for administrator.");
+  const defaultNavItems: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>[] = [
+    { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false },
+    { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false },
+    { label: 'Recherche', route: null, icon_name: 'Search', description: "Recherche globale dans l'application", is_external: false }, // This will be a trigger item
+    { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false },
+    { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false },
+    { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false },
+    { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false },
+    { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false },
+    { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false },
+    { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false },
+    { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false },
+    { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false },
+    { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false },
+    { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false },
+    { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false },
+    { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false },
+    { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false },
+  ];
+
+  const { data: insertedNavItems, error: insertError } = await supabase
+    .from('nav_items')
+    .insert(defaultNavItems)
+    .select();
+
+  if (insertError) {
+    console.error("Error inserting default nav items:", insertError);
+    throw insertError;
+  }
+
+  const defaultRoleConfigs: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
+  const navItemMap = new Map(insertedNavItems.map(item => [item.label, item.id]));
+
+  // Root items
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Tableau de bord')!, role: 'administrator', parent_nav_item_id: null, order_index: 0, establishment_id: null });
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Messagerie')!, role: 'administrator', parent_nav_item_id: null, order_index: 1, establishment_id: null });
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Recherche')!, role: 'administrator', parent_nav_item_id: null, order_index: 2, establishment_id: null });
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mon profil')!, role: 'administrator', parent_nav_item_id: null, order_index: 3, establishment_id: null });
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes cours')!, role: 'administrator', parent_nav_item_id: null, order_index: 4, establishment_id: null });
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes notes')!, role: 'administrator', parent_nav_item_id: null, order_index: 5, establishment_id: null });
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Analytiques')!, role: 'administrator', parent_nav_item_id: null, order_index: 6, establishment_id: null });
+
+  // "Système" category
+  const systemNavItem = insertedNavItems.find(item => item.label === 'Système');
+  if (!systemNavItem) { // Create "Système" if it doesn't exist
+    const { data: newSystemNavItem, error: systemInsertError } = await supabase
+      .from('nav_items')
+      .insert({ label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false })
+      .select()
+      .single();
+    if (systemInsertError) throw systemInsertError;
+    navItemMap.set('Système', newSystemNavItem.id);
+    defaultRoleConfigs.push({ nav_item_id: newSystemNavItem.id, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null });
+  } else {
+    defaultRoleConfigs.push({ nav_item_id: systemNavItem.id, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null });
+  }
+
+  // Children of "Système"
+  const systemParentId = navItemMap.get('Système');
+  if (systemParentId) {
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Paramètres')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 0, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Menus')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 1, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Utilisateurs')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 2, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Établissements')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 3, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Matières')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 4, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Cursus')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 5, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Classes')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 6, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion Pédagogique')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 7, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Affectations Professeurs-Matières')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 8, establishment_id: null });
+    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Années Scolaires')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 9, establishment_id: null });
+  }
+
+  const { data: configsInsertResult, error: configsInsertError } = await supabase
+    .from('role_nav_configs')
+    .insert(defaultRoleConfigs)
+    .select();
+
+  if (configsInsertError) {
+    console.error("Error inserting default role nav configs:", configsInsertError);
+    throw configsInsertError;
+  }
+  return configsInsertResult as RoleNavItemConfig[];
+};
+
+
+/**
  * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
  * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
  * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
@@ -46,168 +138,86 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   query = query.or(orConditions.join(','));
   console.log("[loadNavItems] Supabase query OR conditions:", orConditions.join(','));
 
-  const { data: configs, error: configsError } = await query;
+  let configs: RoleNavItemConfig[] = [];
+  const { data: fetchedConfigs, error: configsError } = await query;
 
   if (configsError) {
     console.error("[loadNavItems] Error loading role nav configs:", configsError);
     return [];
   }
+  configs = fetchedConfigs as RoleNavItemConfig[];
   console.log("[loadNavItems] Fetched configs:", configs);
 
   // --- Add default items for administrator if no configs found ---
   if (configs.length === 0 && userRole === 'administrator') {
-    console.warn("[loadNavItems] No configs found for administrator. Inserting default items.");
-    try {
-      const defaultNavItems: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>[] = [
-        { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false },
-        { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false },
-        { label: 'Recherche', route: null, icon_name: 'Search', description: "Recherche globale dans l'application", is_external: false }, // This will be a trigger item
-        { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false },
-        { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false },
-        { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false },
-        { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false },
-        { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false },
-        { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false },
-        { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false },
-        { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false },
-        { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false },
-        { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false },
-        { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false },
-        { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false },
-        { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false },
-        { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false },
-      ];
+    const newDefaultConfigs = await insertDefaultAdminNavItems();
+    configs = newDefaultConfigs; // Use the newly inserted configs
+  }
+  // --- END Add default items for administrator if no configs found ---
 
-      const { data: insertedNavItems, error: insertError } = await supabase
-        .from('nav_items')
-        .insert(defaultNavItems)
-        .select();
+  const navItemsMap = new Map<string, NavItem>();
+  const allItems: NavItem[] = [];
 
-      if (insertError) {
-        console.error("Error inserting default nav items:", insertError);
-        throw insertError;
-      }
-
-      const defaultRoleConfigs: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
-      const navItemMap = new Map(insertedNavItems.map(item => [item.label, item.id]));
-
-      // Root items
-      defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Tableau de bord')!, role: 'administrator', parent_nav_item_id: null, order_index: 0, establishment_id: null });
-      defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Messagerie')!, role: 'administrator', parent_nav_item_id: null, order_index: 1, establishment_id: null });
-      defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Recherche')!, role: 'administrator', parent_nav_item_id: null, order_index: 2, establishment_id: null });
-      defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mon profil')!, role: 'administrator', parent_nav_item_id: null, order_index: 3, establishment_id: null });
-      defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes cours')!, role: 'administrator', parent_nav_item_id: null, order_index: 4, establishment_id: null });
-      defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes notes')!, role: 'administrator', parent_nav_item_id: null, order_index: 5, establishment_id: null });
-      defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Analytiques')!, role: 'administrator', parent_nav_item_id: null, order_index: 6, establishment_id: null });
-
-      // "Système" category
-      const systemNavItem = insertedNavItems.find(item => item.label === 'Système');
-      if (!systemNavItem) { // Create "Système" if it doesn't exist
-        const { data: newSystemNavItem, error: systemInsertError } = await supabase
-          .from('nav_items')
-          .insert({ label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false })
-          .select()
-          .single();
-        if (systemInsertError) throw systemInsertError;
-        navItemMap.set('Système', newSystemNavItem.id);
-        defaultRoleConfigs.push({ nav_item_id: newSystemNavItem.id, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null });
-      } else {
-        defaultRoleConfigs.push({ nav_item_id: systemNavItem.id, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null });
-      }
-
-      // Children of "Système"
-      const systemParentId = navItemMap.get('Système');
-      if (systemParentId) {
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Paramètres')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 0, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Menus')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 1, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Utilisateurs')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 2, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Établissements')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 3, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Matières')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 4, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Cursus')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 5, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Classes')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 6, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion Pédagogique')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 7, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Affectations Professeurs-Matières')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 8, establishment_id: null });
-        defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Années Scolaires')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 9, establishment_id: null });
-      }
-
-      const { error: configsInsertError } = await supabase
-        .from('role_nav_configs')
-        .insert(defaultRoleConfigs);
-
-      if (configsInsertError) {
-        console.error("Error inserting default role nav configs:", configsInsertError);
-        throw configsInsertError;
-      }
-      // Re-fetch configs after insertion
-      const { data: newConfigs, error: newConfigsError } = await query;
-      if (newConfigsError) throw newConfigsError;
-      configs.splice(0, configs.length, ...newConfigs); // Update original configs array
+  configs.forEach((config: any) => {
+    if (config.nav_item) {
+      const navItem: NavItem = {
+        id: config.nav_item.id,
+        label: config.nav_item.label,
+        route: config.nav_item.route || undefined,
+        icon_name: config.nav_item.icon_name || undefined,
+        description: config.nav_item.description || undefined,
+        is_external: config.nav_item.is_external,
+        children: [],
+        parent_nav_item_id: config.parent_nav_item_id || undefined,
+        order_index: config.order_index, // Now mandatory, should always be a number from DB
+        configId: config.id,
+        establishment_id: config.establishment_id || undefined,
+        is_global: config.establishment_id === null, // New: Indicate if it's a global config
+      };
+      navItemsMap.set(navItem.id, navItem);
+      allItems.push(navItem);
     }
-    // --- END Add default items for administrator if no configs found ---
+  });
+  console.log("[loadNavItems] All items after mapping from configs:", allItems);
 
-    const navItemsMap = new Map<string, NavItem>();
-    const allItems: NavItem[] = [];
+  // Group items by parent_nav_item_id
+  const groupedByParent = new Map<string | null, NavItem[]>();
+  allItems.forEach(item => {
+    const parentId = item.parent_nav_item_id || null;
+    if (!groupedByParent.has(parentId)) {
+      groupedByParent.set(parentId, []);
+    }
+    groupedByParent.get(parentId)?.push(item);
+  });
 
-    configs.forEach((config: any) => {
-      if (config.nav_item) {
-        const navItem: NavItem = {
-          id: config.nav_item.id,
-          label: config.nav_item.label,
-          route: config.nav_item.route || undefined,
-          icon_name: config.nav_item.icon_name || undefined,
-          description: config.nav_item.description || undefined,
-          is_external: config.nav_item.is_external,
-          children: [],
-          parent_nav_item_id: config.parent_nav_item_id || undefined,
-          order_index: config.order_index, // Now mandatory, should always be a number from DB
-          configId: config.id,
-          establishment_id: config.establishment_id || undefined,
-          is_global: config.establishment_id === null, // New: Indicate if it's a global config
-        };
-        navItemsMap.set(navItem.id, navItem);
-        allItems.push(navItem);
+  // Function to build the tree recursively
+  const buildTree = (parentId: string | null): NavItem[] => {
+    const children = groupedByParent.get(parentId) || [];
+    children.sort((a, b) => a.order_index - b.order_index); // Sort by order_index
+
+    return children.map(item => ({
+      ...item,
+      children: buildTree(item.id), // Recursively get children
+    }));
+  };
+
+  const rootItems = buildTree(null); // Start building from root (parent_id is null)
+  console.log("[loadNavItems] Final structured nav items:", rootItems);
+
+  // Apply badge for messages
+  const applyMessageBadge = (items: NavItem[]) => {
+    items.forEach(item => {
+      if (item.route === '/messages') {
+        item.badge = unreadMessagesCount;
+      }
+      if (item.children) {
+        applyMessageBadge(item.children);
       }
     });
-    console.log("[loadNavItems] All items after mapping from configs:", allItems);
+  };
+  applyMessageBadge(rootItems);
 
-    // Group items by parent_nav_item_id
-    const groupedByParent = new Map<string | null, NavItem[]>();
-    allItems.forEach(item => {
-      const parentId = item.parent_nav_item_id || null;
-      if (!groupedByParent.has(parentId)) {
-        groupedByParent.set(parentId, []);
-      }
-      groupedByParent.get(parentId)?.push(item);
-    });
-
-    // Function to build the tree recursively
-    const buildTree = (parentId: string | null): NavItem[] => {
-      const children = groupedByParent.get(parentId) || [];
-      children.sort((a, b) => a.order_index - b.order_index); // Sort by order_index
-
-      return children.map(item => ({
-        ...item,
-        children: buildTree(item.id), // Recursively get children
-      }));
-    };
-
-    const rootItems = buildTree(null); // Start building from root (parent_id is null)
-    console.log("[loadNavItems] Final structured nav items:", rootItems);
-
-    // Apply badge for messages
-    const applyMessageBadge = (items: NavItem[]) => {
-      items.forEach(item => {
-        if (item.route === '/messages') {
-          item.badge = unreadMessagesCount;
-        }
-        if (item.children) {
-          applyMessageBadge(item.children);
-        }
-      });
-    };
-    applyMessageBadge(rootItems);
-
-    return rootItems;
+  return rootItems;
 };
 
 /**
