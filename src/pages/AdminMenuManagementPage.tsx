@@ -68,9 +68,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       isDragging?: boolean;
       isDraggableAndDeletable: boolean;
       selectedRoleFilter: Profile['role'] | 'all'; // Pass selectedRoleFilter
+      isExpanded: boolean; // New prop for expansion state
+      onToggleExpand: (itemId: string) => void; // New prop to toggle expansion
     }
 
-    const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, level, onEditGenericItem, onEditRoleConfig, onDelete, onManageChildren, isDragging, isDraggableAndDeletable, selectedRoleFilter }, ref) => {
+    const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, level, onEditGenericItem, onEditRoleConfig, onDelete, onManageChildren, isDragging, isDraggableAndDeletable, selectedRoleFilter, isExpanded, onToggleExpand }, ref) => {
       const {
         attributes,
         listeners,
@@ -98,11 +100,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         establishment_id: item.establishment_id,
       } : undefined;
 
+      const hasChildren = item.children && item.children.length > 0;
+
       return (
         <ContextMenu>
           <ContextMenuTrigger asChild>
             <div ref={setNodeRef} style={style} className={cn("p-3 border rounded-md bg-background flex items-center justify-between gap-2 mb-2", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
-              <div className="flex items-center gap-2 flex-grow">
+              <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={() => hasChildren && onToggleExpand(item.id)}>
                 {isDraggableAndDeletable && (
                   <Button
                     type="button"
@@ -116,12 +120,23 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <span className="sr-only">Déplacer l'élément</span>
                   </Button>
                 )}
+                {hasChildren && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onToggleExpand(item.id)}
+                    className="h-5 w-5"
+                  >
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <span className="sr-only">{isExpanded ? 'Réduire' : 'Étendre'}</span>
+                  </Button>
+                )}
                 <IconComponent className="h-5 w-5 text-primary" />
                 <span className="font-medium">{item.label}</span>
                 {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
                 {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
                 {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
-                {/* Removed item.children?.length check here, now any item without a route can be a category */}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
@@ -197,6 +212,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
       const [availableGenericItemsForAdd, setAvailableGenericItemsForAdd] = useState<NavItem[]>([]);
 
+      // New state for expanded items in the tree view
+      const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
 
       const sensors = useSensors(
         useSensor(PointerSensor),
@@ -678,6 +695,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         }
       };
 
+      const toggleExpand = (itemId: string) => {
+        setExpandedItems(prev => ({
+          ...prev,
+          [itemId]: !prev[itemId],
+        }));
+      };
+
       const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
         return (
           <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
@@ -695,8 +719,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
                     isDraggableAndDeletable={!item.is_global || selectedEstablishmentFilter === 'all'}
                     selectedRoleFilter={selectedRoleFilter} // Pass selectedRoleFilter
+                    isExpanded={!!expandedItems[item.id]} // Pass expansion state
+                    onToggleExpand={toggleExpand} // Pass toggle function
                   />
-                  {item.children && item.children.length > 0 && (
+                  {item.children && item.children.length > 0 && expandedItems[item.id] && (
                     <div className="ml-4">
                       {/* Recursive call for children, passing a unique containerId for them */}
                       {renderNavItemsList(item.children, level + 1, `${containerId}-children-of-${item.id}`)}
@@ -950,6 +976,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                           isDragging={true}
                           isDraggableAndDeletable={!activeDragItem.is_global || selectedEstablishmentFilter === 'all'}
                           selectedRoleFilter={selectedRoleFilter}
+                          isExpanded={false} // Drag overlay is never expanded
+                          onToggleExpand={() => {}} // No-op for drag overlay
                         />
                       ) : null}
                     </DragOverlay>
