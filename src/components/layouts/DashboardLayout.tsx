@@ -62,6 +62,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Initialize with null
 
+  // New states for desktop menu auto-hide
+  const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
+  const desktopMenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Log navItems and currentUserProfile when they are available
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
@@ -85,6 +89,21 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     setIsAiAChatButtonVisible(true);
     startAutoHideTimer();
   }, [startAutoHideTimer]);
+
+  // Functions to manage desktop menu auto-hide timer
+  const startDesktopMenuAutoHideTimer = useCallback(() => {
+    if (desktopMenuTimerRef.current) {
+      clearTimeout(desktopMenuTimerRef.current);
+    }
+    desktopMenuTimerRef.current = setTimeout(() => {
+      setIsDesktopMenuVisible(false);
+    }, 5000); // 5 seconds
+  }, []);
+
+  const showDesktopMenuAndResetTimer = useCallback(() => {
+    setIsDesktopMenuVisible(true);
+    startDesktopMenuAutoHideTimer();
+  }, [startDesktopMenuAutoHideTimer]);
 
   const handleLogout = async () => {
     await signOut();
@@ -113,6 +132,53 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  // New useEffect to manage desktop menu visibility based on activity and overlay state
+  useEffect(() => {
+    if (isMobile || !currentUserProfile) {
+      setIsDesktopMenuVisible(true); // Ensure menu is always visible on mobile or if not logged in
+      if (desktopMenuTimerRef.current) {
+        clearTimeout(desktopMenuTimerRef.current);
+        desktopMenuTimerRef.current = null;
+      }
+      return;
+    }
+
+    if (isDesktopOverlayOpen) {
+      // If desktop overlay is open, keep menu visible and clear any auto-hide timer
+      setIsDesktopMenuVisible(true);
+      if (desktopMenuTimerRef.current) {
+        clearTimeout(desktopMenuTimerRef.current);
+        desktopMenuTimerRef.current = null;
+      }
+    } else {
+      // If overlay is closed, manage auto-hide based on activity
+      startDesktopMenuAutoHideTimer();
+    }
+
+    // Cleanup function for this effect
+    return () => {
+      if (desktopMenuTimerRef.current) {
+        clearTimeout(desktopMenuTimerRef.current);
+      }
+    };
+  }, [isMobile, currentUserProfile, isDesktopOverlayOpen, startDesktopMenuAutoHideTimer]);
+
+  // Existing useEffect for mouse/keyboard/scroll events, now also dependent on isDesktopOverlayOpen
+  useEffect(() => {
+    if (!isMobile && currentUserProfile && !isDesktopOverlayOpen) { // Only add listeners if not mobile, logged in, and overlay is NOT open
+      window.addEventListener('mousemove', showDesktopMenuAndResetTimer);
+      window.addEventListener('keydown', showDesktopMenuAndResetTimer);
+      window.addEventListener('scroll', showDesktopMenuAndResetTimer);
+
+      return () => {
+        window.removeEventListener('mousemove', showDesktopMenuAndResetTimer);
+        window.removeEventListener('keydown', showDesktopMenuAndResetTimer);
+        window.removeEventListener('scroll', showDesktopMenuAndResetTimer);
+      };
+    }
+  }, [isMobile, currentUserProfile, isDesktopOverlayOpen, showDesktopMenuAndResetTimer]);
+
 
   useEffect(() => {
     let channel: any;
@@ -162,12 +228,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [currentUserProfile?.id]);
 
-  // This function generates the full, structured navigation tree for desktop sidebar
-  const fullNavTree = React.useMemo((): NavItem[] => {
-    console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems (from RoleContext):", navItems);
-    return navItems;
-  }, [navItems]); // Dependency on navItems from context
-
   useEffect(() => {
     startAutoHideTimer();
     return () => {
@@ -207,9 +267,21 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   // Memoize the context value for Outlet
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
+  // This function generates the full, structured navigation tree for desktop sidebar
+  const fullNavTree = React.useMemo((): NavItem[] => {
+    console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems (from RoleContext):", navItems);
+    return navItems;
+  }, [navItems]); // Dependency on navItems from context
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
-      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
+      <header
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 transition-opacity duration-300 ease-in-out",
+          !isMobile && currentUserProfile && !isDesktopMenuVisible && !isDesktopOverlayOpen && "opacity-0 pointer-events-none",
+          !isMobile && currentUserProfile && (isDesktopMenuVisible || isDesktopOverlayOpen) && "opacity-100 pointer-events-auto"
+        )}
+      >
         <Logo />
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && ( // Use headerNavItems here
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
