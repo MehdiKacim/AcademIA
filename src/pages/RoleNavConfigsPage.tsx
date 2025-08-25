@@ -12,30 +12,12 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
-import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems";
+import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole, bootstrapDefaultNavItemsForRole } from "@/lib/navItems";
 import { useRole } from '@/contexts/RoleContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea }
+ from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverlay,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { arrayMove } from '@dnd-kit/sortable';
-import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -364,6 +346,7 @@ const RoleNavConfigsPage = () => {
       };
       await addRoleNavItemConfig(newConfig);
       showSuccess("Élément ajouté au menu du rôle !");
+
       await fetchAndStructureNavItems();
     } catch (error: any) {
       console.error("Error adding generic item to role menu:", error);
@@ -450,7 +433,7 @@ const RoleNavConfigsPage = () => {
       return;
     }
 
-    setIsSavingConfigEdit(true); // Corrected state setter name
+    setIsSavingEdit(true); // Corrected state setter name
     try {
       const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
         id: currentConfigToEdit.id,
@@ -470,7 +453,7 @@ const RoleNavConfigsPage = () => {
       console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
     } finally {
-      setIsSavingConfigEdit(false); // Corrected state setter name
+      setIsSavingEdit(false); // Corrected state setter name
     }
   };
 
@@ -677,6 +660,24 @@ const RoleNavConfigsPage = () => {
     return sortedParents;
   }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds]);
 
+  const handleResetRoleNav = async () => {
+    if (selectedRoleFilter === 'all') {
+      showError("Veuillez sélectionner un rôle spécifique à réinitialiser.");
+      return;
+    }
+    if (window.confirm(`Êtes-vous sûr de vouloir réinitialiser la navigation par défaut pour le rôle '${selectedRoleFilter}' ? Cela écrasera toutes les configurations existantes pour ce rôle.`)) {
+      try {
+        await resetRoleNavConfigsForRole(selectedRoleFilter as Profile['role']);
+        await bootstrapDefaultNavItemsForRole(selectedRoleFilter as Profile['role']);
+        showSuccess(`Navigation par défaut réinitialisée pour le rôle '${selectedRoleFilter}' !`);
+        await fetchAndStructureNavItems(); // Re-fetch to update UI
+      } catch (error: any) {
+        console.error("Error resetting role navigation defaults:", error);
+        showError(`Erreur lors de la réinitialisation de la navigation: ${error.message}`);
+      }
+    }
+  };
+
   if (isLoadingUser) {
     return (
       <div className="text-center py-20">
@@ -724,7 +725,7 @@ const RoleNavConfigsPage = () => {
             <Label htmlFor="role-filter">Rôle sélectionné</Label>
             <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
               <SelectTrigger id="role-filter">
-                <SelectValue placeholder="Sélectionner un rôle" />
+                <SelectValue placeholder="Sélectionner un rôle..." />
               </SelectTrigger>
               <SelectContent className="backdrop-blur-lg bg-background/80">
                 <SelectItem value="all">Sélectionner un rôle...</SelectItem>
@@ -741,6 +742,11 @@ const RoleNavConfigsPage = () => {
               </SelectContent>
             </Select>
           </div>
+          {selectedRoleFilter !== 'all' && (
+            <Button onClick={handleResetRoleNav} variant="outline" className="mt-auto">
+              <RefreshCw className="h-4 w-4 mr-2" /> Réinitialiser la navigation pour ce rôle
+            </Button>
+          )}
         </CardContent>
       </Card>
 

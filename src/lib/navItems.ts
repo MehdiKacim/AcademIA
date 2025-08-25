@@ -1,5 +1,3 @@
-console.log("[navItems.ts] Module loaded."); // Early log to confirm file loading
-
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "./dataModels"; // Import RoleNavItemConfig and ALL_ROLES
 
@@ -50,6 +48,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   const configs = fetchedConfigs as RoleNavItemConfig[];
   const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
+  const configuredNavItemIds = new Set<string>(); // Keep track of generic nav_item_ids that are configured
 
   configs.forEach((config: any) => {
     if (config.nav_item) {
@@ -68,11 +67,45 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         // is_global is a frontend concept, not directly from DB here
       };
       navItemNodes.set(navItem.id, navItem);
+      configuredNavItemIds.add(navItem.id);
     } else {
       console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
     }
   });
   console.log(`[loadNavItems] Populated navItemNodes for ${userRole} (count): ${navItemNodes.size}`);
+
+  // Ensure '/dashboard' is always present for authenticated users
+  if (userRole !== null && !configuredNavItemIds.has('dashboard-generic-item-id')) { // Use a consistent ID for the generic dashboard item
+    const dashboardGenericItem = {
+      id: 'dashboard-generic-item-id', // This ID should match the one used in manage-nav-items Edge Function
+      label: 'Tableau de bord',
+      route: '/dashboard',
+      icon_name: 'LayoutDashboard',
+      description: "Vue d'overview de l'application",
+      is_external: false,
+      type: 'route',
+      children: [],
+      order_index: -1, // Give it a high priority to appear first
+      parent_nav_item_id: undefined,
+      configId: `temp-dashboard-config-${userRole}`, // Temporary configId for non-persisted item
+      is_global: true,
+    };
+    // Add it to navItemNodes if it's not already there
+    if (!navItemNodes.has(dashboardGenericItem.id)) {
+      navItemNodes.set(dashboardGenericItem.id, dashboardGenericItem);
+    }
+    // Also add a temporary config entry if not already configured
+    if (!configs.some(c => c.nav_item_id === dashboardGenericItem.id)) {
+        configs.push({
+            id: dashboardGenericItem.configId!,
+            nav_item_id: dashboardGenericItem.id,
+            role: userRole,
+            parent_nav_item_id: null,
+            order_index: dashboardGenericItem.order_index,
+        });
+    }
+  }
+
 
   const rootItems: NavItem[] = [];
 
