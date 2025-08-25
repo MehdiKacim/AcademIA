@@ -35,6 +35,7 @@ import { CourseChatProvider } from "./contexts/CourseChatContext";
 import AdminModal from "./components/AdminModal";
 import { loadNavItems } from "./lib/navItems"; // Import loadNavItems
 import { NavItem } from "./lib/dataModels"; // Import NavItem type
+import AdminMenuManagementPage from "./pages/AdminMenuManagementPage"; // Import the new page
 
 const queryClient = new QueryClient();
 
@@ -123,6 +124,7 @@ const AppWithThemeProvider = () => {
                           item.route === "/classes" ? <ClassManagementPage /> :
                           item.route === "/students" ? <StudentManagementPage /> :
                           item.route === "/pedagogical-management" ? <PedagogicalManagementPage /> :
+                          item.route === "/admin-menu-management" ? <AdminMenuManagementPage /> : // Added this line
                           <NotFound /> // Fallback for unmapped dynamic routes
                         }
                       />
