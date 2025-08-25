@@ -83,37 +83,6 @@ const SortableNavItem = ({ item, level, onEdit, onDelete, onMove, parentChildren
 
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (active.id !== over?.id) {
-      const activeItem = allNavItems.find(i => i.id === active.id);
-      const overItem = allNavItems.find(i => i.id === over?.id);
-
-      if (!activeItem || !overItem) return;
-
-      // Determine new parent and new index
-      let newParentId = overItem.parent_id;
-      let newIndex = overItem.order_index;
-
-      // If dropped on a category item, make it a child of that category
-      if (overItem.route === null && overItem.children && overItem.children.length > 0) {
-        newParentId = overItem.id;
-        newIndex = overItem.children.length; // Add to the end of children
-      } else if (overItem.is_root && !overItem.parent_id && !overItem.children) {
-        // If dropped on a root item without children, keep it at the same level
-        newParentId = undefined;
-        newIndex = overItem.order_index;
-      } else {
-        // If dropped on a regular item, try to insert it at the same level
-        newParentId = overItem.parent_id;
-        newIndex = overItem.order_index;
-      }
-
-      onMove(activeItem.id, newParentId, newIndex);
-    }
-  };
-
   return (
     <div ref={setNodeRef} style={style} className={cn("p-3 border rounded-md bg-background flex items-center justify-between gap-2 mb-2", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
       <div className="flex items-center gap-2 flex-grow">
@@ -304,85 +273,102 @@ const AdminMenuManagementPage = () => {
     }
   };
 
-  const handleMoveNavItem = async (id: string, newParentId: string | undefined, newIndex: number) => {
-    const itemToMove = navItems.find(item => item.id === id);
-    if (!itemToMove) return;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
 
-    // Create a mutable copy of the navItems for reordering logic
-    const mutableNavItems = JSON.parse(JSON.stringify(navItems)) as NavItem[];
+    if (active.id !== over?.id) {
+      const activeItem = navItems.find(i => i.id === active.id);
+      const overItem = navItems.find(i => i.id === over?.id);
 
-    // Remove item from its current position
-    const removeItem = (items: NavItem[], targetId: string): [NavItem | null, NavItem[]] => {
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].id === targetId) {
-          const [removed] = items.splice(i, 1);
-          return [removed, items];
-        }
-        if (items[i].children) {
-          const [removed, updatedChildren] = removeItem(items[i].children!, targetId);
-          if (removed) {
-            items[i].children = updatedChildren;
-            return [removed, items];
-          }
-        }
-      }
-      return [null, items];
-    };
+      if (!activeItem || !overItem) return;
 
-    const [removedItem, updatedNavItemsAfterRemoval] = removeItem(mutableNavItems, id);
-    if (!removedItem) return;
-
-    // Insert item into new position
-    const insertItem = (items: NavItem[], targetParentId: string | undefined, itemToInsert: NavItem, index: number): NavItem[] => {
-      if (targetParentId === undefined) { // Root level
-        items.splice(index, 0, itemToInsert);
-      } else {
-        const parent = items.find(i => i.id === targetParentId);
-        if (parent) {
-          parent.children = parent.children || [];
-          parent.children.splice(index, 0, itemToInsert);
-        }
-      }
-      return items;
-    };
-
-    const finalNavItems = insertItem(updatedNavItemsAfterRemoval, newParentId, { ...removedItem, parent_id: newParentId || null, is_root: newParentId === undefined }, newIndex);
-
-    // Re-index all items after move
-    const reindexItems = (items: NavItem[], currentParentId: string | null = null) => {
-      items.forEach((item, index) => {
-        item.order_index = index;
-        item.parent_id = currentParentId;
-        item.is_root = currentParentId === null;
-        if (item.children) {
-          reindexItems(item.children, item.id);
-        }
-      });
-    };
-
-    reindexItems(finalNavItems);
-
-    // Update all affected items in DB
-    try {
-      const allItemsToUpdate: NavItem[] = [];
+      // Create a flat list of all items to easily find indices
+      const flatNavItems: NavItem[] = [];
       const collectItems = (items: NavItem[]) => {
         items.forEach(item => {
-          allItemsToUpdate.push(item);
+          flatNavItems.push(item);
           if (item.children) {
             collectItems(item.children);
           }
         });
       };
-      collectItems(finalNavItems);
+      collectItems(navItems);
 
-      for (const item of allItemsToUpdate) {
-        await updateNavItem(item);
+      const oldIndex = flatNavItems.findIndex(item => item.id === active.id);
+      const newIndex = flatNavItems.findIndex(item => item.id === over?.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      // Determine the new parent and order index
+      let newParentId: string | undefined = undefined;
+      let newOrderIndex = newIndex;
+
+      // If dropped onto another item, try to make it a sibling
+      // For simplicity, we'll assume dropping on an item makes it a sibling at the same level
+      // More complex logic would be needed for dropping *into* a parent
+      newParentId = overItem.parent_id;
+      
+      // If the over item is a root item and has no children, and the active item is also a root item,
+      // then they should remain siblings at the root level.
+      if (overItem.is_root && !overItem.children?.length && activeItem.is_root) {
+        newParentId = undefined;
+      } else if (overItem.is_root && overItem.children?.length === 0 && !activeItem.is_root) {
+        // If dropped on an empty root item, make it a child
+        newParentId = overItem.id;
+        newOrderIndex = 0; // First child
+      } else if (overItem.is_root && overItem.children?.length && !activeItem.is_root) {
+        // If dropped on a root item with children, add to its children
+        newParentId = overItem.id;
+        newOrderIndex = overItem.children.length; // Add to the end of children
       }
-      showSuccess("Éléments de navigation réorganisés !");
-      await fetchNavItems(); // Final refresh
-    } catch (error: any) {
-      console.error("Error reordering nav items:", error);
-      showError(`Erreur lors de la réorganisation des éléments: ${error.message}`);
+
+
+      // Update the item's parent_id and is_root status
+      const updatedItemToMove = {
+        ...activeItem,
+        parent_id: newParentId || null,
+        is_root: newParentId === undefined,
+      };
+
+      // Reconstruct the tree with the moved item
+      const reorderedNavItems = arrayMove(navItems, oldIndex, newIndex);
+
+      // Re-index all items after move
+      const reindexItems = (items: NavItem[], currentParentId: string | null = null) => {
+        items.forEach((item, index) => {
+          item.order_index = index;
+          item.parent_id = currentParentId;
+          item.is_root = currentParentId === null;
+          if (item.children) {
+            reindexItems(item.children, item.id);
+          }
+        });
+      };
+
+      reindexItems(reorderedNavItems);
+
+      // Update all affected items in DB
+      try {
+        const allItemsToUpdate: NavItem[] = [];
+        const collectItems = (items: NavItem[]) => {
+          items.forEach(item => {
+            allItemsToUpdate.push(item);
+            if (item.children) {
+              collectItems(item.children);
+            }
+          });
+        };
+        collectItems(reorderedNavItems);
+
+        for (const item of allItemsToUpdate) {
+          await updateNavItem(item);
+        }
+        showSuccess("Éléments de navigation réorganisés !");
+        await fetchNavItems(); // Final refresh
+      } catch (error: any) {
+        console.error("Error reordering nav items:", error);
+        showError(`Erreur lors de la réorganisation des éléments: ${error.message}`);
+      }
     }
   };
 
@@ -538,10 +524,10 @@ const AdminMenuManagementPage = () => {
                            role === 'director' ? 'Directeur' :
                            role === 'deputy_director' ? 'Directeur Adjoint' :
                            'Administrateur'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 </div>
               </div>
               <Button onClick={handleAddNavItem} disabled={isAddingItem}>
@@ -646,11 +632,11 @@ const AdminMenuManagementPage = () => {
                     {allRoles.map(role => (
                       <SelectItem key={role} value={role}>
                         {role === 'student' ? 'Élève' :
-                         role === 'professeur' ? 'Professeur' :
-                         role === 'tutor' ? 'Tuteur' :
-                         role === 'director' ? 'Directeur' :
-                         role === 'deputy_director' ? 'Directeur Adjoint' :
-                         'Administrateur'}
+                           role === 'professeur' ? 'Professeur' :
+                           role === 'tutor' ? 'Tuteur' :
+                           role === 'director' ? 'Directeur' :
+                           role === 'deputy_director' ? 'Directeur Adjoint' :
+                           'Administrateur'}
                       </SelectItem>
                     ))}
                   </SelectContent>
