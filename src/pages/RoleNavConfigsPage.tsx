@@ -182,6 +182,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           </div>
         </div>
       </ContextMenuTrigger>
+      {/* Only show "Gérer les sous-éléments" for true categories (type 'category_or_action' with no route) */}
       {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
         <ContextMenuContent className="w-auto p-1">
           <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
@@ -555,13 +556,19 @@ const RoleNavConfigsPage = () => {
           return;
         }
 
+        // Rule: Cannot place under a route.
+        if (overConfiguredItem.type === 'route') {
+          showError("Vous ne pouvez pas placer un élément sous une route.");
+          return;
+        }
+
         if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) {
           // Dropped over a category, make it a child of this category
           newParentNavItemId = overConfiguredItem.id;
           // Temporary index, actual order will be fixed by sortAndReindex
           tempOrderIndex = (overConfiguredItem.children?.length || 0); 
         } else {
-          // Dropped over a regular item, make it a sibling of overConfiguredItem
+          // Dropped over a regular item (which must be a route or action with route), make it a sibling of overConfiguredItem
           newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
           // Temporary index, actual order will be fixed by sortAndReindex
           tempOrderIndex = overConfiguredItem.order_index; // Or any other temporary value
@@ -582,6 +589,11 @@ const RoleNavConfigsPage = () => {
         const descendantsOfActiveItem = getDescendantIds(activeDragItem, allConfiguredItemsFlat);
         if (descendantsOfActiveItem.has(newParentNavItemId)) {
           showError("Un élément ne peut pas être déplacé dans un de ses propres descendants.");
+          return;
+        }
+        // Rule: Cannot place under a route.
+        if (parentItem && parentItem.type === 'route') {
+          showError("Vous ne pouvez pas placer un élément sous une route.");
           return;
         }
         tempOrderIndex = parentItem?.children?.length || 0;
@@ -843,7 +855,9 @@ const RoleNavConfigsPage = () => {
                     >
                       {editConfigParentId === null
                         ? "Aucun (élément racine)"
-                        : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || tempParentInput || "Sélectionner un parent..."}
+                        : editConfigParentId === "NEW_CATEGORY_TO_CREATE"
+                          ? tempParentInput
+                          : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -855,10 +869,10 @@ const RoleNavConfigsPage = () => {
                         onValueChange={setTempParentInput}
                       />
                       <CommandList>
-                        {tempParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
+                        {tempParentInput.trim() !== '' && !allGenericNavItems.some(item => item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
                           <CommandItem
                             onSelect={() => {
-                              setEditConfigParentId(null); // Indicate no existing parent is selected
+                              setEditConfigParentId("NEW_CATEGORY_TO_CREATE"); // Signal intent to create new parent
                               setOpenEditConfigParentSelect(false);
                             }}
                           >
