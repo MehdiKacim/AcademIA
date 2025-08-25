@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2 } from "lucide-react";
-import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
+import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems";
 import { useRole } from '@/contexts/RoleContext';
@@ -57,7 +57,6 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 // All possible roles for selection
-const allRoles: Profile['role'][] = ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'];
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
 
 // Helper function moved to top-level scope
@@ -729,7 +728,7 @@ const RoleNavConfigsPage = () => {
               </SelectTrigger>
               <SelectContent className="backdrop-blur-lg bg-background/80">
                 <SelectItem value="all">Sélectionner un rôle...</SelectItem>
-                {allRoles.map(role => (
+                {ALL_ROLES.map(role => (
                   <SelectItem key={role} value={role}>
                     {role === 'student' ? 'Élève' :
                      role === 'professeur' ? 'Professeur' :

@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus, LayoutList, RefreshCw } from "lucide-react"; // Added RefreshCw icon
+import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus, LayoutList, RefreshCw, Menu } from "lucide-react"; // Added Menu icon
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal';
 import { clearAllAppData } from '@/lib/dataReset';
@@ -26,8 +26,8 @@ import InputWithStatus from './InputWithStatus';
 import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // Removed loadEstablishments import
-import { Establishment, Profile } from '@/lib/dataModels'; // Import Establishment type, Profile
-import { bootstrapDefaultNavItemsForRole } from '@/lib/navItems'; // Import bootstrapDefaultNavItemsForRole
+import { Establishment, Profile, ALL_ROLES } from '@/lib/dataModels'; // Import Establishment type, Profile, and ALL_ROLES
+import { bootstrapDefaultNavItemsForRole, reinitializeAllMenus } from '@/lib/navItems'; // Import bootstrapDefaultNavItemsForRole and reinitializeAllMenus
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible components
 import { useRole } from '@/contexts/RoleContext'; // Import useRole to get fetchUserProfile
 
@@ -37,9 +37,6 @@ interface AdminModalProps {
 }
 
 const ADMIN_PASSWORD = "Mehkac95!"; // Password for admin access
-
-// All possible roles for selection (re-defined here for AdminModal scope)
-const allRoles: Profile['role'][] = ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'];
 
 const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const isMobile = useIsMobile();
@@ -66,6 +63,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const [roleToBootstrap, setRoleToBootstrap] = useState<Profile['role'] | 'none'>('none');
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [isBootstrapSectionOpen, setIsBootstrapSectionOpen] = useState(false);
+  const [isReinitializingAllMenus, setIsReinitializingAllMenus] = useState(false);
 
 
   useEffect(() => {
@@ -86,6 +84,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       setRoleToBootstrap('none');
       setIsBootstrapping(false);
       setIsBootstrapSectionOpen(false);
+      setIsReinitializingAllMenus(false);
     }
   }, [isOpen]);
 
@@ -252,6 +251,26 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
     }
   };
 
+  const handleReinitializeAllMenus = async () => {
+    if (window.confirm("Êtes-vous ABSOLUMENT SÛR de vouloir réinitialiser TOUS les menus de navigation (génériques et par rôle) ? Cette action est irréversible et recréera les menus par défaut pour tous les rôles.")) {
+      setIsReinitializingAllMenus(true);
+      try {
+        await reinitializeAllMenus();
+        showSuccess("Tous les menus ont été réinitialisés et recréés par défaut !");
+        // Force re-fetch of user profile and nav items for the current user
+        if (currentUserProfile) {
+          await fetchUserProfile(currentUserProfile.id);
+        }
+        onClose(); // Close modal after action
+      } catch (error: any) {
+        console.error("Error reinitializing all menus:", error);
+        showError(`Erreur lors de la réinitialisation des menus: ${error.message}`);
+      } finally {
+        setIsReinitializingAllMenus(false);
+      }
+    }
+  };
+
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
     <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80">
       <Header className="mb-4 text-center">
@@ -358,7 +377,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                     </SelectTrigger>
                     <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="none" disabled>Sélectionner un rôle...</SelectItem>
-                      {allRoles.map(role => (
+                      {ALL_ROLES.map(role => (
                         <SelectItem key={role} value={role}>
                           {role === 'student' ? 'Élève' :
                            role === 'professeur' ? 'Professeur' :
@@ -376,6 +395,10 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                 </Button>
               </CollapsibleContent>
             </Collapsible>
+
+            <Button onClick={handleReinitializeAllMenus} className="w-full" variant="outline" disabled={isReinitializingAllMenus}>
+              {isReinitializingAllMenus ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Menu className="h-4 w-4 mr-2" />} Réinitialiser tous les menus
+            </Button>
 
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données

@@ -213,3 +213,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       created_at?: string;
       updated_at?: string;
     }
+
+    // Centralized list of all roles
+    export const ALL_ROLES: Profile['role'][] = ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'];

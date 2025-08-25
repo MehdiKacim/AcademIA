@@ -1,7 +1,7 @@
 console.log("[navItems.ts] Module loaded."); // Early log to confirm file loading
 
 import { supabase } from "@/integrations/supabase/client";
-import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import RoleNavItemConfig
+import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "./dataModels"; // Import RoleNavItemConfig and ALL_ROLES
 
 /**
  * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
@@ -316,4 +316,31 @@ export const bootstrapDefaultNavItemsForRole = async (role: Profile['role']): Pr
     throw error;
   }
   console.log(`[bootstrapDefaultNavItemsForRole] Default nav items bootstrapped successfully via Edge Function for role: ${role}.`);
+};
+
+/**
+ * Réinitialise tous les éléments de navigation génériques et toutes les configurations de rôle,
+ * puis initialise les menus par défaut pour chaque rôle.
+ */
+export const reinitializeAllMenus = async (): Promise<void> => {
+  console.log("[reinitializeAllMenus] Starting full menu reinitialization...");
+  try {
+    // 1. Reset all generic nav items
+    await resetNavItems();
+    console.log("[reinitializeAllMenus] All generic nav items reset.");
+
+    // 2. Reset all role-specific nav item configurations
+    await resetRoleNavConfigs();
+    console.log("[reinitializeAllMenus] All role nav configs reset.");
+
+    // 3. Bootstrap default nav items for each role
+    for (const role of ALL_ROLES) {
+      await bootstrapDefaultNavItemsForRole(role);
+      console.log(`[reinitializeAllMenus] Bootstrapped default nav items for role: ${role}`);
+    }
+    console.log("[reinitializeAllMenus] Full menu reinitialization complete.");
+  } catch (error) {
+    console.error("[reinitializeAllMenus] Error during full menu reinitialization:", error);
+    throw error;
+  }
 };
