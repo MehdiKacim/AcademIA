@@ -16,6 +16,7 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
     { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false },
     { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false },
     { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false },
+    { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false }, // Moved "Système" here
     { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false },
     { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false },
     { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false },
@@ -49,21 +50,7 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
   defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes cours')!, role: 'administrator', parent_nav_item_id: null, order_index: 4, establishment_id: null });
   defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes notes')!, role: 'administrator', parent_nav_item_id: null, order_index: 5, establishment_id: null });
   defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Analytiques')!, role: 'administrator', parent_nav_item_id: null, order_index: 6, establishment_id: null });
-
-  // "Système" category
-  const systemNavItem = insertedNavItems.find(item => item.label === 'Système');
-  if (!systemNavItem) { // Create "Système" if it doesn't exist
-    const { data: newSystemNavItem, error: systemInsertError } = await supabase
-      .from('nav_items')
-      .insert({ label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false })
-      .select()
-      .single();
-    if (systemInsertError) throw systemInsertError;
-    navItemMap.set('Système', newSystemNavItem.id);
-    defaultRoleConfigs.push({ nav_item_id: newSystemNavItem.id, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null });
-  } else {
-    defaultRoleConfigs.push({ nav_item_id: systemNavItem.id, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null });
-  }
+  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Système')!, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null }); // "Système" is now a root item
 
   // Children of "Système"
   const systemParentId = navItemMap.get('Système');
@@ -80,16 +67,16 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
     defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Années Scolaires')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 9, establishment_id: null });
   }
 
-  const { error: configsInsertError } = await supabase
+  const { data: configsInsertResult, error: configsInsertError } = await supabase
     .from('role_nav_configs')
-    .insert(defaultRoleConfigs);
+    .insert(defaultRoleConfigs)
+    .select();
 
   if (configsInsertError) {
     console.error("Error inserting default role nav configs:", configsInsertError);
     throw configsInsertError;
   }
-  // No need to return configsInsertResult here, as loadNavItems will re-query
-  return []; // Return empty array, as the main function will re-fetch
+  return configsInsertResult as RoleNavItemConfig[];
 };
 
 
@@ -129,21 +116,16 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     .eq('role', userRole)
     .order('order_index', { ascending: true });
 
-  // --- CRITICAL CHANGE HERE ---
-  // Only apply establishment filter if the user is NOT an administrator
-  // Administrators have RLS that allows them to see all configs.
   if (userRole !== 'administrator') {
     let orConditions: string[] = [`establishment_id.is.null`]; // Always include global configs
-
     if (userEstablishmentId) {
       orConditions.push(`establishment_id.eq.${userEstablishmentId}`);
     }
     query = query.or(orConditions.join(','));
-    console.log("[loadNavItems] Supabase query OR conditions:", orConditions.join(','));
+    console.log("[loadNavItems] Supabase query OR conditions for non-admin:", orConditions.join(','));
   } else {
     console.log("[loadNavItems] User is administrator, skipping establishment filter in query.");
   }
-  // --- END CRITICAL CHANGE ---
 
   let configs: RoleNavItemConfig[] = [];
   const { data: fetchedConfigs, error: configsError } = await query;
@@ -153,21 +135,21 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
   configs = fetchedConfigs as RoleNavItemConfig[];
-  console.log("[loadNavItems] Fetched configs (initial):", configs);
+  console.log("[loadNavItems] Fetched configs (initial count):", configs.length, "configs:", configs);
 
   // --- Add default items for administrator if no configs found ---
   if (configs.length === 0 && userRole === 'administrator') {
-    console.warn("[loadNavItems] No configs found for administrator. Inserting default items.");
+    console.warn("[loadNavItems] No configs found for administrator. Attempting to insert default items.");
     try {
-      await insertDefaultAdminNavItems(); // Just call the insertion, don't assign its raw result
+      await insertDefaultAdminNavItems();
       // Re-run the query to fetch the newly inserted configs WITH the nav_item join
       const { data: reFetchedConfigs, error: reFetchError } = await query;
       if (reFetchError) {
         console.error("[loadNavItems] Error re-fetching configs after default insertion:", reFetchError);
         return [];
       }
-      configs = reFetchedConfigs as RoleNavItemConfig[]; // Assign the re-fetched configs
-      console.log("[loadNavItems] Re-fetched configs after default insertion:", configs);
+      configs = reFetchedConfigs as RoleNavItemConfig[];
+      console.log("[loadNavItems] Re-fetched configs after default insertion (count):", configs.length, "configs:", configs);
     } catch (e) {
       console.error("[loadNavItems] Failed to insert default admin nav items:", e);
       return [];
@@ -186,7 +168,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         icon_name: config.nav_item.icon_name || undefined,
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
-        children: [],
+        children: [], // Initialize empty children array
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index, // Now mandatory, should always be a number from DB
         configId: config.id,
@@ -194,9 +176,11 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         is_global: config.establishment_id === null, // New: Indicate if it's a global config
       };
       navItemNodes.set(navItem.id, navItem);
+    } else {
+      console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
     }
   });
-  console.log("[loadNavItems] All flat nav item nodes:", Array.from(navItemNodes.values()));
+  console.log("[loadNavItems] Populated navItemNodes (count):", navItemNodes.size, "nodes:", Array.from(navItemNodes.values()));
 
   const rootItems: NavItem[] = [];
 
@@ -220,7 +204,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     }
   });
 
-  console.log("[loadNavItems] Final structured nav items:", rootItems);
+  console.log("[loadNavItems] Final structured nav items (root items count):", rootItems.length, "items:", rootItems);
 
   // Apply badge for messages
   const applyMessageBadge = (items: NavItem[]) => {
