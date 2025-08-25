@@ -86,7 +86,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 100 : 'auto',
+    zIndex: isDragging ? 100 : 'auto', // Bring dragged item to front
     opacity: isDragging ? 0.8 : 1,
     paddingLeft: `${level * 20}px`,
   };
@@ -237,17 +237,23 @@ const RoleNavConfigsPage = () => {
     return undefined;
   }, []);
 
-  const getDescendantIds = useCallback((item: NavItem, allItems: NavItem[]): Set<string> => {
+  // Updated getDescendantIds to use allItemsFlat
+  const getDescendantIds = useCallback((item: NavItem, allItemsFlat: NavItem[]): Set<string> => {
     const descendants = new Set<string>();
-    const queue: NavItem[] = [...(item.children || [])];
-    while (queue.length > 0) {
-      const current = queue.shift();
-      if (current) {
-        descendants.add(current.id);
-        const childrenOfCurrent = allItems.filter(i => i.parent_nav_item_id === current.id);
-        childrenOfCurrent.forEach(child => queue.push(child));
+    const queue: NavItem[] = [item]; // Start with the item itself
+    let head = 0;
+    while (head < queue.length) {
+      const current = queue[head++];
+      // Find direct children of 'current' from the flat list
+      const childrenOfCurrent = allItemsFlat.filter(i => (i.parent_nav_item_id || null) === current.id);
+      for (const child of childrenOfCurrent) {
+        if (!descendants.has(child.id)) { // Avoid infinite loops for malformed trees
+          descendants.add(child.id);
+          queue.push(child);
+        }
       }
     }
+    descendants.delete(item.id); // The item itself is not its own descendant
     return descendants;
   }, []);
 
@@ -298,7 +304,7 @@ const RoleNavConfigsPage = () => {
         items.sort((a, b) => a.order_index - b.order_index);
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          if (item.order_index !== i || item.parent_nav_item_id !== parentId) {
+          if (item.order_index !== i || (item.parent_nav_item_id || null) !== parentId) {
             const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
               id: item.configId!,
               nav_item_id: item.id,
@@ -332,7 +338,7 @@ const RoleNavConfigsPage = () => {
 
       setConfiguredItemsTree(finalRootItems);
     }
-  }, [selectedRoleFilter, findItemInTree, getDescendantIds]);
+  }, [selectedRoleFilter]); // Removed findItemInTree, getDescendantIds from dependencies as they are useCallback with no deps
 
   useEffect(() => {
     fetchAndStructureNavItems();
@@ -431,7 +437,7 @@ const RoleNavConfigsPage = () => {
       setIsSavingConfigEdit(false);
       return;
     }
-    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
+    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat); // Use allConfiguredItemsFlat
     if (finalParentId && descendantsOfCurrentItem.has(finalParentId)) {
       showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
       setIsSavingConfigEdit(false);
@@ -464,7 +470,7 @@ const RoleNavConfigsPage = () => {
 
   const handleDragStart = (event: any) => {
     const { active } = event;
-    const configuredItem = findItemInTree(configuredItemsTree, active.id);
+    const configuredItem = allConfiguredItemsFlat.find(item => item.configId === active.id); // Find from flat list
     if (configuredItem && configuredItem.configId) {
       const config = {
         id: configuredItem.configId,
@@ -490,88 +496,83 @@ const RoleNavConfigsPage = () => {
       return;
     }
 
-    const activeConfigId = active.id as string;
-    const overId = over.id as string;
+    const activeConfigId = active.id as string; // This is the configId of the dragged item
+    const overId = over.id as string; // This can be configId of an item or containerId
 
     try {
       let newParentNavItemId: string | null = null;
-      let newOrderIndex: number = 0;
+      // The order_index will be re-calculated by fetchAndStructureNavItems,
+      // so we can set a temporary value here.
+      let tempOrderIndex: number = 0; 
 
       if (selectedRoleFilter === 'all') {
         showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
         return;
       }
 
-      const overConfiguredItem = findItemInTree(configuredItemsTree, overId);
-      const overIsConfiguredRootContainer = overId === 'configured-container';
-      const overIsConfiguredChildContainer = overId.startsWith('configured-container-children-of-');
+      const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId); // Find the actual item if dropped on an item
+      const overIsRootContainer = overId === 'configured-container';
+      const overIsChildContainer = overId.startsWith('configured-container-children-of-');
 
       if (overConfiguredItem) {
+        // Dropped over another item
         if (activeDragItem.id === overConfiguredItem.id) {
           showError("Un élément ne peut pas être déplacé sur lui-même.");
           return;
         }
-        const descendantsOfActiveItem = getDescendantIds(activeDragItem, configuredItemsTree);
+        const descendantsOfActiveItem = getDescendantIds(activeDragItem, allConfiguredItemsFlat);
         if (descendantsOfActiveItem.has(overConfiguredItem.id)) {
           showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
           return;
         }
 
         if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) {
-            newParentNavItemId = overConfiguredItem.id;
-            newOrderIndex = overConfiguredItem.children?.length || 0;
+          // Dropped over a category, make it a child of this category
+          newParentNavItemId = overConfiguredItem.id;
+          // Temporary index, actual order will be fixed by sortAndReindex
+          tempOrderIndex = (overConfiguredItem.children?.length || 0); 
         } else {
-            newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-            const siblings =
-                newParentNavItemId === null
-                    ? configuredItemsTree.filter((item) => item.parent_nav_item_id === null)
-                    : configuredItemsTree.find((item) => item.id === newParentNavItemId)
-                        ?.children || [];
-            const overItemIndex = siblings.findIndex(
-                (s) => s.configId === overId
-            );
-            newOrderIndex =
-                overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
+          // Dropped over a regular item, make it a sibling of overConfiguredItem
+          newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
+          // Temporary index, actual order will be fixed by sortAndReindex
+          tempOrderIndex = overConfiguredItem.order_index; // Or any other temporary value
         }
-
-      } else if (overIsConfiguredRootContainer) {
+      } else if (overIsRootContainer) {
+        // Dropped on the root container
         newParentNavItemId = null;
-        newOrderIndex = configuredItemsTree.filter((item) => item.parent_nav_item_id === null)
-          .length;
-      } else if (overIsConfiguredChildContainer) {
-        newParentNavItemId = overId.replace(
-          'configured-container-children-of-',
-          ''
-        );
-        const parentItem = findItemInTree(
-          configuredItemsTree,
-          newParentNavItemId
-        );
+        tempOrderIndex = allConfiguredItemsFlat.filter(item => item.parent_nav_item_id === null).length;
+      } else if (overIsChildContainer) {
+        // Dropped on an empty child container (e.g., an empty category's drop zone)
+        newParentNavItemId = overId.replace('configured-container-children-of-', '');
+        const parentItem = allConfiguredItemsFlat.find(item => item.id === newParentNavItemId);
 
         if (activeDragItem.id === newParentNavItemId) {
           showError("Un élément ne peut pas être déplacé dans lui-même.");
           return;
         }
-        const descendantsOfActiveItem = getDescendantIds(activeDragItem, configuredItemsTree);
+        const descendantsOfActiveItem = getDescendantIds(activeDragItem, allConfiguredItemsFlat);
         if (descendantsOfActiveItem.has(newParentNavItemId)) {
           showError("Un élément ne peut pas être déplacé dans un de ses propres descendants.");
           return;
         }
-
-        newOrderIndex = parentItem?.children?.length || 0;
+        tempOrderIndex = parentItem?.children?.length || 0;
       } else {
         showError("Cible de dépôt non valide.");
         return;
       }
 
+      // Update the dragged item's config in the database
       const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-        ...activeDragConfig,
+        id: activeDragConfig.id, // Use activeDragConfig.id for the update
+        nav_item_id: activeDragConfig.nav_item_id,
+        role: activeDragConfig.role,
         parent_nav_item_id: newParentNavItemId,
-        order_index: newOrderIndex,
+        order_index: tempOrderIndex, // Temporary index
       };
       await updateRoleNavItemConfig(updatedConfig);
       showSuccess("Élément de navigation réorganisé/déplacé !");
 
+      // Re-fetch and re-structure the entire navigation tree to apply correct ordering
       await fetchAndStructureNavItems();
     } catch (error: any) {
       console.error("Error during drag and drop:", error);
@@ -643,13 +644,13 @@ const RoleNavConfigsPage = () => {
   const availableParentsForConfig = useMemo(() => {
     if (!currentItemToEdit) return [];
     const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree, currentItemToEdit.id);
-    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
+    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat); // Use allConfiguredItemsFlat
     const filteredParents = allPotentialParents.filter(parent =>
       parent.id !== currentItemToEdit.id &&
       !descendantsOfCurrentItem.has(parent.id)
     );
     return filteredParents;
-  }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds]);
+  }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds, allConfiguredItemsFlat]);
 
   const getItemTypeLabel = (type: NavItem['type']) => {
     switch (type) {
