@@ -3,7 +3,7 @@ import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import Ro
 
 // Define default nav item structures for each role
 const DEFAULT_NAV_ITEMS_BY_ROLE: { [key in Profile['role']]: {
-  item: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>;
+  item: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>;
   parentLabel?: string; // To link children to parents
 }[] } = {
   administrator: [
@@ -190,7 +190,6 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
   }
 
   const navItemMap = new Map<string, string>(); // Map label to nav_item_id
-  const parentIdMap = new Map<string, string>(); // Map parent label to nav_item_id
 
   // Step 1: Ensure all generic nav_items exist and get their IDs
   for (const { item: itemData } of defaultItemsForRole) {
@@ -222,7 +221,81 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
     }
   }
 
-  // Step 2: Create/Update role_nav_configs
+  // Step 2: Build the hierarchical structure for default configs and assign order_index
+  const structuredDefaultItems: NavItem[] = [];
+  const tempItemMap = new Map<string, NavItem>(); // Map nav_item.id to NavItem with children array
+
+  // First pass: create all NavItem objects with their generic IDs
+  defaultItemsForRole.forEach(({ item: itemData }) => {
+    const navItemId = navItemMap.get(itemData.label);
+    if (navItemId) {
+      tempItemMap.set(navItemId, {
+        id: navItemId,
+        label: itemData.label,
+        route: itemData.route || undefined,
+        icon_name: itemData.icon_name || undefined,
+        description: itemData.description || undefined,
+        is_external: itemData.is_external,
+        children: [], // Initialize children
+        order_index: 0, // Will be set later
+        parent_nav_item_id: undefined, // Will be set later
+      });
+    }
+  });
+
+  // Second pass: assign parent_nav_item_id and build the tree structure
+  defaultItemsForRole.forEach(({ item: itemData, parentLabel }) => {
+    const navItemId = navItemMap.get(itemData.label);
+    if (navItemId) {
+      const currentItem = tempItemMap.get(navItemId);
+      if (currentItem) {
+        if (parentLabel) {
+          const parentNavItemId = navItemMap.get(parentLabel);
+          if (parentNavItemId) {
+            const parentItem = tempItemMap.get(parentNavItemId);
+            if (parentItem) {
+              currentItem.parent_nav_item_id = parentNavItemId;
+              parentItem.children?.push(currentItem);
+            }
+          }
+        } else {
+          structuredDefaultItems.push(currentItem); // Root item
+        }
+      }
+    }
+  });
+
+  // Third pass: assign order_index based on the structured tree
+  const assignOrderIndices = (items: NavItem[], parentId: string | null) => {
+    items.sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically for consistent default order
+    items.forEach((item, index) => {
+      item.order_index = index;
+      if (item.children && item.children.length > 0) {
+        assignOrderIndices(item.children, item.id);
+      }
+    });
+  };
+
+  assignOrderIndices(structuredDefaultItems, null);
+
+  // Flatten the structuredDefaultItems back into a list for DB insertion/update
+  const flattenedConfigsForDb: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
+  const flattenTree = (items: NavItem[]) => {
+    items.forEach(item => {
+      flattenedConfigsForDb.push({
+        nav_item_id: item.id,
+        role: role,
+        parent_nav_item_id: item.parent_nav_item_id || null,
+        order_index: item.order_index,
+      });
+      if (item.children) {
+        flattenTree(item.children);
+      }
+    });
+  };
+  flattenTree(structuredDefaultItems);
+
+  // Step 3: Compare with existing configs and perform DB upserts
   const existingRoleConfigs = await getRoleNavItemConfigsByRole(role);
   const existingConfigMap = new Map<string, RoleNavItemConfig>(); // Key: nav_item_id
   existingRoleConfigs.forEach(config => existingConfigMap.set(config.nav_item_id, config));
@@ -230,54 +303,26 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
   const configsToInsert: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
   const configsToUpdate: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'>[] = [];
 
-  let orderIndexCounter = 0; // For root items
-
-  for (const { item: itemData, parentLabel } of defaultItemsForRole) {
-    const navItemId = navItemMap.get(itemData.label);
-    if (!navItemId) {
-      console.error(`[ensureDefaultNavItemsForRole] Nav item ID not found for label: ${itemData.label}`);
-      continue;
-    }
-
-    let parent_nav_item_id: string | null = null;
-    if (parentLabel) {
-      parent_nav_item_id = parentIdMap.get(parentLabel) || navItemMap.get(parentLabel) || null;
-      if (!parent_nav_item_id) {
-        console.warn(`[ensureDefaultNavItemsForRole] Parent nav item ID not found for label: ${parentLabel}. Item '${itemData.label}' will be a root item.`);
-      }
-    }
-
-    const existingConfig = existingConfigMap.get(navItemId);
+  flattenedConfigsForDb.forEach(newConfigData => {
+    const existingConfig = existingConfigMap.get(newConfigData.nav_item_id);
 
     if (existingConfig) {
       // Update existing config if properties differ
-      if (existingConfig.parent_nav_item_id !== parent_nav_item_id ||
-          existingConfig.order_index !== orderIndexCounter) // Only update order if it's a root item for now
+      if (existingConfig.parent_nav_item_id !== newConfigData.parent_nav_item_id ||
+          existingConfig.order_index !== newConfigData.order_index)
       {
-        console.log(`[ensureDefaultNavItemsForRole] Updating existing config for ${itemData.label}`);
+        console.log(`[ensureDefaultNavItemsForRole] Updating existing config for ${newConfigData.nav_item_id}`);
         configsToUpdate.push({
           id: existingConfig.id,
-          nav_item_id: navItemId,
-          role: role,
-          parent_nav_item_id: parent_nav_item_id,
-          order_index: orderIndexCounter,
+          ...newConfigData,
         });
       }
     } else {
       // Insert new config
-      console.log(`[ensureDefaultNavItemsForRole] Inserting new config for ${itemData.label}`);
-      configsToInsert.push({
-        nav_item_id: navItemId,
-        role: role,
-        parent_nav_item_id: parent_nav_item_id,
-        order_index: orderIndexCounter,
-      });
+      console.log(`[ensureDefaultNavItemsForRole] Inserting new config for ${newConfigData.nav_item_id}`);
+      configsToInsert.push(newConfigData);
     }
-    orderIndexCounter++; // Increment order for next item
-    if (!parentLabel) { // If it's a root item, also add to parentIdMap for potential children
-      parentIdMap.set(itemData.label, navItemId);
-    }
-  }
+  });
 
   if (configsToInsert.length > 0) {
     const { error: insertError } = await supabase.from('role_nav_configs').insert(configsToInsert);

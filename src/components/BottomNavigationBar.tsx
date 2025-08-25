@@ -136,6 +136,7 @@ import {
       // This memo now prepares the list of items to display in the drawer,
       // distinguishing between top-level direct links and categories.
       const currentDrawerItemsToDisplay = React.useMemo(() => {
+        console.log("[BottomNavigationBar] currentDrawerItemsToDisplay memo re-calculated. Input allNavItemsForDrawer:", allNavItemsForDrawer);
         const lowerCaseQuery = searchQuery.toLowerCase();
         let itemsToFilter: NavItem[] = [];
 
@@ -155,11 +156,14 @@ import {
           const activeCategory = allNavItemsForDrawer.find(item => item.label === activeCategoryLabel && item.route === null);
           itemsToFilter = activeCategory?.children || [];
         }
+        console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Items before filtering by search:", itemsToFilter);
 
-        return itemsToFilter.filter(item =>
+        const filteredAndSorted = itemsToFilter.filter(item =>
           item.label.toLowerCase().includes(lowerCaseQuery) ||
           (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
         ).sort((a, b) => a.order_index - b.order_index); // Ensure items are sorted
+        console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Filtered and sorted result:", filteredAndSorted);
+        return filteredAndSorted;
       }, [currentUser, allNavItemsForDrawer, drawerContent, activeCategoryLabel, searchQuery, onOpenAboutModal]);
 
 

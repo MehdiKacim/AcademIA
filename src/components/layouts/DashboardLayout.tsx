@@ -66,7 +66,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
       console.log("[DashboardLayout] Current User Profile:", currentUserProfile);
-      console.log("[DashboardLayout] Current Nav Items:", navItems);
+      console.log("[DashboardLayout] Current Nav Items (from RoleContext):", navItems);
+    } else if (currentUserProfile && navItems.length === 0) {
+      console.log("[DashboardLayout] Current User Profile:", currentUserProfile, "but navItems is empty.");
     }
   }, [currentUserProfile, navItems]);
 
@@ -162,7 +164,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
-    console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems:", navItems);
+    console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems (from RoleContext):", navItems);
     return navItems;
   }, [navItems]); // Dependency on navItems from context
 
