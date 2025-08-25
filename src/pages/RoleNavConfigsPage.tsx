@@ -497,7 +497,7 @@ const RoleNavConfigsPage = () => {
       const overIsChildContainer = overId.startsWith('configured-container-children-of-');
 
       if (overConfiguredItem) {
-        // Dropped over another item
+        // Dropped over another item (make it a sibling)
         if (activeDragItem.id === overConfiguredItem.id) {
           showError("Un élément ne peut pas être déplacé sur lui-même.");
           return;
@@ -507,19 +507,8 @@ const RoleNavConfigsPage = () => {
           showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
           return;
         }
-
-        // Rule: Cannot place under a route.
-        if (overConfiguredItem.type === 'route') {
-          showError("Vous ne pouvez pas placer un élément sous une route.");
-          return;
-        }
-
-        // If dropping on a category, make it a child. Otherwise, make it a sibling.
-        if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) {
-          newParentNavItemId = overConfiguredItem.id;
-        } else {
-          newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-        }
+        // Always make it a sibling of the item it's dropped over
+        newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
       } else if (overIsRootContainer) {
         // Dropped on the root container
         newParentNavItemId = null;
@@ -542,6 +531,8 @@ const RoleNavConfigsPage = () => {
           showError("Vous ne pouvez pas placer un élément sous une route.");
           return;
         }
+        // If dropped on an empty child container, the parent is the container's ID
+        // This is correct for making it a child.
       } else {
         showError("Cible de dépôt non valide.");
         return;
@@ -630,15 +621,20 @@ const RoleNavConfigsPage = () => {
 
   const availableParentsForConfig = useMemo(() => {
     if (!currentItemToEdit) return [];
+
     // Use all configured items (flat list) to find potential parents
-    const allPotentialParents = getFlattenedCategoriesForParentSelection(allConfiguredItemsFlat, currentItemToEdit.id);
     const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
-    const filteredParents = allPotentialParents.filter(parent =>
-      parent.id !== currentItemToEdit.id &&
-      !descendantsOfCurrentItem.has(parent.id)
+
+    const potentialParents = allConfiguredItemsFlat.filter(item =>
+      item.id !== currentItemToEdit.id && // Cannot be the item itself
+      !descendantsOfCurrentItem.has(item.id) && // Cannot be a descendant
+      item.type === 'category_or_action' && // Must be a category
+      (item.route === null || item.route === undefined) // Must be a true category (no route)
     );
-    return filteredParents;
-  }, [currentItemToEdit, allConfiguredItemsFlat, getFlattenedCategoriesForParentSelection, getDescendantIds]);
+
+    // Sort by label for consistent display
+    return potentialParents.sort((a, b) => a.label.localeCompare(b.label));
+  }, [currentItemToEdit, allConfiguredItemsFlat, getDescendantIds]);
 
   const getItemTypeLabel = (type: NavItem['type']) => {
     switch (type) {
@@ -812,11 +808,6 @@ const RoleNavConfigsPage = () => {
                         onValueChange={setTempParentInput}
                       />
                       <CommandList>
-                        {availableParentsForConfig.length === 0 && tempParentInput.trim() === '' ? (
-                          <CommandEmpty>
-                            <span>Aucune catégorie trouvée.</span>
-                          </CommandEmpty>
-                        ) : null}
                         <CommandGroup>
                           <CommandItem
                             value="none"
@@ -829,7 +820,7 @@ const RoleNavConfigsPage = () => {
                             <span>Aucun (élément racine)</span>
                           </CommandItem>
                           {availableParentsForConfig
-                            .filter(item => tempParentInput.trim() === '' || item.label.toLowerCase().includes(tempParentInput.toLowerCase())) // Filter only if input is not empty
+                            .filter(item => tempParentInput.trim() === '' || item.label.toLowerCase().includes(tempParentInput.toLowerCase()))
                             .map((item) => {
                             const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                             return (
@@ -849,6 +840,11 @@ const RoleNavConfigsPage = () => {
                               </CommandItem>
                             );
                           })}
+                          {availableParentsForConfig.filter(item => tempParentInput.trim() === '' || item.label.toLowerCase().includes(tempParentInput.toLowerCase())).length === 0 && tempParentInput.trim() !== '' && (
+                            <CommandEmpty>
+                              <span>Aucune catégorie trouvée pour "{tempParentInput}".</span>
+                            </CommandEmpty>
+                          )}
                         </CommandGroup>
                       </CommandList>
                     </Command>
