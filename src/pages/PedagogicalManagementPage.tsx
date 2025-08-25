@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays } from "lucide-react";
-import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
+import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels"; // Removed Establishment import
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   loadClasses,
   loadCurricula,
-  loadEstablishments,
+  // Removed loadEstablishments,
   loadSchoolYears,
 } from '@/lib/courseData';
 
@@ -55,7 +55,7 @@ const PedagogicalManagementPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [classes, setClasses] = useState<Class[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishments state
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
@@ -73,7 +73,7 @@ const PedagogicalManagementPage = () => {
   // States for student list section (within classes)
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | null>(null);
+  // Removed selectedEstablishmentFilter
   const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null); // Changed to schoolYearFilter
 
   // Get classId from URL for initial filtering
@@ -83,7 +83,7 @@ const PedagogicalManagementPage = () => {
     const fetchData = async () => {
       setClasses(await loadClasses());
       setCurricula(await loadCurricula());
-      setEstablishments(await loadEstablishments());
+      // Removed loadEstablishments
       setAllProfiles(await getAllProfiles());
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
       setSchoolYears(await loadSchoolYears());
@@ -113,7 +113,7 @@ const PedagogicalManagementPage = () => {
     }
   }, [schoolYears]);
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed getEstablishmentName
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
   const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
@@ -140,16 +140,8 @@ const PedagogicalManagementPage = () => {
       showError("Vous ne pouvez retirer des élèves que des classes que vous gérez.");
       return;
     }
-    // Permission check: Director/Deputy Director can only remove from classes in their establishment.
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && classOfEnrollment.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez retirer des élèves que des classes de votre établissement.");
-      return;
-    }
-    // Permission check: Tutor can only remove from classes in their establishment.
-    if (currentRole === 'tutor' && classOfEnrollment.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez retirer des élèves que des classes de votre établissement.");
-      return;
-    }
+    // Removed Director/Deputy Director establishment_id check
+    // Removed Tutor establishment_id check
 
 
     try {
@@ -207,35 +199,21 @@ const PedagogicalManagementPage = () => {
       showError("Seuls les profils d'élèves peuvent être affectés à une classe.");
       return;
     }
-    if (!selectedStudentForClassAssignment.establishment_id) {
-      showError("L'élève doit d'abord être affecté à un établissement.");
-      return;
-    }
+    // Removed establishment_id check for student
     const selectedClass = classes.find(cls => cls.id === classToAssign);
     if (!selectedClass) {
       showError("Classe sélectionnée introuvable.");
       return;
     }
-    if (selectedClass?.establishment_id !== selectedStudentForClassAssignment.establishment_id) {
-      showError("La classe sélectionnée n'appartient pas à l'établissement de l'élève.");
-      return;
-    }
+    // Removed class establishment_id check
 
     // Permission check: Professeur can only assign to classes they manage.
     if (currentRole === 'professeur' && !selectedClass.creator_ids.includes(currentUserProfile.id)) {
       showError("Vous ne pouvez affecter des élèves qu'aux classes que vous gérez.");
       return;
     }
-    // Permission check: Director/Deputy Director can only assign to classes in their establishment.
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && selectedClass.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez affecter des élèves qu'aux classes de votre établissement.");
-      return;
-    }
-    // Permission check: Tutor can only assign to classes in their establishment.
-    if (currentRole === 'tutor' && selectedClass.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez affecter des élèves qu'aux classes de votre établissement.");
-      return;
-    }
+    // Removed Director/Deputy Director establishment_id check
+    // Removed Tutor establishment_id check
 
     const existingEnrollment = allStudentClassEnrollments.find(
       e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.school_year_id === enrollmentSchoolYearId // Changed to schoolYearId
@@ -337,13 +315,13 @@ const PedagogicalManagementPage = () => {
 
   const classesToDisplayForAssignment = classes.filter(cls => 
     (currentRole === 'administrator') ||
-    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor') && cls.establishment_id === currentUserProfile.establishment_id) ||
+    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor')) || // Tutors see all classes
     (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id))
   );
 
   const classesToDisplayForFilter = classes.filter(cls => 
     (currentRole === 'administrator') ||
-    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor') && cls.establishment_id === currentUserProfile.establishment_id) ||
+    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor')) || // Tutors see all classes
     (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id))
   );
 
@@ -444,15 +422,11 @@ const PedagogicalManagementPage = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">Email : {selectedStudentForClassAssignment.email}</p>
                 <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForClassAssignment.username}</p>
-                {selectedStudentForClassAssignment.establishment_id ? (
+                {/* Removed establishment_id display */}
+                {selectedStudentForClassAssignment.enrollment_start_date && selectedStudentForClassAssignment.enrollment_end_date && (
                   <p className="text-sm text-muted-foreground">
-                    Établissement actuel : <span className="font-semibold">{getEstablishmentName(selectedStudentForClassAssignment.establishment_id)}</span>
-                    {selectedStudentForClassAssignment.enrollment_start_date && selectedStudentForClassAssignment.enrollment_end_date && (
-                      <span> (Du {format(parseISO(selectedStudentForClassAssignment.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(selectedStudentForClassAssignment.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
-                    )}
+                    <span>Du {format(parseISO(selectedStudentForClassAssignment.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(selectedStudentForClassAssignment.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
                   </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">Non affecté à un établissement.</p>
                 )}
 
                 <div>
@@ -463,9 +437,6 @@ const PedagogicalManagementPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {classesToDisplayForAssignment
-                        .filter(cls => 
-                          (!selectedStudentForClassAssignment.establishment_id || cls.establishment_id === selectedStudentForClassAssignment.establishment_id)
-                        )
                         .map(cls => (
                           <SelectItem key={cls.id} value={cls.id}>
                             {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
@@ -523,29 +494,7 @@ const PedagogicalManagementPage = () => {
                 onChange={(e) => setStudentSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex-shrink-0 sm:w-1/3">
-              <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
-              <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {
-                setSelectedEstablishmentFilter(value === "all" ? null : value);
-                setSelectedClassFilter(null); // Reset class filter when establishment changes
-              }}
-              disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
-              >
-                <SelectTrigger id="establishment-filter">
-                  <SelectValue placeholder="Tous les établissements" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
-                  {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
-                  {establishments
-                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id)
-                    .map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Removed Establishment Filter */}
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="class-filter">Filtrer par Classe</Label>
               <Select value={selectedClassFilter || "all"} onValueChange={(value) => {
@@ -564,9 +513,6 @@ const PedagogicalManagementPage = () => {
                 </SelectTrigger>
                 <SelectContent className="backdrop-blur-lg bg-background/80">
                   {classesToDisplayForFilter
-                    .filter(cls => 
-                      (!selectedEstablishmentFilter || cls.establishment_id === selectedEstablishmentFilter)
-                    )
                     .map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
                         {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
@@ -593,7 +539,7 @@ const PedagogicalManagementPage = () => {
           <div className="space-y-2">
             {studentsInSelectedClassAndYear.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                {studentSearchQuery.trim() === '' && !selectedClassFilter && !selectedEstablishmentFilter && !selectedSchoolYearFilter
+                {studentSearchQuery.trim() === '' && !selectedClassFilter && !selectedSchoolYearFilter
                   ? <span>Aucun élève à afficher. Utilisez la recherche ou les filtres.</span>
                   : <span>Aucun élève trouvé pour votre recherche ou vos filtres.</span>}
               </p>
@@ -607,15 +553,11 @@ const PedagogicalManagementPage = () => {
                     <div className="flex-grow">
                       <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
                       <p className="text-sm text-muted-foreground">{profile.email}</p>
-                      {profile.establishment_id ? (
+                      {/* Removed establishment_id display */}
+                      {profile.enrollment_start_date && profile.enrollment_end_date && (
                         <p className="text-xs text-muted-foreground">
-                          Établissement: {getEstablishmentName(profile.establishment_id)}
-                          {profile.enrollment_start_date && profile.enrollment_end_date && (
-                            <span> (Du {format(parseISO(profile.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(profile.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
-                          )}
+                          <span>Du {format(parseISO(profile.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(profile.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
                         </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic">Non affecté à un établissement</p>
                       )}
                       {currentClass ? (
                         <p className="text-xs text-muted-foreground">

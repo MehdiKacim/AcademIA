@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react"; // Import UserPlus
-import { Class, Profile, Curriculum, Establishment, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels";
+import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels"; // Removed Establishment import
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -27,7 +27,7 @@ import {
   updateClassInStorage,
   addClassToStorage,
   deleteClassFromStorage,
-  loadEstablishments,
+  // Removed loadEstablishments,
   loadSchoolYears, // Import loadSchoolYears
 } from '@/lib/courseData';
 
@@ -38,7 +38,7 @@ import { Check } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { useRole } from '@/contexts/RoleContext';
 import { useNavigate } from 'react-router-dom';
-import EditClassDialog from '@/components/EditClassDialog'; // Import the new dialog
+// Removed EditClassDialog import
 
 const ClassManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -47,7 +47,7 @@ const ClassManagementPage = () => {
   
   // Main states for data
   const [classes, setClasses] = useState<Class[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishments state
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
@@ -56,11 +56,7 @@ const ClassManagementPage = () => {
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
   const [newClassCurriculumId, setNewClassCurriculumId] = useState<string>("");
-  const [newClassEstablishmentId, setNewClassEstablishmentId] = useState<string>(
-    (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
-      ? currentUserProfile.establishment_id
-      : ''
-  ); // Pre-fill for directors/deputy directors/professors/tutors
+  // Removed newClassEstablishmentId
   const [newClassSchoolYearId, setNewClassSchoolYearId] = useState<string>(""); // Changed to schoolYearId
 
   // State for edit class dialog
@@ -74,7 +70,7 @@ const ClassManagementPage = () => {
     const fetchData = async () => {
       setClasses(await loadClasses());
       setCurricula(await loadCurricula());
-      setEstablishments(await loadEstablishments());
+      // Removed loadEstablishments
       setAllProfiles(await getAllProfiles());
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Initialize here
       setSchoolYears(await loadSchoolYears()); // Load school years
@@ -83,7 +79,7 @@ const ClassManagementPage = () => {
   }, [currentUserProfile]);
 
   // Helper functions to get names from IDs
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed getEstablishmentName
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
   
@@ -93,8 +89,8 @@ const ClassManagementPage = () => {
       showError("Vous n'êtes pas autorisé à ajouter une classe.");
       return;
     }
-    if (!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYearId) { // Changed to newClassSchoolYearId
-      showError("Le nom de la classe, le cursus, l'établissement et l'année scolaire sont requis.");
+    if (!newClassName.trim() || !newClassCurriculumId || !newClassSchoolYearId) { // Changed to newClassSchoolYearId, removed newClassEstablishmentId
+      showError("Le nom de la classe, le cursus et l'année scolaire sont requis.");
       return;
     }
     const selectedCurriculum = curricula.find(c => c.id === newClassCurriculumId);
@@ -102,21 +98,13 @@ const ClassManagementPage = () => {
       showError("Cursus sélectionné introuvable.");
       return;
     }
-    if (selectedCurriculum.establishment_id !== newClassEstablishmentId) {
-      showError("Le cursus sélectionné n'appartient pas à l'établissement choisi.");
-      return;
-    }
-    // Director/Deputy Director/Professeur can only add classes to their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && newClassEstablishmentId !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez ajouter des classes que pour votre établissement.");
-      return;
-    }
+    // Removed curriculum establishment_id check
+    // Removed role-based establishment_id check
 
-    const newCls: Omit<Class, 'id' | 'created_at' | 'school_year_name'> = { // Omit generated fields
+    const newCls: Omit<Class, 'id' | 'created_at' | 'school_year_name'> = { // Omit generated fields, removed establishment_id
       name: newClassName.trim(),
       curriculum_id: newClassCurriculumId,
       creator_ids: [currentUserProfile.id], // Assign current creator
-      establishment_id: newClassEstablishmentId, // Include new field
       school_year_id: newClassSchoolYearId, // Changed to school_year_id
     };
     try {
@@ -125,11 +113,7 @@ const ClassManagementPage = () => {
         setClasses(await loadClasses()); // Re-fetch to get the new list
         setNewClassName('');
         setNewClassCurriculumId("");
-        setNewClassEstablishmentId(
-          (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
-            ? currentUserProfile.establishment_id
-            : ''
-        ); // Reset to pre-filled value
+        // Removed setNewClassEstablishmentId
         setNewClassSchoolYearId(""); // Reset school year
         showSuccess("Classe ajoutée !");
       } else {
@@ -156,11 +140,7 @@ const ClassManagementPage = () => {
       showError("Vous ne pouvez supprimer que les classes que vous gérez.");
       return;
     }
-    // Director/Deputy Director can only delete classes from their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && classToDelete.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez supprimer des classes que de votre établissement.");
-      return;
-    }
+    // Removed director/deputy director establishment_id check
 
     try {
       await deleteClassFromStorage(id);
@@ -189,11 +169,7 @@ const ClassManagementPage = () => {
       showError("Vous ne pouvez modifier que les classes que vous gérez.");
       return;
     }
-    // Director/Deputy Director can only edit classes from their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez modifier des classes que de votre établissement.");
-      return;
-    }
+    // Removed director/deputy director establishment_id check
     setCurrentClassToEdit(cls);
     setIsEditClassDialogOpen(true);
   };
@@ -209,14 +185,14 @@ const ClassManagementPage = () => {
   const filteredClasses = classSearchQuery.trim() === ''
     ? classes.filter(cls => (currentUserProfile && (
         (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id)) ||
-        (currentRole === 'tutor' && cls.establishment_id === currentUserProfile.establishment_id) || // Tutors see classes in their establishment
-        ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id === currentUserProfile.establishment_id) ||
+        (currentRole === 'tutor') || // Tutors see all classes
+        ((currentRole === 'director' || currentRole === 'deputy_director')) ||
         (currentRole === 'administrator')
       )))
     : classes.filter(cls => (currentUserProfile && (
         (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id)) ||
-        (currentRole === 'tutor' && cls.establishment_id === currentUserProfile.establishment_id) ||
-        ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id === currentUserProfile.establishment_id) ||
+        (currentRole === 'tutor') ||
+        ((currentRole === 'director' || currentRole === 'deputy_director')) ||
         (currentRole === 'administrator')
       )) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
 
@@ -248,13 +224,8 @@ const ClassManagementPage = () => {
     );
   }
 
-  const establishmentsToDisplay = currentRole === 'administrator'
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
-
-  const curriculaToDisplay = currentRole === 'administrator'
-    ? curricula
-    : curricula.filter(cur => cur.establishment_id === currentUserProfile.establishment_id);
+  // Removed establishmentsToDisplay
+  const curriculaToDisplay = curricula; // All curricula are now global
 
   return (
     <div className="space-y-8">
@@ -282,32 +253,16 @@ const ClassManagementPage = () => {
                 value={newClassName}
                 onChange={(e) => setNewClassName(e.target.value)}
               />
-              <Label htmlFor="new-class-establishment">Établissement</Label>
-              <Select 
-                value={newClassEstablishmentId} 
-                onValueChange={setNewClassEstablishmentId}
-                disabled={currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor'} // Disable for directors/deputy directors/professors/tutors
-              >
-                <SelectTrigger id="new-class-establishment">
-                  <SelectValue placeholder="Sélectionner un établissement" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
-                  {establishmentsToDisplay.map(est => (
-                    <SelectItem key={est.id} value={est.id}>
-                      {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Removed Establishment Select */}
               <Label htmlFor="new-class-curriculum">Cursus</Label>
               <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
                 <SelectTrigger id="new-class-curriculum">
                   <SelectValue placeholder="Sélectionner un cursus" />
                 </SelectTrigger>
                 <SelectContent className="backdrop-blur-lg bg-background/80">
-                  {curriculaToDisplay.filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId).map(cur => (
+                  {curriculaToDisplay.map(cur => (
                     <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
+                      {cur.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -323,7 +278,7 @@ const ClassManagementPage = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassEstablishmentId || !newClassSchoolYearId}>
+              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassSchoolYearId}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
               </Button>
             </div>
@@ -356,9 +311,6 @@ const ClassManagementPage = () => {
                 <Card key={cls.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex-grow">
                     <p className="font-medium">{cls.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Établissement: {getEstablishmentName(cls.establishment_id)}
-                    </p>
                     <p className="text-sm text-muted-foreground">
                       Cursus: {getCurriculumName(cls.curriculum_id)}
                     </p>

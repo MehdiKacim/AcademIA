@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
-import { Subject, Establishment } from "@/lib/dataModels";
-import { updateSubjectInStorage, loadEstablishments } from "@/lib/courseData";
+import { Subject } from "@/lib/dataModels"; // Removed Establishment import
+import { updateSubjectInStorage } from "@/lib/courseData"; // Removed loadEstablishments
 import { useRole } from '@/contexts/RoleContext';
 
 interface EditSubjectDialogProps {
@@ -26,21 +26,16 @@ interface EditSubjectDialogProps {
 const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDialogProps) => {
   const { currentUserProfile, currentRole } = useRole();
   const [name, setName] = useState(subject.name);
-  const [establishmentId, setEstablishmentId] = useState(subject.establishment_id);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishmentId state
+  // Removed establishments state
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchEstablishments = async () => {
-      setEstablishments(await loadEstablishments());
-    };
-    fetchEstablishments();
-  }, []);
+  // Removed useEffect for fetching establishments
 
   useEffect(() => {
     if (isOpen && subject) {
       setName(subject.name);
-      setEstablishmentId(subject.establishment_id);
+      // Removed setEstablishmentId
     }
   }, [isOpen, subject]);
 
@@ -49,27 +44,19 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
       showError("Vous n'êtes pas autorisé à modifier une matière.");
       return;
     }
-    // Directors/Deputy Directors can only edit subjects from their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && establishmentId !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez modifier des matières que de votre établissement.");
-      return;
-    }
+    // Removed role-based establishment_id check
     if (!name.trim()) {
       showError("Le nom de la matière est requis.");
       return;
     }
-    if (!establishmentId) {
-      showError("L'établissement est requis.");
-      return;
-    }
+    // Removed establishmentId check
 
     setIsLoading(true);
     try {
       const updatedSubjectData: Subject = {
         ...subject,
         name: name.trim(),
-        establishment_id: establishmentId,
-      };
+      }; // Removed establishment_id
       const savedSubject = await updateSubjectInStorage(updatedSubjectData);
 
       if (savedSubject) {
@@ -87,9 +74,7 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
     }
   };
 
-  const establishmentsToDisplay = currentRole === 'administrator'
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile?.establishment_id);
+  // Removed establishmentsToDisplay
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -113,28 +98,7 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
               required
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="establishment" className="text-right">
-              Établissement
-            </Label>
-            <Select 
-              value={establishmentId} 
-              onValueChange={setEstablishmentId}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director'}
-            >
-              <SelectTrigger id="establishment" className="col-span-3">
-                <SelectValue placeholder="Sélectionner un établissement" />
-              </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80">
-                <SelectItem value="none">Aucun</SelectItem>
-                {establishmentsToDisplay.map(est => (
-                  <SelectItem key={est.id} value={est.id}>
-                    {est.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Removed Establishment Select */}
         </div>
         <DialogFooter>
           <Button onClick={handleSave} disabled={isLoading}>

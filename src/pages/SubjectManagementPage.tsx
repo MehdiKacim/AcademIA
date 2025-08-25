@@ -10,32 +10,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, BookText, School, ChevronDown, ChevronUp } from "lucide-react";
-import { Subject, Establishment, Profile } from "@/lib/dataModels";
+import { Subject, Profile } from "@/lib/dataModels"; // Removed Establishment import
 import { showSuccess, showError } from "@/utils/toast";
 import {
   loadSubjects,
   addSubjectToStorage,
   updateSubjectInStorage,
   deleteSubjectFromStorage,
-  loadEstablishments,
+  // Removed loadEstablishments,
 } from '@/lib/courseData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
-import EditSubjectDialog from '@/components/EditSubjectDialog';
+// Removed EditSubjectDialog import
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const SubjectManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishments state
   const [subjects, setSubjects] = useState<Subject[]>([]);
 
   // States for new subject form
   const [newSubjectName, setNewSubjectName] = useState('');
-  const [newSubjectEstablishmentId, setNewSubjectEstablishmentId] = useState<string | undefined>(
-    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
-      ? currentUserProfile.establishment_id
-      : undefined
-  );
+  // Removed newSubjectEstablishmentId
   const [isNewSubjectFormOpen, setIsNewSubjectFormOpen] = useState(false);
 
   // States for edit dialog
@@ -44,13 +40,13 @@ const SubjectManagementPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setEstablishments(await loadEstablishments());
-      setSubjects(await loadSubjects());
+      // Removed loadEstablishments
+      setSubjects(await loadSubjects()); // Load all subjects
     };
     fetchData();
   }, [currentUserProfile]);
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed getEstablishmentName
 
   // --- Subject Management Handlers ---
   const handleAddSubject = async () => {
@@ -58,28 +54,20 @@ const SubjectManagementPage = () => {
       showError("Vous n'êtes pas autorisé à ajouter une matière.");
       return;
     }
-    if (!newSubjectName.trim() || !newSubjectEstablishmentId) {
-      showError("Le nom de la matière et l'établissement sont requis.");
+    if (!newSubjectName.trim()) { // Removed establishment_id check
+      showError("Le nom de la matière est requis.");
       return;
     }
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && newSubjectEstablishmentId !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez ajouter des matières que pour votre établissement.");
-      return;
-    }
+    // Removed role-based establishment_id check
 
     try {
       const newSub = await addSubjectToStorage({
         name: newSubjectName.trim(),
-        establishment_id: newSubjectEstablishmentId,
-      });
+      }); // Removed establishment_id
       if (newSub) {
         setSubjects(await loadSubjects());
         setNewSubjectName('');
-        setNewSubjectEstablishmentId(
-          (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
-            ? currentUserProfile.establishment_id
-            : undefined
-        );
+        // Removed setNewSubjectEstablishmentId
         showSuccess("Matière ajoutée !");
         setIsNewSubjectFormOpen(false);
       } else {
@@ -101,10 +89,7 @@ const SubjectManagementPage = () => {
       showError("Matière introuvable.");
       return;
     }
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && subjectToDelete.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez supprimer des matières que de votre établissement.");
-      return;
-    }
+    // Removed role-based establishment_id check
 
     try {
       await deleteSubjectFromStorage(id);
@@ -121,10 +106,7 @@ const SubjectManagementPage = () => {
       showError("Vous n'êtes pas autorisé à modifier une matière.");
       return;
     }
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && subject.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez modifier des matières que de votre établissement.");
-      return;
-    }
+    // Removed role-based establishment_id check
     setCurrentSubjectToEdit(subject);
     setIsEditSubjectDialogOpen(true);
   };
@@ -159,13 +141,8 @@ const SubjectManagementPage = () => {
     );
   }
 
-  const establishmentsToDisplay = currentRole === 'administrator'
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
-
-  const subjectsToDisplay = currentRole === 'administrator'
-    ? subjects
-    : subjects.filter(sub => sub.establishment_id === currentUserProfile.establishment_id);
+  // Removed establishmentsToDisplay
+  const subjectsToDisplay = subjects; // All subjects are now global
 
   return (
     <div className="space-y-8">
@@ -173,7 +150,7 @@ const SubjectManagementPage = () => {
         Gestion des Matières
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Créez et gérez les matières scolaires pour vos établissements.
+        Créez et gérez les matières scolaires.
       </p>
 
       <Collapsible open={isNewSubjectFormOpen} onOpenChange={setIsNewSubjectFormOpen}>
@@ -187,7 +164,7 @@ const SubjectManagementPage = () => {
                 {isNewSubjectFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </Button>
             </CollapsibleTrigger>
-            <CardDescription>Créez une nouvelle matière pour un établissement.</CardDescription>
+            <CardDescription>Créez une nouvelle matière.</CardDescription>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4">
@@ -200,25 +177,8 @@ const SubjectManagementPage = () => {
                   onChange={(e) => setNewSubjectName(e.target.value)}
                   required
                 />
-                <Label htmlFor="new-subject-establishment">Établissement</Label>
-                <Select
-                  value={newSubjectEstablishmentId || "none"}
-                  onValueChange={(value) => setNewSubjectEstablishmentId(value === "none" ? undefined : value)}
-                  disabled={currentRole === 'director' || currentRole === 'deputy_director'}
-                >
-                  <SelectTrigger id="new-subject-establishment">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
-                    <SelectItem value="none">Aucun</SelectItem>
-                    {establishmentsToDisplay.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleAddSubject} disabled={!newSubjectName.trim() || !newSubjectEstablishmentId}>
+                {/* Removed Establishment Select */}
+                <Button onClick={handleAddSubject} disabled={!newSubjectName.trim()}>
                   <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la matière
                 </Button>
               </div>
@@ -232,38 +192,25 @@ const SubjectManagementPage = () => {
           <CardTitle className="flex items-center gap-2">
             <BookText className="h-6 w-6 text-primary" /> Liste des Matières
           </CardTitle>
-          <CardDescription>Visualisez et gérez les matières par établissement.</CardDescription>
+          <CardDescription>Visualisez et gérez les matières.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2 mt-4">
-            {establishmentsToDisplay.length === 0 ? (
-              <p className="text-muted-foreground">Veuillez d'abord créer un établissement pour ajouter des matières.</p>
+            {subjectsToDisplay.length === 0 ? (
+              <p className="text-muted-foreground">Aucune matière à afficher.</p>
             ) : (
-              establishmentsToDisplay.map(est => (
-                <Card key={est.id} className="p-4 space-y-3 bg-muted/20">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <School className="h-5 w-5 text-primary" /> Matières de {est.name}
-                  </h3>
-                  <div className="space-y-2 pl-4 border-l">
-                    {subjectsToDisplay.filter(sub => sub.establishment_id === est.id).length === 0 ? (
-                      <p className="text-muted-foreground text-sm">Aucune matière pour cet établissement.</p>
-                    ) : (
-                      subjectsToDisplay.filter(sub => sub.establishment_id === est.id).map(sub => (
-                        <div key={sub.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
-                          <span>{sub.name}</span>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEditSubject(sub)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="destructive" size="sm" onClick={() => handleDeleteSubject(sub.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    )}
+              subjectsToDisplay.map(sub => (
+                <div key={sub.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
+                  <span>{sub.name}</span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEditSubject(sub)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteSubject(sub.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                </Card>
+                </div>
               ))
             )}
           </div>

@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
-import { Profile, Establishment } from "@/lib/dataModels"; // Import Profile and Establishment interface
+import { Profile } from "@/lib/dataModels"; // Removed Establishment import
 import { updateProfile } from "@/lib/studentData"; // Import updateProfile
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+// Removed loadEstablishments
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -37,14 +37,14 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
   const [lastName, setLastName] = useState(currentUserProfile.last_name || '');
   const [username, setUsername] = useState(currentUserProfile.username);
   const [email, setEmail] = useState(''); // Email is from auth.users, not directly in profile
-  const [establishmentId, setEstablishmentId] = useState<string | undefined>(currentUserProfile.establishment_id);
+  // Removed establishmentId state
   const [enrollmentStartDate, setEnrollmentStartDate] = useState<Date | undefined>(currentUserProfile.enrollment_start_date ? parseISO(currentUserProfile.enrollment_start_date) : undefined);
   const [enrollmentEndDate, setEnrollmentEndDate] = useState<Date | undefined>(currentUserProfile.enrollment_end_date ? parseISO(currentUserProfile.enrollment_end_date) : undefined);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishments state
 
   useEffect(() => {
     const fetchEstablishments = async () => {
-      setEstablishments(await loadEstablishments());
+      // Removed loadEstablishments
     };
     fetchEstablishments();
   }, []);
@@ -54,7 +54,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
       setFirstName(currentUserProfile.first_name || '');
       setLastName(currentUserProfile.last_name || '');
       setUsername(currentUserProfile.username);
-      setEstablishmentId(currentUserProfile.establishment_id);
+      // Removed setEstablishmentId
       setEnrollmentStartDate(currentUserProfile.enrollment_start_date ? parseISO(currentUserProfile.enrollment_start_date) : undefined);
       setEnrollmentEndDate(currentUserProfile.enrollment_end_date ? parseISO(currentUserProfile.enrollment_end_date) : undefined);
       // Fetch email from auth.users
@@ -75,8 +75,8 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
       showError("Veuillez entrer une adresse email valide.");
       return;
     }
-    if (currentRole === 'student' && (!establishmentId || !enrollmentStartDate || !enrollmentEndDate)) {
-      showError("L'établissement et les dates d'inscription sont requis pour les élèves.");
+    if (currentRole === 'student' && (!enrollmentStartDate || !enrollmentEndDate)) { // Removed establishmentId check
+      showError("Les dates d'inscription sont requises pour les élèves.");
       return;
     }
     if (enrollmentStartDate && enrollmentEndDate && enrollmentStartDate >= enrollmentEndDate) {
@@ -92,7 +92,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
         last_name: lastName.trim(),
         username: username.trim(),
         email: email.trim(), // Update email in profile table as well
-        establishment_id: establishmentId || undefined,
+        // Removed establishment_id
         enrollment_start_date: enrollmentStartDate ? enrollmentStartDate.toISOString().split('T')[0] : undefined,
         enrollment_end_date: enrollmentEndDate ? enrollmentEndDate.toISOString().split('T')[0] : undefined,
       };
@@ -121,9 +121,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
     }
   };
 
-  const establishmentsToDisplay = establishments.filter(est => 
-    currentRole === 'administrator' || est.id === currentUserProfile.establishment_id
-  );
+  // Removed establishmentsToDisplay
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -182,27 +180,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
           </div>
           {currentRole === 'student' && (
             <>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="establishment" className="text-right">
-                  Établissement
-                </Label>
-                <Select 
-                  value={establishmentId || "none"} 
-                  onValueChange={(value) => setEstablishmentId(value === "none" ? undefined : value)}
-                >
-                  <SelectTrigger id="establishment" className="col-span-3">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
-                    <SelectItem value="none">Aucun</SelectItem>
-                    {establishmentsToDisplay.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Removed Establishment Select */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="enrollmentStartDate" className="text-right">
                   Début inscription
