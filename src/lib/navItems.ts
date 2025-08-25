@@ -1,205 +1,312 @@
 import { supabase } from "@/integrations/supabase/client";
-import { NavItem } from "./dataModels";
-import { Profile } from "./dataModels"; // Import Profile for role type
+    import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import RoleNavItemConfig
 
-/**
- * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement.
- * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
- * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
- * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
- */
-export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
-  const { data, error } = await supabase
-    .from('nav_items')
-    .select('*')
-    .order('order_index', { ascending: true });
+    /**
+     * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
+     * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
+     * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
+     * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
+     */
+    export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
+      if (!userRole) return [];
 
-  if (error) {
-    console.error("Error loading nav items:", error);
-    return [];
-  }
+      const { data: configs, error: configsError } = await supabase
+        .from('role_nav_configs')
+        .select(`
+          *,
+          nav_items (
+            id,
+            label,
+            route,
+            icon_name,
+            is_root,
+            description,
+            is_external
+          )
+        `)
+        .eq('role', userRole)
+        .order('order_index', { ascending: true });
 
-  const navItems: NavItem[] = data.map(item => ({
-    id: item.id,
-    label: item.label,
-    route: item.route || undefined,
-    icon_name: item.icon_name || undefined, // Changed from 'icon' to 'icon_name'
-    is_root: item.is_root,
-    allowed_roles: item.allowed_roles as Array<Profile['role']>,
-    parent_id: item.parent_id || undefined,
-    order_index: item.order_index,
-    description: item.description || undefined,
-    is_external: item.is_external,
-    children: [], // Initialiser les enfants
-  }));
-
-  // Filtrer par rôle
-  const filteredItems = navItems.filter(item => userRole && item.allowed_roles.includes(userRole));
-
-  // Construire la structure hiérarchique
-  const rootItems: NavItem[] = [];
-  const childrenOf: { [key: string]: NavItem[] } = {};
-
-  filteredItems.forEach(item => {
-    if (item.parent_id) {
-      if (!childrenOf[item.parent_id]) {
-        childrenOf[item.parent_id] = [];
+      if (configsError) {
+        console.error("Error loading role nav configs:", configsError);
+        return [];
       }
-      childrenOf[item.parent_id].push(item);
-    } else {
-      rootItems.push(item);
-    }
-  });
 
-  // Attacher les enfants récursivement
-  const attachChildren = (items: NavItem[]) => {
-    items.forEach(item => {
-      if (childrenOf[item.id]) {
-        item.children = childrenOf[item.id].sort((a, b) => a.order_index - b.order_index);
-        attachChildren(item.children);
+      const navItemsMap = new Map<string, NavItem>();
+      const allItems: NavItem[] = [];
+
+      configs.forEach((config: any) => {
+        if (config.nav_items) {
+          const navItem: NavItem = {
+            id: config.nav_item_id,
+            label: config.nav_items.label,
+            route: config.nav_items.route || undefined,
+            icon_name: config.nav_items.icon_name || undefined,
+            is_root: config.nav_items.is_root, // This is the original is_root from nav_items, not the config's tree position
+            description: config.nav_items.description || undefined,
+            is_external: config.nav_items.is_external,
+            children: [],
+            // The actual tree structure (is_root, parent_id, order_index) for this role is in config
+          };
+          navItemsMap.set(navItem.id, navItem);
+          allItems.push(navItem);
+        }
+      });
+
+      const rootItems: NavItem[] = [];
+      const childrenOf: { [key: string]: NavItem[] } = {};
+
+      // Build the hierarchical structure based on role_nav_configs
+      configs.forEach((config: any) => {
+        const item = navItemsMap.get(config.nav_item_id);
+        if (item) {
+          if (config.parent_nav_item_id) {
+            if (!childrenOf[config.parent_nav_item_id]) {
+              childrenOf[config.parent_nav_item_id] = [];
+            }
+            childrenOf[config.parent_nav_item_id].push(item);
+          } else {
+            rootItems.push(item);
+          }
+        }
+      });
+
+      const attachChildren = (items: NavItem[]) => {
+        items.forEach(item => {
+          if (childrenOf[item.id]) {
+            item.children = childrenOf[item.id].sort((a, b) => {
+              const configA = configs.find((c: any) => c.nav_item_id === a.id && c.role === userRole);
+              const configB = configs.find((c: any) => c.nav_item_id === b.id && c.role === userRole);
+              return (configA?.order_index || 0) - (configB?.order_index || 0);
+            });
+            attachChildren(item.children);
+          }
+          if (item.route === '/messages') {
+            item.badge = unreadMessagesCount;
+          }
+        });
+      };
+
+      attachChildren(rootItems);
+
+      // Sort root items based on their order_index in role_nav_configs
+      rootItems.sort((a, b) => {
+        const configA = configs.find((c: any) => c.nav_item_id === a.id && c.role === userRole);
+        const configB = configs.find((c: any) => c.nav_item_id === b.id && c.role === userRole);
+        return (configA?.order_index || 0) - (configB?.order_index || 0);
+      });
+
+      return rootItems;
+    };
+
+    /**
+     * Récupère tous les éléments de navigation génériques depuis Supabase (table nav_items).
+     * Utile pour la gestion administrative où tous les éléments disponibles doivent être visibles.
+     * @returns Un tableau plat de tous les éléments de navigation génériques.
+     */
+    export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
+      const { data, error } = await supabase
+        .from('nav_items')
+        .select('*')
+        .order('label', { ascending: true }); // Order by label for the unconfigured list
+
+      if (error) {
+        console.error("Error loading all raw nav items:", error);
+        return [];
       }
-      // Mettre à jour le badge des messages si c'est l'élément "Messages"
-      if (item.route === '/messages') {
-        item.badge = unreadMessagesCount;
+
+      return data.map(item => ({
+        id: item.id,
+        label: item.label,
+        route: item.route || undefined,
+        icon_name: item.icon_name || undefined,
+        is_root: item.is_root, // This is the original is_root from nav_items
+        description: item.description || undefined,
+        is_external: item.is_external,
+        children: [],
+      }));
+    };
+
+    /**
+     * Ajoute un nouvel élément de navigation générique à la table nav_items.
+     * @param newItem L'objet NavItem à ajouter (sans l'ID, ni les propriétés de configuration de rôle).
+     * @returns L'élément de navigation ajouté.
+     */
+    export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge'>): Promise<NavItem | null> => {
+      const { data, error } = await supabase
+        .from('nav_items')
+        .insert({
+          label: newItem.label,
+          route: newItem.route || null,
+          icon_name: newItem.icon_name || null,
+          is_root: newItem.is_root,
+          description: newItem.description || null,
+          is_external: newItem.is_external,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error adding nav item:", error);
+        throw error;
       }
-    });
-  };
+      return data as NavItem;
+    };
 
-  attachChildren(rootItems);
+    /**
+     * Met à jour un élément de navigation générique existant dans la table nav_items.
+     * @param updatedItem L'objet NavItem avec les données mises à jour (sans les propriétés de configuration de rôle).
+     * @returns L'élément de navigation mis à jour.
+     */
+    export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge'>): Promise<NavItem | null> => {
+      const { data, error } = await supabase
+        .from('nav_items')
+        .update({
+          label: updatedItem.label,
+          route: updatedItem.route || null,
+          icon_name: updatedItem.icon_name || null,
+          is_root: updatedItem.is_root,
+          description: updatedItem.description || null,
+          is_external: updatedItem.is_external,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', updatedItem.id)
+        .select()
+        .single();
 
-  return rootItems.sort((a, b) => a.order_index - b.order_index);
-};
+      if (error) {
+        console.error("Error updating nav item:", error);
+        throw error;
+      }
+      return data as NavItem;
+    };
 
-/**
- * Récupère tous les éléments de navigation depuis Supabase sans filtrage ni construction d'arbre.
- * Utile pour la gestion administrative où tous les éléments doivent être visibles.
- * @returns Un tableau plat de tous les éléments de navigation.
- */
-export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
-  const { data, error } = await supabase
-    .from('nav_items')
-    .select('*')
-    .order('order_index', { ascending: true });
+    /**
+     * Supprime un élément de navigation générique de la table nav_items.
+     * Cela devrait cascader la suppression dans role_nav_configs.
+     * @param navItemId L'ID de l'élément de navigation à supprimer.
+     */
+    export const deleteNavItem = async (navItemId: string): Promise<void> => {
+      const { error } = await supabase
+        .from('nav_items')
+        .delete()
+        .eq('id', navItemId);
 
-  if (error) {
-    console.error("Error loading all raw nav items:", error);
-    return [];
-  }
+      if (error) {
+        console.error("Error deleting nav item:", error);
+        throw error;
+      }
+    };
 
-  return data.map(item => ({
-    id: item.id,
-    label: item.label,
-    route: item.route || undefined,
-    icon_name: item.icon_name || undefined,
-    is_root: item.is_root,
-    allowed_roles: item.allowed_roles as Array<Profile['role']>,
-    parent_id: item.parent_id || undefined,
-    order_index: item.order_index,
-    description: item.description || undefined,
-    is_external: item.is_external,
-    children: [], // Children are not built in this raw load
-  }));
-};
+    /**
+     * Récupère un seul élément de navigation générique par son ID.
+     * @param id L'ID de l'élément de navigation.
+     * @returns L'élément de navigation ou null.
+     */
+    export const getNavItemById = async (id: string): Promise<NavItem | null> => {
+      const { data, error } = await supabase
+        .from('nav_items')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-/**
- * Ajoute un nouvel élément de navigation.
- * @param newItem L'objet NavItem à ajouter (sans l'ID).
- * @returns L'élément de navigation ajouté.
- */
-export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge'>): Promise<NavItem | null> => {
-  const { data, error } = await supabase
-    .from('nav_items')
-    .insert({
-      label: newItem.label,
-      route: newItem.route || null,
-      icon_name: newItem.icon_name || null, // Changed from 'icon' to 'icon_name'
-      is_root: newItem.is_root,
-      allowed_roles: newItem.allowed_roles,
-      parent_id: newItem.parent_id || null,
-      order_index: newItem.order_index,
-      description: newItem.description || null,
-      is_external: newItem.is_external,
-    })
-    .select()
-    .single();
+      if (error) {
+        console.error("Error fetching nav item by ID:", error);
+        return null;
+      }
+      return data as NavItem;
+    };
 
-  if (error) {
-    console.error("Error adding nav item:", error);
-    throw error;
-  }
-  return data as NavItem;
-};
+    /**
+     * Ajoute une nouvelle configuration d'élément de navigation pour un rôle spécifique.
+     * @param newConfig L'objet RoleNavItemConfig à ajouter (sans l'ID).
+     * @returns La configuration ajoutée.
+     */
+    export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
+      const { data, error } = await supabase
+        .from('role_nav_configs')
+        .insert(newConfig)
+        .select()
+        .single();
 
-/**
- * Met à jour un élément de navigation existant.
- * @param updatedItem L'objet NavItem avec les données mises à jour.
- * @returns L'élément de navigation mis à jour.
- */
-export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge'>): Promise<NavItem | null> => {
-  const { data, error } = await supabase
-    .from('nav_items')
-    .update({
-      label: updatedItem.label,
-      route: updatedItem.route || null,
-      icon_name: updatedItem.icon_name || null, // Changed from 'icon' to 'icon_name'
-      is_root: updatedItem.is_root,
-      allowed_roles: updatedItem.allowed_roles,
-      parent_id: updatedItem.parent_id || null,
-      order_index: updatedItem.order_index,
-      description: updatedItem.description || null,
-      is_external: updatedItem.is_external,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', updatedItem.id)
-    .select()
-    .single();
+      if (error) {
+        console.error("Error adding role nav item config:", error);
+        throw error;
+      }
+      return data as RoleNavItemConfig;
+    };
 
-  if (error) {
-    console.error("Error updating nav item:", error);
-    throw error;
-  }
-  return data as NavItem;
-};
+    /**
+     * Met à jour une configuration d'élément de navigation existante pour un rôle spécifique.
+     * @param updatedConfig L'objet RoleNavItemConfig avec les données mises à jour.
+     * @returns La configuration mise à jour.
+     */
+    export const updateRoleNavItemConfig = async (updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
+      const { data, error } = await supabase
+        .from('role_nav_configs')
+        .update({
+          parent_nav_item_id: updatedConfig.parent_nav_item_id || null,
+          order_index: updatedConfig.order_index,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', updatedConfig.id)
+        .select()
+        .single();
 
-/**
- * Supprime un élément de navigation.
- * @param navItemId L'ID de l'élément de navigation à supprimer.
- */
-export const deleteNavItem = async (navItemId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('nav_items')
-    .delete()
-    .eq('id', navItemId);
+      if (error) {
+        console.error("Error updating role nav item config:", error);
+        throw error;
+      }
+      return data as RoleNavItemConfig;
+    };
 
-  if (error) {
-    console.error("Error deleting nav item:", error);
-    throw error;
-  }
-};
+    /**
+     * Supprime une configuration d'élément de navigation pour un rôle spécifique.
+     * @param configId L'ID de la configuration à supprimer.
+     */
+    export const deleteRoleNavItemConfig = async (configId: string): Promise<void> => {
+      const { error } = await supabase
+        .from('role_nav_configs')
+        .delete()
+        .eq('id', configId);
 
-/**
- * Récupère un seul élément de navigation par son ID.
- * @param id L'ID de l'élément de navigation.
- * @returns L'élément de navigation ou null.
- */
-export const getNavItemById = async (id: string): Promise<NavItem | null> => {
-  const { data, error } = await supabase
-    .from('nav_items')
-    .select('*')
-    .eq('id', id)
-    .single();
+      if (error) {
+        console.error("Error deleting role nav item config:", error);
+        throw error;
+      }
+    };
 
-  if (error) {
-    console.error("Error fetching nav item by ID:", error);
-    return null;
-  }
-  return data as NavItem;
-};
+    /**
+     * Récupère toutes les configurations d'éléments de navigation pour un rôle donné.
+     * @param role Le rôle à filtrer.
+     * @returns Un tableau de configurations d'éléments de navigation.
+     */
+    export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promise<RoleNavItemConfig[]> => {
+      const { data, error } = await supabase
+        .from('role_nav_configs')
+        .select('*')
+        .eq('role', role)
+        .order('order_index', { ascending: true });
 
-/**
- * Réinitialise la table nav_items (pour le développement/test).
- */
-export const resetNavItems = async (): Promise<void> => {
-  const { error } = await supabase.from('nav_items').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except a dummy ID if needed
-  if (error) console.error("Error resetting nav items:", error);
-};
+      if (error) {
+        console.error("Error fetching role nav item configs by role:", error);
+        return [];
+      }
+      return data as RoleNavItemConfig[];
+    };
+
+    /**
+     * Réinitialise la table nav_items (pour le développement/test).
+     */
+    export const resetNavItems = async (): Promise<void> => {
+      const { error } = await supabase.from('nav_items').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except a dummy ID if needed
+      if (error) console.error("Error resetting nav items:", error);
+    };
+
+    /**
+     * Réinitialise la table role_nav_configs (pour le développement/test).
+     */
+    export const resetRoleNavConfigs = async (): Promise<void> => {
+      const { error } = await supabase.from('role_nav_configs').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except a dummy ID if needed
+      if (error) console.error("Error resetting role nav configs:", error);
+    };
