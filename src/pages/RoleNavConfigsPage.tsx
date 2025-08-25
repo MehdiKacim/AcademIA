@@ -604,33 +604,42 @@ const RoleNavConfigsPage = () => {
     );
   };
 
-  const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] => {
-    let flattened: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
-    items.forEach(item => {
-      // Only include items that are true categories (type 'category_or_action' and no route)
-      if (item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.id !== excludeId) {
-        const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
-        flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name, typeLabel: "Catégorie/Action" });
-        if (item.children) {
-          flattened = flattened.concat(getFlattenedCategoriesForParentSelection(item.children, excludeId, currentLevel + 1, newLabel));
-        }
-      }
-    });
-    return flattened;
-  }, []);
-
   const availableParentsForConfig = useMemo(() => {
     if (!currentItemToEdit) return [];
 
-    // Use all configured items (flat list) to find potential parents
     const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
 
-    const potentialParents = allConfiguredItemsFlat.filter(item =>
-      item.id !== currentItemToEdit.id && // Cannot be the item itself
-      !descendantsOfCurrentItem.has(item.id) && // Cannot be a descendant
-      item.type === 'category_or_action' && // Must be a category
-      (item.route === null || item.route === undefined) // Must be a true category (no route)
-    );
+    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
+
+    // Iterate through all configured items to find potential parents
+    allConfiguredItemsFlat.forEach(item => {
+      // A potential parent must be a category (type 'category_or_action' with no route)
+      // It cannot be the item being edited itself
+      // It cannot be a descendant of the item being edited (to prevent circular dependencies)
+      if (
+        item.type === 'category_or_action' &&
+        (item.route === null || item.route === undefined) &&
+        item.id !== currentItemToEdit.id &&
+        !descendantsOfCurrentItem.has(item.id)
+      ) {
+        // Calculate the level for display purposes.
+        let level = 0;
+        let currentParentId = item.parent_nav_item_id;
+        while (currentParentId) {
+          level++;
+          const parent = allConfiguredItemsFlat.find(i => i.id === currentParentId);
+          currentParentId = parent?.parent_nav_item_id;
+        }
+
+        potentialParents.push({
+          id: item.id,
+          label: item.label,
+          level: level,
+          icon_name: item.icon_name,
+          typeLabel: getItemTypeLabel(item.type),
+        });
+      }
+    });
 
     // Sort by label for consistent display
     return potentialParents.sort((a, b) => a.label.localeCompare(b.label));
@@ -796,7 +805,7 @@ const RoleNavConfigsPage = () => {
                     >
                       {editConfigParentId === null
                         ? "Aucun (élément racine)"
-                        : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
+                        : availableParentsForConfig.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
