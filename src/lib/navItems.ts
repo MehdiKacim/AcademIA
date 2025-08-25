@@ -208,6 +208,7 @@ const ensureDefaultNavItemsForRole = async (role: Profile['role'], establishment
     if (existingItem) {
       navItemMap.set(itemData.label, existingItem.id);
     } else {
+      console.log(`[ensureDefaultNavItemsForRole] Inserting new generic nav_item: ${itemData.label}`);
       const { data: newItem, error: insertItemError } = await supabase
         .from('nav_items')
         .insert(itemData)
@@ -254,6 +255,7 @@ const ensureDefaultNavItemsForRole = async (role: Profile['role'], establishment
           existingConfig.establishment_id !== establishmentId ||
           existingConfig.order_index !== orderIndexCounter) // Only update order if it's a root item for now
       {
+        console.log(`[ensureDefaultNavItemsForRole] Updating existing config for ${itemData.label}`);
         configsToUpdate.push({
           id: existingConfig.id,
           nav_item_id: navItemId,
@@ -265,6 +267,7 @@ const ensureDefaultNavItemsForRole = async (role: Profile['role'], establishment
       }
     } else {
       // Insert new config
+      console.log(`[ensureDefaultNavItemsForRole] Inserting new config for ${itemData.label}`);
       configsToInsert.push({
         nav_item_id: navItemId,
         role: role,

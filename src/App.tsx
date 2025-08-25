@@ -50,7 +50,9 @@ import React, { useState, useEffect } from 'react';
 
       useEffect(() => {
         const fetchNavRoutes = async () => {
+          console.log("[App.tsx] Fetching nav routes for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
           const items = await loadNavItems(currentRole, 0, currentUserProfile?.establishment_id); // Pass establishment_id
+          console.log("[App.tsx] Raw nav items loaded:", items); // Log raw items
           // Flatten the tree to get all routes
           const flattenAndFilterRoutes = (navItems: NavItem[]): NavItem[] => {
             let routes: NavItem[] = [];
@@ -64,7 +66,9 @@ import React, { useState, useEffect } from 'react';
             });
             return routes;
           };
-          setDynamicRoutes(flattenAndFilterRoutes(items));
+          const flattenedRoutes = flattenAndFilterRoutes(items);
+          setDynamicRoutes(flattenedRoutes);
+          console.log("[App.tsx] Flattened dynamic routes for React Router:", flattenedRoutes); // Log flattened routes
         };
         fetchNavRoutes();
       }, [currentRole, currentUserProfile?.establishment_id]); // Re-fetch routes when role or establishment changes
