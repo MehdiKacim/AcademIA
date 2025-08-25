@@ -19,7 +19,7 @@ import {
   Download,
   Info,
   BotMessageSquare, // Added BotMessageSquare for AiA Bot
-  // Removed UserCog from here
+  UserCog, // Added UserCog for Admin access button
 } from "lucide-react"; // Import all necessary icons
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -163,9 +163,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
 
   // Static nav items for the header
   const staticHeaderNavItems: NavItem[] = [
-    { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0 },
-    { id: 'aia', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1 },
-    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2 },
+    { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, type: 'route' },
+    { id: 'aia', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
+    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -264,6 +264,12 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
+              <Button size="lg" onClick={() => setIsAuthModalOpen(true)}>
+                Découvrir AiA
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => setIsAdminModalOpen(true)}>
+                <UserCog className="h-5 w-5 mr-2" /> Accès Admin
+              </Button>
             </div>
           </div>
         </section>
