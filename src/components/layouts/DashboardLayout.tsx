@@ -71,6 +71,9 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
           const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
           setNavItems(loadedItems);
           console.log("[DashboardLayout] fetchNavItems: Loaded navItems (raw from loadNavItems):", loadedItems);
+          if (loadedItems.length === 0 && currentUserProfile && currentRole === 'administrator') {
+            console.error("[DashboardLayout] Admin navigation items are empty. This usually means default items need to be inserted or there's a data issue. Consider a full data reset via the Admin Modal (Ctrl+Shift+S).");
+          }
         };
         fetchNavItems();
       }, [currentRole, unreadMessages, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessages, or establishment changes
@@ -224,7 +227,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         <div className="flex flex-col min-h-screen bg-muted/40">
           <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
             <Logo onLogoClick={handleLogoClick} />
-            {!isMobile && currentUserProfile && (
+            {!isMobile && currentUserProfile && groupedFullNavTree.length > 0 && (
               <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
                 {/* Render category buttons in the header for desktop */}
                 {groupedFullNavTree.map(categoryGroup => {
