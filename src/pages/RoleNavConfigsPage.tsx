@@ -411,6 +411,7 @@ const RoleNavConfigsPage = () => {
 
     let finalParentId: string | null = null;
     const trimmedTempParentInput = tempParentInput.trim();
+    let newCategoryCreated = false; // Flag to track if a new category was created
 
     if (trimmedTempParentInput !== '') {
       // Try to find an existing parent by label
@@ -437,6 +438,7 @@ const RoleNavConfigsPage = () => {
           return;
         }
         showSuccess(`Catégorie '${parentItem.label}' créée automatiquement !`);
+        newCategoryCreated = true; // Set flag
       }
       finalParentId = parentItem.id;
     } else {
@@ -458,6 +460,21 @@ const RoleNavConfigsPage = () => {
 
     setIsSavingEdit(true);
     try {
+      // If a new category was created, ensure it's also added as a root item in the role's config
+      if (newCategoryCreated && finalParentId) {
+        const existingConfigForNewParent = allConfiguredItemsFlat.find(item => item.id === finalParentId);
+        if (!existingConfigForNewParent) { // Only add if not already configured for this role
+          const newParentConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+            nav_item_id: finalParentId,
+            role: selectedRoleFilter as Profile['role'],
+            parent_nav_item_id: null, // It's a root item
+            order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length, // Add at the end of root items
+          };
+          await addRoleNavItemConfig(newParentConfig);
+          showSuccess(`'${trimmedTempParentInput}' ajouté au premier niveau du menu !`);
+        }
+      }
+
       const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
         id: currentConfigToEdit.id,
         nav_item_id: currentConfigToEdit.nav_item_id,
@@ -467,7 +484,7 @@ const RoleNavConfigsPage = () => {
       };
       await updateRoleNavItemConfig(updatedConfigData);
       showSuccess("Configuration de rôle mise à jour !");
-      await fetchAndStructureNavItems();
+      await fetchAndStructureNavItems(); // This will rebuild the tree and pick up all changes
       setIsEditConfigDialogOpen(false);
       setCurrentConfigToEdit(null);
       setCurrentItemToEdit(null);
@@ -642,6 +659,7 @@ const RoleNavConfigsPage = () => {
   const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] => {
     let flattened: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
     items.forEach(item => {
+      // Only include items that are true categories (type 'category_or_action' and no route)
       if (item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.id !== excludeId) {
         const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
         flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name, typeLabel: "Catégorie/Action" });
@@ -655,6 +673,7 @@ const RoleNavConfigsPage = () => {
 
   const availableParentsForConfig = useMemo(() => {
     if (!currentItemToEdit) return [];
+    // Use the configuredItemsTree to find potential parents within the current role's menu structure
     const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree, currentItemToEdit.id);
     const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat); // Use allConfiguredItemsFlat
     const filteredParents = allPotentialParents.filter(parent =>
@@ -824,9 +843,7 @@ const RoleNavConfigsPage = () => {
                     >
                       {editConfigParentId === null
                         ? "Aucun (élément racine)"
-                        : editConfigParentId === "NEW_CATEGORY_TO_CREATE"
-                          ? tempParentInput
-                          : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
+                        : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || tempParentInput || "Sélectionner un parent..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -841,7 +858,7 @@ const RoleNavConfigsPage = () => {
                         {tempParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
                           <CommandItem
                             onSelect={() => {
-                              setEditConfigParentId("NEW_CATEGORY_TO_CREATE"); // Signal intent to create new parent
+                              setEditConfigParentId(null); // Indicate no existing parent is selected
                               setOpenEditConfigParentSelect(false);
                             }}
                           >
