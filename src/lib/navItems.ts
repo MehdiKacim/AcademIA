@@ -46,8 +46,10 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
 
+  console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, fetchedConfigs); // ADDED LOG HERE
+
   const configs = fetchedConfigs as RoleNavItemConfig[];
-  console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${configs.length}`);
+  console.log(`[loadNavItems] Populated navItemNodes for ${userRole} (count): ${navItemNodes.size}`);
 
   const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
 
