@@ -11,21 +11,26 @@ import { loadCourses } from "@/lib/courseData"; // Still load courses from Supab
 import { getProfileById, updateProfile, getStudentCourseProgress, upsertStudentCourseProgress, getAllStudentCourseProgress, getUserFullName } from "@/lib/studentData";
 import type { Profile } from "@/lib/dataModels"; // Import Profile as type
 import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import Course, StudentCourseProgress types
-import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock, BriefcaseBusiness } from "lucide-react"; // Added BriefcaseBusiness icon
+import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock, BriefcaseBusiness, UserCog } from "lucide-react"; // Added BriefcaseBusiness and UserCog icon
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavigate
+import { Link, useNavigate, useOutletContext } from "react-router-dom"; // Import Link, useNavigate, and useOutletContext
 import EditProfileDialog from "@/components/EditProfileDialog";
 import { showSuccess, showError } from '@/utils/toast';
 
+interface ProfilePageOutletContext {
+  setIsAdminModalOpen: (isOpen: boolean) => void;
+}
+
 const Profile = () => {
   const { currentUserProfile, currentRole, setCurrentUserProfile, isLoadingUser } = useRole();
+  const { setIsAdminModalOpen } = useOutletContext<ProfilePageOutletContext>(); // Get setIsAdminModalOpen from context
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate
 
-  console.log("[Profile Page] Rendering. isLoadingUser:", isLoadingUser, "currentUserProfile:", currentUserProfile, "currentRole:", currentRole);
+  console.log("[Profile Page] Rendering. isLoadingUser:", isLoadingUser, "currentUserProfile:", currentUserProfile ? currentUserProfile.id : "null", "currentRole:", currentRole);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -240,7 +245,7 @@ const Profile = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalStudents}</p>
-              <p className="text-sm text-muted-foreground">Élèves uniques.</p>
+              <p className="text-sm text-muted-foreground">élèves uniques.</p>
             </CardContent>
           </Card>
           <Card>
@@ -423,6 +428,19 @@ const Profile = () => {
               </ul>
             </CardContent>
           </Card>
+          {currentRole === 'administrator' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Outils Administrateur</CardTitle>
+                <CardDescription>Accès aux fonctions d'administration avancées.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setIsAdminModalOpen(true)} className="w-full">
+                  <UserCog className="h-4 w-4 mr-2" /> Ouvrir le panneau Admin
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       );
     }
