@@ -29,7 +29,13 @@ import { supabase } from "@/integrations/supabase/client";
         .order('order_index', { ascending: true });
 
       // Filter by establishment_id: either matching user's establishment or NULL (global)
-      query = query.or(`establishment_id.eq.${userEstablishmentId},establishment_id.is.null`);
+      let orConditions: string[] = [`establishment_id.is.null`]; // Always include global configs
+
+      if (userEstablishmentId) {
+        orConditions.push(`establishment_id.eq.${userEstablishmentId}`);
+      }
+
+      query = query.or(orConditions.join(','));
 
       const { data: configs, error: configsError } = await query;
 
