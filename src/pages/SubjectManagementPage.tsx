@@ -10,64 +10,52 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, BookText, School, ChevronDown, ChevronUp } from "lucide-react";
-import { Subject, Profile } from "@/lib/dataModels"; // Removed Establishment import
+import { Subject, Profile } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   loadSubjects,
   addSubjectToStorage,
   updateSubjectInStorage,
   deleteSubjectFromStorage,
-  // Removed loadEstablishments,
 } from '@/lib/courseData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
-// Removed EditSubjectDialog import
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const SubjectManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
-  // Removed establishments state
   const [subjects, setSubjects] = useState<Subject[]>([]);
 
-  // States for new subject form
   const [newSubjectName, setNewSubjectName] = useState('');
-  // Removed newSubjectEstablishmentId
   const [isNewSubjectFormOpen, setIsNewSubjectFormOpen] = useState(false);
 
-  // States for edit dialog
   const [isEditSubjectDialogOpen, setIsEditSubjectDialogOpen] = useState(false);
   const [currentSubjectToEdit, setCurrentSubjectToEdit] = useState<Subject | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      // Removed loadEstablishments
-      setSubjects(await loadSubjects()); // Load all subjects
+      setSubjects(await loadSubjects());
     };
     fetchData();
   }, [currentUserProfile]);
 
-  // Removed getEstablishmentName
-
-  // --- Subject Management Handlers ---
   const handleAddSubject = async () => {
     if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
       showError("Vous n'êtes pas autorisé à ajouter une matière.");
       return;
     }
-    if (!newSubjectName.trim()) { // Removed establishment_id check
+    if (!newSubjectName.trim()) {
       showError("Le nom de la matière est requis.");
       return;
     }
-    // Removed role-based establishment_id check
 
     try {
       const newSub = await addSubjectToStorage({
         name: newSubjectName.trim(),
-      }); // Removed establishment_id
+      });
       if (newSub) {
         setSubjects(await loadSubjects());
         setNewSubjectName('');
-        // Removed setNewSubjectEstablishmentId
         showSuccess("Matière ajoutée !");
         setIsNewSubjectFormOpen(false);
       } else {
@@ -89,7 +77,6 @@ const SubjectManagementPage = () => {
       showError("Matière introuvable.");
       return;
     }
-    // Removed role-based establishment_id check
 
     try {
       await deleteSubjectFromStorage(id);
@@ -106,7 +93,6 @@ const SubjectManagementPage = () => {
       showError("Vous n'êtes pas autorisé à modifier une matière.");
       return;
     }
-    // Removed role-based establishment_id check
     setCurrentSubjectToEdit(subject);
     setIsEditSubjectDialogOpen(true);
   };
@@ -141,8 +127,7 @@ const SubjectManagementPage = () => {
     );
   }
 
-  // Removed establishmentsToDisplay
-  const subjectsToDisplay = subjects; // All subjects are now global
+  const subjectsToDisplay = subjects;
 
   return (
     <div className="space-y-8">
@@ -177,7 +162,6 @@ const SubjectManagementPage = () => {
                   onChange={(e) => setNewSubjectName(e.target.value)}
                   required
                 />
-                {/* Removed Establishment Select */}
                 <Button onClick={handleAddSubject} disabled={!newSubjectName.trim()}>
                   <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la matière
                 </Button>
@@ -200,7 +184,7 @@ const SubjectManagementPage = () => {
               <p className="text-muted-foreground">Aucune matière à afficher.</p>
             ) : (
               subjectsToDisplay.map(sub => (
-                <div key={sub.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
+                <Card key={sub.id} className="p-3 flex items-center justify-between border rounded-md bg-background">
                   <span>{sub.name}</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditSubject(sub)}>
