@@ -1,7 +1,3 @@
-console.log("[RoleContext.tsx] Module loaded."); // Early log to confirm file loading
-
-"use client";
-
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Profile, NavItem } from '@/lib/dataModels'; // Import Profile and NavItem interface
@@ -9,6 +5,7 @@ import { updateProfile } from '@/lib/studentData'; // Import updateProfile
 import { showError } from '@/utils/toast'; // Import showError for diagnostic message
 import { getProfileById } from '@/lib/studentData'; // Import getProfileById
 import { loadNavItems } from '@/lib/navItems'; // Import loadNavItems
+import { User as SupabaseUser } from '@supabase/supabase-js'; // Import Supabase User type
 
 interface RoleContextType {
   currentUserProfile: Profile | null;
@@ -17,7 +14,7 @@ interface RoleContextType {
   isLoadingUser: boolean; // New loading state
   updateUserTheme: (theme: Profile['theme']) => Promise<void>; // Updated: New function to update theme, now accepts Profile['theme']
   signOut: () => Promise<void>; // Add signOut function
-  fetchUserProfile: (userId: string) => Promise<void>; // Add fetchUserProfile
+  fetchUserProfile: (userId: string, user?: SupabaseUser) => Promise<void>; // Add optional user parameter
   navItems: NavItem[]; // Expose structured nav items
   dynamicRoutes: NavItem[]; // Expose flattened dynamic routes for React Router
 }
@@ -30,14 +27,26 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [dynamicRoutes, setDynamicRoutes] = useState<NavItem[]>([]); // State for flattened dynamic routes
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Initialize as true
 
-  const fetchUserProfile = useCallback(async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string, userFromSession?: SupabaseUser) => {
     setIsLoadingUser(true);
     console.log("[RoleContext] fetchUserProfile: Starting for userId:", userId);
     
-    // Fetch the full user object from the session to check email_confirmed_at
-    const { data: userSession, error: sessionError } = await supabase.auth.getUser(); 
+    let userToCheck: SupabaseUser | null = userFromSession || null;
+    let sessionError: any = null;
+
+    if (!userToCheck) {
+      const { data: userSessionData, error: getUserError } = await supabase.auth.getUser();
+      userToCheck = userSessionData.user;
+      sessionError = getUserError;
+    }
+
     if (sessionError) {
-      console.error("[RoleContext] Error fetching user session for confirmation check:", sessionError);
+      // Check if it's the expected "Auth session missing!" error
+      if (sessionError.message === 'Auth session missing!') {
+        console.info("[RoleContext] Info: Auth session missing during profile fetch (expected for unauthenticated users).");
+      } else {
+        console.error("[RoleContext] Error fetching user session for confirmation check:", sessionError);
+      }
       setCurrentUserProfile(null);
       setNavItems([]);
       setDynamicRoutes([]);
@@ -45,12 +54,11 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    if (userSession.user && !userSession.user.email_confirmed_at) {
-      console.warn("[RoleContext] DIAGNOSTIC: User email is NOT confirmed:", userSession.user.email);
-      // Temporarily show an an error to highlight this to the user
+    if (userToCheck && !userToCheck.email_confirmed_at) {
+      console.warn("[RoleContext] DIAGNOSTIC: User email is NOT confirmed:", userToCheck.email);
       showError("DIAGNOSTIC: Votre email n'est pas confirmé. Veuillez vérifier vos paramètres Supabase (Email Confirm).");
-    } else if (userSession.user) {
-      console.log("[RoleContext] DIAGNOSTIC: User email IS confirmed:", userSession.user.email);
+    } else if (userToCheck) {
+      console.log("[RoleContext] DIAGNOSTIC: User email IS confirmed:", userToCheck.email);
     }
 
     const profile = await getProfileById(userId); // Use the updated getProfileById
@@ -104,7 +112,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       console.log("[RoleContext] Auth state changed:", event, "Session exists:", !!session);
       if (session) {
         // User is logged in
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, session.user); // Pass session.user
       } else {
         // User is logged out
         console.log("[RoleContext] User logged out, clearing profile and nav items.");
@@ -120,7 +128,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         console.log("[RoleContext] Initial session found, fetching user profile.");
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, session.user); // Pass session.user
       } else {
         console.log("[RoleContext] No initial session found, setting isLoadingUser to false.");
         setIsLoadingUser(false);
