@@ -280,7 +280,8 @@ const GenericNavItemsPage = () => {
                                 <IconComponent className="h-4 w-4" /> {iconName}
                               </div>
                             </SelectItem>
-                          ))}
+                          );
+                        })}
                       </ScrollArea>
                     </SelectContent>
                   </Select>
@@ -412,7 +413,8 @@ const GenericNavItemsPage = () => {
                               <IconComponent className="h-4 w-4" /> {iconName}
                             </div>
                           </SelectItem>
-                        ))}
+                        );
+                      })}
                     </ScrollArea>
                   </SelectContent>
                 </Select>

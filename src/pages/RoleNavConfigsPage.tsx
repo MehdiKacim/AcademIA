@@ -438,7 +438,7 @@ const RoleNavConfigsPage = () => {
       return;
     }
 
-    setIsSavingConfigEdit(true);
+    setIsSavingEdit(true);
     try {
       const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
         id: currentConfigToEdit.id,
@@ -458,7 +458,7 @@ const RoleNavConfigsPage = () => {
       console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
     } finally {
-      setIsSavingConfigEdit(false);
+      setIsSavingEdit(false);
     }
   };
 

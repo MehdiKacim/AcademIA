@@ -47,7 +47,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe
 };
 
-const navItemTypes: NavItem['type'][] = ['route', 'category_or_action']; // Updated: Replaced 'category' and 'action'
+const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
 
 interface SortableChildItemProps {
   item: NavItem;
@@ -228,7 +228,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                 role: selectedRoleFilter,
                 parent_nav_item_id: parentItem.id,
                 order_index: i,
-              }; // Removed establishment_id
+              };
               await updateRoleNavItemConfig(updatedConfig);
             }
           }
@@ -239,7 +239,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         return;
       }
 
-      onChildrenUpdated(); // Refresh parent tree
+      onChildrenUpdated();
     } catch (error: any) {
       console.error("Error during drag and drop in ManageChildrenDialog:", error);
       showError(`Erreur lors du glisser-déposer: ${error.message}`);
@@ -264,12 +264,12 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
         nav_item_id: genericItem.id,
         role: selectedRoleFilter,
-        parent_nav_item_id: parentItem.id, // Add as child of current parentItem
-        order_index: currentChildren.length, // Add to end
-      }; // Removed establishment_id
+        parent_nav_item_id: parentItem.id,
+        order_index: currentChildren.length,
+      };
       await addRoleNavItemConfig(newConfig);
       showSuccess(`'${genericItem.label}' ajouté comme sous-élément !`);
-      onChildrenUpdated(); // Refresh parent tree
+      onChildrenUpdated();
     } catch (error: any) {
       console.error("Error adding generic item as child:", error);
       showError(`Erreur lors de l'ajout du sous-élément: ${error.message}`);
@@ -285,7 +285,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       showError("Une route est requise pour un élément de type 'Route'.");
       return;
     }
-    if (newChildType === 'category_or_action' && !newChildRoute.trim()) { // Updated logic
+    if (newChildType === 'category_or_action' && !newChildRoute.trim()) {
       // Same logic as for new item: allow empty route for category, require for action
     }
 
@@ -293,11 +293,11 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
     try {
       const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
         label: newChildLabel.trim(),
-        route: newChildRoute.trim() || null, // Allow null route for categories
+        route: newChildRoute.trim() || null,
         description: newChildDescription.trim() || null,
         is_external: newChildIsExternal,
         icon_name: newChildIconName || null,
-        type: newChildType, // Include the new type field
+        type: newChildType,
       };
       const addedGenericItem = await addNavItem(newItemData);
 
@@ -307,10 +307,10 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
           role: selectedRoleFilter,
           parent_nav_item_id: parentItem.id,
           order_index: currentChildren.length,
-        }; // Removed establishment_id
+        };
         await addRoleNavItemConfig(newConfig);
         showSuccess(`'${addedGenericItem.label}' créé et ajouté comme sous-élément !`);
-        onChildrenUpdated(); // Refresh parent tree
+        onChildrenUpdated();
 
         // Reset form
         setNewChildLabel('');
@@ -318,7 +318,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         setNewChildIconName('');
         setNewChildDescription('');
         setNewChildIsExternal(false);
-        setNewChildType('route'); // Reset type
+        setNewChildType('route');
         setIsNewChildFormOpen(false);
       } else {
         showError("Échec de la création du nouvel élément générique.");
@@ -347,7 +347,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const getItemTypeLabel = (type: NavItem['type']) => {
     switch (type) {
       case 'route': return "Route";
-      case 'category_or_action': return "Catégorie/Action"; // Updated label
+      case 'category_or_action': return "Catégorie/Action";
       default: return "Inconnu";
     }
   };
@@ -405,7 +405,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                <span>{item.label} ({getItemTypeLabel(item.type)}) {item.route && `(${item.route})`}</span> {/* Show type and route for clarity */}
+                                <span>{item.label} ({getItemTypeLabel(item.type)}) {item.route && `(${item.route})`}</span>
                               </div>
                             </SelectItem>
                           ))
@@ -454,8 +454,8 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           <Label htmlFor="new-child-type">Type d'élément</Label>
                           <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
                             setNewChildType(value);
-                            if (value === 'category_or_action') { // Updated logic
-                              setNewChildIsExternal(false); // Categories/Actions cannot be external
+                            if (value === 'category_or_action') {
+                              setNewChildIsExternal(false);
                             }
                           }}>
                             <SelectTrigger id="new-child-type">
@@ -472,7 +472,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                         </div>
                         <div>
                           <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
-                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} /> {/* Allow route for action, disable for category */}
+                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} />
                         </div>
                         <div className="flex items-center space-x-2">
                           <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category_or_action'} />
@@ -505,7 +505,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           <Textarea id="new-child-description" value={newChildDescription} onChange={(e) => setNewChildDescription(e.target.value)} />
                         </div>
                       </div>
-                      <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}> {/* Updated disabled condition */}
+                      <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}>
                         {isAddingNewChild ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et ajouter
                       </Button>
                     </CardContent>
