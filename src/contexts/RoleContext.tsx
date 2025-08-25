@@ -109,8 +109,8 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         // User is logged out
         console.log("[RoleContext] User logged out, clearing profile and nav items.");
         setCurrentUserProfile(null);
-        setNavItems([]);
-        setDynamicRoutes([]);
+        setNavItems([]); // Clear nav items
+        setDynamicRoutes([]); // Clear dynamic routes
         setIsLoadingUser(false);
       }
     });
@@ -158,8 +158,8 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     } else {
       console.log("[RoleContext] Signed out successfully.");
       setCurrentUserProfile(null); // Clear profile on successful sign out
-      setNavItems([]);
-      setDynamicRoutes([]);
+      setNavItems([]); // Clear nav items
+      setDynamicRoutes([]); // Clear dynamic routes
       // The onAuthStateChange listener will also catch this and update state
     }
     setIsLoadingUser(false); // Reset loading state

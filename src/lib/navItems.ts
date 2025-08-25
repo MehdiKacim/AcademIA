@@ -121,8 +121,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
   const { data, error } = await supabase
     .from('nav_items')
-    .select('*')
-    .order('label', { ascending: true }); // Order by label as order_index is removed
+    .select('id, label, route, icon_name, description, is_external, type'); // Removed order_index
 
   if (error) {
     console.error("Error loading raw nav items:", error);
@@ -137,7 +136,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     is_external: item.is_external,
     type: item.type, // Ensure type is included
     children: [], // Children are built dynamically, not stored in raw item
-    order_index: 0, // Default order for raw items
+    order_index: 0, // Default order for raw items (not used for display, but required by interface)
     parent_nav_item_id: undefined,
     // is_global is a frontend concept, not directly from DB here
   }));

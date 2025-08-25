@@ -201,6 +201,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       order_index: number; // Made mandatory for sorting
       configId?: string; // The ID of the role_nav_configs entry
       is_global?: boolean; // Added is_global to NavItem
+      // Removed allowed_roles as it's now handled by role_nav_configs
     }
 
     // New interface for role-specific navigation configuration
