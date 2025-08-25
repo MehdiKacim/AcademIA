@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
         .from('role_nav_configs')
         .select(`
           *,
-          nav_items (
+          nav_item:nav_items!role_nav_configs_nav_item_id_fkey (
             id,
             label,
             route,
@@ -42,15 +42,15 @@ import { supabase } from "@/integrations/supabase/client";
       const allItems: NavItem[] = [];
 
       configs.forEach((config: any) => {
-        if (config.nav_items) {
+        if (config.nav_item) { // Changed from config.nav_items to config.nav_item
           const navItem: NavItem = {
-            id: config.nav_item_id,
-            label: config.nav_items.label,
-            route: config.nav_items.route || undefined,
-            icon_name: config.nav_items.icon_name || undefined,
-            is_root: config.nav_items.is_root, // This is the original is_root from nav_items, not the config's tree position
-            description: config.nav_items.description || undefined,
-            is_external: config.nav_items.is_external,
+            id: config.nav_item.id,
+            label: config.nav_item.label,
+            route: config.nav_item.route || undefined,
+            icon_name: config.nav_item.icon_name || undefined,
+            is_root: config.nav_item.is_root, // This is the original is_root from nav_items, not the config's tree position
+            description: config.nav_item.description || undefined,
+            is_external: config.nav_item.is_external,
             children: [],
             // Properties from role_nav_configs, added for convenience in frontend tree building
             parent_nav_item_id: config.parent_nav_item_id || undefined,
