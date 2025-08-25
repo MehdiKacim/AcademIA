@@ -104,7 +104,7 @@ import React, { useState, useEffect, useCallback } from 'react';
             {!item.is_root && item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_id, order_index: item.order_index } : undefined)}>
+            <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_nav_item_id, order_index: item.order_index } : undefined)}>
               <Edit className="h-4 w-4" />
             </Button>
             <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, configId)}>
@@ -253,7 +253,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsAddingItem(true);
         try {
-          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge'> = {
+          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'> = {
             label: newItemLabel.trim(),
             route: newItemRoute.trim() || null,
             is_root: newItemIsRoot,
@@ -261,8 +261,21 @@ import React, { useState, useEffect, useCallback } from 'react';
             is_external: newItemIsExternal,
             icon_name: newItemIconName || null,
           };
-          await addNavItem(newItemData);
+          const addedItem = await addNavItem(newItemData);
           showSuccess("Élément de navigation générique ajouté !");
+
+          // If a specific role is selected, also add a config for it
+          if (selectedRoleFilter !== 'all' && addedItem) {
+            const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+              nav_item_id: addedItem.id,
+              role: selectedRoleFilter as Profile['role'],
+              parent_nav_item_id: newItemParentId || null,
+              order_index: newItemOrderIndex,
+            };
+            await addRoleNavItemConfig(newConfig);
+            showSuccess("Configuration de rôle ajoutée pour le nouvel élément !");
+          }
+
           await fetchAndStructureNavItems(); // Refresh list
           // Reset form
           setNewItemLabel('');
@@ -271,6 +284,8 @@ import React, { useState, useEffect, useCallback } from 'react';
           setNewItemIconName('');
           setNewItemDescription('');
           setNewItemIsExternal(false);
+          setNewItemParentId(undefined);
+          setNewItemOrderIndex(0);
           setIsNewItemFormOpen(false);
         } catch (error: any) {
           console.error("Error adding generic nav item:", error);
@@ -280,15 +295,28 @@ import React, { useState, useEffect, useCallback } from 'react';
         }
       };
 
-      const handleDeleteGenericNavItem = async (navItemId: string) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cet élément de navigation générique ? Cela supprimera toutes ses configurations de rôle associées. Cette action est irréversible.")) {
-          try {
-            await deleteNavItem(navItemId); // This should cascade delete from role_nav_configs
-            showSuccess("Élément de navigation générique supprimé !");
-            await fetchAndStructureNavItems(); // Refresh list
-          } catch (error: any) {
-            console.error("Error deleting generic nav item:", error);
-            showError(`Erreur lors de la suppression de l'élément générique: ${error.message}`);
+      const handleDeleteGenericNavItem = async (navItemId: string, configId?: string) => {
+        if (selectedRoleFilter !== 'all' && configId) {
+          if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette configuration de rôle pour l'élément ? Cela ne supprimera pas l'élément générique lui-même.`)) {
+            try {
+              await deleteRoleNavItemConfig(configId);
+              showSuccess("Configuration de rôle supprimée !");
+              await fetchAndStructureNavItems();
+            } catch (error: any) {
+              console.error("Error deleting role nav item config:", error);
+              showError(`Erreur lors de la suppression de la configuration de rôle: ${error.message}`);
+            }
+          }
+        } else {
+          if (window.confirm("Êtes-vous sûr de vouloir supprimer cet élément de navigation générique ? Cela supprimera toutes ses configurations de rôle associées. Cette action est irréversible.")) {
+            try {
+              await deleteNavItem(navItemId); // This should cascade delete from role_nav_configs
+              showSuccess("Élément de navigation générique supprimé !");
+              await fetchAndStructureNavItems(); // Refresh list
+            } catch (error: any) {
+              console.error("Error deleting generic nav item:", error);
+              showError(`Erreur lors de la suppression de l'élément générique: ${error.message}`);
+            }
           }
         }
       };
@@ -313,7 +341,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsSavingEdit(true);
         try {
-          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge'> = {
+          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'> = {
             id: currentItemToEdit.id,
             label: editItemLabel.trim(),
             route: editItemRoute.trim() || null,
@@ -420,7 +448,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               return;
             }
             // Create a new role_nav_config entry
-            const newOrderIndex = configuredItemsTree.length; // Default to end of root items
+            let newOrderIndex = 0; // Default order
             let parentNavItemId: string | null = null;
 
             if (overId !== 'configured-container') {
@@ -490,7 +518,19 @@ import React, { useState, useEffect, useCallback } from 'react';
                     await updateRoleNavItemConfig(config);
                   }
                 } else { // Was a root item
-                  setConfiguredItemsTree(prev => prev.filter(item => item.configId !== activeId));
+                  // Re-index root items
+                  const newRootOrder = configuredItemsTree.filter(item => item.configId !== activeId);
+                  for (let i = 0; i < newRootOrder.length; i++) {
+                    const item = newRootOrder[i];
+                    const config = {
+                      id: item.configId!,
+                      nav_item_id: item.id,
+                      role: selectedRoleFilter as Profile['role'],
+                      parent_nav_item_id: null,
+                      order_index: i,
+                    };
+                    await updateRoleNavItemConfig(config);
+                  }
                 }
 
                 // Add to new parent's children (as sibling of overItem)
@@ -512,9 +552,8 @@ import React, { useState, useEffect, useCallback } from 'react';
             }
             successMessage = "Ordre de navigation mis à jour !";
           }
-          // Case 4: Reordering within Unconfigured list
+          // Case 4: Reordering within Unconfigured list (no DB update needed)
           else if (unconfiguredItems.some(item => item.id === activeId) && unconfiguredItems.some(item => item.id === overId)) {
-            // No DB update needed for unconfigured list reordering, only local state
             const oldIndex = unconfiguredItems.findIndex(item => item.id === activeId);
             const newIndex = unconfiguredItems.findIndex(item => item.id === overId);
             if (oldIndex !== -1 && newIndex !== -1) {
@@ -541,10 +580,10 @@ import React, { useState, useEffect, useCallback } from 'react';
       };
 
       // Helper to find a configured item and its parent in the tree
-      const findConfigItemAndParent = (items: NavItem[], targetConfigId: string, role: Profile['role'], parent: NavItem | null = null): { item: NavItem | null, config: RoleNavItemConfig | null, parent: NavItem | null, index: number } => {
+      const findConfigItemAndParent = (items: NavItem[], targetId: string, role: Profile['role'], parent: NavItem | null = null): { item: NavItem | null, config: RoleNavItemConfig | null, parent: NavItem | null, index: number } => {
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          if (item.configId === targetConfigId) {
+          if (item.configId === targetId) {
             const config = {
               id: item.configId,
               nav_item_id: item.id,
@@ -555,7 +594,7 @@ import React, { useState, useEffect, useCallback } from 'react';
             return { item, config, parent, index: i };
           }
           if (item.children && item.children.length > 0) {
-            const found = findConfigItemAndParent(item.children, targetConfigId, role, item);
+            const found = findConfigItemAndParent(item.children, targetId, role, item);
             if (found.item) return found;
           }
         }

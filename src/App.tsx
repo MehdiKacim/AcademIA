@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
     import { Toaster as Sonner } from "@/components/ui/sonner";
     import { TooltipProvider } from "@/components/ui/tooltip";
     import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-    import { BrowserRouter, Routes, Route, Outlet, Navigate, useNavigate } from "react-router-dom";
+    import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom"; // Removed useNavigate
     import Index from "./pages/Index";
     import NotFound from "./pages/NotFound";
     import DashboardLayout from "./components/layouts/DashboardLayout";
@@ -43,7 +43,7 @@ import React, { useState, useEffect } from 'react';
       const { currentUserProfile, isLoadingUser, currentRole } = useRole();
       const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
       const [dynamicRoutes, setDynamicRoutes] = useState<NavItem[]>([]);
-      const navigate = useNavigate(); // Initialize useNavigate here
+      // Removed useNavigate here
 
       // Determine the initial theme based on user profile or default to 'system'
       const initialTheme = currentUserProfile?.theme || "system";

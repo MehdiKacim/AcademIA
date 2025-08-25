@@ -99,15 +99,15 @@ import {
       const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
         if (!currentUser) {
           return [
-            { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_root: true, is_external: false },
-            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_root: true, is_external: false, onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); } }
+            { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_root: true, is_external: false, order_index: 0 },
+            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_root: true, is_external: false, onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); }, order_index: 1 }
           ];
         }
-        // Filter navItems to only include those that are root and have no parent_id, and are allowed for the current role
-        const rootItems = navItems.filter(item => item.is_root && !item.parent_nav_item_id); // Use parent_nav_item_id
+        // Filter navItems to only include those that are root and have no parent_nav_item_id
+        const rootItems = navItems.filter(item => item.is_root && !item.parent_nav_item_id);
 
         // Manually add search and messages, as they are special cases for the bottom bar
-        const messagesItem = rootItems.find(item => item.label === "Messagerie"); // Changed label to "Messagerie"
+        const messagesItem = rootItems.find(item => item.label === "Messagerie");
         const searchItem = rootItems.find(item => item.label === "Recherche");
 
         const baseItems = [

@@ -175,7 +175,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
 
         fullNavTree.forEach(item => {
-          if (item.is_root && !item.parent_id) { // Check if it's a root item (category or direct link)
+          if (item.is_root && !item.parent_nav_item_id) { // Check if it's a root item (category or direct link)
             const categoryLabel = item.label;
             const categoryOrder = item.order_index; // Use order_index from the configured item
             const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;

@@ -224,6 +224,10 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       children?: NavItem[]; // Recursive children (built in frontend)
       onClick?: () => void; // For trigger items (e.g., opening modals)
       badge?: number; // For unread message count
+      // Properties from role_nav_configs, added for convenience in frontend tree building
+      parent_nav_item_id?: string;
+      order_index: number;
+      configId?: string; // The ID of the role_nav_configs entry
     }
 
     // New interface for role-specific navigation configuration

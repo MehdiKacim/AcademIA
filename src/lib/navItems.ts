@@ -46,7 +46,10 @@ import { supabase } from "@/integrations/supabase/client";
             description: config.nav_items.description || undefined,
             is_external: config.nav_items.is_external,
             children: [],
-            // The actual tree structure (is_root, parent_id, order_index) for this role is in config
+            // Properties from role_nav_configs, added for convenience in frontend tree building
+            parent_nav_item_id: config.parent_nav_item_id || undefined,
+            order_index: config.order_index,
+            configId: config.id, // The ID of the role_nav_configs entry
           };
           navItemsMap.set(navItem.id, navItem);
           allItems.push(navItem);
@@ -57,28 +60,21 @@ import { supabase } from "@/integrations/supabase/client";
       const childrenOf: { [key: string]: NavItem[] } = {};
 
       // Build the hierarchical structure based on role_nav_configs
-      configs.forEach((config: any) => {
-        const item = navItemsMap.get(config.nav_item_id);
-        if (item) {
-          if (config.parent_nav_item_id) {
-            if (!childrenOf[config.parent_nav_item_id]) {
-              childrenOf[config.parent_nav_item_id] = [];
-            }
-            childrenOf[config.parent_nav_item_id].push(item);
-          } else {
-            rootItems.push(item);
+      allItems.forEach((item: NavItem) => {
+        if (item.parent_nav_item_id && navItemsMap.has(item.parent_nav_item_id)) {
+          if (!childrenOf[item.parent_nav_item_id]) {
+            childrenOf[item.parent_nav_item_id] = [];
           }
+          childrenOf[item.parent_nav_item_id].push(item);
+        } else {
+          rootItems.push(item);
         }
       });
 
       const attachChildren = (items: NavItem[]) => {
         items.forEach(item => {
           if (childrenOf[item.id]) {
-            item.children = childrenOf[item.id].sort((a, b) => {
-              const configA = configs.find((c: any) => c.nav_item_id === a.id && c.role === userRole);
-              const configB = configs.find((c: any) => c.nav_item_id === b.id && c.role === userRole);
-              return (configA?.order_index || 0) - (configB?.order_index || 0);
-            });
+            item.children = childrenOf[item.id].sort((a, b) => a.order_index - b.order_index);
             attachChildren(item.children);
           }
           if (item.route === '/messages') {
@@ -90,11 +86,7 @@ import { supabase } from "@/integrations/supabase/client";
       attachChildren(rootItems);
 
       // Sort root items based on their order_index in role_nav_configs
-      rootItems.sort((a, b) => {
-        const configA = configs.find((c: any) => c.nav_item_id === a.id && c.role === userRole);
-        const configB = configs.find((c: any) => c.nav_item_id === b.id && c.role === userRole);
-        return (configA?.order_index || 0) - (configB?.order_index || 0);
-      });
+      rootItems.sort((a, b) => a.order_index - b.order_index);
 
       return rootItems;
     };
@@ -124,6 +116,10 @@ import { supabase } from "@/integrations/supabase/client";
         description: item.description || undefined,
         is_external: item.is_external,
         children: [],
+        // Default values for properties from role_nav_configs, as they don't exist on raw items
+        parent_nav_item_id: undefined,
+        order_index: 0,
+        configId: undefined,
       }));
     };
 
@@ -132,7 +128,7 @@ import { supabase } from "@/integrations/supabase/client";
      * @param newItem L'objet NavItem à ajouter (sans l'ID, ni les propriétés de configuration de rôle).
      * @returns L'élément de navigation ajouté.
      */
-    export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge'>): Promise<NavItem | null> => {
+    export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'>): Promise<NavItem | null> => {
       const { data, error } = await supabase
         .from('nav_items')
         .insert({
@@ -158,7 +154,7 @@ import { supabase } from "@/integrations/supabase/client";
      * @param updatedItem L'objet NavItem avec les données mises à jour (sans les propriétés de configuration de rôle).
      * @returns L'élément de navigation mis à jour.
      */
-    export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge'>): Promise<NavItem | null> => {
+    export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'>): Promise<NavItem | null> => {
       const { data, error } = await supabase
         .from('nav_items')
         .update({
