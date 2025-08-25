@@ -116,7 +116,7 @@ const AiAPersistentChat = () => {
     >
       {isMinimized ? (
         <div className="flex items-center justify-center h-full w-full">
-          <Bot className="h-7 w-7 text-primary" />
+          <Bot className="h-10 w-10 text-primary" />
           <span className="sr-only">Ouvrir le chat AiA</span>
         </div>
       ) : (
