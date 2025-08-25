@@ -211,7 +211,7 @@ const RoleNavConfigsPage = () => {
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
 
-  const [editConfigParentInput, setEditConfigParentInput] = useState<string>('');
+  const [tempParentInput, setTempParentInput] = useState<string>(''); // New state for search/create input
   const [openEditConfigParentSelect, setOpenEditConfigParentSelect] = useState(false);
 
   const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
@@ -398,8 +398,8 @@ const RoleNavConfigsPage = () => {
   const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
-    setEditConfigParentInput(item.parent_nav_item_id ? configuredItemsTree.find(i => i.id === item.parent_nav_item_id)?.label || '' : '');
-    setEditConfigParentId(config.parent_nav_item_id || undefined);
+    setEditConfigParentId(config.parent_nav_item_id || undefined); // Set the actual ID
+    setTempParentInput(item.parent_nav_item_id ? configuredItemsTree.find(i => i.id === item.parent_nav_item_id)?.label || '' : ''); // Set the label for display
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
     setOpenEditConfigParentSelect(false);
@@ -409,14 +409,22 @@ const RoleNavConfigsPage = () => {
     if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
     let finalParentId: string | null = null;
-    if (editConfigParentInput.trim() !== '') {
-      let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && item.type === 'category_or_action' && (item.route === null || item.route === undefined));
+    const trimmedTempParentInput = tempParentInput.trim();
+
+    if (trimmedTempParentInput !== '') {
+      // Try to find an existing parent by label
+      let parentItem = allGenericNavItems.find(item => 
+        item.label.toLowerCase() === trimmedTempParentInput.toLowerCase() && 
+        item.type === 'category_or_action' && 
+        (item.route === null || item.route === undefined)
+      );
 
       if (!parentItem) {
+        // If not found, create a new generic category item
         const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
-          label: editConfigParentInput.trim(),
+          label: trimmedTempParentInput,
           route: null,
-          description: `Catégorie générée automatiquement pour '${editConfigParentInput.trim()}'`,
+          description: `Catégorie générée automatiquement pour '${trimmedTempParentInput}'`,
           is_external: false,
           icon_name: 'LayoutList',
           type: 'category_or_action',
@@ -430,6 +438,9 @@ const RoleNavConfigsPage = () => {
         showSuccess(`Catégorie '${parentItem.label}' créée automatiquement !`);
       }
       finalParentId = parentItem.id;
+    } else {
+      // If tempParentInput is empty, it means no parent is selected (root item)
+      finalParentId = null;
     }
 
     if (finalParentId === currentItemToEdit.id) {
@@ -459,7 +470,7 @@ const RoleNavConfigsPage = () => {
       setIsEditConfigDialogOpen(false);
       setCurrentConfigToEdit(null);
       setCurrentItemToEdit(null);
-      setEditConfigParentInput('');
+      setTempParentInput(''); // Reset temp input
     } catch (error: any) {
       console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
@@ -813,8 +824,8 @@ const RoleNavConfigsPage = () => {
                       {editConfigParentId
                         ? availableParentsForConfig.find(
                             (item) => item.id === editConfigParentId,
-                          )?.label || editConfigParentInput
-                        : "Aucun (élément racine)"}
+                          )?.label || tempParentInput // Display tempParentInput if ID not found (e.g., new category)
+                        : (tempParentInput || "Aucun (élément racine)")}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -822,21 +833,21 @@ const RoleNavConfigsPage = () => {
                     <Command>
                       <CommandInput
                         placeholder="Rechercher ou créer une catégorie..."
-                        value={editConfigParentInput}
-                        onValueChange={setEditConfigParentInput}
+                        value={tempParentInput} // Bind to tempParentInput
+                        onValueChange={setTempParentInput} // Update tempParentInput
                       />
                       <CommandList>
-                        {editConfigParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase()) && (
+                        {tempParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
                           <CommandItem
                             onSelect={() => {
-                              setEditConfigParentId(editConfigParentInput);
+                              setEditConfigParentId(undefined); // Signal intent to create new parent
                               setOpenEditConfigParentSelect(false);
                             }}
                           >
-                            <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{editConfigParentInput}"</span>
+                            <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{tempParentInput}"</span>
                           </CommandItem>
                         )}
-                        {availableParentsForConfig.length === 0 && editConfigParentInput.trim() === '' && (
+                        {availableParentsForConfig.length === 0 && tempParentInput.trim() === '' && (
                           <CommandEmpty>
                             <span>Aucune catégorie trouvée.</span>
                           </CommandEmpty>
@@ -846,13 +857,15 @@ const RoleNavConfigsPage = () => {
                             value="none"
                             onSelect={() => {
                               setEditConfigParentId(undefined);
-                              setEditConfigParentInput('');
+                              setTempParentInput('');
                               setOpenEditConfigParentSelect(false);
                             }}
                           >
                             <span>Aucun (élément racine)</span>
                           </CommandItem>
-                          {availableParentsForConfig.map((item) => {
+                          {availableParentsForConfig
+                            .filter(item => item.label.toLowerCase().includes(tempParentInput.toLowerCase())) // Filter by tempParentInput
+                            .map((item) => {
                             const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                             return (
                               <CommandItem
@@ -860,7 +873,7 @@ const RoleNavConfigsPage = () => {
                                 value={item.label}
                                 onSelect={() => {
                                   setEditConfigParentId(item.id);
-                                  setEditConfigParentInput(item.label);
+                                  setTempParentInput(item.label);
                                   setOpenEditConfigParentSelect(false);
                                 }}
                               >
