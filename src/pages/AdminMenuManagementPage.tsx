@@ -1103,12 +1103,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <SelectItem value="none">Aucun</SelectItem>
                         {availableParentsForConfig.map(item => {
-                          const IconComponent = item.icon_name ? iconMap[item.icon_name] || Info : Info; // Define IconComponent here
+                          const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                           return (
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {Array(item.level).fill('—').join('')}
-                                <IconComponent className="h-4 w-4" /> {item.label}
+                                <IconComponentToRender className="h-4 w-4" /> {item.label}
                               </div>
                             </SelectItem>
                           );
