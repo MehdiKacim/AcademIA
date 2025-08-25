@@ -40,7 +40,7 @@ interface IndexProps {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, // Removed UserCog from here
+  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, 
 };
 
 const Index = ({ setIsAdminModalOpen }: IndexProps) => {
@@ -239,7 +239,6 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               <LogIn className="h-5 w-5 mr-2" /> Authentification
             </Button>
           )}
-          {/* Removed temporary Admin Button */}
         </div>
       </header>
 

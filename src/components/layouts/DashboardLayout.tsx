@@ -60,7 +60,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [isDesktopCategoryOverlayOpen, setIsDesktopCategoryOverlayOpen] = useState(false);
 
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
-  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(autoHideTimerRef); // Initialize with null
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Initialize with null
 
   // Log navItems and currentUserProfile when they are available
   useEffect(() => {
@@ -197,6 +197,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const headerNavItems = fullNavTree.filter(item => item.parent_nav_item_id === null);
   console.log("[DashboardLayout] Header Nav Items (filtered for parent_nav_item_id === null):", headerNavItems);
 
+  // Memoize the context value for Outlet
+  const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -370,7 +372,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           !isMobile && isDesktopCategoryOverlayOpen && "pt-[calc(68px+1rem+100px)]"
         )}
       >
-        <Outlet context={{ setIsAdminModalOpen }} /> {/* Pass setIsAdminModalOpen via context */}
+        <Outlet context={outletContextValue} /> {/* Pass setIsAdminModalOpen via context */}
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
