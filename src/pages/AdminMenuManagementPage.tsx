@@ -50,6 +50,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
     import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog'; // Import new dialog
     import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
     import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"; // Import Command components
+    import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // Import Popover components
 
     // Map icon_name strings to Lucide React components
     const iconMap: { [key: string]: React.ElementType } = {
@@ -1090,7 +1091,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                               {newConfigParentInput.trim() !== '' ? (
                                 <CommandItem
                                   onSelect={() => {
-                                    setSelectedParentForNewConfig(newConfigParentInput);
+                                    setEditConfigParentId(newConfigParentInput); // Use input as ID for new category
                                     setOpenNewConfigParentSelect(false);
                                   }}
                                 >
@@ -1104,7 +1105,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                               <CommandItem
                                 value="none"
                                 onSelect={() => {
-                                  setSelectedParentForNewConfig(null);
+                                  setEditConfigParentId(undefined);
                                   setNewConfigParentInput('');
                                   setOpenNewConfigParentSelect(false);
                                 }}
@@ -1118,7 +1119,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     key={item.id}
                                     value={item.label} // Use label for search matching
                                     onSelect={() => {
-                                      setSelectedParentForNewConfig(item.id);
+                                      setEditConfigParentId(item.id);
                                       setNewConfigParentInput(item.label);
                                       setOpenNewConfigParentSelect(false);
                                     }}
