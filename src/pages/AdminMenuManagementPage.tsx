@@ -59,7 +59,6 @@ interface SortableNavItemProps {
   level: number;
   onEdit: (item: NavItem) => void;
   onDelete: (id: string) => void;
-  // onMove is no longer passed down directly, handled by DndContext
   isDragging?: boolean; // Prop to indicate if this item is currently being dragged
 }
 
@@ -121,6 +120,9 @@ const AdminMenuManagementPage = () => {
   const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]); // Items in tree structure
   const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
 
+  // State for global role filter
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
+
   // States for new item form
   const [newItemLabel, setNewItemLabel] = useState('');
   const [newItemRoute, setNewItemRoute] = useState('');
@@ -158,6 +160,8 @@ const AdminMenuManagementPage = () => {
 
   const fetchAndStructureNavItems = useCallback(async () => {
     const rawItems = await loadAllNavItemsRaw();
+    // Sort raw items by order_index first to ensure consistent processing
+    rawItems.sort((a, b) => a.order_index - b.order_index);
     setAllRawNavItems(rawItems);
 
     const configured: NavItem[] = [];
@@ -169,37 +173,53 @@ const AdminMenuManagementPage = () => {
       itemMap.set(item.id, newItem);
     });
 
+    // First pass: identify root items and populate children
     itemMap.forEach(item => {
-      if (item.parent_id && itemMap.has(item.parent_id)) {
-        const parent = itemMap.get(item.parent_id);
-        if (parent) {
-          parent.children.push(item);
+      // Filter items based on selectedRoleFilter
+      const isAllowedByFilter = selectedRoleFilter === 'all' || item.allowed_roles.includes(selectedRoleFilter);
+
+      if (isAllowedByFilter) {
+        if (item.parent_id && itemMap.has(item.parent_id)) {
+          const parent = itemMap.get(item.parent_id);
+          if (parent) {
+            parent.children.push(item);
+          }
+        } else if (item.is_root) {
+          configured.push(item);
+        } else {
+          unconfigured.push(item);
         }
-      } else if (item.is_root) {
-        configured.push(item);
-      } else {
-        unconfigured.push(item);
       }
     });
 
-    // Sort root items and their children
-    configured.sort((a, b) => a.order_index - b.order_index);
+    // Sort children within their parents
     configured.forEach(item => {
       if (item.children) {
         item.children.sort((a, b) => a.order_index - b.order_index);
       }
     });
 
+    // Sort root items of configured list
+    configured.sort((a, b) => a.order_index - b.order_index);
     // Sort unconfigured items
     unconfigured.sort((a, b) => a.order_index - b.order_index);
 
     setConfiguredItemsTree(configured);
     setUnconfiguredItems(unconfigured);
-  }, []);
+  }, [selectedRoleFilter]); // Re-run when selectedRoleFilter changes
 
   useEffect(() => {
     fetchAndStructureNavItems();
   }, [fetchAndStructureNavItems]);
+
+  // Pre-fill new item roles based on selectedRoleFilter
+  useEffect(() => {
+    if (selectedRoleFilter !== 'all') {
+      setNewItemAllowedRoles([selectedRoleFilter]);
+    } else {
+      setNewItemAllowedRoles([]);
+    }
+  }, [selectedRoleFilter]);
 
   const handleAddNavItem = async () => {
     if (!newItemLabel.trim() || newItemAllowedRoles.length === 0) {
@@ -235,7 +255,7 @@ const AdminMenuManagementPage = () => {
       setNewItemLabel('');
       setNewItemRoute('');
       setNewItemIsRoot(false);
-      setNewItemAllowedRoles([]);
+      setNewItemAllowedRoles(selectedRoleFilter !== 'all' ? [selectedRoleFilter] : []); // Reset based on filter
       setNewItemParentId(undefined);
       setNewItemOrderIndex(0);
       setNewItemIconName('');
@@ -328,7 +348,7 @@ const AdminMenuManagementPage = () => {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!activeDragItem || !over) {
+    if (!activeDragItem || !over || active.id === over.id) {
       setActiveDragItem(null);
       return;
     }
@@ -336,153 +356,51 @@ const AdminMenuManagementPage = () => {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Determine if the item is being moved within the same list or between lists
-    const isMovingWithinUnconfigured = unconfiguredItems.some(item => item.id === activeId) && unconfiguredItems.some(item => item.id === overId);
-    const isMovingWithinConfigured = configuredItemsTree.some(item => item.id === activeId || item.children?.some(c => c.id === activeId)) && configuredItemsTree.some(item => item.id === overId || item.children?.some(c => c.id === overId));
-    const isMovingToConfigured = unconfiguredItems.some(item => item.id === activeId) && configuredItemsTree.some(item => item.id === overId || item.children?.some(c => c.id === overId));
-    const isMovingToUnconfigured = configuredItemsTree.some(item => item.id === activeId || item.children?.some(c => c.id === activeId)) && unconfiguredItems.some(item => item.id === overId);
+    let updatedItem: NavItem = { ...activeDragItem }; // Start with a copy of the dragged item
 
-    let updatedItem: NavItem | null = null;
-    let newParentId: string | undefined = undefined;
-    let newIsRoot: boolean = false;
-    let newOrderIndex: number;
-
-    // Helper to find item and its parent in the tree
-    const findItemAndParent = (items: NavItem[], targetId: string, parent: NavItem | null = null): { item: NavItem | null, parent: NavItem | null, index: number } => {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.id === targetId) {
-          return { item, parent, index: i };
-        }
-        if (item.children && item.children.length > 0) {
-          const found = findItemAndParent(item.children, targetId, item);
-          if (found.item) return found;
-        }
-      }
-      return { item: null, parent: null, index: -1 };
-    };
-
-    // Case 1: Moving within Unconfigured list
-    if (isMovingWithinUnconfigured) {
-      const oldIndex = unconfiguredItems.findIndex(item => item.id === activeId);
-      const newIndex = unconfiguredItems.findIndex(item => item.id === overId);
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newUnconfigured = arrayMove(unconfiguredItems, oldIndex, newIndex);
-        // Re-index order_index for all items in the new list
-        newUnconfigured.forEach((item, idx) => item.order_index = idx);
-        setUnconfiguredItems(newUnconfigured);
-        updatedItem = { ...activeDragItem, parent_id: null, is_root: false, order_index: newIndex };
-      }
-    }
-    // Case 2: Moving within Configured list (only reordering root items for now)
-    else if (isMovingWithinConfigured && activeDragItem.is_root && overId === 'configured-container') { // Dropped on the root container
-      const oldIndex = configuredItemsTree.findIndex(item => item.id === activeId);
-      const newIndex = configuredItemsTree.length; // Add to end if dropped on container
-      if (oldIndex !== -1) {
-        const newConfigured = arrayMove(configuredItemsTree, oldIndex, newIndex);
-        newConfigured.forEach((item, idx) => item.order_index = idx);
-        setConfiguredItemsTree(newConfigured);
-        updatedItem = { ...activeDragItem, parent_id: null, is_root: true, order_index: newIndex };
-      }
-    }
-    // Case 3: Moving from Unconfigured to Configured (as a new root item)
-    else if (unconfiguredItems.some(item => item.id === activeId) && (overId === 'configured-container' || configuredItemsTree.some(item => item.id === overId))) {
-      newIsRoot = true;
-      newParentId = undefined;
-      newOrderIndex = configuredItemsTree.length; // Add to the end of root items
-
-      const newUnconfigured = unconfiguredItems.filter(item => item.id !== activeId);
-      newUnconfigured.forEach((item, idx) => item.order_index = idx); // Re-index remaining unconfigured
-      setUnconfiguredItems(newUnconfigured);
-
-      const newConfigured = [...configuredItemsTree, { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex, children: [] }];
-      newConfigured.sort((a, b) => a.order_index - b.order_index); // Re-sort to maintain order
-      setConfiguredItemsTree(newConfigured);
-      updatedItem = { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex };
-    }
-    // Case 4: Moving from Configured to Unconfigured
-    else if (configuredItemsTree.some(item => item.id === activeId || item.children?.some(c => c.id === activeId)) && overId === 'unconfigured-container') {
-      newIsRoot = false;
-      newParentId = undefined;
-      newOrderIndex = unconfiguredItems.length; // Add to the end of unconfigured items
-
-      // Remove from configured tree
-      const newConfiguredTree = configuredItemsTree.map(rootItem => {
-        if (rootItem.id === activeId) return null; // If it's a root item
-        if (rootItem.children) {
-          rootItem.children = rootItem.children.filter(child => child.id !== activeId);
-        }
-        return rootItem;
-      }).filter(Boolean) as NavItem[];
-      newConfiguredTree.forEach((item, idx) => item.order_index = idx); // Re-index remaining configured roots
-      setConfiguredItemsTree(newConfiguredTree);
-
-      const newUnconfigured = [...unconfiguredItems, { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex, children: [] }];
-      newUnconfigured.sort((a, b) => a.order_index - b.order_index); // Re-sort to maintain order
-      setUnconfiguredItems(newUnconfigured);
-      updatedItem = { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex };
-    }
-    // Case 5: Reordering within configured items (children) - this is more complex and will be simplified for now
-    // For now, if dropped on another item, it becomes a sibling at the same level.
-    else if (isMovingWithinConfigured && activeId !== overId) {
-      const { item: activeFound, parent: activeParent, index: activeIndex } = findItemAndParent(configuredItemsTree, activeId);
-      const { item: overFound, parent: overParent, index: overIndex } = findItemAndParent(configuredItemsTree, overId);
-
-      if (activeFound && overFound) {
-        let sourceList = activeParent ? activeParent.children : configuredItemsTree;
-        let destinationList = overParent ? overParent.children : configuredItemsTree;
-
-        if (sourceList === destinationList) { // Moving within the same parent/level
-          const newOrder = arrayMove(sourceList, activeIndex, overIndex);
-          newOrder.forEach((item, idx) => item.order_index = idx);
-          if (activeParent) {
-            activeParent.children = newOrder;
-          } else {
-            setConfiguredItemsTree(newOrder);
-          }
-          updatedItem = { ...activeDragItem, order_index: newOrder[overIndex].order_index };
-        } else { // Moving to a different parent/level (make it a sibling of overItem)
-          // Remove from old parent's children
-          if (activeParent) {
-            activeParent.children = activeParent.children.filter(item => item.id !== activeId);
-            activeParent.children.forEach((item, idx) => item.order_index = idx);
-          } else { // Was a root item
-            setConfiguredItemsTree(prev => prev.filter(item => item.id !== activeId));
-          }
-
-          // Add to new parent's children (as sibling of overItem)
-          const newDestinationList = [...destinationList];
-          newDestinationList.splice(overIndex, 0, { ...activeDragItem, parent_id: overParent?.id || null, is_root: !overParent, children: [] });
-          newDestinationList.forEach((item, idx) => item.order_index = idx);
-
-          if (overParent) {
-            overParent.children = newDestinationList;
-          } else {
-            setConfiguredItemsTree(newDestinationList);
-          }
-          updatedItem = { ...activeDragItem, parent_id: overParent?.id || null, is_root: !overParent, order_index: newDestinationList[overIndex].order_index };
-        }
+    // Determine the target container/item and update properties
+    if (overId === 'unconfigured-container') {
+      // Dropped into the unconfigured container
+      updatedItem.is_root = false;
+      updatedItem.parent_id = null;
+      // Order index will be re-calculated by fetchAndStructureNavItems
+    } else if (overId === 'configured-container') {
+      // Dropped into the configured container (as a new root item)
+      updatedItem.is_root = true;
+      updatedItem.parent_id = null;
+      // Order index will be re-calculated by fetchAndStructureNavItems
+    } else {
+      // Dropped onto another item (make it a sibling of the over item)
+      const overItem = allRawNavItems.find(item => item.id === overId);
+      if (overItem) {
+        updatedItem.is_root = overItem.is_root; // Keep same root status as sibling
+        updatedItem.parent_id = overItem.parent_id; // Keep same parent as sibling
+      } else {
+        // Fallback if overItem not found (e.g., dropped on an invalid area)
+        setActiveDragItem(null);
+        return;
       }
     }
 
-    if (updatedItem) {
-      try {
-        await updateNavItem(updatedItem);
-        showSuccess("Élément de navigation mis à jour !");
-        await fetchAndStructureNavItems(); // Re-fetch and re-structure to ensure consistency
-      } catch (error: any) {
-        console.error("Error updating nav item after drag:", error);
-        showError(`Erreur lors de la mise à jour de l'élément: ${error.message}`);
-      }
+    try {
+      // Update the item in the database
+      await updateNavItem(updatedItem);
+      showSuccess("Élément de navigation mis à jour !");
+      // Re-fetch and re-structure all items to update the UI and re-calculate order_index
+      await fetchAndStructureNavItems();
+    } catch (error: any) {
+      console.error("Error updating nav item after drag:", error);
+      showError(`Erreur lors de la mise à jour de l'élément: ${error.message}`);
+    } finally {
+      setActiveDragItem(null);
     }
-    setActiveDragItem(null);
   };
 
   const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
     return (
-      <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
-        <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
-          {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2">Déposez des éléments ici</p>}
+      <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
+        {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2">Déposez des éléments ici</p>}
+        <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
           {items.map(item => (
             <React.Fragment key={item.id}>
               <SortableNavItem
@@ -494,13 +412,14 @@ const AdminMenuManagementPage = () => {
               />
               {item.children && item.children.length > 0 && (
                 <div className="ml-4">
-                  {renderNavItemsList(item.children, level + 1, `${containerId}-child-${item.id}`)}
+                  {/* Recursive call for children, passing a unique containerId for them */}
+                  {renderNavItemsList(item.children, level + 1, `${containerId}-children-of-${item.id}`)}
                 </div>
               )}
             </React.Fragment>
           ))}
-        </div>
-      </SortableContext>
+        </SortableContext>
+      </div>
     );
   };
 
@@ -530,7 +449,10 @@ const AdminMenuManagementPage = () => {
     );
   }
 
-  const availableParents = allRawNavItems.filter(item => item.is_root && !item.parent_id && item.route === null); // Only categories can be parents
+  // Filter available parents based on the selected role filter
+  const availableParents = allRawNavItems.filter(item =>
+    item.is_root && !item.parent_id && item.route === null && (selectedRoleFilter === 'all' || item.allowed_roles.includes(selectedRoleFilter))
+  );
 
   return (
     <div className="space-y-8">
@@ -540,6 +462,37 @@ const AdminMenuManagementPage = () => {
       <p className="text-lg text-muted-foreground mb-8">
         Créez, modifiez, supprimez et réorganisez les éléments de navigation de l'application.
       </p>
+
+      {/* Global Role Filter */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserRoundCog className="h-6 w-6 text-primary" /> Configurer les menus par rôle
+          </CardTitle>
+          <CardDescription>Sélectionnez un rôle pour voir et gérer les éléments de menu qui lui sont associés.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Label htmlFor="role-filter">Rôle sélectionné</Label>
+          <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
+            <SelectTrigger id="role-filter">
+              <SelectValue placeholder="Sélectionner un rôle" />
+            </SelectTrigger>
+            <SelectContent className="backdrop-blur-lg bg-background/80">
+              <SelectItem value="all">Tous les rôles</SelectItem>
+              {allRoles.map(role => (
+                <SelectItem key={role} value={role}>
+                  {role === 'student' ? 'Élève' :
+                   role === 'professeur' ? 'Professeur' :
+                   role === 'tutor' ? 'Tuteur' :
+                   role === 'director' ? 'Directeur' :
+                   role === 'deputy_director' ? 'Directeur Adjoint' :
+                   'Administrateur'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
 
       {/* Section: Ajouter un nouvel élément de navigation */}
       <Collapsible open={isNewItemFormOpen} onOpenChange={setIsNewItemFormOpen}>
