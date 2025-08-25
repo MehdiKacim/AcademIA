@@ -224,6 +224,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [newConfigParentInput, setNewConfigParentInput] = useState<string>(''); // For Command input
       const [openNewConfigParentSelect, setOpenNewConfigParentSelect] = useState(false);
       const [availableGenericItemsForAdd, setAvailableGenericItemsForAdd] = useState<NavItem[]>([]);
+      // New state to hold the ID of the selected parent for new config
+      const [selectedParentIdForNewConfig, setSelectedParentIdForNewConfig] = useState<string | null>(null);
+
 
       // New state for expanded items in the tree view
       const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
@@ -500,7 +503,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         }
         setCurrentItemToEdit(item); // Keep generic item context
         setCurrentConfigToEdit(config);
-        setNewConfigParentInput(item.parent_nav_item_id ? configuredItemsTree.find(i => i.id === item.parent_nav_item_id)?.label || '' : ''); // Set input for existing parent
+        // Set newConfigParentInput for display in the PopoverTrigger
+        setNewConfigParentInput(item.parent_nav_item_id ? configuredItemsTree.find(i => i.id === item.parent_nav_item_id)?.label || '' : '');
+        // Set editConfigParentId for the actual ID value
         setEditConfigParentId(config.parent_nav_item_id || undefined);
         setEditConfigOrderIndex(config.order_index);
         setEditConfigEstablishmentId(config.establishment_id || undefined); // Set establishment_id for editing
@@ -512,11 +517,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         let finalParentId: string | null = null;
         if (newConfigParentInput.trim() !== '') {
-          // Check if parent category exists
+          // Check if newConfigParentInput (label) corresponds to an existing category
           let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === newConfigParentInput.trim().toLowerCase() && !item.route);
 
           if (!parentItem) {
-            // Create new generic category if it doesn't exist
+            // If not found, it means the user typed a new category name, so create it
             const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
               label: newConfigParentInput.trim(),
               route: null, // It's a category
@@ -744,23 +749,23 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         }
 
         let finalParentId: string | null = null;
-        if (newConfigParentInput.trim() !== '') {
-          // Check if parent category exists
-          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === newConfigParentInput.trim().toLowerCase() && !item.route);
+        if (selectedParentIdForNewConfig) { // Use the new state variable for the selected parent ID
+          // Check if selectedParentIdForNewConfig is an existing ID or a new category name
+          let parentItem = allGenericNavItems.find(item => item.id === selectedParentIdForNewConfig);
 
           if (!parentItem) {
-            // Create new generic category if it doesn't exist
+            // It's a new category name, create it
             const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
-              label: newConfigParentInput.trim(),
-              route: null, // It's a category
-              description: `Catégorie générée automatiquement pour '${newConfigParentInput.trim()}'`,
-              is_external: false,
-              icon_name: 'LayoutList', // Default icon for categories
+                label: newConfigParentInput.trim(), // Use newConfigParentInput for the label of the new category
+                route: null,
+                description: `Catégorie générée automatiquement pour '${newConfigParentInput.trim()}'`,
+                is_external: false,
+                icon_name: 'LayoutList',
             };
             parentItem = await addNavItem(newCategory);
             if (!parentItem) {
-              showError("Échec de la création de la nouvelle catégorie parente.");
-              return;
+                showError("Échec de la création de la nouvelle catégorie parente.");
+                return;
             }
             showSuccess(`Catégorie '${parentItem.label}' créée automatiquement !`);
           }
@@ -789,6 +794,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           await fetchAndStructureNavItems(); // Refresh lists
           setSelectedGenericItemToAdd(null); // Reset selection
           setNewConfigParentInput(''); // Reset parent input
+          setSelectedParentIdForNewConfig(null); // Reset selected parent ID
           setOpenNewConfigParentSelect(false);
         } catch (error: any) {
           console.error("Error adding generic item to menu:", error);
@@ -1071,10 +1077,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                           aria-expanded={openNewConfigParentSelect}
                           className="w-full justify-between"
                         >
-                          {newConfigParentInput
+                          {selectedParentIdForNewConfig
                             ? availableParentsForNewConfig.find(
-                                (item) => item.id === newConfigParentInput,
-                              )?.label || newConfigParentInput
+                                (item) => item.id === selectedParentIdForNewConfig,
+                              )?.label || newConfigParentInput // Fallback to input text if ID not found (for new category)
                             : "Aucun (élément racine)"}
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -1091,7 +1097,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                               {newConfigParentInput.trim() !== '' ? (
                                 <CommandItem
                                   onSelect={() => {
-                                    setEditConfigParentId(newConfigParentInput); // Use input as ID for new category
+                                    setSelectedParentIdForNewConfig(newConfigParentInput); // Use input as ID for new category
                                     setOpenNewConfigParentSelect(false);
                                   }}
                                 >
@@ -1105,7 +1111,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                               <CommandItem
                                 value="none"
                                 onSelect={() => {
-                                  setEditConfigParentId(undefined);
+                                  setSelectedParentIdForNewConfig(null);
                                   setNewConfigParentInput('');
                                   setOpenNewConfigParentSelect(false);
                                 }}
@@ -1119,7 +1125,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     key={item.id}
                                     value={item.label} // Use label for search matching
                                     onSelect={() => {
-                                      setEditConfigParentId(item.id);
+                                      setSelectedParentIdForNewConfig(item.id);
                                       setNewConfigParentInput(item.label);
                                       setOpenNewConfigParentSelect(false);
                                     }}
@@ -1258,10 +1264,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                           aria-expanded={openNewConfigParentSelect}
                           className="col-span-3 justify-between"
                         >
-                          {newConfigParentInput
+                          {editConfigParentId
                             ? availableParentsForConfig.find(
-                                (item) => item.id === newConfigParentInput,
-                              )?.label || newConfigParentInput
+                                (item) => item.id === editConfigParentId,
+                              )?.label || newConfigParentInput // Fallback to input text if ID not found (for new category)
                             : "Aucun (élément racine)"}
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
