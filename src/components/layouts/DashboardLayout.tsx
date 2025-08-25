@@ -174,44 +174,6 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         return navItems;
       }, [navItems]);
 
-      // Group fullNavTree items by category for desktop display, respecting order_index
-      const groupedFullNavTree = React.useMemo(() => {
-        const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
-
-        fullNavTree.forEach(item => {
-          console.log("[DashboardLayout] groupedFullNavTree: Processing item:", item.label, "parent_nav_item_id:", item.parent_nav_item_id);
-          if (item.parent_nav_item_id === null) { // Now directly use item.parent_nav_item_id === null
-            const categoryLabel = item.label;
-            const categoryOrder = item.order_index; // Use order_index from the configured item
-            const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;
-
-            if (!categories[categoryLabel]) {
-              categories[categoryLabel] = { label: categoryLabel, order: categoryOrder, icon: categoryIcon, items: [] };
-            }
-
-            if (item.children && item.children.length > 0) {
-              item.children.forEach(child => {
-                categories[categoryLabel].items.push(child);
-              });
-            } else if (item.route) { // Direct link at root level
-              categories[categoryLabel].items.push(item);
-            }
-          }
-        });
-
-        // Convert to array and sort categories by their order
-        const sortedCategories = Object.values(categories)
-          .filter(group => group.items.length > 0)
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        // Sort items within each category by their order_index
-        sortedCategories.forEach(categoryGroup => {
-          categoryGroup.items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-        });
-        console.log("[DashboardLayout] groupedFullNavTree memo re-calculated. Result (sorted categories):", sortedCategories);
-        return sortedCategories;
-      }, [fullNavTree]);
-
       useEffect(() => {
         startAutoHideTimer();
         return () => {
@@ -242,24 +204,50 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
       return (
         <div className="flex flex-col min-h-screen bg-muted/40">
           <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
-            <Logo /> {/* Removed onLogoClick prop */}
-            {!isMobile && currentUserProfile && groupedFullNavTree.length > 0 && (
+            <Logo />
+            {!isMobile && currentUserProfile && fullNavTree.length > 0 && ( // Use fullNavTree directly
               <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-                {/* Render category buttons in the header for desktop */}
-                {groupedFullNavTree.map(categoryGroup => {
-                  const IconComponent = categoryGroup.icon;
+                {fullNavTree.filter(item => item.parent_nav_item_id === null).map(item => { // Only top-level items
+                  const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                  const isCategory = item.route === null; // Determine if it's a category
 
-                  return (
-                    <Button
-                      key={categoryGroup.label}
-                      variant="ghost"
-                      onClick={() => handleDesktopCategoryClick(categoryGroup.label, categoryGroup.icon, categoryGroup.items)}
-                      className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
-                    >
-                      {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
-                      {categoryGroup.label}
-                    </Button>
-                  );
+                  if (isCategory) {
+                    return (
+                      <Button
+                        key={item.id}
+                        variant="ghost"
+                        onClick={() => handleDesktopCategoryClick(item.label, IconComponent, item.children || [])} // Pass children for categories
+                        className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                      >
+                        {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
+                        {item.label}
+                      </Button>
+                    );
+                  } else { // Direct link
+                    const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+                    return (
+                      <NavLink
+                        key={item.id}
+                        to={item.route!}
+                        className={({ isActive }) =>
+                          cn(
+                            "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                            isActive || isLinkActive
+                              ? "text-primary font-semibold"
+                              : "text-muted-foreground hover:text-foreground"
+                          )
+                        }
+                      >
+                        {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
+                        {item.label}
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                            {item.badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    );
+                  }
                 })}
               </nav>
             )}

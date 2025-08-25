@@ -91,7 +91,7 @@ import {
         if (currentUser) { // Only load dynamic nav items if user is authenticated
           const fetchNavItems = async () => {
             console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
-            const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id);
+            const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
             setDynamicNavItems(loadedItems);
             console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
           };
@@ -100,7 +100,7 @@ import {
           setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
           console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
         }
-      }, [currentRole, unreadMessagesCount, currentUserProfile?.establishment_id, currentUser]);
+      }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
 
       const handleCategoryClick = useCallback((categoryLabel: string, categoryIcon: React.ElementType) => {
         setActiveCategoryLabel(categoryLabel);
@@ -125,7 +125,7 @@ import {
         const searchItem = rootItems.find(item => item.label === "Recherche");
 
         const baseItems = [
-          rootItems.find(item => item.label === "Accueil"),
+          rootItems.find(item => item.label === "Tableau de bord"), // Changed from "Accueil" to "Tableau de bord" for authenticated users
           messagesItem ? { ...messagesItem, badge: unreadMessagesCount } : null,
           searchItem ? { ...searchItem, onClick: onOpenGlobalSearch } : null,
         ].filter(Boolean) as NavItem[];
@@ -133,49 +133,35 @@ import {
         return baseItems;
       }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, dynamicNavItems, handleCategoryClick]);
 
-      const groupedDrawerItems = React.useMemo(() => {
-        const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
+      // This memo now prepares the list of items to display in the drawer,
+      // distinguishing between top-level direct links and categories.
+      const currentDrawerItemsToDisplay = React.useMemo(() => {
+        const lowerCaseQuery = searchQuery.toLowerCase();
+        let itemsToFilter: NavItem[] = [];
 
-        const itemsToGroup = currentUser ? dynamicNavItems : [
-          { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0 },
-          { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1 },
-          { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2 },
-          { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_external: false, onClick: onOpenAboutModal, order_index: 3 },
-        ];
+        if (!currentUser) {
+          // For anonymous users, provide a static list of top-level items
+          itemsToFilter = [
+            { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, children: [] },
+            { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, children: [] },
+            { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, children: [] },
+            { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_external: false, onClick: onOpenAboutModal, order_index: 3, children: [] },
+          ].sort((a, b) => a.order_index - b.order_index);
+        } else if (drawerContent === 'categories') {
+          // For authenticated users, show top-level items (direct links or categories)
+          itemsToFilter = dynamicNavItems.filter(item => item.parent_nav_item_id === null);
+        } else if (drawerContent === 'items' && activeCategoryLabel) {
+          // Show children of the active category
+          const activeCategory = dynamicNavItems.find(item => item.label === activeCategoryLabel && item.route === null);
+          itemsToFilter = activeCategory?.children || [];
+        }
 
-        itemsToGroup.forEach(item => {
-          console.log("[BottomNavigationBar] groupedDrawerItems: Processing item:", item.label, "parent_nav_item_id:", item.parent_nav_item_id);
-          if (item.parent_nav_item_id === null) { // Now directly use item.parent_nav_item_id === null
-            const categoryLabel = item.label;
-            const categoryOrder = item.order_index; // Use order_index from the configured item
-            const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;
+        return itemsToFilter.filter(item =>
+          item.label.toLowerCase().includes(lowerCaseQuery) ||
+          (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
+        ).sort((a, b) => a.order_index - b.order_index); // Ensure items are sorted
+      }, [currentUser, dynamicNavItems, drawerContent, activeCategoryLabel, searchQuery, onOpenAboutModal]);
 
-            if (!categories[categoryLabel]) {
-              categories[categoryLabel] = { label: categoryLabel, order: categoryOrder, icon: categoryIcon, items: [] };
-            }
-
-            if (item.children && item.children.length > 0) {
-              item.children.forEach(child => {
-                categories[categoryLabel].items.push(child);
-              });
-            } else if (item.route || item.onClick) { // Direct link at root level or a trigger item
-              categories[categoryLabel].items.push(item);
-            }
-          }
-        });
-
-        // Convert to array and sort categories by their order
-        const sortedCategories = Object.values(categories)
-          .filter(group => group.items.length > 0)
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        // Sort items within each category by their order_index
-        sortedCategories.forEach(categoryGroup => {
-          categoryGroup.items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-        });
-        console.log("[BottomNavigationBar] groupedDrawerItems memo re-calculated. Result:", sortedCategories);
-        return sortedCategories;
-      }, [dynamicNavItems, currentUser, onOpenAboutModal]);
 
       const handleLogout = async () => {
         await signOut();
@@ -227,26 +213,6 @@ import {
         setActiveCategoryIcon(null);
         setSearchQuery('');
       };
-
-      const filteredDisplayContent = React.useMemo(() => {
-        const lowerCaseQuery = searchQuery.toLowerCase();
-
-        if (drawerContent === 'categories') {
-          return groupedDrawerItems.filter(group =>
-            group.label.toLowerCase().includes(lowerCaseQuery) ||
-            group.items.some(item => item.label.toLowerCase().includes(lowerCaseQuery) || (item.description && item.description.toLowerCase().includes(lowerCaseQuery)))
-          );
-        } else {
-          const activeGroup = groupedDrawerItems.find(group => group.label === activeCategoryLabel);
-          if (!activeGroup) return [];
-
-          const filteredItems = activeGroup.items.filter(item =>
-            item.label.toLowerCase().includes(lowerCaseQuery) ||
-            (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
-          );
-          return [{ label: activeGroup.label, order: activeGroup.order, icon: activeGroup.icon, items: filteredItems }];
-        }
-      }, [groupedDrawerItems, searchQuery, drawerContent, activeCategoryLabel]);
 
       const swipeHandlers = useSwipeable({
         onSwipedUp: () => {
@@ -355,67 +321,52 @@ import {
                   </div>
                 )}
                 <div className="flex-grow overflow-y-auto p-4 space-y-4">
-                  {filteredDisplayContent.length === 0 ? (
+                  {currentDrawerItemsToDisplay.length === 0 && searchQuery.trim() !== '' ? (
                     <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
+                  ) : currentDrawerItemsToDisplay.length === 0 && searchQuery.trim() === '' ? (
+                    <p className="text-muted-foreground text-center py-4">Aucun élément de menu configuré pour ce rôle.</p>
                   ) : (
-                    filteredDisplayContent.map((group) => (
-                      <div key={group.label} className="space-y-2">
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                          {drawerContent === 'categories' ? (
-                            (group.items.length > 0 || (group.label.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== '')) && (
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "flex flex-col items-center justify-center h-24 w-full text-center p-2",
-                                  "hover:bg-accent hover:text-accent-foreground",
-                                  "transition-all duration-200 ease-in-out"
-                                )}
-                                onClick={() => handleCategoryClick(group.label, group.icon)}
-                              >
-                                {React.createElement(group.icon, { className: "h-6 w-6 mb-2" })}
-                                <span className="text-xs font-medium line-clamp-2">{group.label}</span>
-                              </Button>
-                            )
-                          ) : (
-                            group.items.map((item) => {
-                              const isLinkActive = 
-                                (item.route === '/' && location.pathname === '/' && !location.hash) ||
-                                (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route) ||
-                                (item.route && !item.route.startsWith('#') && location.pathname.startsWith(item.route));
-                              const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                              
-                              return (
-                                <Button
-                                  key={item.id}
-                                  variant="outline"
-                                  className={cn(
-                                    "flex flex-col items-center justify-center h-24 w-full text-center p-2",
-                                    isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
-                                    "transition-all duration-200 ease-in-out"
-                                  )}
-                                  onClick={() => handleDrawerItemClick(item)}
-                                >
-                                  <IconComponent className="h-6 w-6 mb-2" />
-                                  <span className="text-xs font-medium line-clamp-2">{item.label}</span>
-                                  {item.badge !== undefined && item.badge > 0 && (
-                                    <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                                      {item.badge}
-                                    </span>
-                                  )}
-                                </Button>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    ))
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {currentDrawerItemsToDisplay.map((item) => {
+                        const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                        const isCategory = item.route === null;
+                        const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+
+                        return (
+                          <Button
+                            key={item.id}
+                            variant="outline"
+                            className={cn(
+                              "flex flex-col items-center justify-center h-24 w-full text-center p-2",
+                              isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
+                              "transition-all duration-200 ease-in-out"
+                            )}
+                            onClick={() => {
+                              if (isCategory) {
+                                handleCategoryClick(item.label, IconComponent);
+                              } else {
+                                handleDrawerItemClick(item);
+                              }
+                            }}
+                          >
+                            <IconComponent className="h-6 w-6 mb-2" />
+                            <span className="text-xs font-medium line-clamp-2">{item.label}</span>
+                            {item.badge !== undefined && item.badge > 0 && (
+                              <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                {item.badge}
+                              </span>
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
                 <DrawerFooter>
                   {!currentUser && drawerContent === 'items' && activeCategoryLabel === 'Accueil' && (
                     <AuthMenu onClose={() => setIsMoreDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
                   )}
-                  {currentUser && drawerContent === 'items' && activeCategoryLabel === 'Accueil' && (
+                  {currentUser && drawerContent === 'categories' && ( // Show logout only in top-level categories view for authenticated users
                     <Button
                       variant="destructive"
                       className="w-full justify-start"
