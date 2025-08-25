@@ -121,7 +121,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
                 {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
                 {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
-                {item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
+                {/* Removed item.children?.length check here, now any item without a route can be a category */}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
@@ -227,6 +227,22 @@ import React, { useState, useEffect, useCallback } from 'react';
         return undefined;
       }, []);
 
+      // Helper to get all descendants of an item
+      const getDescendantIds = useCallback((item: NavItem, allItems: NavItem[]): Set<string> => {
+        const descendants = new Set<string>();
+        const queue: NavItem[] = [...(item.children || [])];
+        while (queue.length > 0) {
+          const current = queue.shift();
+          if (current) {
+            descendants.add(current.id);
+            const childrenOfCurrent = allItems.filter(i => i.parent_nav_item_id === current.id);
+            childrenOfCurrent.forEach(child => queue.push(child));
+          }
+        }
+        return descendants;
+      }, []);
+
+
       const fetchAndStructureNavItems = useCallback(async () => {
         const genericItems = await loadAllNavItemsRaw();
         setAllGenericNavItems(genericItems);
@@ -323,7 +339,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           setAvailableGenericItemsForAdd(availableForAdd);
           setSelectedGenericItemToAdd(null); // Reset selection
         }
-      }, [selectedRoleFilter, selectedEstablishmentFilter, findItemInTree]);
+      }, [selectedRoleFilter, selectedEstablishmentFilter, findItemInTree, getDescendantIds]);
 
       useEffect(() => {
         fetchAndStructureNavItems();
@@ -463,6 +479,17 @@ import React, { useState, useEffect, useCallback } from 'react';
       const handleSaveEditedRoleConfig = async () => {
         if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
+        // Prevent circular dependency: an item cannot be its own parent or a descendant of itself
+        if (editConfigParentId === currentItemToEdit.id) {
+          showError("Un élément ne peut pas être son propre parent.");
+          return;
+        }
+        const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
+        if (editConfigParentId && descendantsOfCurrentItem.has(editConfigParentId)) {
+          showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
+          return;
+        }
+
         setIsSavingConfigEdit(true);
         try {
           const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
@@ -541,6 +568,17 @@ import React, { useState, useEffect, useCallback } from 'react';
           }
 
           if (overConfiguredItem) {
+            // Prevent circular dependency: an item cannot be its own parent or a descendant of itself
+            if (activeDragItem.id === overConfiguredItem.id) {
+              showError("Un élément ne peut pas être déplacé sur lui-même.");
+              return;
+            }
+            const descendantsOfActiveItem = getDescendantIds(activeDragItem, configuredItemsTree);
+            if (descendantsOfActiveItem.has(overConfiguredItem.id)) {
+              showError("Un élément ne peut pas être déplacé dans un de ses propres descendants.");
+              return;
+            }
+
             // Dropped ONTO an existing configured item (as a sibling)
             newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
             const siblings =
@@ -568,6 +606,18 @@ import React, { useState, useEffect, useCallback } from 'react';
               configuredItemsTree,
               newParentNavItemId
             );
+
+            // Prevent circular dependency when dropping into a child container
+            if (activeDragItem.id === newParentNavItemId) {
+              showError("Un élément ne peut pas être déplacé dans lui-même.");
+              return;
+            }
+            const descendantsOfActiveItem = getDescendantIds(activeDragItem, configuredItemsTree);
+            if (descendantsOfActiveItem.has(newParentNavItemId)) {
+              showError("Un élément ne peut pas être déplacé dans un de ses propres descendants.");
+              return;
+            }
+
             newOrderIndex = parentItem?.children?.length || 0;
           } else {
             showError("Cible de dépôt non valide.");
@@ -685,8 +735,32 @@ import React, { useState, useEffect, useCallback } from 'react';
         );
       }
 
-      // Filter available parents for the edit/add dialogs
-      const availableParentsForConfig = configuredItemsTree.filter(item => !item.route); // Only categories (items without a route) can be parents
+      // Helper to flatten the tree for parent selection, excluding self and descendants
+      const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number }[] => {
+        let flattened: { id: string; label: string; level: number }[] = [];
+        items.forEach(item => {
+          if (!item.route && item.id !== excludeId) { // Only categories (no route) and not the item itself
+            const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
+            flattened.push({ id: item.id, label: newLabel, level: currentLevel });
+            if (item.children) {
+              flattened = flattened.concat(getFlattenedCategoriesForParentSelection(item.children, excludeId, currentLevel + 1, newLabel));
+            }
+          }
+        });
+        return flattened;
+      }, []);
+
+      const availableParentsForConfig = useMemo(() => {
+        if (!currentItemToEdit) return [];
+        const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree);
+        const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
+
+        return allPotentialParents.filter(parent =>
+          parent.id !== currentItemToEdit.id && // Cannot be its own parent
+          !descendantsOfCurrentItem.has(parent.id) // Cannot be a descendant of itself
+        );
+      }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds]);
+
 
       return (
         <div className="space-y-8">

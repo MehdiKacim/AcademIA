@@ -36,6 +36,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
 
 // Map icon_name strings to Lucide React components (re-declare or import from a central place)
 const iconMap: { [key: string]: React.ElementType } = {
@@ -109,8 +110,10 @@ interface ManageChildrenDialogProps {
 }
 
 const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, selectedEstablishmentFilter, allGenericNavItems, onChildrenUpdated }: ManageChildrenDialogProps) => {
-  const [availableChildren, setAvailableChildren] = useState<NavItem[]>([]);
+  const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
+  const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -121,21 +124,41 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
 
+  // Helper to get all descendants of an item
+  const getDescendantIds = useCallback((item: NavItem, allItems: NavItem[]): Set<string> => {
+    const descendants = new Set<string>();
+    const queue: NavItem[] = [...(item.children || [])];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (current) {
+        descendants.add(current.id);
+        const childrenOfCurrent = allItems.filter(i => i.parent_nav_item_id === current.id);
+        childrenOfCurrent.forEach(child => queue.push(child));
+      }
+    }
+    return descendants;
+  }, []);
+
   useEffect(() => {
     if (isOpen && parentItem) {
       // Filter generic items: not the parent itself, and not already a child
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
+      const descendantsOfParent = getDescendantIds(parentItem, allGenericNavItems); // Get descendants from generic items
+
       const filteredAvailable = allGenericNavItems.filter(
-        item => item.id !== parentItem.id && !currentChildIds.has(item.id)
+        item => item.id !== parentItem.id && // Cannot be the parent itself
+                !currentChildIds.has(item.id) && // Not already a direct child
+                !descendantsOfParent.has(item.id) // Not already a descendant (to prevent circular dependency)
       );
-      setAvailableChildren(filteredAvailable);
+      setAvailableChildrenForAdd(filteredAvailable);
       setCurrentChildren(parentItem.children || []);
+      setSelectedGenericItemToAdd(null); // Reset selection
     }
-  }, [isOpen, parentItem, allGenericNavItems]);
+  }, [isOpen, parentItem, allGenericNavItems, getDescendantIds]);
 
   const handleDragStart = (event: any) => {
     const { active } = event;
-    const item = availableChildren.find(i => i.id === active.id) || currentChildren.find(i => i.configId === active.id);
+    const item = currentChildren.find(i => i.configId === active.id);
     setActiveDragItem(item || null);
   };
 
@@ -147,53 +170,33 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       return;
     }
 
-    const activeId = active.id as string; // This could be generic nav item ID or configId
-    const overId = over.id as string; // This could be configId or container ID
+    const activeConfigId = active.id as string;
+    const overId = over.id as string;
 
     try {
-      // Dropped into "Available Children" container (remove from current children)
-      if (overId === 'available-children-container' && activeDragItem.configId) {
-        await deleteRoleNavItemConfig(activeDragItem.configId);
-        showSuccess("Élément retiré des sous-éléments !");
-      }
-      // Dropped into "Current Children" container (add or reorder)
-      else if (overId === 'current-children-container' || currentChildren.some(c => c.configId === overId)) {
-        // If dragging from available to current
-        if (!activeDragItem.configId) { // It's a generic item, needs a new config
-          const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-            nav_item_id: activeDragItem.id,
-            role: selectedRoleFilter,
-            parent_nav_item_id: parentItem.id,
-            order_index: currentChildren.length, // Add to end, re-index later
-            establishment_id: selectedEstablishmentFilter || null,
-          };
-          await addRoleNavItemConfig(newConfig);
-          showSuccess("Élément ajouté aux sous-éléments !");
-        }
-        // If reordering within current children
-        else {
-          const oldIndex = currentChildren.findIndex(item => item.configId === activeId);
-          const newIndex = currentChildren.findIndex(item => item.configId === overId);
+      // Dropped into "Current Children" container (reorder)
+      if (overId === 'current-children-container' || currentChildren.some(c => c.configId === overId)) {
+        const oldIndex = currentChildren.findIndex(item => item.configId === activeConfigId);
+        const newIndex = currentChildren.findIndex(item => item.configId === overId);
 
-          if (oldIndex !== -1 && newIndex !== -1) {
-            const newOrder = arrayMove(currentChildren, oldIndex, newIndex);
-            // Update order_index for all affected children in DB
-            for (let i = 0; i < newOrder.length; i++) {
-              const item = newOrder[i];
-              if (item.order_index !== i) {
-                const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-                  id: item.configId!,
-                  nav_item_id: item.id,
-                  role: selectedRoleFilter,
-                  parent_nav_item_id: parentItem.id,
-                  order_index: i,
-                  establishment_id: selectedEstablishmentFilter || null,
-                };
-                await updateRoleNavItemConfig(updatedConfig);
-              }
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newOrder = arrayMove(currentChildren, oldIndex, newIndex);
+          // Update order_index for all affected children in DB
+          for (let i = 0; i < newOrder.length; i++) {
+            const item = newOrder[i];
+            if (item.order_index !== i) {
+              const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+                id: item.configId!,
+                nav_item_id: item.id,
+                role: selectedRoleFilter,
+                parent_nav_item_id: parentItem.id,
+                order_index: i,
+                establishment_id: selectedEstablishmentFilter || null,
+              };
+              await updateRoleNavItemConfig(updatedConfig);
             }
-            showSuccess("Sous-éléments réorganisés !");
           }
+          showSuccess("Sous-éléments réorganisés !");
         }
       } else {
         showError("Cible de dépôt non valide.");
@@ -206,6 +209,48 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       showError(`Erreur lors du glisser-déposer: ${error.message}`);
     } finally {
       setActiveDragItem(null);
+    }
+  };
+
+  const handleAddSelectedGenericItemAsChild = async () => {
+    if (!selectedGenericItemToAdd) {
+      showError("Veuillez sélectionner un élément à ajouter.");
+      return;
+    }
+
+    const genericItem = allGenericNavItems.find(item => item.id === selectedGenericItemToAdd);
+    if (!genericItem) {
+      showError("Élément générique introuvable.");
+      return;
+    }
+
+    try {
+      const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+        nav_item_id: genericItem.id,
+        role: selectedRoleFilter,
+        parent_nav_item_id: parentItem.id, // Add as child of current parentItem
+        order_index: currentChildren.length, // Add to end
+        establishment_id: selectedEstablishmentFilter || null,
+      };
+      await addRoleNavItemConfig(newConfig);
+      showSuccess(`'${genericItem.label}' ajouté comme sous-élément !`);
+      onChildrenUpdated(); // Refresh parent tree
+    } catch (error: any) {
+      console.error("Error adding generic item as child:", error);
+      showError(`Erreur lors de l'ajout du sous-élément: ${error.message}`);
+    }
+  };
+
+  const handleRemoveChild = async (configId: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir retirer ce sous-élément ?")) {
+      try {
+        await deleteRoleNavItemConfig(configId);
+        showSuccess("Sous-élément retiré !");
+        onChildrenUpdated();
+      } catch (error: any) {
+        console.error("Error removing child item:", error);
+        showError(`Erreur lors du retrait du sous-élément: ${error.message}`);
+      }
     }
   };
 
@@ -245,27 +290,44 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
               <Card className="flex flex-col">
                 <CardHeader>
-                  <CardTitle className="text-lg">Éléments disponibles</CardTitle>
-                  <CardDescription>Faites glisser pour ajouter aux sous-éléments.</CardDescription>
+                  <CardTitle className="text-lg">Ajouter un sous-élément</CardTitle>
+                  <CardDescription>Sélectionnez un élément générique à ajouter comme enfant.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-grow overflow-y-auto">
-                  {renderChildItemsList(availableChildren, 'available-children-container', true)}
+                <CardContent className="flex-grow flex flex-col gap-4">
+                  <Select value={selectedGenericItemToAdd || ""} onValueChange={setSelectedGenericItemToAdd}>
+                    <SelectTrigger id="add-child-select">
+                      <SelectValue placeholder="Sélectionner un élément à ajouter" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                      <ScrollArea className="h-40">
+                        {availableChildrenForAdd.length === 0 ? (
+                          <SelectItem value="no-items" disabled>Aucun élément disponible</SelectItem>
+                        ) : (
+                          availableChildrenForAdd.map(item => (
+                            <SelectItem key={item.id} value={item.id}>
+                              <div className="flex items-center gap-2">
+                                {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
+                                {item.label} {item.route && `(${item.route})`}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </ScrollArea>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
+                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
+                  </Button>
                 </CardContent>
               </Card>
 
               <Card className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-lg">Sous-éléments actuels</CardTitle>
-                  <CardDescription>Réorganisez ou faites glisser pour retirer.</CardDescription>
+                  <CardDescription>Réorganisez ou supprimez les sous-éléments.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-y-auto">
-                  {renderChildItemsList(currentChildren, 'current-children-container', true, (configId) => {
-                    // This is a direct remove action, not drag-and-drop
-                    deleteRoleNavItemConfig(configId).then(() => {
-                      showSuccess("Sous-élément retiré !");
-                      onChildrenUpdated();
-                    }).catch(err => showError(`Erreur: ${err.message}`));
-                  })}
+                  {renderChildItemsList(currentChildren, 'current-children-container', true, handleRemoveChild)}
                 </CardContent>
               </Card>
             </div>
