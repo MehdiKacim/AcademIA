@@ -25,24 +25,19 @@ import { clearAllAppData } from '@/lib/dataReset';
 import InputWithStatus from './InputWithStatus';
 import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// Removed loadEstablishments import
-import { Establishment, Profile, ALL_ROLES } from '@/lib/dataModels'; // Import Establishment type, Profile, and ALL_ROLES
-import { bootstrapDefaultNavItemsForRole, reinitializeAllMenus } from '@/lib/navItems'; // Import bootstrapDefaultNavItemsForRole and reinitializeAllMenus
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible components
-import { useRole } from '@/contexts/RoleContext'; // Import useRole to get fetchUserProfile
+import { Profile, ALL_ROLES } from '@/lib/dataModels';
+import { bootstrapDefaultNavItemsForRole, reinitializeAllMenus } from '@/lib/navItems';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useRole } from '@/contexts/RoleContext';
 
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ADMIN_PASSWORD = "Mehkac95!"; // Password for admin access
-
 const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const isMobile = useIsMobile();
-  const { currentUserProfile, fetchUserProfile } = useRole(); // Get fetchUserProfile from useRole
-  const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { currentUserProfile, currentRole, fetchUserProfile } = useRole();
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
   const [showCreateAdminForm, setShowCreateAdminForm] = useState(false);
 
@@ -67,12 +62,9 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
 
   useEffect(() => {
-    // Clear authentication state when modal closes
+    // Reset form fields and states when modal closes
     if (!isOpen) {
-      setIsAuthenticated(false);
-      setPassword('');
       setShowCreateAdminForm(false);
-      // Reset new admin form fields
       setAdminFirstName('');
       setAdminLastName('');
       setAdminUsername('');
@@ -80,24 +72,12 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       setAdminPassword('');
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
-      // Reset bootstrap states
       setRoleToBootstrap('none');
       setIsBootstrapping(false);
       setIsBootstrapSectionOpen(false);
       setIsReinitializingAllMenus(false);
     }
   }, [isOpen]);
-
-
-  const handleAuthenticate = () => {
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      showSuccess("Accès administrateur accordé !");
-    } else {
-      showError("Mot de passe incorrect.");
-      setPassword('');
-    }
-  };
 
   const handleClearAllData = async () => {
     if (window.confirm("Êtes-vous ABSOLUMENT SÛR de vouloir effacer TOUTES les données de l'application ? Cette action est irréversible et supprimera tous les utilisateurs, cours, notes, etc.")) {
@@ -201,8 +181,8 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       
       showSuccess(`Administrateur ${adminFirstName} ${adminLastName} créé avec succès !`);
       // After creating the admin, ensure their default navigation items are set up
-      console.log("[AdminModal] Calling bootstrapDefaultNavItemsForRole for administrator."); // Add this log
-      await bootstrapDefaultNavItemsForRole('administrator'); // Call the new client-side function
+      console.log("[AdminModal] Calling bootstrapDefaultNavItemsForRole for administrator.");
+      await bootstrapDefaultNavItemsForRole('administrator');
       showSuccess("Navigation administrateur par défaut configurée !");
 
       setAdminFirstName('');
@@ -240,8 +220,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         
         setRoleToBootstrap('none');
         setIsBootstrapSectionOpen(false);
-        onClose(); // Close modal after action
-        // No need for window.location.reload() if fetchUserProfile handles it
+        onClose();
       } catch (error: any) {
         console.error("Error bootstrapping role navigation defaults:", error);
         showError(`Erreur lors de l'initialisation de la navigation: ${error.message}`);
@@ -261,7 +240,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         if (currentUserProfile) {
           await fetchUserProfile(currentUserProfile.id);
         }
-        onClose(); // Close modal after action
+        onClose();
       } catch (error: any) {
         console.error("Error reinitializing all menus:", error);
         showError(`Erreur lors de la réinitialisation des menus: ${error.message}`);
@@ -278,84 +257,16 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
           Accès Administrateur
         </Title>
         <Description className="text-center">
-          {isAuthenticated ? "Actions d'administration disponibles." : "Entrez le mot de passe administrateur pour accéder."}
+          {currentUserProfile?.role === 'administrator' ? "Actions d'administration disponibles." : "Connectez-vous en tant qu'administrateur pour accéder à ces outils."}
         </Description>
       </Header>
       <div className="space-y-4">
-        {!isAuthenticated ? (
-          <>
-            <Label htmlFor="admin-password">Mot de passe administrateur</Label>
-            <Input
-              id="admin-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAuthenticate()}
-              placeholder="Mot de passe"
-            />
-            <Button onClick={handleAuthenticate} className="w-full">
-              <Lock className="h-4 w-4 mr-2" /> Accéder
-            </Button>
-          </>
-        ) : (
+        {currentUserProfile?.role === 'administrator' ? (
           <>
             <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full" variant="outline">
               <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
             </Button>
             
-            <Button 
-              onClick={() => setShowCreateAdminForm(prev => !prev)} 
-              className="w-full justify-between" 
-              variant="outline"
-            >
-              <div className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" /> Créer un administrateur initial
-              </div>
-              {showCreateAdminForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-
-            {showCreateAdminForm && (
-              <div className="space-y-4 p-4 border rounded-md bg-muted/20">
-                <p className="text-sm text-muted-foreground">
-                  Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
-                </p>
-                <Input
-                  placeholder="Prénom"
-                  value={adminFirstName}
-                  onChange={(e) => setAdminFirstName(e.target.value)}
-                />
-                <Input
-                  placeholder="Nom"
-                  value={adminLastName}
-                  onChange={(e) => setAdminLastName(e.target.value)}
-                />
-                <InputWithStatus
-                  placeholder="Nom d'utilisateur"
-                  value={adminUsername}
-                  onChange={(e) => handleAdminUsernameChange(e.target.value)}
-                  status={usernameAvailabilityStatus}
-                  errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-                />
-                <InputWithStatus
-                  type="email"
-                  placeholder="Email"
-                  value={adminEmail}
-                  onChange={(e) => handleAdminEmailChange(e.target.value)}
-                  status={emailAvailabilityStatus}
-                  errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-                />
-                <Input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                />
-                <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
-                  {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
-                </Button>
-              </div>
-            )}
-
             <Collapsible open={isBootstrapSectionOpen} onOpenChange={setIsBootstrapSectionOpen}>
               <CollapsibleTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
@@ -373,7 +284,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                   <Label htmlFor="role-to-bootstrap">Rôle</Label>
                   <Select value={roleToBootstrap} onValueChange={(value: Profile['role'] | 'none') => setRoleToBootstrap(value)}>
                     <SelectTrigger id="role-to-bootstrap">
-                      <SelectValue placeholder="Sélectionner un rôle" />
+                      <SelectValue placeholder="Sélectionner un rôle..." />
                     </SelectTrigger>
                     <SelectContent className="backdrop-blur-lg bg-background/80">
                       <SelectItem value="none" disabled>Sélectionner un rôle...</SelectItem>
@@ -404,6 +315,67 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
             </Button>
 
+            <Button onClick={onClose} className="w-full" variant="secondary">
+              Fermer
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground text-center">
+              Pour accéder aux outils d'administration, veuillez vous connecter avec un compte ayant le rôle 'administrateur'.
+            </p>
+            {/* Show create initial admin form only if no user is logged in */}
+            {!currentUserProfile && (
+              <Collapsible open={showCreateAdminForm} onOpenChange={setShowCreateAdminForm}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" /> Créer un administrateur initial
+                    </div>
+                    {showCreateAdminForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 p-4 border rounded-md bg-muted/20">
+                  <p className="text-sm text-muted-foreground">
+                    Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
+                  </p>
+                  <Input
+                    placeholder="Prénom"
+                    value={adminFirstName}
+                    onChange={(e) => setAdminFirstName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Nom"
+                    value={adminLastName}
+                    onChange={(e) => setAdminLastName(e.target.value)}
+                  />
+                  <InputWithStatus
+                    placeholder="Nom d'utilisateur"
+                    value={adminUsername}
+                    onChange={(e) => handleAdminUsernameChange(e.target.value)}
+                    status={usernameAvailabilityStatus}
+                    errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                  />
+                  <InputWithStatus
+                    type="email"
+                    placeholder="Email"
+                    value={adminEmail}
+                    onChange={(e) => handleAdminEmailChange(e.target.value)}
+                    status={emailAvailabilityStatus}
+                    errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Mot de passe"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                  />
+                  <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
+                    {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
+                  </Button>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
             <Button onClick={onClose} className="w-full" variant="secondary">
               Fermer
             </Button>
