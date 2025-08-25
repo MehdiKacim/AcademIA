@@ -595,13 +595,13 @@ const StudentManagementPage = () => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
-                      <Calendar
-                        mode="single"
-                        selected={newStudentEnrollmentEndDate}
-                        onSelect={setNewStudentEnrollmentEndDate}
-                        initialFocus
-                        locale={fr}
-                      />
+                        <Calendar
+                          mode="single"
+                          selected={newStudentEnrollmentEndDate}
+                          onSelect={setNewStudentEnrollmentEndDate}
+                          initialFocus
+                          locale={fr}
+                        />
                     </PopoverContent>
                   </Popover>
                 </div>

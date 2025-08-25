@@ -59,8 +59,8 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       console.log("[RoleContext] fetchUserProfile: Profile fetched:", profile);
       console.log("[RoleContext] fetchUserProfile: Profile role:", profile.role); // Log the role
       setCurrentUserProfile(profile);
-      // Now load nav items based on the fetched profile's role
-      const loadedNavItems = await loadNavItems(profile.role, 0); // Removed establishment_id
+      // Now load nav items based on the fetched profile's role and establishment_id
+      const loadedNavItems = await loadNavItems(profile.role, 0, profile.establishment_id); // Pass establishment_id
       setNavItems(loadedNavItems);
       console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
 

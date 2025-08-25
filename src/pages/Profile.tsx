@@ -7,16 +7,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses } from "@/lib/courseData"; // Still load courses from Supabase
+import { loadCourses, loadEstablishments } from "@/lib/courseData"; // Still load courses from Supabase, added loadEstablishments
 import { getProfileById, updateProfile, getStudentCourseProgress, upsertStudentCourseProgress, getAllStudentCourseProgress, getUserFullName } from "@/lib/studentData";
 import type { Profile } from "@/lib/dataModels"; // Import Profile as type
-import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import Course, StudentCourseProgress types
-import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock, BriefcaseBusiness, UserCog } from "lucide-react"; // Added BriefcaseBusiness and UserCog icon
+import { Course, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Import Course, StudentCourseProgress types, added Establishment
+import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock, BriefcaseBusiness, UserCog, Building2, CalendarDays } from "lucide-react"; // Added Building2 and CalendarDays icon
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate, useOutletContext } from "react-router-dom"; // Import Link, useNavigate, and useOutletContext
 import EditProfileDialog from "@/components/EditProfileDialog";
 import { showSuccess, showError } from '@/utils/toast';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface ProfilePageOutletContext {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -27,6 +29,7 @@ const Profile = () => {
   const { setIsAdminModalOpen } = useOutletContext<ProfilePageOutletContext>(); // Get setIsAdminModalOpen from context
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -41,6 +44,8 @@ const Profile = () => {
       const loadedProgresses = await getAllStudentCourseProgress();
       setStudentCourseProgresses(loadedProgresses);
       console.log("[Profile Page] Loaded student progresses:", loadedProgresses);
+      const loadedEstablishments = await loadEstablishments(); // Load establishments
+      setEstablishments(loadedEstablishments);
     };
     fetchData();
   }, [currentUserProfile]); // Re-fetch if user profile changes
@@ -63,6 +68,8 @@ const Profile = () => {
   const handleSendMessageToUser = (userId: string) => {
     navigate(`/messages?contactId=${userId}`);
   };
+
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   if (isLoadingUser) {
     console.log("[Profile Page] Displaying loading state.");
@@ -130,6 +137,16 @@ const Profile = () => {
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     @{currentUserProfile.username}
                   </CardDescription>
+                  {currentUserProfile.establishment_id && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                    </CardDescription>
+                  )}
+                  {currentUserProfile.enrollment_start_date && currentUserProfile.enrollment_end_date && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <CalendarDays className="h-4 w-4" /> Du {format(parseISO(currentUserProfile.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(currentUserProfile.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })}
+                    </CardDescription>
+                  )}
                 </div>
               </div>
               <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
@@ -193,7 +210,7 @@ const Profile = () => {
     } else if (currentRole === 'professeur') {
       console.log("[Profile Page] renderProfileContent: Rendering professeur profile.");
       const createdCourses = courses; // Assuming all courses are created by this creator for demo
-      const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.sections.some(s => s.content))).length; // Check if any section has content as a proxy for 'published'
+      const publishedCoursesCount = createdCourses.filter(c => c.modules.some(m => m.sections.some(s => s.content))).length; // Heuristic: has at least one section
       const totalStudents = studentCourseProgresses.length; // Total students with any progress
 
       const topCourses = createdCourses.sort((a, b) => (b.modules.length > 0 ? b.modules.reduce((acc, m) => acc + m.sections.length, 0) : 0) - (a.modules.length > 0 ? a.modules.reduce((acc, m) => acc + m.sections.length, 0) : 0)).slice(0, 3); // Sort by number of sections
@@ -217,6 +234,11 @@ const Profile = () => {
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     @{currentUserProfile.username}
                   </CardDescription>
+                  {currentUserProfile.establishment_id && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                    </CardDescription>
+                  )}
                 </div>
               </div>
               <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
@@ -309,6 +331,11 @@ const Profile = () => {
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     @{currentUserProfile.username}
                   </CardDescription>
+                  {currentUserProfile.establishment_id && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                    </CardDescription>
+                  )}
                 </div>
               </div>
               <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
@@ -397,8 +424,8 @@ const Profile = () => {
                 Rôle actuel: {currentRole === 'administrator' ? 'Administrateur' : currentRole === 'director' ? 'Directeur' : 'Directeur Adjoint'}
               </p>
               {currentUserProfile.establishment_id && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Établissement: {currentUserProfile.establishment_id} {/* You might want to resolve the establishment name here */}
+                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Établissement: {getEstablishmentName(currentUserProfile.establishment_id)}
                 </p>
               )}
             </CardContent>

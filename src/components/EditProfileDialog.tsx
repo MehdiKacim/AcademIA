@@ -11,9 +11,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
-import { Profile } from "@/lib/dataModels"; // Import Profile interface
+import { Profile, Establishment } from "@/lib/dataModels"; // Import Profile and Establishment interface
 import { updateProfile } from "@/lib/studentData"; // Import updateProfile
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from '@/lib/utils';
+import { CalendarDays } from 'lucide-react';
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -23,16 +32,31 @@ interface EditProfileDialogProps {
 }
 
 const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: EditProfileDialogProps) => {
+  const { currentRole } = useRole(); // Get currentRole
   const [firstName, setFirstName] = useState(currentUserProfile.first_name || '');
   const [lastName, setLastName] = useState(currentUserProfile.last_name || '');
   const [username, setUsername] = useState(currentUserProfile.username);
   const [email, setEmail] = useState(''); // Email is from auth.users, not directly in profile
+  const [establishmentId, setEstablishmentId] = useState<string | undefined>(currentUserProfile.establishment_id);
+  const [enrollmentStartDate, setEnrollmentStartDate] = useState<Date | undefined>(currentUserProfile.enrollment_start_date ? parseISO(currentUserProfile.enrollment_start_date) : undefined);
+  const [enrollmentEndDate, setEnrollmentEndDate] = useState<Date | undefined>(currentUserProfile.enrollment_end_date ? parseISO(currentUserProfile.enrollment_end_date) : undefined);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+
+  useEffect(() => {
+    const fetchEstablishments = async () => {
+      setEstablishments(await loadEstablishments());
+    };
+    fetchEstablishments();
+  }, []);
 
   useEffect(() => {
     if (isOpen && currentUserProfile) {
       setFirstName(currentUserProfile.first_name || '');
       setLastName(currentUserProfile.last_name || '');
       setUsername(currentUserProfile.username);
+      setEstablishmentId(currentUserProfile.establishment_id);
+      setEnrollmentStartDate(currentUserProfile.enrollment_start_date ? parseISO(currentUserProfile.enrollment_start_date) : undefined);
+      setEnrollmentEndDate(currentUserProfile.enrollment_end_date ? parseISO(currentUserProfile.enrollment_end_date) : undefined);
       // Fetch email from auth.users
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (user) {
@@ -51,6 +75,14 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
       showError("Veuillez entrer une adresse email valide.");
       return;
     }
+    if (currentRole === 'student' && (!establishmentId || !enrollmentStartDate || !enrollmentEndDate)) {
+      showError("L'établissement et les dates d'inscription sont requis pour les élèves.");
+      return;
+    }
+    if (enrollmentStartDate && enrollmentEndDate && enrollmentStartDate >= enrollmentEndDate) {
+      showError("La date de fin d'inscription doit être postérieure à la date de début.");
+      return;
+    }
 
     try {
       // Update profile table
@@ -60,6 +92,9 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
         last_name: lastName.trim(),
         username: username.trim(),
         email: email.trim(), // Update email in profile table as well
+        establishment_id: establishmentId || undefined,
+        enrollment_start_date: enrollmentStartDate ? enrollmentStartDate.toISOString().split('T')[0] : undefined,
+        enrollment_end_date: enrollmentEndDate ? enrollmentEndDate.toISOString().split('T')[0] : undefined,
       };
       const savedProfile = await updateProfile(updatedProfileData);
 
@@ -85,6 +120,10 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
       showError(`Erreur lors de la sauvegarde du profil: ${error.message}`);
     }
   };
+
+  const establishmentsToDisplay = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile.establishment_id
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -141,6 +180,87 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
               className="col-span-3"
             />
           </div>
+          {currentRole === 'student' && (
+            <>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="establishment" className="text-right">
+                  Établissement
+                </Label>
+                <Select 
+                  value={establishmentId || "none"} 
+                  onValueChange={(value) => setEstablishmentId(value === "none" ? undefined : value)}
+                >
+                  <SelectTrigger id="establishment" className="col-span-3">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectItem value="none">Aucun</SelectItem>
+                    {establishmentsToDisplay.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="enrollmentStartDate" className="text-right">
+                  Début inscription
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "col-span-3 justify-start text-left font-normal",
+                        !enrollmentStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                    <Calendar
+                      mode="single"
+                      selected={enrollmentStartDate}
+                      onSelect={setEnrollmentStartDate}
+                      initialFocus
+                      locale={fr}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="enrollmentEndDate" className="text-right">
+                  Fin inscription
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "col-span-3 justify-start text-left font-normal",
+                        !enrollmentEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                    <Calendar
+                      mode="single"
+                      selected={enrollmentEndDate}
+                      onSelect={setEnrollmentEndDate}
+                      initialFocus
+                      locale={fr}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={handleSave}>Enregistrer les modifications</Button>

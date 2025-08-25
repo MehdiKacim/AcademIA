@@ -27,7 +27,7 @@ import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
 import { Establishment } from '@/lib/dataModels'; // Import Establishment type
-import { ensureDefaultNavItemsForRole } from '@/lib/navItems'; // Import ensureDefaultNavItemsForRole
+import { bootstrapDefaultNavItemsForRole } from '@/lib/navItems'; // Import bootstrapDefaultNavItemsForRole
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -186,7 +186,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       
       showSuccess(`Administrateur ${adminFirstName} ${adminLastName} créé avec succès !`);
       // After creating the admin, ensure their default navigation items are set up
-      await ensureDefaultNavItemsForRole('administrator', null);
+      await bootstrapDefaultNavItemsForRole('administrator', null); // Call the new client-side function
       showSuccess("Navigation administrateur par défaut configurée !");
 
       setAdminFirstName('');
@@ -209,7 +209,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const handleRecreateAdminNav = async () => {
     if (window.confirm("Êtes-vous sûr de vouloir recréer les éléments de navigation par défaut pour l'administrateur ? Cela écrasera toutes les configurations existantes pour le rôle 'administrateur'.")) {
       try {
-        await ensureDefaultNavItemsForRole('administrator', null);
+        await bootstrapDefaultNavItemsForRole('administrator', null); // Call the new client-side function
         showSuccess("Navigation administrateur par défaut recréée !");
         onClose(); // Close modal after action
         window.location.reload(); // Reload to apply new navigation

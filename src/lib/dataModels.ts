@@ -13,6 +13,9 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       username: string;
       email: string; // Added email to Profile interface
       role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
+      establishment_id?: string; // Added establishment_id to Profile
+      enrollment_start_date?: string; // Added enrollment_start_date to Profile
+      enrollment_end_date?: string; // Added enrollment_end_date to Profile
       theme?: 'dark' | 'light' | 'dark-purple'; // Updated: Removed 'modern-blue'
       created_at?: string;
       updated_at?: string;
@@ -214,8 +217,8 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       parent_nav_item_id?: string;
       order_index: number; // Made mandatory for sorting
       configId?: string; // The ID of the role_nav_configs entry
-      // Removed establishment_id
-      // Removed is_global
+      establishment_id?: string; // Added establishment_id to NavItem
+      is_global?: boolean; // Added is_global to NavItem
     }
 
     // New interface for role-specific navigation configuration
@@ -225,7 +228,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       role: Profile['role'];
       parent_nav_item_id?: string; // FK to NavItem (parent in the role's menu tree)
       order_index: number;
-      // Removed establishment_id
+      establishment_id?: string; // Added establishment_id to RoleNavItemConfig
       created_at?: string;
       updated_at?: string;
     }
