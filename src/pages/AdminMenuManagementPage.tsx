@@ -219,6 +219,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
       // State for adding an item directly to the configured tree
       const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+      const [selectedParentForNewConfig, setSelectedParentForNewConfig] = useState<string | null>(null); // New state for parent when adding new config
       const [availableGenericItemsForAdd, setAvailableGenericItemsForAdd] = useState<NavItem[]>([]);
 
       // New state for expanded items in the tree view
@@ -704,17 +705,32 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           return;
         }
 
+        // Determine the parent and order index for the new config
+        let parentId: string | null = null;
+        let orderIndex: number = 0;
+
+        if (selectedParentForNewConfig && selectedParentForNewConfig !== "none") {
+          parentId = selectedParentForNewConfig;
+          const parentItem = findItemInTree(configuredItemsTree, parentId);
+          orderIndex = parentItem?.children?.length || 0;
+        } else {
+          // If no parent selected, add as a root item
+          orderIndex = configuredItemsTree.filter(item => item.is_root).length;
+        }
+
         try {
           const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
             nav_item_id: genericItem.id,
             role: selectedRoleFilter as Profile['role'],
-            parent_nav_item_id: null, // Add as a root item by default
-            order_index: configuredItemsTree.filter(item => item.is_root).length, // Add to end of root items
+            parent_nav_item_id: parentId,
+            order_index: orderIndex,
             establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
           };
           await addRoleNavItemConfig(newConfig);
           showSuccess(`'${genericItem.label}' ajouté au menu !`);
           await fetchAndStructureNavItems(); // Refresh lists
+          setSelectedGenericItemToAdd(null); // Reset selection
+          setSelectedParentForNewConfig(null); // Reset parent selection
         } catch (error: any) {
           console.error("Error adding generic item to menu:", error);
           showError(`Erreur lors de l'ajout au menu: ${error.message}`);
@@ -822,6 +838,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         console.log("[availableParentsForConfig] Filtered parents:", filteredParents);
         return filteredParents;
       }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds]);
+
+      const availableParentsForNewConfig = useMemo(() => {
+        // When adding a new item, any existing category can be a parent
+        return getFlattenedCategoriesForParentSelection(configuredItemsTree);
+      }, [configuredItemsTree, getFlattenedCategoriesForParentSelection]);
 
 
       return (
@@ -955,7 +976,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                   <CardTitle className="flex items-center gap-2">
                     <PlusCircle className="h-6 w-6 text-primary" /> Ajouter un élément disponible au menu
                   </CardTitle>
-                  <CardDescription>Sélectionnez un élément générique et ajoutez-le comme élément racine au menu de {selectedRoleFilter}.</CardDescription>
+                  <CardDescription>Sélectionnez un élément générique et ajoutez-le au menu de {selectedRoleFilter} en tant qu'élément racine ou enfant.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -979,6 +1000,28 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                             ))
                           )}
                         </ScrollArea>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="add-parent-for-new-config">Parent (laisser vide pour élément racine)</Label>
+                    <Select value={selectedParentForNewConfig || "none"} onValueChange={(value) => setSelectedParentForNewConfig(value === "none" ? null : value)}>
+                      <SelectTrigger id="add-parent-for-new-config">
+                        <SelectValue placeholder="Aucun (élément racine)" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80">
+                        <SelectItem value="none">Aucun (élément racine)</SelectItem>
+                        {availableParentsForNewConfig.map(item => {
+                          const IconComponent = item.icon_name ? iconMap[item.icon_name] || Info : Info;
+                          return (
+                            <SelectItem key={item.id} value={item.id}>
+                              <div className="flex items-center gap-2">
+                                {Array(item.level).fill('—').join('')}
+                                <IconComponent className="h-4 w-4" /> {item.label}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
