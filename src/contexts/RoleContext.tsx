@@ -60,26 +60,33 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       console.log("[RoleContext] fetchUserProfile: Profile role:", profile.role); // Log the role
       setCurrentUserProfile(profile);
       // Now load nav items based on the fetched profile's role and establishment_id
-      const loadedNavItems = await loadNavItems(profile.role, 0, profile.establishment_id); // Pass establishment_id
-      setNavItems(loadedNavItems);
-      console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
+      try {
+        const loadedNavItems = await loadNavItems(profile.role, 0, profile.establishment_id); // Pass establishment_id
+        setNavItems(loadedNavItems);
+        console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
 
-      // Flatten the tree to get all routes for React Router
-      const flattenAndFilterRoutes = (items: NavItem[]): NavItem[] => {
-        let routes: NavItem[] = [];
-        items.forEach(item => {
-          if (item.route && !item.route.startsWith('#') && !item.is_external) {
-            routes.push(item);
-          }
-          if (item.children) {
-            routes = routes.concat(flattenAndFilterRoutes(item.children));
-          }
-        });
-        return routes;
-      };
-      const flattenedRoutes = flattenAndFilterRoutes(loadedNavItems);
-      setDynamicRoutes(flattenedRoutes);
-      console.log("[RoleContext] Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes);
+        // Flatten the tree to get all routes for React Router
+        const flattenAndFilterRoutes = (items: NavItem[]): NavItem[] => {
+          let routes: NavItem[] = [];
+          items.forEach(item => {
+            if (item.route && !item.route.startsWith('#') && !item.is_external) {
+              routes.push(item);
+            }
+            if (item.children) {
+              routes = routes.concat(flattenAndFilterRoutes(item.children));
+            }
+          });
+          return routes;
+        };
+        const flattenedRoutes = flattenAndFilterRoutes(loadedNavItems);
+        setDynamicRoutes(flattenedRoutes);
+        console.log("[RoleContext] Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes);
+      } catch (navError) {
+        console.error("[RoleContext] Error loading nav items:", navError);
+        showError("Erreur lors du chargement des menus de navigation.");
+        setNavItems([]);
+        setDynamicRoutes([]);
+      }
 
     } else {
       console.log("[RoleContext] fetchUserProfile: No profile found for userId:", userId);

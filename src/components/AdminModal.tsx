@@ -186,6 +186,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       
       showSuccess(`Administrateur ${adminFirstName} ${adminLastName} créé avec succès !`);
       // After creating the admin, ensure their default navigation items are set up
+      console.log("[AdminModal] Calling bootstrapDefaultNavItemsForRole for administrator."); // Add this log
       await bootstrapDefaultNavItemsForRole('administrator', null); // Call the new client-side function
       showSuccess("Navigation administrateur par défaut configurée !");
 
@@ -209,6 +210,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const handleRecreateAdminNav = async () => {
     if (window.confirm("Êtes-vous sûr de vouloir recréer les éléments de navigation par défaut pour l'administrateur ? Cela écrasera toutes les configurations existantes pour le rôle 'administrateur'.")) {
       try {
+        console.log("[AdminModal] Calling bootstrapDefaultNavItemsForRole for administrator."); // Add this log
         await bootstrapDefaultNavItemsForRole('administrator', null); // Call the new client-side function
         showSuccess("Navigation administrateur par défaut recréée !");
         onClose(); // Close modal after action
