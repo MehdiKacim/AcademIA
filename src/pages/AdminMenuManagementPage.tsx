@@ -101,11 +101,11 @@ import React, { useState, useEffect, useCallback } from 'react';
             <span className="font-medium">{item.label}</span>
             {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
             {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
-            {item.is_root && !item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Élément générique)</span>}
-            {!item.is_root && item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
+            {/* Removed is_root check here as it's no longer a direct property of NavItem */}
+            {item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_nav_item_id, order_index: item.order_index, establishment_id: item.establishment_id } : undefined)}>
+            <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_nav_item_id, order_index: item.order_index || 0, establishment_id: item.establishment_id } : undefined)}>
               <Edit className="h-4 w-4" />
             </Button>
             <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, configId)}>
@@ -131,7 +131,7 @@ import React, { useState, useEffect, useCallback } from 'react';
       // States for new generic item form
       const [newItemLabel, setNewItemLabel] = useState('');
       const [newItemRoute, setNewItemRoute] = useState('');
-      const [newItemIsRoot, setNewItemIsRoot] = useState(false);
+      // const [newItemIsRoot, setNewItemIsRoot] = useState(false); // Removed
       const [newItemIconName, setNewItemIconName] = useState('');
       const [newItemDescription, setNewItemDescription] = useState('');
       const [newItemIsExternal, setNewItemIsExternal] = useState(false);
@@ -142,7 +142,7 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
       const [editItemLabel, setEditItemLabel] = useState('');
       const [editItemRoute, setEditItemRoute] = useState('');
-      const [editItemIsRoot, setEditItemIsRoot] = useState(false);
+      // const [editItemIsRoot, setEditItemIsRoot] = useState(false); // Removed
       const [editItemIconName, setEditItemIconName] = useState('');
       const [editItemDescription, setEditItemDescription] = useState('');
       const [editItemIsExternal, setEditItemIsExternal] = useState(false);
@@ -204,7 +204,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 children: [],
                 // Store config ID on the item for easier access in DND/edit
                 configId: config.id,
-                parent_nav_item_id: config.parent_nav_item_id, // Store parent_nav_item_id from config
+                parent_nav_item_id: config.parent_nav_item_id || undefined, // Store parent_nav_item_id from config
                 order_index: config.order_index, // Store order_index from config
                 establishment_id: config.establishment_id || undefined, // Store establishment_id from config
               };
@@ -231,13 +231,13 @@ import React, { useState, useEffect, useCallback } from 'react';
           const attachConfiguredChildren = (items: NavItem[]) => {
             items.forEach(item => {
               if (childrenOfConfigured[item.id]) {
-                item.children = childrenOfConfigured[item.id].sort((a, b) => a.order_index - b.order_index);
+                item.children = childrenOfConfigured[item.id].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
                 attachConfiguredChildren(item.children);
               }
             });
           };
           attachConfiguredChildren(rootConfiguredItems);
-          rootConfiguredItems.sort((a, b) => a.order_index - b.order_index);
+          rootConfiguredItems.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
           setConfiguredItemsTree(rootConfiguredItems);
 
@@ -260,17 +260,14 @@ import React, { useState, useEffect, useCallback } from 'react';
           showError("Le libellé est requis.");
           return;
         }
-        if (newItemIsRoot && newItemParentId) { // ParentId is not relevant for generic items anymore
-          showError("Un élément racine ne peut pas avoir de parent.");
-          return;
-        }
+        // Removed newItemIsRoot check
 
         setIsAddingItem(true);
         try {
-          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId' | 'establishment_id'> = {
+          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index'> = {
             label: newItemLabel.trim(),
             route: newItemRoute.trim() || null,
-            is_root: newItemIsRoot,
+            // is_root: newItemIsRoot, // Removed
             description: newItemDescription.trim() || null,
             is_external: newItemIsExternal,
             icon_name: newItemIconName || null,
@@ -283,8 +280,8 @@ import React, { useState, useEffect, useCallback } from 'react';
             const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
               nav_item_id: addedItem.id,
               role: selectedRoleFilter as Profile['role'],
-              parent_nav_item_id: newItemParentId || null,
-              order_index: newItemOrderIndex,
+              parent_nav_item_id: undefined, // No parent by default for new generic item config
+              order_index: 0, // Default order for new config
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter, // Use selected establishment
             };
             await addRoleNavItemConfig(newConfig);
@@ -295,7 +292,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           // Reset form
           setNewItemLabel('');
           setNewItemRoute('');
-          setNewItemIsRoot(false);
+          // setNewItemIsRoot(false); // Removed
           setNewItemIconName('');
           setNewItemDescription('');
           setNewItemIsExternal(false);
@@ -338,7 +335,7 @@ import React, { useState, useEffect, useCallback } from 'react';
         setCurrentItemToEdit(item);
         setEditItemLabel(item.label);
         setEditItemRoute(item.route || '');
-        setEditItemIsRoot(item.is_root);
+        // setEditItemIsRoot(item.is_root); // Removed
         setEditItemIconName(item.icon_name || '');
         setEditItemDescription(item.description || '');
         setEditItemIsExternal(item.is_external || false);
@@ -354,11 +351,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsSavingEdit(true);
         try {
-          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId' | 'establishment_id'> = {
+          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index'> = {
             id: currentItemToEdit.id,
             label: editItemLabel.trim(),
             route: editItemRoute.trim() || null,
-            is_root: editItemIsRoot,
+            // is_root: editItemIsRoot, // Removed
             description: editItemDescription.trim() || null,
             is_external: editItemIsExternal,
             icon_name: editItemIconName || null,
@@ -432,7 +429,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               nav_item_id: configuredItem.id,
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: configuredItem.parent_nav_item_id,
-              order_index: configuredItem.order_index,
+              order_index: configuredItem.order_index || 0,
               establishment_id: configuredItem.establishment_id,
             };
             setActiveDragItem(configuredItem);
@@ -542,7 +539,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
                 // Add to new parent's children (as sibling of overItem)
                 const newDestinationList = [...destinationList];
-                newDestinationList.splice(overIndex, 0, { ...activeFound, parent_nav_item_id: overParent?.id || null, order_index: overIndex, establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter }); // Temporarily add
+                newDestinationList.splice(overIndex, 0, { ...activeFound, parent_nav_item_id: overParent?.id || undefined, order_index: overIndex, establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter }); // Temporarily add
                 // Re-index all items in the new destination list
                 for (let i = 0; i < newDestinationList.length; i++) {
                   const item = newDestinationList[i];
@@ -598,7 +595,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               nav_item_id: item.id,
               role: role,
               parent_nav_item_id: item.parent_nav_item_id,
-              order_index: item.order_index,
+              order_index: item.order_index || 0,
               establishment_id: item.establishment_id,
             };
             return { item, config, parent, index: i };
@@ -666,7 +663,7 @@ import React, { useState, useEffect, useCallback } from 'react';
       }
 
       // Filter available parents for the edit/add dialogs
-      const availableParentsForConfig = configuredItemsTree.filter(item => item.route === null); // Only categories can be parents
+      const availableParentsForConfig = configuredItemsTree.filter(item => !item.route); // Only categories (items without a route) can be parents
 
       return (
         <div className="space-y-8">
@@ -751,10 +748,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                       <Label htmlFor="new-item-route">Route (URL interne ou #hash, laisser vide pour catégorie/déclencheur)</Label>
                       <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch id="new-item-is-root" checked={newItemIsRoot} onCheckedChange={setNewItemIsRoot} />
-                      <Label htmlFor="new-item-is-root">Est une catégorie (pas de route directe)</Label>
-                    </div>
+                    {/* Removed is_root switch */}
                     <div className="flex items-center space-x-2">
                       <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} />
                       <Label htmlFor="new-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
@@ -868,10 +862,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                     <Label htmlFor="edit-item-route" className="text-right">Route</Label>
                     <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="col-span-3" />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-item-is-root" className="text-right">Est une catégorie</Label>
-                    <Switch id="edit-item-is-root" checked={editItemIsRoot} onCheckedChange={setEditItemIsRoot} className="col-span-3" />
-                  </div>
+                  {/* Removed is_root switch */}
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-item-is-external" className="text-right">Lien externe</Label>
                     <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="col-span-3" />

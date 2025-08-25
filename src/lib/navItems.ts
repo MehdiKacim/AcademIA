@@ -25,7 +25,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         label,
         route,
         icon_name,
-        is_root,
         description,
         is_external
       )
@@ -60,12 +59,12 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         label: config.nav_item.label,
         route: config.nav_item.route || undefined,
         icon_name: config.nav_item.icon_name || undefined,
-        is_root: config.nav_item.is_root,
+        // is_root: config.nav_item.is_root, // Removed from nav_items
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
         children: [],
         parent_nav_item_id: config.parent_nav_item_id || undefined,
-        order_index: config.order_index,
+        order_index: config.order_index || undefined, // Now optional
         configId: config.id,
         establishment_id: config.establishment_id || undefined,
       };
@@ -95,7 +94,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   const attachChildren = (items: NavItem[]) => {
     items.forEach(item => {
       if (childrenOf[item.id]) {
-        item.children = childrenOf[item.id].sort((a, b) => a.order_index - b.order_index);
+        item.children = childrenOf[item.id].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         attachChildren(item.children);
       }
       if (item.route === '/messages') {
@@ -106,7 +105,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   attachChildren(rootItems);
 
-  rootItems.sort((a, b) => a.order_index - b.order_index);
+  rootItems.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
   console.log("[loadNavItems] Final structured nav items:", rootItems);
 
   return rootItems;
@@ -120,7 +119,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
   const { data, error } = await supabase
     .from('nav_items')
     .select('*')
-    .order('order_index', { ascending: true });
+    .order('label', { ascending: true }); // Order by label as order_index is removed
 
   if (error) {
     console.error("Error loading raw nav items:", error);
@@ -131,12 +130,12 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     label: item.label,
     route: item.route || undefined,
     icon_name: item.icon_name || undefined,
-    is_root: item.is_root,
+    // is_root: item.is_root, // Removed from nav_items
     description: item.description || undefined,
     is_external: item.is_external,
     children: [], // Children are built dynamically, not stored in raw item
-    parent_nav_item_id: item.parent_id || undefined, // Use parent_id from DB
-    order_index: item.order_index,
+    // parent_nav_item_id: item.parent_id || undefined, // Removed from nav_items
+    // order_index: item.order_index, // Removed from nav_items
   }));
 };
 
@@ -145,18 +144,18 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  * @param newItem Les données du nouvel élément de navigation.
  * @returns L'élément de navigation ajouté.
  */
-export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id'>): Promise<NavItem | null> => {
+export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .insert({
       label: newItem.label,
       route: newItem.route || null,
       icon_name: newItem.icon_name || null,
-      is_root: newItem.is_root,
+      // is_root: newItem.is_root, // Removed from nav_items
       description: newItem.description || null,
       is_external: newItem.is_external,
-      parent_id: newItem.parent_nav_item_id || null, // Use parent_nav_item_id for DB insert
-      order_index: newItem.order_index,
+      // parent_id: newItem.parent_nav_item_id || null, // Removed from nav_items
+      // order_index: newItem.order_index, // Removed from nav_items
     })
     .select()
     .single();
@@ -173,18 +172,18 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
  * @param updatedItem Les données de l'élément de navigation à mettre à jour.
  * @returns L'élément de navigation mis à jour.
  */
-export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id'>): Promise<NavItem | null> => {
+export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .update({
       label: updatedItem.label,
       route: updatedItem.route || null,
       icon_name: updatedItem.icon_name || null,
-      is_root: updatedItem.is_root,
+      // is_root: updatedItem.is_root, // Removed from nav_items
       description: updatedItem.description || null,
       is_external: updatedItem.is_external,
-      parent_id: updatedItem.parent_nav_item_id || null, // Use parent_nav_item_id for DB update
-      order_index: updatedItem.order_index,
+      // parent_id: updatedItem.parent_nav_item_id || null, // Removed from nav_items
+      // order_index: updatedItem.order_index, // Removed from nav_items
       updated_at: new Date().toISOString(),
     })
     .eq('id', updatedItem.id)

@@ -217,7 +217,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       label: string;
       route?: string; // Optional route for navigation
       icon_name?: string; // Lucide icon name as string
-      is_root: boolean; // Is it a top-level menu item?
+      // is_root: boolean; // Removed from nav_items, derived from config or parent_nav_item_id
       description?: string; // Added description for drawer items
       is_external: boolean; // Is it an external link?
       // Removed parent_id, order_index, allowed_roles from here
@@ -226,7 +226,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       badge?: number; // For unread message count
       // Properties from role_nav_configs, added for convenience in frontend tree building
       parent_nav_item_id?: string;
-      order_index: number;
+      order_index?: number; // Made optional, as it comes from config
       configId?: string; // The ID of the role_nav_configs entry
       establishment_id?: string; // New: Optional establishment_id for role_nav_configs
     }
