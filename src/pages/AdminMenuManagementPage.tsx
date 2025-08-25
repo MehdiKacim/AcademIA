@@ -35,7 +35,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
     } from '@dnd-kit/sortable';
     import { CSS } from '@dnd-kit/utilities';
     import { arrayMove } from '@dnd-kit/sortable';
-    import { cn } from '@/lib/utils';
+    import { cn } '@/lib/utils';
     import {
       Dialog,
       DialogContent,
@@ -1098,19 +1098,18 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                             onValueChange={setEditConfigParentInput}
                           />
                           <CommandList>
+                            {editConfigParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase()) && (
+                              <CommandItem
+                                onSelect={() => {
+                                  setEditConfigParentId(editConfigParentInput); // Use input as ID for new category
+                                  setOpenEditConfigParentSelect(false);
+                                }}
+                              >
+                                <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{editConfigParentInput}"</span>
+                              </CommandItem>
+                            )}
                             <CommandEmpty>
-                              {editConfigParentInput.trim() !== '' ? (
-                                <CommandItem
-                                  onSelect={() => {
-                                    setEditConfigParentId(editConfigParentInput); // Use input as ID for new category
-                                    setOpenEditConfigParentSelect(false);
-                                  }}
-                                >
-                                  <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{editConfigParentInput}"</span>
-                                </CommandItem>
-                              ) : (
-                                <span>Aucune catégorie trouvée.</span> // Wrapped in span
-                              )}
+                              <span>Aucune catégorie trouvée.</span>
                             </CommandEmpty>
                             <CommandGroup>
                               <CommandItem
@@ -1136,7 +1135,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     }}
                                   >
                                     <div className="flex items-center gap-2">
-                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>} {/* Wrapped in span */}
+                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
                                       <IconComponentToRender className="h-4 w-4" /> <span>{item.label}</span>
                                     </div>
                                   </CommandItem>
