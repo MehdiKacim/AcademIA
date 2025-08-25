@@ -66,7 +66,7 @@ import {
 
     // Map icon_name strings to Lucide React components
     const iconMap: { [key: string]: React.ElementType } = {
-      Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
+      Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LogIn
     };
 
     const BottomNavigationBar = ({
@@ -137,6 +137,7 @@ import {
             { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, children: [], type: 'route' },
             { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, children: [], type: 'route' },
             { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_external: false, onClick: onOpenAboutModal, order_index: 3, children: [], type: 'category_or_action' },
+            { id: 'auth-anon-drawer', label: "Authentification", icon_name: 'LogIn', is_external: false, onClick: onOpenAuthModal, order_index: 4, children: [], type: 'category_or_action' } // Added Authentification
           ].sort((a, b) => a.order_index - b.order_index);
         } else if (drawerNavStack.length === 0) {
           // For authenticated users, show top-level items (direct links or categories)
@@ -154,7 +155,7 @@ import {
         ).sort((a, b) => a.order_index - b.order_index); // Ensure items are sorted
         console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Filtered and sorted result:", filteredAndSorted);
         return filteredAndSorted;
-      }, [currentUser, allNavItemsForDrawer, drawerNavStack, searchQuery, onOpenAboutModal]);
+      }, [currentUser, allNavItemsForDrawer, drawerNavStack, searchQuery, onOpenAboutModal, onOpenAuthModal]);
 
 
       const handleLogout = async () => {
