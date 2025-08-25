@@ -129,14 +129,21 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     .eq('role', userRole)
     .order('order_index', { ascending: true });
 
-  let orConditions: string[] = [`establishment_id.is.null`]; // Always include global configs
+  // --- CRITICAL CHANGE HERE ---
+  // Only apply establishment filter if the user is NOT an administrator
+  // Administrators have RLS that allows them to see all configs.
+  if (userRole !== 'administrator') {
+    let orConditions: string[] = [`establishment_id.is.null`]; // Always include global configs
 
-  if (userEstablishmentId) {
-    orConditions.push(`establishment_id.eq.${userEstablishmentId}`);
+    if (userEstablishmentId) {
+      orConditions.push(`establishment_id.eq.${userEstablishmentId}`);
+    }
+    query = query.or(orConditions.join(','));
+    console.log("[loadNavItems] Supabase query OR conditions:", orConditions.join(','));
+  } else {
+    console.log("[loadNavItems] User is administrator, skipping establishment filter in query.");
   }
-
-  query = query.or(orConditions.join(','));
-  console.log("[loadNavItems] Supabase query OR conditions:", orConditions.join(','));
+  // --- END CRITICAL CHANGE ---
 
   let configs: RoleNavItemConfig[] = [];
   const { data: fetchedConfigs, error: configsError } = await query;
