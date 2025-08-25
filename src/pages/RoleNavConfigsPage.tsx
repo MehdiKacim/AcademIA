@@ -411,31 +411,7 @@ const RoleNavConfigsPage = () => {
   const handleSaveEditedRoleConfig = async () => {
     if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
-    let finalParentId: string | null = editConfigParentId; // Start with the selected parent ID
-    const trimmedTempParentInput = tempParentInput.trim();
-    let newCategoryCreated = false; // Flag to track if a new category was created
-
-    // If the user chose to create a new category
-    if (editConfigParentId === "NEW_CATEGORY_TO_CREATE" && trimmedTempParentInput !== '') {
-      // Create the new generic category item
-      const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
-        label: trimmedTempParentInput,
-        route: null,
-        description: `Catégorie générée automatiquement pour '${trimmedTempParentInput}'`,
-        is_external: false,
-        icon_name: 'LayoutList',
-        type: 'category_or_action',
-      };
-      const createdParentItem = await addNavItem(newCategory);
-      if (!createdParentItem) {
-        showError("Échec de la création de la nouvelle catégorie parente.");
-        setIsSavingConfigEdit(false);
-        return;
-      }
-      showSuccess(`Catégorie '${createdParentItem.label}' créée automatiquement !`);
-      finalParentId = createdParentItem.id; // Use the ID of the newly created generic item
-      newCategoryCreated = true;
-    }
+    const finalParentId: string | null = editConfigParentId; // Use the selected parent ID directly
 
     // Validation for circular dependency
     if (finalParentId && finalParentId === currentItemToEdit.id) {
@@ -452,21 +428,6 @@ const RoleNavConfigsPage = () => {
 
     setIsSavingEdit(true);
     try {
-      // If a new category was created, ensure it's also added as a root item in the role's config
-      if (newCategoryCreated && finalParentId) {
-        const existingConfigForNewParent = allConfiguredItemsFlat.find(item => item.id === finalParentId);
-        if (!existingConfigForNewParent) { // Only add if not already configured for this role
-          const newParentConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-            nav_item_id: finalParentId,
-            role: selectedRoleFilter as Profile['role'],
-            parent_nav_item_id: null, // It's a root item
-            order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length, // Add at the end of root items
-          };
-          await addRoleNavItemConfig(newParentConfig);
-          showSuccess(`'${trimmedTempParentInput}' ajouté au premier niveau du menu !`);
-        }
-      }
-
       const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
         id: currentConfigToEdit.id,
         nav_item_id: currentConfigToEdit.nav_item_id,
@@ -669,15 +630,15 @@ const RoleNavConfigsPage = () => {
 
   const availableParentsForConfig = useMemo(() => {
     if (!currentItemToEdit) return [];
-    // Use the configuredItemsTree to find potential parents within the current role's menu structure
-    const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree, currentItemToEdit.id);
-    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat); // Use allConfiguredItemsFlat
+    // Use all configured items (flat list) to find potential parents
+    const allPotentialParents = getFlattenedCategoriesForParentSelection(allConfiguredItemsFlat, currentItemToEdit.id);
+    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
     const filteredParents = allPotentialParents.filter(parent =>
       parent.id !== currentItemToEdit.id &&
       !descendantsOfCurrentItem.has(parent.id)
     );
     return filteredParents;
-  }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds, allConfiguredItemsFlat]);
+  }, [currentItemToEdit, allConfiguredItemsFlat, getFlattenedCategoriesForParentSelection, getDescendantIds]);
 
   const getItemTypeLabel = (type: NavItem['type']) => {
     switch (type) {
@@ -839,31 +800,18 @@ const RoleNavConfigsPage = () => {
                     >
                       {editConfigParentId === null
                         ? "Aucun (élément racine)"
-                        : editConfigParentId === "NEW_CATEGORY_TO_CREATE"
-                          ? `Créer: "${tempParentInput}"`
-                          : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
+                        : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 backdrop-blur-lg bg-background/80">
                     <Command>
                       <CommandInput
-                        placeholder="Rechercher ou créer une catégorie..."
+                        placeholder="Rechercher une catégorie..."
                         value={tempParentInput}
                         onValueChange={setTempParentInput}
                       />
                       <CommandList>
-                        {tempParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
-                          <CommandItem
-                            onSelect={() => {
-                              setEditConfigParentId("NEW_CATEGORY_TO_CREATE"); // Signal intent to create new parent
-                              setOpenEditConfigParentSelect(false);
-                            }}
-                          >
-                            <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{tempParentInput}"</span>
-                          </CommandItem>
-                        )}
-                        {/* Corrected: Show all available parents when search input is empty */}
                         {availableParentsForConfig.length === 0 && tempParentInput.trim() === '' ? (
                           <CommandEmpty>
                             <span>Aucune catégorie trouvée.</span>
