@@ -54,8 +54,8 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     
     if (profile) {
       setCurrentUserProfile(profile);
-      // Now load nav items based on the fetched profile's role and establishment
-      const loadedNavItems = await loadNavItems(profile.role, 0, profile.establishment_id);
+      // Now load nav items based on the fetched profile's role
+      const loadedNavItems = await loadNavItems(profile.role, 0); // Removed establishment_id
       setNavItems(loadedNavItems);
 
       // Flatten the tree to get all routes for React Router

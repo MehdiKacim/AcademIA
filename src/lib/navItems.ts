@@ -3,7 +3,7 @@ import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import Ro
 
 // Define default nav item structures for each role
 const DEFAULT_NAV_ITEMS_BY_ROLE: { [key in Profile['role']]: {
-  item: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>;
+  item: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>;
   parentLabel?: string; // To link children to parents
 }[] } = {
   administrator: [
@@ -66,7 +66,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE: { [key in Profile['role']]: {
     { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
     { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
     { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
-    { item: { label: 'Gestion des Années Scolaires', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
+    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
     { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
     { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
     { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
@@ -82,7 +82,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE: { [key in Profile['role']]: {
     { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
     { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
     { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
-    { item: { label: 'Gestion des Années Scolaires', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
+    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
     { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
     { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
     { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
@@ -159,7 +159,7 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
       role: 'administrator',
       parent_nav_item_id: parent_nav_item_id,
       order_index: orderIndexCounter,
-      establishment_id: null, // Admin configs are global
+      // Removed establishment_id
     });
     orderIndexCounter++;
     if (!parentLabel) { // If it's a root item, also add to parentIdMap for potential children
@@ -180,8 +180,8 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
 };
 
 // New function to ensure default nav items and configs for a given role
-export const ensureDefaultNavItemsForRole = async (role: Profile['role'], establishmentId: string | null = null): Promise<void> => {
-  console.log(`[ensureDefaultNavItemsForRole] Ensuring default nav items for role: ${role}, establishment: ${establishmentId}`);
+export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promise<void> => {
+  console.log(`[ensureDefaultNavItemsForRole] Ensuring default nav items for role: ${role}`);
 
   const defaultItemsForRole = DEFAULT_NAV_ITEMS_BY_ROLE[role];
   if (!defaultItemsForRole || defaultItemsForRole.length === 0) {
@@ -223,7 +223,7 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role'], establ
   }
 
   // Step 2: Create/Update role_nav_configs
-  const existingRoleConfigs = await getRoleNavItemConfigsByRole(role, establishmentId || undefined);
+  const existingRoleConfigs = await getRoleNavItemConfigsByRole(role);
   const existingConfigMap = new Map<string, RoleNavItemConfig>(); // Key: nav_item_id
   existingRoleConfigs.forEach(config => existingConfigMap.set(config.nav_item_id, config));
 
@@ -252,7 +252,6 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role'], establ
     if (existingConfig) {
       // Update existing config if properties differ
       if (existingConfig.parent_nav_item_id !== parent_nav_item_id ||
-          existingConfig.establishment_id !== establishmentId ||
           existingConfig.order_index !== orderIndexCounter) // Only update order if it's a root item for now
       {
         console.log(`[ensureDefaultNavItemsForRole] Updating existing config for ${itemData.label}`);
@@ -262,7 +261,6 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role'], establ
           role: role,
           parent_nav_item_id: parent_nav_item_id,
           order_index: orderIndexCounter,
-          establishment_id: establishmentId,
         });
       }
     } else {
@@ -273,7 +271,6 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role'], establ
         role: role,
         parent_nav_item_id: parent_nav_item_id,
         order_index: orderIndexCounter,
-        establishment_id: establishmentId,
       });
     }
     orderIndexCounter++; // Increment order for next item
@@ -308,19 +305,15 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role'], establ
  * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
  * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
  * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
- * @param userEstablishmentId L'ID de l'établissement de l'utilisateur (optionnel).
  * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
  */
-export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0, userEstablishmentId?: string): Promise<NavItem[]> => {
-  console.log("[loadNavItems] Called with userRole:", userRole, "userEstablishmentId:", userEstablishmentId);
+export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
+  console.log("[loadNavItems] Called with userRole:", userRole);
 
   if (!userRole) {
     console.log("[loadNavItems] No user role, returning empty array.");
     return [];
   }
-
-  // Determine the target establishment_id for the query
-  const targetEstablishmentId = userRole === 'administrator' ? null : (userEstablishmentId || null);
 
   // Step 1: Load role-specific configurations
   let query = supabase
@@ -331,7 +324,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
       role,
       parent_nav_item_id,
       order_index,
-      establishment_id,
       nav_item:nav_items!role_nav_configs_nav_item_id_fkey (
         id,
         label,
@@ -344,16 +336,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     .eq('role', userRole)
     .order('order_index', { ascending: true });
 
-  if (userRole !== 'administrator') {
-    // For non-admins, fetch global configs OR configs specific to their establishment
-    query = query.or(`establishment_id.is.null,establishment_id.eq.${userEstablishmentId}`);
-    console.log(`[loadNavItems] Supabase query OR conditions for non-admin (role: ${userRole}, establishment: ${userEstablishmentId}): establishment_id.is.null,establishment_id.eq.${userEstablishmentId}`);
-  } else {
-    // For admin, fetch only global configs (as admin manages global menu)
-    query = query.is('establishment_id', null);
-    console.log("[loadNavItems] User is administrator, fetching only global configs.");
-  }
-
   let configs: RoleNavItemConfig[] = [];
   const { data: fetchedConfigs, error: configsError } = await query;
 
@@ -361,7 +343,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     console.error("[loadNavItems] Error loading role nav configs:", configsError);
     // Attempt to ensure defaults if there's an error fetching
     try {
-      await ensureDefaultNavItemsForRole(userRole, targetEstablishmentId);
+      await ensureDefaultNavItemsForRole(userRole);
       // Re-fetch after ensuring defaults
       const { data: reFetchedConfigs, error: reFetchError } = await query;
       if (reFetchError) {
@@ -378,11 +360,11 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     configs = fetchedConfigs as RoleNavItemConfig[];
     console.log("[loadNavItems] Fetched configs (initial count):", configs.length);
 
-    // If no configs found for this role/establishment, ensure defaults
+    // If no configs found for this role, ensure defaults
     if (configs.length === 0) {
-      console.warn(`[loadNavItems] No configs found for role ${userRole} and establishment ${userEstablishmentId}. Attempting to ensure defaults.`);
+      console.warn(`[loadNavItems] No configs found for role ${userRole}. Attempting to ensure defaults.`);
       try {
-        await ensureDefaultNavItemsForRole(userRole, targetEstablishmentId);
+        await ensureDefaultNavItemsForRole(userRole);
         // Re-fetch after ensuring defaults
         const { data: reFetchedConfigs, error: reFetchError } = await query;
         if (reFetchError) {
@@ -413,8 +395,8 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index,
         configId: config.id,
-        establishment_id: config.establishment_id || undefined,
-        is_global: config.establishment_id === null,
+        // Removed establishment_id
+        // Removed is_global
       };
       navItemNodes.set(navItem.id, navItem);
     } else {
@@ -495,7 +477,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  * @param newItem Les données du nouvel élément de navigation.
  * @returns L'élément de navigation ajouté.
  */
-export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
+export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .insert({
@@ -520,7 +502,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
  * @param updatedItem Les données de l'élément de navigation à mettre à jour.
  * @returns L'élément de navigation mis à jour.
  */
-export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
+export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .update({
@@ -561,21 +543,14 @@ export const deleteNavItem = async (navItemId: string): Promise<void> => {
 /**
  * Récupère les configurations de navigation pour un rôle donné.
  * @param role Le rôle de l'utilisateur.
- * @param establishmentId L'ID de l'établissement (optionnel).
  * @returns Un tableau de configurations de navigation.
  */
-export const getRoleNavItemConfigsByRole = async (role: Profile['role'], establishmentId?: string): Promise<RoleNavItemConfig[]> => {
+export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promise<RoleNavItemConfig[]> => {
   let query = supabase
     .from('role_nav_configs')
     .select('*')
     .eq('role', role)
     .order('order_index', { ascending: true });
-
-  if (establishmentId) {
-    query = query.or(`establishment_id.eq.${establishmentId},establishment_id.is.null`);
-  } else {
-    query = query.is('establishment_id', null); // Only global configs if no establishmentId provided
-  }
 
   const { data, error } = await query;
 
@@ -599,7 +574,6 @@ export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'i
       role: newConfig.role,
       parent_nav_item_id: newConfig.parent_nav_item_id || null,
       order_index: newConfig.order_index,
-      establishment_id: newConfig.establishment_id || null,
     })
     .select()
     .single();
@@ -622,7 +596,6 @@ export const updateRoleNavItemConfig = async (updatedConfig: Omit<RoleNavItemCon
     .update({
       parent_nav_item_id: updatedConfig.parent_nav_item_id || null,
       order_index: updatedConfig.order_index,
-      establishment_id: updatedConfig.establishment_id || null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', updatedConfig.id)
@@ -679,6 +652,6 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
 };
 
 // Call this function to recreate default admin navigation
-ensureDefaultNavItemsForRole('administrator', null)
+ensureDefaultNavItemsForRole('administrator')
   .then(() => console.log("Default administrator navigation ensured."))
   .catch(error => console.error("Failed to ensure default administrator navigation:", error));
