@@ -183,7 +183,7 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
 
 // New function to ensure default nav items and configs for a given role
 export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promise<void> => {
-  console.log(`[ensureDefaultNavItemsForRole] Ensuring default nav items for role: ${role}`);
+  console.log(`[ensureDefaultNavItemsForRole] Attempting to ensure default nav items for role: ${role}`);
 
   const defaultItemsForRole = DEFAULT_NAV_ITEMS_BY_ROLE[role];
   if (!defaultItemsForRole || defaultItemsForRole.length === 0) {
@@ -306,7 +306,7 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
     });
   };
   flattenTree(structuredDefaultItems);
-  console.log("[ensureDefaultNavItemsForRole] Flattened configs for DB:", flattenedConfigsForDb);
+  console.log("[ensureDefaultNavItemsForRole] Flattened configs for DB (count):", flattenedConfigsForDb.length, "configs:", flattenedConfigsForDb);
 
 
   // Step 3: Compare with existing configs and perform DB upserts
@@ -367,7 +367,7 @@ export const ensureDefaultNavItemsForRole = async (role: Profile['role']): Promi
  * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
  */
 export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
-  console.log("[loadNavItems] Called with userRole:", userRole);
+  console.log(`[loadNavItems] Called with userRole: ${userRole}, unreadMessagesCount: ${unreadMessagesCount}`);
 
   if (!userRole) {
     console.log("[loadNavItems] No user role, returning empty array.");
@@ -399,25 +399,25 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   const { data: fetchedConfigs, error: configsError } = await query;
 
   if (configsError) {
-    console.error("[loadNavItems] Error loading role nav configs:", configsError);
+    console.error(`[loadNavItems] Error loading role nav configs for ${userRole}:`, configsError);
     // Attempt to ensure defaults if there's an error fetching
     try {
       await ensureDefaultNavItemsForRole(userRole);
       // Re-fetch after ensuring defaults
       const { data: reFetchedConfigs, error: reFetchError } = await query;
       if (reFetchError) {
-        console.error("[loadNavItems] Error re-fetching configs after ensuring defaults:", reFetchError);
+        console.error(`[loadNavItems] Error re-fetching configs after ensuring defaults for ${userRole}:`, reFetchError);
         return [];
       }
       configs = reFetchedConfigs as RoleNavItemConfig[];
-      console.log("[loadNavItems] Re-fetched configs after ensuring defaults (count):", configs.length);
+      console.log(`[loadNavItems] Re-fetched configs after ensuring defaults for ${userRole} (count): ${configs.length}`);
     } catch (e) {
-      console.error("[loadNavItems] Failed to ensure default nav items after initial fetch error:", e);
+      console.error(`[loadNavItems] Failed to ensure default nav items after initial fetch error for ${userRole}:`, e);
       return [];
     }
   } else {
     configs = fetchedConfigs as RoleNavItemConfig[];
-    console.log("[loadNavItems] Fetched configs (initial count):", configs.length);
+    console.log(`[loadNavItems] Fetched configs for ${userRole} (initial count): ${configs.length}`);
 
     // If no configs found for this role, ensure defaults
     if (configs.length === 0) {
@@ -427,13 +427,13 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         // Re-fetch after ensuring defaults
         const { data: reFetchedConfigs, error: reFetchError } = await query;
         if (reFetchError) {
-          console.error("[loadNavItems] Error re-fetching configs after ensuring defaults (empty initial):", reFetchError);
+          console.error(`[loadNavItems] Error re-fetching configs after ensuring defaults (empty initial) for ${userRole}:`, reFetchError);
           return [];
         }
         configs = reFetchedConfigs as RoleNavItemConfig[];
-        console.log("[loadNavItems] Re-fetched configs after ensuring defaults (empty initial, count):", configs.length);
+        console.log(`[loadNavItems] Re-fetched configs after ensuring defaults (empty initial, count) for ${userRole}: ${configs.length}`);
       } catch (e) {
-        console.error("[loadNavItems] Failed to ensure default nav items when initial fetch was empty:", e);
+        console.error(`[loadNavItems] Failed to ensure default nav items when initial fetch was empty for ${userRole}:`, e);
         return [];
       }
     }
@@ -462,7 +462,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
       console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
     }
   });
-  console.log("[loadNavItems] Populated navItemNodes (count):", navItemNodes.size);
+  console.log(`[loadNavItems] Populated navItemNodes for ${userRole} (count): ${navItemNodes.size}`);
 
   const rootItems: NavItem[] = [];
 
@@ -486,7 +486,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     }
   });
 
-  console.log("[loadNavItems] Final structured nav items (root items count):", rootItems.length, "items:", rootItems);
+  console.log(`[loadNavItems] Final structured nav items for ${userRole} (root items count): ${rootItems.length}, items:`, rootItems);
 
   // Apply badge for messages
   const applyMessageBadge = (items: NavItem[]) => {

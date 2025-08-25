@@ -57,11 +57,12 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     
     if (profile) {
       console.log("[RoleContext] fetchUserProfile: Profile fetched:", profile);
+      console.log("[RoleContext] fetchUserProfile: Profile role:", profile.role); // Log the role
       setCurrentUserProfile(profile);
       // Now load nav items based on the fetched profile's role
       const loadedNavItems = await loadNavItems(profile.role, 0); // Removed establishment_id
       setNavItems(loadedNavItems);
-      console.log("[RoleContext] fetchUserProfile: Nav items loaded:", loadedNavItems);
+      console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
 
       // Flatten the tree to get all routes for React Router
       const flattenAndFilterRoutes = (items: NavItem[]): NavItem[] => {
@@ -78,7 +79,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       };
       const flattenedRoutes = flattenAndFilterRoutes(loadedNavItems);
       setDynamicRoutes(flattenedRoutes);
-      console.log("[RoleContext] Flattened dynamic routes for React Router:", flattenedRoutes);
+      console.log("[RoleContext] Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes);
 
     } else {
       console.log("[RoleContext] fetchUserProfile: No profile found for userId:", userId);
