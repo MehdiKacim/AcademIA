@@ -213,7 +213,7 @@ const RoleNavConfigsPage = () => {
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
 
-  const [openEditConfigParentSelect, setOpenEditConfigParentSelect] = useState(false);
+  // Removed openEditConfigParentSelect state as it's no longer needed with standard Select
 
   const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
 
@@ -399,7 +399,7 @@ const RoleNavConfigsPage = () => {
     setEditConfigParentId(config.parent_nav_item_id || null);
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
-    setOpenEditConfigParentSelect(false);
+    // Removed setOpenEditConfigParentSelect(false);
   };
 
   const handleSaveEditedRoleConfig = async () => {
@@ -818,67 +818,36 @@ const RoleNavConfigsPage = () => {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-parent" className="text-right">Parent</Label>
-                <Popover key={currentConfigToEdit.id} open={openEditConfigParentSelect} onOpenChange={setOpenEditConfigParentSelect}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openEditConfigParentSelect}
-                      className="col-span-3 justify-between"
-                    >
-                      {editConfigParentId === null
-                        ? "Aucun (élément racine)"
-                        : availableParentsForConfig.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card z-[101]">
-                    <Command>
-                      <CommandList>
-                        <CommandGroup>
-                          <CommandItem
-                            value="none"
-                            onSelect={() => {
-                              console.log("CommandItem selected: none (root)");
-                              setEditConfigParentId(null); // Explicitly set to null for root
-                              setOpenEditConfigParentSelect(false);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <span>Aucun (élément racine)</span>
-                          </CommandItem>
-                          {availableParentsForConfig
-                            .map((item) => {
-                            const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
-                            return (
-                              <CommandItem
-                                key={item.id}
-                                value={item.id} // Use item.id as value
-                                onSelect={() => {
-                                  console.log("CommandItem selected:", item.id, item.label);
-                                  setEditConfigParentId(item.id);
-                                  setOpenEditConfigParentSelect(false);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <div className="flex items-center gap-2">
-                                  {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
-                                  <IconComponentToRender className="h-4 w-4" /> 
-                                  <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && <span className="font-bold text-primary">(Nouveau)</span>}</span>
-                                </div>
-                              </CommandItem>
-                            );
-                          })}
-                          {availableParentsForConfig.length === 0 && (
-                            <CommandEmpty>
-                              <span>Aucune catégorie disponible.</span>
-                            </CommandEmpty>
-                          )}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <Select 
+                  value={editConfigParentId || "none"} 
+                  onValueChange={(value) => {
+                    console.log("Select onValueChange:", value);
+                    setEditConfigParentId(value === "none" ? null : value);
+                  }}
+                >
+                  <SelectTrigger id="edit-config-parent-select" className="col-span-3">
+                    <SelectValue placeholder="Sélectionner un parent..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card z-[101]">
+                    <SelectItem value="none">Aucun (élément racine)</SelectItem>
+                    {availableParentsForConfig
+                      .map((item) => {
+                      const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
+                      return (
+                        <SelectItem key={item.id} value={item.id}>
+                          <div className="flex items-center gap-2">
+                            {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
+                            <IconComponentToRender className="h-4 w-4" /> 
+                            <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && <span className="font-bold text-primary">(Nouveau)</span>}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                    {availableParentsForConfig.length === 0 && (
+                      <SelectItem value="no-parents" disabled>Aucune catégorie disponible.</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
