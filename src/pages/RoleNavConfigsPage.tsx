@@ -95,7 +95,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
 
   const config: RoleNavItemConfig | undefined = item.configId && selectedRoleFilter !== 'all' ? {
     id: item.configId,
-    nav_item_id: item.id,
+    nav_item_id: selectedRoleFilter === 'all' ? item.id : item.id, // Ensure nav_item_id is correct
     role: selectedRoleFilter as Profile['role'],
     parent_nav_item_id: item.parent_nav_item_id,
     order_index: item.order_index,
@@ -204,7 +204,7 @@ const RoleNavConfigsPage = () => {
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
   const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
-  const [editConfigParentId, setEditConfigParentId] = useState<string | undefined>(undefined);
+  const [editConfigParentId, setEditConfigParentId] = useState<string | null | undefined>(undefined); // Can be null for root, undefined for new
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
   const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false);
 
@@ -375,7 +375,7 @@ const RoleNavConfigsPage = () => {
 
   const handleDeleteGenericNavItem = async (navItemId: string, configId?: string) => {
     if (selectedRoleFilter !== 'all' && configId) {
-      if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette configuration de rôle pour l'élément ? Cela ne supprimera pas l'élément générique lui-même.`)) {
+      if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette configuration de rôle pour l'élément ? Cela supprimera toutes ses configurations de rôle associées. Cette action est irréversible.`)) {
         try {
           await deleteRoleNavItemConfig(configId);
           showSuccess("Configuration de rôle supprimée !");
@@ -398,8 +398,8 @@ const RoleNavConfigsPage = () => {
   const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
-    setEditConfigParentId(config.parent_nav_item_id || undefined); // Set the actual ID
-    setTempParentInput(item.parent_nav_item_id ? configuredItemsTree.find(i => i.id === item.parent_nav_item_id)?.label || '' : ''); // Set the label for display
+    setEditConfigParentId(config.parent_nav_item_id || null); // Set to null if no parent
+    setTempParentInput(item.parent_nav_item_id ? allGenericNavItems.find(i => i.id === item.parent_nav_item_id)?.label || '' : ''); // Use allGenericNavItems for label
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
     setOpenEditConfigParentSelect(false);
@@ -412,7 +412,7 @@ const RoleNavConfigsPage = () => {
     const trimmedTempParentInput = tempParentInput.trim();
 
     if (trimmedTempParentInput !== '') {
-      // Try to find an existing parent by label
+      // If a new category is to be created or an existing one selected via input
       let parentItem = allGenericNavItems.find(item => 
         item.label.toLowerCase() === trimmedTempParentInput.toLowerCase() && 
         item.type === 'category_or_action' && 
@@ -821,11 +821,11 @@ const RoleNavConfigsPage = () => {
                       aria-expanded={openEditConfigParentSelect}
                       className="col-span-3 justify-between"
                     >
-                      {editConfigParentId
-                        ? availableParentsForConfig.find(
-                            (item) => item.id === editConfigParentId,
-                          )?.label || tempParentInput // Display tempParentInput if ID not found (e.g., new category)
-                        : (tempParentInput || "Aucun (élément racine)")}
+                      {editConfigParentId === null
+                        ? "Aucun (élément racine)"
+                        : editConfigParentId === "NEW_CATEGORY_TO_CREATE"
+                          ? tempParentInput
+                          : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -833,14 +833,14 @@ const RoleNavConfigsPage = () => {
                     <Command>
                       <CommandInput
                         placeholder="Rechercher ou créer une catégorie..."
-                        value={tempParentInput} // Bind to tempParentInput
-                        onValueChange={setTempParentInput} // Update tempParentInput
+                        value={tempParentInput}
+                        onValueChange={setTempParentInput}
                       />
                       <CommandList>
                         {tempParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
                           <CommandItem
                             onSelect={() => {
-                              setEditConfigParentId(undefined); // Signal intent to create new parent
+                              setEditConfigParentId("NEW_CATEGORY_TO_CREATE"); // Signal intent to create new parent
                               setOpenEditConfigParentSelect(false);
                             }}
                           >
@@ -856,7 +856,7 @@ const RoleNavConfigsPage = () => {
                           <CommandItem
                             value="none"
                             onSelect={() => {
-                              setEditConfigParentId(undefined);
+                              setEditConfigParentId(null); // Explicitly set to null for root
                               setTempParentInput('');
                               setOpenEditConfigParentSelect(false);
                             }}
