@@ -530,7 +530,7 @@ const PedagogicalManagementPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80">
                   <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYearsOptions.map(year => (
-                    <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
+                    <SelectItem key={year.id} value={year.id}>{year.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
