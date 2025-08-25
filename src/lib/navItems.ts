@@ -155,8 +155,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   }
   // --- END Add default items for administrator if no configs found ---
 
-  const navItemsMap = new Map<string, NavItem>();
-  const allItems: NavItem[] = [];
+  const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
 
   configs.forEach((config: any) => {
     if (config.nav_item) {
@@ -167,41 +166,40 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         icon_name: config.nav_item.icon_name || undefined,
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
-        children: [],
+        children: [], // Initialize empty children array
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index, // Now mandatory, should always be a number from DB
         configId: config.id,
         establishment_id: config.establishment_id || undefined,
         is_global: config.establishment_id === null, // New: Indicate if it's a global config
       };
-      navItemsMap.set(navItem.id, navItem);
-      allItems.push(navItem);
+      navItemNodes.set(navItem.id, navItem);
     }
   });
-  console.log("[loadNavItems] All items after mapping from configs:", allItems);
+  console.log("[loadNavItems] All flat nav item nodes:", Array.from(navItemNodes.values()));
 
-  // Group items by parent_nav_item_id
-  const groupedByParent = new Map<string | null, NavItem[]>();
-  allItems.forEach(item => {
-    const parentId = item.parent_nav_item_id || null;
-    if (!groupedByParent.has(parentId)) {
-      groupedByParent.set(parentId, []);
+  const rootItems: NavItem[] = [];
+
+  // Assign children and identify root items
+  navItemNodes.forEach(item => {
+    if (item.parent_nav_item_id && navItemNodes.has(item.parent_nav_item_id)) {
+      const parent = navItemNodes.get(item.parent_nav_item_id);
+      if (parent) {
+        parent.children?.push(item);
+      }
+    } else {
+      rootItems.push(item); // This is a root item
     }
-    groupedByParent.get(parentId)?.push(item);
   });
 
-  // Function to build the tree recursively
-  const buildTree = (parentId: string | null): NavItem[] => {
-    const children = groupedByParent.get(parentId) || [];
-    children.sort((a, b) => a.order_index - b.order_index); // Sort by order_index
+  // Sort children within each parent and root items
+  rootItems.sort((a, b) => a.order_index - b.order_index);
+  navItemNodes.forEach(item => {
+    if (item.children) {
+      item.children.sort((a, b) => a.order_index - b.order_index);
+    }
+  });
 
-    return children.map(item => ({
-      ...item,
-      children: buildTree(item.id), // Recursively get children
-    }));
-  };
-
-  const rootItems = buildTree(null); // Start building from root (parent_id is null)
   console.log("[loadNavItems] Final structured nav items:", rootItems);
 
   // Apply badge for messages
