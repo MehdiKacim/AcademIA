@@ -8,7 +8,7 @@ interface LogoProps {
   onLogoClick?: () => void; // New prop for click handler
 }
 
-const Logo = ({ iconClassName, textClassName, showText = true, onLogoClick }: LogoProps) => {
+const Logo = ({ iconClassName, textClassName, showText = true, onLogoClick = () => {} }: LogoProps) => { // Ajout d'une fonction vide par défaut
   return (
     <div className="flex items-center gap-2" onClick={onLogoClick}> {/* Attach onClick handler here */}
       <div className={cn("w-8 h-8", iconClassName)}>
