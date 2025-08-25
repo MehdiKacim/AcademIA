@@ -91,7 +91,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         paddingLeft: `${level * 20}px`, // Indent based on level
       };
 
-      const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+      // Determine if it's a category (no route) or a menu item (has route)
+      const isCategory = !item.route;
+      const IconComponent = iconMap[item.icon_name || (isCategory ? 'LayoutList' : 'Info')] || Info; // Default to LayoutList for categories
 
       const config: RoleNavItemConfig | undefined = item.configId && selectedRoleFilter !== 'all' ? {
         id: item.configId,
@@ -107,7 +109,16 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       return (
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            <div ref={setNodeRef} style={style} className={cn("p-3 border rounded-md bg-background flex items-center justify-between gap-2 mb-2", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
+            <div 
+              ref={setNodeRef} 
+              style={style} 
+              className={cn(
+                "p-3 border rounded-md flex items-center justify-between gap-2 mb-2", 
+                isDragging && "ring-2 ring-primary/50 shadow-xl",
+                isCategory ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base", // Distinct styling for categories
+                isCategory && level === 0 && "border-l-4 border-primary/50" // Stronger border for root categories
+              )}
+            >
               <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={(e) => {
                 // Only toggle expand if it has children and click is not on a button
                 if (hasChildren) {
@@ -528,7 +539,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         let finalParentId: string | null = null;
         if (editConfigParentInput.trim() !== '') {
-          // Check if newConfigParentInput (label) corresponds to an existing category
+          // Check if parent category exists
           let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && !item.route);
 
           if (!parentItem) {
