@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
-import { loadNavItems, addNavItem, updateNavItem, deleteNavItem, getNavItemById } from "@/lib/navItems";
+import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem } from "@/lib/navItems"; // Use loadAllNavItemsRaw
 import { useRole } from '@/contexts/RoleContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -58,19 +59,17 @@ interface SortableNavItemProps {
   level: number;
   onEdit: (item: NavItem) => void;
   onDelete: (id: string) => void;
-  onMove: (id: string, newParentId: string | undefined, newIndex: number) => void;
-  parentChildrenIds: string[]; // IDs of children in the current parent
-  allNavItems: NavItem[]; // All items for parent selection
+  // onMove is no longer passed down directly, handled by DndContext
+  isDragging?: boolean; // Prop to indicate if this item is currently being dragged
 }
 
-const SortableNavItem = ({ item, level, onEdit, onDelete, onMove, parentChildrenIds, allNavItems }: SortableNavItemProps) => {
+const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, level, onEdit, onDelete, isDragging }, ref) => {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging,
   } = useSortable({ id: item.id });
 
   const style = {
@@ -113,11 +112,13 @@ const SortableNavItem = ({ item, level, onEdit, onDelete, onMove, parentChildren
       </div>
     </div>
   );
-};
+});
 
 const AdminMenuManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
-  const [navItems, setNavItems] = useState<NavItem[]>([]);
+  const [allRawNavItems, setAllRawNavItems] = useState<NavItem[]>([]); // All items from DB
+  const [unconfiguredItems, setUnconfiguredItems] = useState<NavItem[]>([]); // Items not in tree
+  const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]); // Items in tree structure
   const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
 
   // States for new item form
@@ -146,14 +147,59 @@ const AdminMenuManagementPage = () => {
   const [editItemIsExternal, setEditItemIsExternal] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  const fetchNavItems = useCallback(async () => {
-    const items = await loadNavItems(currentRole); // Load all items, then filter for display
-    setNavItems(items);
-  }, [currentRole]);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
+
+  const fetchAndStructureNavItems = useCallback(async () => {
+    const rawItems = await loadAllNavItemsRaw();
+    setAllRawNavItems(rawItems);
+
+    const configured: NavItem[] = [];
+    const unconfigured: NavItem[] = [];
+
+    const itemMap = new Map<string, NavItem>();
+    rawItems.forEach(item => {
+      const newItem = { ...item, children: [] }; // Ensure children array exists
+      itemMap.set(item.id, newItem);
+    });
+
+    itemMap.forEach(item => {
+      if (item.parent_id && itemMap.has(item.parent_id)) {
+        const parent = itemMap.get(item.parent_id);
+        if (parent) {
+          parent.children.push(item);
+        }
+      } else if (item.is_root) {
+        configured.push(item);
+      } else {
+        unconfigured.push(item);
+      }
+    });
+
+    // Sort root items and their children
+    configured.sort((a, b) => a.order_index - b.order_index);
+    configured.forEach(item => {
+      if (item.children) {
+        item.children.sort((a, b) => a.order_index - b.order_index);
+      }
+    });
+
+    // Sort unconfigured items
+    unconfigured.sort((a, b) => a.order_index - b.order_index);
+
+    setConfiguredItemsTree(configured);
+    setUnconfiguredItems(unconfigured);
+  }, []);
 
   useEffect(() => {
-    fetchNavItems();
-  }, [fetchNavItems]);
+    fetchAndStructureNavItems();
+  }, [fetchAndStructureNavItems]);
 
   const handleAddNavItem = async () => {
     if (!newItemLabel.trim() || newItemAllowedRoles.length === 0) {
@@ -184,7 +230,7 @@ const AdminMenuManagementPage = () => {
       };
       await addNavItem(newItemData);
       showSuccess("Élément de navigation ajouté !");
-      await fetchNavItems(); // Refresh list
+      await fetchAndStructureNavItems(); // Refresh list
       // Reset form
       setNewItemLabel('');
       setNewItemRoute('');
@@ -209,7 +255,7 @@ const AdminMenuManagementPage = () => {
       try {
         await deleteNavItem(id);
         showSuccess("Élément de navigation supprimé !");
-        await fetchNavItems(); // Refresh list
+        await fetchAndStructureNavItems(); // Refresh list
       } catch (error: any) {
         console.error("Error deleting nav item:", error);
         showError(`Erreur lors de la suppression de l'élément: ${error.message}`);
@@ -262,7 +308,7 @@ const AdminMenuManagementPage = () => {
       };
       await updateNavItem(updatedItemData);
       showSuccess("Élément de navigation mis à jour !");
-      await fetchNavItems(); // Refresh list
+      await fetchAndStructureNavItems(); // Refresh list
       setIsEditDialogOpen(false);
       setCurrentItemToEdit(null);
     } catch (error: any) {
@@ -273,193 +319,187 @@ const AdminMenuManagementPage = () => {
     }
   };
 
-  const handleMoveNavItem = useCallback(async (id: string, newParentId: string | undefined, newIndex: number) => {
-    const updatedNavItems = [...navItems]; // Create a mutable copy
-
-    // Find the item being moved
-    const itemToMoveIndex = updatedNavItems.findIndex(item => item.id === id);
-    if (itemToMoveIndex === -1) return;
-    const [itemToMove] = updatedNavItems.splice(itemToMoveIndex, 1);
-
-    // Update its properties
-    itemToMove.parent_id = newParentId || null;
-    itemToMove.is_root = newParentId === undefined;
-    itemToMove.order_index = newIndex; // This will be re-indexed later
-
-    // Insert it at the new position
-    updatedNavItems.splice(newIndex, 0, itemToMove);
-
-    // Re-index all items to ensure correct order_index and parent_id consistency
-    const reindexAndStructure = (items: NavItem[], currentParentId: string | null = null, currentLevel: number = 0): NavItem[] => {
-      const childrenMap = new Map<string | null, NavItem[]>();
-      items.forEach(item => {
-        const parent = item.parent_id || null;
-        if (!childrenMap.has(parent)) {
-          childrenMap.set(parent, []);
-        }
-        childrenMap.get(parent)?.push(item);
-      });
-
-      const sortedItems = (childrenMap.get(currentParentId) || []).sort((a, b) => a.order_index - b.order_index);
-
-      sortedItems.forEach((item, index) => {
-        item.order_index = index;
-        item.parent_id = currentParentId;
-        item.is_root = currentParentId === null;
-        item.children = reindexAndStructure(items, item.id, currentLevel + 1);
-      });
-      return sortedItems;
-    };
-
-    const newStructuredNavItems = reindexAndStructure(updatedNavItems, null);
-
-    // Flatten the new structured items for database update
-    const flattenItems = (items: NavItem[]): NavItem[] => {
-      let flat: NavItem[] = [];
-      items.forEach(item => {
-        flat.push(item);
-        if (item.children) {
-          flat = flat.concat(flattenItems(item.children));
-        }
-      });
-      return flat;
-    };
-
-    const itemsToUpdateInDb = flattenItems(newStructuredNavItems);
-
-    try {
-      for (const item of itemsToUpdateInDb) {
-        await updateNavItem(item);
-      }
-      showSuccess("Élément de navigation déplacé et réorganisé !");
-      await fetchNavItems(); // Fetch the fully updated and structured list
-    } catch (error: any) {
-      console.error("Error moving nav item:", error);
-      showError(`Erreur lors du déplacement de l'élément: ${error.message}`);
-    }
-  }, [navItems, fetchNavItems]);
-
+  const handleDragStart = (event: any) => {
+    const { active } = event;
+    const item = allRawNavItems.find(i => i.id === active.id);
+    setActiveDragItem(item || null);
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (active.id !== over?.id) {
-      const activeItem = navItems.find(i => i.id === active.id);
-      const overItem = navItems.find(i => i.id === over?.id);
+    if (!activeDragItem || !over) {
+      setActiveDragItem(null);
+      return;
+    }
 
-      if (!activeItem || !overItem) return;
+    const activeId = active.id as string;
+    const overId = over.id as string;
 
-      // Create a flat list of all items to easily find indices
-      const flatNavItems: NavItem[] = [];
-      const collectItems = (items: NavItem[]) => {
-        items.forEach(item => {
-          flatNavItems.push(item);
-          if (item.children) {
-            collectItems(item.children);
-          }
-        });
-      };
-      collectItems(navItems);
+    // Determine if the item is being moved within the same list or between lists
+    const isMovingWithinUnconfigured = unconfiguredItems.some(item => item.id === activeId) && unconfiguredItems.some(item => item.id === overId);
+    const isMovingWithinConfigured = configuredItemsTree.some(item => item.id === activeId || item.children?.some(c => c.id === activeId)) && configuredItemsTree.some(item => item.id === overId || item.children?.some(c => c.id === overId));
+    const isMovingToConfigured = unconfiguredItems.some(item => item.id === activeId) && configuredItemsTree.some(item => item.id === overId || item.children?.some(c => c.id === overId));
+    const isMovingToUnconfigured = configuredItemsTree.some(item => item.id === activeId || item.children?.some(c => c.id === activeId)) && unconfiguredItems.some(item => item.id === overId);
 
-      const oldIndex = flatNavItems.findIndex(item => item.id === active.id);
-      const newIndex = flatNavItems.findIndex(item => item.id === over?.id);
+    let updatedItem: NavItem | null = null;
+    let newParentId: string | undefined = undefined;
+    let newIsRoot: boolean = false;
+    let newOrderIndex: number;
 
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      // Determine the new parent and order index
-      let newParentId: string | undefined = undefined;
-      let newOrderIndex = newIndex;
-
-      // If dropped onto another item, try to make it a sibling
-      // For simplicity, we'll assume dropping on an item makes it a sibling at the same level
-      // More complex logic would be needed for dropping *into* a parent
-      newParentId = overItem.parent_id;
-      
-      // If the over item is a root item and has no children, and the active item is also a root item,
-      // then they should remain siblings at the root level.
-      if (overItem.is_root && !overItem.children?.length && activeItem.is_root) {
-        newParentId = undefined;
-      } else if (overItem.is_root && overItem.children?.length === 0 && !activeItem.is_root) {
-        // If dropped on an empty root item, make it a child
-        newParentId = overItem.id;
-        newOrderIndex = 0; // First child
-      } else if (overItem.is_root && overItem.children?.length && !activeItem.is_root) {
-        // If dropped on a root item with children, add to its children
-        newParentId = overItem.id;
-        newOrderIndex = overItem.children.length; // Add to the end of children
-      }
-
-
-      // Update the item's parent_id and is_root status
-      const updatedItemToMove = {
-        ...activeItem,
-        parent_id: newParentId || null,
-        is_root: newParentId === undefined,
-      };
-
-      // Reconstruct the tree with the moved item
-      const reorderedNavItems = arrayMove(navItems, oldIndex, newIndex);
-
-      // Re-index all items after move
-      const reindexItems = (items: NavItem[], currentParentId: string | null = null) => {
-        items.forEach((item, index) => {
-          item.order_index = index;
-          item.parent_id = currentParentId;
-          item.is_root = currentParentId === null;
-          if (item.children) {
-            reindexItems(item.children, item.id);
-          }
-        });
-      };
-
-      reindexItems(reorderedNavItems);
-
-      // Update all affected items in DB
-      try {
-        const allItemsToUpdate: NavItem[] = [];
-        const collectItems = (items: NavItem[]) => {
-          items.forEach(item => {
-            allItemsToUpdate.push(item);
-            if (item.children) {
-              collectItems(item.children);
-            }
-          });
-        };
-        collectItems(reorderedNavItems);
-
-        for (const item of allItemsToUpdate) {
-          await updateNavItem(item);
+    // Helper to find item and its parent in the tree
+    const findItemAndParent = (items: NavItem[], targetId: string, parent: NavItem | null = null): { item: NavItem | null, parent: NavItem | null, index: number } => {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.id === targetId) {
+          return { item, parent, index: i };
         }
-        showSuccess("Éléments de navigation réorganisés !");
-        await fetchNavItems(); // Final refresh
-      } catch (error: any) {
-        console.error("Error reordering nav items:", error);
-        showError(`Erreur lors de la réorganisation des éléments: ${error.message}`);
+        if (item.children && item.children.length > 0) {
+          const found = findItemAndParent(item.children, targetId, item);
+          if (found.item) return found;
+        }
+      }
+      return { item: null, parent: null, index: -1 };
+    };
+
+    // Case 1: Moving within Unconfigured list
+    if (isMovingWithinUnconfigured) {
+      const oldIndex = unconfiguredItems.findIndex(item => item.id === activeId);
+      const newIndex = unconfiguredItems.findIndex(item => item.id === overId);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newUnconfigured = arrayMove(unconfiguredItems, oldIndex, newIndex);
+        // Re-index order_index for all items in the new list
+        newUnconfigured.forEach((item, idx) => item.order_index = idx);
+        setUnconfiguredItems(newUnconfigured);
+        updatedItem = { ...activeDragItem, parent_id: null, is_root: false, order_index: newIndex };
       }
     }
+    // Case 2: Moving within Configured list (only reordering root items for now)
+    else if (isMovingWithinConfigured && activeDragItem.is_root && overId === 'configured-container') { // Dropped on the root container
+      const oldIndex = configuredItemsTree.findIndex(item => item.id === activeId);
+      const newIndex = configuredItemsTree.length; // Add to end if dropped on container
+      if (oldIndex !== -1) {
+        const newConfigured = arrayMove(configuredItemsTree, oldIndex, newIndex);
+        newConfigured.forEach((item, idx) => item.order_index = idx);
+        setConfiguredItemsTree(newConfigured);
+        updatedItem = { ...activeDragItem, parent_id: null, is_root: true, order_index: newIndex };
+      }
+    }
+    // Case 3: Moving from Unconfigured to Configured (as a new root item)
+    else if (unconfiguredItems.some(item => item.id === activeId) && (overId === 'configured-container' || configuredItemsTree.some(item => item.id === overId))) {
+      newIsRoot = true;
+      newParentId = undefined;
+      newOrderIndex = configuredItemsTree.length; // Add to the end of root items
+
+      const newUnconfigured = unconfiguredItems.filter(item => item.id !== activeId);
+      newUnconfigured.forEach((item, idx) => item.order_index = idx); // Re-index remaining unconfigured
+      setUnconfiguredItems(newUnconfigured);
+
+      const newConfigured = [...configuredItemsTree, { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex, children: [] }];
+      newConfigured.sort((a, b) => a.order_index - b.order_index); // Re-sort to maintain order
+      setConfiguredItemsTree(newConfigured);
+      updatedItem = { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex };
+    }
+    // Case 4: Moving from Configured to Unconfigured
+    else if (configuredItemsTree.some(item => item.id === activeId || item.children?.some(c => c.id === activeId)) && overId === 'unconfigured-container') {
+      newIsRoot = false;
+      newParentId = undefined;
+      newOrderIndex = unconfiguredItems.length; // Add to the end of unconfigured items
+
+      // Remove from configured tree
+      const newConfiguredTree = configuredItemsTree.map(rootItem => {
+        if (rootItem.id === activeId) return null; // If it's a root item
+        if (rootItem.children) {
+          rootItem.children = rootItem.children.filter(child => child.id !== activeId);
+        }
+        return rootItem;
+      }).filter(Boolean) as NavItem[];
+      newConfiguredTree.forEach((item, idx) => item.order_index = idx); // Re-index remaining configured roots
+      setConfiguredItemsTree(newConfiguredTree);
+
+      const newUnconfigured = [...unconfiguredItems, { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex, children: [] }];
+      newUnconfigured.sort((a, b) => a.order_index - b.order_index); // Re-sort to maintain order
+      setUnconfiguredItems(newUnconfigured);
+      updatedItem = { ...activeDragItem, is_root: newIsRoot, parent_id: newParentId, order_index: newOrderIndex };
+    }
+    // Case 5: Reordering within configured items (children) - this is more complex and will be simplified for now
+    // For now, if dropped on another item, it becomes a sibling at the same level.
+    else if (isMovingWithinConfigured && activeId !== overId) {
+      const { item: activeFound, parent: activeParent, index: activeIndex } = findItemAndParent(configuredItemsTree, activeId);
+      const { item: overFound, parent: overParent, index: overIndex } = findItemAndParent(configuredItemsTree, overId);
+
+      if (activeFound && overFound) {
+        let sourceList = activeParent ? activeParent.children : configuredItemsTree;
+        let destinationList = overParent ? overParent.children : configuredItemsTree;
+
+        if (sourceList === destinationList) { // Moving within the same parent/level
+          const newOrder = arrayMove(sourceList, activeIndex, overIndex);
+          newOrder.forEach((item, idx) => item.order_index = idx);
+          if (activeParent) {
+            activeParent.children = newOrder;
+          } else {
+            setConfiguredItemsTree(newOrder);
+          }
+          updatedItem = { ...activeDragItem, order_index: newOrder[overIndex].order_index };
+        } else { // Moving to a different parent/level (make it a sibling of overItem)
+          // Remove from old parent's children
+          if (activeParent) {
+            activeParent.children = activeParent.children.filter(item => item.id !== activeId);
+            activeParent.children.forEach((item, idx) => item.order_index = idx);
+          } else { // Was a root item
+            setConfiguredItemsTree(prev => prev.filter(item => item.id !== activeId));
+          }
+
+          // Add to new parent's children (as sibling of overItem)
+          const newDestinationList = [...destinationList];
+          newDestinationList.splice(overIndex, 0, { ...activeDragItem, parent_id: overParent?.id || null, is_root: !overParent, children: [] });
+          newDestinationList.forEach((item, idx) => item.order_index = idx);
+
+          if (overParent) {
+            overParent.children = newDestinationList;
+          } else {
+            setConfiguredItemsTree(newDestinationList);
+          }
+          updatedItem = { ...activeDragItem, parent_id: overParent?.id || null, is_root: !overParent, order_index: newDestinationList[overIndex].order_index };
+        }
+      }
+    }
+
+    if (updatedItem) {
+      try {
+        await updateNavItem(updatedItem);
+        showSuccess("Élément de navigation mis à jour !");
+        await fetchAndStructureNavItems(); // Re-fetch and re-structure to ensure consistency
+      } catch (error: any) {
+        console.error("Error updating nav item after drag:", error);
+        showError(`Erreur lors de la mise à jour de l'élément: ${error.message}`);
+      }
+    }
+    setActiveDragItem(null);
   };
 
-  const renderNavItems = (items: NavItem[], level: number) => {
+  const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
     return (
       <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
-        {items.map(item => (
-          <React.Fragment key={item.id}>
-            <SortableNavItem
-              item={item}
-              level={level}
-              onEdit={handleEditNavItem}
-              onDelete={handleDeleteNavItem}
-              onMove={handleMoveNavItem}
-              parentChildrenIds={items.map(i => i.id)}
-              allNavItems={navItems}
-            />
-            {item.children && item.children.length > 0 && (
-              <div className="ml-4">
-                {renderNavItems(item.children, level + 1)}
-              </div>
-            )}
-          </React.Fragment>
-        ))}
+        <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
+          {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2">Déposez des éléments ici</p>}
+          {items.map(item => (
+            <React.Fragment key={item.id}>
+              <SortableNavItem
+                item={item}
+                level={level}
+                onEdit={handleEditNavItem}
+                onDelete={handleDeleteNavItem}
+                isDragging={activeDragItem?.id === item.id}
+              />
+              {item.children && item.children.length > 0 && (
+                <div className="ml-4">
+                  {renderNavItemsList(item.children, level + 1, `${containerId}-child-${item.id}`)}
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </SortableContext>
     );
   };
@@ -490,7 +530,7 @@ const AdminMenuManagementPage = () => {
     );
   }
 
-  const availableParents = navItems.filter(item => item.is_root && !item.parent_id && item.route === null); // Only categories can be parents
+  const availableParents = allRawNavItems.filter(item => item.is_root && !item.parent_id && item.route === null); // Only categories can be parents
 
   return (
     <div className="space-y-8">
@@ -606,19 +646,57 @@ const AdminMenuManagementPage = () => {
       </Collapsible>
 
       {/* Section: Liste des éléments de navigation */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation
-          </CardTitle>
-          <CardDescription>Réorganisez les éléments par glisser-déposer. Les éléments de niveau racine sont affichés en premier.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <DndContext sensors={useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            {renderNavItems(navItems.filter(item => item.is_root && !item.parent_id), 0)}
-          </DndContext>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LayoutList className="h-6 w-6 text-primary" /> Éléments non configurés
+            </CardTitle>
+            <CardDescription>Ces éléments ne font pas partie du menu de navigation principal.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              {renderNavItemsList(unconfiguredItems, 0, 'unconfigured-container')}
+              <DragOverlay>
+                {activeDragItem ? (
+                  <SortableNavItem
+                    item={activeDragItem}
+                    level={0}
+                    onEdit={handleEditNavItem}
+                    onDelete={handleDeleteNavItem}
+                    isDragging={true}
+                  />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation
+            </CardTitle>
+            <CardDescription>Réorganisez les éléments par glisser-déposer. Les éléments de niveau racine sont affichés en premier.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
+              <DragOverlay>
+                {activeDragItem ? (
+                  <SortableNavItem
+                    item={activeDragItem}
+                    level={0}
+                    onEdit={handleEditNavItem}
+                    onDelete={handleDeleteNavItem}
+                    isDragging={true}
+                  />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Edit Nav Item Dialog */}
       {currentItemToEdit && (
@@ -666,7 +744,7 @@ const AdminMenuManagementPage = () => {
                 <Input id="edit-item-order" type="number" value={editItemOrderIndex} onChange={(e) => setEditItemOrderIndex(parseInt(e.target.value))} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-item-icon" className="text-right">Icône</Label>
+                <Label htmlFor="edit-item-icon">Icône</Label>
                 <Select value={editItemIconName} onValueChange={setEditItemIconName}>
                   <SelectTrigger id="edit-item-icon" className="col-span-3">
                     <SelectValue placeholder="Sélectionner une icône" />

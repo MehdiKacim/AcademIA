@@ -1,17 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
-import { NavItem, Profile } from "./dataModels";
+import { NavItem } from "./dataModels";
+import { Profile } from "./dataModels"; // Import Profile for role type
 
 /**
- * Récupère tous les éléments de navigation depuis Supabase, potentiellement filtrés par rôle.
- * Les éléments sont structurés de manière récursive (enfants sous leurs parents).
+ * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement.
  * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
- * @returns Un tableau d'éléments de navigation de niveau racine avec leurs enfants.
+ * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
+ * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
  */
-export const loadNavItems = async (userRole: Profile['role'] | null): Promise<NavItem[]> => {
-  if (!userRole) {
-    return []; // No nav items if no user role
-  }
-
+export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
   const { data, error } = await supabase
     .from('nav_items')
     .select('*')
@@ -22,48 +19,86 @@ export const loadNavItems = async (userRole: Profile['role'] | null): Promise<Na
     return [];
   }
 
-  const navItems: NavItem[] = data.map((item: any) => ({
+  const navItems: NavItem[] = data.map(item => ({
     id: item.id,
     label: item.label,
     route: item.route || undefined,
+    icon_name: item.icon_name || undefined, // Changed from 'icon' to 'icon_name'
     is_root: item.is_root,
-    allowed_roles: item.allowed_roles,
+    allowed_roles: item.allowed_roles as Array<Profile['role']>,
     parent_id: item.parent_id || undefined,
     order_index: item.order_index,
-    icon_name: item.icon_name || undefined,
     description: item.description || undefined,
     is_external: item.is_external,
-    children: [], // Will be populated in the tree building step
+    children: [], // Initialiser les enfants
   }));
 
-  // Filter by allowed roles
-  const filteredNavItems = navItems.filter(item => item.allowed_roles.includes(userRole));
+  // Filtrer par rôle
+  const filteredItems = navItems.filter(item => userRole && item.allowed_roles.includes(userRole));
 
-  // Build a recursive tree structure
-  const itemMap = new Map<string, NavItem>();
-  filteredNavItems.forEach(item => itemMap.set(item.id, item));
-
+  // Construire la structure hiérarchique
   const rootItems: NavItem[] = [];
-  filteredNavItems.forEach(item => {
-    if (item.parent_id && itemMap.has(item.parent_id)) {
-      const parent = itemMap.get(item.parent_id);
-      if (parent) {
-        parent.children = parent.children || [];
-        parent.children.push(item);
+  const childrenOf: { [key: string]: NavItem[] } = {};
+
+  filteredItems.forEach(item => {
+    if (item.parent_id) {
+      if (!childrenOf[item.parent_id]) {
+        childrenOf[item.parent_id] = [];
       }
-    } else if (item.is_root) {
+      childrenOf[item.parent_id].push(item);
+    } else {
       rootItems.push(item);
     }
   });
 
-  // Sort children for each parent
-  itemMap.forEach(item => {
-    if (item.children) {
-      item.children.sort((a, b) => a.order_index - b.order_index);
-    }
-  });
+  // Attacher les enfants récursivement
+  const attachChildren = (items: NavItem[]) => {
+    items.forEach(item => {
+      if (childrenOf[item.id]) {
+        item.children = childrenOf[item.id].sort((a, b) => a.order_index - b.order_index);
+        attachChildren(item.children);
+      }
+      // Mettre à jour le badge des messages si c'est l'élément "Messages"
+      if (item.route === '/messages') {
+        item.badge = unreadMessagesCount;
+      }
+    });
+  };
+
+  attachChildren(rootItems);
 
   return rootItems.sort((a, b) => a.order_index - b.order_index);
+};
+
+/**
+ * Récupère tous les éléments de navigation depuis Supabase sans filtrage ni construction d'arbre.
+ * Utile pour la gestion administrative où tous les éléments doivent être visibles.
+ * @returns Un tableau plat de tous les éléments de navigation.
+ */
+export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
+  const { data, error } = await supabase
+    .from('nav_items')
+    .select('*')
+    .order('order_index', { ascending: true });
+
+  if (error) {
+    console.error("Error loading all raw nav items:", error);
+    return [];
+  }
+
+  return data.map(item => ({
+    id: item.id,
+    label: item.label,
+    route: item.route || undefined,
+    icon_name: item.icon_name || undefined,
+    is_root: item.is_root,
+    allowed_roles: item.allowed_roles as Array<Profile['role']>,
+    parent_id: item.parent_id || undefined,
+    order_index: item.order_index,
+    description: item.description || undefined,
+    is_external: item.is_external,
+    children: [], // Children are not built in this raw load
+  }));
 };
 
 /**
@@ -77,11 +112,11 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
     .insert({
       label: newItem.label,
       route: newItem.route || null,
+      icon_name: newItem.icon_name || null, // Changed from 'icon' to 'icon_name'
       is_root: newItem.is_root,
       allowed_roles: newItem.allowed_roles,
       parent_id: newItem.parent_id || null,
       order_index: newItem.order_index,
-      icon_name: newItem.icon_name || null,
       description: newItem.description || null,
       is_external: newItem.is_external,
     })
@@ -92,7 +127,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
     console.error("Error adding nav item:", error);
     throw error;
   }
-  return data;
+  return data as NavItem;
 };
 
 /**
@@ -106,11 +141,11 @@ export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'u
     .update({
       label: updatedItem.label,
       route: updatedItem.route || null,
+      icon_name: updatedItem.icon_name || null, // Changed from 'icon' to 'icon_name'
       is_root: updatedItem.is_root,
       allowed_roles: updatedItem.allowed_roles,
       parent_id: updatedItem.parent_id || null,
       order_index: updatedItem.order_index,
-      icon_name: updatedItem.icon_name || null,
       description: updatedItem.description || null,
       is_external: updatedItem.is_external,
       updated_at: new Date().toISOString(),
@@ -123,7 +158,7 @@ export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'u
     console.error("Error updating nav item:", error);
     throw error;
   }
-  return data;
+  return data as NavItem;
 };
 
 /**
@@ -158,7 +193,7 @@ export const getNavItemById = async (id: string): Promise<NavItem | null> => {
     console.error("Error fetching nav item by ID:", error);
     return null;
   }
-  return data;
+  return data as NavItem;
 };
 
 /**
@@ -166,5 +201,5 @@ export const getNavItemById = async (id: string): Promise<NavItem | null> => {
  */
 export const resetNavItems = async (): Promise<void> => {
   const { error } = await supabase.from('nav_items').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except a dummy ID if needed
-  if (error) console.error("Error resetting nav_items:", error);
+  if (error) console.error("Error resetting nav items:", error);
 };
