@@ -18,6 +18,7 @@ import {
   LogIn,
   Download,
   Info,
+  BotMessageSquare, // Added BotMessageSquare for AiA Bot
 } from "lucide-react"; // Import all necessary icons
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -38,7 +39,7 @@ interface IndexProps {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, // Add all icons used in this file
+  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, // Add all icons used in this file
 };
 
 const Index = ({ setIsAdminModalOpen }: IndexProps) => {
@@ -162,7 +163,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   // Static nav items for the header
   const staticHeaderNavItems: NavItem[] = [
     { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_root: true, is_external: false, order_index: 0 },
-    { id: 'aia', label: "AiA Bot", icon_name: 'MessageCircleMore', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
+    { id: 'aia', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
     { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_root: true, is_external: false, order_index: 2 },
   ];
 
@@ -279,7 +280,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               AiA, l'intelligence artificielle d'AcademIA, est là pour vous guider. Elle identifie vos points faibles, adapte les leçons et vous offre un soutien personnalisé pour une progression optimale.
             </p>
             <div className="flex justify-center mb-8">
-              <MessageCircleMore className="w-24 h-24 text-primary" />
+              <BotMessageSquare className="w-24 h-24 text-primary" />
             </div>
             <div>
               <Button size="lg" onClick={() => setIsAuthModalOpen(true)}>

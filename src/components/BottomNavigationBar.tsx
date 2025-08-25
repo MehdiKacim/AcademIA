@@ -16,13 +16,19 @@ import {
       Users, // For Pédagogie category
       BarChart2, // For Analytiques category
       BriefcaseBusiness, // For Administration category
-      LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, BookMarked, CalendarDays, UserCheck, PlusSquare, ClipboardCheck, BotMessageSquare,
+      LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog,
       GraduationCap, // Added GraduationCap icon
       PenTool, // Added PenTool icon
       NotebookText, // Added NotebookText icon
       School, // Added School icon
       LayoutList, // Added LayoutList icon
       UserRoundCog, // Added UserRoundCog icon
+      ClipboardCheck, // Added ClipboardCheck icon
+      BotMessageSquare, // Added BotMessageSquare icon
+      BookMarked, // Added BookMarked icon
+      CalendarDays, // Added CalendarDays icon
+      UserCheck, // Added UserCheck icon
+      PlusSquare, // Added PlusSquare icon
     } from "lucide-react";
     import { NavLink, useNavigate, useLocation } from "react-router-dom";
     import React, { useCallback, useState, useEffect } from "react";
@@ -128,14 +134,14 @@ import {
         // Use dynamicNavItems for authenticated users, or static items for unauthenticated
         const itemsToGroup = currentUser ? dynamicNavItems : [
           { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_root: true, is_external: false, order_index: 0 },
-          { id: 'aia-drawer', label: "AiA Bot", icon_name: 'MessageCircleMore', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
+          { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
           { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_root: true, is_external: false, order_index: 2 },
           { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_root: true, is_external: false, onClick: onOpenAboutModal, order_index: 3 },
         ];
 
 
         itemsToGroup.forEach(item => {
-          if (item.is_root && !item.parent_nav_item_id) { // Check if it's a root item (category or direct link)
+          if (item.is_root) { // Now directly use item.is_root
             const categoryLabel = item.label;
             const categoryOrder = item.order_index; // Use order_index from the configured item
             const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;
@@ -157,11 +163,11 @@ import {
         // Convert to array and sort categories by their order
         const sortedCategories = Object.values(categories)
           .filter(group => group.items.length > 0)
-          .sort((a, b) => a.order - b.order);
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
 
         // Sort items within each category by their order_index
         sortedCategories.forEach(categoryGroup => {
-          categoryGroup.items.sort((a, b) => a.order_index - b.order_index);
+          categoryGroup.items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         });
 
         return sortedCategories;

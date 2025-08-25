@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-    import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Info, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X } from "lucide-react";
+    import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X } from "lucide-react";
     import { cn } from "@/lib/utils";
     import Logo from "@/components/Logo";
     import { ThemeToggle } from "../theme-toggle";
@@ -176,7 +176,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
 
         fullNavTree.forEach(item => {
-          if (item.is_root && !item.parent_nav_item_id) { // Check if it's a root item (category or direct link)
+          if (item.is_root) { // Now directly use item.is_root
             const categoryLabel = item.label;
             const categoryOrder = item.order_index; // Use order_index from the configured item
             const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;
@@ -198,11 +198,11 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         // Convert to array and sort categories by their order
         const sortedCategories = Object.values(categories)
           .filter(group => group.items.length > 0)
-          .sort((a, b) => a.order - b.order);
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
 
         // Sort items within each category by their order_index
         sortedCategories.forEach(categoryGroup => {
-          categoryGroup.items.sort((a, b) => a.order_index - b.order_index);
+          categoryGroup.items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         });
 
         return sortedCategories;
