@@ -165,6 +165,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             </div>
           </ContextMenuTrigger>
           {/* Show "Manage Children" for any item that is a category (no route) */}
+          {/* Re-added the !item.route condition to allow only categories to manage children */}
           {!item.route && (
             <ContextMenuContent className="w-auto p-1">
               <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
@@ -611,12 +612,19 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               return;
             }
 
-            // Logic to determine if dropping ONTO a category (to make it a child) or BETWEEN items (to make it a sibling)
+            // Logic to determine if dropping ONTO an item (to make it a child) or BETWEEN items (to make it a sibling)
+            // If dropping onto an item, it becomes a child of that item.
+            // If dropping between items, it becomes a sibling.
+            // For simplicity, let's assume dropping onto an item makes it a child.
+            // For dropping between items, we need to find the correct sibling position.
+
+            // Check if the drop target is a valid parent (i.e., a category, an item without a route)
             if (!overConfiguredItem.route) { // If the over item is a category (no route)
                 newParentNavItemId = overConfiguredItem.id;
                 newOrderIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
                 console.log("[handleDragEnd] Dropped ONTO category. New parent:", newParentNavItemId, "New order:", newOrderIndex);
             } else { // If the over item is a leaf node (has a route) or a root item with a route
+                // If dropping onto a leaf node, it should become a sibling of that leaf node.
                 newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
                 const siblings =
                     newParentNavItemId === null
@@ -630,6 +638,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
                 console.log("[handleDragEnd] Dropped BETWEEN items. New parent:", newParentNavItemId, "New order:", newOrderIndex);
             }
+
           } else if (overIsConfiguredRootContainer) {
             // Dropped into the root container (no specific parent)
             newParentNavItemId = null;
@@ -805,7 +814,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string }[] => {
         let flattened: { id: string; label: string; level: number; icon_name?: string }[] = [];
         items.forEach(item => {
-          // Only categories (no route) can be parents
+          // Only items without a route (categories) can be parents
           if (!item.route && item.id !== excludeId) {
             const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
             flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name }); // Include icon_name
@@ -1009,12 +1018,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <SelectItem value="none">Aucun (élément racine)</SelectItem>
                         {availableParentsForNewConfig.map(item => {
-                          const IconComponent = item.icon_name ? iconMap[item.icon_name] || Info : Info;
+                          const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                           return (
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {Array(item.level).fill('—').join('')}
-                                <IconComponent className="h-4 w-4" /> {item.label}
+                                <IconComponentToRender className="h-4 w-4" /> {item.label}
                               </div>
                             </SelectItem>
                           );
