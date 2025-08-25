@@ -119,20 +119,8 @@ import {
             { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_external: false, onClick: onOpenAuthModal, order_index: 1 } // Direct call to onOpenAuthModal
           ];
         }
-        // For authenticated users, use dynamicNavItems
-        const rootItems = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
-        console.log("[BottomNavigationBar] fixedBottomNavItems: Root items from allNavItemsForDrawer:", rootItems);
-
-        const messagesItem = rootItems.find(item => item.label === "Messagerie");
-        const searchItem = rootItems.find(item => item.label === "Recherche");
-
-        const baseItems = [
-          rootItems.find(item => item.label === "Tableau de bord"), // Changed from "Accueil" to "Tableau de bord" for authenticated users
-          messagesItem ? { ...messagesItem, badge: unreadMessagesCount } : null,
-          searchItem ? { ...searchItem, onClick: onOpenGlobalSearch } : null,
-        ].filter(Boolean) as NavItem[];
-        console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Result:", baseItems);
-        return baseItems;
+        // For authenticated users, return an empty array to only show the "Menu" button
+        return [];
       }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, allNavItemsForDrawer, handleCategoryClick, onOpenAuthModal]);
 
       // This memo now prepares the list of items to display in the drawer,
@@ -249,7 +237,8 @@ import {
             {...swipeHandlers}
             className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden"
           >
-            {fixedBottomNavItems.map((item: NavItem) => {
+            {/* Only show fixed bottom nav items if user is NOT authenticated */}
+            {!currentUser && fixedBottomNavItems.map((item: NavItem) => {
               const isLinkActive = 
                 (item.route === '/' && location.pathname === '/' && !location.hash) ||
                 (item.route && !item.route.startsWith('#') && location.pathname.startsWith(item.route));
@@ -283,7 +272,10 @@ import {
             <Button
               variant="ghost"
               onClick={() => setIsMoreDrawerOpen(true)}
-              className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5"
+              className={cn(
+                "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0",
+                currentUser ? "w-full" : "w-1/5" // Make it full width if only one button
+              )}
             >
               <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" />
               Menu
