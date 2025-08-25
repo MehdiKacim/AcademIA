@@ -30,7 +30,7 @@ import AboutModal from "@/components/AboutModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
-import { loadNavItems } from "@/lib/navItems"; // Import loadNavItems
+// import { loadNavItems } from "./lib/navItems"; // Removed dynamic import
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -58,15 +58,15 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const logoTapCountRef = useRef(0);
   const location = useLocation();
 
-  const [navItems, setNavItems] = useState<NavItem[]>([]); // State to store loaded nav items
-
-  useEffect(() => {
-    const fetchNavItems = async () => {
-      const loadedItems = await loadNavItems(currentRole);
-      setNavItems(loadedItems);
-    };
-    fetchNavItems();
-  }, [currentRole]); // Reload nav items when user role changes
+  // Removed dynamic navItems state and useEffect for loading them
+  // const [navItems, setNavItems] = useState<NavItem[]>([]); 
+  // useEffect(() => {
+  //   const fetchNavItems = async () => {
+  //     const loadedItems = await loadNavItems(currentRole);
+  //     setNavItems(loadedItems);
+  //   };
+  //   fetchNavItems();
+  // }, [currentRole]);
 
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
     queryKey: ['latestApkRelease'],
@@ -159,10 +159,11 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     },
   ];
 
-  const indexNavItems: NavItem[] = [
-    { id: 'home-anon', label: "Accueil", icon_name: 'Home', type: 'link', to: '/', is_root: true, allowed_roles: [] },
-    { id: 'aia', label: "AiA Bot", icon_name: 'MessageCircleMore', type: 'link', to: '#aiaBot', is_root: true, allowed_roles: [] },
-    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', type: 'link', to: '#methodologie', is_root: true, allowed_roles: [] },
+  // Static nav items for the header
+  const staticHeaderNavItems: NavItem[] = [
+    { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_root: true, is_external: false, order_index: 0 },
+    { id: 'aia', label: "AiA Bot", icon_name: 'MessageCircleMore', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
+    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_root: true, is_external: false, order_index: 2 },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -200,28 +201,25 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         <Logo onLogoClick={handleLogoClick} />
         {!isMobile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {indexNavItems.map((item) => {
-              if (item.type === 'link' && item.to) {
-                const isActive = 
-                  (item.to === '/' && location.pathname === '/' && !location.hash) ||
-                  (item.to.startsWith('#') && location.pathname === '/' && location.hash === item.to);
-                
-                const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+            {staticHeaderNavItems.map((item) => {
+              const isActive = 
+                (item.route === '/' && location.pathname === '/' && !location.hash) ||
+                (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route);
+              
+              const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
-                return (
-                  <Link
-                    key={item.id}
-                    to={item.to}
-                    className={cn(
-                      "flex flex-col items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                      isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <IconComponent className="h-5 w-5 mb-1" /> {item.label}
-                  </Link>
-                );
-              }
-              return null;
+              return (
+                <Link
+                  key={item.id}
+                  to={item.route!}
+                  className={cn(
+                    "flex flex-col items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                    isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <IconComponent className="h-5 w-5 mb-1" /> {item.label}
+                </Link>
+              );
             })}
           </nav>
         )}
@@ -331,7 +329,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
       </footer>
 
       <BottomNavigationBar
-        allNavItemsForDrawer={navItems}
+        allNavItemsForDrawer={[]} // Pass empty array as nav items are now static for index
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
         isMoreDrawerOpen={isMoreDrawerOpen}

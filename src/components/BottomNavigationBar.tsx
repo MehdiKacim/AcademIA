@@ -46,7 +46,7 @@ import {
     import { loadNavItems } from "@/lib/navItems"; // Import loadNavItems
 
     interface BottomNavigationBarProps {
-      allNavItemsForDrawer: NavItem[];
+      allNavItemsForDrawer: NavItem[]; // This will now be used only for authenticated users' drawer
       onOpenGlobalSearch?: () => void;
       currentUser?: { name?: string; id?: string };
       onOpenAboutModal: () => void;
@@ -61,7 +61,7 @@ import {
     };
 
     const BottomNavigationBar = ({
-      allNavItemsForDrawer,
+      allNavItemsForDrawer, // This prop is now primarily for authenticated users' drawer
       onOpenGlobalSearch,
       currentUser,
       onOpenAboutModal,
@@ -79,15 +79,19 @@ import {
       const [activeCategoryLabel, setActiveCategoryLabel] = useState<string | null>(null);
       const [activeCategoryIcon, setActiveCategoryIcon] = useState<React.ElementType | null>(null);
 
-      const [navItems, setNavItems] = useState<NavItem[]>([]); // State to store loaded nav items for the drawer
+      const [dynamicNavItems, setDynamicNavItems] = useState<NavItem[]>([]); // State to store loaded nav items for the drawer (authenticated users)
 
       useEffect(() => {
-        const fetchNavItems = async () => {
-          const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id); // Pass unreadMessagesCount and establishment_id
-          setNavItems(loadedItems);
-        };
-        fetchNavItems();
-      }, [currentRole, unreadMessagesCount, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessagesCount, or establishment changes
+        if (currentUser) { // Only load dynamic nav items if user is authenticated
+          const fetchNavItems = async () => {
+            const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id);
+            setDynamicNavItems(loadedItems);
+          };
+          fetchNavItems();
+        } else {
+          setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
+        }
+      }, [currentRole, unreadMessagesCount, currentUserProfile?.establishment_id, currentUser]);
 
       const handleCategoryClick = useCallback((categoryLabel: string, categoryIcon: React.ElementType) => {
         setActiveCategoryLabel(categoryLabel);
@@ -103,10 +107,9 @@ import {
             { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_root: true, is_external: false, onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); }, order_index: 1 }
           ];
         }
-        // Filter navItems to only include those that are root and have no parent_nav_item_id
-        const rootItems = navItems.filter(item => item.is_root && !item.parent_nav_item_id);
+        // For authenticated users, use dynamicNavItems
+        const rootItems = dynamicNavItems.filter(item => item.is_root && !item.parent_nav_item_id);
 
-        // Manually add search and messages, as they are special cases for the bottom bar
         const messagesItem = rootItems.find(item => item.label === "Messagerie");
         const searchItem = rootItems.find(item => item.label === "Recherche");
 
@@ -117,12 +120,21 @@ import {
         ].filter(Boolean) as NavItem[];
 
         return baseItems;
-      }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, navItems, handleCategoryClick]);
+      }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, dynamicNavItems, handleCategoryClick]);
 
       const groupedDrawerItems = React.useMemo(() => {
         const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
 
-        navItems.forEach(item => {
+        // Use dynamicNavItems for authenticated users, or static items for unauthenticated
+        const itemsToGroup = currentUser ? dynamicNavItems : [
+          { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_root: true, is_external: false, order_index: 0 },
+          { id: 'aia-drawer', label: "AiA Bot", icon_name: 'MessageCircleMore', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
+          { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_root: true, is_external: false, order_index: 2 },
+          { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_root: true, is_external: false, onClick: onOpenAboutModal, order_index: 3 },
+        ];
+
+
+        itemsToGroup.forEach(item => {
           if (item.is_root && !item.parent_nav_item_id) { // Check if it's a root item (category or direct link)
             const categoryLabel = item.label;
             const categoryOrder = item.order_index; // Use order_index from the configured item
@@ -136,7 +148,7 @@ import {
               item.children.forEach(child => {
                 categories[categoryLabel].items.push(child);
               });
-            } else if (item.route) { // Direct link at root level
+            } else if (item.route || item.onClick) { // Direct link at root level or a trigger item
               categories[categoryLabel].items.push(item);
             }
           }
@@ -153,7 +165,7 @@ import {
         });
 
         return sortedCategories;
-      }, [navItems]);
+      }, [dynamicNavItems, currentUser, onOpenAboutModal]);
 
       const handleLogout = async () => {
         await signOut();
@@ -176,7 +188,12 @@ import {
 
       const handleDrawerItemClick = (item: NavItem) => {
         if (item.route) {
-          navigate(item.route);
+          if (item.route.startsWith('#')) {
+            // Handle hash links for the Index page
+            navigate(`/${item.route}`);
+          } else {
+            navigate(item.route);
+          }
           setIsMoreDrawerOpen(false);
           setDrawerContent('categories');
           setActiveCategoryLabel(null);
@@ -184,7 +201,7 @@ import {
           setSearchQuery('');
         } else if (item.onClick) {
           item.onClick();
-          if (item.label !== "Recherche") {
+          if (item.label !== "Recherche") { // Keep search drawer open if it's the search button
             setIsMoreDrawerOpen(false);
             setDrawerContent('categories');
             setActiveCategoryLabel(null);
