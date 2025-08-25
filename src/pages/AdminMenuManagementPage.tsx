@@ -35,7 +35,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
     } from '@dnd-kit/sortable';
     import { CSS } from '@dnd-kit/utilities';
     import { arrayMove } from '@dnd-kit/sortable';
-    import { cn } '@/lib/utils';
+    import { cn } from '@/lib/utils';
     import {
       Dialog,
       DialogContent,
@@ -1108,9 +1108,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                 <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{editConfigParentInput}"</span>
                               </CommandItem>
                             )}
-                            <CommandEmpty>
-                              <span>Aucune catégorie trouvée.</span>
-                            </CommandEmpty>
+                            {availableParentsForConfig.length === 0 && editConfigParentInput.trim() === '' && (
+                              <CommandEmpty>
+                                <span>Aucune catégorie trouvée.</span>
+                              </CommandEmpty>
+                            )}
                             <CommandGroup>
                               <CommandItem
                                 value="none"
