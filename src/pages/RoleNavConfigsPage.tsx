@@ -195,7 +195,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
 });
 
 const RoleNavConfigsPage = () => {
-  console.log("[RoleNavConfigsPage] Component rendered."); // Unconditional log
+  console.log("[RoleNavConfigsPage] Component rendered.");
 
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]);
@@ -214,7 +214,6 @@ const RoleNavConfigsPage = () => {
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
 
-  // Removed tempParentInput as it's no longer needed for search
   const [openEditConfigParentSelect, setOpenEditConfigParentSelect] = useState(false);
 
   const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
@@ -240,23 +239,21 @@ const RoleNavConfigsPage = () => {
     return undefined;
   }, []);
 
-  // Updated getDescendantIds to use allItemsFlat
   const getDescendantIds = useCallback((item: NavItem, allItemsFlat: NavItem[]): Set<string> => {
     const descendants = new Set<string>();
-    const queue: NavItem[] = [item]; // Start with the item itself
+    const queue: NavItem[] = [item];
     let head = 0;
     while (head < queue.length) {
       const current = queue[head++];
-      // Find direct children of 'current' from the flat list
       const childrenOfCurrent = allItemsFlat.filter(i => (i.parent_nav_item_id || null) === current.id);
       for (const child of childrenOfCurrent) {
-        if (!descendants.has(child.id)) { // Avoid infinite loops for malformed trees
+        if (!descendants.has(child.id)) {
           descendants.add(child.id);
           queue.push(child);
         }
       }
     }
-    descendants.delete(item.id); // The item itself is not its own descendant
+    descendants.delete(item.id);
     return descendants;
   }, []);
 
@@ -307,7 +304,6 @@ const RoleNavConfigsPage = () => {
         items.sort((a, b) => a.order_index - b.order_index);
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          // Only update if order or parent has actually changed
           if (item.order_index !== i || (item.parent_nav_item_id || null) !== parentId) {
             const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
               id: item.configId!,
@@ -342,7 +338,7 @@ const RoleNavConfigsPage = () => {
 
       setConfiguredItemsTree(finalRootItems);
     }
-  }, [selectedRoleFilter]); // Removed findItemInTree, getDescendantIds from dependencies as they are useCallback with no deps
+  }, [selectedRoleFilter]);
 
   useEffect(() => {
     fetchAndStructureNavItems();
@@ -395,14 +391,13 @@ const RoleNavConfigsPage = () => {
   };
 
   const handleEditGenericItem = (item: NavItem) => {
-    // This dialog is not part of this page, but we need a placeholder to pass to SortableNavItem
     showError("Veuillez utiliser la page 'Éléments de navigation' pour modifier les propriétés génériques des éléments.");
   };
 
   const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
-    setEditConfigParentId(config.parent_nav_item_id || null); // Use null for root
+    setEditConfigParentId(config.parent_nav_item_id || null);
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
     setOpenEditConfigParentSelect(false);
@@ -411,9 +406,8 @@ const RoleNavConfigsPage = () => {
   const handleSaveEditedRoleConfig = async () => {
     if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
-    const finalParentId: string | null = editConfigParentId; // Use the selected parent ID directly
+    const finalParentId: string | null = editConfigParentId;
 
-    // Validation for circular dependency
     if (finalParentId && finalParentId === currentItemToEdit.id) {
       showError("Un élément ne peut pas être son propre parent.");
       setIsSavingConfigEdit(false);
@@ -432,12 +426,12 @@ const RoleNavConfigsPage = () => {
         id: currentConfigToEdit.id,
         nav_item_id: currentConfigToEdit.nav_item_id,
         role: currentConfigToEdit.role,
-        parent_nav_item_id: finalParentId, // Use the resolved finalParentId
+        parent_nav_item_id: finalParentId,
         order_index: editConfigOrderIndex,
       };
       await updateRoleNavItemConfig(updatedConfigData);
       showSuccess("Configuration de rôle mise à jour !");
-      await fetchAndStructureNavItems(); // This will rebuild the tree and pick up all changes
+      await fetchAndStructureNavItems();
       setIsEditConfigDialogOpen(false);
       setCurrentConfigToEdit(null);
       setCurrentItemToEdit(null);
@@ -451,7 +445,7 @@ const RoleNavConfigsPage = () => {
 
   const handleDragStart = (event: any) => {
     const { active } = event;
-    const configuredItem = allConfiguredItemsFlat.find(item => item.configId === active.id); // Find from flat list
+    const configuredItem = allConfiguredItemsFlat.find(item => item.configId === active.id);
     if (configuredItem && configuredItem.configId) {
       const config = {
         id: configuredItem.configId,
@@ -477,13 +471,11 @@ const RoleNavConfigsPage = () => {
       return;
     }
 
-    const activeConfigId = active.id as string; // This is the configId of the dragged item
-    const overId = over.id as string; // This can be configId of an item or containerId
+    const activeConfigId = active.id as string;
+    const overId = over.id as string;
 
     try {
       let newParentNavItemId: string | null = null;
-      // The order_index will be re-calculated by fetchAndStructureNavItems,
-      // so we can set a temporary value here.
       let tempOrderIndex: number = 0; 
 
       if (selectedRoleFilter === 'all') {
@@ -491,12 +483,11 @@ const RoleNavConfigsPage = () => {
         return;
       }
 
-      const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId); // Find the actual item if dropped on an item
+      const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId);
       const overIsRootContainer = overId === 'configured-container';
       const overIsChildContainer = overId.startsWith('configured-container-children-of-');
 
       if (overConfiguredItem) {
-        // Dropped over another item (make it a sibling)
         if (activeDragItem.id === overConfiguredItem.id) {
           showError("Un élément ne peut pas être déplacé sur lui-même.");
           return;
@@ -506,13 +497,10 @@ const RoleNavConfigsPage = () => {
           showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
           return;
         }
-        // Always make it a sibling of the item it's dropped over
         newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
       } else if (overIsRootContainer) {
-        // Dropped on the root container
         newParentNavItemId = null;
       } else if (overIsChildContainer) {
-        // Dropped on an empty child container (e.g., an empty category's drop zone)
         newParentNavItemId = overId.replace('configured-container-children-of-', '');
         const parentItem = allConfiguredItemsFlat.find(item => item.id === newParentNavItemId);
 
@@ -525,30 +513,25 @@ const RoleNavConfigsPage = () => {
           showError("Un élément ne peut pas être déplacé dans un de ses propres descendants.");
           return;
         }
-        // Rule: Cannot place under a route.
         if (parentItem && parentItem.type === 'route') {
           showError("Vous ne pouvez pas placer un élément sous une route.");
           return;
         }
-        // If dropped on an empty child container, the parent is the container's ID
-        // This is correct for making it a child.
       } else {
         showError("Cible de dépôt non valide.");
         return;
       }
 
-      // Update the dragged item's config in the database
       const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-        id: activeDragConfig.id, // Use activeDragConfig.id for the update
+        id: activeDragConfig.id,
         nav_item_id: activeDragConfig.nav_item_id,
         role: activeDragConfig.role,
         parent_nav_item_id: newParentNavItemId,
-        order_index: tempOrderIndex, // Temporary index, will be re-calculated by fetchAndStructureNavItems
+        order_index: tempOrderIndex,
       };
       await updateRoleNavItemConfig(updatedConfig);
       showSuccess("Élément de navigation réorganisé/déplacé !");
 
-      // Re-fetch and re-structure the entire navigation tree to apply correct ordering
       await fetchAndStructureNavItems();
     } catch (error: any) {
       console.error("Error during drag and drop:", error);
@@ -604,9 +587,10 @@ const RoleNavConfigsPage = () => {
   };
 
   const availableParentsForConfig = useMemo(() => {
-    console.log("[availableParentsForConfig] Recalculating...");
+    console.log("[availableParentsForConfig] --- START Recalculating ---");
     if (!currentItemToEdit) {
       console.log("[availableParentsForConfig] No currentItemToEdit, returning empty.");
+      console.log("[availableParentsForConfig] --- END Recalculating ---");
       return [];
     }
 
@@ -618,13 +602,9 @@ const RoleNavConfigsPage = () => {
 
     const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
 
-    // Iterate through all configured items to find potential parents
     allConfiguredItemsFlat.forEach(item => {
-      // Rule 1: Must be a category (type 'category_or_action' and no route)
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-      // Rule 2: Cannot be the item itself
       const isNotSelf = item.id !== currentItemToEdit.id;
-      // Rule 3: Cannot be a descendant of the item (to prevent circular dependencies)
       const isNotDescendant = !descendantsOfCurrentItem.has(item.id);
 
       console.log(`  Checking item: ${item.label} (ID: ${item.id})`);
@@ -633,7 +613,6 @@ const RoleNavConfigsPage = () => {
       console.log(`    - isNotDescendant: ${isNotDescendant}`);
 
       if (isCategory && isNotSelf && isNotDescendant) {
-        // Calculate the level for display purposes.
         let level = 0;
         let currentParentId = item.parent_nav_item_id;
         while (currentParentId) {
@@ -655,9 +634,9 @@ const RoleNavConfigsPage = () => {
       }
     });
 
-    // Sort by label for consistent display
     const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
     console.log("[availableParentsForConfig] Final sorted potential parents:", sortedParents);
+    console.log("[availableParentsForConfig] --- END Recalculating ---");
     return sortedParents;
   }, [currentItemToEdit, allConfiguredItemsFlat, getDescendantIds]);
 
