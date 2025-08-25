@@ -403,6 +403,7 @@ const RoleNavConfigsPage = () => {
   };
 
   const handleSaveEditedRoleConfig = async () => {
+    console.log("[handleSaveEditedRoleConfig] Function called. Is setIsSavingConfigEdit defined?", typeof setIsSavingConfigEdit !== 'undefined');
     if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
     let finalParentId: string | null = editConfigParentId; // This is the ID from the dropdown
