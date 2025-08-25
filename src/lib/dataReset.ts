@@ -8,7 +8,7 @@ import { resetCourses, resetCurricula, resetEstablishments, resetClasses, resetS
       await resetNotes();
       await resetStudentCourseProgress();
       await resetStudentClassEnrollments(); // New: Reset student class enrollments
-      await resetProfessorSubjectAssignment(); // New: Reset professor subject assignments
+      await resetProfessorSubjectAssignments(); // New: Reset professor subject assignments
       await resetClassSubjects(); // New: Reset class subjects
       await resetCourses();
       await resetCurricula();

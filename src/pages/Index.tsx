@@ -162,9 +162,9 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
 
   // Static nav items for the header
   const staticHeaderNavItems: NavItem[] = [
-    { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_root: true, is_external: false, order_index: 0 },
-    { id: 'aia', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
-    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_root: true, is_external: false, order_index: 2 },
+    { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0 },
+    { id: 'aia', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1 },
+    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2 },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {

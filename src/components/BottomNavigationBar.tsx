@@ -109,12 +109,12 @@ import {
       const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
         if (!currentUser) {
           return [
-            { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_root: true, is_external: false, order_index: 0 },
-            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_root: true, is_external: false, onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); }, order_index: 1 }
+            { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_external: false, order_index: 0 },
+            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_external: false, onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); }, order_index: 1 }
           ];
         }
         // For authenticated users, use dynamicNavItems
-        const rootItems = dynamicNavItems.filter(item => item.is_root);
+        const rootItems = dynamicNavItems.filter(item => item.parent_nav_item_id === null);
 
         const messagesItem = rootItems.find(item => item.label === "Messagerie");
         const searchItem = rootItems.find(item => item.label === "Recherche");
@@ -133,15 +133,15 @@ import {
 
         // Use dynamicNavItems for authenticated users, or static items for unauthenticated
         const itemsToGroup = currentUser ? dynamicNavItems : [
-          { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_root: true, is_external: false, order_index: 0 },
-          { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_root: true, is_external: false, order_index: 1 },
-          { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_root: true, is_external: false, order_index: 2 },
-          { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_root: true, is_external: false, onClick: onOpenAboutModal, order_index: 3 },
+          { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0 },
+          { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1 },
+          { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2 },
+          { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_external: false, onClick: onOpenAboutModal, order_index: 3 },
         ];
 
 
         itemsToGroup.forEach(item => {
-          if (item.is_root) { // Now directly use item.is_root
+          if (item.parent_nav_item_id === null) { // Now directly use item.parent_nav_item_id === null
             const categoryLabel = item.label;
             const categoryOrder = item.order_index; // Use order_index from the configured item
             const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;

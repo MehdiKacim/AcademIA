@@ -299,7 +299,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                       <SelectValue placeholder="Sélectionner un élément à ajouter" />
                     </SelectTrigger>
                     <SelectContent className="backdrop-blur-lg bg-background/80">
-                      <ScrollArea className="h-40">
+                      <ScrollArea className="h-40"> {/* Added ScrollArea */}
                         {availableChildrenForAdd.length === 0 ? (
                           <SelectItem value="no-items" disabled>Aucun élément disponible</SelectItem>
                         ) : (

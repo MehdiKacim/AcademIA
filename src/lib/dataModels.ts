@@ -217,7 +217,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       label: string;
       route?: string; // Optional route for navigation
       icon_name?: string; // Lucide icon name as string
-      is_root: boolean; // Is it a top-level item/category?
+      // is_root: boolean; // REMOVED: Root status is determined by parent_nav_item_id === null
       description?: string; // Added description for drawer items
       is_external: boolean; // Is it an external link?
       children?: NavItem[]; // Recursive children (built in frontend)

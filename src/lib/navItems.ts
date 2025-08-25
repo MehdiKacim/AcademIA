@@ -59,7 +59,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         label: config.nav_item.label,
         route: config.nav_item.route || undefined,
         icon_name: config.nav_item.icon_name || undefined,
-        is_root: !config.parent_nav_item_id, // Explicitly set based on parent_nav_item_id
+        // is_root: !config.parent_nav_item_id, // REMOVED: Root status is determined by parent_nav_item_id === null
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
         children: [],
@@ -131,7 +131,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     label: item.label,
     route: item.route || undefined,
     icon_name: item.icon_name || undefined,
-    is_root: true, // All raw items are considered root in the generic list
+    // is_root: true, // REMOVED: Root status is determined by parent_nav_item_id === null
     description: item.description || undefined,
     is_external: item.is_external,
     children: [], // Children are built dynamically, not stored in raw item
@@ -145,7 +145,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  * @param newItem Les données du nouvel élément de navigation.
  * @returns L'élément de navigation ajouté.
  */
-export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'>): Promise<NavItem | null> => {
+export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .insert({
@@ -170,7 +170,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
  * @param updatedItem Les données de l'élément de navigation à mettre à jour.
  * @returns L'élément de navigation mis à jour.
  */
-export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'>): Promise<NavItem | null> => {
+export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .update({

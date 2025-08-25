@@ -294,10 +294,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               const configuredItem: NavItem = {
                 ...genericItem,
                 children: [],
-                is_root: !config.parent_nav_item_id, // Explicitly set based on parent_nav_item_id
+                // is_root: !config.parent_nav_item_id, // REMOVED: Root status is determined by parent_nav_item_id === null
                 configId: config.id,
                 parent_nav_item_id: config.parent_nav_item_id || undefined,
-                order_index: config.order_index,
+                order_index: config.order_index, // Now mandatory, should always be a number from DB
                 establishment_id: config.establishment_id || undefined,
                 is_global: config.establishment_id === null, // Indicate if it's a global config
               };
@@ -334,7 +334,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 await updateRoleNavItemConfig(updatedConfig); // Update DB
                 item.order_index = i; // Update local item
                 item.parent_nav_item_id = parentId; // Update local item
-                item.is_root = (parentId === null); // Update local item
+                // item.is_root = (parentId === null); // REMOVED: Root status is determined by parent_nav_item_id === null
               }
             }
           };
@@ -382,7 +382,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         setIsAddingItem(true);
         try {
-          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'> = {
+          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
             label: newItemLabel.trim(),
             route: newItemRoute.trim() || null,
             description: newItemDescription.trim() || null,
@@ -398,7 +398,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               nav_item_id: addedItem.id,
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: null, // Add as a root item
-              order_index: configuredItemsTree.filter(item => item.is_root).length, // Add to end of root items
+              order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length, // Add to end of root items
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter, // Use selected establishment
             };
             await addRoleNavItemConfig(newConfig);
@@ -471,7 +471,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         setIsSavingEdit(true);
         try {
-          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'> = {
+          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
             id: currentItemToEdit.id,
             label: editItemLabel.trim(),
             route: editItemRoute.trim() || null,
@@ -622,7 +622,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
                 const siblings =
                     newParentNavItemId === null
-                        ? configuredItemsTree.filter((item) => item.is_root)
+                        ? configuredItemsTree.filter((item) => item.parent_nav_item_id === null)
                         : configuredItemsTree.find((item) => item.id === newParentNavItemId)
                             ?.children || [];
                 const overItemIndex = siblings.findIndex(
@@ -635,7 +635,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           } else if (overIsConfiguredRootContainer) {
             // Dropped into the root container (no specific parent)
             newParentNavItemId = null;
-            newOrderIndex = configuredItemsTree.filter((item) => item.is_root)
+            newOrderIndex = configuredItemsTree.filter((item) => item.parent_nav_item_id === null)
               .length;
             console.log("[handleDragEnd] Dropped into root container. New parent:", newParentNavItemId, "New order:", newOrderIndex);
           } else if (overIsConfiguredChildContainer) {
@@ -715,7 +715,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           orderIndex = parentItem?.children?.length || 0;
         } else {
           // If no parent selected, add as a root item
-          orderIndex = configuredItemsTree.filter(item => item.is_root).length;
+          orderIndex = configuredItemsTree.filter(item => item.parent_nav_item_id === null).length;
         }
 
         try {
@@ -1012,12 +1012,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <SelectItem value="none">Aucun (élément racine)</SelectItem>
                         {availableParentsForNewConfig.map(item => {
-                          const IconComponent = item.icon_name ? iconMap[item.icon_name] || Info : Info;
+                          const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                           return (
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {Array(item.level).fill('—').join('')}
-                                <IconComponent className="h-4 w-4" /> {item.label}
+                                <IconComponentToRender className="h-4 w-4" /> {item.label}
                               </div>
                             </SelectItem>
                           );
@@ -1099,11 +1099,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <ScrollArea className="h-40"> {/* Added ScrollArea */}
                           {Object.keys(iconMap).sort().map(iconName => {
-                            const IconComponent = iconMap[iconName];
+                            const IconComponentToRender: React.ElementType = (iconName && typeof iconName === 'string' && iconMap[iconName]) ? iconMap[iconName] : Info;
                             return (
                               <SelectItem key={iconName} value={iconName}>
                                 <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> {iconName}
+                                  <IconComponentToRender className="h-4 w-4" /> {iconName}
                                 </div>
                               </SelectItem>
                             );
