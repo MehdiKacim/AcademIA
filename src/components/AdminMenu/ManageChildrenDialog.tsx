@@ -47,6 +47,8 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe
 };
 
+const navItemTypes: NavItem['type'][] = ['route', 'category', 'action']; // Define possible types
+
 interface SortableChildItemProps {
   item: NavItem;
   level: number;
@@ -74,11 +76,13 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
 
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
-  const getItemTypeLabel = (item: NavItem) => {
-    if (item.route === null) return "Catégorie";
-    if (item.route && item.route.startsWith('#')) return "Action";
-    if (item.route) return "Route";
-    return "Inconnu";
+  const getItemTypeLabel = (type: NavItem['type']) => {
+    switch (type) {
+      case 'route': return "Route";
+      case 'category': return "Catégorie";
+      case 'action': return "Action";
+      default: return "Inconnu";
+    }
   };
 
   return (
@@ -99,7 +103,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
         )}
         <IconComponent className="h-4 w-4 text-primary" />
         <span className="font-medium text-sm">{item.label}</span>
-        <span className="text-xs text-muted-foreground italic">({getItemTypeLabel(item)})</span>
+        <span className="text-xs text-muted-foreground italic">({getItemTypeLabel(item.type)})</span>
         {item.is_global && <Globe className="h-3 w-3 text-muted-foreground ml-1" title="Configuration globale" />}
       </div>
       {isDraggableAndDeletable && (
@@ -134,6 +138,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const [newChildIconName, setNewChildIconName] = useState('');
   const [newChildDescription, setNewChildDescription] = useState('');
   const [newChildIsExternal, setNewChildIsExternal] = useState(false);
+  const [newChildType, setNewChildType] = useState<NavItem['type']>('route'); // New state for type
   const [isAddingNewChild, setIsAddingNewChild] = useState(false);
 
 
@@ -277,8 +282,18 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       showError("Le libellé est requis.");
       return;
     }
-    // A new child added here can be a category (no route) or a link (with route)
-    // Removed the `!newChildRoute.trim()` check to allow creating categories
+    if (newChildType === 'route' && !newChildRoute.trim()) {
+      showError("Une route est requise pour un élément de type 'Route'.");
+      return;
+    }
+    if (newChildType === 'action' && !newChildRoute.trim()) {
+      showError("Une route (hash) est requise pour un élément de type 'Action'.");
+      return;
+    }
+    if (newChildType === 'category' && newChildRoute.trim()) {
+      showError("Une catégorie ne doit pas avoir de route.");
+      return;
+    }
 
     setIsAddingNewChild(true);
     try {
@@ -288,6 +303,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         description: newChildDescription.trim() || null,
         is_external: newChildIsExternal,
         icon_name: newChildIconName || null,
+        type: newChildType, // Include the new type field
       };
       const addedGenericItem = await addNavItem(newItemData);
 
@@ -308,6 +324,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         setNewChildIconName('');
         setNewChildDescription('');
         setNewChildIsExternal(false);
+        setNewChildType('route'); // Reset type
         setIsNewChildFormOpen(false);
       } else {
         showError("Échec de la création du nouvel élément générique.");
@@ -333,11 +350,13 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
     }
   };
 
-  const getItemTypeLabel = (item: NavItem) => {
-    if (item.route === null) return "Catégorie";
-    if (item.route && item.route.startsWith('#')) return "Action";
-    if (item.route) return "Route";
-    return "Inconnu";
+  const getItemTypeLabel = (type: NavItem['type']) => {
+    switch (type) {
+      case 'route': return "Route";
+      case 'category': return "Catégorie";
+      case 'action': return "Action";
+      default: return "Inconnu";
+    }
   };
 
   const renderChildItemsList = (items: NavItem[], containerId: string, isDraggableAndDeletable: boolean, onRemove?: (configId: string) => void) => {
@@ -393,7 +412,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                <span>{item.label} ({getItemTypeLabel(item)}) {item.route && `(${item.route})`}</span> {/* Show type and route for clarity */}
+                                <span>{item.label} ({getItemTypeLabel(item.type)}) {item.route && `(${item.route})`}</span> {/* Show type and route for clarity */}
                               </div>
                             </SelectItem>
                           ))
@@ -439,11 +458,32 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           <Input id="new-child-label" value={newChildLabel} onChange={(e) => setNewChildLabel(e.target.value)} required />
                         </div>
                         <div>
-                          <Label htmlFor="new-child-route">Route (URL interne ou #hash, laisser vide pour catégorie)</Label> {/* Updated label */}
-                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} /> {/* Removed required */}
+                          <Label htmlFor="new-child-type">Type d'élément</Label>
+                          <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
+                            setNewChildType(value);
+                            if (value === 'category') {
+                              setNewChildRoute(''); // Clear route for categories
+                              setNewChildIsExternal(false); // Categories cannot be external
+                            }
+                          }}>
+                            <SelectTrigger id="new-child-type">
+                              <SelectValue placeholder="Sélectionner un type" />
+                            </SelectTrigger>
+                            <SelectContent className="backdrop-blur-lg bg-background/80">
+                              {navItemTypes.map(type => (
+                                <SelectItem key={type} value={type}>
+                                  {getItemTypeLabel(type)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
+                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category'} />
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} />
+                          <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category'} />
                           <Label htmlFor="new-child-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
                         </div>
                         <div>

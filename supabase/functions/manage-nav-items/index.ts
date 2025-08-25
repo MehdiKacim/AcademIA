@@ -9,8 +9,8 @@ const corsHeaders = {
 // Define default nav item structures for each role
 const DEFAULT_NAV_ITEMS_BY_ROLE = {
   administrator: [
-    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
-    { item: { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false } },
+    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false, type: 'route' } },
+    { item: { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false, type: 'route' } },
   ],
   // Clearing default nav items for other roles as per request
   student: [],
@@ -74,7 +74,7 @@ serve(async (req) => {
       case 'create':
         ({ data, error } = await supabaseAdminClient
           .from('nav_items')
-          .insert(payload)
+          .insert({ ...payload, type: payload.type || 'route' }) // Ensure type is set, default to 'route'
           .select()
           .single());
         break;
@@ -87,7 +87,7 @@ serve(async (req) => {
       case 'update':
         ({ data, error } = await supabaseAdminClient
           .from('nav_items')
-          .update({ ...payload, updated_at: new Date().toISOString() })
+          .update({ ...payload, updated_at: new Date().toISOString(), type: payload.type || 'route' }) // Ensure type is updated
           .eq('id', payload.id)
           .select()
           .single());
@@ -179,6 +179,7 @@ serve(async (req) => {
               icon_name: itemData.icon_name || undefined,
               description: itemData.description || undefined,
               is_external: itemData.is_external,
+              type: itemData.type, // Set the type here
               children: [], // Initialize children
               order_index: 0, // Will be set later
               parent_nav_item_id: undefined, // Will be set later
