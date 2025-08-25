@@ -66,7 +66,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE: { [key in Profile['role']]: {
     { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
     { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
     { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
-    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
+    { item: { label: 'Gestion des Années Scolaires', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
     { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
     { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
     { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
@@ -82,7 +82,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE: { [key in Profile['role']]: {
     { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
     { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
     { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
-    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
+    { item: { label: 'Gestion des Années Scolaires', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
     { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
     { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
     { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
@@ -677,3 +677,8 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
     throw error;
   }
 };
+
+// Call this function to recreate default admin navigation
+ensureDefaultNavItemsForRole('administrator', null)
+  .then(() => console.log("Default administrator navigation ensured."))
+  .catch(error => console.error("Failed to ensure default administrator navigation:", error));
