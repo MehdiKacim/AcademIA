@@ -95,6 +95,23 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
 
+  // Step 1: Ensure generic nav_items exist
+  let genericNavItems = await loadAllNavItemsRaw();
+  if (genericNavItems.length === 0 && userRole === 'administrator') {
+    console.warn("[loadNavItems] No generic nav_items found. Attempting to insert default admin nav items (which also creates generic items).");
+    try {
+      // Reset configs first to avoid conflicts if only nav_items were deleted
+      await resetRoleNavConfigsForRole('administrator'); 
+      await insertDefaultAdminNavItems(); // This inserts both nav_items and role_nav_configs
+      genericNavItems = await loadAllNavItemsRaw(); // Reload generic items
+      console.log("[loadNavItems] Re-loaded generic nav_items after default insertion (count):", genericNavItems.length);
+    } catch (e) {
+      console.error("[loadNavItems] Failed to insert default admin nav items:", e);
+      return [];
+    }
+  }
+
+  // Step 2: Load role-specific configurations
   let query = supabase
     .from('role_nav_configs')
     .select(`
@@ -132,36 +149,12 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   if (configsError) {
     console.error("[loadNavItems] Error loading role nav configs:", configsError);
-    // If there's an error, and it's for admin, try to insert defaults as a fallback
-    if (userRole === 'administrator') {
-        console.warn("[loadNavItems] Error fetching admin configs, attempting to insert defaults as fallback.");
-        try {
-            await resetRoleNavConfigsForRole('administrator'); // Delete any potentially corrupted configs
-            const inserted = await insertDefaultAdminNavItems();
-            // Re-run the query to fetch the newly inserted configs
-            const { data: reFetchedConfigs, error: reFetchError } = await query;
-            if (reFetchError) {
-                console.error("[loadNavItems] Error re-fetching configs after fallback insertion:", reFetchError);
-                return [];
-            }
-            configs = reFetchedConfigs as RoleNavItemConfig[];
-            console.log("[loadNavItems] Re-fetched configs after fallback insertion (count):", configs.length, "configs:", configs);
-        } catch (e) {
-            console.error("[loadNavItems] Failed to insert default admin nav items as fallback:", e);
-            return [];
-        }
-    } else {
-        return [];
-    }
-  } else {
-      configs = fetchedConfigs as RoleNavItemConfig[];
-      console.log("[loadNavItems] Fetched configs (initial count):", configs.length, "configs:", configs);
+    return [];
   }
+  configs = fetchedConfigs as RoleNavItemConfig[];
+  console.log("[loadNavItems] Fetched configs (initial count):", configs.length, "configs:", configs);
 
-
-  // --- Targeted fix for administrator: If configs are missing or incomplete, re-insert defaults ---
-  // Expected number of root items for admin is 8 (Tableau de bord, Messagerie, Recherche, Mon profil, Mes cours, Mes notes, Analytiques, Système)
-  // Expected total items for admin is 8 (root) + 10 (children of Système) = 18
+  // Step 3: Targeted fix for administrator: If configs are missing or incomplete, re-insert defaults
   const EXPECTED_ADMIN_CONFIG_COUNT = 18; // Based on the `insertDefaultAdminNavItems` function
 
   if (userRole === 'administrator' && configs.length < EXPECTED_ADMIN_CONFIG_COUNT) {
