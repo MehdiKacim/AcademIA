@@ -72,7 +72,7 @@ import {
       const isMobile = useIsMobile();
       const location = useLocation();
       const navigate = useNavigate();
-      const { signOut, currentRole } = useRole();
+      const { signOut, currentRole, currentUserProfile } = useRole(); // Get currentUserProfile
 
       const [searchQuery, setSearchQuery] = useState("");
       const [drawerContent, setDrawerContent] = useState<'categories' | 'items'>('categories');
@@ -83,11 +83,11 @@ import {
 
       useEffect(() => {
         const fetchNavItems = async () => {
-          const loadedItems = await loadNavItems(currentRole, unreadMessagesCount);
+          const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id); // Pass unreadMessagesCount and establishment_id
           setNavItems(loadedItems);
         };
         fetchNavItems();
-      }, [currentRole, unreadMessagesCount]); // Reload nav items when user role or unreadMessagesCount changes
+      }, [currentRole, unreadMessagesCount, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessagesCount, or establishment changes
 
       const handleCategoryClick = useCallback((categoryLabel: string, categoryIcon: React.ElementType) => {
         setActiveCategoryLabel(categoryLabel);

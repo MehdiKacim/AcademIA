@@ -10,7 +10,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Input } from "@/components/ui/input";
     import { Label } from "@/components/ui/label";
     import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck } from "lucide-react";
-    import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels"; // Import RoleNavItemConfig
+    import { NavItem, Profile, RoleNavItemConfig, Establishment } from "@/lib/dataModels"; // Import RoleNavItemConfig, Establishment
     import { showSuccess, showError } from "@/utils/toast";
     import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole } from "@/lib/navItems"; // Use new functions
     import { useRole } from '@/contexts/RoleContext';
@@ -45,6 +45,7 @@ import React, { useState, useEffect, useCallback } from 'react';
       DialogFooter,
     } from "@/components/ui/dialog";
     import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
+    import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
 
     // Map icon_name strings to Lucide React components
     const iconMap: { [key: string]: React.ElementType } = {
@@ -104,7 +105,7 @@ import React, { useState, useEffect, useCallback } from 'react';
             {!item.is_root && item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_nav_item_id, order_index: item.order_index } : undefined)}>
+            <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_nav_item_id, order_index: item.order_index, establishment_id: item.establishment_id } : undefined)}>
               <Edit className="h-4 w-4" />
             </Button>
             <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, configId)}>
@@ -121,9 +122,11 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [unconfiguredItems, setUnconfiguredItems] = useState<NavItem[]>([]); // Generic items not yet configured for selected role
       const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]); // Configured items for selected role
       const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
+      const [establishments, setEstablishments] = useState<Establishment[]>([]); // All establishments
 
       // State for global role filter
       const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
+      const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // New: Filter by establishment
 
       // States for new generic item form
       const [newItemLabel, setNewItemLabel] = useState('');
@@ -150,6 +153,7 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
       const [editConfigParentId, setEditConfigParentId] = useState<string | undefined>(undefined);
       const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
+      const [editConfigEstablishmentId, setEditConfigEstablishmentId] = useState<string | undefined>(undefined); // New: for editing config
       const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false);
 
 
@@ -163,6 +167,12 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
       const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
 
+      useEffect(() => {
+        const fetchEstablishments = async () => {
+          setEstablishments(await loadEstablishments());
+        };
+        fetchEstablishments();
+      }, []);
 
       const fetchAndStructureNavItems = useCallback(async () => {
         const genericItems = await loadAllNavItemsRaw();
@@ -173,7 +183,10 @@ import React, { useState, useEffect, useCallback } from 'react';
           setUnconfiguredItems(genericItems);
           setConfiguredItemsTree([]);
         } else {
-          const roleConfigs = await getRoleNavItemConfigsByRole(selectedRoleFilter as Profile['role']);
+          const roleConfigs = await getRoleNavItemConfigsByRole(
+            selectedRoleFilter as Profile['role'],
+            selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter
+          );
 
           const configuredMap = new Map<string, NavItem>();
           const unconfigured: NavItem[] = [];
@@ -193,6 +206,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 configId: config.id,
                 parent_nav_item_id: config.parent_nav_item_id, // Store parent_nav_item_id from config
                 order_index: config.order_index, // Store order_index from config
+                establishment_id: config.establishment_id || undefined, // Store establishment_id from config
               };
               configuredMap.set(configuredItem.id, configuredItem);
             }
@@ -235,7 +249,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           });
           setUnconfiguredItems(unconfigured);
         }
-      }, [selectedRoleFilter]);
+      }, [selectedRoleFilter, selectedEstablishmentFilter]); // Re-run when selectedRoleFilter or selectedEstablishmentFilter changes
 
       useEffect(() => {
         fetchAndStructureNavItems();
@@ -253,7 +267,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsAddingItem(true);
         try {
-          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'> = {
+          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId' | 'establishment_id'> = {
             label: newItemLabel.trim(),
             route: newItemRoute.trim() || null,
             is_root: newItemIsRoot,
@@ -271,6 +285,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: newItemParentId || null,
               order_index: newItemOrderIndex,
+              establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter, // Use selected establishment
             };
             await addRoleNavItemConfig(newConfig);
             showSuccess("Configuration de rôle ajoutée pour le nouvel élément !");
@@ -284,8 +299,6 @@ import React, { useState, useEffect, useCallback } from 'react';
           setNewItemIconName('');
           setNewItemDescription('');
           setNewItemIsExternal(false);
-          setNewItemParentId(undefined);
-          setNewItemOrderIndex(0);
           setIsNewItemFormOpen(false);
         } catch (error: any) {
           console.error("Error adding generic nav item:", error);
@@ -341,7 +354,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsSavingEdit(true);
         try {
-          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'> = {
+          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId' | 'establishment_id'> = {
             id: currentItemToEdit.id,
             label: editItemLabel.trim(),
             route: editItemRoute.trim() || null,
@@ -372,6 +385,7 @@ import React, { useState, useEffect, useCallback } from 'react';
         setCurrentConfigToEdit(config);
         setEditConfigParentId(config.parent_nav_item_id || undefined);
         setEditConfigOrderIndex(config.order_index);
+        setEditConfigEstablishmentId(config.establishment_id || undefined); // Set establishment_id for editing
         setIsEditConfigDialogOpen(true);
       };
 
@@ -386,6 +400,7 @@ import React, { useState, useEffect, useCallback } from 'react';
             role: currentConfigToEdit.role,
             parent_nav_item_id: editConfigParentId || null,
             order_index: editConfigOrderIndex,
+            establishment_id: editConfigEstablishmentId === 'all' ? null : editConfigEstablishmentId, // Save establishment_id
           };
           await updateRoleNavItemConfig(updatedConfigData);
           showSuccess("Configuration de rôle mise à jour !");
@@ -418,6 +433,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: configuredItem.parent_nav_item_id,
               order_index: configuredItem.order_index,
+              establishment_id: configuredItem.establishment_id,
             };
             setActiveDragItem(configuredItem);
             setActiveDragConfig(config);
@@ -468,6 +484,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: parentNavItemId,
               order_index: newOrderIndex,
+              establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
             };
             await addRoleNavItemConfig(newConfig);
             successMessage = "Élément ajouté à la configuration du rôle !";
@@ -498,6 +515,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                     role: selectedRoleFilter as Profile['role'],
                     parent_nav_item_id: item.parent_nav_item_id,
                     order_index: i,
+                    establishment_id: item.establishment_id,
                   };
                   await updateRoleNavItemConfig(config);
                 }
@@ -514,28 +532,17 @@ import React, { useState, useEffect, useCallback } from 'react';
                       role: selectedRoleFilter as Profile['role'],
                       parent_nav_item_id: item.parent_nav_item_id,
                       order_index: i,
+                      establishment_id: item.establishment_id,
                     };
                     await updateRoleNavItemConfig(config);
                   }
                 } else { // Was a root item
-                  // Re-index root items
-                  const newRootOrder = configuredItemsTree.filter(item => item.configId !== activeId);
-                  for (let i = 0; i < newRootOrder.length; i++) {
-                    const item = newRootOrder[i];
-                    const config = {
-                      id: item.configId!,
-                      nav_item_id: item.id,
-                      role: selectedRoleFilter as Profile['role'],
-                      parent_nav_item_id: null,
-                      order_index: i,
-                    };
-                    await updateRoleNavItemConfig(config);
-                  }
+                  setConfiguredItemsTree(prev => prev.filter(item => item.configId !== activeId));
                 }
 
                 // Add to new parent's children (as sibling of overItem)
                 const newDestinationList = [...destinationList];
-                newDestinationList.splice(overIndex, 0, { ...activeFound, parent_nav_item_id: overParent?.id || null, order_index: overIndex }); // Temporarily add
+                newDestinationList.splice(overIndex, 0, { ...activeFound, parent_nav_item_id: overParent?.id || null, order_index: overIndex, establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter }); // Temporarily add
                 // Re-index all items in the new destination list
                 for (let i = 0; i < newDestinationList.length; i++) {
                   const item = newDestinationList[i];
@@ -545,6 +552,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                     role: selectedRoleFilter as Profile['role'],
                     parent_nav_item_id: overParent?.id || null, // All items in this list get the same parent
                     order_index: i,
+                    establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
                   };
                   await updateRoleNavItemConfig(config);
                 }
@@ -552,8 +560,9 @@ import React, { useState, useEffect, useCallback } from 'react';
             }
             successMessage = "Ordre de navigation mis à jour !";
           }
-          // Case 4: Reordering within Unconfigured list (no DB update needed)
+          // Case 4: Reordering within Unconfigured list
           else if (unconfiguredItems.some(item => item.id === activeId) && unconfiguredItems.some(item => item.id === overId)) {
+            // No DB update needed for unconfigured list reordering, only local state
             const oldIndex = unconfiguredItems.findIndex(item => item.id === activeId);
             const newIndex = unconfiguredItems.findIndex(item => item.id === overId);
             if (oldIndex !== -1 && newIndex !== -1) {
@@ -580,21 +589,22 @@ import React, { useState, useEffect, useCallback } from 'react';
       };
 
       // Helper to find a configured item and its parent in the tree
-      const findConfigItemAndParent = (items: NavItem[], targetId: string, role: Profile['role'], parent: NavItem | null = null): { item: NavItem | null, config: RoleNavItemConfig | null, parent: NavItem | null, index: number } => {
+      const findConfigItemAndParent = (items: NavItem[], targetConfigId: string, role: Profile['role'], parent: NavItem | null = null): { item: NavItem | null, config: RoleNavItemConfig | null, parent: NavItem | null, index: number } => {
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          if (item.configId === targetId) {
+          if (item.configId === targetConfigId) {
             const config = {
               id: item.configId,
               nav_item_id: item.id,
               role: role,
               parent_nav_item_id: item.parent_nav_item_id,
               order_index: item.order_index,
+              establishment_id: item.establishment_id,
             };
             return { item, config, parent, index: i };
           }
           if (item.children && item.children.length > 0) {
-            const found = findConfigItemAndParent(item.children, targetId, role, item);
+            const found = findConfigItemAndParent(item.children, targetConfigId, role, item);
             if (found.item) return found;
           }
         }
@@ -673,28 +683,46 @@ import React, { useState, useEffect, useCallback } from 'react';
               <CardTitle className="flex items-center gap-2">
                 <UserRoundCog className="h-6 w-6 text-primary" /> Configurer les menus par rôle
               </CardTitle>
-              <CardDescription>Sélectionnez un rôle pour voir et gérer les éléments de menu qui lui sont associés.</CardDescription>
+              <CardDescription>Sélectionnez un rôle et un établissement pour voir et gérer les éléments de menu qui lui sont associés.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Label htmlFor="role-filter">Rôle sélectionné</Label>
-              <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
-                <SelectTrigger id="role-filter">
-                  <SelectValue placeholder="Sélectionner un rôle" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
-                  <SelectItem value="all">Tous les rôles (éléments génériques)</SelectItem>
-                  {allRoles.map(role => (
-                    <SelectItem key={role} value={role}>
-                      {role === 'student' ? 'Élève' :
-                       role === 'professeur' ? 'Professeur' :
-                       role === 'tutor' ? 'Tuteur' :
-                       role === 'director' ? 'Directeur' :
-                       role === 'deputy_director' ? 'Directeur Adjoint' :
-                       'Administrateur'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="role-filter">Rôle sélectionné</Label>
+                <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
+                  <SelectTrigger id="role-filter">
+                    <SelectValue placeholder="Sélectionner un rôle" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectItem value="all">Tous les rôles (éléments génériques)</SelectItem>
+                    {allRoles.map(role => (
+                      <SelectItem key={role} value={role}>
+                        {role === 'student' ? 'Élève' :
+                         role === 'professeur' ? 'Professeur' :
+                         role === 'tutor' ? 'Tuteur' :
+                         role === 'director' ? 'Directeur' :
+                         role === 'deputy_director' ? 'Directeur Adjoint' :
+                         'Administrateur'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="establishment-filter">Établissement</Label>
+                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)} disabled={selectedRoleFilter === 'all'}>
+                  <SelectTrigger id="establishment-filter">
+                    <SelectValue placeholder="Tous les établissements (Global)" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectItem value="all">Tous les établissements (Global)</SelectItem>
+                    {establishments.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
 
@@ -770,6 +798,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <LayoutList className="h-6 w-6 text-primary" /> Éléments non configurés pour {selectedRoleFilter}
+                    {selectedEstablishmentFilter !== 'all' && ` (${establishments.find(e => e.id === selectedEstablishmentFilter)?.name || 'Global'})`}
                   </CardTitle>
                   <CardDescription>Faites glisser les éléments ici pour les ajouter au menu de {selectedRoleFilter}.</CardDescription>
                 </CardHeader>
@@ -795,6 +824,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {selectedRoleFilter}
+                    {selectedEstablishmentFilter !== 'all' && ` (${establishments.find(e => e.id === selectedEstablishmentFilter)?.name || 'Global'})`}
                   </CardTitle>
                   <CardDescription>Réorganisez les éléments par glisser-déposer. Faites glisser ici pour les retirer.</CardDescription>
                 </CardHeader>
@@ -908,6 +938,22 @@ import React, { useState, useEffect, useCallback } from 'react';
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
                     <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-config-establishment" className="text-right">Établissement</Label>
+                    <Select value={editConfigEstablishmentId || "all"} onValueChange={(value) => setEditConfigEstablishmentId(value === "all" ? undefined : value)}>
+                      <SelectTrigger id="edit-config-establishment" className="col-span-3">
+                        <SelectValue placeholder="Tous les établissements (Global)" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80">
+                        <SelectItem value="all">Tous les établissements (Global)</SelectItem>
+                        {establishments.map(est => (
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <DialogFooter>

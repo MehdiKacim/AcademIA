@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
      * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
      * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
      * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
+     * @param userEstablishmentId L'ID de l'établissement de l'utilisateur (optionnel).
      * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
      */
-    export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
+    export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0, userEstablishmentId?: string): Promise<NavItem[]> => {
       if (!userRole) return [];
 
-      const { data: configs, error: configsError } = await supabase
+      let query = supabase
         .from('role_nav_configs')
         .select(`
           *,
@@ -26,6 +27,11 @@ import { supabase } from "@/integrations/supabase/client";
         `)
         .eq('role', userRole)
         .order('order_index', { ascending: true });
+
+      // Filter by establishment_id: either matching user's establishment or NULL (global)
+      query = query.or(`establishment_id.eq.${userEstablishmentId},establishment_id.is.null`);
+
+      const { data: configs, error: configsError } = await query;
 
       if (configsError) {
         console.error("Error loading role nav configs:", configsError);
@@ -50,6 +56,7 @@ import { supabase } from "@/integrations/supabase/client";
             parent_nav_item_id: config.parent_nav_item_id || undefined,
             order_index: config.order_index,
             configId: config.id, // The ID of the role_nav_configs entry
+            establishment_id: config.establishment_id || undefined, // New: establishment_id from config
           };
           navItemsMap.set(navItem.id, navItem);
           allItems.push(navItem);
@@ -120,6 +127,7 @@ import { supabase } from "@/integrations/supabase/client";
         parent_nav_item_id: undefined,
         order_index: 0,
         configId: undefined,
+        establishment_id: undefined,
       }));
     };
 
@@ -128,7 +136,7 @@ import { supabase } from "@/integrations/supabase/client";
      * @param newItem L'objet NavItem à ajouter (sans l'ID, ni les propriétés de configuration de rôle).
      * @returns L'élément de navigation ajouté.
      */
-    export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'>): Promise<NavItem | null> => {
+    export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId' | 'establishment_id'>): Promise<NavItem | null> => {
       const { data, error } = await supabase
         .from('nav_items')
         .insert({
@@ -154,7 +162,7 @@ import { supabase } from "@/integrations/supabase/client";
      * @param updatedItem L'objet NavItem avec les données mises à jour (sans les propriétés de configuration de rôle).
      * @returns L'élément de navigation mis à jour.
      */
-    export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId'>): Promise<NavItem | null> => {
+    export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'parent_nav_item_id' | 'order_index' | 'configId' | 'establishment_id'>): Promise<NavItem | null> => {
       const { data, error } = await supabase
         .from('nav_items')
         .update({
@@ -243,6 +251,7 @@ import { supabase } from "@/integrations/supabase/client";
         .update({
           parent_nav_item_id: updatedConfig.parent_nav_item_id || null,
           order_index: updatedConfig.order_index,
+          establishment_id: updatedConfig.establishment_id || null, // New: Update establishment_id
           updated_at: new Date().toISOString(),
         })
         .eq('id', updatedConfig.id)
@@ -275,14 +284,23 @@ import { supabase } from "@/integrations/supabase/client";
     /**
      * Récupère toutes les configurations d'éléments de navigation pour un rôle donné.
      * @param role Le rôle à filtrer.
+     * @param establishmentId L'ID de l'établissement à filtrer (optionnel).
      * @returns Un tableau de configurations d'éléments de navigation.
      */
-    export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promise<RoleNavItemConfig[]> => {
-      const { data, error } = await supabase
+    export const getRoleNavItemConfigsByRole = async (role: Profile['role'], establishmentId?: string): Promise<RoleNavItemConfig[]> => {
+      let query = supabase
         .from('role_nav_configs')
         .select('*')
         .eq('role', role)
         .order('order_index', { ascending: true });
+
+      if (establishmentId) {
+        query = query.eq('establishment_id', establishmentId);
+      } else {
+        query = query.is('establishment_id', null); // Get global configs if no establishmentId is provided
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching role nav item configs by role:", error);

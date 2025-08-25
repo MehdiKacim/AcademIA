@@ -67,11 +67,11 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 
       useEffect(() => {
         const fetchNavItems = async () => {
-          const loadedItems = await loadNavItems(currentRole, unreadMessages); // Pass unreadMessages
+          const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id); // Pass unreadMessages and establishment_id
           setNavItems(loadedItems);
         };
         fetchNavItems();
-      }, [currentRole, unreadMessages]); // Reload nav items when user role or unreadMessages changes
+      }, [currentRole, unreadMessages, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessages, or establishment changes
 
       const startAutoHideTimer = useCallback(() => {
         if (autoHideTimerRef.current) {

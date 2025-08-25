@@ -228,6 +228,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       parent_nav_item_id?: string;
       order_index: number;
       configId?: string; // The ID of the role_nav_configs entry
+      establishment_id?: string; // New: Optional establishment_id for role_nav_configs
     }
 
     // New interface for role-specific navigation configuration
@@ -237,6 +238,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       role: Profile['role'];
       parent_nav_item_id?: string; // FK to NavItem (parent in the role's menu tree)
       order_index: number;
+      establishment_id?: string; // New: Optional establishment_id
       created_at?: string;
       updated_at?: string;
     }
