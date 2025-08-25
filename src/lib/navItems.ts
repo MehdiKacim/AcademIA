@@ -80,16 +80,16 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
     defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Années Scolaires')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 9, establishment_id: null });
   }
 
-  const { data: configsInsertResult, error: configsInsertError } = await supabase
+  const { error: configsInsertError } = await supabase
     .from('role_nav_configs')
-    .insert(defaultRoleConfigs)
-    .select();
+    .insert(defaultRoleConfigs);
 
   if (configsInsertError) {
     console.error("Error inserting default role nav configs:", configsInsertError);
     throw configsInsertError;
   }
-  return configsInsertResult as RoleNavItemConfig[];
+  // No need to return configsInsertResult here, as loadNavItems will re-query
+  return []; // Return empty array, as the main function will re-fetch
 };
 
 
@@ -146,12 +146,25 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
   configs = fetchedConfigs as RoleNavItemConfig[];
-  console.log("[loadNavItems] Fetched configs:", configs);
+  console.log("[loadNavItems] Fetched configs (initial):", configs);
 
   // --- Add default items for administrator if no configs found ---
   if (configs.length === 0 && userRole === 'administrator') {
-    const newDefaultConfigs = await insertDefaultAdminNavItems();
-    configs = newDefaultConfigs; // Use the newly inserted configs
+    console.warn("[loadNavItems] No configs found for administrator. Inserting default items.");
+    try {
+      await insertDefaultAdminNavItems(); // Just call the insertion, don't assign its raw result
+      // Re-run the query to fetch the newly inserted configs WITH the nav_item join
+      const { data: reFetchedConfigs, error: reFetchError } = await query;
+      if (reFetchError) {
+        console.error("[loadNavItems] Error re-fetching configs after default insertion:", reFetchError);
+        return [];
+      }
+      configs = reFetchedConfigs as RoleNavItemConfig[]; // Assign the re-fetched configs
+      console.log("[loadNavItems] Re-fetched configs after default insertion:", configs);
+    } catch (e) {
+      console.error("[loadNavItems] Failed to insert default admin nav items:", e);
+      return [];
+    }
   }
   // --- END Add default items for administrator if no configs found ---
 
@@ -166,7 +179,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         icon_name: config.nav_item.icon_name || undefined,
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
-        children: [], // Initialize empty children array
+        children: [],
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index, // Now mandatory, should always be a number from DB
         configId: config.id,
