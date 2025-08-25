@@ -106,7 +106,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         <ContextMenu>
           <ContextMenuTrigger asChild>
             <div ref={setNodeRef} style={style} className={cn("p-3 border rounded-md bg-background flex items-center justify-between gap-2 mb-2", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
-              <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={() => hasChildren && onToggleExpand(item.id)}>
+              <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={(e) => {
+                // Only toggle expand if it has children and click is not on a button
+                if (hasChildren) {
+                  e.stopPropagation(); // Prevent triggering parent's onClick if any
+                  onToggleExpand(item.id);
+                }
+              }}>
                 {isDraggableAndDeletable && (
                   <Button
                     type="button"
@@ -125,7 +131,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => onToggleExpand(item.id)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering parent div's onClick
+                      onToggleExpand(item.id);
+                    }}
                     className="h-5 w-5"
                   >
                     {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -596,18 +605,23 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               return;
             }
 
-            // Dropped ONTO an existing configured item (as a sibling)
-            newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-            const siblings =
-              newParentNavItemId === null
-                ? configuredItemsTree.filter((item) => item.is_root)
-                : configuredItemsTree.find((item) => item.id === newParentNavItemId)
-                    ?.children || [];
-            const overItemIndex = siblings.findIndex(
-              (s) => s.configId === overId
-            );
-            newOrderIndex =
-              overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
+            // Logic to determine if dropping ONTO a category (to make it a child) or BETWEEN items (to make it a sibling)
+            if (!overConfiguredItem.route) { // If the over item is a category (no route)
+                newParentNavItemId = overConfiguredItem.id;
+                newOrderIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
+            } else { // If the over item is a leaf node (has a route) or a root item with a route
+                newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
+                const siblings =
+                    newParentNavItemId === null
+                        ? configuredItemsTree.filter((item) => item.is_root)
+                        : configuredItemsTree.find((item) => item.id === newParentNavItemId)
+                            ?.children || [];
+                const overItemIndex = siblings.findIndex(
+                    (s) => s.configId === overId
+                );
+                newOrderIndex =
+                    overItemIndex !== -1 ? overItemIndex + 1 : siblings.length;
+            }
           } else if (overIsConfiguredRootContainer) {
             // Dropped into the root container (no specific parent)
             newParentNavItemId = null;
@@ -765,9 +779,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number }[] => {
         let flattened: { id: string; label: string; level: number }[] = [];
         items.forEach(item => {
-          if (!item.route && item.id !== excludeId) { // Only categories (no route) and not the item itself
+          // Only categories (no route) can be parents
+          if (!item.route && item.id !== excludeId) {
             const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
             flattened.push({ id: item.id, label: newLabel, level: currentLevel });
+            // Recursively add children of this category
             if (item.children) {
               flattened = flattened.concat(getFlattenedCategoriesForParentSelection(item.children, excludeId, currentLevel + 1, newLabel));
             }
@@ -778,7 +794,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
       const availableParentsForConfig = useMemo(() => {
         if (!currentItemToEdit) return [];
-        const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree);
+        const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree, currentItemToEdit.id);
         const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
 
         return allPotentialParents.filter(parent =>
@@ -1067,7 +1083,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <SelectItem value="none">Aucun</SelectItem>
                         {availableParentsForConfig.map(item => (
-                          <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>
+                          <SelectItem key={item.id} value={item.id}>
+                            {/* Indent parent options for better hierarchy visualization */}
+                            {Array(item.level).fill('—').join('')} {item.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
