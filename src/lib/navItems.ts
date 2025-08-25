@@ -32,7 +32,8 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         route,
         icon_name,
         description,
-        is_external
+        is_external,
+        type
       )
     `)
     .eq('role', userRole)
@@ -59,6 +60,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         icon_name: config.nav_item.icon_name || undefined,
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
+        type: config.nav_item.type, // <--- ADDED THIS
         children: [], // Initialize empty children array
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index,
@@ -133,6 +135,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     icon_name: item.icon_name || undefined,
     description: item.description || undefined,
     is_external: item.is_external,
+    type: item.type, // <--- ADDED THIS
     children: [], // Children are built dynamically, not stored in raw item
     order_index: 0, // Default order for raw items
     parent_nav_item_id: undefined,
