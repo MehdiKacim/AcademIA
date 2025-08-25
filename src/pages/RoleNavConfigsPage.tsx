@@ -808,7 +808,7 @@ const RoleNavConfigsPage = () => {
       {/* Edit Role Config Dialog */}
       {currentConfigToEdit && currentItemToEdit && (
         <Dialog open={isEditConfigDialogOpen} onOpenChange={setIsEditConfigDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] backdrop-blur-lg bg-background/80">
+          <DialogContent className="sm:max-w-[600px] bg-card z-[100]"> {/* Changed bg-background/80 backdrop-blur-lg to bg-card and added z-[100] */}
             <DialogHeader>
               <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
               <DialogDescription>
@@ -832,17 +832,18 @@ const RoleNavConfigsPage = () => {
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 backdrop-blur-lg bg-background/80">
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card z-[100]"> {/* Changed bg-background/80 backdrop-blur-lg to bg-card and added z-[100] */}
                     <Command>
                       <CommandList>
                         <CommandGroup>
                           <CommandItem
                             value="none"
                             onSelect={() => {
-                              console.log("Selected item: none (root)");
+                              console.log("CommandItem selected: none (root)");
                               setEditConfigParentId(null); // Explicitly set to null for root
                               setOpenEditConfigParentSelect(false);
                             }}
+                            className="cursor-pointer"
                           >
                             <span>Aucun (élément racine)</span>
                           </CommandItem>
@@ -854,11 +855,11 @@ const RoleNavConfigsPage = () => {
                                 key={item.id}
                                 value={item.id} // Use item.id as value
                                 onSelect={() => {
-                                  console.log("Selected item:", item.id, item.label);
+                                  console.log("CommandItem selected:", item.id, item.label);
                                   setEditConfigParentId(item.id);
                                   setOpenEditConfigParentSelect(false);
                                 }}
-                                onMouseUp={() => console.log("CommandItem clicked:", item.id, item.label)}
+                                className="cursor-pointer"
                               >
                                 <div className="flex items-center gap-2">
                                   {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
