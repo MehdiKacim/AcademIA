@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast";
-import { Curriculum, Establishment } from "@/lib/dataModels";
-import { updateCurriculumInStorage, loadEstablishments, getEstablishmentAddress } from "@/lib/courseData";
+import { Curriculum } from "@/lib/dataModels"; // Removed Establishment import
+import { updateCurriculumInStorage } from "@/lib/courseData"; // Removed loadEstablishments, getEstablishmentAddress
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface EditCurriculumDialogProps {
@@ -28,22 +28,16 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
   const { currentUserProfile, currentRole } = useRole(); // Get currentUserProfile and currentRole
   const [name, setName] = useState(curriculum.name);
   const [description, setDescription] = useState(curriculum.description || '');
-  const [establishmentId, setEstablishmentId] = useState(curriculum.establishment_id);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishmentId state
+  // Removed establishments state
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchEstablishments = async () => {
-      setEstablishments(await loadEstablishments());
-    };
-    fetchEstablishments();
-  }, []);
+  // Removed useEffect for fetching establishments
 
   useEffect(() => {
     if (isOpen && curriculum) {
       setName(curriculum.name);
       setDescription(curriculum.description || '');
-      setEstablishmentId(curriculum.establishment_id);
     }
   }, [isOpen, curriculum]);
 
@@ -56,15 +50,8 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
       showError("Le nom du cursus est requis.");
       return;
     }
-    if (!establishmentId) {
-      showError("L'établissement est requis.");
-      return;
-    }
-    // Director/Deputy Director/Professeur can only edit curricula from their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur') && establishmentId !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez modifier des cursus que de votre établissement.");
-      return;
-    }
+    // Removed establishmentId check
+    // Removed role-based establishment_id check
 
     setIsLoading(true);
     try {
@@ -72,8 +59,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
         ...curriculum,
         name: name.trim(),
         description: description.trim() || undefined,
-        establishment_id: establishmentId,
-      };
+      }; // Removed establishment_id
       const savedCurriculum = await updateCurriculumInStorage(updatedCurriculumData);
 
       if (savedCurriculum) {
@@ -91,9 +77,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
     }
   };
 
-  const establishmentsToDisplay = currentRole === 'administrator'
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile?.establishment_id);
+  // Removed establishmentsToDisplay
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -128,27 +112,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="establishment" className="text-right">
-              Établissement
-            </Label>
-            <Select 
-              value={establishmentId} 
-              onValueChange={setEstablishmentId}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur'} // Disable for directors/deputy directors/professors
-            >
-              <SelectTrigger id="establishment" className="col-span-3">
-                <SelectValue placeholder="Sélectionner un établissement" />
-              </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80">
-                {establishmentsToDisplay.map(est => (
-                  <SelectItem key={est.id} value={est.id}>
-                    {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Removed Establishment Select */}
         </div>
         <DialogFooter>
           <Button onClick={handleSave} disabled={isLoading}>

@@ -108,13 +108,13 @@ interface ManageChildrenDialogProps {
   onClose: () => void;
   parentItem: NavItem;
   selectedRoleFilter: Profile['role'];
-  selectedEstablishmentFilter?: string;
+  // Removed selectedEstablishmentFilter
   allGenericNavItems: NavItem[];
   allConfiguredItemsFlat: NavItem[]; // New prop: flat list of all configured items for the current role/establishment
   onChildrenUpdated: () => void;
 }
 
-const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, selectedEstablishmentFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated }: ManageChildrenDialogProps) => {
+const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated }: ManageChildrenDialogProps) => { // Removed selectedEstablishmentFilter
   const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
@@ -213,8 +213,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                 role: selectedRoleFilter,
                 parent_nav_item_id: parentItem.id,
                 order_index: i,
-                establishment_id: selectedEstablishmentFilter || null,
-              };
+              }; // Removed establishment_id
               await updateRoleNavItemConfig(updatedConfig);
             }
           }
@@ -252,8 +251,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         role: selectedRoleFilter,
         parent_nav_item_id: parentItem.id, // Add as child of current parentItem
         order_index: currentChildren.length, // Add to end
-        establishment_id: selectedEstablishmentFilter || null,
-      };
+      }; // Removed establishment_id
       await addRoleNavItemConfig(newConfig);
       showSuccess(`'${genericItem.label}' ajouté comme sous-élément !`);
       onChildrenUpdated(); // Refresh parent tree
@@ -275,7 +273,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
     setIsAddingNewChild(true);
     try {
-      const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
+      const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
         label: newChildLabel.trim(),
         route: newChildRoute.trim(), // Route is now mandatory
         description: newChildDescription.trim() || null,
@@ -290,8 +288,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
           role: selectedRoleFilter,
           parent_nav_item_id: parentItem.id,
           order_index: currentChildren.length,
-          establishment_id: selectedEstablishmentFilter || null,
-        };
+        }; // Removed establishment_id
         await addRoleNavItemConfig(newConfig);
         showSuccess(`'${addedGenericItem.label}' créé et ajouté comme sous-élément !`);
         onChildrenUpdated(); // Refresh parent tree
@@ -339,7 +336,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
               level={0}
               onRemove={onRemove || (() => {})}
               isDragging={activeDragItem?.id === item.id || activeDragItem?.configId === item.configId}
-              isDraggableAndDeletable={isDraggableAndDeletable && (!item.is_global || selectedEstablishmentFilter === undefined)}
+              isDraggableAndDeletable={isDraggableAndDeletable}
             />
           ))}
         </SortableContext>

@@ -9,20 +9,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, UserPlus, UserCheck, Loader2, Check, XCircle, Mail, Search, Edit, Trash2, UserRoundCog, ChevronDown, ChevronUp, Building2, UserX } from "lucide-react";
+import { PlusCircle, UserPlus, UserCheck, Loader2, Check, XCircle, Mail, Search, Edit, Trash2, UserRoundCog, ChevronDown, ChevronUp, Building2, UserX, CalendarDays } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, checkUsernameExists, checkEmailExists, deleteProfile, updateProfile, getProfileById } from '@/lib/studentData';
-import { Profile, Establishment } from '@/lib/dataModels';
+import { Profile } from '@/lib/dataModels'; // Removed Establishment import
 import { supabase } from '@/integrations/supabase/client';
 import InputWithStatus from '@/components/InputWithStatus';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { loadEstablishments } from '@/lib/courseData';
+// Removed loadEstablishments import
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +40,7 @@ const AdminUserManagementPage = () => {
   const navigate = useNavigate(); // Initialize useNavigate
 
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishments state
 
   // States for new user creation form
   const [newUserFirstName, setNewUserFirstName] = useState('');
@@ -48,11 +51,9 @@ const AdminUserManagementPage = () => {
   const [newUserRole, setNewUserRole] = useState<Profile['role']>(
     (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'student'
   );
-  const [newUserEstablishmentId, setNewUserEstablishmentId] = useState<string>(
-    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
-      ? currentUserProfile.establishment_id
-      : ''
-  );
+  // Removed newUserEstablishmentId
+  const [newUserEnrollmentStartDate, setNewUserEnrollmentStartDate] = useState<Date | undefined>(undefined);
+  const [newUserEnrollmentEndDate, setNewUserEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isNewUserFormOpen, setIsNewUserFormOpen] = useState(false);
 
@@ -66,11 +67,7 @@ const AdminUserManagementPage = () => {
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>(
     (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'all'
   );
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>(
-    (currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id
-      ? currentUserProfile.establishment_id
-      : 'all'
-  );
+  // Removed selectedEstablishmentFilter
 
   // States for editing user
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -80,7 +77,9 @@ const AdminUserManagementPage = () => {
   const [editUsername, setEditUsername] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editRole, setEditRole] = useState<Profile['role']>('student');
-  const [editEstablishmentId, setEditEstablishmentId] = useState<string>('');
+  // Removed editEstablishmentId
+  const [editEnrollmentStartDate, setEditEnrollmentStartDate] = useState<Date | undefined>(undefined);
+  const [editEnrollmentEndDate, setEditEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const [editUsernameAvailabilityStatus, setEditUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
@@ -92,7 +91,7 @@ const AdminUserManagementPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       setAllUsers(await getAllProfiles());
-      setEstablishments(await loadEstablishments());
+      // Removed loadEstablishments
     };
     fetchData();
   }, [currentUserProfile]);
@@ -101,23 +100,23 @@ const AdminUserManagementPage = () => {
   useEffect(() => {
     if ((currentRole === 'director' || currentRole === 'deputy_director')) {
       setSelectedRoleFilter('professeur');
-      setSelectedEstablishmentFilter(currentUserProfile?.establishment_id || 'all');
+      // Removed setSelectedEstablishmentFilter
       setNewUserRole('professeur'); // Default new user role for directors
-      setNewUserEstablishmentId(currentUserProfile?.establishment_id || ''); // Default new user establishment for directors
+      // Removed setNewUserEstablishmentId
     } else if (currentRole === 'administrator') { // Admin specific defaults
       setSelectedRoleFilter('all'); // Admin can see all roles by default
-      setSelectedEstablishmentFilter('all'); // Admin can see all establishments by default
+      // Removed setSelectedEstablishmentFilter
       setNewUserRole('director'); // Admin defaults to creating directors
-      setNewUserEstablishmentId(''); // Admin can choose establishment for new director
+      // Removed setNewUserEstablishmentId
     } else { // Professeur/Tutor defaults
       setSelectedRoleFilter('student');
-      setSelectedEstablishmentFilter(currentUserProfile?.establishment_id || 'all');
+      // Removed setSelectedEstablishmentFilter
       setNewUserRole('student');
-      setNewUserEstablishmentId(currentUserProfile?.establishment_id || '');
+      // Removed setNewUserEstablishmentId
     }
-  }, [currentRole, currentUserProfile?.establishment_id]);
+  }, [currentRole, currentUserProfile?.id]); // Changed dependency from establishment_id to id
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed getEstablishmentName
 
   // --- New User Creation Logic ---
   const validateUsername = useCallback(async (username: string, currentUserId?: string) => {
@@ -201,7 +200,9 @@ const AdminUserManagementPage = () => {
     }
 
     let finalNewUserRole = newUserRole;
-    let finalNewUserEstablishmentId = newUserEstablishmentId;
+    // Removed finalNewUserEstablishmentId
+    let finalNewUserEnrollmentStartDate = newUserEnrollmentStartDate;
+    let finalNewUserEnrollmentEndDate = newUserEnrollmentEndDate;
 
     // Role-based creation restrictions and defaults
     if (currentRole === 'director' || currentRole === 'deputy_director') {
@@ -210,31 +211,33 @@ const AdminUserManagementPage = () => {
         showError("Les directeurs ne peuvent créer que des professeurs, tuteurs ou des élèves.");
         return;
       }
-      // Establishment is fixed to their own
-      finalNewUserEstablishmentId = currentUserProfile.establishment_id || '';
-      if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) {
-        showError("Vous ne pouvez créer des utilisateurs que pour votre établissement.");
-        return;
-      }
+      // Removed establishment_id logic for directors
     } else if (currentRole === 'professeur' || currentRole === 'tutor') { // Professors and Tutors can only create students
       if (newUserRole !== 'student') {
         showError("Les professeurs et tuteurs ne peuvent créer que des élèves.");
         return;
       }
-      finalNewUserEstablishmentId = currentUserProfile.establishment_id || '';
-      if (newUserEstablishmentId && newUserEstablishmentId !== currentUserProfile.establishment_id) {
-        showError("Vous ne pouvez créer des élèves que pour votre établissement.");
-        return;
-      }
+      // Removed establishment_id logic for professors/tutors
     } else if (currentRole === 'administrator') {
       // Admin can only create director, deputy_director, or other administrators
       if (!['director', 'deputy_director', 'administrator'].includes(newUserRole)) {
         showError("Les administrateurs ne peuvent créer que des directeurs, directeurs adjoints ou d'autres administrateurs.");
         return;
       }
-      // For admin, if a role that requires establishment is selected, ensure establishment is provided
-      if ((newUserRole === 'director' || newUserRole === 'deputy_director') && !newUserEstablishmentId) {
-        showError("L'établissement est requis pour ce rôle.");
+      // Removed establishment_id requirement for admin
+    }
+
+    // Enrollment dates are only for students
+    if (newUserRole !== 'student') {
+      finalNewUserEnrollmentStartDate = undefined;
+      finalNewUserEnrollmentEndDate = undefined;
+    } else {
+      if (!finalNewUserEnrollmentStartDate || !finalNewUserEnrollmentEndDate) {
+        showError("Les dates de début et de fin d'inscription sont requises pour les élèves.");
+        return;
+      }
+      if (finalNewUserEnrollmentStartDate >= finalNewUserEnrollmentEndDate) {
+        showError("La date de fin d'inscription doit être postérieure à la date de début.");
         return;
       }
     }
@@ -249,7 +252,9 @@ const AdminUserManagementPage = () => {
           last_name: newUserLastName.trim(),
           username: newUserUsername.trim(),
           role: finalNewUserRole,
-          establishment_id: finalNewUserEstablishmentId || undefined, // Pass undefined if empty
+          // Removed establishment_id
+          enrollment_start_date: finalNewUserEnrollmentStartDate ? finalNewUserEnrollmentStartDate.toISOString().split('T')[0] : undefined,
+          enrollment_end_date: finalNewUserEnrollmentEndDate ? finalNewUserEnrollmentEndDate.toISOString().split('T')[0] : undefined,
         },
       });
 
@@ -269,11 +274,9 @@ const AdminUserManagementPage = () => {
         (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 
         (currentRole === 'professeur' || currentRole === 'tutor') ? 'student' : 'director' // Admin defaults to director
       ); // Reset to default based on role
-      setNewUserEstablishmentId(
-        (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && currentUserProfile?.establishment_id
-          ? currentUserProfile.establishment_id
-          : ''
-      ); // Reset to default
+      // Removed setNewUserEstablishmentId
+      setNewUserEnrollmentStartDate(undefined);
+      setNewUserEnrollmentEndDate(undefined);
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
       setAllUsers(await getAllProfiles());
@@ -290,23 +293,15 @@ const AdminUserManagementPage = () => {
   const filteredUsers = React.useMemo(() => {
     let users = allUsers;
 
-    // Filter by current user's establishment if director/deputy director/professeur/tutor
-    if (currentUserProfile && (currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor')) {
-      users = users.filter(u => u.establishment_id === currentUserProfile.establishment_id);
-    } else if (currentRole === 'administrator') {
-      // Admin sees all users by default, then filters by selectedEstablishmentFilter
-    }
-
+    // Removed filtering by current user's establishment
+    
     // Apply role filter
     if (selectedRoleFilter !== 'all') {
       users = users.filter(u => u.role === selectedRoleFilter);
     }
     
-    // Apply establishment filter (only for admin, as others are already filtered by their own establishment)
-    if (currentRole === 'administrator' && selectedEstablishmentFilter !== 'all') {
-      users = users.filter(u => u.establishment_id === selectedEstablishmentFilter);
-    }
-
+    // Removed establishment filter
+    
     if (userListSearchQuery.trim()) {
       const lowerCaseQuery = userListSearchQuery.toLowerCase();
       users = users.filter(u =>
@@ -317,7 +312,7 @@ const AdminUserManagementPage = () => {
       );
     }
     return users;
-  }, [allUsers, selectedRoleFilter, selectedEstablishmentFilter, userListSearchQuery, currentUserProfile, currentRole]);
+  }, [allUsers, selectedRoleFilter, userListSearchQuery, currentUserProfile, currentRole]); // Removed selectedEstablishmentFilter
 
   // --- Edit User Logic ---
   const handleEditUser = (user: Profile) => {
@@ -327,10 +322,7 @@ const AdminUserManagementPage = () => {
     }
     // Restrict directors/deputy directors from editing certain roles or users outside their establishment
     if ((currentRole === 'director' || currentRole === 'deputy_director')) {
-      if (user.establishment_id !== currentUserProfile.establishment_id) {
-        showError("Vous ne pouvez modifier que les utilisateurs de votre établissement.");
-        return;
-      }
+      // Removed establishment_id check for directors
       if (['administrator', 'director', 'deputy_director'].includes(user.role)) {
         showError("Vous ne pouvez pas modifier un administrateur, un directeur ou un directeur adjoint.");
         return;
@@ -349,7 +341,9 @@ const AdminUserManagementPage = () => {
     setEditUsername(user.username || '');
     setEditEmail(user.email || '');
     setEditRole(user.role);
-    setEditEstablishmentId(user.establishment_id || '');
+    // Removed setEditEstablishmentId
+    setEditEnrollmentStartDate(user.enrollment_start_date ? parseISO(user.enrollment_start_date) : undefined);
+    setEditEnrollmentEndDate(user.enrollment_end_date ? parseISO(user.enrollment_end_date) : undefined);
     setEditUsernameAvailabilityStatus('available'); // Assume available initially for existing user
     setEditEmailAvailabilityStatus('available'); // Assume available initially for existing user
     setIsEditDialogOpen(true);
@@ -409,18 +403,12 @@ const AdminUserManagementPage = () => {
 
     // Role-based editing restrictions
     if ((currentRole === 'director' || currentRole === 'deputy_director')) {
-      if (userToEdit.establishment_id !== currentUserProfile.establishment_id) {
-        showError("Vous ne pouvez modifier que les utilisateurs de votre établissement.");
-        return;
-      }
+      // Removed establishment_id check for directors
       if (['administrator', 'director', 'deputy_director'].includes(userToEdit.role)) {
         showError("Vous ne pouvez pas modifier un administrateur, un directeur ou un directeur adjoint.");
         return;
       }
-      if (editEstablishmentId && editEstablishmentId !== currentUserProfile.establishment_id) { // If an establishment is selected, it must be their own
-        showError("Vous ne pouvez pas changer l'établissement d'un utilisateur en dehors du vôtre.");
-        return;
-      }
+      // Removed establishment_id change restriction
       if (!['professeur', 'student', 'tutor'].includes(editRole)) { // Directors can edit students, professeurs, tutors
         showError("Vous ne pouvez attribuer que les rôles de professeur, tuteur ou d'élève.");
         return;
@@ -431,11 +419,7 @@ const AdminUserManagementPage = () => {
         showError("Les administrateurs ne peuvent pas modifier les élèves, professeurs ou tuteurs.");
         return;
       }
-      // Admin can only assign director/deputy director to an establishment
-      if ((editRole === 'director' || editRole === 'deputy_director') && !editEstablishmentId) {
-        showError("L'établissement est requis pour les rôles de directeur et directeur adjoint.");
-        return;
-      }
+      // Removed establishment_id requirement for admin
       // Admin cannot change role to student, professeur, tutor
       if (['student', 'professeur', 'tutor'].includes(editRole)) {
         showError("Les administrateurs ne peuvent pas attribuer les rôles d'élève, professeur ou tuteur.");
@@ -443,10 +427,21 @@ const AdminUserManagementPage = () => {
       }
     }
 
-    // For 'professeur' and 'tutor' roles, establishment_id is still required
-    if ((editRole === 'professeur' || editRole === 'tutor') && !editEstablishmentId) {
-      showError("L'établissement est requis pour les rôles de professeur et tuteur.");
-      return;
+    // Removed establishment_id requirement for 'professeur' and 'tutor' roles
+
+    // Enrollment dates are only for students
+    if (editRole !== 'student') {
+      setEditEnrollmentStartDate(undefined);
+      setEditEnrollmentEndDate(undefined);
+    } else {
+      if (!editEnrollmentStartDate || !editEnrollmentEndDate) {
+        showError("Les dates de début et de fin d'inscription sont requises pour les élèves.");
+        return;
+      }
+      if (editEnrollmentStartDate >= editEnrollmentEndDate) {
+        showError("La date de fin d'inscription doit être postérieure à la date de début.");
+        return;
+      }
     }
 
     setIsSavingEdit(true);
@@ -458,7 +453,9 @@ const AdminUserManagementPage = () => {
         username: editUsername.trim(),
         email: editEmail.trim(),
         role: editRole,
-        establishment_id: editEstablishmentId || undefined, // Pass undefined if empty
+        // Removed establishment_id
+        enrollment_start_date: editEnrollmentStartDate ? editEnrollmentStartDate.toISOString().split('T')[0] : undefined,
+        enrollment_end_date: editEnrollmentEndDate ? editEnrollmentEndDate.toISOString().split('T')[0] : undefined,
       };
 
       const savedProfile = await updateProfile(updatedProfileData);
@@ -519,10 +516,7 @@ const AdminUserManagementPage = () => {
     // Role-based deletion restrictions
     if ((currentRole === 'director' || currentRole === 'deputy_director')) {
       const userToDelete = allUsers.find(u => u.id === userId);
-      if (!userToDelete || userToDelete.establishment_id !== currentUserProfile.establishment_id) {
-        showError("Vous ne pouvez supprimer que les utilisateurs de votre établissement.");
-        return;
-      }
+      // Removed establishment_id check for directors
       if (['administrator', 'director', 'deputy_director'].includes(userRole)) {
         showError("Vous ne pouvez pas supprimer un administrateur, un directeur ou un directeur adjoint.");
         return;
@@ -554,46 +548,8 @@ const AdminUserManagementPage = () => {
   };
 
   const handleUnassignFromEstablishment = async (userId: string, userName: string) => {
-    if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
-      showError("Vous n'êtes pas autorisé à désaffecter des utilisateurs d'un établissement.");
-      return;
-    }
-    const userToUnassign = allUsers.find(u => u.id === userId);
-    if (!userToUnassign) {
-      showError("Utilisateur introuvable.");
-      return;
-    }
-    if (!userToUnassign.establishment_id) {
-      showError("Cet utilisateur n'est pas affecté à un établissement.");
-      return;
-    }
-    // Directors/Deputy Directors can only unassign users from their own establishment
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && userToUnassign.establishment_id !== currentUserProfile.establishment_id) {
-      showError("Vous ne pouvez désaffecter que les utilisateurs de votre établissement.");
-      return;
-    }
-    // Admin cannot unassign student, professeur, tutor roles
-    if (currentRole === 'administrator' && ['student', 'professeur', 'tutor'].includes(userToUnassign.role)) {
-      showError("Les administrateurs ne peuvent pas désaffecter les élèves, professeurs ou tuteurs.");
-      return;
-    }
-
-    if (window.confirm(`Êtes-vous sûr de vouloir désaffecter ${userName} de son établissement ?`)) {
-      try {
-        const updatedProfile: Partial<Profile> = {
-          id: userId,
-          establishment_id: undefined, // Set to undefined to clear the foreign key
-          enrollment_start_date: undefined,
-          enrollment_end_date: undefined,
-        };
-        await updateProfile(updatedProfile);
-        setAllUsers(await getAllProfiles());
-        showSuccess(`${userName} a été désaffecté de son établissement.`);
-      } catch (error: any) {
-        console.error("Error unassigning user from establishment:", error);
-        showError(`Erreur lors de la désaffectation: ${error.message}`);
-      }
-    }
+    showError("La gestion des établissements a été supprimée.");
+    return;
   };
 
   const handleSendMessageToUser = (userId: string) => {
@@ -640,13 +596,7 @@ const AdminUserManagementPage = () => {
     );
   }
 
-  const establishmentsToDisplayForNewUser = currentRole === 'administrator'
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
-
-  const establishmentsToDisplayForFilter = currentRole === 'administrator'
-    ? establishments
-    : establishments.filter(est => est.id === currentUserProfile.establishment_id);
+  // Removed establishmentsToDisplayForNewUser and establishmentsToDisplayForFilter
 
   return (
     <div className="space-y-8">
@@ -709,11 +659,10 @@ const AdminUserManagementPage = () => {
                   value={newUserRole} 
                   onValueChange={(value: Profile['role']) => {
                     setNewUserRole(value);
-                    // Reset establishment_id if role doesn't require it or if it's a director/deputy director/professeur/tutor
-                    if (value === 'student' || value === 'administrator') { // Admin can create other admins without establishment
-                      setNewUserEstablishmentId('');
-                    } else if (['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')) {
-                      setNewUserEstablishmentId(currentUserProfile.establishment_id || '');
+                    // Reset enrollment dates if not a student
+                    if (value !== 'student') {
+                      setNewUserEnrollmentStartDate(undefined);
+                      setNewUserEnrollmentEndDate(undefined);
                     }
                   }}
                   disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')} // Disable if director/professeur/tutor
@@ -734,28 +683,65 @@ const AdminUserManagementPage = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {/* Establishment selection is now conditional based on role and current user's role */}
-                {((newUserRole === 'professeur' || newUserRole === 'tutor') || (currentRole === 'administrator' && (newUserRole === 'director' || newUserRole === 'deputy_director'))) && (
-                  <Select 
-                    value={newUserEstablishmentId || "none"} 
-                    onValueChange={(value) => setNewUserEstablishmentId(value === "none" ? '' : value)}
-                    disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
-                  >
-                    <SelectTrigger id="new-user-establishment">
-                      <SelectValue placeholder="Sélectionner un établissement" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
-                      <SelectItem value="none">Aucun</SelectItem>
-                      {establishmentsToDisplayForNewUser.map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                {/* Removed Establishment selection */}
+                {newUserRole === 'student' && (
+                  <>
+                    <div>
+                      <Label htmlFor="new-user-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !newUserEnrollmentStartDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {newUserEnrollmentStartDate ? format(newUserEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                          <Calendar
+                            mode="single"
+                            selected={newUserEnrollmentStartDate}
+                            onSelect={setNewUserEnrollmentStartDate}
+                            initialFocus
+                            locale={fr}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label htmlFor="new-user-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !newUserEnrollmentEndDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {newUserEnrollmentEndDate ? format(newUserEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                          <Calendar
+                            mode="single"
+                            selected={newUserEnrollmentEndDate}
+                            onSelect={setNewUserEnrollmentEndDate}
+                            initialFocus
+                            locale={fr}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
                 )}
               </div>
-              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || ((newUserRole === 'professeur' || newUserRole === 'tutor' || newUserRole === 'director' || newUserRole === 'deputy_director') && !newUserEstablishmentId && currentRole === 'administrator') || ((newUserRole === 'student') && !newUserEstablishmentId && (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor'))}>
+              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole === 'student' && (!newUserEnrollmentStartDate || !newUserEnrollmentEndDate))}>
                 {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
               </Button>
             </CardContent>
@@ -817,26 +803,7 @@ const AdminUserManagementPage = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-shrink-0 sm:w-1/3">
-              <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
-              <Select 
-                value={selectedEstablishmentFilter} 
-                onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}
-                disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')}
-              >
-                <SelectTrigger id="establishment-filter">
-                  <SelectValue placeholder="Tous les établissements" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
-                  <SelectItem value="all">Tous les établissements</SelectItem>
-                  {establishmentsToDisplayForFilter.map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                          </SelectItem>
-                        ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Removed Establishment Filter */}
           </div>
           <div className="space-y-2">
             {filteredUsers.length === 0 ? (
@@ -850,9 +817,10 @@ const AdminUserManagementPage = () => {
                     <p className="font-medium">{user.first_name} {user.last_name} <span className="text-sm text-muted-foreground">(@{user.username})</span></p>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                     <p className="text-xs text-muted-foreground">Rôle: <span className="font-semibold">{user.role === 'professeur' ? 'Professeur' : user.role === 'student' ? 'Élève' : user.role === 'tutor' ? 'Tuteur' : user.role === 'director' ? 'Directeur' : user.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur (Super Admin)'}</span></p>
-                    {user.establishment_id && (
+                    {/* Removed establishment_id display */}
+                    {user.role === 'student' && user.enrollment_start_date && user.enrollment_end_date && (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Building2 className="h-3 w-3" /> Établissement: {getEstablishmentName(user.establishment_id)}
+                        <CalendarDays className="h-3 w-3" /> Du {format(parseISO(user.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(user.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })}
                       </p>
                     )}
                   </div>
@@ -860,17 +828,11 @@ const AdminUserManagementPage = () => {
                     <Button variant="outline" size="sm" onClick={() => handleSendMessageToUser(user.id)}>
                       <Mail className="h-4 w-4 mr-1" /> Message
                     </Button>
-                    {/* Unassign from Establishment button */}
-                    {user.establishment_id && (currentRole === 'administrator' || ((currentRole === 'director' || currentRole === 'deputy_director') && user.establishment_id === currentUserProfile.establishment_id)) && !['student', 'professeur', 'tutor'].includes(user.role) && ( // Admin cannot unassign student/prof/tutor
-                      <Button variant="outline" size="sm" onClick={() => handleUnassignFromEstablishment(user.id, `${user.first_name} ${user.last_name}`)}>
-                        <UserX className="h-4 w-4 mr-1" /> Désaffecter
-                      </Button>
-                    )}
+                    {/* Removed Unassign from Establishment button */}
                     {/* Edit button visibility and permissions */}
                     {((currentRole === 'administrator' && !['student', 'professeur', 'tutor'].includes(user.role)) || // Admin can edit non-student/prof/tutor
                       ((currentRole === 'director' || currentRole === 'deputy_director') && 
-                       user.establishment_id === currentUserProfile.establishment_id && 
-                       !['administrator', 'director', 'deputy_director'].includes(user.role))) && (
+                       !['administrator', 'director', 'deputy_director'].includes(user.role))) && ( // Directors can edit non-admin/director/deputy_director
                       <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -878,8 +840,7 @@ const AdminUserManagementPage = () => {
                     {/* Delete button visibility and permissions */}
                     {((currentRole === 'administrator' && !['student', 'professeur', 'tutor'].includes(user.role)) || // Admin can delete non-student/prof/tutor
                       ((currentRole === 'director' || currentRole === 'deputy_director') && 
-                       user.establishment_id === currentUserProfile.establishment_id && 
-                       !['administrator', 'director', 'deputy_director'].includes(user.role))) && (
+                       !['administrator', 'director', 'deputy_director'].includes(user.role))) && ( // Directors can delete non-admin/director/deputy_director
                       <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.id, user.role)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -940,11 +901,10 @@ const AdminUserManagementPage = () => {
                   value={editRole} 
                   onValueChange={(value: Profile['role']) => {
                     setEditRole(value);
-                    // Reset establishment_id if role doesn't require it or if it's a director/deputy director
-                    if (value === 'student' || value === 'administrator') {
-                      setEditEstablishmentId('');
-                    } else if (currentRole === 'director' || currentRole === 'deputy_director') {
-                      setEditEstablishmentId(currentUserProfile.establishment_id || '');
+                    // Reset enrollment dates if not a student
+                    if (value !== 'student') {
+                      setEditEnrollmentStartDate(undefined);
+                      setEditEnrollmentEndDate(undefined);
                     }
                   }}
                   disabled={
@@ -978,30 +938,65 @@ const AdminUserManagementPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              {((editRole === 'professeur' || editRole === 'tutor') || (currentRole === 'administrator' && (editRole === 'director' || editRole === 'deputy_director'))) && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="editEstablishment" className="text-right">Établissement</Label>
-                  <Select 
-                    value={editEstablishmentId || "none"} 
-                    onValueChange={(value) => setEditEstablishmentId(value === "none" ? '' : value)} 
-                    disabled={currentRole === 'director' || currentRole === 'deputy_director'}
-                  >
-                    <SelectTrigger id="editEstablishment" className="col-span-3">
-                      <SelectValue placeholder="Sélectionner un établissement" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
-                      <SelectItem value="none">Aucun</SelectItem>
-                      {establishmentsToDisplayForNewUser.map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name} {est.address && <span className="italic text-muted-foreground">({est.address})</span>}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Removed Establishment Select */}
+              {editRole === 'student' && (
+                <>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="editEnrollmentStartDate" className="text-right">Début inscription</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "col-span-3 justify-start text-left font-normal",
+                            !editEnrollmentStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {editEnrollmentStartDate ? format(editEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                        <Calendar
+                          mode="single"
+                          selected={editEnrollmentStartDate}
+                          onSelect={setEditEnrollmentStartDate}
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="editEnrollmentEndDate" className="text-right">Fin inscription</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "col-span-3 justify-start text-left font-normal",
+                            !editEnrollmentEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {editEnrollmentEndDate ? format(editEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                        <Calendar
+                          mode="single"
+                          selected={editEnrollmentEndDate}
+                          onSelect={setEditEnrollmentEndDate}
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </>
               )}
             </div>
-            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || ((editRole === 'professeur' || editRole === 'tutor' || editRole === 'director' || editRole === 'deputy_director') && !editEstablishmentId && currentRole === 'administrator')}>
+            <Button onClick={handleSaveEditedUser} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || (editRole === 'student' && (!editEnrollmentStartDate || !editEnrollmentEndDate))}>
               {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
             </Button>
           </DialogContent>

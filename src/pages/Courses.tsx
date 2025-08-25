@@ -88,23 +88,12 @@ const Courses = () => {
 
   const renderCoursesContent = () => {
     if (currentRole === 'student') {
-      if (!currentUserProfile?.establishment_id) { // Changed from class_id to establishment_id
-        return (
-          <div className="text-center py-20">
-            <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-              Cours non accessibles
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Vous n'êtes pas encore affecté à un établissement. Veuillez contacter votre administrateur.
-            </p>
-          </div>
-        );
-      }
+      // Removed establishment_id check
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Voici les cours disponibles. Cliquez sur un cours pour voir sa progression par modules.</p>
           {coursesToDisplay.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche ou accessible via votre établissement.</p>
+            <p className="text-muted-foreground text-center py-4">Aucun cours trouvé pour votre recherche.</p>
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => {

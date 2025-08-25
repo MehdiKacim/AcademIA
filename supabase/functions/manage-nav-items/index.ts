@@ -20,7 +20,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
     { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false }, parentLabel: 'Système' },
     { item: { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false }, parentLabel: 'Système' },
     { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false }, parentLabel: 'Système' },
-    { item: { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false }, parentLabel: 'Système' },
+    // Removed 'Gestion des Établissements'
     { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false }, parentLabel: 'Système' },
     { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false }, parentLabel: 'Système' },
     { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false }, parentLabel: 'Système' },
@@ -62,7 +62,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
   director: [
     { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
     { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false } },
-    { item: { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false } },
+    // Removed 'Gestion des Établissements'
     { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false } },
     { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false } },
     { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
@@ -71,14 +71,14 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
     { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
     { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
     { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } }, // Changed view
     { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
     { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
   ],
   deputy_director: [
     { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
     { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false } },
-    { item: { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false } },
+    // Removed 'Gestion des Établissements'
     { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false } },
     { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false } },
     { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
@@ -87,7 +87,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
     { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
     { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
     { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
-    { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } }, // Changed view
     { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
     { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
   ],
@@ -172,8 +172,8 @@ serve(async (req) => {
           .eq('id', payload.id));
         break;
       case 'bootstrap_defaults':
-        const { role: bootstrapRole, establishment_id: bootstrapEstablishmentId } = payload;
-        console.log(`[Edge Function] Bootstrapping defaults for role: ${bootstrapRole}, establishment: ${bootstrapEstablishmentId}`);
+        const { role: bootstrapRole } = payload; // Removed establishment_id
+        console.log(`[Edge Function] Bootstrapping defaults for role: ${bootstrapRole}`);
 
         const defaultItemsForRole = DEFAULT_NAV_ITEMS_BY_ROLE[bootstrapRole];
         if (!defaultItemsForRole || defaultItemsForRole.length === 0) {
@@ -183,12 +183,11 @@ serve(async (req) => {
           });
         }
 
-        // Step 1: Delete existing configs for this role and establishment to ensure a clean slate
+        // Step 1: Delete existing configs for this role to ensure a clean slate
         const { error: deleteConfigsError } = await supabaseAdminClient
           .from('role_nav_configs')
           .delete()
-          .eq('role', bootstrapRole)
-          .eq('establishment_id', bootstrapEstablishmentId); // Use eq for establishment_id
+          .eq('role', bootstrapRole);
 
         if (deleteConfigsError) {
           console.error(`[Edge Function] Error deleting existing role nav configs for ${bootstrapRole}:`, deleteConfigsError);
@@ -301,7 +300,7 @@ serve(async (req) => {
               role: bootstrapRole,
               parent_nav_item_id: item.parent_nav_item_id || null, // Ensure null for root items
               order_index: item.order_index,
-              establishment_id: bootstrapEstablishmentId || null, // Use provided establishment_id
+              // Removed establishment_id
             });
             if (item.children) {
               flattenTree(item.children);
@@ -323,6 +322,39 @@ serve(async (req) => {
         }
         data = configsInsertResult;
         console.log(`[Edge Function] Inserted ${configsInsertResult.length} new role nav configs for role ${bootstrapRole}.`);
+        break;
+      case 'create_config': // New action for creating role_nav_configs
+        ({ data, error } = await supabaseAdminClient
+          .from('role_nav_configs')
+          .insert(payload)
+          .select()
+          .single());
+        break;
+      case 'update_config': // New action for updating role_nav_configs
+        ({ data, error } = await supabaseAdminClient
+          .from('role_nav_configs')
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq('id', payload.id)
+          .select()
+          .single());
+        break;
+      case 'delete_config': // New action for deleting role_nav_configs
+        ({ data, error } = await supabaseAdminClient
+          .from('role_nav_configs')
+          .delete()
+          .eq('id', payload.id));
+        break;
+      case 'reset_nav_items': // New action for resetting nav_items
+        ({ data, error } = await supabaseAdminClient.from('nav_items').delete().neq('id', '00000000-0000-0000-0000-000000000000'));
+        break;
+      case 'reset_role_nav_configs': // New action for resetting role_nav_configs
+        ({ data, error } = await supabaseAdminClient.from('role_nav_configs').delete().neq('id', '00000000-0000-0000-0000-000000000000'));
+        break;
+      case 'reset_role_nav_configs_for_role': // New action for resetting role_nav_configs for a specific role
+        ({ data, error } = await supabaseAdminClient
+          .from('role_nav_configs')
+          .delete()
+          .eq('role', payload.role));
         break;
       default:
         return new Response(JSON.stringify({ error: 'Invalid action.' }), {

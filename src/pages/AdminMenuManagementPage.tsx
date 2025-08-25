@@ -10,7 +10,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
     import { Input } from "@/components/ui/input";
     import { Label } from "@/components/ui/label";
     import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2 } from "lucide-react";
-    import { NavItem, Profile, RoleNavItemConfig, Establishment } from "@/lib/dataModels"; // Import RoleNavItemConfig, Establishment
+    import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels"; // Import RoleNavItemConfig
     import { showSuccess, showError } from "@/utils/toast";
     import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems"; // Use new functions
     import { useRole } from '@/contexts/RoleContext';
@@ -45,7 +45,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       DialogFooter,
     } from "@/components/ui/dialog";
     import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
-    import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+    // Removed import for loadEstablishments
     import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'; // Import ContextMenu
     import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog'; // Import new dialog
     import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
@@ -101,8 +101,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         role: selectedRoleFilter as Profile['role'],
         parent_nav_item_id: item.parent_nav_item_id,
         order_index: item.order_index,
-        establishment_id: item.establishment_id,
-      } : undefined;
+      } : undefined; // Removed establishment_id
 
       const hasChildren = item.children && item.children.length > 0;
 
@@ -195,11 +194,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]); // Configured items for selected role
       const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]); // Flat list of configured items
       const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
-      const [establishments, setEstablishments] = useState<Establishment[]>([]); // All establishments
+      // Removed establishments state
 
       // State for global role filter
       const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
-      const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // New: Filter by establishment
+      // Removed selectedEstablishmentFilter
 
       // States for new generic item form
       const [newItemLabel, setNewItemLabel] = useState('');
@@ -224,7 +223,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
       const [editConfigParentId, setEditConfigParentId] = useState<string | undefined>(undefined);
       const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
-      const [editConfigEstablishmentId, setEditConfigEstablishmentId] = useState<string | undefined>(undefined); // New: for editing config
+      // Removed editConfigEstablishmentId
       const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false);
 
       // States for managing children dialog
@@ -250,12 +249,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
       const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
 
-      useEffect(() => {
-        const fetchEstablishments = async () => {
-          setEstablishments(await loadEstablishments());
-        };
-        fetchEstablishments();
-      }, []);
+      // Removed useEffect for fetching establishments
 
       // Helper to find an item in the tree by its configId or id
       const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
@@ -294,8 +288,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           setAllConfiguredItemsFlat([]); // Clear flat list too
         } else {
           const role = selectedRoleFilter as Profile['role'];
-          const establishmentId = selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter;
-          const roleConfigs = await getRoleNavItemConfigsByRole(role, establishmentId);
+          const roleConfigs = await getRoleNavItemConfigsByRole(role); // Removed establishmentId
 
           const configuredMap = new Map<string, NavItem>();
           const allConfiguredItemsFlatList: NavItem[] = []; // Use a temporary list
@@ -312,8 +305,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 configId: config.id,
                 parent_nav_item_id: config.parent_nav_item_id || undefined,
                 order_index: config.order_index, // Now mandatory, should always be a number from DB
-                establishment_id: config.establishment_id || undefined,
-                is_global: config.establishment_id === null, // Indicate if it's a global config
+                is_global: true, // All items are global now
               };
               configuredMap.set(configuredItem.id, configuredItem);
               allConfiguredItemsFlatList.push(configuredItem); // Add to temporary flat list
@@ -344,8 +336,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                   role: role,
                   parent_nav_item_id: parentId,
                   order_index: i,
-                  establishment_id: item.establishment_id,
-                };
+                }; // Removed establishment_id
                 await updateRoleNavItemConfig(updatedConfig); // Update DB
                 item.order_index = i; // Update local item
                 item.parent_nav_item_id = parentId; // Update local item
@@ -375,7 +366,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           setConfiguredItemsTree(finalRootItems);
           console.log("[AdminMenuManagementPage] Configured items tree rebuilt:", finalRootItems);
         }
-      }, [selectedRoleFilter, selectedEstablishmentFilter, findItemInTree, getDescendantIds]);
+      }, [selectedRoleFilter, findItemInTree, getDescendantIds]); // Removed selectedEstablishmentFilter
 
       useEffect(() => {
         fetchAndStructureNavItems();
@@ -389,7 +380,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         setIsAddingItem(true);
         try {
-          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
+          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
             label: newItemLabel.trim(),
             route: newItemRoute.trim() || null,
             description: newItemDescription.trim() || null,
@@ -406,8 +397,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: null, // Add as a root item
               order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length, // Add to end of root items
-              establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter, // Use selected establishment
-            };
+            }; // Removed establishment_id
             await addRoleNavItemConfig(newConfig);
             showSuccess("Configuration de rôle ajoutée pour le nouvel élément !");
           }
@@ -431,10 +421,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const handleDeleteGenericNavItem = async (navItemId: string, configId?: string) => {
         if (selectedRoleFilter !== 'all' && configId) {
           const configToDelete = configuredItemsTree.find(item => item.configId === configId);
-          if (configToDelete?.is_global && selectedEstablishmentFilter !== 'all') {
-            showError("Vous ne pouvez pas supprimer une configuration globale depuis un établissement spécifique.");
-            return;
-          }
           if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette configuration de rôle pour l'élément ? Cela ne supprimera pas l'élément générique lui-même.`)) {
             try {
               await deleteRoleNavItemConfig(configId);
@@ -478,7 +464,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         setIsSavingEdit(true);
         try {
-          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
+          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
             id: currentItemToEdit.id,
             label: editItemLabel.trim(),
             route: editItemRoute.trim() || null,
@@ -500,10 +486,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       };
 
       const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
-        if (config.is_global && selectedEstablishmentFilter !== 'all') {
-          showError("Vous ne pouvez pas modifier une configuration globale depuis un établissement spécifique.");
-          return;
-        }
         setCurrentItemToEdit(item); // Keep generic item context
         setCurrentConfigToEdit(config);
         // Set editConfigParentInput for display in the PopoverTrigger
@@ -511,7 +493,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         // Set editConfigParentId for the actual ID value
         setEditConfigParentId(config.parent_nav_item_id || undefined);
         setEditConfigOrderIndex(config.order_index);
-        setEditConfigEstablishmentId(config.establishment_id || undefined); // Set establishment_id for editing
         setIsEditConfigDialogOpen(true);
         setOpenEditConfigParentSelect(false); // Ensure it's closed initially
       };
@@ -526,7 +507,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
           if (!parentItem) {
             // If not found, it means the user typed a new category name, so create it
-            const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
+            const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
               label: editConfigParentInput.trim(),
               route: null, // It's a category
               description: `Catégorie générée automatiquement pour '${editConfigParentInput.trim()}'`,
@@ -565,8 +546,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             role: currentConfigToEdit.role,
             parent_nav_item_id: finalParentId,
             order_index: editConfigOrderIndex,
-            establishment_id: editConfigEstablishmentId === 'all' ? null : editConfigEstablishmentId, // Save establishment_id
-          };
+          }; // Removed establishment_id
           console.log("[AdminMenuManagementPage] Saving updated config:", updatedConfigData);
           await updateRoleNavItemConfig(updatedConfigData);
           showSuccess("Configuration de rôle mise à jour !");
@@ -594,8 +574,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             role: selectedRoleFilter as Profile['role'],
             parent_nav_item_id: configuredItem.parent_nav_item_id,
             order_index: configuredItem.order_index,
-            establishment_id: configuredItem.establishment_id,
-          };
+          }; // Removed establishment_id
           setActiveDragItem(configuredItem);
           setActiveDragConfig(config);
         } else {
@@ -618,12 +597,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         const overId = over.id as string;
 
         try {
-          // Prevent dragging/dropping global items when viewing a specific establishment
-          if (activeDragItem.is_global && selectedEstablishmentFilter !== 'all') {
-            showError("Vous ne pouvez pas déplacer ou modifier une configuration globale depuis un établissement spécifique.");
-            return;
-          }
-
           let newParentNavItemId: string | null = null;
           let newOrderIndex: number = 0;
 
@@ -719,8 +692,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             ...activeDragConfig,
             parent_nav_item_id: newParentNavItemId,
             order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
-            establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
-          };
+          }; // Removed establishment_id
           console.log("[handleDragEnd] Updating config with:", updatedConfig);
           await updateRoleNavItemConfig(updatedConfig);
           showSuccess("Élément de navigation réorganisé/déplacé !");
@@ -762,7 +734,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     onDelete={handleDeleteGenericNavItem}
                     onManageChildren={handleManageChildren} // Pass the new handler
                     isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
-                    isDraggableAndDeletable={!item.is_global || selectedEstablishmentFilter === 'all'}
+                    isDraggableAndDeletable={true} // All items are draggable now
                     selectedRoleFilter={selectedRoleFilter} // Pass selectedRoleFilter
                     isExpanded={!!expandedItems[item.id]} // Pass expansion state
                     onToggleExpand={toggleExpand} // Pass toggle function
@@ -858,7 +830,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               <CardTitle className="flex items-center gap-2">
                 <UserRoundCog className="h-6 w-6 text-primary" /> Configurer les menus par rôle
               </CardTitle>
-              <CardDescription>Sélectionnez un rôle et un établissement pour voir et gérer les éléments de menu qui lui sont associés.</CardDescription>
+              <CardDescription>Sélectionnez un rôle pour voir et gérer les éléments de menu qui lui sont associés.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -882,22 +854,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="establishment-filter">Établissement</Label>
-                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)} disabled={selectedRoleFilter === 'all'}>
-                  <SelectTrigger id="establishment-filter">
-                    <SelectValue placeholder="Tous les établissements (Global)" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
-                    <SelectItem value="all">Tous les établissements (Global)</SelectItem>
-                    {establishments.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Removed Establishment Filter */}
             </CardContent>
           </Card>
 
@@ -972,7 +929,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {selectedRoleFilter}
-                    {selectedEstablishmentFilter !== 'all' && ` (${establishments.find(e => e.id === selectedEstablishmentFilter)?.name || 'Global'})`}
                   </CardTitle>
                   <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
                 </CardHeader>
@@ -989,7 +945,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                           onDelete={handleDeleteGenericNavItem}
                           onManageChildren={handleManageChildren}
                           isDragging={true}
-                          isDraggableAndDeletable={!activeDragItem.is_global || selectedEstablishmentFilter === 'all'}
+                          isDraggableAndDeletable={true}
                           selectedRoleFilter={selectedRoleFilter}
                           isExpanded={false} // Drag overlay is never expanded
                           onToggleExpand={() => {}} // No-op for drag overlay
@@ -1153,22 +1109,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
                     <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="col-span-3" />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-config-establishment" className="text-right">Établissement</Label>
-                    <Select value={editConfigEstablishmentId || "all"} onValueChange={(value) => setEditConfigEstablishmentId(value === "all" ? undefined : value)} disabled={currentConfigToEdit.is_global}>
-                      <SelectTrigger id="edit-config-establishment" className="col-span-3">
-                        <SelectValue placeholder="Tous les établissements (Global)" />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80">
-                        <SelectItem value="all">Tous les établissements (Global)</SelectItem>
-                        {establishments.map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Removed Establishment Select */}
                 </div>
                 <DialogFooter>
                   <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingConfigEdit}>
@@ -1186,7 +1127,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               onClose={() => setIsManageChildrenDialogOpen(false)}
               parentItem={selectedParentForChildrenManagement}
               selectedRoleFilter={selectedRoleFilter as Profile['role']}
-              selectedEstablishmentFilter={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter}
               allGenericNavItems={allGenericNavItems}
               allConfiguredItemsFlat={allConfiguredItemsFlat} // Pass the flat list of configured items
               onChildrenUpdated={fetchAndStructureNavItems} // Callback to refresh the main tree

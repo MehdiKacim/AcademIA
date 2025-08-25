@@ -7,11 +7,10 @@ import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import Ro
  * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
  * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
  * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
- * @param establishmentId L'ID de l'établissement de l'utilisateur (optionnel).
  * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
  */
-export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0, establishmentId?: string): Promise<NavItem[]> => {
-  console.log(`[loadNavItems] Called with userRole: ${userRole}, unreadMessagesCount: ${unreadMessagesCount}, establishmentId: ${establishmentId}`);
+export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
+  console.log(`[loadNavItems] Called with userRole: ${userRole}, unreadMessagesCount: ${unreadMessagesCount}`);
 
   if (!userRole) {
     console.log("[loadNavItems] No user role, returning empty array.");
@@ -27,7 +26,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
       role,
       parent_nav_item_id,
       order_index,
-      establishment_id,
       nav_item:nav_items!role_nav_configs_nav_item_id_fkey (
         id,
         label,
@@ -39,13 +37,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     `)
     .eq('role', userRole)
     .order('order_index', { ascending: true });
-
-  // Filter by establishment_id if provided and not 'all'
-  if (establishmentId) {
-    query = query.or(`establishment_id.eq.${establishmentId},establishment_id.is.null`);
-  } else {
-    query = query.is('establishment_id', null); // Only global items if no establishment is selected
-  }
 
   const { data: fetchedConfigs, error: configsError } = await query;
 
@@ -72,8 +63,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index,
         configId: config.id,
-        establishment_id: config.establishment_id || undefined,
-        is_global: config.establishment_id === null,
+        is_global: true, // All items are global now
       };
       navItemNodes.set(navItem.id, navItem);
     } else {
@@ -146,8 +136,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     children: [], // Children are built dynamically, not stored in raw item
     order_index: 0, // Default order for raw items
     parent_nav_item_id: undefined,
-    establishment_id: undefined,
-    is_global: false,
+    is_global: true, // All items are global now
   }));
 };
 
@@ -156,7 +145,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  * @param newItem Les données du nouvel élément de navigation.
  * @returns L'élément de navigation ajouté.
  */
-export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global' | 'establishment_id'>): Promise<NavItem | null> => {
+export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'create', payload: newItem },
   });
@@ -173,7 +162,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
  * @param updatedItem Les données de l'élément de navigation à mettre à jour.
  * @returns L'élément de navigation mis à jour.
  */
-export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global' | 'establishment_id'>): Promise<NavItem | null> => {
+export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'update', payload: updatedItem },
   });
@@ -203,21 +192,14 @@ export const deleteNavItem = async (navItemId: string): Promise<void> => {
 /**
  * Récupère les configurations de navigation pour un rôle donné.
  * @param role Le rôle de l'utilisateur.
- * @param establishmentId L'ID de l'établissement (optionnel).
  * @returns Un tableau de configurations de navigation.
  */
-export const getRoleNavItemConfigsByRole = async (role: Profile['role'], establishmentId?: string): Promise<RoleNavItemConfig[]> => {
+export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promise<RoleNavItemConfig[]> => {
   let query = supabase
     .from('role_nav_configs')
     .select('*')
     .eq('role', role)
     .order('order_index', { ascending: true });
-
-  if (establishmentId) {
-    query = query.or(`establishment_id.eq.${establishmentId},establishment_id.is.null`);
-  } else {
-    query = query.is('establishment_id', null);
-  }
 
   const { data, error } = await query;
 
@@ -304,10 +286,10 @@ export const resetRoleNavConfigs = async (): Promise<void> => {
 };
 
 // New helper function to delete role_nav_configs for a specific role
-export const resetRoleNavConfigsForRole = async (role: Profile['role'], establishmentId?: string): Promise<void> => {
-  console.warn(`[resetRoleNavConfigsForRole] Deleting all role_nav_configs for role: ${role} and establishment: ${establishmentId}`);
+export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise<void> => { // Removed establishmentId
+  console.warn(`[resetRoleNavConfigsForRole] Deleting all role_nav_configs for role: ${role}`);
   const { error } = await supabase.functions.invoke('manage-nav-items', {
-    body: { action: 'reset_role_nav_configs_for_role', payload: { role, establishment_id: establishmentId } }, // New action for reset
+    body: { action: 'reset_role_nav_configs_for_role', payload: { role } }, // Removed establishment_id
   });
   if (error) {
     console.error(`Error resetting role nav configs for role ${role} via Edge Function:`, error);
@@ -318,12 +300,11 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role'], establis
 /**
  * Déclenche l'initialisation des éléments de navigation par défaut pour un rôle via une fonction Edge.
  * @param role Le rôle pour lequel initialiser les menus.
- * @param establishmentId L'ID de l'établissement (optionnel, null pour global).
  */
-export const bootstrapDefaultNavItemsForRole = async (role: Profile['role'], establishmentId?: string): Promise<void> => {
-  console.log(`[bootstrapDefaultNavItemsForRole] Triggering Edge Function to bootstrap defaults for role: ${role}, establishment: ${establishmentId}`);
+export const bootstrapDefaultNavItemsForRole = async (role: Profile['role']): Promise<void> => { // Removed establishmentId
+  console.log(`[bootstrapDefaultNavItemsForRole] Triggering Edge Function to bootstrap defaults for role: ${role}`);
   const { error } = await supabase.functions.invoke('manage-nav-items', {
-    body: { action: 'bootstrap_defaults', payload: { role, establishment_id: establishmentId || null } },
+    body: { action: 'bootstrap_defaults', payload: { role } }, // Removed establishment_id
   });
   if (error) {
     console.error(`[bootstrapDefaultNavItemsForRole] Error bootstrapping default nav items via Edge Function for role ${role}:`, error);

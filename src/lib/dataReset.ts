@@ -1,4 +1,4 @@
-import { resetCourses, resetCurricula, resetEstablishments, resetClasses, resetSubjects, resetClassSubjects, resetProfessorSubjectAssignments, resetSchoolYears } from "./courseData";
+import { resetCourses, resetCurricula, resetClasses, resetSubjects, resetClassSubjects, resetProfessorSubjectAssignments, resetSchoolYears } from "./courseData";
     import { resetProfiles, resetStudentCourseProgress, resetStudentClassEnrollments } from "./studentData"; // Import resetStudentClassEnrollments
     import { resetNotes } from "./notes";
     import { resetNavItems, resetRoleNavConfigs } from "./navItems"; // Import resetRoleNavConfigs
@@ -15,7 +15,7 @@ import { resetCourses, resetCurricula, resetEstablishments, resetClasses, resetS
       await resetClasses();
       await resetSubjects(); // New: Reset subjects
       await resetSchoolYears(); // New: Reset school years
-      await resetEstablishments();
+      // Removed resetEstablishments();
       await resetProfiles(); // Reset profiles last, as other tables might reference it
       await resetRoleNavConfigs(); // New: Reset role nav configs
       await resetNavItems(); // New: Reset nav items

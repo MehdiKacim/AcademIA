@@ -1,4 +1,4 @@
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Establishment, Class, StudentClassEnrollment, EstablishmentType, Subject, ClassSubject, ProfessorSubjectAssignment, SchoolYear } from "./dataModels";
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Curriculum, Class, StudentClassEnrollment, Subject, ClassSubject, ProfessorSubjectAssignment, SchoolYear } from "./dataModels";
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 import { format, addYears, subYears } from 'date-fns'; // Import date-fns for date manipulation
 
@@ -221,7 +221,6 @@ export const loadCurricula = async (): Promise<Curriculum[]> => {
     id: curriculum.id,
     name: curriculum.name,
     description: curriculum.description || undefined,
-    establishment_id: curriculum.establishment_id,
     course_ids: curriculum.course_ids || [],
     created_at: curriculum.created_at || undefined,
   }));
@@ -233,7 +232,6 @@ export const addCurriculumToStorage = async (newCurriculum: Omit<Curriculum, 'id
     .insert({
       name: newCurriculum.name,
       description: newCurriculum.description,
-      establishment_id: newCurriculum.establishment_id,
       course_ids: newCurriculum.course_ids,
     })
     .select()
@@ -246,7 +244,6 @@ export const addCurriculumToStorage = async (newCurriculum: Omit<Curriculum, 'id
     id: data.id,
     name: data.name,
     description: data.description || undefined,
-    establishment_id: data.establishment_id,
     course_ids: data.course_ids || [],
     created_at: data.created_at || undefined,
   };
@@ -258,7 +255,6 @@ export const updateCurriculumInStorage = async (updatedCurriculum: Curriculum): 
     .update({
       name: updatedCurriculum.name,
       description: updatedCurriculum.description,
-      establishment_id: updatedCurriculum.establishment_id,
       course_ids: updatedCurriculum.course_ids,
       updated_at: new Date().toISOString(), // Add updated_at if your table has it
     })
@@ -273,7 +269,6 @@ export const updateCurriculumInStorage = async (updatedCurriculum: Curriculum): 
     id: data.id,
     name: data.name,
     description: data.description || undefined,
-    establishment_id: data.establishment_id,
     course_ids: data.course_ids || [],
     created_at: data.created_at || undefined,
   };
@@ -290,109 +285,12 @@ export const deleteCurriculumFromStorage = async (curriculumId: string): Promise
   }
 };
 
-// --- Establishment Management ---
-export const loadEstablishments = async (): Promise<Establishment[]> => {
-  const { data, error } = await supabase
-    .from('establishments')
-    .select('*');
-  if (error) {
-    console.error("Error loading establishments:", error);
-    return [];
-  }
-  return data.map(establishment => ({
-    id: establishment.id,
-    name: establishment.name,
-    type: establishment.type as EstablishmentType,
-    address: establishment.address || undefined, // Now optional
-    phone_number: establishment.phone_number || undefined,
-    director_id: establishment.director_id || undefined, // Now optional
-    deputy_director_id: establishment.deputy_director_id || undefined, // Now optional
-    contact_email: establishment.contact_email || undefined,
-    created_at: establishment.created_at || undefined,
-  }));
-};
-
-export const addEstablishmentToStorage = async (newEstablishment: Omit<Establishment, 'id' | 'created_at'>): Promise<Establishment | null> => {
-  const { data, error } = await supabase
-    .from('establishments')
-    .insert({
-      name: newEstablishment.name,
-      type: newEstablishment.type,
-      address: newEstablishment.address || null, // Pass null if undefined
-      phone_number: newEstablishment.phone_number || null, // Pass null if undefined
-      director_id: newEstablishment.director_id || null, // Pass null if undefined
-      deputy_director_id: newEstablishment.deputy_director_id || null, // Pass null if undefined
-      contact_email: newEstablishment.contact_email || null,
-    })
-    .select()
-    .single();
-  if (error) {
-    console.error("Error adding establishment:", error);
-    throw error;
-  }
-  return {
-    id: data.id,
-    name: data.name,
-    type: data.type as EstablishmentType,
-    address: data.address || undefined,
-    phone_number: data.phone_number || undefined,
-    director_id: data.director_id || undefined,
-    deputy_director_id: data.deputy_director_id || undefined,
-    contact_email: data.contact_email || undefined,
-    created_at: data.created_at || undefined,
-  };
-};
-
-export const updateEstablishmentInStorage = async (updatedEstablishment: Establishment): Promise<Establishment | null> => {
-  const { data, error } = await supabase
-    .from('establishments')
-    .update({
-      name: updatedEstablishment.name,
-      type: updatedEstablishment.type,
-      address: updatedEstablishment.address || null, // Pass null if undefined
-      phone_number: updatedEstablishment.phone_number || null, // Pass null if undefined
-      director_id: updatedEstablishment.director_id || null, // Pass null if undefined
-      deputy_director_id: updatedEstablishment.deputy_director_id || null, // Pass null if undefined
-      contact_email: updatedEstablishment.contact_email || null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', updatedEstablishment.id)
-    .select()
-    .single();
-  if (error) {
-    console.error("Error updating establishment:", error);
-    throw error;
-  }
-  return {
-    id: data.id,
-    name: data.name,
-    type: data.type as EstablishmentType,
-    address: data.address || undefined,
-    phone_number: data.phone_number || undefined,
-    director_id: data.director_id || undefined,
-    deputy_director_id: data.deputy_director_id || undefined,
-    contact_email: data.contact_email || undefined,
-    created_at: data.created_at || undefined,
-  };
-};
-
-export const deleteEstablishmentFromStorage = async (establishmentId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('establishments')
-    .delete()
-    .eq('id', establishmentId);
-  if (error) {
-    console.error("Error deleting establishment:", error);
-    throw error;
-  }
-};
+// --- Establishment Management (Removed) ---
+// Removed loadEstablishments, addEstablishmentToStorage, updateEstablishmentInStorage, deleteEstablishmentFromStorage
 
 // --- Subject Management (New) ---
-export const loadSubjects = async (establishmentId?: string): Promise<Subject[]> => {
+export const loadSubjects = async (): Promise<Subject[]> => { // Removed establishmentId parameter
   let query = supabase.from('subjects').select('*');
-  if (establishmentId) {
-    query = query.eq('establishment_id', establishmentId);
-  }
   const { data, error } = await query;
   if (error) {
     console.error("Error loading subjects:", error);
@@ -454,7 +352,6 @@ export const loadClasses = async (): Promise<Class[]> => {
     name: cls.name,
     curriculum_id: cls.curriculum_id,
     creator_ids: cls.creator_ids || [],
-    establishment_id: cls.establishment_id || undefined,
     school_year_id: cls.school_year_id,
     school_year_name: cls.school_years?.name, // For convenience
     created_at: cls.created_at || undefined,
@@ -468,7 +365,6 @@ export const addClassToStorage = async (newClass: Omit<Class, 'id' | 'created_at
       name: newClass.name,
       curriculum_id: newClass.curriculum_id,
       creator_ids: newClass.creator_ids,
-      establishment_id: newClass.establishment_id,
       school_year_id: newClass.school_year_id,
     })
     .select('*, school_years(name)')
@@ -482,7 +378,6 @@ export const addClassToStorage = async (newClass: Omit<Class, 'id' | 'created_at
     name: data.name,
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
-    establishment_id: data.establishment_id || undefined,
     school_year_id: data.school_year_id,
     school_year_name: (data as any).school_years?.name,
     created_at: data.created_at || undefined,
@@ -496,7 +391,6 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
       name: updatedClass.name,
       curriculum_id: updatedClass.curriculum_id,
       creator_ids: updatedClass.creator_ids,
-      establishment_id: updatedClass.establishment_id,
       school_year_id: updatedClass.school_year_id,
       updated_at: new Date().toISOString(),
     })
@@ -512,7 +406,6 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
     name: data.name,
     curriculum_id: data.curriculum_id,
     creator_ids: data.creator_ids || [],
-    establishment_id: data.establishment_id || undefined,
     school_year_id: data.school_year_id,
     school_year_name: (data as any).school_years?.name,
     created_at: data.created_at || undefined,
@@ -744,19 +637,8 @@ export const deleteSchoolYear = async (schoolYearId: string): Promise<void> => {
   }
 };
 
-// New helper function to get establishment address by ID
-export const getEstablishmentAddress = async (establishmentId: string): Promise<string | undefined> => {
-  const { data, error } = await supabase
-    .from('establishments')
-    .select('address')
-    .eq('id', establishmentId)
-    .single();
-  if (error) {
-    console.error("Error fetching establishment address:", error);
-    return undefined;
-  }
-  return data?.address || undefined;
-};
+// New helper function to get establishment address by ID (Removed)
+// Removed getEstablishmentAddress
 
 
 // Reset functions for all data types (for development/testing)
@@ -770,10 +652,7 @@ export const resetCurricula = async () => {
   if (error) console.error("Error resetting curricula:", error);
 };
 
-export const resetEstablishments = async () => {
-  const { error } = await supabase.from('establishments').delete();
-  if (error) console.error("Error resetting establishments:", error);
-};
+// Removed resetEstablishments
 
 export const resetClasses = async () => {
   const { error } = await supabase.from('classes').delete();

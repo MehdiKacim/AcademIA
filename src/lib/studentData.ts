@@ -16,7 +16,6 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
       last_name,
       username,
       email,
-      establishment_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -43,7 +42,6 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
     email: data.email,
     // Assuming roles is an object with a name property, but Supabase sometimes returns an array for joined tables
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
-    establishment_id: data.establishment_id || undefined,
     enrollment_start_date: data.enrollment_start_date || undefined,
     enrollment_end_date: data.enrollment_end_date || undefined,
     theme: data.theme || undefined,
@@ -66,7 +64,6 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
       last_name,
       username,
       email,
-      establishment_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -89,7 +86,6 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
     username: data.username,
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
-    establishment_id: data.establishment_id || undefined,
     enrollment_start_date: data.enrollment_start_date || undefined,
     enrollment_end_date: data.enrollment_end_date || undefined,
     theme: data.theme || undefined,
@@ -139,7 +135,6 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
       last_name,
       username,
       email,
-      establishment_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -162,7 +157,6 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
     username: data.username,
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
-    establishment_id: data.establishment_id || undefined,
     enrollment_start_date: data.enrollment_start_date || undefined,
     enrollment_end_date: data.enrollment_end_date || undefined,
     theme: data.theme || undefined,
@@ -219,7 +213,6 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
     role_id: role_id_to_update, // Use role_id for DB update
     role: undefined, // Remove role from payload to avoid sending it to DB
     // Explicitly set optional fields to null if they are undefined or empty string
-    establishment_id: updatedProfile.establishment_id === '' ? null : updatedProfile.establishment_id,
     enrollment_start_date: updatedProfile.enrollment_start_date === '' ? null : updatedProfile.enrollment_start_date,
     enrollment_end_date: updatedProfile.enrollment_end_date === '' ? null : updatedProfile.enrollment_end_date,
     theme: updatedProfile.theme === undefined ? null : updatedProfile.theme,
@@ -259,7 +252,6 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
       last_name,
       username,
       email,
-      establishment_id,
       enrollment_start_date,
       enrollment_end_date,
       theme,
@@ -279,7 +271,6 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
     username: p.username,
     email: p.email,
     role: (p.roles as { name: Profile['role'] } | null)?.name || 'student',
-    establishment_id: p.establishment_id || undefined,
     enrollment_start_date: p.enrollment_start_date || undefined,
     enrollment_end_date: p.enrollment_end_date || undefined,
     theme: p.theme || undefined,
@@ -302,7 +293,6 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
       last_name,
       username,
       email,
-      establishment_id,
       enrollment_start_date,
       enrollment_end_date,
       roles(name)
@@ -321,7 +311,6 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
     username: p.username,
     email: p.email,
     role: (p.roles as { name: Profile['role'] } | null)?.name || 'student',
-    establishment_id: p.establishment_id || undefined,
     enrollment_start_date: p.enrollment_start_date || undefined,
     enrollment_end_date: p.enrollment_end_date || undefined,
   }));

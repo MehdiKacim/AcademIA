@@ -59,9 +59,9 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       console.log("[RoleContext] fetchUserProfile: Profile fetched:", profile);
       console.log("[RoleContext] fetchUserProfile: Profile role:", profile.role); // Log the role
       setCurrentUserProfile(profile);
-      // Now load nav items based on the fetched profile's role and establishment_id
+      // Now load nav items based on the fetched profile's role
       try {
-        const loadedNavItems = await loadNavItems(profile.role, 0, profile.establishment_id); // Pass establishment_id
+        const loadedNavItems = await loadNavItems(profile.role, 0); // Removed establishment_id
         setNavItems(loadedNavItems);
         console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
 
@@ -100,7 +100,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     console.log("[RoleContext] onAuthStateChange: Setting up subscription.");
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange(async (event, session) => { // Added default empty object to data
       console.log("[RoleContext] Auth state changed:", event, "Session exists:", !!session);
       if (session) {
         // User is logged in
@@ -129,7 +129,9 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       console.log("[RoleContext] Cleaning up auth state subscription.");
-      subscription.unsubscribe();
+      if (subscription) { // Check if subscription exists before unsubscribing
+        subscription.unsubscribe();
+      }
     };
   }, [fetchUserProfile]); // Dependency on fetchUserProfile
 

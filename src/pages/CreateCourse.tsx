@@ -501,9 +501,7 @@ const CreateCourse = () => {
 
   useEffect(() => {
     const fetchCourseAndSubjects = async () => {
-      if (currentUserProfile?.establishment_id) {
-        setSubjects(await loadSubjects(currentUserProfile.establishment_id)); // Load subjects for the user's establishment
-      }
+      setSubjects(await loadSubjects()); // Load all subjects
 
       if (courseId) {
         const courses = await loadCourses();
@@ -541,7 +539,7 @@ const CreateCourse = () => {
       }
     };
     fetchCourseAndSubjects();
-  }, [courseId, form, navigate, currentUserProfile?.establishment_id]); // Added currentUserProfile.establishment_id
+  }, [courseId, form, navigate]); // Removed currentUserProfile.establishment_id
 
   const onSubmit = async (values: z.infer<typeof CourseSchema>) => {
     if (!currentUserProfile?.id) {

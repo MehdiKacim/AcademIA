@@ -6,9 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses, loadClasses, loadEstablishments, loadCurricula } from "@/lib/courseData"; // Load classes for professeur/tutor
+import { loadCourses, loadClasses, loadCurricula } from "@/lib/courseData"; // Removed loadEstablishments
 import { getAllStudentCourseProgress, getAllProfiles, getAllStudentClassEnrollments } from "@/lib/studentData"; // Import Supabase function
-import { Course, StudentCourseProgress, Profile, Class, Establishment, Curriculum, StudentClassEnrollment } from "@/lib/dataModels"; // Import types
+import { Course, StudentCourseProgress, Profile, Class, Curriculum, StudentClassEnrollment } from "@/lib/dataModels"; // Removed Establishment type
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const Dashboard = () => {
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]); // For professeur/tutor to count students
   const [classes, setClasses] = useState<Class[]>([]); // For professeur/tutor to count students in classes
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // For admin
+  // Removed establishments state
   const [curricula, setCurricula] = useState<Curriculum[]>([]); // For admin
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
 
@@ -34,8 +34,7 @@ const Dashboard = () => {
       setAllProfiles(loadedProfiles);
       const loadedClasses = await loadClasses();
       setClasses(loadedClasses);
-      const loadedEstablishments = await loadEstablishments(); // Fetch establishments
-      setEstablishments(loadedEstablishments);
+      // Removed loadEstablishments
       const loadedCurricula = await loadCurricula(); // Fetch curricula
       setCurricula(loadedCurricula);
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Fetch all enrollments
@@ -129,7 +128,8 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-primary">{overallProgress}%</p>
-              <p className="text-sm text-muted-foreground">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
+              <Progress value={overallProgress} className="w-full mt-2" />
+              <p className="text-sm text-muted-foreground mt-2">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
               <Link to="/analytics?view=personal" className="mt-4 block">
                 <Button variant="outline" className="w-full">Voir mes statistiques</Button>
               </Link>
@@ -210,7 +210,7 @@ const Dashboard = () => {
             <CardContent>
               <p className="text-2xl font-bold text-primary">{totalSupervisedStudents}</p>
               <p className="text-sm text-muted-foreground">élèves au total.</p>
-              <Link to="/students" className="mt-4 block">
+              <Link to="/pedagogical-management" className="mt-4 block">
                 <Button className="w-full">Voir tous les élèves</Button>
               </Link>
             </CardContent>
@@ -244,7 +244,7 @@ const Dashboard = () => {
         </div>
       );
     } else if (currentRole === 'administrator') { // Administrator
-      const totalEstablishments = establishments.length;
+      // Removed totalEstablishments
       const totalDirectors = allProfiles.filter(p => p.role === 'director').length;
       const totalDeputyDirectors = allProfiles.filter(p => p.role === 'deputy_director').length;
 
@@ -252,13 +252,13 @@ const Dashboard = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Établissements Gérés</CardTitle>
-              <CardDescription>Nombre total d'établissements sur la plateforme.</CardDescription>
+              <CardTitle>Utilisateurs Administrateurs</CardTitle>
+              <CardDescription>Nombre total d'administrateurs sur la plateforme.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{totalEstablishments}</p>
-              <Link to="/establishments" className="mt-4 block">
-                <Button className="w-full">Gérer les établissements</Button>
+              <p className="text-2xl font-bold text-primary">{allProfiles.filter(p => p.role === 'administrator').length}</p>
+              <Link to="/admin-users" className="mt-4 block">
+                <Button className="w-full">Gérer les administrateurs</Button>
               </Link>
             </CardContent>
           </Card>
@@ -290,24 +290,23 @@ const Dashboard = () => {
         </div>
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') { // Director, Deputy Director
-      const myEstablishment = establishments.find(est => est.id === currentUserProfile.establishment_id);
-      const studentsInMyEstablishment = allProfiles.filter(p => p.role === 'student' && p.establishment_id === currentUserProfile.establishment_id).length;
-      const professeursInMyEstablishment = allProfiles.filter(p => p.role === 'professeur' && p.establishment_id === currentUserProfile.establishment_id).length;
-      const classesInMyEstablishment = classes.filter(cls => cls.establishment_id === currentUserProfile.establishment_id).length;
-      const curriculaInMyEstablishment = curricula.filter(cur => cur.establishment_id === currentUserProfile.establishment_id).length;
+      // Removed myEstablishment
+      const studentsInMyScope = allProfiles.filter(p => p.role === 'student').length; // Now counts all students
+      const professeursInMyScope = allProfiles.filter(p => p.role === 'professeur').length; // Now counts all professeurs
+      const classesInMyScope = classes.length; // Now counts all classes
+      const curriculaInMyScope = curricula.length; // Now counts all curricula
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Mon Établissement</CardTitle>
-              <CardDescription>Vue d'overview de {myEstablishment?.name || 'votre établissement'}.</CardDescription>
+              <CardTitle>Mon Rôle</CardTitle>
+              <CardDescription>Vue d'overview de votre rôle.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{myEstablishment?.name || 'N/A'}</p>
-              <p className="text-sm text-muted-foreground">Type: {myEstablishment?.type || 'N/A'}</p>
-              <Link to="/establishments" className="mt-4 block">
-                <Button className="w-full">Gérer l'établissement</Button>
+              <p className="text-2xl font-bold text-primary">{currentRole === 'director' ? 'Directeur' : 'Directeur Adjoint'}</p>
+              <Link to="/profile" className="mt-4 block">
+                <Button className="w-full">Voir mon profil</Button>
               </Link>
             </CardContent>
           </Card>
@@ -317,7 +316,7 @@ const Dashboard = () => {
               <CardDescription>Nombre de professeurs et d'élèves.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{professeursInMyEstablishment} Professeurs, {studentsInMyEstablishment} Élèves</p>
+              <p className="text-2xl font-bold text-primary">{professeursInMyScope} Professeurs, {studentsInMyScope} Élèves</p>
               <Link to="/admin-users" className="mt-4 block">
                 <Button variant="outline" className="w-full">Gérer les utilisateurs</Button>
               </Link>
@@ -326,10 +325,10 @@ const Dashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle>Structure Pédagogique</CardTitle>
-              <CardDescription>Cursus et classes de votre établissement.</CardDescription>
+              <CardDescription>Cursus et classes.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{curriculaInMyEstablishment} Cursus, {classesInMyEstablishment} Classes</p>
+              <p className="text-2xl font-bold text-primary">{curriculaInMyScope} Cursus, {classesInMyScope} Classes</p>
               <Link to="/curricula" className="mt-4 block">
                 <Button variant="outline" className="w-full">Gérer les cursus et classes</Button>
               </Link>
@@ -337,8 +336,8 @@ const Dashboard = () => {
           </Card>
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>Analytiques de l'Établissement</CardTitle>
-              <CardDescription>Accédez aux statistiques détaillées de votre établissement.</CardDescription>
+              <CardTitle>Analytiques</CardTitle>
+              <CardDescription>Accédez aux statistiques détaillées.</CardDescription>
             </CardHeader>
             <CardContent>
               <Link to="/analytics?view=overview" className="mt-4 block">

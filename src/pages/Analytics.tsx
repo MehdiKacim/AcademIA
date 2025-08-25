@@ -7,16 +7,16 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { loadCourses, loadEstablishments, loadCurricula, loadClasses } from "@/lib/courseData";
+import { loadCourses, loadCurricula, loadClasses } from "@/lib/courseData"; // Removed loadEstablishments
 import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData";
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
 import TutorAnalyticsSection from "@/components/TutorAnalyticsSection";
-import EstablishmentAdminAnalyticsSection from "@/components/EstablishmentAdminAnalyticsSection"; // Renamed import
+// Removed EstablishmentAdminAnalyticsSection
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Course, Establishment, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels";
+import { Course, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels"; // Removed Establishment
 
 const Analytics = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -30,11 +30,11 @@ const Analytics = () => {
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
+  // Removed establishments state
 
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | undefined>(undefined);
   const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | undefined>(undefined);
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | undefined>(undefined);
+  // Removed selectedEstablishmentFilter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +43,7 @@ const Analytics = () => {
       setStudentCourseProgresses(await getAllStudentCourseProgress());
       setClasses(await loadClasses());
       setCurricula(await loadCurricula());
-      setEstablishments(await loadEstablishments());
+      // Removed setEstablishments
     };
     fetchData();
   }, [currentUserProfile]);
@@ -52,41 +52,12 @@ const Analytics = () => {
   useEffect(() => {
     setSelectedClassFilter(undefined);
     setSelectedCurriculumFilter(undefined);
-    setSelectedEstablishmentFilter(undefined);
+    // Removed setSelectedEstablishmentFilter
 
-    // For directors/deputy directors, default to their establishment and disable selection
-    if ((currentRole === 'director' || currentRole === 'deputy_director') && currentUserProfile?.establishment_id) {
-      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
-    }
-  }, [currentRole, currentUserProfile?.establishment_id]);
+    // For directors/deputy directors, default to their establishment and disable selection (now removed)
+  }, [currentRole, currentUserProfile?.id]); // Changed dependency from establishment_id to id
 
-  if (isLoadingUser) {
-    return (
-      <div className="text-center py-20">
-        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-          Chargement des analytiques...
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Veuillez patienter.
-        </p>
-      </div>
-    );
-  }
-
-  if (!currentUserProfile) {
-    return (
-      <div className="text-center py-20">
-        <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-          Accès Restreint
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Veuillez vous connecter pour accéder aux analytiques.
-        </p>
-      </div>
-    );
-  }
-
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed getEstablishmentName
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
 
   const handleSendMessageToUser = (userId: string) => {
@@ -121,7 +92,6 @@ const Analytics = () => {
           allStudentCourseProgresses={studentCourseProgresses}
           allClasses={classes}
           allCurricula={curricula}
-          selectedEstablishmentId={selectedEstablishmentFilter}
         />
       );
     } else if (currentRole === 'tutor') {
@@ -138,110 +108,74 @@ const Analytics = () => {
         />
       );
     } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') {
-      if (!selectedEstablishmentFilter) {
-        return (
-          <div className="text-center py-20">
-            <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-              Sélectionnez un Établissement
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Veuillez choisir un établissement dans le filtre ci-dessus pour voir les analytiques.
-            </p>
-          </div>
-        );
-      }
+      // Removed establishment filter requirement for admin/director roles
       return (
-        <EstablishmentAdminAnalyticsSection
-          establishments={establishments}
-          curricula={curricula}
-          classes={classes}
+        <CreatorAnalyticsSection // Re-using CreatorAnalyticsSection for admin/director overview
+          view={view}
+          selectedClassId={selectedClassFilter}
+          selectedCurriculumId={selectedCurriculumFilter}
+          selectedCourseId={courseIdFromUrl}
+          allCourses={courses}
           allProfiles={allProfiles}
-          selectedEstablishmentFilter={selectedEstablishmentFilter}
+          allStudentCourseProgresses={studentCourseProgresses}
+          allClasses={classes}
+          allCurricula={curricula}
         />
       );
     }
     return null;
   };
 
-  const currentEstablishmentName = selectedEstablishmentFilter ? getEstablishmentName(selectedEstablishmentFilter) : 'Globales';
+  // Removed currentEstablishmentName
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Analytiques {currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director' ? `de l'Établissement : ${currentEstablishmentName}` : ''}
+        Analytiques
       </h1>
 
       {(currentRole === 'administrator' || currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director') && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {(currentRole === 'administrator' || currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director') && (
-            <div>
-              <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
-              <Select value={selectedEstablishmentFilter || "all"} onValueChange={(value) => {
-                setSelectedEstablishmentFilter(value === "all" ? undefined : value);
-                setSelectedCurriculumFilter(undefined);
-                setSelectedClassFilter(undefined);
-              }}
-              disabled={currentRole === 'director' || currentRole === 'deputy_director'}
-              >
-                <SelectTrigger id="select-establishment">
-                  <SelectValue placeholder="Sélectionner un établissement" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currentRole === 'administrator' && <SelectItem value="all">Tous les établissements</SelectItem>}
-                  {establishments
-                    .filter(est => currentRole === 'administrator' || est.id === currentUserProfile.establishment_id)
-                    .map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          {(currentRole !== 'administrator') && (
-            <>
-              <div>
-                <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
-                <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
-                  setSelectedCurriculumFilter(value === "all" ? undefined : value);
-                  setSelectedClassFilter(undefined);
-                }}>
-                  <SelectTrigger id="select-curriculum">
-                    <SelectValue placeholder="Tous les cursus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les cursus</SelectItem>
-                    {curricula
-                      .filter(cur => !selectedEstablishmentFilter || cur.establishment_id === selectedEstablishmentFilter)
-                      .map(cur => (
-                        <SelectItem key={cur.id} value={cur.id}>
-                          {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="select-class">Filtrer par Classe</Label>
-                <Select value={selectedClassFilter || "all"} onValueChange={setSelectedClassFilter}>
-                  <SelectTrigger id="select-class">
-                    <SelectValue placeholder="Toutes les classes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les classes</SelectItem>
-                    {classes
-                      .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)
-                      .map(cls => (
-                        <SelectItem key={cls.id} value={cls.id}>
-                          {cls.name} ({getCurriculumName(cls.curriculum_id)})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
+          {/* Removed Establishment Filter */}
+          {/* Always show curriculum and class filters for relevant roles */}
+          <div>
+            <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
+            <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
+              setSelectedCurriculumFilter(value === "all" ? undefined : value);
+              setSelectedClassFilter(undefined);
+            }}>
+              <SelectTrigger id="select-curriculum">
+                <SelectValue placeholder="Tous les cursus" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les cursus</SelectItem>
+                {curricula
+                  .map(cur => (
+                    <SelectItem key={cur.id} value={cur.id}>
+                      {cur.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="select-class">Filtrer par Classe</Label>
+            <Select value={selectedClassFilter || "all"} onValueChange={setSelectedClassFilter}>
+              <SelectTrigger id="select-class">
+                <SelectValue placeholder="Toutes les classes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les classes</SelectItem>
+                {classes
+                  .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)
+                  .map(cls => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.name} ({getCurriculumName(cls.curriculum_id)})
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 

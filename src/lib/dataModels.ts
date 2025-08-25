@@ -13,7 +13,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       username: string;
       email: string; // Added email to Profile interface
       role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
-      establishment_id?: string; // Added establishment_id to Profile
       enrollment_start_date?: string; // Added enrollment_start_date to Profile
       enrollment_end_date?: string; // Added enrollment_end_date to Profile
       theme?: 'dark' | 'light' | 'dark-purple'; // Updated: Removed 'modern-blue'
@@ -21,25 +20,11 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       updated_at?: string;
     }
 
-    export interface Establishment {
-      id: string; // UUID
-      name: string;
-      type: 'Maternelle' | 'Élémentaire' | 'Collège' | 'Lycée Général' | 'Lycée Technologique' | 'Lycée Professionnel' | 'Privé Sous Contrat' | 'Privé Hors Contrat' | 'Spécialisé' | 'CFA';
-      address?: string;
-      phone_number?: string;
-      director_id?: string;
-      deputy_director_id?: string;
-      contact_email?: string;
-      created_at?: string;
-    }
-
-    export type EstablishmentType = 'Maternelle' | 'Élémentaire' | 'Collège' | 'Lycée Général' | 'Lycée Technologique' | 'Lycée Professionnel' | 'Privé Sous Contrat' | 'Privé Hors Contrat' | 'Spécialisé' | 'CFA';
-
+    // Removed Establishment interface and EstablishmentType
 
     export interface Subject { // New: Subject interface
       id: string;
       name: string;
-      establishment_id: string; // Keep establishment_id for subjects
       created_at?: string;
       updated_at?: string;
     }
@@ -48,7 +33,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       id: string;
       name: string;
       description?: string;
-      establishment_id: string; // Keep establishment_id for curricula
       course_ids: string[]; // JSONB, liste d'UUIDs de public.courses(id)
       created_at?: string;
     }
@@ -68,7 +52,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       name: string;
       curriculum_id: string; // Link to parent curriculum
       creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
-      establishment_id: string; // Keep establishment_id for classes
       school_year_id: string; // Changed: Link to SchoolYear
       school_year_name?: string; // For convenience when fetching
       created_at?: string;
@@ -217,7 +200,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       parent_nav_item_id?: string;
       order_index: number; // Made mandatory for sorting
       configId?: string; // The ID of the role_nav_configs entry
-      establishment_id?: string; // Added establishment_id to NavItem
       is_global?: boolean; // Added is_global to NavItem
     }
 
@@ -228,7 +210,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       role: Profile['role'];
       parent_nav_item_id?: string; // FK to NavItem (parent in the role's menu tree)
       order_index: number;
-      establishment_id?: string; // Added establishment_id to RoleNavItemConfig
       created_at?: string;
       updated_at?: string;
     }
