@@ -67,6 +67,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         order_index: config.order_index, // Now mandatory, should always be a number from DB
         configId: config.id,
         establishment_id: config.establishment_id || undefined,
+        is_global: config.establishment_id === null, // New: Indicate if it's a global config
       };
       navItemsMap.set(navItem.id, navItem);
       allItems.push(navItem);
@@ -144,7 +145,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  * @param newItem Les données du nouvel élément de navigation.
  * @returns L'élément de navigation ajouté.
  */
-export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root'>): Promise<NavItem | null> => {
+export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .insert({
@@ -169,7 +170,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
  * @param updatedItem Les données de l'élément de navigation à mettre à jour.
  * @returns L'élément de navigation mis à jour.
  */
-export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root'>): Promise<NavItem | null> => {
+export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'>): Promise<NavItem | null> => {
   const { data, error } = await supabase
     .from('nav_items')
     .update({
@@ -221,7 +222,7 @@ export const getRoleNavItemConfigsByRole = async (role: Profile['role'], establi
     .order('order_index', { ascending: true });
 
   if (establishmentId) {
-    query = query.eq('establishment_id', establishmentId);
+    query = query.or(`establishment_id.eq.${establishmentId},establishment_id.is.null`);
   } else {
     query = query.is('establishment_id', null); // Only global configs if no establishmentId provided
   }

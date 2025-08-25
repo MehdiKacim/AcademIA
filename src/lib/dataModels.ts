@@ -217,10 +217,9 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       label: string;
       route?: string; // Optional route for navigation
       icon_name?: string; // Lucide icon name as string
-      is_root: boolean; // Re-added: Is it a top-level item/category?
+      is_root: boolean; // Is it a top-level item/category?
       description?: string; // Added description for drawer items
       is_external: boolean; // Is it an external link?
-      // Removed parent_id, order_index, allowed_roles from here
       children?: NavItem[]; // Recursive children (built in frontend)
       onClick?: () => void; // For trigger items (e.g., opening modals)
       badge?: number; // For unread message count
@@ -229,6 +228,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       order_index: number; // Made mandatory for sorting
       configId?: string; // The ID of the role_nav_configs entry
       establishment_id?: string; // New: Optional establishment_id for role_nav_configs
+      is_global?: boolean; // New: Indicates if this is a global configuration (establishment_id is null)
     }
 
     // New interface for role-specific navigation configuration

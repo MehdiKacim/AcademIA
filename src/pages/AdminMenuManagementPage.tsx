@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Button } from "@/components/ui/button";
     import { Input } from "@/components/ui/input";
     import { Label } from "@/components/ui/label";
-    import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck } from "lucide-react";
+    import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe } from "lucide-react";
     import { NavItem, Profile, RoleNavItemConfig, Establishment } from "@/lib/dataModels"; // Import RoleNavItemConfig, Establishment
     import { showSuccess, showError } from "@/utils/toast";
     import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole } from "@/lib/navItems"; // Use new functions
@@ -49,7 +49,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
     // Map icon_name strings to Lucide React components
     const iconMap: { [key: string]: React.ElementType } = {
-      Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink
+      Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe
     };
 
     // All possible roles for selection
@@ -62,16 +62,17 @@ import React, { useState, useEffect, useCallback } from 'react';
       onEdit: (item: NavItem, config?: RoleNavItemConfig) => void;
       onDelete: (id: string, configId?: string) => void;
       isDragging?: boolean; // Prop to indicate if this item is currently being dragged
+      isDraggableAndDeletable: boolean; // New prop to control drag/delete
     }
 
-    const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, configId, level, onEdit, onDelete, isDragging }, ref) => {
+    const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, configId, level, onEdit, onDelete, isDragging, isDraggableAndDeletable }, ref) => {
       const {
         attributes,
         listeners,
         setNodeRef,
         transform,
         transition,
-      } = useSortable({ id: configId || item.id }); // Use configId for sortable if available
+      } = useSortable({ id: configId || item.id, disabled: !isDraggableAndDeletable }); // Disable sortable if not draggable
 
       const style = {
         transform: CSS.Transform.toString(transform),
@@ -86,31 +87,35 @@ import React, { useState, useEffect, useCallback } from 'react';
       return (
         <div ref={setNodeRef} style={style} className={cn("p-3 border rounded-md bg-background flex items-center justify-between gap-2 mb-2", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
           <div className="flex items-center gap-2 flex-grow">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              {...listeners}
-              {...attributes}
-              className="cursor-grab"
-            >
-              <GripVertical className="h-5 w-5 text-muted-foreground" />
-              <span className="sr-only">Déplacer l'élément</span>
-            </Button>
+            {isDraggableAndDeletable && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                {...listeners}
+                {...attributes}
+                className="cursor-grab"
+              >
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
+                <span className="sr-only">Déplacer l'élément</span>
+              </Button>
+            )}
             <IconComponent className="h-5 w-5 text-primary" />
             <span className="font-medium">{item.label}</span>
             {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
             {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
-            {/* Removed is_root check here as it's no longer a direct property of NavItem */}
+            {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
             {item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_nav_item_id, order_index: item.order_index || 0, establishment_id: item.establishment_id } : undefined)}>
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, configId)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {isDraggableAndDeletable && (
+              <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, configId)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       );
@@ -131,7 +136,6 @@ import React, { useState, useEffect, useCallback } from 'react';
       // States for new generic item form
       const [newItemLabel, setNewItemLabel] = useState('');
       const [newItemRoute, setNewItemRoute] = useState('');
-      // const [newItemIsRoot, setNewItemIsRoot] = useState(false); // Removed
       const [newItemIconName, setNewItemIconName] = useState('');
       const [newItemDescription, setNewItemDescription] = useState('');
       const [newItemIsExternal, setNewItemIsExternal] = useState(false);
@@ -142,7 +146,6 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
       const [editItemLabel, setEditItemLabel] = useState('');
       const [editItemRoute, setEditItemRoute] = useState('');
-      // const [editItemIsRoot, setEditItemIsRoot] = useState(false); // Removed
       const [editItemIconName, setEditItemIconName] = useState('');
       const [editItemDescription, setEditItemDescription] = useState('');
       const [editItemIsExternal, setEditItemIsExternal] = useState(false);
@@ -204,6 +207,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 parent_nav_item_id: config.parent_nav_item_id || undefined,
                 order_index: config.order_index,
                 establishment_id: config.establishment_id || undefined,
+                is_global: config.establishment_id === null, // Indicate if it's a global config
               };
               configuredMap.set(configuredItem.id, configuredItem);
             }
@@ -265,8 +269,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 
           setConfiguredItemsTree(finalRootItems);
 
+          // Determine unconfigured items (generic items not in roleConfigs)
           genericItems.forEach(genericItem => {
-            if (!configuredMap.has(genericItem.id)) {
+            // An item is unconfigured if it's not in the configuredMap for the current role/establishment
+            // AND it's not a global item (unless selectedEstablishmentFilter is 'all')
+            const isConfiguredForCurrentContext = allConfiguredItemsFlat.some(configuredItem => configuredItem.id === genericItem.id && configuredItem.establishment_id === (selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter));
+            const isGlobalConfigured = allConfiguredItemsFlat.some(configuredItem => configuredItem.id === genericItem.id && configuredItem.is_global);
+
+            if (!isConfiguredForCurrentContext && !(isGlobalConfigured && selectedEstablishmentFilter !== 'all')) {
               unconfigured.push(genericItem);
             }
           });
@@ -286,7 +296,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsAddingItem(true);
         try {
-          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root'> = {
+          const newItemData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'> = {
             label: newItemLabel.trim(),
             route: newItemRoute.trim() || null,
             description: newItemDescription.trim() || null,
@@ -327,6 +337,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 
       const handleDeleteGenericNavItem = async (navItemId: string, configId?: string) => {
         if (selectedRoleFilter !== 'all' && configId) {
+          const configToDelete = configuredItemsTree.find(item => item.configId === configId);
+          if (configToDelete?.is_global && selectedEstablishmentFilter !== 'all') {
+            showError("Vous ne pouvez pas supprimer une configuration globale depuis un établissement spécifique.");
+            return;
+          }
           if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette configuration de rôle pour l'élément ? Cela ne supprimera pas l'élément générique lui-même.`)) {
             try {
               await deleteRoleNavItemConfig(configId);
@@ -370,7 +385,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
         setIsSavingEdit(true);
         try {
-          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root'> = {
+          const updatedItemData: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_root' | 'is_global'> = {
             id: currentItemToEdit.id,
             label: editItemLabel.trim(),
             route: editItemRoute.trim() || null,
@@ -394,6 +409,10 @@ import React, { useState, useEffect, useCallback } from 'react';
       const handleEditRoleConfig = (item: NavItem, config?: RoleNavItemConfig) => {
         if (!config) {
           showError("Configuration de rôle introuvable pour l'édition.");
+          return;
+        }
+        if (config.is_global && selectedEstablishmentFilter !== 'all') {
+          showError("Vous ne pouvez pas modifier une configuration globale depuis un établissement spécifique.");
           return;
         }
         setCurrentItemToEdit(item); // Keep generic item context
@@ -465,36 +484,54 @@ import React, { useState, useEffect, useCallback } from 'react';
           return;
         }
 
-        const activeId = active.id as string;
-        const overId = over.id as string;
+        const activeId = active.id as string; // This is configId if configured, or navItemId if generic
+        const overId = over.id as string; // This is configId if configured, or containerId if container
 
         let successMessage = "Élément de navigation mis à jour !";
         let errorMessage = "Erreur lors de la mise à jour de l'élément.";
 
         try {
-          // Find the active item's current config (if it's a configured item)
-          const activeConfig = activeDragConfig;
+          // Prevent dragging/dropping global items when viewing a specific establishment
+          if (activeDragItem.is_global && selectedEstablishmentFilter !== 'all') {
+            showError("Vous ne pouvez pas déplacer ou modifier une configuration globale depuis un établissement spécifique.");
+            return;
+          }
 
           // Determine the target parent for the active item
           let newParentNavItemId: string | null = null;
-          const overConfiguredItem = configuredItemsTree.find(item => item.configId === overId);
+          let newOrderIndex: number = 0;
+          let targetList: NavItem[] = [];
 
-          if (overConfiguredItem && !overConfiguredItem.route && overConfiguredItem.id !== activeDragItem.id) { // Dropped ONTO a category item (potential parent)
-            newParentNavItemId = overConfiguredItem.id;
-          } else if (overId === 'configured-container') { // Dropped into empty root area
+          // Find the actual item being dropped over (could be a configured item or a container)
+          const overConfiguredItem = configuredItemsTree.find(item => item.configId === overId);
+          const overUnconfiguredItem = unconfiguredItems.find(item => item.id === overId);
+
+          if (overConfiguredItem) {
+            // Dropped onto an existing configured item
+            if (!overConfiguredItem.route) { // Dropped onto a category (make it a child)
+              newParentNavItemId = overConfiguredItem.id;
+              targetList = overConfiguredItem.children || [];
+              newOrderIndex = targetList.length; // Add to the end of children
+            } else { // Dropped onto a regular item (make it a sibling)
+              newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
+              targetList = (newParentNavItemId === null) ? configuredItemsTree.filter(item => item.is_root) : (configuredItemsTree.find(item => item.id === newParentNavItemId)?.children || []);
+              newOrderIndex = overConfiguredItem.order_index + 1; // Insert after the over item
+            }
+          } else if (overId === 'configured-container') { // Dropped into the root of the configured list
             newParentNavItemId = null;
-          } else if (overConfiguredItem) { // Dropped ONTO a non-category item (treat as sibling of its parent)
-            newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-          } else if (unconfiguredItems.some(item => item.id === activeId) && overId === 'unconfigured-container') {
-            // Dropped back into unconfigured list, no DB update needed for parent/order
-            // This case is handled by deleting the config below
+            targetList = configuredItemsTree.filter(item => item.is_root);
+            newOrderIndex = targetList.length; // Add to the end of root items
+          } else if (overId === 'unconfigured-container') {
+            // Dropped into the unconfigured list, handled by deletion below
+          } else if (overUnconfiguredItem) { // Dropped onto an unconfigured item (reorder within unconfigured)
+            // This case is handled by local state update for unconfiguredItems
           } else {
             showError("Cible de dépôt non valide.");
             return;
           }
 
           // Perform DB operations based on source and target
-          if (!activeConfig && activeDragItem) { // From Unconfigured to Configured
+          if (!activeDragConfig && activeDragItem) { // From Unconfigured to Configured
             if (selectedRoleFilter === 'all') {
               showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
               return;
@@ -503,19 +540,19 @@ import React, { useState, useEffect, useCallback } from 'react';
               nav_item_id: activeDragItem.id,
               role: selectedRoleFilter as Profile['role'],
               parent_nav_item_id: newParentNavItemId,
-              order_index: 0, // Temporary, will be re-indexed by fetchAndStructureNavItems
+              order_index: newOrderIndex,
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
             };
             await addRoleNavItemConfig(newConfig);
             successMessage = "Élément ajouté à la configuration du rôle !";
-          } else if (activeConfig && overId === 'unconfigured-container') { // From Configured to Unconfigured
-            await deleteRoleNavItemConfig(activeConfig.id);
+          } else if (activeDragConfig && overId === 'unconfigured-container') { // From Configured to Unconfigured
+            await deleteRoleNavItemConfig(activeDragConfig.id);
             successMessage = "Élément retiré de la configuration du rôle !";
-          } else if (activeConfig && activeDragItem) { // Within Configured (reorder or change parent)
+          } else if (activeDragConfig && activeDragItem) { // Within Configured (reorder or change parent)
             const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-              ...activeConfig,
+              ...activeDragConfig,
               parent_nav_item_id: newParentNavItemId,
-              order_index: 0, // Temporary, will be re-indexed by fetchAndStructureNavItems
+              order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
             };
             await updateRoleNavItemConfig(updatedConfig);
@@ -574,6 +611,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                     onEdit={handleEditGenericNavItem} // Edit generic properties
                     onDelete={handleDeleteGenericNavItem} // Delete generic item
                     isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
+                    isDraggableAndDeletable={!item.is_global || selectedEstablishmentFilter === 'all'} // Only draggable/deletable if not global OR if 'all' establishments selected
                   />
                   {item.children && item.children.length > 0 && (
                     <div className="ml-4">
@@ -759,6 +797,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                           onEdit={handleEditGenericNavItem}
                           onDelete={handleDeleteGenericNavItem}
                           isDragging={true}
+                          isDraggableAndDeletable={true} // Always draggable/deletable in unconfigured list
                         />
                       ) : null}
                     </DragOverlay>
@@ -786,6 +825,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                           onEdit={handleEditGenericNavItem}
                           onDelete={handleDeleteGenericNavItem}
                           isDragging={true}
+                          isDraggableAndDeletable={!activeDragItem.is_global || selectedEstablishmentFilter === 'all'}
                         />
                       ) : null}
                     </DragOverlay>
@@ -884,7 +924,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-config-establishment" className="text-right">Établissement</Label>
-                    <Select value={editConfigEstablishmentId || "all"} onValueChange={(value) => setEditConfigEstablishmentId(value === "all" ? undefined : value)}>
+                    <Select value={editConfigEstablishmentId || "all"} onValueChange={(value) => setEditConfigEstablishmentId(value === "all" ? undefined : value)} disabled={currentConfigToEdit.is_global}>
                       <SelectTrigger id="edit-config-establishment" className="col-span-3">
                         <SelectValue placeholder="Tous les établissements (Global)" />
                       </SelectTrigger>
