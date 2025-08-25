@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react"; // Icône de baguette magique
+import { Bot } from "lucide-react"; // Changed from Sparkles to Bot
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,7 +24,7 @@ const FloatingAiAPersistentChat = ({ isVisible }: FloatingAiAChatButtonProps) =>
         className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
         onClick={() => openChat()}
       >
-        <Sparkles className="h-7 w-7" />
+        <Bot className="h-7 w-7" /> {/* Changed icon to Bot */}
         <span className="sr-only">Ouvrir le chat AiA</span>
       </Button>
     </div>
