@@ -198,8 +198,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   };
 
   // Log the items that are actually being rendered in the header
-  const headerNavItems = fullNavTree.filter(item => item.parent_nav_item_id === null);
-  console.log("[DashboardLayout] Header Nav Items (filtered for parent_nav_item_id === null):", headerNavItems);
+  // CORRECTED: Filter for parent_nav_item_id being null OR undefined
+  const headerNavItems = fullNavTree.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
+  console.log("[DashboardLayout] Header Nav Items (filtered for parent_nav_item_id === null || undefined):", headerNavItems);
 
   // Memoize the context value for Outlet
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
