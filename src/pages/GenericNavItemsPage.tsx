@@ -253,13 +253,11 @@ const GenericNavItemsPage = () => {
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
                     <SelectContent className="backdrop-blur-lg bg-background/80">
-                      <ScrollArea className="h-40">
-                        {navItemTypes.map(type => (
-                          <SelectItem key={type} value={type}>
-                            {getItemTypeLabel(type)}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
+                      {navItemTypes.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {getItemTypeLabel(type)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -326,7 +324,7 @@ const GenericNavItemsPage = () => {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
-                <ScrollArea className="h-auto max-h-80 w-full rounded-md border">
+                <ScrollArea className="h-[300px] w-full rounded-md border">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
@@ -382,7 +380,7 @@ const GenericNavItemsPage = () => {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
-                <ScrollArea className="h-auto max-h-80 w-full rounded-md border">
+                <ScrollArea className="h-[300px] w-full rounded-md border">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
