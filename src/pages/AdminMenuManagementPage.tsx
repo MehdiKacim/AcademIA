@@ -806,13 +806,21 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
       const availableParentsForConfig = useMemo(() => {
         if (!currentItemToEdit) return [];
-        const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree);
-        const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
+        console.log("[availableParentsForConfig] currentItemToEdit:", currentItemToEdit);
+        console.log("[availableParentsForConfig] configuredItemsTree:", configuredItemsTree);
 
-        return allPotentialParents.filter(parent =>
+        const allPotentialParents = getFlattenedCategoriesForParentSelection(configuredItemsTree, currentItemToEdit.id);
+        console.log("[availableParentsForConfig] All potential parents (before descendant check):", allPotentialParents);
+
+        const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, configuredItemsTree);
+        console.log("[availableParentsForConfig] Descendants of current item:", descendantsOfCurrentItem);
+
+        const filteredParents = allPotentialParents.filter(parent =>
           parent.id !== currentItemToEdit.id && // Cannot be its own parent
           !descendantsOfCurrentItem.has(parent.id) // Cannot be a descendant of itself
         );
+        console.log("[availableParentsForConfig] Filtered parents:", filteredParents);
+        return filteredParents;
       }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds]);
 
 
@@ -964,8 +972,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                             availableGenericItemsForAdd.map(item => (
                               <SelectItem key={item.id} value={item.id}>
                                 <div className="flex items-center gap-2">
-                                  {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                  {item.label} {item.route && `(${item.route})`}
+                                  <IconComponent className="h-4 w-4" /> {item.label} {item.route && `(${item.route})`}
                                 </div>
                               </SelectItem>
                             ))
