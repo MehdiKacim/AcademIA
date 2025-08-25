@@ -15,7 +15,8 @@ import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem } from "@/lib/navItems";
 import { useRole } from '@/contexts/RoleContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea }
+ from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -252,11 +253,13 @@ const GenericNavItemsPage = () => {
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
                     <SelectContent className="backdrop-blur-lg bg-background/80">
-                      {navItemTypes.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {getItemTypeLabel(type)}
-                        </SelectItem>
-                      ))}
+                      <ScrollArea className="h-40">
+                        {navItemTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {getItemTypeLabel(type)}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -347,7 +350,7 @@ const GenericNavItemsPage = () => {
                               <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
                               <td className="p-2">
                                 <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
+                                  <IconComponent className="h-4 w-4" /> 
                                 </div>
                               </td>
                               <td className="p-2 flex gap-2">
@@ -403,7 +406,7 @@ const GenericNavItemsPage = () => {
                               <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
                               <td className="p-2">
                                 <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
+                                  <IconComponent className="h-4 w-4" /> 
                                 </div>
                               </td>
                               <td className="p-2 flex gap-2">
@@ -454,11 +457,13 @@ const GenericNavItemsPage = () => {
                     <SelectValue placeholder="Sélectionner un type" />
                   </SelectTrigger>
                   <SelectContent className="backdrop-blur-lg bg-background/80">
-                    {navItemTypes.map(type => (
-                      <SelectItem key={type} value={type}>
-                        {getItemTypeLabel(type)}
-                      </SelectItem>
-                    ))}
+                    <ScrollArea className="h-40">
+                      {navItemTypes.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {getItemTypeLabel(type)}
+                        </SelectItem>
+                      ))}
+                    </ScrollArea>
                   </SelectContent>
                 </Select>
               </div>
