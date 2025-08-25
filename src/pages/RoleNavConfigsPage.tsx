@@ -859,7 +859,8 @@ const RoleNavConfigsPage = () => {
                               >
                                 <div className="flex items-center gap-2">
                                   {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
-                                  <IconComponentToRender className="h-4 w-4" /> <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && "(Nouveau)"}</span>
+                                  <IconComponentToRender className="h-4 w-4" /> 
+                                  <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && <span className="font-bold text-primary">(Nouveau)</span>}</span>
                                 </div>
                               </CommandItem>
                             );
