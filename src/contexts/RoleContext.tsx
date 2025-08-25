@@ -25,6 +25,7 @@ interface RoleContextType {
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
+  console.log("[RoleProvider] Rendering RoleProvider."); // Diagnostic log
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [navItems, setNavItems] = useState<NavItem[]>([]); // State for structured nav items
   const [dynamicRoutes, setDynamicRoutes] = useState<NavItem[]>([]); // State for flattened dynamic routes
