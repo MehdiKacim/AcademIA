@@ -193,6 +193,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const { currentUserProfile, currentRole, isLoadingUser } = useRole();
       const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]); // All items from nav_items table
       const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]); // Configured items for selected role
+      const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]); // Flat list of configured items
       const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
       const [establishments, setEstablishments] = useState<Establishment[]>([]); // All establishments
 
@@ -229,25 +230,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       // States for managing children dialog
       const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
       const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
-
-      // State for adding an item directly to the configured tree
-      const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
-      // NEW: Separate state for the add section's parent input
-      const [addConfigParentInput, setAddConfigParentInput] = useState<string>('');
-      // NEW: Separate state for the add section's Popover open state
-      const [openAddConfigParentSelect, setOpenAddConfigParentSelect] = useState(false);
-      const [availableGenericItemsForAdd, setAvailableGenericItemsForAdd] = useState<NavItem[]>([]);
-      // New state to hold the ID of the selected parent for new config
-      const [selectedParentIdForNewConfig, setSelectedParentIdForNewConfig] = useState<string | null>(null);
-      // NEW: State for icon of new parent category created on the fly
-      const [newParentCategoryIconName, setNewParentCategoryIconName] = useState('LayoutList');
-
-
-      // NEW: Separate state for the edit dialog's parent input
-      const [editConfigParentInput, setEditConfigParentInput] = useState<string>('');
-      // NEW: Separate state for the edit dialog's Popover open state
-      const [openEditConfigParentSelect, setOpenEditConfigParentSelect] = useState(false);
-
 
       // New state for expanded items in the tree view
       const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
@@ -303,14 +285,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         if (selectedRoleFilter === 'all') {
           setConfiguredItemsTree([]);
-          setAvailableGenericItemsForAdd(genericItems); // All generic items are available if no role selected
+          setAllConfiguredItemsFlat([]); // Clear flat list too
         } else {
           const role = selectedRoleFilter as Profile['role'];
           const establishmentId = selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter;
           const roleConfigs = await getRoleNavItemConfigsByRole(role, establishmentId);
 
           const configuredMap = new Map<string, NavItem>();
-          const allConfiguredItemsFlat: NavItem[] = [];
+          const allConfiguredItemsFlatList: NavItem[] = []; // Use a temporary list
 
           const genericItemMap = new Map<string, NavItem>();
           genericItems.forEach(item => genericItemMap.set(item.id, { ...item, children: [] }));
@@ -328,14 +310,15 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 is_global: config.establishment_id === null, // Indicate if it's a global config
               };
               configuredMap.set(configuredItem.id, configuredItem);
-              allConfiguredItemsFlat.push(configuredItem);
+              allConfiguredItemsFlatList.push(configuredItem); // Add to temporary flat list
             }
           });
+          setAllConfiguredItemsFlat(allConfiguredItemsFlatList); // Set the state with the temporary list
 
           // Rebuild the tree and re-index
           // Group items by parent_nav_item_id
           const groupedByParent = new Map<string | null, NavItem[]>();
-          allConfiguredItemsFlat.forEach(item => {
+          allConfiguredItemsFlatList.forEach(item => { // Use the temporary flat list here
             const parentId = item.parent_nav_item_id || null;
             if (!groupedByParent.has(parentId)) {
               groupedByParent.set(parentId, []);
@@ -385,13 +368,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
           setConfiguredItemsTree(finalRootItems);
           console.log("[AdminMenuManagementPage] Configured items tree rebuilt:", finalRootItems);
-
-
-          // Determine available generic items for adding (not yet configured for current context)
-          const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
-          const availableForAdd = genericItems.filter(genericItem => !configuredGenericItemIds.has(genericItem.id));
-          setAvailableGenericItemsForAdd(availableForAdd);
-          setSelectedGenericItemToAdd(null); // Reset selection
         }
       }, [selectedRoleFilter, selectedEstablishmentFilter, findItemInTree, getDescendantIds]);
 
@@ -531,7 +507,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         setEditConfigOrderIndex(config.order_index);
         setEditConfigEstablishmentId(config.establishment_id || undefined); // Set establishment_id for editing
         setIsEditConfigDialogOpen(true);
-        setOpenEditConfigParentSelect(false); // Ensure it's closed initially
       };
 
       const handleSaveEditedRoleConfig = async () => {
@@ -540,7 +515,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         let finalParentId: string | null = null;
         if (editConfigParentInput.trim() !== '') {
           // Check if parent category exists
-          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && !item.route);
+          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentParentInput.trim().toLowerCase() && !item.route);
 
           if (!parentItem) {
             // If not found, it means the user typed a new category name, so create it
@@ -758,73 +733,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         setIsManageChildrenDialogOpen(true);
       };
 
-      const handleAddSelectedGenericItemToMenu = async () => {
-        if (!selectedGenericItemToAdd || selectedRoleFilter === 'all') {
-          showError("Veuillez sélectionner un élément générique et un rôle.");
-          return;
-        }
-
-        const genericItem = allGenericNavItems.find(item => item.id === selectedGenericItemToAdd);
-        if (!genericItem) {
-          showError("Élément générique introuvable.");
-          return;
-        }
-
-        let finalParentId: string | null = null;
-        if (selectedParentIdForNewConfig) { // Use the new state variable for the selected parent ID
-          // Check if selectedParentIdForNewConfig is an existing ID or a new category name
-          let parentItem = allGenericNavItems.find(item => item.id === selectedParentIdForNewConfig);
-
-          if (!parentItem) {
-            // It's a new category name, create it
-            const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
-                label: addConfigParentInput.trim(), // Use addConfigParentInput for the label of the new category
-                route: null,
-                description: `Catégorie générée automatiquement pour '${addConfigParentInput.trim()}'`,
-                is_external: false,
-                icon_name: newParentCategoryIconName, // Use the selected icon for the new category
-            };
-            parentItem = await addNavItem(newCategory);
-            if (!parentItem) {
-                showError("Échec de la création de la nouvelle catégorie parente.");
-                return;
-            }
-            showSuccess(`Catégorie '${parentItem.label}' créée automatiquement !`);
-          }
-          finalParentId = parentItem.id;
-        }
-
-        // Determine the order index for the new config
-        let orderIndex: number = 0;
-        if (finalParentId) {
-          const parentInTree = findItemInTree(configuredItemsTree, finalParentId);
-          orderIndex = parentInTree?.children?.length || 0;
-        } else {
-          orderIndex = configuredItemsTree.filter(item => item.parent_nav_item_id === null).length;
-        }
-
-        try {
-          const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-            nav_item_id: genericItem.id,
-            role: selectedRoleFilter as Profile['role'],
-            parent_nav_item_id: finalParentId,
-            order_index: orderIndex,
-            establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
-          };
-          await addRoleNavItemConfig(newConfig);
-          showSuccess(`'${genericItem.label}' ajouté au menu !`);
-          await fetchAndStructureNavItems(); // Refresh lists
-          setSelectedGenericItemToAdd(null); // Reset selection
-          setAddConfigParentInput(''); // Reset parent input
-          setSelectedParentIdForNewConfig(null); // Reset selected parent ID
-          setOpenAddConfigParentSelect(false);
-          setNewParentCategoryIconName('LayoutList'); // Reset icon selection
-        } catch (error: any) {
-          console.error("Error adding generic item to menu:", error);
-          showError(`Erreur lors de l'ajout au menu: ${error.message}`);
-        }
-      };
-
       const toggleExpand = (itemId: string) => {
         setExpandedItems(prev => ({
           ...prev,
@@ -974,7 +882,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               </div>
               <div>
                 <Label htmlFor="establishment-filter">Établissement</Label>
-                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)} disabled={selectedRoleFilter === 'all'}>
+                <Select value={selectedEstablishmentFilter} onOnValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)} disabled={selectedRoleFilter === 'all'}>
                   <SelectTrigger id="establishment-filter">
                     <SelectValue placeholder="Tous les établissements (Global)" />
                   </SelectTrigger>
@@ -1057,143 +965,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
           {selectedRoleFilter !== 'all' && (
             <div className="grid grid-cols-1 gap-8">
-              {/* New section for adding available generic items to the menu */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PlusCircle className="h-6 w-6 text-primary" /> Ajouter un élément disponible au menu
-                  </CardTitle>
-                  <CardDescription>Sélectionnez un élément générique et ajoutez-le au menu de {selectedRoleFilter} en tant qu'élément racine ou enfant. Vous pouvez taper un nouveau nom de catégorie pour la créer dynamiquement.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="add-generic-item-select">Élément générique</Label>
-                    <Select value={selectedGenericItemToAdd || ""} onValueChange={setSelectedGenericItemToAdd}>
-                      <SelectTrigger id="add-generic-item-select">
-                        <SelectValue placeholder="Sélectionner un élément à ajouter" />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80">
-                        <ScrollArea className="h-40"> {/* Added ScrollArea */}
-                          {availableGenericItemsForAdd.length === 0 ? (
-                            <SelectItem value="no-items" disabled>Aucun élément disponible</SelectItem>
-                          ) : (
-                            availableGenericItemsForAdd.map(item => (
-                              <SelectItem key={item.id} value={item.id}>
-                                <div className="flex items-center gap-2">
-                                  {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                  {item.label} {item.route && `(${item.route})`}
-                                </div>
-                              </SelectItem>
-                            ))
-                          )}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="add-parent-for-new-config">Parent (laisser vide pour élément racine)</Label>
-                    <Popover open={openAddConfigParentSelect} onOpenChange={setOpenAddConfigParentSelect}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openAddConfigParentSelect}
-                          className="w-full justify-between"
-                        >
-                          {selectedParentIdForNewConfig
-                            ? availableParentsForNewConfig.find(
-                                (item) => item.id === selectedParentIdForNewConfig,
-                              )?.label || addConfigParentInput // Fallback to input text if ID not found (for new category)
-                            : "Aucun (élément racine)"}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 backdrop-blur-lg bg-background/80">
-                        <Command>
-                          <CommandInput
-                            placeholder="Rechercher ou créer une catégorie..."
-                            value={addConfigParentInput}
-                            onValueChange={setAddConfigParentInput}
-                          />
-                          <CommandList>
-                            <CommandEmpty>
-                              {addConfigParentInput.trim() !== '' ? (
-                                <CommandItem
-                                  onSelect={() => {
-                                    setSelectedParentIdForNewConfig(addConfigParentInput); // Use input as ID for new category
-                                    setOpenAddConfigParentSelect(false); // Close popover on selection
-                                  }}
-                                >
-                                  <PlusCircle className="mr-2 h-4 w-4" /> Créer la catégorie "{addConfigParentInput}"
-                                </CommandItem>
-                              ) : (
-                                <span>Aucune catégorie trouvée.</span> // Wrapped in span
-                              )}
-                            </CommandEmpty>
-                            <CommandGroup>
-                              <CommandItem
-                                value="none"
-                                onSelect={() => {
-                                  setSelectedParentIdForNewConfig(null);
-                                  setAddConfigParentInput('');
-                                  setOpenAddConfigParentSelect(false); // Close popover on selection
-                                }}
-                              >
-                                Aucun (élément racine)
-                              </CommandItem>
-                              {availableParentsForNewConfig.map((item) => {
-                                const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
-                                return (
-                                  <CommandItem
-                                    key={item.id}
-                                    value={item.label} // Use label for search matching
-                                    onSelect={() => {
-                                      setSelectedParentIdForNewConfig(item.id);
-                                      setAddConfigParentInput(item.label);
-                                      setOpenAddConfigParentSelect(false); // Close popover on selection
-                                    }}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>} {/* Wrapped in span */}
-                                      <IconComponentToRender className="h-4 w-4" /> {item.label}
-                                    </div>
-                                  </CommandItem>
-                                );
-                              })}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div>
-                    <Label htmlFor="new-parent-category-icon">Icône pour la nouvelle catégorie parente (si créée)</Label>
-                    <Select value={newParentCategoryIconName} onValueChange={setNewParentCategoryIconName}>
-                      <SelectTrigger id="new-parent-category-icon">
-                        <SelectValue placeholder="Sélectionner une icône" />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80">
-                        <ScrollArea className="h-40">
-                          {Object.keys(iconMap).sort().map(iconName => {
-                            const IconComponent = iconMap[iconName];
-                            return (
-                              <SelectItem key={iconName} value={iconName}>
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> {iconName}
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={handleAddSelectedGenericItemToMenu} disabled={!selectedGenericItemToAdd}>
-                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter au menu
-                  </Button>
-                </CardContent>
-              </Card>
-
               {/* Configured Items Tree (now full width) */}
               <Card>
                 <CardHeader>
@@ -1414,6 +1185,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               selectedRoleFilter={selectedRoleFilter as Profile['role']}
               selectedEstablishmentFilter={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter}
               allGenericNavItems={allGenericNavItems}
+              allConfiguredItemsFlat={allConfiguredItemsFlat} // Pass the flat list of configured items
               onChildrenUpdated={fetchAndStructureNavItems} // Callback to refresh the main tree
             />
           )}

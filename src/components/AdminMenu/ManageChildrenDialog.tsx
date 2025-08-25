@@ -110,10 +110,11 @@ interface ManageChildrenDialogProps {
   selectedRoleFilter: Profile['role'];
   selectedEstablishmentFilter?: string;
   allGenericNavItems: NavItem[];
+  allConfiguredItemsFlat: NavItem[]; // New prop: flat list of all configured items for the current role/establishment
   onChildrenUpdated: () => void;
 }
 
-const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, selectedEstablishmentFilter, allGenericNavItems, onChildrenUpdated }: ManageChildrenDialogProps) => {
+const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, selectedEstablishmentFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated }: ManageChildrenDialogProps) => {
   const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
@@ -154,20 +155,26 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   useEffect(() => {
     if (isOpen && parentItem) {
-      // Filter generic items: not the parent itself, and not already a child
+      // Filter generic items:
+      // 1. Not the parent itself
+      // 2. Not already a direct child of this parent
+      // 3. Not already a descendant of this parent (to prevent circular dependency)
+      // 4. Not already configured anywhere in the current role/establishment's menu tree
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
-      const descendantsOfParent = getDescendantIds(parentItem, allGenericNavItems); // Get descendants from generic items
+      const descendantsOfParent = getDescendantIds(parentItem, allGenericNavItems);
+      const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id)); // IDs of all items already in the menu
 
       const filteredAvailable = allGenericNavItems.filter(
         item => item.id !== parentItem.id && // Cannot be the parent itself
                 !currentChildIds.has(item.id) && // Not already a direct child
-                !descendantsOfParent.has(item.id) // Not already a descendant (to prevent circular dependency)
+                !descendantsOfParent.has(item.id) && // Not already a descendant
+                !configuredItemIds.has(item.id) // Not already configured anywhere in the menu
       );
       setAvailableChildrenForAdd(filteredAvailable);
       setCurrentChildren(parentItem.children || []);
       setSelectedGenericItemToAdd(null); // Reset selection
     }
-  }, [isOpen, parentItem, allGenericNavItems, getDescendantIds]);
+  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds]);
 
   const handleDragStart = (event: any) => {
     const { active } = event;
@@ -308,7 +315,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         showSuccess("Sous-élément retiré !");
         onChildrenUpdated();
       } catch (error: any) {
-        console.error("Error removing child item:", error);
+      console.error("Error removing child item:", error);
         showError(`Erreur lors du retrait du sous-élément: ${error.message}`);
       }
     }
