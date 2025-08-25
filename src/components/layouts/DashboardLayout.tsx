@@ -36,18 +36,6 @@ interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
 }
 
-// Define category metadata (icons, labels) - Moved here to be the source of truth
-const categoriesConfig: { [key: string]: { label: string; icon: React.ElementType } } = {
-  "Accueil": { label: "Accueil", icon: Home },
-  "Apprentissage": { label: "Apprentissage", icon: BookOpen },
-  "Progression": { label: "Progression", icon: TrendingUp },
-  "Contenu": { label: "Contenu", icon: BookOpen },
-  "Pédagogie": { label: "Pédagogie", icon: Users },
-  "Analytiques": { label: "Analytiques", icon: BarChart2 },
-  "Administration": { label: "Administration", icon: BriefcaseBusiness },
-  "Autres": { label: "Autres", icon: Info }, // Fallback category
-};
-
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
@@ -66,7 +54,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const location = useLocation();
 
   // States for desktop category navigation
-  const [desktopActiveCategory, setDesktopActiveCategory] = useState<string | null>(null);
+  const [desktopActiveCategoryLabel, setDesktopActiveCategoryLabel] = useState<string | null>(null);
+  const [desktopActiveCategoryIcon, setDesktopActiveCategoryIcon] = useState<React.ElementType | null>(null);
+  const [desktopActiveCategoryItems, setDesktopActiveCategoryItems] = useState<NavItem[]>([]);
   const [isDesktopCategoryOverlayOpen, setIsDesktopCategoryOverlayOpen] = useState(false);
 
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
@@ -184,48 +174,58 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     });
   }, [navItems, unreadMessages]);
 
-  // Group fullNavTree items by category for desktop display
+  // Group fullNavTree items by category for desktop display, respecting order_index
   const groupedFullNavTree = React.useMemo(() => {
-    const groups: { [key: string]: NavItem[] } = {};
+    const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
+
     fullNavTree.forEach(item => {
-      // For top-level items, use their label as category if they are root and have no children
-      // Otherwise, if they have children, they are a category
-      const categoryLabel = item.is_root && item.children && item.children.length > 0 ? item.label : (item.parent_id ? fullNavTree.find(p => p.id === item.parent_id)?.label : item.label);
-      
-      if (categoryLabel) {
-        if (!groups[categoryLabel]) {
-          groups[categoryLabel] = [];
+      if (item.is_root && !item.parent_id && item.allowed_roles.includes(currentRole)) {
+        const categoryLabel = item.label;
+        const categoryOrder = item.order_index;
+        const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;
+
+        if (!categories[categoryLabel]) {
+          categories[categoryLabel] = { label: categoryLabel, order: categoryOrder, icon: categoryIcon, items: [] };
         }
-        // Add only direct children to categories, or the item itself if it's a root item without children
+
         if (item.children && item.children.length > 0) {
-          groups[categoryLabel].push(...item.children);
-        } else if (item.is_root && !item.parent_id) {
-          groups[categoryLabel].push(item);
+          item.children.forEach(child => {
+            if (child.allowed_roles.includes(currentRole)) {
+              categories[categoryLabel].items.push(child);
+            }
+          });
+        } else if (item.route) { // Direct link at root level
+          categories[categoryLabel].items.push(item);
         }
       }
     });
 
-    // Filter out empty categories and sort items within categories
-    const filteredGroups: { [key: string]: NavItem[] } = {};
-    for (const category in groups) {
-      const items = groups[category].filter(item => item.allowed_roles.includes(currentRole));
-      if (items.length > 0) {
-        filteredGroups[category] = items.sort((a, b) => a.order_index - b.order_index);
-      }
-    }
+    // Convert to array and sort categories by their order
+    const sortedCategories = Object.values(categories)
+      .filter(group => group.items.length > 0)
+      .sort((a, b) => a.order - b.order);
 
-    return filteredGroups;
+    // Sort items within each category by their order_index
+    sortedCategories.forEach(categoryGroup => {
+      categoryGroup.items.sort((a, b) => a.order_index - b.order_index);
+    });
+
+    return sortedCategories;
   }, [fullNavTree, currentRole]);
 
   // Handlers for desktop category navigation
-  const handleDesktopCategoryClick = (categoryLabel: string) => {
-    setDesktopActiveCategory(categoryLabel);
-    setIsDesktopCategoryOverlayOpen(true); // Open the overlay
+  const handleDesktopCategoryClick = (categoryLabel: string, categoryIcon: React.ElementType, items: NavItem[]) => {
+    setDesktopActiveCategoryLabel(categoryLabel);
+    setDesktopActiveCategoryIcon(categoryIcon);
+    setDesktopActiveCategoryItems(items);
+    setIsDesktopCategoryOverlayOpen(true);
   };
 
   const handleDesktopBackToCategories = () => {
-    setDesktopActiveCategory(null);
-    setIsDesktopCategoryOverlayOpen(false); // Close the overlay
+    setDesktopActiveCategoryLabel(null);
+    setDesktopActiveCategoryIcon(null);
+    setDesktopActiveCategoryItems([]);
+    setIsDesktopCategoryOverlayOpen(false);
   };
 
   const handleLogoClick = useCallback(() => {
@@ -257,22 +257,18 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         {!isMobile && currentUserProfile && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {/* Render category buttons in the header for desktop */}
-            {Object.keys(groupedFullNavTree).sort().map(category => {
-              const categoryItems = groupedFullNavTree[category];
-              if (categoryItems.length === 0) return null;
-
-              const categoryConfig = categoriesConfig[category] || categoriesConfig["Autres"];
-              const IconComponent = iconMap[categoryConfig.icon.name] || Info; // Use iconMap
+            {groupedFullNavTree.map(categoryGroup => {
+              const IconComponent = categoryGroup.icon;
 
               return (
                 <Button
-                  key={category}
+                  key={categoryGroup.label}
                   variant="ghost"
-                  onClick={() => handleDesktopCategoryClick(category)}
+                  onClick={() => handleDesktopCategoryClick(categoryGroup.label, categoryGroup.icon, categoryGroup.items)}
                   className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
                 >
                   {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
-                  {categoryConfig.label}
+                  {categoryGroup.label}
                 </Button>
               );
             })}
@@ -334,23 +330,23 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </header>
 
       {/* Desktop Category Items Overlay (Full-width drawer) */}
-      {!isMobile && isDesktopCategoryOverlayOpen && desktopActiveCategory && (
+      {!isMobile && isDesktopCategoryOverlayOpen && desktopActiveCategoryLabel && (
         <div className="fixed top-[68px] left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8">
           <div className="max-w-7xl mx-auto flex flex-col gap-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <ArrowLeft className="h-5 w-5 cursor-pointer" onClick={handleDesktopBackToCategories} />
-                {React.createElement(categoriesConfig[desktopActiveCategory]?.icon || Info, { className: "h-6 w-6 text-primary" })}
-                {categoriesConfig[desktopActiveCategory]?.label || desktopActiveCategory}
+                {desktopActiveCategoryIcon && React.createElement(desktopActiveCategoryIcon, { className: "h-6 w-6 text-primary" })}
+                {desktopActiveCategoryLabel}
               </h2>
               <Button variant="ghost" onClick={handleDesktopBackToCategories}>
                 <X className="h-5 w-5 mr-2" /> Fermer
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {groupedFullNavTree[desktopActiveCategory]?.map((item) => {
+              {desktopActiveCategoryItems.map((item) => {
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                const IconComponent = iconMap[item.icon_name || 'Info'] || Info; // Use iconMap
+                const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
                 return (
                   <NavLink

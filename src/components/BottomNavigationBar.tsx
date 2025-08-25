@@ -54,18 +54,6 @@ interface BottomNavigationBarProps {
   unreadMessagesCount: number;
 }
 
-// Define category metadata (icons, labels) - Using the same config as DashboardLayout
-const categoriesConfig: { [key: string]: { label: string; icon: React.ElementType } } = {
-  "Accueil": { label: "Accueil", icon: Home },
-  "Apprentissage": { label: "Apprentissage", icon: BookOpen },
-  "Progression": { label: "Progression", icon: TrendingUp },
-  "Contenu": { label: "Contenu", icon: BookOpen },
-  "Pédagogie": { label: "Pédagogie", icon: Users },
-  "Analytiques": { label: "Analytiques", icon: BarChart2 },
-  "Administration": { label: "Administration", icon: BriefcaseBusiness },
-  "Autres": { label: "Autres", icon: Info }, // Fallback category
-};
-
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
@@ -87,14 +75,21 @@ const BottomNavigationBar = ({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerContent, setDrawerContent] = useState<'categories' | 'items'>('categories');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategoryLabel, setActiveCategoryLabel] = useState<string | null>(null);
   const [activeCategoryIcon, setActiveCategoryIcon] = useState<React.ElementType | null>(null);
+
+  const handleCategoryClick = useCallback((categoryLabel: string, categoryIcon: React.ElementType) => {
+    setActiveCategoryLabel(categoryLabel);
+    setActiveCategoryIcon(categoryIcon);
+    setDrawerContent('items');
+    setSearchQuery('');
+  }, []);
 
   const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
     if (!currentUser) {
       return [
-        { id: 'home-anon', to: "/", icon_name: 'Home', label: "Accueil", is_root: true, allowed_roles: [], order_index: 0, type: "link" },
-        { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_root: true, allowed_roles: [], order_index: 1, type: 'trigger', onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); } }
+        { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_root: true, allowed_roles: [], order_index: 0 },
+        { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_root: true, allowed_roles: [], order_index: 1, onClick: () => { setIsMoreDrawerOpen(true); handleCategoryClick("Accueil", iconMap['Home']); } }
       ];
     }
     // Filter navItems to only include those that are root and have no parent_id, and are allowed for the current role
@@ -111,41 +106,44 @@ const BottomNavigationBar = ({
     ].filter(Boolean) as NavItem[];
 
     return baseItems;
-  }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, allNavItemsForDrawer, currentRole]);
+  }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, allNavItemsForDrawer, currentRole, handleCategoryClick]);
 
   const groupedDrawerItems = React.useMemo(() => {
-    const groups: { [key: string]: NavItem[] } = {};
-    allNavItemsForDrawer.forEach(item => {
-      // Determine the category for the item. If it's a root item with children, its label is the category.
-      // If it's a child, its parent's label is the category.
-      // If it's a root item without children, its label is the category.
-      let categoryLabel = item.label; // Default to item's label
-      if (item.parent_id) {
-        const parent = allNavItemsForDrawer.find(p => p.id === item.parent_id);
-        if (parent) {
-          categoryLabel = parent.label;
-        }
-      } else if (item.is_root && item.children && item.children.length > 0) {
-        categoryLabel = item.label; // This item itself is a category
-      } else if (item.is_root && !item.children) {
-        categoryLabel = "Accueil"; // Group standalone root items under "Accueil"
-      }
+    const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
 
-      if (!groups[categoryLabel]) {
-        groups[categoryLabel] = [];
+    allNavItemsForDrawer.forEach(item => {
+      if (item.is_root && !item.parent_id && item.allowed_roles.includes(currentRole)) {
+        const categoryLabel = item.label;
+        const categoryOrder = item.order_index;
+        const categoryIcon = iconMap[item.icon_name || 'Info'] || Info;
+
+        if (!categories[categoryLabel]) {
+          categories[categoryLabel] = { label: categoryLabel, order: categoryOrder, icon: categoryIcon, items: [] };
+        }
+
+        if (item.children && item.children.length > 0) {
+          item.children.forEach(child => {
+            if (child.allowed_roles.includes(currentRole)) {
+              categories[categoryLabel].items.push(child);
+            }
+          });
+        } else if (item.route) { // Direct link at root level
+          categories[categoryLabel].items.push(item);
+        }
       }
-      groups[categoryLabel].push(item);
     });
 
-    // Filter out empty categories and sort items within categories
-    const filteredGroups: { category: string; items: NavItem[] }[] = [];
-    for (const category in groups) {
-      const items = groups[category].filter(item => item.allowed_roles.includes(currentRole));
-      if (items.length > 0) {
-        filteredGroups.push({ category, items: items.sort((a, b) => a.order_index - b.order_index) });
-      }
-    }
-    return filteredGroups.sort((a, b) => a.category.localeCompare(b.category));
+    // Convert to array and sort categories by their order
+    const sortedCategories = Object.values(categories)
+      .filter(group => group.items.length > 0)
+      .sort((a, b) => a.order - b.order);
+
+    // Sort items within each category by their order_index
+    sortedCategories.forEach(categoryGroup => {
+      categoryGroup.items.sort((a, b) => a.order_index - b.order_index);
+    });
+
+    return sortedCategories;
   }, [allNavItemsForDrawer, currentRole]);
 
   const handleLogout = async () => {
@@ -153,7 +151,7 @@ const BottomNavigationBar = ({
     navigate("/");
     setIsMoreDrawerOpen(false);
     setDrawerContent('categories');
-    setActiveCategory(null);
+    setActiveCategoryLabel(null);
     setActiveCategoryIcon(null);
     setSearchQuery('');
   };
@@ -161,18 +159,18 @@ const BottomNavigationBar = ({
   const handleAuthSuccess = () => {
     setIsMoreDrawerOpen(false);
     setDrawerContent('categories');
-    setActiveCategory(null);
+    setActiveCategoryLabel(null);
     setActiveCategoryIcon(null);
     setSearchQuery('');
     navigate("/dashboard");
   };
 
   const handleDrawerItemClick = (item: NavItem) => {
-    if (item.type === 'link' && item.route) {
+    if (item.route) {
       navigate(item.route);
       setIsMoreDrawerOpen(false);
       setDrawerContent('categories');
-      setActiveCategory(null);
+      setActiveCategoryLabel(null);
       setActiveCategoryIcon(null);
       setSearchQuery('');
     } else if (item.onClick) {
@@ -180,23 +178,16 @@ const BottomNavigationBar = ({
       if (item.label !== "Recherche") {
         setIsMoreDrawerOpen(false);
         setDrawerContent('categories');
-        setActiveCategory(null);
+        setActiveCategoryLabel(null);
         setActiveCategoryIcon(null);
         setSearchQuery('');
       }
     }
   };
 
-  const handleCategoryClick = (categoryLabel: string, categoryIcon: React.ElementType) => {
-    setActiveCategory(categoryLabel);
-    setActiveCategoryIcon(categoryIcon);
-    setDrawerContent('items');
-    setSearchQuery('');
-  };
-
   const handleBackToCategories = () => {
     setDrawerContent('categories');
-    setActiveCategory(null);
+    setActiveCategoryLabel(null);
     setActiveCategoryIcon(null);
     setSearchQuery('');
   };
@@ -205,20 +196,21 @@ const BottomNavigationBar = ({
     const lowerCaseQuery = searchQuery.toLowerCase();
 
     if (drawerContent === 'categories') {
-      const filteredCategories = groupedDrawerItems.filter(group =>
-        categoriesConfig[group.category]?.label.toLowerCase().includes(lowerCaseQuery) ||
+      return groupedDrawerItems.filter(group =>
+        group.label.toLowerCase().includes(lowerCaseQuery) ||
         group.items.some(item => item.label.toLowerCase().includes(lowerCaseQuery) || (item.description && item.description.toLowerCase().includes(lowerCaseQuery)))
       );
-      return filteredCategories;
     } else {
-      const currentCategoryItems = groupedDrawerItems.find(group => group.category === activeCategory)?.items || [];
-      const filteredItems = currentCategoryItems.filter(item =>
+      const activeGroup = groupedDrawerItems.find(group => group.label === activeCategoryLabel);
+      if (!activeGroup) return [];
+
+      const filteredItems = activeGroup.items.filter(item =>
         item.label.toLowerCase().includes(lowerCaseQuery) ||
         (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
       );
-      return [{ category: activeCategory || "Autres", items: filteredItems }];
+      return [{ label: activeGroup.label, order: activeGroup.order, icon: activeGroup.icon, items: filteredItems }];
     }
-  }, [groupedDrawerItems, searchQuery, drawerContent, activeCategory, currentRole]);
+  }, [groupedDrawerItems, searchQuery, drawerContent, activeCategoryLabel, currentRole]);
 
   const swipeHandlers = useSwipeable({
     onSwipedUp: () => {
@@ -233,7 +225,7 @@ const BottomNavigationBar = ({
   useEffect(() => {
     if (!isMoreDrawerOpen) {
       setDrawerContent('categories');
-      setActiveCategory(null);
+      setActiveCategoryLabel(null);
       setActiveCategoryIcon(null);
       setSearchQuery('');
     }
@@ -255,44 +247,29 @@ const BottomNavigationBar = ({
             (item.route && !item.route.startsWith('#') && location.pathname.startsWith(item.route));
           const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
-          if (item.type === 'link' && item.route) {
-            return (
-              <NavLink
-                key={item.id}
-                to={item.route}
-                className={({ isActive }) =>
-                  cn(
-                    "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 w-1/5",
-                    isActive || isLinkActive
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  )
-                }
-              >
-                <IconComponent className="h-5 w-5 mb-1" />
-                {item.label}
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            );
-          }
-          if (item.type === 'trigger' && item.onClick) {
-            return (
-              <Button
-                key={item.id}
-                variant="ghost"
-                onClick={item.onClick}
-                className="flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors h-auto text-muted-foreground hover:text-foreground flex-shrink-0 w-1/5"
-              >
-                <IconComponent className="h-5 w-5 mb-1" />
-                {item.label}
-              </Button>
-            );
-          }
-          return null;
+          return (
+            <NavLink
+              key={item.id}
+              to={item.route || '#'}
+              className={({ isActive }) =>
+                cn(
+                  "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0 w-1/5",
+                  isActive || isLinkActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )
+              }
+              onClick={item.onClick ? () => handleDrawerItemClick(item) : undefined}
+            >
+              <IconComponent className="h-5 w-5 mb-1" />
+              {item.label}
+              {item.badge !== undefined && item.badge > 0 && (
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                  {item.badge}
+                </span>
+              )}
+            </NavLink>
+          );
         })}
 
         <Button
@@ -318,7 +295,7 @@ const BottomNavigationBar = ({
                 )}
                 <DrawerTitle className="flex-grow text-center flex items-center justify-center gap-2">
                   {drawerContent === 'items' && activeCategoryIcon && React.createElement(activeCategoryIcon, { className: "h-6 w-6 text-primary" })}
-                  {drawerContent === 'items' ? activeCategory : "Menu"}
+                  {drawerContent === 'items' ? activeCategoryLabel : "Menu"}
                 </DrawerTitle>
                 <DrawerClose asChild>
                   <Button variant="ghost" size="icon" className="absolute right-4">
@@ -328,13 +305,13 @@ const BottomNavigationBar = ({
                 </DrawerClose>
               </div>
               <DrawerDescription className="text-center">
-                {drawerContent === 'items' ? `Éléments de la catégorie ${activeCategory}` : "Toutes les options de navigation."}
+                {drawerContent === 'items' ? `Éléments de la catégorie ${activeCategoryLabel}` : "Toutes les options de navigation."}
               </DrawerDescription>
             </DrawerHeader>
             {currentUser && (
               <div className="p-4 border-b border-border">
                 <Input
-                  placeholder={drawerContent === 'categories' ? "Rechercher une catégorie ou un élément..." : `Rechercher dans ${activeCategory}...`}
+                  placeholder={drawerContent === 'categories' ? "Rechercher une catégorie ou un élément..." : `Rechercher dans ${activeCategoryLabel}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full"
@@ -346,10 +323,10 @@ const BottomNavigationBar = ({
                 <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
               ) : (
                 filteredDisplayContent.map((group) => (
-                  <div key={group.category} className="space-y-2">
+                  <div key={group.label} className="space-y-2">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {drawerContent === 'categories' ? (
-                        (group.items.length > 0 || (categoriesConfig[group.category]?.label.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== '')) && (
+                        (group.items.length > 0 || (group.label.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== '')) && (
                           <Button
                             variant="outline"
                             className={cn(
@@ -357,10 +334,10 @@ const BottomNavigationBar = ({
                               "hover:bg-accent hover:text-accent-foreground",
                               "transition-all duration-200 ease-in-out"
                             )}
-                            onClick={() => handleCategoryClick(group.category, iconMap[categoriesConfig[group.category]?.icon.name || 'Info'] || Info)}
+                            onClick={() => handleCategoryClick(group.label, group.icon)}
                           >
-                            {React.createElement(iconMap[categoriesConfig[group.category]?.icon.name || 'Info'] || Info, { className: "h-6 w-6 mb-2" })}
-                            <span className="text-xs font-medium line-clamp-2">{categoriesConfig[group.category]?.label || group.category}</span>
+                            {React.createElement(group.icon, { className: "h-6 w-6 mb-2" })}
+                            <span className="text-xs font-medium line-clamp-2">{group.label}</span>
                           </Button>
                         )
                       ) : (
@@ -399,10 +376,10 @@ const BottomNavigationBar = ({
               )}
             </div>
             <DrawerFooter>
-              {!currentUser && drawerContent === 'items' && activeCategory === 'Accueil' && (
+              {!currentUser && drawerContent === 'items' && activeCategoryLabel === 'Accueil' && (
                 <AuthMenu onClose={() => setIsMoreDrawerOpen(false)} onLoginSuccess={handleAuthSuccess} />
               )}
-              {currentUser && drawerContent === 'items' && activeCategory === 'Accueil' && (
+              {currentUser && drawerContent === 'items' && activeCategoryLabel === 'Accueil' && (
                 <Button
                   variant="destructive"
                   className="w-full justify-start"
