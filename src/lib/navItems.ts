@@ -59,7 +59,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         label: config.nav_item.label,
         route: config.nav_item.route || undefined,
         icon_name: config.nav_item.icon_name || undefined,
-        // is_root: !config.parent_nav_item_id, // REMOVED: Root status is determined by parent_nav_item_id === null
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
         children: [],
@@ -131,7 +130,6 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     label: item.label,
     route: item.route || undefined,
     icon_name: item.icon_name || undefined,
-    // is_root: true, // REMOVED: Root status is determined by parent_nav_item_id === null
     description: item.description || undefined,
     is_external: item.is_external,
     children: [], // Children are built dynamically, not stored in raw item

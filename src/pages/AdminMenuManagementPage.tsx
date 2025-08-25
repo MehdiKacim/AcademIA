@@ -294,7 +294,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               const configuredItem: NavItem = {
                 ...genericItem,
                 children: [],
-                // is_root: !config.parent_nav_item_id, // REMOVED: Root status is determined by parent_nav_item_id === null
                 configId: config.id,
                 parent_nav_item_id: config.parent_nav_item_id || undefined,
                 order_index: config.order_index, // Now mandatory, should always be a number from DB
@@ -334,7 +333,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 await updateRoleNavItemConfig(updatedConfig); // Update DB
                 item.order_index = i; // Update local item
                 item.parent_nav_item_id = parentId; // Update local item
-                // item.is_root = (parentId === null); // REMOVED: Root status is determined by parent_nav_item_id === null
               }
             }
           };
@@ -928,7 +926,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <Label htmlFor="new-item-route">Route (URL interne ou #hash, laisser vide pour catégorie/déclencheur)</Label>
                       <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} />
                     </div>
-                    {/* Removed is_root switch */}
                     <div className="flex items-center space-x-2">
                       <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} />
                       <Label htmlFor="new-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
@@ -1012,12 +1009,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <SelectItem value="none">Aucun (élément racine)</SelectItem>
                         {availableParentsForNewConfig.map(item => {
-                          const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
+                          const IconComponent = item.icon_name ? iconMap[item.icon_name] || Info : Info;
                           return (
                             <SelectItem key={item.id} value={item.id}>
                               <div className="flex items-center gap-2">
                                 {Array(item.level).fill('—').join('')}
-                                <IconComponentToRender className="h-4 w-4" /> {item.label}
+                                <IconComponent className="h-4 w-4" /> {item.label}
                               </div>
                             </SelectItem>
                           );
@@ -1085,7 +1082,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <Label htmlFor="edit-item-route" className="text-right">Route</Label>
                     <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="col-span-3" />
                   </div>
-                  {/* Removed is_root switch */}
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-item-is-external" className="text-right">Lien externe</Label>
                     <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="col-span-3" />
@@ -1099,11 +1095,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                       <SelectContent className="backdrop-blur-lg bg-background/80">
                         <ScrollArea className="h-40"> {/* Added ScrollArea */}
                           {Object.keys(iconMap).sort().map(iconName => {
-                            const IconComponentToRender: React.ElementType = (iconName && typeof iconName === 'string' && iconMap[iconName]) ? iconMap[iconName] : Info;
+                            const IconComponent = iconMap[iconName];
                             return (
                               <SelectItem key={iconName} value={iconName}>
                                 <div className="flex items-center gap-2">
-                                  <IconComponentToRender className="h-4 w-4" /> {iconName}
+                                  <IconComponent className="h-4 w-4" /> {iconName}
                                 </div>
                               </SelectItem>
                             );
