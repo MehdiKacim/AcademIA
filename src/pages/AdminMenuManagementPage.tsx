@@ -45,7 +45,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       DialogFooter,
     } from "@/components/ui/dialog";
     import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
-    // Removed import for loadEstablishments
     import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'; // Import ContextMenu
     import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog'; // Import new dialog
     import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
@@ -203,11 +202,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]); // Configured items for selected role
       const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]); // Flat list of configured items
       const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
-      // Removed establishments state
 
       // State for global role filter
       const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
-      // Removed selectedEstablishmentFilter
 
       // States for new generic item form
       const [newItemLabel, setNewItemLabel] = useState('');
@@ -215,7 +212,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [newItemIconName, setNewItemIconName] = useState('');
       const [newItemDescription, setNewItemDescription] = useState('');
       const [newItemIsExternal, setNewItemIsExternal] = useState(false);
-      const [newItemType, setNewItemType] = useState<NavItem['type']>('route'); // New state for type
+      const [newItemType, setNewItemType] = useState<NavItem['type']>('route');
       const [isAddingItem, setIsAddingItem] = useState(false);
 
       // States for edit dialog (for generic nav item properties)
@@ -226,7 +223,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [editItemIconName, setEditItemIconName] = useState('');
       const [editItemDescription, setEditItemDescription] = useState('');
       const [editItemIsExternal, setEditItemIsExternal] = useState(false);
-      const [editItemType, setEditItemType] = useState<NavItem['type']>('route'); // New state for type
+      const [editItemType, setEditItemType] = useState<NavItem['type']>('route');
       const [isSavingEdit, setIsSavingEdit] = useState(false);
 
       // States for edit dialog (for role-specific config properties)
@@ -234,7 +231,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
       const [editConfigParentId, setEditConfigParentId] = useState<string | undefined>(undefined);
       const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
-      // Removed editConfigEstablishmentId
       const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false);
 
       // States for managing children dialog
@@ -259,8 +255,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
       const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
       const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
-
-      // Removed useEffect for fetching establishments
 
       // Helper to find an item in the tree by its configId or id
       const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
@@ -299,10 +293,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           setAllConfiguredItemsFlat([]); // Clear flat list too
         } else {
           const role = selectedRoleFilter as Profile['role'];
-          const roleConfigs = await getRoleNavItemConfigsByRole(role); // Removed establishmentId
+          const roleConfigs = await getRoleNavItemConfigsByRole(role);
 
           const configuredMap = new Map<string, NavItem>();
-          const allConfiguredItemsFlatList: NavItem[] = []; // Use a temporary list
+          const allConfiguredItemsFlatList: NavItem[] = [];
 
           const genericItemMap = new Map<string, NavItem>();
           genericItems.forEach(item => genericItemMap.set(item.id, { ...item, children: [] }));
@@ -315,19 +309,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 children: [],
                 configId: config.id,
                 parent_nav_item_id: config.parent_nav_item_id || undefined,
-                order_index: config.order_index, // Now mandatory, should always be a number from DB
-                is_global: true, // All items are global now
+                order_index: config.order_index,
+                is_global: true,
               };
               configuredMap.set(configuredItem.id, configuredItem);
-              allConfiguredItemsFlatList.push(configuredItem); // Add to temporary flat list
+              allConfiguredItemsFlatList.push(configuredItem);
             }
           });
-          setAllConfiguredItemsFlat(allConfiguredItemsFlatList); // Set the state with the temporary list
+          setAllConfiguredItemsFlat(allConfiguredItemsFlatList);
 
-          // Rebuild the tree and re-index
-          // Group items by parent_nav_item_id
           const groupedByParent = new Map<string | null, NavItem[]>();
-          allConfiguredItemsFlatList.forEach(item => { // Use the temporary flat list here
+          allConfiguredItemsFlatList.forEach(item => {
             const parentId = item.parent_nav_item_id || null;
             if (!groupedByParent.has(parentId)) {
               groupedByParent.set(parentId, []);
@@ -335,9 +327,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             groupedByParent.get(parentId)?.push(item);
           });
 
-          // Function to sort and re-index a list of items and update DB
           const sortAndReindex = async (items: NavItem[], parentId: string | null) => {
-            items.sort((a, b) => a.order_index - b.order_index); // Sort by current order
+            items.sort((a, b) => a.order_index - b.order_index);
             for (let i = 0; i < items.length; i++) {
               const item = items[i];
               if (item.order_index !== i || item.parent_nav_item_id !== parentId) {
@@ -347,20 +338,18 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                   role: role,
                   parent_nav_item_id: parentId,
                   order_index: i,
-                }; // Removed establishment_id
-                await updateRoleNavItemConfig(updatedConfig); // Update DB
-                item.order_index = i; // Update local item
-                item.parent_nav_item_id = parentId; // Update local item
+                };
+                await updateRoleNavItemConfig(updatedConfig);
+                item.order_index = i;
+                item.parent_nav_item_id = parentId;
               }
             }
           };
 
-          // Process root items
           const rootItemsToProcess = groupedByParent.get(null) || [];
           await sortAndReindex(rootItemsToProcess, null);
           const finalRootItems: NavItem[] = [...rootItemsToProcess];
 
-          // Recursively process children
           const processChildren = async (parentItem: NavItem) => {
             const children = groupedByParent.get(parentItem.id) || [];
             await sortAndReindex(children, parentItem.id);
@@ -377,7 +366,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           setConfiguredItemsTree(finalRootItems);
           console.log("[AdminMenuManagementPage] Configured items tree rebuilt:", finalRootItems);
         }
-      }, [selectedRoleFilter, findItemInTree, getDescendantIds]); // Removed selectedEstablishmentFilter
+      }, [selectedRoleFilter, findItemInTree, getDescendantIds]);
 
       useEffect(() => {
         fetchAndStructureNavItems();
@@ -392,12 +381,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           showError("Une route est requise pour un élément de type 'Route'.");
           return;
         }
-        if (newItemType === 'category_or_action' && !newItemRoute.trim()) { // Updated logic
+        if (newItemType === 'category_or_action' && !newItemRoute.trim()) {
           // For category_or_action, route can be null (category) or a hash route (action)
           // If it's meant to be an action, a route is required. If it's a category, route should be null.
-          // For simplicity, let's enforce a route for 'action' and allow null for 'category'
-          // Here, we assume if type is 'category_or_action' and route is empty, it's a category.
-          // If it's an action, the user should provide a route.
           // This check is now more flexible.
         }
 
@@ -409,7 +395,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             description: newItemDescription.trim() || null,
             is_external: newItemIsExternal,
             icon_name: newItemIconName || null,
-            type: newItemType, // Include the new type field
+            type: newItemType,
           };
           const addedItem = await addNavItem(newItemData);
           showSuccess("Élément de navigation générique ajouté !");
@@ -419,21 +405,21 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
               nav_item_id: addedItem.id,
               role: selectedRoleFilter as Profile['role'],
-              parent_nav_item_id: null, // Add as a root item
-              order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length, // Add to end of root items
-            }; // Removed establishment_id
+              parent_nav_item_id: null,
+              order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length,
+            };
             await addRoleNavItemConfig(newConfig);
             showSuccess("Configuration de rôle ajoutée pour le nouvel élément !");
           }
 
-          await fetchAndStructureNavItems(); // Refresh list
+          await fetchAndStructureNavItems();
           // Reset form
           setNewItemLabel('');
           setNewItemRoute('');
           setNewItemIconName('');
           setNewItemDescription('');
           setNewItemIsExternal(false);
-          setNewItemType('route'); // Reset type
+          setNewItemType('route');
           setIsNewItemFormOpen(false);
         } catch (error: any) {
           console.error("Error adding generic nav item:", error);
@@ -459,9 +445,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         } else {
           if (window.confirm("Êtes-vous sûr de vouloir supprimer cet élément de navigation générique ? Cela supprimera toutes ses configurations de rôle associées. Cette action est irréversible.")) {
             try {
-              await deleteNavItem(navItemId); // This should cascade delete from role_nav_configs
+              await deleteNavItem(navItemId);
               showSuccess("Élément de navigation générique supprimé !");
-              await fetchAndStructureNavItems(); // Refresh list
+              await fetchAndStructureNavItems();
             } catch (error: any) {
               console.error("Error deleting generic nav item:", error);
               showError(`Erreur lors de la suppression de l'élément générique: ${error.message}`);
@@ -477,7 +463,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         setEditItemIconName(item.icon_name || '');
         setEditItemDescription(item.description || '');
         setEditItemIsExternal(item.is_external);
-        setEditItemType(item.type); // Set the type for editing
+        setEditItemType(item.type);
         setIsEditDialogOpen(true);
       };
 
@@ -491,7 +477,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           showError("Une route est requise pour un élément de type 'Route'.");
           return;
         }
-        if (editItemType === 'category_or_action' && !editItemRoute.trim()) { // Updated logic
+        if (editItemType === 'category_or_action' && !editItemRoute.trim()) {
           // Same logic as for new item: allow empty route for category, require for action
         }
 
@@ -504,11 +490,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             description: editItemDescription.trim() || null,
             is_external: editItemIsExternal,
             icon_name: editItemIconName || null,
-            type: editItemType, // Include the new type field
+            type: editItemType,
           };
           await updateNavItem(updatedItemData);
           showSuccess("Élément de navigation générique mis à jour !");
-          await fetchAndStructureNavItems(); // Refresh list
+          await fetchAndStructureNavItems();
           setIsEditDialogOpen(false);
           setCurrentItemToEdit(null);
         } catch (error: any) {
@@ -520,15 +506,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       };
 
       const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
-        setCurrentItemToEdit(item); // Keep generic item context
+        setCurrentItemToEdit(item);
         setCurrentConfigToEdit(config);
-        // Set editConfigParentInput for display in the PopoverTrigger
         setEditConfigParentInput(item.parent_nav_item_id ? configuredItemsTree.find(i => i.id === item.parent_nav_item_id)?.label || '' : '');
-        // Set editConfigParentId for the actual ID value
         setEditConfigParentId(config.parent_nav_item_id || undefined);
         setEditConfigOrderIndex(config.order_index);
         setIsEditConfigDialogOpen(true);
-        setOpenEditConfigParentSelect(false); // Ensure it's closed initially
+        setOpenEditConfigParentSelect(false);
       };
 
       const handleSaveEditedRoleConfig = async () => {
@@ -536,18 +520,16 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
         let finalParentId: string | null = null;
         if (editConfigParentInput.trim() !== '') {
-          // Check if parent category exists
-          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && item.type === 'category_or_action' && (item.route === null || item.route === undefined)); // Check type and ensure it's a category (no route)
+          let parentItem = allGenericNavItems.find(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase() && item.type === 'category_or_action' && (item.route === null || item.route === undefined));
 
           if (!parentItem) {
-            // If not found, it means the user typed a new category name, so create it
             const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
               label: editConfigParentInput.trim(),
-              route: null, // It's a category
+              route: null,
               description: `Catégorie générée automatiquement pour '${editConfigParentInput.trim()}'`,
               is_external: false,
-              icon_name: 'LayoutList', // Default icon for categories
-              type: 'category_or_action', // Set type for new category
+              icon_name: 'LayoutList',
+              type: 'category_or_action',
             };
             parentItem = await addNavItem(newCategory);
             if (!parentItem) {
@@ -560,7 +542,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           finalParentId = parentItem.id;
         }
 
-        // Prevent circular dependency: an item cannot be its own parent or a descendant of itself
         if (finalParentId === currentItemToEdit.id) {
           showError("Un élément ne peut pas être son propre parent.");
           setIsSavingConfigEdit(false);
@@ -581,15 +562,15 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             role: currentConfigToEdit.role,
             parent_nav_item_id: finalParentId,
             order_index: editConfigOrderIndex,
-          }; // Removed establishment_id
+          };
           console.log("[AdminMenuManagementPage] Saving updated config:", updatedConfigData);
           await updateRoleNavItemConfig(updatedConfigData);
           showSuccess("Configuration de rôle mise à jour !");
-          await fetchAndStructureNavItems(); // Refresh list
+          await fetchAndStructureNavItems();
           setIsEditConfigDialogOpen(false);
           setCurrentConfigToEdit(null);
           setCurrentItemToEdit(null);
-          setEditConfigParentInput(''); // Reset edit parent input
+          setEditConfigParentInput('');
         } catch (error: any) {
           console.error("Error updating role config:", error);
           showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
@@ -601,7 +582,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const handleDragStart = (event: any) => {
         const { active } = event;
 
-        // Only allow dragging of configured items within the configured tree
         const configuredItem = findItemInTree(configuredItemsTree, active.id);
         if (configuredItem && configuredItem.configId) {
           const config = {
@@ -610,11 +590,10 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             role: selectedRoleFilter as Profile['role'],
             parent_nav_item_id: configuredItem.parent_nav_item_id,
             order_index: configuredItem.order_index,
-          }; // Removed establishment_id
+          };
           setActiveDragItem(configuredItem);
           setActiveDragConfig(config);
         } else {
-          // If it's not a configured item, don't allow dragging in this context
           setActiveDragItem(null);
           setActiveDragConfig(null);
         }
@@ -649,7 +628,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
           const overIsConfiguredChildContainer = overId.startsWith('configured-container-children-of-');
 
           if (overConfiguredItem) {
-            // Prevent circular dependency: an item cannot be its own parent or a descendant of itself
             if (activeDragItem.id === overConfiguredItem.id) {
               showError("Un élément ne peut pas être déplacé sur lui-même.");
               return;
@@ -660,19 +638,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               return;
             }
 
-            // Logic to determine if dropping ONTO an item (to make it a child) or BETWEEN items (to make it a sibling)
-            // If dropping onto an item, it becomes a child of that item.
-            // If dropping between items, it becomes a sibling.
-            // For simplicity, let's assume dropping onto an item makes it a child.
-            // For dropping between items, we need to find the correct sibling position.
-
-            // Check if the drop target is a valid parent (i.e., a category, an item without a route)
-            if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) { // If the over item is a category
+            if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) {
                 newParentNavItemId = overConfiguredItem.id;
-                newOrderIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
+                newOrderIndex = overConfiguredItem.children?.length || 0;
                 console.log("[handleDragEnd] Dropped ONTO category. New parent:", newParentNavItemId, "New order:", newOrderIndex);
-            } else { // If the over item is a leaf node (has a route) or a root item with a route
-                // If dropping onto a leaf node, it should become a sibling of that leaf node.
+            } else {
                 newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
                 const siblings =
                     newParentNavItemId === null
@@ -688,13 +658,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             }
 
           } else if (overIsConfiguredRootContainer) {
-            // Dropped into the root container (no specific parent)
             newParentNavItemId = null;
             newOrderIndex = configuredItemsTree.filter((item) => item.parent_nav_item_id === null)
               .length;
             console.log("[handleDragEnd] Dropped into root container. New parent:", newParentNavItemId, "New order:", newOrderIndex);
           } else if (overIsConfiguredChildContainer) {
-            // Dropped into a specific child container (e.g., children of a category)
             newParentNavItemId = overId.replace(
               'configured-container-children-of-',
               ''
@@ -704,7 +672,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               newParentNavItemId
             );
 
-            // Prevent circular dependency when dropping into a child container
             if (activeDragItem.id === newParentNavItemId) {
               showError("Un élément ne peut pas être déplacé dans lui-même.");
               return;
@@ -722,17 +689,16 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             return;
           }
 
-          // Update the existing configured item
           const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
             ...activeDragConfig,
             parent_nav_item_id: newParentNavItemId,
-            order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
-          }; // Removed establishment_id
+            order_index: newOrderIndex,
+          };
           console.log("[handleDragEnd] Updating config with:", updatedConfig);
           await updateRoleNavItemConfig(updatedConfig);
           showSuccess("Élément de navigation réorganisé/déplacé !");
 
-          await fetchAndStructureNavItems(); // Re-fetch and re-structure all items to update the UI
+          await fetchAndStructureNavItems();
         } catch (error: any) {
           console.error("Error during drag and drop:", error);
           showError(`Erreur lors du glisser-déposer: ${error.message}`);
@@ -765,18 +731,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     item={item}
                     level={level}
                     onEditGenericItem={handleEditGenericNavItem}
-                    onEditRoleConfig={handleEditRoleConfig} // This will open the role config edit dialog
+                    onEditRoleConfig={handleEditRoleConfig}
                     onDelete={handleDeleteGenericNavItem}
-                    onManageChildren={handleManageChildren} // Pass the new handler
+                    onManageChildren={handleManageChildren}
                     isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
-                    isDraggableAndDeletable={true} // All items are draggable now
-                    selectedRoleFilter={selectedRoleFilter} // Pass selectedRoleFilter
-                    isExpanded={!!expandedItems[item.id]} // Pass expansion state
-                    onToggleExpand={toggleExpand} // Pass toggle function
+                    isDraggableAndDeletable={true}
+                    selectedRoleFilter={selectedRoleFilter}
+                    isExpanded={!!expandedItems[item.id]}
+                    onToggleExpand={toggleExpand}
                   />
                   {item.children && item.children.length > 0 && expandedItems[item.id] && (
                     <div className="ml-4">
-                      {/* Recursive call for children, passing a unique containerId for them */}
                       {renderNavItemsList(item.children, level + 1, `${containerId}-children-of-${item.id}`)}
                     </div>
                   )}
@@ -785,6 +750,37 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             </SortableContext>
           </div>
         );
+      };
+
+      // Function to add an existing generic item to the current role's menu
+      const handleAddExistingGenericItemToRole = async (navItemId: string) => {
+        if (selectedRoleFilter === 'all') {
+          showError("Veuillez sélectionner un rôle spécifique pour ajouter un élément.");
+          return;
+        }
+        const role = selectedRoleFilter as Profile['role'];
+
+        // Check if already configured for this role
+        const isAlreadyConfigured = allConfiguredItemsFlat.some(item => item.id === navItemId);
+        if (isAlreadyConfigured) {
+          showError("Cet élément est déjà configuré pour ce rôle.");
+          return;
+        }
+
+        try {
+          const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+            nav_item_id: navItemId,
+            role: role,
+            parent_nav_item_id: null, // Add as a root item by default
+            order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length, // Add to end of root items
+          };
+          await addRoleNavItemConfig(newConfig);
+          showSuccess("Élément ajouté au menu du rôle !");
+          await fetchAndStructureNavItems(); // Refresh list
+        } catch (error: any) {
+          console.error("Error adding generic item to role menu:", error);
+          showError(`Erreur lors de l'ajout de l'élément au menu du rôle: ${error.message}`);
+        }
       };
 
       if (isLoadingUser) {
@@ -813,15 +809,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         );
       }
 
-      // Helper to flatten the tree for parent selection, excluding self and descendants
       const getFlattenedCategoriesForParentSelection = useCallback((items: NavItem[], excludeId?: string, currentLevel = 0, prefix = ''): { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] => {
         let flattened: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
         items.forEach(item => {
-          // Only items of type 'category_or_action' and with null/undefined route can be parents
           if (item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.id !== excludeId) {
             const newLabel = prefix ? `${prefix} > ${item.label}` : item.label;
-            flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name, typeLabel: "Catégorie/Action" }); // Include icon_name and typeLabel
-            // Recursively add children of this category
+            flattened.push({ id: item.id, label: newLabel, level: currentLevel, icon_name: item.icon_name, typeLabel: "Catégorie/Action" });
             if (item.children) {
               flattened = flattened.concat(getFlattenedCategoriesForParentSelection(item.children, excludeId, currentLevel + 1, newLabel));
             }
@@ -842,18 +835,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         console.log("[availableParentsForConfig] Descendants of current item:", descendantsOfCurrentItem);
 
         const filteredParents = allPotentialParents.filter(parent =>
-          parent.id !== currentItemToEdit.id && // Cannot be its own parent
-          !descendantsOfCurrentItem.has(parent.id) // Cannot be a descendant of itself
+          parent.id !== currentItemToEdit.id &&
+          !descendantsOfCurrentItem.has(parent.id)
         );
         console.log("[availableParentsForConfig] Filtered parents:", filteredParents);
         return filteredParents;
       }, [currentItemToEdit, configuredItemsTree, getFlattenedCategoriesForParentSelection, getDescendantIds]);
 
-      // Use item.type directly
       const getItemTypeLabel = (type: NavItem['type']) => {
         switch (type) {
           case 'route': return "Route";
-          case 'category_or_action': return "Catégorie/Action"; // Updated label
+          case 'category_or_action': return "Catégorie/Action";
           default: return "Inconnu";
         }
       };
@@ -867,15 +859,157 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
             Créez, modifiez, supprimez et réorganisez les éléments de navigation de l'application.
           </p>
 
-          {/* Global Role Filter */}
+          {/* Section 1: Gestion des Éléments de Navigation Génériques */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserRoundCog className="h-6 w-6 text-primary" /> Configurer les menus par rôle
+                <LayoutList className="h-6 w-6 text-primary" /> Gestion des Éléments Génériques
+              </CardTitle>
+              <CardDescription>Définissez les éléments de navigation de base disponibles pour tous les rôles.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Formulaire d'ajout d'un nouvel élément générique */}
+              <Collapsible open={isNewItemFormOpen} onOpenChange={setIsNewItemFormOpen}>
+                <Card className="border-none shadow-none">
+                  <CardHeader className="p-0 pb-4">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between p-0">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <PlusCircle className="h-5 w-5 text-primary" /> Ajouter un nouvel élément générique
+                        </CardTitle>
+                        {isNewItemFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CardDescription>Créez un nouveau lien ou une catégorie disponible pour tous les rôles.</CardDescription>
+                  </CardHeader>
+                  <CollapsibleContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="new-item-label">Libellé</Label>
+                        <Input id="new-item-label" value={newItemLabel} onChange={(e) => setNewItemLabel(e.target.value)} required />
+                      </div>
+                      <div>
+                        <Label htmlFor="new-item-type">Type d'élément</Label>
+                        <Select value={newItemType} onValueChange={(value: NavItem['type']) => {
+                          setNewItemType(value);
+                          if (value === 'category_or_action') {
+                            setNewItemIsExternal(false);
+                          }
+                        }}>
+                          <SelectTrigger id="new-item-type">
+                            <SelectValue placeholder="Sélectionner un type" />
+                          </SelectTrigger>
+                          <SelectContent className="backdrop-blur-lg bg-background/80">
+                            {navItemTypes.map(type => (
+                              <SelectItem key={type} value={type}>
+                                {getItemTypeLabel(type)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="new-item-route">Route (URL interne ou #hash)</Label>
+                        <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category_or_action' && (newItemRoute === null || newItemRoute === undefined)} />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} disabled={newItemType === 'category_or_action'} />
+                        <Label htmlFor="new-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
+                      </div>
+                      <div>
+                        <Label htmlFor="new-item-icon">Nom de l'icône (Lucide React)</Label>
+                        <Select value={newItemIconName} onValueChange={setNewItemIconName}>
+                          <SelectTrigger id="new-item-icon">
+                            <SelectValue placeholder="Sélectionner une icône" />
+                          </SelectTrigger>
+                          <SelectContent className="backdrop-blur-lg bg-background/80">
+                            <ScrollArea className="h-40">
+                              {Object.keys(iconMap).sort().map(iconName => {
+                                const IconComponent = iconMap[iconName];
+                                return (
+                                  <SelectItem key={iconName} value={iconName}>
+                                    <div className="flex items-center gap-2">
+                                      <IconComponent className="h-4 w-4" /> {iconName}
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })}
+                            </ScrollArea>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="new-item-description">Description (optionnel)</Label>
+                        <Textarea id="new-item-description" value={newItemDescription} onChange={(e) => setNewItemDescription(e.target.value)} />
+                      </div>
+                    </div>
+                    <Button onClick={handleAddGenericNavItem} disabled={isAddingItem} className="mt-4">
+                      {isAddingItem ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément générique
+                    </Button>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+
+              {/* Tableau de tous les éléments génériques */}
+              <h3 className="text-xl font-semibold mt-6 mb-4 flex items-center gap-2">
+                <LayoutList className="h-5 w-5 text-primary" /> Liste des éléments génériques
+              </h3>
+              <ScrollArea className="h-80 w-full rounded-md border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
+                      <th className="p-2 text-left font-semibold">Libellé</th>
+                      <th className="p-2 text-left font-semibold">Type</th>
+                      <th className="p-2 text-left font-semibold">Route/Action</th>
+                      <th className="p-2 text-left font-semibold">Icône</th>
+                      <th className="p-2 text-left font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allGenericNavItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="p-4 text-center text-muted-foreground">Aucun élément générique à afficher.</td>
+                      </tr>
+                    ) : (
+                      allGenericNavItems.map(item => {
+                        const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                        return (
+                          <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                            <td className="p-2">{item.label}</td>
+                            <td className="p-2">{getItemTypeLabel(item.type)}</td>
+                            <td className="p-2">{item.route || '-'}</td>
+                            <td className="p-2">
+                              <div className="flex items-center gap-2">
+                                <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
+                              </div>
+                            </td>
+                            <td className="p-2 flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
+          {/* Section 2: Configuration des Menus par Rôle */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserRoundCog className="h-6 w-6 text-primary" /> Configuration des Menus par Rôle
               </CardTitle>
               <CardDescription>Sélectionnez un rôle pour voir et gérer les éléments de menu qui lui sont associés.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="role-filter">Rôle sélectionné</Label>
                 <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
@@ -883,7 +1017,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
                   <SelectContent className="backdrop-blur-lg bg-background/80">
-                    <SelectItem value="all">Tous les rôles (éléments génériques)</SelectItem>
+                    <SelectItem value="all">Sélectionner un rôle...</SelectItem>
                     {allRoles.map(role => (
                       <SelectItem key={role} value={role}>
                         {role === 'student' ? 'Élève' :
@@ -897,187 +1031,68 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                   </SelectContent>
                 </Select>
               </div>
-              {/* Removed Establishment Filter */}
-            </CardContent>
-          </Card>
 
-          {/* Section: Ajouter un nouvel élément de navigation (toujours visible pour ajouter des éléments génériques) */}
-          <Collapsible open={isNewItemFormOpen} onOpenChange={setIsNewItemFormOpen}>
-            <Card>
-              <CardHeader>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-between p-0">
-                    <CardTitle className="flex items-center gap-2">
-                      <PlusCircle className="h-6 w-6 text-primary" /> Ajouter un élément de navigation générique
-                    </CardTitle>
-                    {isNewItemFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </Button>
-                </CollapsibleTrigger>
-                <CardDescription>Ajoutez un nouveau lien ou une catégorie disponible pour tous les rôles.</CardDescription>
-              </CardHeader>
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {selectedRoleFilter !== 'all' && (
+                <>
+                  <h3 className="text-xl font-semibold mt-6 mb-4 flex items-center gap-2">
+                    <LayoutList className="h-5 w-5 text-primary" /> Structure de Navigation pour {selectedRoleFilter}
+                  </h3>
+                  <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
+                  <div className="flex flex-col gap-4">
+                    {/* Dropdown to add existing generic item to this role's menu */}
                     <div>
-                      <Label htmlFor="new-item-label">Libellé</Label>
-                      <Input id="new-item-label" value={newItemLabel} onChange={(e) => setNewItemLabel(e.target.value)} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="new-item-type">Type d'élément</Label>
-                      <Select value={newItemType} onValueChange={(value: NavItem['type']) => {
-                        setNewItemType(value);
-                        if (value === 'category_or_action') { // Updated logic
-                          setNewItemIsExternal(false); // Categories/Actions cannot be external
-                        }
-                      }}>
-                        <SelectTrigger id="new-item-type">
-                          <SelectValue placeholder="Sélectionner un type" />
+                      <Label htmlFor="add-existing-to-role">Ajouter un élément générique existant</Label>
+                      <Select onValueChange={handleAddExistingGenericItemToRole} value="">
+                        <SelectTrigger id="add-existing-to-role">
+                          <SelectValue placeholder="Ajouter un élément existant au menu de ce rôle" />
                         </SelectTrigger>
                         <SelectContent className="backdrop-blur-lg bg-background/80">
-                          {navItemTypes.map(type => (
-                            <SelectItem key={type} value={type}>
-                              {getItemTypeLabel(type)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="new-item-route">Route (URL interne ou #hash)</Label>
-                      <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category_or_action' && (newItemRoute === null || newItemRoute === undefined)} /> {/* Allow route for action, disable for category */}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} disabled={newItemType === 'category_or_action'} />
-                      <Label htmlFor="new-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
-                    </div>
-                    <div>
-                      <Label htmlFor="new-item-icon">Nom de l'icône (Lucide React)</Label>
-                      <Select value={newItemIconName} onValueChange={setNewItemIconName}>
-                        <SelectTrigger id="new-item-icon">
-                          <SelectValue placeholder="Sélectionner une icône" />
-                        </SelectTrigger>
-                        <SelectContent className="backdrop-blur-lg bg-background/80">
-                          <ScrollArea className="h-40"> {/* Added ScrollArea */}
-                            {Object.keys(iconMap).sort().map(iconName => {
-                              const IconComponent = iconMap[iconName];
-                              return (
-                                <SelectItem key={iconName} value={iconName}>
-                                  <div className="flex items-center gap-2">
-                                    <IconComponent className="h-4 w-4" /> {iconName}
-                                  </div>
-                                </SelectItem>
-                              );
-                            })}
+                          <ScrollArea className="h-40">
+                            {allGenericNavItems.filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id)).length === 0 ? (
+                              <SelectItem value="no-available-items" disabled>Aucun élément générique disponible à ajouter</SelectItem>
+                            ) : (
+                              allGenericNavItems
+                                .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
+                                .map(item => (
+                                  <SelectItem key={item.id} value={item.id}>
+                                    <div className="flex items-center gap-2">
+                                      {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
+                                      <span>{item.label} ({getItemTypeLabel(item.type)}) {item.route && `(${item.route})`}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))
+                            )}
                           </ScrollArea>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label htmlFor="new-item-description">Description (optionnel)</Label>
-                      <Textarea id="new-item-description" value={newItemDescription} onChange={(e) => setNewItemDescription(e.target.value)} />
-                    </div>
+
+                    {/* Configured Items Tree */}
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                      {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
+                      <DragOverlay>
+                        {activeDragItem ? (
+                          <SortableNavItem
+                            item={activeDragItem}
+                            level={0}
+                            onEditGenericItem={handleEditGenericNavItem}
+                            onEditRoleConfig={handleEditRoleConfig}
+                            onDelete={handleDeleteGenericNavItem}
+                            onManageChildren={handleManageChildren}
+                            isDragging={true}
+                            isDraggableAndDeletable={true}
+                            selectedRoleFilter={selectedRoleFilter}
+                            isExpanded={false}
+                            onToggleExpand={() => {}}
+                          />
+                        ) : null}
+                      </DragOverlay>
+                    </DndContext>
                   </div>
-                  <Button onClick={handleAddGenericNavItem} disabled={isAddingItem}>
-                    {isAddingItem ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément générique
-                  </Button>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {/* Section: Éléments de navigation génériques (Tableau) */}
-          {selectedRoleFilter === 'all' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LayoutList className="h-6 w-6 text-primary" /> Tous les éléments de navigation génériques
-                </CardTitle>
-                <CardDescription>Liste de tous les éléments de navigation de base disponibles.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-80 w-full rounded-md border">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
-                        <th className="p-2 text-left font-semibold">Libellé</th>
-                        <th className="p-2 text-left font-semibold">Type</th>
-                        <th className="p-2 text-left font-semibold">Route/Action</th>
-                        <th className="p-2 text-left font-semibold">Icône</th>
-                        <th className="p-2 text-left font-semibold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {allGenericNavItems.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="p-4 text-center text-muted-foreground">Aucun élément générique à afficher.</td>
-                        </tr>
-                      ) : (
-                        allGenericNavItems.map(item => {
-                          const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                          return (
-                            <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                              <td className="p-2">{item.label}</td>
-                              <td className="p-2">{getItemTypeLabel(item.type)}</td>
-                              <td className="p-2">{item.route || '-'}</td>
-                              <td className="p-2">
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> {item.icon_name || '-'}
-                                </div>
-                              </td>
-                              <td className="p-2 flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
-
-          {selectedRoleFilter !== 'all' && (
-            <div className="grid grid-cols-1 gap-8">
-              {/* Configured Items Tree (now full width) */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {selectedRoleFilter}
-                  </CardTitle>
-                  <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                    {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
-                    <DragOverlay>
-                      {activeDragItem ? (
-                        <SortableNavItem
-                          item={activeDragItem}
-                          level={0}
-                          onEditGenericItem={handleEditGenericNavItem}
-                          onEditRoleConfig={handleEditRoleConfig}
-                          onDelete={handleDeleteGenericNavItem}
-                          onManageChildren={handleManageChildren}
-                          isDragging={true}
-                          isDraggableAndDeletable={true}
-                          selectedRoleFilter={selectedRoleFilter}
-                          isExpanded={false} // Drag overlay is never expanded
-                          onToggleExpand={() => {}} // No-op for drag overlay
-                        />
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Edit Generic Nav Item Dialog */}
           {currentItemToEdit && (
@@ -1098,8 +1113,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <Label htmlFor="edit-item-type">Type d'élément</Label>
                     <Select value={editItemType} onValueChange={(value: NavItem['type']) => {
                       setEditItemType(value);
-                      if (value === 'category_or_action') { // Updated logic
-                        setEditItemIsExternal(false); // Categories/Actions cannot be external
+                      if (value === 'category_or_action') {
+                        setEditItemIsExternal(false);
                       }
                     }}>
                       <SelectTrigger id="edit-item-type" className="col-span-3">
@@ -1116,7 +1131,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-item-route" className="text-right">Route</Label>
-                    <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} /> {/* Allow route for action, disable for category */}
+                    <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-item-is-external" className="text-right">Lien externe</Label>
@@ -1129,7 +1144,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                         <SelectValue placeholder="Sélectionner une icône" />
                       </SelectTrigger>
                       <SelectContent className="backdrop-blur-lg bg-background/80">
-                        <ScrollArea className="h-40"> {/* Added ScrollArea */}
+                        <ScrollArea className="h-40">
                           {Object.keys(iconMap).sort().map(iconName => {
                             const IconComponent = iconMap[iconName];
                             return (
@@ -1182,7 +1197,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                           {editConfigParentId
                             ? availableParentsForConfig.find(
                                 (item) => item.id === editConfigParentId,
-                              )?.label || editConfigParentInput // Fallback to input text if ID not found (for new category)
+                              )?.label || editConfigParentInput
                             : "Aucun (élément racine)"}
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -1198,7 +1213,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                             {editConfigParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === editConfigParentInput.trim().toLowerCase()) && (
                               <CommandItem
                                 onSelect={() => {
-                                  setEditConfigParentId(editConfigParentInput); // Use input as ID for new category
+                                  setEditConfigParentId(editConfigParentInput);
                                   setOpenEditConfigParentSelect(false);
                                 }}
                               >
@@ -1250,7 +1265,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                     <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
                     <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="col-span-3" />
                   </div>
-                  {/* Removed Establishment Select */}
                 </div>
                 <DialogFooter>
                   <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingConfigEdit}>
@@ -1269,8 +1283,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
               parentItem={selectedParentForChildrenManagement}
               selectedRoleFilter={selectedRoleFilter as Profile['role']}
               allGenericNavItems={allGenericNavItems}
-              allConfiguredItemsFlat={allConfiguredItemsFlat} // Pass the flat list of configured items
-              onChildrenUpdated={fetchAndStructureNavItems} // Callback to refresh the main tree
+              allConfiguredItemsFlat={allConfiguredItemsFlat}
+              onChildrenUpdated={fetchAndStructureNavItems}
             />
           )}
         </div>
