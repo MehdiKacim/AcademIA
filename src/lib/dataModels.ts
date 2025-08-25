@@ -18,12 +18,25 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       updated_at?: string;
     }
 
-    // Removed EstablishmentType and Establishment interfaces as they are no longer needed.
+    export interface Establishment {
+      id: string; // UUID
+      name: string;
+      type: 'Maternelle' | 'Élémentaire' | 'Collège' | 'Lycée Général' | 'Lycée Technologique' | 'Lycée Professionnel' | 'Privé Sous Contrat' | 'Privé Hors Contrat' | 'Spécialisé' | 'CFA';
+      address?: string;
+      phone_number?: string;
+      director_id?: string;
+      deputy_director_id?: string;
+      contact_email?: string;
+      created_at?: string;
+    }
+
+    export type EstablishmentType = 'Maternelle' | 'Élémentaire' | 'Collège' | 'Lycée Général' | 'Lycée Technologique' | 'Lycée Professionnel' | 'Privé Sous Contrat' | 'Privé Hors Contrat' | 'Spécialisé' | 'CFA';
+
 
     export interface Subject { // New: Subject interface
       id: string;
       name: string;
-      // Removed establishment_id
+      establishment_id: string; // Keep establishment_id for subjects
       created_at?: string;
       updated_at?: string;
     }
@@ -32,7 +45,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       id: string;
       name: string;
       description?: string;
-      // Removed establishment_id
+      establishment_id: string; // Keep establishment_id for curricula
       course_ids: string[]; // JSONB, liste d'UUIDs de public.courses(id)
       created_at?: string;
     }
@@ -52,7 +65,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       name: string;
       curriculum_id: string; // Link to parent curriculum
       creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
-      // Removed establishment_id
+      establishment_id: string; // Keep establishment_id for classes
       school_year_id: string; // Changed: Link to SchoolYear
       school_year_name?: string; // For convenience when fetching
       created_at?: string;
@@ -202,7 +215,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       order_index: number; // Made mandatory for sorting
       configId?: string; // The ID of the role_nav_configs entry
       // Removed establishment_id
-      is_global?: boolean; // New: Indicates if this is a global configuration (establishment_id is null)
+      // Removed is_global
     }
 
     // New interface for role-specific navigation configuration
