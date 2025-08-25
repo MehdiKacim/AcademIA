@@ -16,7 +16,7 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
     { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false },
     { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false },
     { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false },
-    { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false }, // "Système" is now a root item
+    { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false }, // Moved "Système" here
     { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false },
     { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false },
     { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false },
@@ -132,30 +132,57 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   if (configsError) {
     console.error("[loadNavItems] Error loading role nav configs:", configsError);
-    return [];
+    // If there's an error, and it's for admin, try to insert defaults as a fallback
+    if (userRole === 'administrator') {
+        console.warn("[loadNavItems] Error fetching admin configs, attempting to insert defaults as fallback.");
+        try {
+            await resetRoleNavConfigsForRole('administrator'); // Delete any potentially corrupted configs
+            const inserted = await insertDefaultAdminNavItems();
+            // Re-run the query to fetch the newly inserted configs
+            const { data: reFetchedConfigs, error: reFetchError } = await query;
+            if (reFetchError) {
+                console.error("[loadNavItems] Error re-fetching configs after fallback insertion:", reFetchError);
+                return [];
+            }
+            configs = reFetchedConfigs as RoleNavItemConfig[];
+            console.log("[loadNavItems] Re-fetched configs after fallback insertion (count):", configs.length, "configs:", configs);
+        } catch (e) {
+            console.error("[loadNavItems] Failed to insert default admin nav items as fallback:", e);
+            return [];
+        }
+    } else {
+        return [];
+    }
+  } else {
+      configs = fetchedConfigs as RoleNavItemConfig[];
+      console.log("[loadNavItems] Fetched configs (initial count):", configs.length, "configs:", configs);
   }
-  configs = fetchedConfigs as RoleNavItemConfig[];
-  console.log("[loadNavItems] Fetched configs (initial count):", configs.length, "configs:", configs);
 
-  // --- Add default items for administrator if no configs found ---
-  if (configs.length === 0 && userRole === 'administrator') {
-    console.warn("[loadNavItems] No configs found for administrator. Attempting to insert default items.");
+
+  // --- Targeted fix for administrator: If configs are missing or incomplete, re-insert defaults ---
+  // Expected number of root items for admin is 8 (Tableau de bord, Messagerie, Recherche, Mon profil, Mes cours, Mes notes, Analytiques, Système)
+  // Expected total items for admin is 8 (root) + 10 (children of Système) = 18
+  const EXPECTED_ADMIN_CONFIG_COUNT = 18; // Based on the `insertDefaultAdminNavItems` function
+
+  if (userRole === 'administrator' && configs.length < EXPECTED_ADMIN_CONFIG_COUNT) {
+    console.warn(`[loadNavItems] Admin configs are incomplete (${configs.length} found, ${EXPECTED_ADMIN_CONFIG_COUNT} expected). Re-inserting defaults.`);
     try {
+      await resetRoleNavConfigsForRole('administrator'); // Delete existing incomplete configs
       await insertDefaultAdminNavItems();
-      // Re-run the query to fetch the newly inserted configs WITH the nav_item join
+      // Re-run the query to fetch the newly inserted configs
       const { data: reFetchedConfigs, error: reFetchError } = await query;
       if (reFetchError) {
-        console.error("[loadNavItems] Error re-fetching configs after default insertion:", reFetchError);
+        console.error("[loadNavItems] Error re-fetching configs after re-insertion:", reFetchError);
         return [];
       }
       configs = reFetchedConfigs as RoleNavItemConfig[];
-      console.log("[loadNavItems] Re-fetched configs after default insertion (count):", configs.length, "configs:", configs);
+      console.log("[loadNavItems] Re-fetched configs after re-insertion (count):", configs.length, "configs:", configs);
     } catch (e) {
-      console.error("[loadNavItems] Failed to insert default admin nav items:", e);
+      console.error("[loadNavItems] Failed to re-insert default admin nav items:", e);
       return [];
     }
   }
-  // --- END Add default items for administrator if no configs found ---
+  // --- END Targeted fix for administrator ---
 
   const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
 
@@ -425,4 +452,14 @@ export const resetNavItems = async (): Promise<void> => {
 export const resetRoleNavConfigs = async (): Promise<void> => {
   const { error } = await supabase.from('role_nav_configs').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except a dummy ID if needed
   if (error) console.error("Error resetting role nav configs:", error);
+};
+
+// New helper function to delete role_nav_configs for a specific role
+export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise<void> => {
+  console.warn(`[resetRoleNavConfigsForRole] Deleting all role_nav_configs for role: ${role}`);
+  const { error } = await supabase.from('role_nav_configs').delete().eq('role', role);
+  if (error) {
+    console.error(`Error resetting role nav configs for role ${role}:`, error);
+    throw error;
+  }
 };
