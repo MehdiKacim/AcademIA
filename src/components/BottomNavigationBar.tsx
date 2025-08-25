@@ -33,7 +33,7 @@ import {
       PlusSquare, // Added PlusSquare icon
     } from "lucide-react";
     import { NavLink, useNavigate, useLocation } from "react-router-dom";
-    import React, { useCallback, useState, useEffect } from "react";
+    import React, { useCallback, useState, useEffect, useRef } from "react";
     import { useIsMobile } from "@/hooks/use-mobile";
     import { cn } from "@/lib/utils";
     import { NavItem } from "@/lib/dataModels";
@@ -85,9 +85,8 @@ import {
       const { signOut, currentRole, currentUserProfile } = useRole(); // Get currentUserProfile
 
       const [searchQuery, setSearchQuery] = useState("");
-      const [drawerContent, setDrawerContent] = useState<'categories' | 'items'>('categories');
-      const [activeCategoryLabel, setActiveCategoryLabel] = useState<string | null>(null);
-      const [activeCategoryIcon, setActiveCategoryIcon] = useState<React.ElementType | null>(null);
+      // Removed drawerContent and activeCategoryLabel/Icon states
+      const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]); // New: Stack for drawer navigation
 
       // Removed dynamicNavItems state and its useEffect for loading. It now comes from props.
       // const [dynamicNavItems, setDynamicNavItems] = useState<NavItem[]>([]); 
@@ -106,11 +105,10 @@ import {
       //   }
       // }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
 
-      const handleCategoryClick = useCallback((categoryLabel: string, categoryIcon: React.ElementType) => {
-        setActiveCategoryLabel(categoryLabel);
-        setActiveCategoryIcon(categoryIcon);
-        setDrawerContent('items');
-        setSearchQuery('');
+      const handleCategoryClick = useCallback((categoryItem: NavItem) => {
+        console.log("[BottomNavigationBar] handleCategoryClick: Pushing category to stack:", categoryItem.label);
+        setDrawerNavStack(prevStack => [...prevStack, categoryItem]);
+        setSearchQuery(''); // Clear search when entering a category
       }, []);
 
       const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
@@ -147,18 +145,18 @@ import {
         if (!currentUser) {
           // For anonymous users, provide a static list of top-level items
           itemsToFilter = [
-            { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, children: [] },
-            { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, children: [] },
-            { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, children: [] },
-            { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_external: false, onClick: onOpenAboutModal, order_index: 3, children: [] },
+            { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, children: [], type: 'route' },
+            { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, children: [], type: 'route' },
+            { id: 'methodology-drawer', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, children: [], type: 'route' },
+            { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_external: false, onClick: onOpenAboutModal, order_index: 3, children: [], type: 'category_or_action' },
           ].sort((a, b) => a.order_index - b.order_index);
-        } else if (drawerContent === 'categories') {
+        } else if (drawerNavStack.length === 0) {
           // For authenticated users, show top-level items (direct links or categories)
           itemsToFilter = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
-        } else if (drawerContent === 'items' && activeCategoryLabel) {
-          // Show children of the active category
-          const activeCategory = allNavItemsForDrawer.find(item => item.label === activeCategoryLabel && (item.route === null || item.route === undefined));
-          itemsToFilter = activeCategory?.children || [];
+        } else {
+          // Show children of the active category (top of the stack)
+          const activeCategory = drawerNavStack[drawerNavStack.length - 1];
+          itemsToFilter = activeCategory.children || [];
         }
         console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Items before filtering by search:", itemsToFilter);
 
@@ -168,30 +166,29 @@ import {
         ).sort((a, b) => a.order_index - b.order_index); // Ensure items are sorted
         console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Filtered and sorted result:", filteredAndSorted);
         return filteredAndSorted;
-      }, [currentUser, allNavItemsForDrawer, drawerContent, activeCategoryLabel, searchQuery, onOpenAboutModal]);
+      }, [currentUser, allNavItemsForDrawer, drawerNavStack, searchQuery, onOpenAboutModal]);
 
 
       const handleLogout = async () => {
         await signOut();
         navigate("/");
         setIsMoreDrawerOpen(false);
-        setDrawerContent('categories');
-        setActiveCategoryLabel(null);
-        setActiveCategoryIcon(null);
+        setDrawerNavStack([]); // Reset stack on logout
         setSearchQuery('');
       };
 
       const handleAuthSuccess = () => {
         setIsMoreDrawerOpen(false);
-        setDrawerContent('categories');
-        setActiveCategoryLabel(null);
-        setActiveCategoryIcon(null);
+        setDrawerNavStack([]); // Reset stack on login success
         setSearchQuery('');
         navigate("/dashboard");
       };
 
       const handleDrawerItemClick = (item: NavItem) => {
-        if (item.route) {
+        const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+        if (isCategory) {
+          handleCategoryClick(item); // Push category to stack
+        } else if (item.route) {
           if (item.route.startsWith('#')) {
             // Handle hash links for the Index page
             navigate(`/${item.route}`);
@@ -199,27 +196,26 @@ import {
             navigate(item.route);
           }
           setIsMoreDrawerOpen(false);
-          setDrawerContent('categories');
-          setActiveCategoryLabel(null);
-          setActiveCategoryIcon(null);
+          setDrawerNavStack([]); // Reset stack on direct navigation
           setSearchQuery('');
         } else if (item.onClick) {
           item.onClick();
           if (item.label !== "Recherche") { // Keep search drawer open if it's the search button
             setIsMoreDrawerOpen(false);
-            setDrawerContent('categories');
-            setActiveCategoryLabel(null);
-            setActiveCategoryIcon(null);
+            setDrawerNavStack([]); // Reset stack on action
             setSearchQuery('');
           }
         }
       };
 
-      const handleBackToCategories = () => {
-        setDrawerContent('categories');
-        setActiveCategoryLabel(null);
-        setActiveCategoryIcon(null);
-        setSearchQuery('');
+      const handleBackInDrawer = () => {
+        console.log("[BottomNavigationBar] handleBackInDrawer: Popping from stack.");
+        setDrawerNavStack(prevStack => {
+          const newStack = [...prevStack];
+          newStack.pop(); // Remove the current category
+          return newStack;
+        });
+        setSearchQuery(''); // Clear search when going back
       };
 
       const swipeHandlers = useSwipeable({
@@ -234,12 +230,14 @@ import {
 
       useEffect(() => {
         if (!isMoreDrawerOpen) {
-          setDrawerContent('categories');
-          setActiveCategoryLabel(null);
-          setActiveCategoryIcon(null);
+          setDrawerNavStack([]); // Reset stack when drawer closes
           setSearchQuery('');
         }
       }, [isMoreDrawerOpen]);
+
+      const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
+      const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[drawerNavStack[drawerNavStack.length - 1].icon_name || 'Info'] : null;
+
 
       if (!isMobile) {
         return null;
@@ -297,15 +295,15 @@ import {
               <div className="mx-auto w-full max-w-md flex-grow flex flex-col">
                 <DrawerHeader className="text-center">
                   <div className="flex items-center justify-between">
-                    {drawerContent === 'items' && (
-                      <Button variant="ghost" size="icon" onClick={handleBackToCategories} className="absolute left-4">
+                    {drawerNavStack.length > 0 && (
+                      <Button variant="ghost" size="icon" onClick={handleBackInDrawer} className="absolute left-4">
                         <ArrowLeft className="h-5 w-5" />
-                        <span className="sr-only">Retour aux catégories</span>
+                        <span className="sr-only">Retour</span>
                       </Button>
                     )}
                     <DrawerTitle className="flex-grow text-center flex items-center justify-center gap-2">
-                      {drawerContent === 'items' && activeCategoryIcon && React.createElement(activeCategoryIcon, { className: "h-6 w-6 text-primary" })}
-                      {drawerContent === 'items' ? activeCategoryLabel : "Menu"}
+                      {currentDrawerIcon && React.createElement(currentDrawerIcon, { className: "h-6 w-6 text-primary" })}
+                      {currentDrawerTitle}
                     </DrawerTitle>
                     <DrawerClose asChild>
                       <Button variant="ghost" size="icon" className="absolute right-4">
@@ -315,13 +313,13 @@ import {
                     </DrawerClose>
                   </div>
                   <DrawerDescription className="text-center">
-                    {drawerContent === 'items' ? `Éléments de la catégorie ${activeCategoryLabel}` : "Toutes les options de navigation."}
+                    {drawerNavStack.length > 0 ? `Éléments de la catégorie ${currentDrawerTitle}` : "Toutes les options de navigation."}
                   </DrawerDescription>
                 </DrawerHeader>
                 {currentUser && (
                   <div className="p-4 border-b border-border">
                     <Input
-                      placeholder={drawerContent === 'categories' ? "Rechercher une catégorie ou un élément..." : `Rechercher dans ${activeCategoryLabel}...`}
+                      placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full"
@@ -337,7 +335,7 @@ import {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {currentDrawerItemsToDisplay.map((item) => {
                         const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                        const isCategory = item.route === null || item.route === undefined;
+                        const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
                         const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
 
                         return (
@@ -349,13 +347,7 @@ import {
                               isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
                               "transition-all duration-200 ease-in-out"
                             )}
-                            onClick={() => {
-                              if (isCategory) {
-                                handleCategoryClick(item.label, IconComponent);
-                              } else {
-                                handleDrawerItemClick(item);
-                              }
-                            }}
+                            onClick={() => handleDrawerItemClick(item)}
                           >
                             <IconComponent className="h-6 w-6 mb-2" />
                             <span className="text-xs font-medium line-clamp-2">{item.label}</span>
@@ -372,7 +364,7 @@ import {
                 </div>
                 <DrawerFooter>
                   {/* Removed AuthMenu from here */}
-                  {currentUser && drawerContent === 'categories' && ( // Show logout only in top-level categories view for authenticated users
+                  {currentUser && drawerNavStack.length === 0 && ( // Show logout only in top-level categories view for authenticated users
                     <Button
                       variant="destructive"
                       className="w-full justify-start"
