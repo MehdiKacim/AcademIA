@@ -183,6 +183,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // New handler for desktop category clicks
   const handleDesktopCategoryClick = (categoryLabel: string, categoryIcon: React.ElementType, items: NavItem[]) => {
+    console.log(`[DashboardLayout] handleDesktopCategoryClick: Clicked category "${categoryLabel}". Items to display:`, items);
     setDesktopActiveCategoryLabel(categoryLabel);
     setDesktopActiveCategoryIcon(categoryIcon);
     setDesktopActiveCategoryItems(items);
@@ -191,6 +192,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // New handler to go back from desktop category items to categories
   const handleDesktopBackToCategories = () => {
+    console.log("[DashboardLayout] handleDesktopBackToCategories: Going back to main categories.");
     setIsDesktopCategoryOverlayOpen(false);
     setDesktopActiveCategoryLabel(null);
     setDesktopActiveCategoryIcon(null);
@@ -213,9 +215,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {headerNavItems.map(item => { // Only top-level items
               const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-              const isCategory = item.route === null; // Determine if it's a category
+              const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined); // Determine if it's a category
 
               if (isCategory) {
+                console.log(`[DashboardLayout] Rendering category button: ${item.label}, children count: ${item.children?.length || 0}`);
                 return (
                   <Button
                     key={item.id}
@@ -227,8 +230,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     {item.label}
                   </Button>
                 );
-              } else { // Direct link
+              } else { // Direct link or action
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+                console.log(`[DashboardLayout] Rendering direct link/action: ${item.label}, route: ${item.route}`);
                 return (
                   <NavLink
                     key={item.id}
@@ -390,6 +394,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
         currentUser={currentUserProfile}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
         isMoreDrawerOpen={isMoreDrawerOpen}
         setIsMoreDrawerOpen={setIsMoreDrawerOpen}
         unreadMessagesCount={unreadMessages}
