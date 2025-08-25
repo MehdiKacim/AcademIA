@@ -195,6 +195,8 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
 });
 
 const RoleNavConfigsPage = () => {
+  console.log("[RoleNavConfigsPage] Component rendered."); // Unconditional log
+
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]);
   const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]);
@@ -618,8 +620,11 @@ const RoleNavConfigsPage = () => {
 
     // Iterate through all configured items to find potential parents
     allConfiguredItemsFlat.forEach(item => {
+      // Rule 1: Must be a category (type 'category_or_action' and no route)
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+      // Rule 2: Cannot be the item itself
       const isNotSelf = item.id !== currentItemToEdit.id;
+      // Rule 3: Cannot be a descendant of the item (to prevent circular dependencies)
       const isNotDescendant = !descendantsOfCurrentItem.has(item.id);
 
       console.log(`  Checking item: ${item.label} (ID: ${item.id})`);
