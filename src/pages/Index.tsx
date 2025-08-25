@@ -267,7 +267,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               <Button size="lg" onClick={() => setIsAuthModalOpen(true)}>
                 Découvrir AiA
               </Button>
-              <Button size="lg" variant="outline" onClick={() => setIsAdminModalOpen(true)}>
+              <Button size="lg" variant="outline" onClick={() => setIsAdminModalOpen(true)}> {/* Corrected onClick handler */}
                 <UserCog className="h-5 w-5 mr-2" /> Accès Admin
               </Button>
             </div>
