@@ -513,6 +513,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
         setEditConfigOrderIndex(config.order_index);
         setEditConfigEstablishmentId(config.establishment_id || undefined); // Set establishment_id for editing
         setIsEditConfigDialogOpen(true);
+        setOpenEditConfigParentSelect(false); // Ensure it's closed initially
       };
 
       const handleSaveEditedRoleConfig = async () => {
@@ -749,7 +750,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
       const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
         return (
           <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
-            {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2">Déposez des éléments ici</p>}
+            {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2"><span>Déposez des éléments ici</span></p>}
             <SortableContext items={items.map(item => item.configId || item.id)} strategy={verticalListSortingStrategy}>
               {items.map(item => (
                 <React.Fragment key={item.id}>
@@ -1073,7 +1074,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-config-parent" className="text-right">Parent</Label>
-                    <Popover open={openEditConfigParentSelect} onOpenChange={setOpenEditConfigParentSelect}>
+                    <Popover key={currentConfigToEdit.id} open={openEditConfigParentSelect} onOpenChange={setOpenEditConfigParentSelect}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -1108,7 +1109,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                   <PlusCircle className="mr-2 h-4 w-4" /> <span>Créer la catégorie "{editConfigParentInput}"</span>
                                 </CommandItem>
                               ) : (
-                                <span>Aucune catégorie trouvée.</span>
+                                <span>Aucune catégorie trouvée.</span> // Wrapped in span
                               )}
                             </CommandEmpty>
                             <CommandGroup>
@@ -1135,7 +1136,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
                                     }}
                                   >
                                     <div className="flex items-center gap-2">
-                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
+                                      {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>} {/* Wrapped in span */}
                                       <IconComponentToRender className="h-4 w-4" /> <span>{item.label}</span>
                                     </div>
                                   </CommandItem>
