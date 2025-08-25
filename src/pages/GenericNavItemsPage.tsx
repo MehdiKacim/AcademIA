@@ -41,6 +41,7 @@ const GenericNavItemsPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]);
   const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
+  const [searchFilter, setSearchFilter] = useState(''); // New state for search filter
 
   // States for new generic item form
   const [newItemLabel, setNewItemLabel] = useState('');
@@ -209,8 +210,17 @@ const GenericNavItemsPage = () => {
     );
   }
 
-  const routes = allGenericNavItems.filter(item => item.type === 'route').sort((a, b) => a.label.localeCompare(b.label));
-  const categoriesAndActions = allGenericNavItems.filter(item => item.type === 'category_or_action').sort((a, b) => a.label.localeCompare(b.label));
+  const lowerCaseSearchFilter = searchFilter.toLowerCase();
+
+  const filteredGenericNavItems = allGenericNavItems.filter(item =>
+    item.label.toLowerCase().includes(lowerCaseSearchFilter) ||
+    (item.route && item.route.toLowerCase().includes(lowerCaseSearchFilter)) ||
+    (item.description && item.description.toLowerCase().includes(lowerCaseSearchFilter)) ||
+    (item.icon_name && item.icon_name.toLowerCase().includes(lowerCaseSearchFilter))
+  );
+
+  const routes = filteredGenericNavItems.filter(item => item.type === 'route').sort((a, b) => a.label.localeCompare(b.label));
+  const categoriesAndActions = filteredGenericNavItems.filter(item => item.type === 'category_or_action').sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <div className="space-y-8">
@@ -253,11 +263,13 @@ const GenericNavItemsPage = () => {
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
                     <SelectContent className="backdrop-blur-lg bg-background/80">
-                      {navItemTypes.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {getItemTypeLabel(type)}
-                        </SelectItem>
-                      ))}
+                      <ScrollArea className="h-40">
+                        {navItemTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {getItemTypeLabel(type)}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -312,6 +324,15 @@ const GenericNavItemsPage = () => {
           <CardDescription>Visualisez et gérez les définitions de base des éléments de navigation.</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Filtrer les éléments par libellé, route, description ou icône..."
+              className="pl-10"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Added grid for side-by-side */}
             {/* Categories/Actions Section (moved to first column) */}
             <Collapsible defaultOpen={true}>
