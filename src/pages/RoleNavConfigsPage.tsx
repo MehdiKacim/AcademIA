@@ -32,7 +32,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable'; // Corrected import path for SortableContext and useSortable
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
@@ -59,6 +59,15 @@ const iconMap: { [key: string]: React.ElementType } = {
 // All possible roles for selection
 const allRoles: Profile['role'][] = ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'];
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
+
+// Helper function moved to top-level scope
+const getItemTypeLabel = (type: NavItem['type']) => {
+  switch (type) {
+    case 'route': return "Route";
+    case 'category_or_action': return "Catégorie/Action";
+    default: return "Inconnu";
+  }
+};
 
 interface SortableNavItemProps {
   item: NavItem;
@@ -102,14 +111,6 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
   } : undefined;
 
   const hasChildren = item.children && item.children.length > 0;
-
-  const getItemTypeLabel = (type: NavItem['type']) => {
-    switch (type) {
-      case 'route': return "Route";
-      case 'category_or_action': return "Catégorie/Action";
-      default: return "Inconnu";
-    }
-  };
 
   return (
     <ContextMenu>
@@ -675,14 +676,6 @@ const RoleNavConfigsPage = () => {
     return sortedParents;
   }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds]);
 
-  const getItemTypeLabel = (type: NavItem['type']) => {
-    switch (type) {
-      case 'route': return "Route";
-      case 'category_or_action': return "Catégorie/Action";
-      default: return "Inconnu";
-    }
-  };
-
   if (isLoadingUser) {
     return (
       <div className="text-center py-20">
@@ -866,7 +859,7 @@ const RoleNavConfigsPage = () => {
                               >
                                 <div className="flex items-center gap-2">
                                   {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
-                                  <IconComponentToRender className="h-4 w-4" /> <span>{item.label} ({item.typeLabel}) {item.isNew && "(Nouveau)"}</span>
+                                  <IconComponentToRender className="h-4 w-4" /> <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && "(Nouveau)"}</span>
                                 </div>
                               </CommandItem>
                             );
