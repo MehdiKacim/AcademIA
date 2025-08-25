@@ -26,7 +26,7 @@ import InputWithStatus from './InputWithStatus';
 import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
-import { Establishment } from '@/lib/dataModels'; // Import Establishment type
+import { Establishment, Profile } from '@/lib/dataModels'; // Import Establishment type, Profile
 import { bootstrapDefaultNavItemsForRole } from '@/lib/navItems'; // Import bootstrapDefaultNavItemsForRole
 
 interface AdminModalProps {
@@ -35,6 +35,9 @@ interface AdminModalProps {
 }
 
 const ADMIN_PASSWORD = "Mehkac95!"; // Password for admin access
+
+// All possible roles for selection (re-defined here for AdminModal scope)
+const allRoles: Profile['role'][] = ['student', 'professeur', 'tutor', 'administrator', 'director', 'deputy_director'];
 
 const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const isMobile = useIsMobile();
@@ -56,6 +59,12 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const debounceTimeoutRefUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // New states for bootstrapping role navigation
+  const [roleToBootstrap, setRoleToBootstrap] = useState<Profile['role'] | 'none'>('none');
+  const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const [isBootstrapSectionOpen, setIsBootstrapSectionOpen] = useState(false);
+
+
   useEffect(() => {
     // Clear authentication state when modal closes
     if (!isOpen) {
@@ -70,6 +79,10 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       setAdminPassword('');
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
+      // Reset bootstrap states
+      setRoleToBootstrap('none');
+      setIsBootstrapping(false);
+      setIsBootstrapSectionOpen(false);
     }
   }, [isOpen]);
 
@@ -187,7 +200,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       showSuccess(`Administrateur ${adminFirstName} ${adminLastName} créé avec succès !`);
       // After creating the admin, ensure their default navigation items are set up
       console.log("[AdminModal] Calling bootstrapDefaultNavItemsForRole for administrator."); // Add this log
-      await bootstrapDefaultNavItemsForRole('administrator', null); // Call the new client-side function
+      await bootstrapDefaultNavItemsForRole('administrator'); // Call the new client-side function
       showSuccess("Navigation administrateur par défaut configurée !");
 
       setAdminFirstName('');
@@ -207,17 +220,25 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
     }
   };
 
-  const handleRecreateAdminNav = async () => {
-    if (window.confirm("Êtes-vous sûr de vouloir recréer les éléments de navigation par défaut pour l'administrateur ? Cela écrasera toutes les configurations existantes pour le rôle 'administrateur'.")) {
+  const handleBootstrapRoleNav = async () => {
+    if (roleToBootstrap === 'none') {
+      showError("Veuillez sélectionner un rôle à initialiser.");
+      return;
+    }
+    if (window.confirm(`Êtes-vous sûr de vouloir initialiser la navigation par défaut pour le rôle '${roleToBootstrap}' ? Cela écrasera toutes les configurations existantes pour ce rôle.`)) {
+      setIsBootstrapping(true);
       try {
-        console.log("[AdminModal] Calling bootstrapDefaultNavItemsForRole for administrator."); // Add this log
-        await bootstrapDefaultNavItemsForRole('administrator', null); // Call the new client-side function
-        showSuccess("Navigation administrateur par défaut recréée !");
+        await bootstrapDefaultNavItemsForRole(roleToBootstrap as Profile['role']);
+        showSuccess(`Navigation par défaut initialisée pour le rôle '${roleToBootstrap}' !`);
+        setRoleToBootstrap('none');
+        setIsBootstrapSectionOpen(false);
         onClose(); // Close modal after action
         window.location.reload(); // Reload to apply new navigation
       } catch (error: any) {
-        console.error("Error recreating admin navigation defaults:", error);
-        showError(`Erreur lors de la recréation de la navigation: ${error.message}`);
+        console.error("Error bootstrapping role navigation defaults:", error);
+        showError(`Erreur lors de l'initialisation de la navigation: ${error.message}`);
+      } finally {
+        setIsBootstrapping(false);
       }
     }
   };
@@ -307,9 +328,45 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               </div>
             )}
 
-            <Button onClick={handleRecreateAdminNav} className="w-full" variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" /> Recréer la Navigation Admin
-            </Button>
+            <Collapsible open={isBootstrapSectionOpen} onOpenChange={setIsBootstrapSectionOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" /> Initialiser Navigation par Rôle
+                  </div>
+                  {isBootstrapSectionOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 p-4 border rounded-md bg-muted/20">
+                <p className="text-sm text-muted-foreground">
+                  Sélectionnez un rôle pour initialiser ses éléments de navigation par défaut. Cela écrasera les configurations existantes pour ce rôle.
+                </p>
+                <div>
+                  <Label htmlFor="role-to-bootstrap">Rôle</Label>
+                  <Select value={roleToBootstrap} onValueChange={(value: Profile['role'] | 'none') => setRoleToBootstrap(value)}>
+                    <SelectTrigger id="role-to-bootstrap">
+                      <SelectValue placeholder="Sélectionner un rôle" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                      <SelectItem value="none" disabled>Sélectionner un rôle...</SelectItem>
+                      {allRoles.map(role => (
+                        <SelectItem key={role} value={role}>
+                          {role === 'student' ? 'Élève' :
+                           role === 'professeur' ? 'Professeur' :
+                           role === 'tutor' ? 'Tuteur' :
+                           role === 'director' ? 'Directeur' :
+                           role === 'deputy_director' ? 'Directeur Adjoint' :
+                           'Administrateur'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleBootstrapRoleNav} className="w-full" disabled={isBootstrapping || roleToBootstrap === 'none'}>
+                  {isBootstrapping ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />} Initialiser la navigation
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
 
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données

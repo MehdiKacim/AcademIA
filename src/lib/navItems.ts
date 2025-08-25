@@ -49,8 +49,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, fetchedConfigs); // ADDED LOG HERE
 
   const configs = fetchedConfigs as RoleNavItemConfig[];
-  console.log(`[loadNavItems] Populated navItemNodes for ${userRole} (count): ${navItemNodes.size}`);
-
   const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
 
   configs.forEach((config: any) => {
@@ -62,7 +60,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         icon_name: config.nav_item.icon_name || undefined,
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
-        type: config.nav_item.type, // <--- ADDED THIS
+        type: config.nav_item.type,
         children: [], // Initialize empty children array
         parent_nav_item_id: config.parent_nav_item_id || undefined,
         order_index: config.order_index,
@@ -137,7 +135,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     icon_name: item.icon_name || undefined,
     description: item.description || undefined,
     is_external: item.is_external,
-    type: item.type, // <--- ADDED THIS
+    type: item.type,
     children: [], // Children are built dynamically, not stored in raw item
     order_index: 0, // Default order for raw items
     parent_nav_item_id: undefined,
@@ -319,14 +317,3 @@ export const bootstrapDefaultNavItemsForRole = async (role: Profile['role']): Pr
   }
   console.log(`[bootstrapDefaultNavItemsForRole] Default nav items bootstrapped successfully via Edge Function for role: ${role}.`);
 };
-
-// Removed the IIFE that was causing issues
-// console.log("[navItems.ts] Attempting to ensure default administrator navigation on module load.");
-// (async () => {
-//   try {
-//     await ensureDefaultNavItemsForRole('administrator');
-//     console.log("[navItems.ts] Default administrator navigation ensured successfully on module load.");
-//   } catch (error) {
-//     console.error("[navItems.ts] Failed to ensure default administrator navigation on module load:", error);
-//   }
-// })();
