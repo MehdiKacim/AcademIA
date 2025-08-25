@@ -66,6 +66,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
   const desktopMenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // This function generates the full, structured navigation tree for desktop sidebar
+  const fullNavTree = React.useMemo((): NavItem[] => {
+    console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems (from RoleContext):", navItems);
+    return navItems;
+  }, [navItems]); // Dependency on navItems from context
+
   // Log navItems and currentUserProfile when they are available
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
@@ -266,12 +272,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // Memoize the context value for Outlet
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
-
-  // This function generates the full, structured navigation tree for desktop sidebar
-  const fullNavTree = React.useMemo((): NavItem[] => {
-    console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems (from RoleContext):", navItems);
-    return navItems;
-  }, [navItems]); // Dependency on navItems from context
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
