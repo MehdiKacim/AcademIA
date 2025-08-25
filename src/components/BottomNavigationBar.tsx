@@ -90,9 +90,10 @@ import {
       useEffect(() => {
         if (currentUser) { // Only load dynamic nav items if user is authenticated
           const fetchNavItems = async () => {
+            console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
             const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id);
             setDynamicNavItems(loadedItems);
-            console.log("[BottomNavigationBar] Fetched dynamicNavItems:", loadedItems);
+            console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
           };
           fetchNavItems();
         } else {
@@ -109,6 +110,7 @@ import {
       }, []);
 
       const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
+        console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Input dynamicNavItems:", dynamicNavItems);
         if (!currentUser) {
           return [
             { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_external: false, order_index: 0 },
@@ -117,6 +119,7 @@ import {
         }
         // For authenticated users, use dynamicNavItems
         const rootItems = dynamicNavItems.filter(item => item.parent_nav_item_id === null);
+        console.log("[BottomNavigationBar] fixedBottomNavItems: Root items from dynamicNavItems:", rootItems);
 
         const messagesItem = rootItems.find(item => item.label === "Messagerie");
         const searchItem = rootItems.find(item => item.label === "Recherche");
@@ -133,7 +136,6 @@ import {
       const groupedDrawerItems = React.useMemo(() => {
         const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
 
-        // Use dynamicNavItems for authenticated users, or static items for unauthenticated
         const itemsToGroup = currentUser ? dynamicNavItems : [
           { id: 'home-anon-drawer', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0 },
           { id: 'aia-drawer', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1 },
@@ -141,8 +143,8 @@ import {
           { id: 'about-drawer', label: "À propos", icon_name: 'Info', is_external: false, onClick: onOpenAboutModal, order_index: 3 },
         ];
 
-
         itemsToGroup.forEach(item => {
+          console.log("[BottomNavigationBar] groupedDrawerItems: Processing item:", item.label, "parent_nav_item_id:", item.parent_nav_item_id);
           if (item.parent_nav_item_id === null) { // Now directly use item.parent_nav_item_id === null
             const categoryLabel = item.label;
             const categoryOrder = item.order_index; // Use order_index from the configured item

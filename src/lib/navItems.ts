@@ -16,7 +16,7 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
     { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false },
     { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false },
     { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false },
-    { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false }, // Moved "Système" here
+    { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false }, // "Système" is now a root item
     { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false },
     { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false },
     { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false },

@@ -43,7 +43,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 
     const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       const isMobile = useIsMobile();
-      const { currentUserProfile, currentRole, signOut } = useRole();
+      const { currentUserProfile, isLoadingUser, currentRole, signOut } = useRole();
       const { isChatOpen } = useCourseChat();
       const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
       const [unreadMessages, setUnreadMessages] = useState(0);
@@ -67,9 +67,10 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 
       useEffect(() => {
         const fetchNavItems = async () => {
-          const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id); // Pass unreadMessages and establishment_id
+          console.log("[DashboardLayout] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
+          const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
           setNavItems(loadedItems);
-          console.log("[DashboardLayout] Fetched navItems:", loadedItems); // Add this log
+          console.log("[DashboardLayout] fetchNavItems: Loaded navItems (raw from loadNavItems):", loadedItems);
         };
         fetchNavItems();
       }, [currentRole, unreadMessages, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessages, or establishment changes
@@ -166,9 +167,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 
       // This function generates the full, structured navigation tree for desktop sidebar
       const fullNavTree = React.useMemo((): NavItem[] => {
-        // loadNavItems already handles filtering by role and building the tree
-        // We just need to ensure the unreadMessagesCount is passed correctly
-        console.log("[DashboardLayout] fullNavTree memo re-calculated. navItems:", navItems);
+        console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems:", navItems);
         return navItems;
       }, [navItems]);
 
@@ -177,6 +176,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         const categories: { [key: string]: { label: string; order: number; icon: React.ElementType; items: NavItem[] } } = {};
 
         fullNavTree.forEach(item => {
+          console.log("[DashboardLayout] groupedFullNavTree: Processing item:", item.label, "parent_nav_item_id:", item.parent_nav_item_id);
           if (item.parent_nav_item_id === null) { // Now directly use item.parent_nav_item_id === null
             const categoryLabel = item.label;
             const categoryOrder = item.order_index; // Use order_index from the configured item
@@ -205,35 +205,9 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         sortedCategories.forEach(categoryGroup => {
           categoryGroup.items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         });
-        console.log("[DashboardLayout] groupedFullNavTree memo re-calculated. Result:", sortedCategories);
+        console.log("[DashboardLayout] groupedFullNavTree memo re-calculated. Result (sorted categories):", sortedCategories);
         return sortedCategories;
       }, [fullNavTree]);
-
-      // Handlers for desktop category navigation
-      const handleDesktopCategoryClick = (categoryLabel: string, categoryIcon: React.ElementType, items: NavItem[]) => {
-        setDesktopActiveCategoryLabel(categoryLabel);
-        setDesktopActiveCategoryIcon(categoryIcon);
-        setDesktopActiveCategoryItems(items);
-        setIsDesktopCategoryOverlayOpen(true);
-      };
-
-      const handleDesktopBackToCategories = () => {
-        setDesktopActiveCategoryLabel(null);
-        setDesktopActiveCategoryIcon(null);
-        setDesktopActiveCategoryItems([]);
-        setIsDesktopCategoryOverlayOpen(false);
-      };
-
-      const handleLogoClick = useCallback(() => {
-        logoTapCountRef.current += 1;
-        if (logoTapCountRef.current >= 10) {
-          setIsAdminModalOpen(true);
-          logoTapCountRef.current = 0;
-        }
-        setTimeout(() => {
-          logoTapCountRef.current = 0;
-        }, 1000);
-      }, [setIsAdminModalOpen]);
 
       useEffect(() => {
         startAutoHideTimer();
