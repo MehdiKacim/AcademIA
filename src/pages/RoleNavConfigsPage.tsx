@@ -602,23 +602,32 @@ const RoleNavConfigsPage = () => {
   };
 
   const availableParentsForConfig = useMemo(() => {
-    if (!currentItemToEdit) return [];
+    console.log("[availableParentsForConfig] Recalculating...");
+    if (!currentItemToEdit) {
+      console.log("[availableParentsForConfig] No currentItemToEdit, returning empty.");
+      return [];
+    }
+
+    console.log("[availableParentsForConfig] currentItemToEdit:", currentItemToEdit);
+    console.log("[availableParentsForConfig] allConfiguredItemsFlat:", allConfiguredItemsFlat.map(item => ({ id: item.id, label: item.label, type: item.type, route: item.route, parent_nav_item_id: item.parent_nav_item_id })));
 
     const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
+    console.log("[availableParentsForConfig] Descendants of currentItemToEdit:", Array.from(descendantsOfCurrentItem));
 
     const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string }[] = [];
 
     // Iterate through all configured items to find potential parents
     allConfiguredItemsFlat.forEach(item => {
-      // A potential parent must be a category (type 'category_or_action' with no route)
-      // It cannot be the item being edited itself
-      // It cannot be a descendant of the item being edited (to prevent circular dependencies)
-      if (
-        item.type === 'category_or_action' &&
-        (item.route === null || item.route === undefined) &&
-        item.id !== currentItemToEdit.id &&
-        !descendantsOfCurrentItem.has(item.id)
-      ) {
+      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+      const isNotSelf = item.id !== currentItemToEdit.id;
+      const isNotDescendant = !descendantsOfCurrentItem.has(item.id);
+
+      console.log(`  Checking item: ${item.label} (ID: ${item.id})`);
+      console.log(`    - isCategory: ${isCategory} (type: ${item.type}, route: ${item.route})`);
+      console.log(`    - isNotSelf: ${isNotSelf}`);
+      console.log(`    - isNotDescendant: ${isNotDescendant}`);
+
+      if (isCategory && isNotSelf && isNotDescendant) {
         // Calculate the level for display purposes.
         let level = 0;
         let currentParentId = item.parent_nav_item_id;
@@ -635,11 +644,16 @@ const RoleNavConfigsPage = () => {
           icon_name: item.icon_name,
           typeLabel: getItemTypeLabel(item.type),
         });
+        console.log(`    -> Added as potential parent.`);
+      } else {
+        console.log(`    -> Not added as potential parent.`);
       }
     });
 
     // Sort by label for consistent display
-    return potentialParents.sort((a, b) => a.label.localeCompare(b.label));
+    const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
+    console.log("[availableParentsForConfig] Final sorted potential parents:", sortedParents);
+    return sortedParents;
   }, [currentItemToEdit, allConfiguredItemsFlat, getDescendantIds]);
 
   const getItemTypeLabel = (type: NavItem['type']) => {
