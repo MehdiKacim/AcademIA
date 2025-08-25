@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Establishment, Profile } from '@/lib/dataModels'; // Import Establishment type, Profile
 import { bootstrapDefaultNavItemsForRole } from '@/lib/navItems'; // Import bootstrapDefaultNavItemsForRole
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible components
+import { useRole } from '@/contexts/RoleContext'; // Import useRole to get fetchUserProfile
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ const allRoles: Profile['role'][] = ['student', 'professeur', 'tutor', 'administ
 
 const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const isMobile = useIsMobile();
+  const { currentUserProfile, fetchUserProfile } = useRole(); // Get fetchUserProfile from useRole
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDataModelModalOpen, setIsDataModelModalOpen] = useState(false);
@@ -231,10 +233,16 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       try {
         await bootstrapDefaultNavItemsForRole(roleToBootstrap as Profile['role']);
         showSuccess(`Navigation par défaut initialisée pour le rôle '${roleToBootstrap}' !`);
+        
+        // Force re-fetch of user profile and nav items if the current user's role was bootstrapped
+        if (currentUserProfile && currentUserProfile.role === roleToBootstrap) {
+          await fetchUserProfile(currentUserProfile.id);
+        }
+        
         setRoleToBootstrap('none');
         setIsBootstrapSectionOpen(false);
         onClose(); // Close modal after action
-        window.location.reload(); // Reload to apply new navigation
+        // No need for window.location.reload() if fetchUserProfile handles it
       } catch (error: any) {
         console.error("Error bootstrapping role navigation defaults:", error);
         showError(`Erreur lors de l'initialisation de la navigation: ${error.message}`);
