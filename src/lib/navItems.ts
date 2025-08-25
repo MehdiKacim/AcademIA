@@ -49,6 +49,19 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   }
   console.log("[loadNavItems] Fetched configs:", configs);
 
+  // --- TEMPORARY DEBUGGING: Add default items for administrator if no configs found ---
+  if (configs.length === 0 && userRole === 'administrator') {
+    console.warn("[loadNavItems] No configs found for administrator. Returning default items for debugging.");
+    return [
+      { id: 'temp-home', label: 'Accueil', route: '/dashboard', icon_name: 'Home', is_external: false, order_index: 0, parent_nav_item_id: null, configId: 'temp-config-home', is_global: true, children: [] },
+      { id: 'temp-users', label: 'Utilisateurs', route: '/admin-users', icon_name: 'Users', is_external: false, order_index: 1, parent_nav_item_id: null, configId: 'temp-config-users', is_global: true, children: [] },
+      { id: 'temp-establishments', label: 'Établissements', route: '/establishments', icon_name: 'Building2', is_external: false, order_index: 2, parent_nav_item_id: null, configId: 'temp-config-establishments', is_global: true, children: [] },
+      { id: 'temp-settings', label: 'Paramètres', route: '/settings', icon_name: 'Settings', is_external: false, order_index: 3, parent_nav_item_id: null, configId: 'temp-config-settings', is_global: true, children: [] },
+      { id: 'temp-menu-management', label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', is_external: false, order_index: 4, parent_nav_item_id: null, configId: 'temp-config-menu', is_global: true, children: [] },
+    ];
+  }
+  // --- END TEMPORARY DEBUGGING ---
+
   const navItemsMap = new Map<string, NavItem>();
   const allItems: NavItem[] = [];
 

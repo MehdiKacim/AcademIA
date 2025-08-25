@@ -92,10 +92,12 @@ import {
           const fetchNavItems = async () => {
             const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id);
             setDynamicNavItems(loadedItems);
+            console.log("[BottomNavigationBar] Fetched dynamicNavItems:", loadedItems);
           };
           fetchNavItems();
         } else {
           setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
+          console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
         }
       }, [currentRole, unreadMessagesCount, currentUserProfile?.establishment_id, currentUser]);
 
@@ -124,7 +126,7 @@ import {
           messagesItem ? { ...messagesItem, badge: unreadMessagesCount } : null,
           searchItem ? { ...searchItem, onClick: onOpenGlobalSearch } : null,
         ].filter(Boolean) as NavItem[];
-
+        console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Result:", baseItems);
         return baseItems;
       }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, dynamicNavItems, handleCategoryClick]);
 
@@ -169,7 +171,7 @@ import {
         sortedCategories.forEach(categoryGroup => {
           categoryGroup.items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         });
-
+        console.log("[BottomNavigationBar] groupedDrawerItems memo re-calculated. Result:", sortedCategories);
         return sortedCategories;
       }, [dynamicNavItems, currentUser, onOpenAboutModal]);
 

@@ -168,6 +168,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
       const fullNavTree = React.useMemo((): NavItem[] => {
         // loadNavItems already handles filtering by role and building the tree
         // We just need to ensure the unreadMessagesCount is passed correctly
+        console.log("[DashboardLayout] fullNavTree memo re-calculated. navItems:", navItems);
         return navItems;
       }, [navItems]);
 
@@ -204,7 +205,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
         sortedCategories.forEach(categoryGroup => {
           categoryGroup.items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         });
-
+        console.log("[DashboardLayout] groupedFullNavTree memo re-calculated. Result:", sortedCategories);
         return sortedCategories;
       }, [fullNavTree]);
 
