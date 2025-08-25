@@ -1,6 +1,96 @@
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import RoleNavItemConfig
 
+// Define default nav item structures for each role
+const DEFAULT_NAV_ITEMS_BY_ROLE: { [key in Profile['role']]: {
+  item: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>;
+  parentLabel?: string; // To link children to parents
+}[] } = {
+  administrator: [
+    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
+    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
+    { item: { label: 'Recherche', route: null, icon_name: 'Search', description: "Recherche globale dans l'application", is_external: false } },
+    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
+    { item: { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false } },
+    { item: { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false } },
+    { item: { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false } },
+    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false }, parentLabel: 'Système' },
+    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false }, parentLabel: 'Système' },
+  ],
+  student: [
+    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
+    { item: { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false } },
+    { item: { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false } },
+    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
+    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=personal', icon_name: 'LineChart', description: "Consultez vos statistiques personnelles", is_external: false } },
+    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } }, // Trigger for chat
+    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
+  ],
+  professeur: [
+    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
+    { item: { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false } },
+    { item: { label: 'Créer un cours', route: '/create-course', icon_name: 'PlusSquare', description: "Créez un nouveau cours", is_external: false } },
+    { item: { label: 'Gestion des classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
+    { item: { label: 'Gestion des affectations professeurs-matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
+    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
+    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques de vos cours", is_external: false } },
+    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
+    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
+  ],
+  tutor: [
+    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
+    { item: { label: 'Mes élèves', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
+    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
+    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=student-monitoring', icon_name: 'LineChart', description: "Consultez les statistiques de vos élèves", is_external: false } },
+    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
+    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
+  ],
+  director: [
+    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
+    { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false } },
+    { item: { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false } },
+    { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false } },
+    { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false } },
+    { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
+    { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
+    { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
+    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
+    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
+    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
+    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
+    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
+  ],
+  deputy_director: [
+    { item: { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false } },
+    { item: { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false } },
+    { item: { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false } },
+    { item: { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false } },
+    { item: { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false } },
+    { item: { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false } },
+    { item: { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false } },
+    { item: { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false } },
+    { item: { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false } },
+    { item: { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false } },
+    { item: { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false } },
+    { item: { label: 'Analytiques', route: '/analytics?view=establishment-admin', icon_name: 'BarChart2', description: "Consultez les statistiques de votre établissement", is_external: false } },
+    { item: { label: 'AiA Bot', route: null, icon_name: 'BotMessageSquare', description: "Votre tuteur IA personnel", is_external: false } },
+    { item: { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false } },
+  ],
+};
+
 /**
  * Insère les éléments de navigation et les configurations de rôle par défaut pour un administrateur.
  * Cette fonction est appelée si aucune configuration n'est trouvée pour le rôle 'administrator'.
@@ -8,31 +98,17 @@ import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import Ro
  */
 const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
   console.warn("[insertDefaultAdminNavItems] Inserting default items for administrator.");
-  const defaultNavItemsData: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'establishment_id' | 'parent_nav_item_id' | 'order_index' | 'is_global'>[] = [
-    { label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false },
-    { label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false },
-    { label: 'Recherche', route: null, icon_name: 'Search', description: "Recherche globale dans l'application", is_external: false }, // This will be a trigger item
-    { label: 'Mon profil', route: '/profile', icon_name: 'User', description: "Gérez votre profil utilisateur", is_external: false },
-    { label: 'Mes cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours", is_external: false },
-    { label: 'Mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false },
-    { label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', description: "Consultez les statistiques", is_external: false },
-    { label: 'Système', route: null, icon_name: 'Settings', description: "Gestion des paramètres système et de l'application.", is_external: false }, // Moved "Système" here
-    { label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false },
-    { label: 'Gestion des Menus', route: '/admin-menu-management', icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false },
-    { label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'Users', description: "Gérez les comptes utilisateurs", is_external: false },
-    { label: 'Gestion des Établissements', route: '/establishments', icon_name: 'Building2', description: "Gérez les établissements scolaires", is_external: false },
-    { label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Gérez les matières scolaires", is_external: false },
-    { label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Gérez les cursus d'études", is_external: false },
-    { label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes et leurs élèves", is_external: false },
-    { label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations élèves-classes", is_external: false },
-    { label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières", is_external: false },
-    { label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Gérez les années scolaires", is_external: false },
-  ];
+
+  // First, reset existing admin configs to ensure a clean slate
+  await resetRoleNavConfigsForRole('administrator');
+
+  const defaultNavItemsData = DEFAULT_NAV_ITEMS_BY_ROLE['administrator'];
 
   const navItemMap = new Map<string, string>(); // Map label to nav_item_id
+  const parentIdMap = new Map<string, string>(); // Map parent label to nav_item_id
 
   // Ensure all generic nav_items exist and get their IDs
-  for (const itemData of defaultNavItemsData) {
+  for (const { item: itemData } of defaultNavItemsData) {
     const { data: existingItem, error: fetchError } = await supabase
       .from('nav_items')
       .select('id')
@@ -61,30 +137,34 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
   }
 
   const defaultRoleConfigs: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
+  let orderIndexCounter = 0;
 
-  // Root items
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Tableau de bord')!, role: 'administrator', parent_nav_item_id: null, order_index: 0, establishment_id: null });
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Messagerie')!, role: 'administrator', parent_nav_item_id: null, order_index: 1, establishment_id: null });
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Recherche')!, role: 'administrator', parent_nav_item_id: null, order_index: 2, establishment_id: null });
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mon profil')!, role: 'administrator', parent_nav_item_id: null, order_index: 3, establishment_id: null });
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes cours')!, role: 'administrator', parent_nav_item_id: null, order_index: 4, establishment_id: null });
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Mes notes')!, role: 'administrator', parent_nav_item_id: null, order_index: 5, establishment_id: null });
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Analytiques')!, role: 'administrator', parent_nav_item_id: null, order_index: 6, establishment_id: null });
-  defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Système')!, role: 'administrator', parent_nav_item_id: null, order_index: 7, establishment_id: null }); // "Système" is now a root item
+  for (const { item: itemData, parentLabel } of defaultNavItemsData) {
+    const navItemId = navItemMap.get(itemData.label);
+    if (!navItemId) {
+      console.error(`[insertDefaultAdminNavItems] Nav item ID not found for label: ${itemData.label}`);
+      continue;
+    }
 
-  // Children of "Système"
-  const systemParentId = navItemMap.get('Système');
-  if (systemParentId) {
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Paramètres')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 0, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Menus')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 1, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Utilisateurs')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 2, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Établissements')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 3, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Matières')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 4, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Cursus')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 5, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Classes')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 6, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion Pédagogique')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 7, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Affectations Professeurs-Matières')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 8, establishment_id: null });
-    defaultRoleConfigs.push({ nav_item_id: navItemMap.get('Gestion des Années Scolaires')!, role: 'administrator', parent_nav_item_id: systemParentId, order_index: 9, establishment_id: null });
+    let parent_nav_item_id: string | null = null;
+    if (parentLabel) {
+      parent_nav_item_id = parentIdMap.get(parentLabel) || navItemMap.get(parentLabel) || null;
+      if (!parent_nav_item_id) {
+        console.warn(`[insertDefaultAdminNavItems] Parent nav item ID not found for label: ${parentLabel}. Item '${itemData.label}' will be a root item.`);
+      }
+    }
+
+    defaultRoleConfigs.push({
+      nav_item_id: navItemId,
+      role: 'administrator',
+      parent_nav_item_id: parent_nav_item_id,
+      order_index: orderIndexCounter,
+      establishment_id: null, // Admin configs are global
+    });
+    orderIndexCounter++;
+    if (!parentLabel) { // If it's a root item, also add to parentIdMap for potential children
+      parentIdMap.set(itemData.label, navItemId);
+    }
   }
 
   const { data: configsInsertResult, error: configsInsertError } = await supabase
@@ -99,6 +179,127 @@ const insertDefaultAdminNavItems = async (): Promise<RoleNavItemConfig[]> => {
   return configsInsertResult as RoleNavItemConfig[];
 };
 
+// New function to ensure default nav items and configs for a given role
+const ensureDefaultNavItemsForRole = async (role: Profile['role'], establishmentId: string | null = null): Promise<void> => {
+  console.log(`[ensureDefaultNavItemsForRole] Ensuring default nav items for role: ${role}, establishment: ${establishmentId}`);
+
+  const defaultItemsForRole = DEFAULT_NAV_ITEMS_BY_ROLE[role];
+  if (!defaultItemsForRole || defaultItemsForRole.length === 0) {
+    console.warn(`[ensureDefaultNavItemsForRole] No default items defined for role: ${role}`);
+    return;
+  }
+
+  const navItemMap = new Map<string, string>(); // Map label to nav_item_id
+  const parentIdMap = new Map<string, string>(); // Map parent label to nav_item_id
+
+  // Step 1: Ensure all generic nav_items exist and get their IDs
+  for (const { item: itemData } of defaultItemsForRole) {
+    const { data: existingItem, error: fetchError } = await supabase
+      .from('nav_items')
+      .select('id')
+      .eq('label', itemData.label)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error(`[ensureDefaultNavItemsForRole] Error checking for existing nav item '${itemData.label}':`, fetchError);
+      throw fetchError;
+    }
+
+    if (existingItem) {
+      navItemMap.set(itemData.label, existingItem.id);
+    } else {
+      const { data: newItem, error: insertItemError } = await supabase
+        .from('nav_items')
+        .insert(itemData)
+        .select('id')
+        .single();
+      if (insertItemError) {
+        console.error(`[ensureDefaultNavItemsForRole] Error inserting nav item '${itemData.label}':`, insertItemError);
+        throw insertItemError;
+      }
+      navItemMap.set(itemData.label, newItem.id);
+    }
+  }
+
+  // Step 2: Create/Update role_nav_configs
+  const existingRoleConfigs = await getRoleNavItemConfigsByRole(role, establishmentId || undefined);
+  const existingConfigMap = new Map<string, RoleNavItemConfig>(); // Key: nav_item_id
+  existingRoleConfigs.forEach(config => existingConfigMap.set(config.nav_item_id, config));
+
+  const configsToInsert: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>[] = [];
+  const configsToUpdate: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'>[] = [];
+
+  let orderIndexCounter = 0; // For root items
+
+  for (const { item: itemData, parentLabel } of defaultItemsForRole) {
+    const navItemId = navItemMap.get(itemData.label);
+    if (!navItemId) {
+      console.error(`[ensureDefaultNavItemsForRole] Nav item ID not found for label: ${itemData.label}`);
+      continue;
+    }
+
+    let parent_nav_item_id: string | null = null;
+    if (parentLabel) {
+      parent_nav_item_id = parentIdMap.get(parentLabel) || navItemMap.get(parentLabel) || null;
+      if (!parent_nav_item_id) {
+        console.warn(`[ensureDefaultNavItemsForRole] Parent nav item ID not found for label: ${parentLabel}. Item '${itemData.label}' will be a root item.`);
+      }
+    }
+
+    const existingConfig = existingConfigMap.get(navItemId);
+
+    if (existingConfig) {
+      // Update existing config if properties differ
+      if (existingConfig.parent_nav_item_id !== parent_nav_item_id ||
+          existingConfig.establishment_id !== establishmentId ||
+          existingConfig.order_index !== orderIndexCounter) // Only update order if it's a root item for now
+      {
+        configsToUpdate.push({
+          id: existingConfig.id,
+          nav_item_id: navItemId,
+          role: role,
+          parent_nav_item_id: parent_nav_item_id,
+          order_index: orderIndexCounter,
+          establishment_id: establishmentId,
+        });
+      }
+    } else {
+      // Insert new config
+      configsToInsert.push({
+        nav_item_id: navItemId,
+        role: role,
+        parent_nav_item_id: parent_nav_item_id,
+        order_index: orderIndexCounter,
+        establishment_id: establishmentId,
+      });
+    }
+    orderIndexCounter++; // Increment order for next item
+    if (!parentLabel) { // If it's a root item, also add to parentIdMap for potential children
+      parentIdMap.set(itemData.label, navItemId);
+    }
+  }
+
+  if (configsToInsert.length > 0) {
+    const { error: insertError } = await supabase.from('role_nav_configs').insert(configsToInsert);
+    if (insertError) {
+      console.error(`[ensureDefaultNavItemsForRole] Error inserting role nav configs for role ${role}:`, insertError);
+      throw insertError;
+    }
+    console.log(`[ensureDefaultNavItemsForRole] Inserted ${configsToInsert.length} new role nav configs for role ${role}.`);
+  }
+
+  if (configsToUpdate.length > 0) {
+    for (const config of configsToUpdate) {
+      const { error: updateError } = await supabase.from('role_nav_configs').update(config).eq('id', config.id);
+      if (updateError) {
+        console.error(`[ensureDefaultNavItemsForRole] Error updating role nav config ${config.id} for role ${role}:`, updateError);
+        throw updateError;
+      }
+    }
+    console.log(`[ensureDefaultNavItemsForRole] Updated ${configsToUpdate.length} role nav configs for role ${role}.`);
+  }
+  console.log(`[ensureDefaultNavItemsForRole] Finished ensuring default nav items for role: ${role}.`);
+};
 
 /**
  * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
@@ -115,25 +316,10 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
 
-  // Step 1: Ensure generic nav_items exist and are complete for administrator
-  if (userRole === 'administrator') {
-    const genericItemsCount = (await loadAllNavItemsRaw()).length;
-    const EXPECTED_GENERIC_ITEM_COUNT = 18; // Based on defaultNavItemsData in insertDefaultAdminNavItems
+  // Determine the target establishment_id for the query
+  const targetEstablishmentId = userRole === 'administrator' ? null : (userEstablishmentId || null);
 
-    if (genericItemsCount < EXPECTED_GENERIC_ITEM_COUNT) {
-      console.warn(`[loadNavItems] Generic nav_items are incomplete (${genericItemsCount} found, ${EXPECTED_GENERIC_ITEM_COUNT} expected). Attempting to ensure all generic items are present.`);
-      try {
-        // This will ensure all generic items are in nav_items table
-        await insertDefaultAdminNavItems(); 
-        console.log("[loadNavItems] Ensured generic nav_items are present.");
-      } catch (e) {
-        console.error("[loadNavItems] Failed to ensure generic nav items are present:", e);
-        return [];
-      }
-    }
-  }
-
-  // Step 2: Load role-specific configurations
+  // Step 1: Load role-specific configurations
   let query = supabase
     .from('role_nav_configs')
     .select(`
@@ -156,14 +342,13 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     .order('order_index', { ascending: true });
 
   if (userRole !== 'administrator') {
-    let orConditions: string[] = [`establishment_id.is.null`]; // Always include global configs
-    if (userEstablishmentId) {
-      orConditions.push(`establishment_id.eq.${userEstablishmentId}`);
-    }
-    query = query.or(orConditions.join(','));
-    console.log("[loadNavItems] Supabase query OR conditions for non-admin:", orConditions.join(','));
+    // For non-admins, fetch global configs OR configs specific to their establishment
+    query = query.or(`establishment_id.is.null,establishment_id.eq.${userEstablishmentId}`);
+    console.log(`[loadNavItems] Supabase query OR conditions for non-admin (role: ${userRole}, establishment: ${userEstablishmentId}): establishment_id.is.null,establishment_id.eq.${userEstablishmentId}`);
   } else {
-    console.log("[loadNavItems] User is administrator, skipping establishment filter in query.");
+    // For admin, fetch only global configs (as admin manages global menu)
+    query = query.is('establishment_id', null);
+    console.log("[loadNavItems] User is administrator, fetching only global configs.");
   }
 
   let configs: RoleNavItemConfig[] = [];
@@ -171,33 +356,44 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   if (configsError) {
     console.error("[loadNavItems] Error loading role nav configs:", configsError);
-    return [];
-  }
-  configs = fetchedConfigs as RoleNavItemConfig[];
-  console.log("[loadNavItems] Fetched configs (initial count):", configs.length, "configs:", configs);
-
-  // Step 3: Targeted fix for administrator: If configs are missing or incomplete, re-insert defaults
-  const EXPECTED_ADMIN_CONFIG_COUNT = 18; // Based on the `insertDefaultAdminNavItems` function
-
-  if (userRole === 'administrator' && configs.length < EXPECTED_ADMIN_CONFIG_COUNT) {
-    console.warn(`[loadNavItems] Admin configs are incomplete (${configs.length} found, ${EXPECTED_ADMIN_CONFIG_COUNT} expected). Re-inserting defaults.`);
+    // Attempt to ensure defaults if there's an error fetching
     try {
-      await resetRoleNavConfigsForRole('administrator'); // Delete existing incomplete configs
-      await insertDefaultAdminNavItems();
-      // Re-run the query to fetch the newly inserted configs
+      await ensureDefaultNavItemsForRole(userRole, targetEstablishmentId);
+      // Re-fetch after ensuring defaults
       const { data: reFetchedConfigs, error: reFetchError } = await query;
       if (reFetchError) {
-        console.error("[loadNavItems] Error re-fetching configs after re-insertion:", reFetchError);
+        console.error("[loadNavItems] Error re-fetching configs after ensuring defaults:", reFetchError);
         return [];
       }
       configs = reFetchedConfigs as RoleNavItemConfig[];
-      console.log("[loadNavItems] Re-fetched configs after re-insertion (count):", configs.length, "configs:", configs);
+      console.log("[loadNavItems] Re-fetched configs after ensuring defaults (count):", configs.length);
     } catch (e) {
-      console.error("[loadNavItems] Failed to re-insert default admin nav items:", e);
+      console.error("[loadNavItems] Failed to ensure default nav items after initial fetch error:", e);
       return [];
     }
+  } else {
+    configs = fetchedConfigs as RoleNavItemConfig[];
+    console.log("[loadNavItems] Fetched configs (initial count):", configs.length);
+
+    // If no configs found for this role/establishment, ensure defaults
+    if (configs.length === 0) {
+      console.warn(`[loadNavItems] No configs found for role ${userRole} and establishment ${userEstablishmentId}. Attempting to ensure defaults.`);
+      try {
+        await ensureDefaultNavItemsForRole(userRole, targetEstablishmentId);
+        // Re-fetch after ensuring defaults
+        const { data: reFetchedConfigs, error: reFetchError } = await query;
+        if (reFetchError) {
+          console.error("[loadNavItems] Error re-fetching configs after ensuring defaults (empty initial):", reFetchError);
+          return [];
+        }
+        configs = reFetchedConfigs as RoleNavItemConfig[];
+        console.log("[loadNavItems] Re-fetched configs after ensuring defaults (empty initial, count):", configs.length);
+      } catch (e) {
+        console.error("[loadNavItems] Failed to ensure default nav items when initial fetch was empty:", e);
+        return [];
+      }
+    }
   }
-  // --- END Targeted fix for administrator ---
 
   const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
 
@@ -212,17 +408,17 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         is_external: config.nav_item.is_external,
         children: [], // Initialize empty children array
         parent_nav_item_id: config.parent_nav_item_id || undefined,
-        order_index: config.order_index, // Now mandatory, should always be a number from DB
+        order_index: config.order_index,
         configId: config.id,
         establishment_id: config.establishment_id || undefined,
-        is_global: config.establishment_id === null, // New: Indicate if it's a global config
+        is_global: config.establishment_id === null,
       };
       navItemNodes.set(navItem.id, navItem);
     } else {
       console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
     }
   });
-  console.log("[loadNavItems] Populated navItemNodes (count):", navItemNodes.size, "nodes:", Array.from(navItemNodes.values()));
+  console.log("[loadNavItems] Populated navItemNodes (count):", navItemNodes.size);
 
   const rootItems: NavItem[] = [];
 
