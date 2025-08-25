@@ -46,6 +46,8 @@ import React, { useState, useEffect, useCallback } from 'react';
     } from "@/components/ui/dialog";
     import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
     import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+    import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'; // Import ContextMenu
+    import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog'; // Import new dialog
 
     // Map icon_name strings to Lucide React components
     const iconMap: { [key: string]: React.ElementType } = {
@@ -57,22 +59,24 @@ import React, { useState, useEffect, useCallback } from 'react';
 
     interface SortableNavItemProps {
       item: NavItem;
-      configId?: string; // The ID of the RoleNavItemConfig entry if it's a configured item
       level: number;
-      onEdit: (item: NavItem, config?: RoleNavItemConfig) => void;
-      onDelete: (id: string, configId?: string) => void;
-      isDragging?: boolean; // Prop to indicate if this item is currently being dragged
-      isDraggableAndDeletable: boolean; // New prop to control drag/delete
+      onEditGenericItem: (item: NavItem) => void;
+      onEditRoleConfig: (item: NavItem, config: RoleNavItemConfig) => void;
+      onDelete: (navItemId: string, configId?: string) => void;
+      onManageChildren: (parentItem: NavItem) => void; // New prop for managing children
+      isDragging?: boolean;
+      isDraggableAndDeletable: boolean;
+      selectedRoleFilter: Profile['role'] | 'all'; // Pass selectedRoleFilter
     }
 
-    const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, configId, level, onEdit, onDelete, isDragging, isDraggableAndDeletable }, ref) => {
+    const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, level, onEditGenericItem, onEditRoleConfig, onDelete, onManageChildren, isDragging, isDraggableAndDeletable, selectedRoleFilter }, ref) => {
       const {
         attributes,
         listeners,
         setNodeRef,
         transform,
         transition,
-      } = useSortable({ id: configId || item.id, disabled: !isDraggableAndDeletable }); // Disable sortable if not draggable
+      } = useSortable({ id: item.configId || item.id, disabled: !isDraggableAndDeletable }); // Disable sortable if not draggable
 
       const style = {
         transform: CSS.Transform.toString(transform),
@@ -84,40 +88,65 @@ import React, { useState, useEffect, useCallback } from 'react';
 
       const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
+      const config: RoleNavItemConfig | undefined = item.configId && selectedRoleFilter !== 'all' ? {
+        id: item.configId,
+        nav_item_id: item.id,
+        role: selectedRoleFilter as Profile['role'],
+        parent_nav_item_id: item.parent_nav_item_id,
+        order_index: item.order_index,
+        establishment_id: item.establishment_id,
+      } : undefined;
+
       return (
-        <div ref={setNodeRef} style={style} className={cn("p-3 border rounded-md bg-background flex items-center justify-between gap-2 mb-2", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
-          <div className="flex items-center gap-2 flex-grow">
-            {isDraggableAndDeletable && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                {...listeners}
-                {...attributes}
-                className="cursor-grab"
-              >
-                <GripVertical className="h-5 w-5 text-muted-foreground" />
-                <span className="sr-only">Déplacer l'élément</span>
-              </Button>
-            )}
-            <IconComponent className="h-5 w-5 text-primary" />
-            <span className="font-medium">{item.label}</span>
-            {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
-            {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
-            {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
-            {item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onEdit(item, configId ? { id: configId, nav_item_id: item.id, role: selectedRoleFilter as Profile['role'], parent_nav_item_id: item.parent_nav_item_id, order_index: item.order_index || 0, establishment_id: item.establishment_id } : undefined)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            {isDraggableAndDeletable && (
-              <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, configId)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <div ref={setNodeRef} style={style} className={cn("p-3 border rounded-md bg-background flex items-center justify-between gap-2 mb-2", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
+              <div className="flex items-center gap-2 flex-grow">
+                {isDraggableAndDeletable && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    {...listeners}
+                    {...attributes}
+                    className="cursor-grab"
+                  >
+                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                    <span className="sr-only">Déplacer l'élément</span>
+                  </Button>
+                )}
+                <IconComponent className="h-5 w-5 text-primary" />
+                <span className="font-medium">{item.label}</span>
+                {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
+                {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
+                {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
+                {item.children?.length && <span className="text-xs text-muted-foreground ml-2">(Catégorie)</span>}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                {config && ( // Only show edit config if it's a configured item
+                  <Button variant="outline" size="sm" onClick={() => onEditRoleConfig(item, config)}>
+                    <UserRoundCog className="h-4 w-4" />
+                  </Button>
+                )}
+                {isDraggableAndDeletable && (
+                  <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, item.configId)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </ContextMenuTrigger>
+          {item.children && item.children.length > 0 && ( // Only show "Manage Children" for categories
+            <ContextMenuContent className="w-auto p-1">
+              <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
+                <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
+              </ContextMenuItem>
+            </ContextMenuContent>
+          )}
+        </ContextMenu>
       );
     });
 
@@ -159,6 +188,10 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [editConfigEstablishmentId, setEditConfigEstablishmentId] = useState<string | undefined>(undefined); // New: for editing config
       const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false);
 
+      // States for managing children dialog
+      const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
+      const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
+
 
       const sensors = useSensors(
         useSensor(PointerSensor),
@@ -197,10 +230,9 @@ import React, { useState, useEffect, useCallback } from 'react';
           setUnconfiguredItems(genericItems);
           setConfiguredItemsTree([]);
         } else {
-          const roleConfigs = await getRoleNavItemConfigsByRole(
-            selectedRoleFilter as Profile['role'],
-            selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter
-          );
+          const role = selectedRoleFilter as Profile['role'];
+          const establishmentId = selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter;
+          const roleConfigs = await getRoleNavItemConfigsByRole(role, establishmentId);
 
           const configuredMap = new Map<string, NavItem>();
           const allConfiguredItemsFlat: NavItem[] = [];
@@ -246,7 +278,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                 const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
                   id: item.configId!,
                   nav_item_id: item.id,
-                  role: selectedRoleFilter as Profile['role'],
+                  role: role,
                   parent_nav_item_id: parentId,
                   order_index: i,
                   establishment_id: item.establishment_id,
@@ -285,7 +317,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           genericItems.forEach(genericItem => {
             const isConfiguredForCurrentContext = allConfiguredItemsFlat.some(configuredItem =>
               configuredItem.id === genericItem.id &&
-              (configuredItem.establishment_id === (selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter) || configuredItem.is_global)
+              (configuredItem.establishment_id === establishmentId || configuredItem.is_global)
             );
             if (!isConfiguredForCurrentContext) {
               unconfigured.push(genericItem);
@@ -383,7 +415,7 @@ import React, { useState, useEffect, useCallback } from 'react';
         setEditItemRoute(item.route || '');
         setEditItemIconName(item.icon_name || '');
         setEditItemDescription(item.description || '');
-        setEditItemIsExternal(item.is_external || false);
+        setEditItemIsExternal(item.is_external);
         setIsEditDialogOpen(true);
       };
 
@@ -417,11 +449,7 @@ import React, { useState, useEffect, useCallback } from 'react';
         }
       };
 
-      const handleEditRoleConfig = (item: NavItem, config?: RoleNavItemConfig) => {
-        if (!config) {
-          showError("Configuration de rôle introuvable pour l'édition.");
-          return;
-        }
+      const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
         if (config.is_global && selectedEstablishmentFilter !== 'all') {
           showError("Vous ne pouvez pas modifier une configuration globale depuis un établissement spécifique.");
           return;
@@ -498,9 +526,6 @@ import React, { useState, useEffect, useCallback } from 'react';
         const activeId = active.id as string; // This is configId if configured, or navItemId if generic
         const overId = over.id as string; // This is configId if configured, or containerId if container
 
-        let successMessage = "Élément de navigation mis à jour !";
-        let errorMessage = "Erreur lors de la mise à jour de l'élément.";
-
         try {
           // Prevent dragging/dropping global items when viewing a specific establishment
           if (activeDragItem.is_global && selectedEstablishmentFilter !== 'all') {
@@ -511,44 +536,51 @@ import React, { useState, useEffect, useCallback } from 'react';
           let newParentNavItemId: string | null = null;
           let newOrderIndex: number = 0;
 
-          const overItem = findItemInTree(configuredItemsTree, overId);
-          const overIsContainer = overId.endsWith('-container'); // Simple heuristic for container IDs
+          const overConfiguredItem = findItemInTree(configuredItemsTree, overId);
+          const overIsUnconfiguredContainer = overId === 'unconfigured-container';
+          const overIsConfiguredRootContainer = overId === 'configured-container';
+          const overIsConfiguredChildContainer = overId.startsWith('configured-container-children-of-');
 
-          if (overIsContainer) {
-            if (overId === 'configured-container') { // Dropped into root container
-              newParentNavItemId = null;
-              newOrderIndex = configuredItemsTree.filter(item => item.is_root).length;
-            } else if (overId.startsWith('configured-container-children-of-')) { // Dropped into a child container
-              newParentNavItemId = overId.replace('configured-container-children-of-', '');
-              const parentItem = findItemInTree(configuredItemsTree, newParentNavItemId);
-              newOrderIndex = parentItem?.children?.length || 0;
-            } else if (overId === 'unconfigured-container') {
-              // Dropped back into unconfigured list, handled by deletion below
-            } else {
-              showError("Cible de dépôt de conteneur non valide.");
-              return;
+          if (overIsUnconfiguredContainer) {
+            // Dropped into the unconfigured list -> delete config
+            if (activeDragConfig) {
+              await deleteRoleNavItemConfig(activeDragConfig.id);
+              showSuccess("Élément retiré de la configuration du rôle !");
             }
-          } else if (overItem) { // Dropped onto an existing item
-            if (!overItem.route) { // Dropped onto a category item (make it a child)
-              newParentNavItemId = overItem.id;
-              newOrderIndex = overItem.children?.length || 0;
-            } else { // Dropped onto a leaf item (make it a sibling)
-              newParentNavItemId = overItem.parent_nav_item_id || null;
-              newOrderIndex = overItem.order_index + 1;
+            await fetchAndStructureNavItems(); // Re-fetch to update both lists
+            return;
+          }
+
+          if (selectedRoleFilter === 'all') {
+            showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
+            return;
+          }
+
+          if (overConfiguredItem) {
+            // Dropped ONTO an existing configured item
+            if (!overConfiguredItem.route) { // If the over item is a CATEGORY (no route), make active item its child
+              newParentNavItemId = overConfiguredItem.id;
+              newOrderIndex = overConfiguredItem.children?.length || 0; // Add to end of its children
+            } else { // If the over item is a LEAF (has a route), make active item its sibling
+              newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
+              newOrderIndex = overConfiguredItem.order_index + 1; // Insert after it
             }
-          } else if (overId === 'unconfigured-container') {
-            // Dropped back into unconfigured list, handled by deletion below
+          } else if (overIsConfiguredRootContainer) {
+            // Dropped into the root container (no specific parent)
+            newParentNavItemId = null;
+            newOrderIndex = configuredItemsTree.filter(item => item.is_root).length; // Add to end of root items
+          } else if (overIsConfiguredChildContainer) {
+            // Dropped into a specific child container (e.g., children of a category)
+            newParentNavItemId = overId.replace('configured-container-children-of-', '');
+            const parentItem = findItemInTree(configuredItemsTree, newParentNavItemId);
+            newOrderIndex = parentItem?.children?.length || 0; // Add to end of its children
           } else {
             showError("Cible de dépôt non valide.");
             return;
           }
 
           // Perform DB operations based on source and target
-          if (!activeDragConfig && activeDragItem) { // From Unconfigured to Configured
-            if (selectedRoleFilter === 'all') {
-              showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
-              return;
-            }
+          if (!activeDragConfig) { // From Unconfigured to Configured
             const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
               nav_item_id: activeDragItem.id,
               role: selectedRoleFilter as Profile['role'],
@@ -557,26 +589,18 @@ import React, { useState, useEffect, useCallback } from 'react';
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
             };
             await addRoleNavItemConfig(newConfig);
-            successMessage = "Élément ajouté à la configuration du rôle !";
-          } else if (activeDragConfig && overId === 'unconfigured-container') { // From Configured to Unconfigured
-            await deleteRoleNavItemConfig(activeDragConfig.id);
-            successMessage = "Élément retiré de la configuration du rôle !";
-          } else if (activeConfig && activeDragItem) { // Within Configured (reorder or change parent)
+            showSuccess("Élément ajouté à la configuration du rôle !");
+          } else { // Within Configured (reorder or change parent)
             const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-              ...activeConfig,
+              ...activeDragConfig,
               parent_nav_item_id: newParentNavItemId,
               order_index: newOrderIndex, // This will be re-indexed by fetchAndStructureNavItems
               establishment_id: selectedEstablishmentFilter === 'all' ? null : selectedEstablishmentFilter,
             };
             await updateRoleNavItemConfig(updatedConfig);
-            successMessage = "Élément de navigation réorganisé/déplacé !";
-          } else {
-            errorMessage = "Action de glisser-déposer non valide.";
-            showError(errorMessage);
-            return;
+            showSuccess("Élément de navigation réorganisé/déplacé !");
           }
 
-          showSuccess(successMessage);
           await fetchAndStructureNavItems(); // Re-fetch and re-structure all items to update the UI
         } catch (error: any) {
           console.error("Error during drag and drop:", error);
@@ -585,6 +609,11 @@ import React, { useState, useEffect, useCallback } from 'react';
           setActiveDragItem(null);
           setActiveDragConfig(null);
         }
+      };
+
+      const handleManageChildren = (parentItem: NavItem) => {
+        setSelectedParentForChildrenManagement(parentItem);
+        setIsManageChildrenDialogOpen(true);
       };
 
       const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
@@ -596,12 +625,14 @@ import React, { useState, useEffect, useCallback } from 'react';
                 <React.Fragment key={item.id}>
                   <SortableNavItem
                     item={item}
-                    configId={item.configId}
                     level={level}
-                    onEdit={handleEditGenericNavItem} // Edit generic properties
-                    onDelete={handleDeleteGenericNavItem} // Delete generic item
+                    onEditGenericItem={handleEditGenericNavItem}
+                    onEditRoleConfig={handleEditRoleConfig} // This will open the role config edit dialog
+                    onDelete={handleDeleteGenericNavItem}
+                    onManageChildren={handleManageChildren} // Pass the new handler
                     isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
-                    isDraggableAndDeletable={!item.is_global || selectedEstablishmentFilter === 'all'} // Only draggable/deletable if not global OR if 'all' establishments selected
+                    isDraggableAndDeletable={!item.is_global || selectedEstablishmentFilter === 'all'}
+                    selectedRoleFilter={selectedRoleFilter} // Pass selectedRoleFilter
                   />
                   {item.children && item.children.length > 0 && (
                     <div className="ml-4">
@@ -784,10 +815,13 @@ import React, { useState, useEffect, useCallback } from 'react';
                         <SortableNavItem
                           item={activeDragItem}
                           level={0}
-                          onEdit={handleEditGenericNavItem}
+                          onEditGenericItem={handleEditGenericNavItem}
+                          onEditRoleConfig={handleEditRoleConfig}
                           onDelete={handleDeleteGenericNavItem}
+                          onManageChildren={handleManageChildren}
                           isDragging={true}
                           isDraggableAndDeletable={true} // Always draggable/deletable in unconfigured list
+                          selectedRoleFilter={selectedRoleFilter}
                         />
                       ) : null}
                     </DragOverlay>
@@ -810,12 +844,14 @@ import React, { useState, useEffect, useCallback } from 'react';
                       {activeDragItem ? (
                         <SortableNavItem
                           item={activeDragItem}
-                          configId={activeDragConfig?.id}
                           level={0}
-                          onEdit={handleEditGenericNavItem}
+                          onEditGenericItem={handleEditGenericNavItem}
+                          onEditRoleConfig={handleEditRoleConfig}
                           onDelete={handleDeleteGenericNavItem}
+                          onManageChildren={handleManageChildren}
                           isDragging={true}
                           isDraggableAndDeletable={!activeDragItem.is_global || selectedEstablishmentFilter === 'all'}
+                          selectedRoleFilter={selectedRoleFilter}
                         />
                       ) : null}
                     </DragOverlay>
@@ -936,6 +972,19 @@ import React, { useState, useEffect, useCallback } from 'react';
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+          )}
+
+          {/* Manage Children Dialog */}
+          {selectedParentForChildrenManagement && (
+            <ManageChildrenDialog
+              isOpen={isManageChildrenDialogOpen}
+              onClose={() => setIsManageChildrenDialogOpen(false)}
+              parentItem={selectedParentForChildrenManagement}
+              selectedRoleFilter={selectedRoleFilter as Profile['role']}
+              selectedEstablishmentFilter={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter}
+              allGenericNavItems={allGenericNavItems}
+              onChildrenUpdated={fetchAndStructureNavItems} // Callback to refresh the main tree
+            />
           )}
         </div>
       );
