@@ -49,7 +49,7 @@ import {
     import { Input } from "@/components/ui/input";
     import { Button } from "@/components/ui/button";
     import { useSwipeable } from 'react-swipeable';
-    import { loadNavItems } from "@/lib/navItems"; // Import loadNavItems
+    // Removed import for loadNavItems from "@/lib/navItems"
 
     interface BottomNavigationBarProps {
       allNavItemsForDrawer: NavItem[]; // This will now be used only for authenticated users' drawer
@@ -85,22 +85,22 @@ import {
       const [activeCategoryLabel, setActiveCategoryLabel] = useState<string | null>(null);
       const [activeCategoryIcon, setActiveCategoryIcon] = useState<React.ElementType | null>(null);
 
-      const [dynamicNavItems, setDynamicNavItems] = useState<NavItem[]>([]); // State to store loaded nav items for the drawer (authenticated users)
-
-      useEffect(() => {
-        if (currentUser) { // Only load dynamic nav items if user is authenticated
-          const fetchNavItems = async () => {
-            console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
-            const loadedItems = await loadNavItems(currentRole, unreadMessagesCount, currentUserProfile?.establishment_id);
-            setDynamicNavItems(loadedItems);
-            console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
-          };
-          fetchNavItems();
-        } else {
-          setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
-          console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
-        }
-      }, [currentRole, unreadMessagesCount, currentUserProfile?.establishment_id, currentUser]);
+      // Removed dynamicNavItems state and its useEffect for loading. It now comes from props.
+      // const [dynamicNavItems, setDynamicNavItems] = useState<NavItem[]>([]); 
+      // useEffect(() => {
+      //   if (currentUser) { // Only load dynamic nav items if user is authenticated
+      //     const fetchNavItems = async () => {
+      //       console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
+      //       const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
+      //       setDynamicNavItems(loadedItems);
+      //       console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
+      //     };
+      //     fetchNavItems();
+      //   } else {
+      //     setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
+      //     console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
+      //   }
+      // }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
 
       const handleCategoryClick = useCallback((categoryLabel: string, categoryIcon: React.ElementType) => {
         setActiveCategoryLabel(categoryLabel);
@@ -110,7 +110,7 @@ import {
       }, []);
 
       const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
-        console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Input dynamicNavItems:", dynamicNavItems);
+        console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Input allNavItemsForDrawer:", allNavItemsForDrawer);
         if (!currentUser) {
           return [
             { id: 'home-anon', route: "/", icon_name: 'Home', label: "Accueil", is_external: false, order_index: 0 },
@@ -118,8 +118,8 @@ import {
           ];
         }
         // For authenticated users, use dynamicNavItems
-        const rootItems = dynamicNavItems.filter(item => item.parent_nav_item_id === null);
-        console.log("[BottomNavigationBar] fixedBottomNavItems: Root items from dynamicNavItems:", rootItems);
+        const rootItems = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null);
+        console.log("[BottomNavigationBar] fixedBottomNavItems: Root items from allNavItemsForDrawer:", rootItems);
 
         const messagesItem = rootItems.find(item => item.label === "Messagerie");
         const searchItem = rootItems.find(item => item.label === "Recherche");
@@ -131,7 +131,7 @@ import {
         ].filter(Boolean) as NavItem[];
         console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Result:", baseItems);
         return baseItems;
-      }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, dynamicNavItems, handleCategoryClick]);
+      }, [currentUser, unreadMessagesCount, onOpenGlobalSearch, setIsMoreDrawerOpen, allNavItemsForDrawer, handleCategoryClick]);
 
       // This memo now prepares the list of items to display in the drawer,
       // distinguishing between top-level direct links and categories.
@@ -149,10 +149,10 @@ import {
           ].sort((a, b) => a.order_index - b.order_index);
         } else if (drawerContent === 'categories') {
           // For authenticated users, show top-level items (direct links or categories)
-          itemsToFilter = dynamicNavItems.filter(item => item.parent_nav_item_id === null);
+          itemsToFilter = allNavItemsForDrawer.filter(item => item.parent_nav_item_id === null);
         } else if (drawerContent === 'items' && activeCategoryLabel) {
           // Show children of the active category
-          const activeCategory = dynamicNavItems.find(item => item.label === activeCategoryLabel && item.route === null);
+          const activeCategory = allNavItemsForDrawer.find(item => item.label === activeCategoryLabel && item.route === null);
           itemsToFilter = activeCategory?.children || [];
         }
 
@@ -160,7 +160,7 @@ import {
           item.label.toLowerCase().includes(lowerCaseQuery) ||
           (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
         ).sort((a, b) => a.order_index - b.order_index); // Ensure items are sorted
-      }, [currentUser, dynamicNavItems, drawerContent, activeCategoryLabel, searchQuery, onOpenAboutModal]);
+      }, [currentUser, allNavItemsForDrawer, drawerContent, activeCategoryLabel, searchQuery, onOpenAboutModal]);
 
 
       const handleLogout = async () => {

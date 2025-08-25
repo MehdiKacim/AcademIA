@@ -30,7 +30,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
     import { NavItem } from "@/lib/dataModels";
     import AuthModal from "@/components/AuthModal";
     import AboutModal from "@/components/AboutModal";
-    import { loadNavItems } from "@/lib/navItems"; // Import loadNavItems
+    // Removed import for loadNavItems from "@/lib/navItems"
 
     interface DashboardLayoutProps {
       setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -43,7 +43,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 
     const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       const isMobile = useIsMobile();
-      const { currentUserProfile, isLoadingUser, currentRole, signOut } = useRole();
+      const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole(); // Get navItems from useRole
       const { isChatOpen } = useCourseChat();
       const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
       const [unreadMessages, setUnreadMessages] = useState(0);
@@ -63,20 +63,20 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
       const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
       const logoTapCountRef = useRef(0);
 
-      const [navItems, setNavItems] = useState<NavItem[]>([]); // State to store loaded nav items
-
-      useEffect(() => {
-        const fetchNavItems = async () => {
-          console.log("[DashboardLayout] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
-          const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
-          setNavItems(loadedItems);
-          console.log("[DashboardLayout] fetchNavItems: Loaded navItems (raw from loadNavItems):", loadedItems);
-          if (loadedItems.length === 0 && currentUserProfile && currentRole === 'administrator') {
-            console.error("[DashboardLayout] Admin navigation items are empty. This usually means default items need to be inserted or there's a data issue. Consider a full data reset via the Admin Modal (Ctrl+Shift+S).");
-          }
-        };
-        fetchNavItems();
-      }, [currentRole, unreadMessages, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessages, or establishment changes
+      // Removed navItems state and its useEffect for loading. It now comes from useRole.
+      // const [navItems, setNavItems] = useState<NavItem[]>([]); 
+      // useEffect(() => {
+      //   const fetchNavItems = async () => {
+      //     console.log("[DashboardLayout] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
+      //     const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
+      //     setNavItems(loadedItems);
+      //     console.log("[DashboardLayout] fetchNavItems: Loaded navItems (raw from loadNavItems):", loadedItems);
+      //     if (loadedItems.length === 0 && currentUserProfile && currentRole === 'administrator') {
+      //       console.error("[DashboardLayout] Admin navigation items are empty. This usually means default items need to be inserted or there's a data issue. Consider a full data reset via the Admin Modal (Ctrl+Shift+S).");
+      //     }
+      //   };
+      //   fetchNavItems();
+      // }, [currentRole, unreadMessages, currentUserProfile?.establishment_id]); // Reload nav items when user role, unreadMessages, or establishment changes
 
       const startAutoHideTimer = useCallback(() => {
         if (autoHideTimerRef.current) {
@@ -172,7 +172,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
       const fullNavTree = React.useMemo((): NavItem[] => {
         console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems:", navItems);
         return navItems;
-      }, [navItems]);
+      }, [navItems]); // Dependency on navItems from context
 
       useEffect(() => {
         startAutoHideTimer();

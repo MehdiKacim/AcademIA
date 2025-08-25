@@ -1,11 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Profile } from '@/lib/dataModels'; // Import Profile interface
+import { Profile, NavItem } from '@/lib/dataModels'; // Import Profile and NavItem interface
 import { updateProfile } from '@/lib/studentData'; // Import updateProfile
 import { showError } from '@/utils/toast'; // Import showError for diagnostic message
 import { getProfileById } from '@/lib/studentData'; // Import getProfileById
+import { loadNavItems } from '@/lib/navItems'; // Import loadNavItems
 
 interface RoleContextType {
   currentUserProfile: Profile | null;
@@ -15,15 +16,19 @@ interface RoleContextType {
   updateUserTheme: (theme: Profile['theme']) => Promise<void>; // Updated: New function to update theme, now accepts Profile['theme']
   signOut: () => Promise<void>; // Add signOut function
   fetchUserProfile: (userId: string) => Promise<void>; // Add fetchUserProfile
+  navItems: NavItem[]; // Expose structured nav items
+  dynamicRoutes: NavItem[]; // Expose flattened dynamic routes for React Router
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
+  const [navItems, setNavItems] = useState<NavItem[]>([]); // State for structured nav items
+  const [dynamicRoutes, setDynamicRoutes] = useState<NavItem[]>([]); // State for flattened dynamic routes
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Initialize as true
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     setIsLoadingUser(true);
     
     // Fetch the full user object from the session to check email_confirmed_at
@@ -31,6 +36,8 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     if (sessionError) {
       console.error("Error fetching user session for confirmation check:", sessionError);
       setCurrentUserProfile(null);
+      setNavItems([]);
+      setDynamicRoutes([]);
       setIsLoadingUser(false);
       return;
     }
@@ -47,11 +54,34 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     
     if (profile) {
       setCurrentUserProfile(profile);
+      // Now load nav items based on the fetched profile's role and establishment
+      const loadedNavItems = await loadNavItems(profile.role, 0, profile.establishment_id);
+      setNavItems(loadedNavItems);
+
+      // Flatten the tree to get all routes for React Router
+      const flattenAndFilterRoutes = (items: NavItem[]): NavItem[] => {
+        let routes: NavItem[] = [];
+        items.forEach(item => {
+          if (item.route && !item.route.startsWith('#') && !item.is_external) {
+            routes.push(item);
+          }
+          if (item.children) {
+            routes = routes.concat(flattenAndFilterRoutes(item.children));
+          }
+        });
+        return routes;
+      };
+      const flattenedRoutes = flattenAndFilterRoutes(loadedNavItems);
+      setDynamicRoutes(flattenedRoutes);
+      console.log("[RoleContext] Flattened dynamic routes for React Router:", flattenedRoutes);
+
     } else {
       setCurrentUserProfile(null);
+      setNavItems([]);
+      setDynamicRoutes([]);
     }
     setIsLoadingUser(false);
-  };
+  }, []); // No dependencies needed for useCallback as it's only called once or on auth state change
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -61,6 +91,8 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // User is logged out
         setCurrentUserProfile(null);
+        setNavItems([]);
+        setDynamicRoutes([]);
         setIsLoadingUser(false);
       }
     });
@@ -75,7 +107,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserProfile]); // Dependency on fetchUserProfile
 
   const updateUserTheme = async (theme: Profile['theme']) => { // Updated type here
     if (currentUserProfile) {
@@ -98,6 +130,8 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       // Optionally show an error toast
     } else {
       setCurrentUserProfile(null); // Clear profile on successful sign out
+      setNavItems([]);
+      setDynamicRoutes([]);
       // The onAuthStateChange listener will also catch this and update state
     }
     setIsLoadingUser(false); // Reset loading state
@@ -106,7 +140,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const currentRole = currentUserProfile ? currentUserProfile.role : null;
 
   return (
-    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut, fetchUserProfile }}>
+    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut, fetchUserProfile, navItems, dynamicRoutes }}>
       {children}
     </RoleContext.Provider>
   );
