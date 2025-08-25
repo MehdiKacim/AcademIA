@@ -55,11 +55,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // States for desktop category navigation
-  const [desktopActiveCategoryLabel, setDesktopActiveCategoryLabel] = useState<string | null>(null);
-  const [desktopActiveCategoryIcon, setDesktopActiveCategoryIcon] = useState<React.ElementType | null>(null);
-  const [desktopActiveCategoryItems, setDesktopActiveCategoryItems] = useState<NavItem[]>([]);
-  const [isDesktopCategoryOverlayOpen, setIsDesktopCategoryOverlayOpen] = useState(false);
+  // New states for desktop category navigation
+  const [desktopNavStack, setDesktopNavStack] = useState<NavItem[]>([]); // Stack of parent categories
+  const [isDesktopOverlayOpen, setIsDesktopOverlayOpen] = useState(false);
 
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Initialize with null
@@ -182,21 +180,23 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
   // New handler for desktop category clicks
-  const handleDesktopCategoryClick = (categoryLabel: string, categoryIcon: React.ElementType, items: NavItem[]) => {
-    console.log(`[DashboardLayout] handleDesktopCategoryClick: Clicked category "${categoryLabel}". Items to display:`, items);
-    setDesktopActiveCategoryLabel(categoryLabel);
-    setDesktopActiveCategoryIcon(categoryIcon);
-    setDesktopActiveCategoryItems(items);
-    setIsDesktopCategoryOverlayOpen(true);
+  const handleDesktopCategoryClick = (categoryItem: NavItem) => {
+    console.log("[DashboardLayout] handleDesktopCategoryClick: Pushing category to stack:", categoryItem.label);
+    setDesktopNavStack(prevStack => [...prevStack, categoryItem]);
+    setIsDesktopOverlayOpen(true);
   };
 
   // New handler to go back from desktop category items to categories
   const handleDesktopBackToCategories = () => {
-    console.log("[DashboardLayout] handleDesktopBackToCategories: Going back to main categories.");
-    setIsDesktopCategoryOverlayOpen(false);
-    setDesktopActiveCategoryLabel(null);
-    setDesktopActiveCategoryIcon(null);
-    setDesktopActiveCategoryItems([]);
+    console.log("[DashboardLayout] handleDesktopBackToCategories: Popping from stack.");
+    setDesktopNavStack(prevStack => {
+      const newStack = [...prevStack];
+      newStack.pop(); // Remove the current category
+      if (newStack.length === 0) {
+        setIsDesktopOverlayOpen(false); // Close overlay if stack is empty
+      }
+      return newStack;
+    });
   };
 
   // Log the items that are actually being rendered in the header
@@ -223,7 +223,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   <Button
                     key={item.id}
                     variant="ghost"
-                    onClick={() => handleDesktopCategoryClick(item.label, IconComponent, item.children || [])} // Pass children for categories
+                    onClick={() => handleDesktopCategoryClick(item)} // Pass the category item itself
                     className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
                   >
                     {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
@@ -315,49 +315,56 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </header>
 
       {/* Desktop Category Items Overlay (Full-width drawer) */}
-      {!isMobile && isDesktopCategoryOverlayOpen && desktopActiveCategoryLabel && (
+      {!isMobile && isDesktopOverlayOpen && ( // Use isDesktopOverlayOpen
         <div className="fixed top-[68px] left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8">
           <div className="max-w-7xl mx-auto flex flex-col gap-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
-                <ArrowLeft className="h-5 w-5 cursor-pointer" onClick={handleDesktopBackToCategories} />
-                {desktopActiveCategoryIcon && React.createElement(desktopActiveCategoryIcon, { className: "h-6 w-6 text-primary" })}
-                {desktopActiveCategoryLabel}
+                {desktopNavStack.length > 1 && ( // Show back button if deeper than root
+                  <ArrowLeft className="h-5 w-5 cursor-pointer" onClick={handleDesktopBackToCategories} />
+                )}
+                {/* Display current category label/icon from the stack */}
+                {desktopNavStack.length > 0 ? (
+                  <>
+                    {React.createElement(iconMap[desktopNavStack[desktopNavStack.length - 1].icon_name || 'Info'], { className: "h-6 w-6 text-primary" })}
+                    {desktopNavStack[desktopNavStack.length - 1].label}
+                  </>
+                ) : "Menu"} {/* Default title if stack is empty (shouldn't happen if overlay is open) */}
               </h2>
-              <Button variant="ghost" onClick={handleDesktopBackToCategories}>
+              <Button variant="ghost" onClick={() => { setIsDesktopOverlayOpen(false); setDesktopNavStack([]); }}> {/* Reset stack on direct close */}
                 <X className="h-5 w-5 mr-2" /> Fermer
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {desktopActiveCategoryItems.map((item) => {
+              {desktopNavStack.length > 0 && desktopNavStack[desktopNavStack.length - 1].children?.map((item) => { // Render children of the current category on top of stack
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                const isSubCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.children && item.children.length > 0;
 
                 return (
-                  <NavLink
+                  <Button
                     key={item.id}
-                    to={item.route || '#'}
+                    variant="outline"
                     onClick={() => {
-                      // For trigger items, call onClick and close overlay
-                      if (item.label === "Recherche" && item.route === null) { // Special handling for search trigger
-                        setIsSearchOverlayOpen(true);
-                        setIsDesktopCategoryOverlayOpen(false);
-                      } else if (item.label === "À propos" && item.route === null) { // Special handling for about trigger
-                        setIsAboutModalOpen(true);
-                        setIsDesktopCategoryOverlayOpen(false);
+                      if (isSubCategory) {
+                        console.log("[DashboardLayout] Clicked sub-category:", item.label);
+                        handleDesktopCategoryClick(item); // Push this sub-category to stack
                       } else {
-                        setIsDesktopCategoryOverlayOpen(false); // Close overlay on item click
+                        console.log("[DashboardLayout] Clicked direct link/action:", item.label);
+                        setIsDesktopOverlayOpen(false); // Close overlay
+                        setDesktopNavStack([]); // Reset stack
+                        if (item.route) {
+                          navigate(item.route);
+                        } else if (item.onClick) {
+                          item.onClick();
+                        }
                       }
                     }}
-                    className={() =>
-                      cn(
-                        "flex flex-col items-center justify-center p-4 rounded-lg border text-center h-24",
-                        isLinkActive
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "hover:bg-accent hover:text-accent-foreground",
-                        "transition-all duration-200 ease-in-out"
-                      )
-                    }
+                    className={cn(
+                      "flex flex-col items-center justify-center p-4 rounded-lg border text-center h-24",
+                      isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
+                      "transition-all duration-200 ease-in-out"
+                    )}
                   >
                     <IconComponent className="h-6 w-6 mb-2" />
                     <span className="text-sm font-medium line-clamp-1">{item.label}</span>
@@ -366,7 +373,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                         {item.badge}
                       </span>
                     )}
-                  </NavLink>
+                  </Button>
                 );
               })}
             </div>
@@ -378,7 +385,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto",
           isMobile && "pb-20",
-          !isMobile && isDesktopCategoryOverlayOpen && "pt-[calc(68px+1rem+100px)]"
+          !isMobile && isDesktopOverlayOpen && "pt-[calc(68px+1rem+100px)]" // Adjust padding when overlay is open
         )}
       >
         <Outlet context={outletContextValue} /> {/* Pass setIsAdminModalOpen via context */}
