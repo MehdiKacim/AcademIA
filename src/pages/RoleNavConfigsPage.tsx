@@ -410,49 +410,39 @@ const RoleNavConfigsPage = () => {
   const handleSaveEditedRoleConfig = async () => {
     if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
 
-    let finalParentId: string | null = null;
+    let finalParentId: string | null = editConfigParentId; // Start with the selected parent ID
     const trimmedTempParentInput = tempParentInput.trim();
     let newCategoryCreated = false; // Flag to track if a new category was created
 
-    if (trimmedTempParentInput !== '') {
-      // Try to find an existing parent by label
-      let parentItem = allGenericNavItems.find(item => 
-        item.label.toLowerCase() === trimmedTempParentInput.toLowerCase() && 
-        item.type === 'category_or_action' && 
-        (item.route === null || item.route === undefined)
-      );
-
-      if (!parentItem) {
-        // If not found, create a new generic category item
-        const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
-          label: trimmedTempParentInput,
-          route: null,
-          description: `Catégorie générée automatiquement pour '${trimmedTempParentInput}'`,
-          is_external: false,
-          icon_name: 'LayoutList',
-          type: 'category_or_action',
-        };
-        parentItem = await addNavItem(newCategory);
-        if (!parentItem) {
-          showError("Échec de la création de la nouvelle catégorie parente.");
-          setIsSavingConfigEdit(false);
-          return;
-        }
-        showSuccess(`Catégorie '${parentItem.label}' créée automatiquement !`);
-        newCategoryCreated = true; // Set flag
+    // If the user chose to create a new category
+    if (editConfigParentId === "NEW_CATEGORY_TO_CREATE" && trimmedTempParentInput !== '') {
+      // Create the new generic category item
+      const newCategory: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'> = {
+        label: trimmedTempParentInput,
+        route: null,
+        description: `Catégorie générée automatiquement pour '${trimmedTempParentInput}'`,
+        is_external: false,
+        icon_name: 'LayoutList',
+        type: 'category_or_action',
+      };
+      const createdParentItem = await addNavItem(newCategory);
+      if (!createdParentItem) {
+        showError("Échec de la création de la nouvelle catégorie parente.");
+        setIsSavingConfigEdit(false);
+        return;
       }
-      finalParentId = parentItem.id;
-    } else {
-      // If tempParentInput is empty, it means no parent is selected (root item)
-      finalParentId = null;
+      showSuccess(`Catégorie '${createdParentItem.label}' créée automatiquement !`);
+      finalParentId = createdParentItem.id; // Use the ID of the newly created generic item
+      newCategoryCreated = true;
     }
 
-    if (finalParentId === currentItemToEdit.id) {
+    // Validation for circular dependency
+    if (finalParentId && finalParentId === currentItemToEdit.id) {
       showError("Un élément ne peut pas être son propre parent.");
       setIsSavingConfigEdit(false);
       return;
     }
-    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat); // Use allConfiguredItemsFlat
+    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
     if (finalParentId && descendantsOfCurrentItem.has(finalParentId)) {
       showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
       setIsSavingConfigEdit(false);
@@ -480,7 +470,7 @@ const RoleNavConfigsPage = () => {
         id: currentConfigToEdit.id,
         nav_item_id: currentConfigToEdit.nav_item_id,
         role: currentConfigToEdit.role,
-        parent_nav_item_id: finalParentId,
+        parent_nav_item_id: finalParentId, // Use the resolved finalParentId
         order_index: editConfigOrderIndex,
       };
       await updateRoleNavItemConfig(updatedConfigData);
@@ -856,7 +846,7 @@ const RoleNavConfigsPage = () => {
                       {editConfigParentId === null
                         ? "Aucun (élément racine)"
                         : editConfigParentId === "NEW_CATEGORY_TO_CREATE"
-                          ? tempParentInput
+                          ? `Créer: "${tempParentInput}"`
                           : allGenericNavItems.find(item => item.id === editConfigParentId)?.label || "Sélectionner un parent..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -869,7 +859,7 @@ const RoleNavConfigsPage = () => {
                         onValueChange={setTempParentInput}
                       />
                       <CommandList>
-                        {tempParentInput.trim() !== '' && !allGenericNavItems.some(item => item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
+                        {tempParentInput.trim() !== '' && !availableParentsForConfig.some(item => item.label.toLowerCase() === tempParentInput.trim().toLowerCase()) && (
                           <CommandItem
                             onSelect={() => {
                               setEditConfigParentId("NEW_CATEGORY_TO_CREATE"); // Signal intent to create new parent
@@ -896,7 +886,7 @@ const RoleNavConfigsPage = () => {
                             <span>Aucun (élément racine)</span>
                           </CommandItem>
                           {availableParentsForConfig
-                            .filter(item => item.label.toLowerCase().includes(tempParentInput.toLowerCase())) // Filter by tempParentInput
+                            .filter(item => tempParentInput.trim() === '' || item.label.toLowerCase().includes(tempParentInput.toLowerCase())) // Filter only if input is not empty
                             .map((item) => {
                             const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                             return (
