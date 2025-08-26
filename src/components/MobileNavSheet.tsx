@@ -118,22 +118,28 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   ];
 
   const currentItemsToDisplay = React.useMemo(() => {
-    // Removed lowerCaseQuery and search filtering
     let itemsToFilter: NavItem[] = [];
 
     if (drawerNavStack.length === 0) {
-      // Filter out 'profile' and 'settings' if they are already in the header
+      // For top-level, show main nav items and "Mon Compte" if logged in
       itemsToFilter = navItems.filter(item => 
-        (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined) &&
-        item.id !== 'nav-profile' && item.id !== 'nav-settings' // Assuming these IDs for profile and settings
+        (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
       );
+      if (currentUserProfile) {
+        // Add a virtual category for "Mon Compte" to group profile actions
+        itemsToFilter.push({
+          id: 'profile-category',
+          label: 'Mon Compte',
+          icon_name: 'User',
+          is_external: false,
+          type: 'category_or_action',
+          children: profileActions, // Attach profile actions as children
+          order_index: 999, // Place it at the end
+        });
+      }
     } else {
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
-      if (activeCategory.id === 'profile-category') {
-        itemsToFilter = profileActions;
-      } else {
-        itemsToFilter = activeCategory.children || [];
-      }
+      itemsToFilter = activeCategory.children || [];
     }
     
     return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
@@ -149,47 +155,12 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="top"
-        className="w-full h-[calc(100vh-68px)] flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg fixed top-[68px]" // Added fixed top-[68px]
+        className="w-full h-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg" // Reverted positioning
         {...swipeHandlers}
       >
         <div className="p-4 flex-shrink-0 border-b border-border">
-          {/* Top row: Mon Compte, Theme Toggle, Close button */}
           <div className="flex items-center justify-between">
-            {/* "Mon Compte" button */}
-            {currentUserProfile ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleItemClick({
-                  id: 'profile-category',
-                  label: 'Mon Compte',
-                  icon_name: 'User',
-                  is_external: false,
-                  type: 'category_or_action',
-                  children: profileActions,
-                  order_index: 999,
-                })}
-                className="flex items-center gap-1 text-sm rounded-full px-3 py-2 border-none bg-muted/50 hover:bg-muted/80 text-muted-foreground hover:text-foreground"
-              >
-                <User className="h-5 w-5" />
-                <span>Mon Compte</span>
-              </Button>
-            ) : (
-              <div className="w-fit"></div> // Placeholder for alignment
-            )}
-
-            {/* Theme Toggle */}
-            <ThemeToggle />
-
-            {/* Close button */}
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
-              <X className="h-5 w-5" />
-              <span className="sr-only">Fermer le menu</span>
-            </Button>
-          </div>
-
-          {/* Second row: Back button and dynamic title (only if in a sub-category) */}
-          <div className="flex items-center justify-between mt-4">
+            {/* Left side: Back button or placeholder */}
             {drawerNavStack.length > 0 ? (
               <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
                 <ArrowLeft className="h-5 w-5" />
@@ -198,11 +169,21 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
             ) : (
               <div className="w-10 h-10"></div> // Placeholder for alignment
             )}
+
+            {/* Center: Dynamic Title */}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
               {React.createElement(CurrentDrawerIconComponent, { className: "h-6 w-6 text-primary" })}
               {currentDrawerTitle}
             </SheetTitle>
-            <div className="w-10 h-10"></div> {/* Placeholder for alignment */}
+
+            {/* Right side: Theme Toggle and Close button */}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Fermer le menu</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -228,8 +209,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "android-tile flex-col items-start justify-start h-auto min-h-[80px] text-left w-full", // Changed min-h-[100px] to min-h-[80px]
-                      "rounded-android-tile", // Apply the custom rounded-android-tile class
+                      "android-tile flex-col items-start justify-start h-auto min-h-[80px] text-left w-full",
+                      "rounded-android-tile",
                       isLinkActive ? "active" : "",
                       "transition-all duration-200 ease-in-out"
                     )}
