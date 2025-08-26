@@ -30,6 +30,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
+import AboutModal from "@/components/AboutModal"; // Importation manquante
 // Removed import for loadNavItems from "@/lib/navItems"
 
 interface DashboardLayoutProps {
