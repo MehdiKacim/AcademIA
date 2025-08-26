@@ -15,14 +15,13 @@ export default defineConfig(() => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // Ajout d'un alias pour forcer la résolution de 'react-dom' vers 'react-dom/client'
-      "react-dom": "react-dom/client",
+      // Removed: "react-dom": "react-dom/client",
     },
   },
   // Exclure @dnd-kit/core de l'optimisation des dépendances de Vite
   optimizeDeps: {
     exclude: ['@dnd-kit/core'],
-    // NEW: Explicitly include react-dom/client to ensure it's correctly pre-bundled
+    // Keep: Explicitly include react-dom/client to ensure it's correctly pre-bundled
     include: ['react-dom/client'],
   },
 }));
