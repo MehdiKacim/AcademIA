@@ -52,6 +52,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils'; // Import cn for conditional styling
 import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog'; // New import
+import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog'; // New import
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -186,7 +187,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
       </ContextMenuTrigger>
       {/* Only show "Gérer les sous-éléments" for true categories (type 'category_or_action' with no route) */}
       {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
-        <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile"> {/* Apply rounded-android-tile */}
+        <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
           <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
             <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
           </ContextMenuItem>
@@ -208,9 +209,7 @@ const RoleNavConfigsPage = () => {
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
   const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
-  const [editConfigParentId, setEditConfigParentId] = useState<string | null>(null); // Can be null for root
-  const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  // Removed editConfigParentId, editConfigOrderIndex, isSavingEdit as they are now internal to EditRoleConfigDialog
 
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
@@ -228,8 +227,7 @@ const RoleNavConfigsPage = () => {
   const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
 
   // States for search in dropdowns
-  const [selectedParentForEdit, setSelectedParentForEdit] = useState<string | null>(null); // New state for parent selection in edit dialog
-  const [parentSearchQuery, setParentSearchQuery] = useState(''); // New state for parent search input
+  // Removed selectedParentForEdit, parentSearchQuery as they are now internal to EditRoleConfigDialog
 
   const [isAddExistingItemDialogOpen, setIsAddExistingItemDialogOpen] = useState(false); // New state for the add existing item dialog
 
@@ -353,69 +351,7 @@ const RoleNavConfigsPage = () => {
   }, [fetchAndStructureNavItems]);
 
   // Memoize availableParentsForConfig to ensure it's only computed when dependencies change
-  const availableParentsForConfig = useMemo(() => {
-    if (!currentItemToEdit) {
-      return [];
-    }
-
-    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
-    const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
-
-    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
-
-    // 1. Add already configured categories that are valid parents
-    allConfiguredItemsFlat.forEach(item => {
-      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-      const isNotSelf = item.id !== currentItemToEdit.id;
-      const isNotDescendant = !descendantsOfCurrentItem.has(item.id);
-
-      if (isCategory && isNotSelf && isNotDescendant) {
-        let level = 0;
-        let currentParentId = item.parent_nav_item_id;
-        while (currentParentId) {
-          level++;
-          const parent = allConfiguredItemsFlat.find(i => i.id === currentParentId);
-          currentParentId = parent?.parent_nav_item_id;
-        }
-        potentialParents.push({
-          id: item.id,
-          label: item.label,
-          level: level,
-          icon_name: item.icon_name,
-          typeLabel: getItemTypeLabel(item.type),
-          isNew: false, // This is an existing configured parent
-        });
-      }
-    });
-
-    // 2. Add generic categories that are NOT YET configured for this role and are valid parents
-    allGenericNavItems.forEach(item => {
-      // Only consider if it's a category and not already configured for this role
-      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-      const isNotConfiguredForRole = !configuredItemIds.has(item.id);
-      const isNotSelf = item.id !== currentItemToEdit.id;
-      const isNotDescendant = !descendantsOfCurrentItem.has(item.id); // Check against descendants of currentItemToEdit
-
-      if (isCategory && isNotConfiguredForRole && isNotSelf && isNotDescendant) {
-        // For new generic items, assume level 0 for display in the dropdown
-        potentialParents.push({
-          id: item.id,
-          label: item.label,
-          level: 0, // Treat as a potential root-level parent for now
-          icon_name: item.icon_name,
-          typeLabel: getItemTypeLabel(item.type),
-          isNew: true, // This is a new generic parent to be configured
-        });
-      }
-    });
-
-    const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
-    
-    // Apply search filter
-    const lowerCaseQuery = parentSearchQuery.toLowerCase();
-    return sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery));
-
-  }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds, parentSearchQuery]);
+  // Removed availableParentsForConfig as it's now internal to EditRoleConfigDialog
 
 
   // Effect to handle adding the selected generic item (now triggered by AddExistingNavItemDialog)
@@ -449,87 +385,10 @@ const RoleNavConfigsPage = () => {
   const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
-    setEditConfigParentId(config.parent_nav_item_id || null);
-    setSelectedParentForEdit(config.parent_nav_item_id || null); // Initialize new state
-    setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
   };
 
-  // Effect to handle saving the edited role config
-  useEffect(() => {
-    if (isSavingEdit && currentConfigToEdit && currentItemToEdit && selectedRoleFilter !== 'all') {
-      const saveConfig = async () => {
-        let finalParentId: string | null = selectedParentForEdit; // Use the new state
-
-        // Check if the selected parent is a new generic item (not yet configured for this role)
-        const selectedParentInfo = availableParentsForConfig.find(p => p.id === finalParentId);
-
-        if (selectedParentInfo?.isNew) {
-            try {
-                const newParentConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-                    nav_item_id: finalParentId!,
-                    role: selectedRoleFilter as Profile['role'],
-                    parent_nav_item_id: null,
-                    order_index: 9999,
-                };
-                const addedConfig = await addRoleNavItemConfig(newParentConfig);
-                if (addedConfig) {
-                    finalParentId = addedConfig.nav_item_id;
-                    showSuccess(`Catégorie '${selectedParentInfo.label}' ajoutée au menu du rôle.`);
-                } else {
-                    showError(`Échec de l'ajout de la catégorie '${selectedParentInfo.label}' au menu du rôle.`);
-                    setIsSavingEdit(false);
-                    return;
-                }
-            } catch (error: any) {
-                console.error("Error adding new generic parent to role config:", error);
-                showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
-                setIsSavingEdit(false);
-                return;
-            }
-        }
-
-        if (finalParentId && finalParentId === currentItemToEdit.id) {
-          showError("Un élément ne peut pas être son propre parent.");
-          setIsSavingEdit(false);
-          return;
-        }
-        const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
-        if (finalParentId && descendantsOfCurrentItem.has(finalParentId)) {
-          showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
-          setIsSavingEdit(false);
-          return;
-        }
-
-        try {
-          const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-            id: currentConfigToEdit.id,
-            nav_item_id: currentConfigToEdit.nav_item_id,
-            role: currentConfigToEdit.role,
-            parent_nav_item_id: finalParentId,
-            order_index: editConfigOrderIndex,
-          };
-          console.log("[handleSaveEditedRoleConfig] Updating config with parent_nav_item_id:", updatedConfigData.parent_nav_item_id);
-          await updateRoleNavItemConfig(updatedConfigData);
-          showSuccess("Configuration de rôle mise à jour !");
-          await fetchAndStructureNavItems();
-          setIsEditConfigDialogOpen(false);
-          setCurrentConfigToEdit(null);
-          setCurrentItemToEdit(null);
-        } catch (error: any) {
-          console.error("Error updating role config:", error);
-          showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
-        } finally {
-          setIsSavingEdit(false);
-        }
-      };
-      saveConfig();
-    }
-  }, [isSavingEdit, currentConfigToEdit, currentItemToEdit, selectedRoleFilter, selectedParentForEdit, editConfigOrderIndex, availableParentsForConfig, allConfiguredItemsFlat, getDescendantIds, fetchAndStructureNavItems]);
-
-  const handleSaveEditedRoleConfig = () => {
-    setIsSavingEdit(true); // Trigger the useEffect
-  };
+  // Removed handleSaveEditedRoleConfig as it's now internal to EditRoleConfigDialog
 
   const handleDragStart = (event: any) => {
     const { active } = event;
@@ -731,7 +590,7 @@ const RoleNavConfigsPage = () => {
   // console.log("[RoleNavConfigsPage] Current selectedGenericItemToAdd:", selectedGenericItemToAdd);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Configuration des Menus par Rôle
       </h1>
@@ -785,9 +644,9 @@ const RoleNavConfigsPage = () => {
               </CardTitle>
               <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
             </CardHeader>
-            <ContextMenu> {/* Re-added ContextMenu */}
+            <ContextMenu>
               <ContextMenuTrigger asChild>
-                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-android-tile"> {/* Removed problematic classes */}
+                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-android-tile">
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                     {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
                     <DragOverlay>
@@ -810,7 +669,7 @@ const RoleNavConfigsPage = () => {
                   </DndContext>
                 </CardContent>
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile"> {/* Apply rounded-android-tile */}
+              <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
                 <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
                 </ContextMenuItem>
@@ -822,59 +681,22 @@ const RoleNavConfigsPage = () => {
 
       {/* Edit Role Config Dialog */}
       {currentConfigToEdit && currentItemToEdit && (
-        <Dialog open={isEditConfigDialogOpen} onOpenChange={setIsEditConfigDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] bg-card z-[100] rounded-android-tile"> {/* Apply rounded-android-tile */}
-            <DialogHeader>
-              <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
-              <DialogDescription>
-                Ajustez la position et le parent de cet élément dans le menu de ce rôle.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="parent-search-input" className="text-right">Rechercher parent</Label>
-                <Input
-                  id="parent-search-input"
-                  placeholder="Rechercher un parent..."
-                  value={parentSearchQuery}
-                  onChange={(e) => setParentSearchQuery(e.target.value)}
-                  className="col-span-3 rounded-android-tile"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-config-parent" className="text-right">Parent</Label>
-                <SearchableDropdown
-                  value={selectedParentForEdit}
-                  onValueChange={setSelectedParentForEdit}
-                  options={[
-                    { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false }, // Option for no parent
-                    ...availableParentsForConfig.map(item => ({
-                      id: item.id,
-                      label: item.label,
-                      icon_name: item.icon_name,
-                      level: item.level,
-                      isNew: item.isNew,
-                    }))
-                  ]}
-                  placeholder="Sélectionner un parent..."
-                  emptyMessage="Aucun parent trouvé."
-                  iconMap={iconMap}
-                  className="col-span-3"
-                  popoverContentClassName="z-[999] rounded-android-tile" // Increased z-index, apply rounded-android-tile
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
-                <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="col-span-3 rounded-android-tile" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingEdit}>
-                {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <EditRoleConfigDialog
+          isOpen={isEditConfigDialogOpen}
+          onClose={() => {
+            setIsEditConfigDialogOpen(false);
+            setCurrentConfigToEdit(null);
+            setCurrentItemToEdit(null);
+          }}
+          currentConfigToEdit={currentConfigToEdit}
+          currentItemToEdit={currentItemToEdit}
+          selectedRoleFilter={selectedRoleFilter as Profile['role']}
+          allGenericNavItems={allGenericNavItems}
+          allConfiguredItemsFlat={allConfiguredItemsFlat}
+          onSave={fetchAndStructureNavItems} // Callback to refresh the list
+          getDescendantIds={getDescendantIds}
+          iconMap={iconMap}
+        />
       )}
 
       {/* Manage Children Dialog */}
