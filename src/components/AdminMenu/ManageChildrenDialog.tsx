@@ -407,7 +407,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                     searchPlaceholder="Rechercher un élément..."
                     emptyMessage="Aucun élément disponible."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[101]" {/* Added z-index here */}
+                    popoverContentClassName="z-[101]"
                   />
                   <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
@@ -457,7 +457,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <SelectTrigger id="new-child-type">
                               <SelectValue placeholder="Sélectionner un type" />
                             </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[101]"> {/* Added z-index here */}
+                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[101]">
                               <ScrollArea className="h-40">
                                 {Object.keys(iconMap).sort().map(iconName => {
                                   const IconComponent = iconMap[iconName];
@@ -487,7 +487,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <SelectTrigger id="new-child-icon">
                               <SelectValue placeholder="Sélectionner une icône" />
                             </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[101]"> {/* Added z-index here */}
+                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[101]">
                               <ScrollArea className="h-40">
                                 {Object.keys(iconMap).sort().map(iconName => {
                                   const IconComponent = iconMap[iconName];

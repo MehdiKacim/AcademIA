@@ -478,7 +478,7 @@ const RoleNavConfigsPage = () => {
 
   // Effect to handle saving the edited role config
   useEffect(() => {
-    if (isSavingConfigEdit && currentConfigToEdit && currentItemToEdit && selectedRoleFilter !== 'all') {
+    if (isSavingEdit && currentConfigToEdit && currentItemToEdit && selectedRoleFilter !== 'all') {
       const saveConfig = async () => {
         let finalParentId: string | null = selectedParentForEdit; // Use the new state
 
@@ -546,7 +546,7 @@ const RoleNavConfigsPage = () => {
       };
       saveConfig();
     }
-  }, [isSavingConfigEdit, currentConfigToEdit, currentItemToEdit, selectedRoleFilter, selectedParentForEdit, editConfigOrderIndex, availableParentsForConfig, allConfiguredItemsFlat, getDescendantIds, fetchAndStructureNavItems]);
+  }, [isSavingEdit, currentConfigToEdit, currentItemToEdit, selectedRoleFilter, selectedParentForEdit, editConfigOrderIndex, availableParentsForConfig, allConfiguredItemsFlat, getDescendantIds, fetchAndStructureNavItems]);
 
   const handleSaveEditedRoleConfig = () => {
     setIsSavingEdit(true); // Trigger the useEffect
@@ -831,7 +831,7 @@ const RoleNavConfigsPage = () => {
                     searchPlaceholder="Rechercher un élément..."
                     emptyMessage="Aucun élément disponible."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[101]" {/* Added z-index here */}
+                    popoverContentClassName="z-[101]"
                   />
                 </div>
               </div>
@@ -892,7 +892,7 @@ const RoleNavConfigsPage = () => {
                   emptyMessage="Aucun parent trouvé."
                   iconMap={iconMap}
                   className="col-span-3"
-                  popoverContentClassName="z-[101]" {/* Added z-index here */}
+                  popoverContentClassName="z-[101]"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -901,7 +901,7 @@ const RoleNavConfigsPage = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingConfigEdit}>
+              <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingEdit}>
                 {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
               </Button>
             </DialogFooter>
