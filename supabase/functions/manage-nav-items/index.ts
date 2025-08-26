@@ -80,7 +80,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
     ,
     { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false, type: 'route' } },
     { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
+    { item: { logical_id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
     { item: { logical_id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de votre établissement", is_external: false, type: 'route' } },
   ],
 };
@@ -249,7 +249,6 @@ serve(async (req) => {
         console.log("[Edge Function] logicalIdToDbIdMap after processing generic items:", logicalIdToDbIdMap);
 
         // Step 3: Build the hierarchical structure for default configs and assign order_index
-        const configsToInsert = [];
         const tempTree = new Map<string, any>(); // Map logical ID to temp item object
 
         // First pass: create temp items and map logical IDs to their DB IDs
@@ -293,17 +292,17 @@ serve(async (req) => {
             flattenedConfigsForDb.push({
               nav_item_id: item.nav_item_id,
               role: bootstrapRole,
-              parent_nav_item_id: parentDbId,
+              parent_nav_item_id: parentDbId, // This is the parent's DB ID
               order_index: item.order_index,
             });
             if (item._children.length > 0) {
-              processNode(item._children, item.nav_item_id);
+              processNode(item._children, item.nav_item_id); // Pass current item's DB ID as parent for its children
             }
           });
         };
 
-        // Start processing from root items (those without a parent in tempConfigItems)
-        const rootTempItems = Object.values(tempConfigItems).filter(item => !item.parent_nav_item_id);
+        // Start processing from root items (those without a parent in tempTree)
+        const rootTempItems = Array.from(tempTree.values()).filter(item => !item.parent_nav_item_id);
         processNode(rootTempItems, null);
 
         console.log("[Edge Function] Flattened configs for DB (count):", flattenedConfigsForDb.length, "configs:", flattenedConfigsForDb);
