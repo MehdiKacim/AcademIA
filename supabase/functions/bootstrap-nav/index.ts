@@ -31,6 +31,11 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'nav-global-search', label: 'Recherche', icon_name: 'Search', is_external: false, type: 'category_or_action' }, // Action to open search overlay
   { id: 'nav-about', label: 'À propos', icon_name: 'Info', is_external: false, type: 'category_or_action' }, // Action to open about modal
   { id: 'nav-aia-chat', label: 'AiA Chat', icon_name: 'BotMessageSquare', is_external: false, type: 'category_or_action' }, // Action to open AiA chat
+
+  // Add categories as generic nav items
+  { id: 'cat-my-content', label: 'Mon Contenu', route: null, icon_name: 'BookOpen', is_external: false, type: 'category_or_action' },
+  { id: 'cat-pedagogy', label: 'Pédagogie', route: null, icon_name: 'Users', is_external: false, type: 'category_or_action' },
+  { id: 'cat-student-monitoring', label: 'Suivi Élèves', route: null, icon_name: 'UsersRound', is_external: false, type: 'category_or_action' },
 ];
 
 // Define default role navigation configurations
@@ -94,10 +99,10 @@ const DEFAULT_ROLE_NAV_CONFIGS = {
   ],
   professeur: [
     { nav_item_id: 'nav-dashboard', parent_nav_item_id: null, order_index: 0 },
-    { id: 'cat-my-content', label: 'Mon Contenu', icon_name: 'BookOpen', is_external: false, type: 'category_or_action', parent_nav_item_id: null, order_index: 1 },
+    { nav_item_id: 'cat-my-content', parent_nav_item_id: null, order_index: 1 }, // Reference the generic category
     { nav_item_id: 'nav-courses', parent_nav_item_id: 'cat-my-content', order_index: 0 },
     { nav_item_id: 'nav-create-course', parent_nav_item_id: 'cat-my-content', order_index: 1 },
-    { id: 'cat-pedagogy', label: 'Pédagogie', icon_name: 'Users', is_external: false, type: 'category_or_action', parent_nav_item_id: null, order_index: 2 },
+    { nav_item_id: 'cat-pedagogy', parent_nav_item_id: null, order_index: 2 }, // Reference the generic category
     { nav_item_id: 'nav-classes', parent_nav_item_id: 'cat-pedagogy', order_index: 0 },
     { nav_item_id: 'nav-students', parent_nav_item_id: 'cat-pedagogy', order_index: 1 },
     { nav_item_id: 'nav-pedagogical-management', parent_nav_item_id: 'cat-pedagogy', order_index: 2 },
@@ -111,7 +116,7 @@ const DEFAULT_ROLE_NAV_CONFIGS = {
   ],
   tutor: [
     { nav_item_id: 'nav-dashboard', parent_nav_item_id: null, order_index: 0 },
-    { id: 'cat-student-monitoring', label: 'Suivi Élèves', icon_name: 'UsersRound', is_external: false, type: 'category_or_action', parent_nav_item_id: null, order_index: 1 },
+    { nav_item_id: 'cat-student-monitoring', parent_nav_item_id: null, order_index: 1 }, // Reference the generic category
     { nav_item_id: 'nav-pedagogical-management', parent_nav_item_id: 'cat-student-monitoring', order_index: 0 },
     { nav_item_id: 'nav-students', parent_nav_item_id: 'cat-student-monitoring', order_index: 1 },
     { nav_item_id: 'nav-analytics', parent_nav_item_id: null, order_index: 2 },
@@ -206,24 +211,12 @@ serve(async (req) => {
     for (const role in DEFAULT_ROLE_NAV_CONFIGS) {
       const configsForRole = (DEFAULT_ROLE_NAV_CONFIGS as any)[role];
       for (const config of configsForRole) {
-        // Check if the item is a category defined directly in DEFAULT_ROLE_NAV_CONFIGS
-        const isCategoryDefinedInline = DEFAULT_NAV_ITEMS.find(item => item.id === config.id && item.type === 'category_or_action');
-        
-        if (config.id && isCategoryDefinedInline) { // If it's an inline category definition
-          allRoleConfigsToInsert.push({
-            nav_item_id: config.id, // Use the ID defined in the config
-            role: role,
-            parent_nav_item_id: config.parent_nav_item_id,
-            order_index: config.order_index,
-          });
-        } else { // Standard nav_item_id reference
-          allRoleConfigsToInsert.push({
-            nav_item_id: config.nav_item_id,
-            role: role,
-            parent_nav_item_id: config.parent_nav_item_id,
-            order_index: config.order_index,
-          });
-        }
+        allRoleConfigsToInsert.push({
+          nav_item_id: config.nav_item_id,
+          role: role,
+          parent_nav_item_id: config.parent_nav_item_id,
+          order_index: config.order_index,
+        });
       }
     }
 
