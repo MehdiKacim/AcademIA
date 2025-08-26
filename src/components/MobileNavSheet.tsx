@@ -179,10 +179,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
             {/* Right side: Quick access items */}
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Fermer</span>
-              </Button>
               {currentUserProfile && (
                 <>
                   <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative">
@@ -204,6 +200,10 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 </>
               )}
               <ThemeToggle />
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Fermer</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -244,7 +244,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     )}
                     onClick={() => handleItemClick(item)}
                   >
-                    <div className="icon-container rounded-lg"> {/* Added rounded-lg here */}
+                    <div className="icon-container rounded-lg">
                       <IconComponent className="h-6 w-6" />
                     </div>
                     <span className="title text-base font-medium line-clamp-2">{item.label}</span>
