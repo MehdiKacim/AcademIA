@@ -201,7 +201,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               <span className="sr-only">Fermer le menu</span>
             </Button>
           </div>
-        </SheetHeader>
+        </div>
 
         <ScrollArea className="flex-grow p-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
