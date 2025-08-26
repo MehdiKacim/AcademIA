@@ -9,27 +9,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight, ChevronUp, Menu } from "lucide-react";
+// Keep only essential icons for now for diagnostic
+import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSwipeable } from 'react-swipeable';
-// Removed format and fr imports as they are no longer used for time/date display
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { motion, AnimatePresence } from 'framer-motion'; // Import framer-motion
 
-// Map icon_name strings to Lucide React components
+// Map icon_name strings to Lucide React components (reduced for diagnostic)
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight, ChevronUp, Menu
+  Home: Home,
+  MessageSquare: MessageSquare,
+  Search: Search,
+  User: User,
+  LogOut: LogOut,
+  Settings: Settings,
+  Info: Info,
+  BookOpen: BookOpen,
+  Sun: Sun,
+  Moon: Moon,
+  ChevronUp: ChevronUp,
+  ExternalLink: ExternalLink,
+  Menu: Menu,
+  BotMessageSquare: BotMessageSquare,
+  SlidersHorizontal: SlidersHorizontal,
+  MessageSquareQuote: MessageSquareQuote,
+  ShieldCheck: ShieldCheck,
+  Target: Target,
 };
 
 interface MobileNavSheetProps {
@@ -51,14 +61,12 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Swipe handlers for closing the sheet on mobile
   const swipeHandlers = useSwipeable({
     onSwipedDown: onClose,
     preventScrollOnSwipe: true,
     trackMouse: true,
   });
 
-  // Reset stack and search when sheet opens/closes
   React.useEffect(() => {
     if (!isOpen) {
       setDrawerNavStack([]);
@@ -108,6 +116,13 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     setTheme(theme === 'dark' ? 'light' : 'dark');
   }, [theme, setTheme]);
 
+  // Define virtual NavItems for profile actions
+  const profileActions: NavItem[] = [
+    { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
+    { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
+    { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 2 },
+  ];
+
   const currentItemsToDisplay = React.useMemo(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
     let itemsToFilter: NavItem[] = [];
@@ -116,10 +131,15 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       itemsToFilter = navItems.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
     } else {
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
-      itemsToFilter = activeCategory.children || [];
+      // If the active category is the virtual "Mon Compte" category, show its actions
+      if (activeCategory.id === 'profile-category') {
+        itemsToFilter = profileActions;
+      } else {
+        itemsToFilter = activeCategory.children || [];
+      }
     }
 
-    // Add ThemeToggle and Profile Dropdown as virtual NavItems if at the root level
+    // Add ThemeToggle and a virtual "Mon Compte" category at the root level
     if (drawerNavStack.length === 0 && currentUserProfile) {
       itemsToFilter.push(
         {
@@ -132,12 +152,12 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           order_index: 998,
         },
         {
-          id: 'profile-menu-item',
+          id: 'profile-category', // This is now a category
           label: 'Mon Compte',
           icon_name: 'User',
           is_external: false,
           type: 'category_or_action',
-          onClick: () => {},
+          children: profileActions, // Its children are the profile actions
           order_index: 999,
         }
       );
@@ -147,7 +167,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme]);
+  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme, profileActions]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -174,11 +194,18 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           </div>
 
           <div className="flex items-center justify-between">
-            {/* Simplified back button / placeholder */}
-            <div className="w-10 h-10"></div> 
+            {drawerNavStack.length > 0 ? (
+              <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
+                <ArrowLeft className="h-5 w-5" />
+                <span className="sr-only">Retour</span>
+              </Button>
+            ) : (
+              <div className="w-10 h-10"></div> {/* Placeholder to keep alignment */}
+            )}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
-              <Menu className="h-6 w-6 text-primary" /> {/* Static icon */}
-              {"Menu"} {/* Static title */}
+              {/* Dynamic icon and title */}
+              {React.createElement(CurrentDrawerIconComponent, { className: "h-6 w-6 text-primary" })}
+              {currentDrawerTitle}
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
               <X className="h-5 w-5" />
@@ -188,7 +215,14 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         </div>
 
         <ScrollArea className="flex-grow p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <motion.div 
+            key={drawerNavStack.length} // Key change to trigger exit/enter animations
+            initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }} // Slide in from right if deeper, left if shallower
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }} // Slide out to left if deeper, right if shallower
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="grid grid-cols-2 sm:grid-cols-3 gap-4"
+          >
             {currentItemsToDisplay.length === 0 && searchQuery.trim() !== '' ? (
               <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément trouvé pour "{searchQuery}".</p>
             ) : currentItemsToDisplay.length === 0 && searchQuery.trim() === '' ? (
@@ -197,57 +231,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               currentItemsToDisplay.map((item) => {
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-
-                // Special handling for ThemeToggle and Profile Dropdown
-                if (item.id === 'theme-toggle-item') {
-                  return (
-                    <div key={item.id} className="col-span-full"> {/* Make theme toggle full width */}
-                      <div className="android-tile flex-row items-center justify-between h-auto min-h-[60px] text-left w-full !p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="icon-container">
-                            <IconComponent className="h-6 w-6" />
-                          </div>
-                          <span className="title text-base font-medium">{item.label}</span>
-                        </div>
-                        <ThemeToggle /> {/* Render the actual ThemeToggle component */}
-                      </div>
-                    </div>
-                  );
-                } else if (item.id === 'profile-menu-item' && currentUserProfile) {
-                  return (
-                    <div key={item.id} className="col-span-full"> {/* Make profile menu full width */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="android-tile flex-row items-center justify-between h-auto min-h-[60px] text-left w-full !p-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="icon-container">
-                                <IconComponent className="h-6 w-6" />
-                              </div>
-                              <span className="title text-base font-medium">{currentUserProfile.first_name} {currentUserProfile.last_name}</span>
-                            </div>
-                            <ChevronUp className="h-5 w-5 rotate-90" /> {/* Placeholder for dropdown arrow */}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80 z-[999]">
-                          <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => { navigate("/profile"); onClose(); }}>
-                            <User className="mr-2 h-4 w-4" /> Mon profil
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { navigate("/settings"); onClose(); }}>
-                            <Settings className="mr-2 h-4 w-4" /> Paramètres
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleLogout}>
-                            <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  );
-                }
+                const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
                 return (
                   <Button
@@ -270,11 +254,12 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                       </span>
                     )}
                     {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
+                    {isCategory && <ChevronUp className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />} {/* Indicate category */}
                   </Button>
                 );
               })
             )}
-          </div>
+          </motion.div>
         </ScrollArea>
 
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
