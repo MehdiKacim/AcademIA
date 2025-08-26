@@ -27,11 +27,11 @@ import {
   DragOverlay,
 } from '@dnd-kit/core';
 import {
-  SortableContext,
+  SortableContext, // Corrected import
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/core';
+} from '@dnd-kit/sortable'; // Corrected import
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';

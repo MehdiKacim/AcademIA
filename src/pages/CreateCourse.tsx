@@ -38,11 +38,11 @@ import {
   DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  SortableContext,
+  SortableContext, // Corrected import
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable';
+} from '@dnd-kit/sortable'; // Corrected import
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from "@/lib/utils"; // Import cn for conditional styling
@@ -390,7 +390,7 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                             const currentQuestions = form.getValues(`modules.${moduleIndex}.sections.${sectionIndex}.questions`);
                             if (currentQuestions && currentQuestions[questionIndex]) {
                               currentQuestions[questionIndex].options = currentQuestions[questionIndex].options || [];
-                              currentQuestions[questionIndex].options?.push({ text: "", isCorrect: false });
+                              currentQuestions[questionIndex].options?.push({ text: "", isCorrect: false }, { text: "", isCorrect: false });
                               form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                             }
                           }}
