@@ -13,8 +13,8 @@ import {
   useSensor,
   useSensors,
   useDraggable, // Import useDraggable
-  LongPressSensor, // CORRECTED: Import LongPressSensor directly from @dnd-kit/core
 } from '@dnd-kit/core';
+import { LongPressSensor } from '@dnd-kit/core/sensors'; // CORRECTED: Import LongPressSensor from the correct sub-path
 import { CSS } from '@dnd-kit/utilities';
 
 interface Message {
