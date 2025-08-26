@@ -40,7 +40,7 @@ const queryClient = new QueryClient();
 const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isAdminModalOpen: boolean; setIsAdminModalOpen: (isOpen: boolean) => void }) => {
   const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
 
-  const initialTheme = currentUserProfile?.theme || "system";
+  const initialTheme = currentUserProfile?.theme || "dark";
 
   const routeComponentMap: { [key: string]: React.ElementType } = {
     "/dashboard": Dashboard,

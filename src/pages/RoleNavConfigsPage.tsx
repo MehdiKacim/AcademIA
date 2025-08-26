@@ -43,13 +43,14 @@ import {
   DragOverlay,
 } from '@dnd-kit/core';
 import {
-  SortableContext, // Corrected import
+  SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable'; // Corrected import
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
+import { cn } from '@/lib/utils'; // Import cn for conditional styling
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
