@@ -72,6 +72,7 @@ const SearchableDropdown = React.forwardRef<
     const IconComponentToRender = (iconName?: string) => {
       if (!iconName) return null;
       const Component = iconMap[iconName];
+      console.log(`[IconComponentToRender] iconName: ${iconName}, Component:`, Component); // Added log
       return Component ? <Component className="h-4 w-4" /> : null;
     };
 
