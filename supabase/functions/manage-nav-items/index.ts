@@ -55,7 +55,7 @@ serve(async (req) => {
 
     switch (action) {
       case 'create':
-        // For 'create' action, the payload might contain a logical_id, remove it before insert
+        console.log("[Edge Function] Create action received. Payload:", payload); // Add this log
         const itemToCreate = { ...payload };
         // Removed delete itemToCreate.logical_id;
         ({ data, error } = await supabaseAdminClient

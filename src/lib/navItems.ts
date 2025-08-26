@@ -168,6 +168,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  * @returns L'élément de navigation ajouté.
  */
 export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
+  console.log("[addNavItem] Sending payload to Edge Function:", newItem); // Add this log
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'create', payload: newItem },
   });
