@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils'; // Import cn for conditional styling
+import { cn } '@/lib/utils'; // Import cn for conditional styling
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -36,6 +36,15 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
+
+// Helper function moved to top-level scope
+const getItemTypeLabel = (type: NavItem['type']) => {
+  switch (type) {
+    case 'route': return "Route";
+    case 'category_or_action': return "Catégorie/Action";
+    default: return "Inconnu";
+  }
+};
 
 const GenericNavItemsPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -176,14 +185,6 @@ const GenericNavItemsPage = () => {
     }
   };
 
-  const getItemTypeLabel = (type: NavItem['type']) => {
-    switch (type) {
-      case 'route': return "Route";
-      case 'category_or_action': return "Catégorie/Action";
-      default: return "Inconnu";
-    }
-  };
-
   if (isLoadingUser) {
     return (
       <div className="text-center py-20">
@@ -223,7 +224,7 @@ const GenericNavItemsPage = () => {
   const categoriesAndActions = filteredGenericNavItems.filter(item => item.type === 'category_or_action').sort((a, b) => a.label.localeCompare(b.label));
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Éléments de Navigation Génériques
       </h1>

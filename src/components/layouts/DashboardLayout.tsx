@@ -30,6 +30,7 @@ import { NavItem } from "@/lib/dataModels";
 import AboutModal from "@/components/AboutModal";
 import MobileNavSheet from "@/components/MobileNavSheet";
 import { useSwipeable } from 'react-swipeable';
+import { motion, AnimatePresence } from 'framer-motion'; // Import motion and AnimatePresence
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -66,10 +67,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
-      console.log("[DashboardLayout] Current User Profile:", currentUserProfile);
-      console.log("[DashboardLayout] Current Nav Items (from RoleContext):", navItems);
+      // console.log("[DashboardLayout] Current User Profile:", currentUserProfile);
+      // console.log("[DashboardLayout] Current Nav Items (from RoleContext):", navItems);
     } else if (currentUserProfile && navItems.length === 0) {
-      console.log("[DashboardLayout] Current User Profile:", currentUserProfile, "but navItems is empty.");
+      // console.log("[DashboardLayout] Current User Profile:", currentUserProfile, "but navItems is empty.");
     }
   }, [currentUserProfile, navItems]);
 
@@ -191,13 +192,13 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
   const handleDesktopCategoryClick = (categoryItem: NavItem) => {
-    console.log("[DashboardLayout] handleDesktopCategoryClick: Pushing category to stack:", categoryItem.label);
+    // console.log("[DashboardLayout] handleDesktopCategoryClick: Pushing category to stack:", categoryItem.label);
     setDesktopNavStack(prevStack => [...prevStack, categoryItem]);
     setIsDesktopOverlayOpen(true);
   };
 
   const handleDesktopBackToCategories = () => {
-    console.log("[DashboardLayout] handleDesktopBackToCategories: Popping from stack.");
+    // console.log("[DashboardLayout] handleDesktopBackToCategories: Popping from stack.");
     setDesktopNavStack(prevStack => {
       const newStack = [...prevStack];
       newStack.pop();
@@ -367,7 +368,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               {desktopNavStack.length > 0 && desktopNavStack[desktopNavStack.length - 1].children?.map((item) => {
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                const isSubCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.children && item.children.length > 0;
+                const isSubCategory = item.type === 'category_or_or_action' && (item.route === null || item.route === undefined) && item.children && item.children.length > 0;
 
                 return (
                   <Button
@@ -375,10 +376,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     variant="outline"
                     onClick={() => {
                       if (isSubCategory) {
-                        console.log("[DashboardLayout] Clicked sub-category:", item.label);
+                        // console.log("[DashboardLayout] Clicked sub-category:", item.label);
                         handleDesktopCategoryClick(item);
                       } else {
-                        console.log("[DashboardLayout] Clicked direct link/action:", item.label);
+                        // console.log("[DashboardLayout] Clicked direct link/action:", item.label);
                         setIsDesktopOverlayOpen(false);
                         setDesktopNavStack([]);
                         if (item.route) {
@@ -415,7 +416,18 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           !isMobile && isDesktopOverlayOpen && "pt-[calc(68px+1rem+100px)]"
         )}
       >
-        <Outlet context={outletContextValue} />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname} // Key change triggers animation
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="h-full w-full" // Ensure it takes full space
+          >
+            <Outlet context={outletContextValue} />
+          </motion.div>
+        </AnimatePresence>
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
