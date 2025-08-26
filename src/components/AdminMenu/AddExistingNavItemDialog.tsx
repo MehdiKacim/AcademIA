@@ -9,13 +9,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2, Home, Info, Search as SearchIcon } from "lucide-react"; // Import SearchIcon
+import { PlusCircle, Loader2, Home, Info, Search as SearchIcon, ArrowLeft, XCircle } from "lucide-react"; // Import SearchIcon, ArrowLeft, XCircle
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { addRoleNavItemConfig, updateRoleNavItemConfig } from "@/lib/navItems";
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input'; // Import Input
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Import Card components
+import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
 
 interface AddExistingNavItemDialogProps {
   isOpen: boolean;
@@ -48,15 +50,17 @@ const AddExistingNavItemDialog = ({
   iconMap,
 }: AddExistingNavItemDialogProps) => {
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+  const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean } & NavItem) | null>(null); // Store full info
   const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [genericItemSearchQuery, setGenericItemSearchQuery] = useState(''); // New state for generic item search
-  const [parentSearchQuery, setParentSearchQuery] = useState(''); // New state for parent search
+  const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
 
   // Reset states when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
       setSelectedGenericItemToAdd(null);
+      setSelectedGenericItemInfo(null);
       setSelectedParentForNewItem(null);
       setIsAdding(false);
       setGenericItemSearchQuery('');
@@ -65,26 +69,21 @@ const AddExistingNavItemDialog = ({
   }, [isOpen]);
 
   const availableGenericItemsOptions = useMemo(() => {
-    const itemsNotYetConfigured = allGenericNavItems.filter(
-      item => !allConfiguredItemsFlat.some(configured => configured.id === item.id)
-    );
-
-    const configuredRootItems = allConfiguredItemsFlat.filter(
-      item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined
-    );
-
-    const combinedItems = [...itemsNotYetConfigured, ...configuredRootItems];
-
-    const filtered = combinedItems.filter(item =>
-      item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase())
-    );
+    const items = allGenericNavItems
+      .filter(item => {
+        // An item is available if:
+        // 1. It's not yet configured for this role.
+        // 2. It IS configured for this role, but is currently a root item (no parent).
+        const isConfigured = allConfiguredItemsFlat.some(configured => configured.id === item.id);
+        const isConfiguredAsRoot = allConfiguredItemsFlat.some(configured => configured.id === item.id && (configured.parent_nav_item_id === null || configured.parent_nav_item_id === undefined));
+        
+        return !isConfigured || isConfiguredAsRoot;
+      })
+      .filter(item => item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase()));
       
-    return filtered.map(item => ({
-        id: item.id, // This is the generic nav_item_id
-        label: item.label,
-        icon_name: item.icon_name,
-        level: 0,
-        isNew: !allConfiguredItemsFlat.some(configured => configured.id === item.id), // Mark as new if not already configured
+    return items.map(item => ({
+        ...item,
+        isConfiguredAsRoot: allConfiguredItemsFlat.some(configured => configured.id === item.id && (configured.parent_nav_item_id === null || configured.parent_nav_item_id === undefined)),
       }));
   }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
@@ -142,22 +141,19 @@ const AddExistingNavItemDialog = ({
   }, [allConfiguredItemsFlat, allGenericNavItems, parentSearchQuery]);
 
   const handleAddExistingItem = async () => {
-    if (!selectedGenericItemToAdd) {
+    if (!selectedGenericItemInfo) {
       showError("Veuillez sélectionner un élément générique à ajouter.");
       return;
     }
 
     setIsAdding(true);
     try {
-      const genericItem = allGenericNavItems.find(item => item.id === selectedGenericItemToAdd);
+      const genericItem = allGenericNavItems.find(item => item.id === selectedGenericItemInfo.id);
       if (!genericItem) {
         showError("Élément générique introuvable.");
         setIsAdding(false);
         return;
       }
-
-      const selectedItemInfo = availableGenericItemsOptions.find(opt => opt.id === selectedGenericItemToAdd);
-      const isNewConfiguration = selectedItemInfo?.isNew; // Check if it's a truly new configuration
 
       let finalParentId: string | null = selectedParentForNewItem === 'none' ? null : selectedParentForNewItem;
 
@@ -204,8 +200,7 @@ const AddExistingNavItemDialog = ({
         }
       }
 
-      if (isNewConfiguration) {
-        // Add a new configuration for the selected generic item
+      if (!selectedGenericItemInfo.isConfiguredAsRoot) { // If it's a truly new configuration
         const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
           nav_item_id: genericItem.id,
           role: selectedRoleFilter,
@@ -243,7 +238,28 @@ const AddExistingNavItemDialog = ({
     }
   };
 
-  const isAddButtonDisabled = isAdding || !selectedGenericItemToAdd || availableGenericItemsOptions.length === 0;
+  const isAddButtonDisabled = isAdding || !selectedGenericItemInfo || !selectedParentForNewItem;
+
+  const handleSelectGenericItem = (item: ({ isConfiguredAsRoot: boolean } & NavItem)) => {
+    setSelectedGenericItemToAdd(item.id);
+    setSelectedGenericItemInfo(item);
+    // Pre-select current parent if it's already configured
+    if (item.isConfiguredAsRoot && item.parent_nav_item_id) {
+      setSelectedParentForNewItem(item.parent_nav_item_id);
+    } else {
+      setSelectedParentForNewItem('none'); // Default to root if not configured or already root
+    }
+  };
+
+  const handleCancelSelection = () => {
+    setSelectedGenericItemToAdd(null);
+    setSelectedGenericItemInfo(null);
+    setSelectedParentForNewItem(null);
+    setGenericItemSearchQuery('');
+    setParentSearchQuery('');
+  };
+
+  const IconComponent = selectedGenericItemInfo?.icon_name ? (iconMap[selectedGenericItemInfo.icon_name] || Info) : Info;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -255,50 +271,92 @@ const AddExistingNavItemDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div>
-            <Label htmlFor="generic-item-search-input">Rechercher un élément générique</Label>
-            <Input
-              id="generic-item-search-input"
-              placeholder="Rechercher un élément..."
-              value={genericItemSearchQuery}
-              onChange={(e) => setGenericItemSearchQuery(e.target.value)}
-              className="mb-2 rounded-android-tile"
-            />
-            <SearchableDropdown
-              value={selectedGenericItemToAdd}
-              onValueChange={setSelectedGenericItemToAdd}
-              options={availableGenericItemsOptions}
-              placeholder="Sélectionner un élément..."
-              emptyMessage="Aucun élément disponible à ajouter."
-              iconMap={iconMap}
-              popoverContentClassName="z-[999] rounded-android-tile"
-              disabled={availableGenericItemsOptions.length === 0} // Explicitly disable if no options
-            />
-            {availableGenericItemsOptions.length === 0 && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Tous les éléments génériques sont déjà configurés pour ce rôle ou aucun n'est disponible.
-              </p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="parent-search-input">Rechercher un parent</Label>
-            <Input
-              id="parent-search-input"
-              placeholder="Rechercher un parent..."
-              value={parentSearchQuery}
-              onChange={(e) => setParentSearchQuery(e.target.value)}
-              className="mb-2 rounded-android-tile"
-            />
-            <SearchableDropdown
-              value={selectedParentForNewItem}
-              onValueChange={setSelectedParentForNewItem}
-              options={availableParentsOptions}
-              placeholder="Sélectionner un parent..."
-              emptyMessage="Aucun parent trouvé."
-              iconMap={iconMap}
-              popoverContentClassName="z-[999] rounded-android-tile"
-            />
-          </div>
+          {!selectedGenericItemInfo ? (
+            // Step 1: Select Generic Item
+            <div className="space-y-4">
+              <Label htmlFor="generic-item-search-input">1. Rechercher et sélectionner un élément générique</Label>
+              <Input
+                id="generic-item-search-input"
+                placeholder="Rechercher un élément..."
+                value={genericItemSearchQuery}
+                onChange={(e) => setGenericItemSearchQuery(e.target.value)}
+                className="mb-2 rounded-android-tile"
+              />
+              <ScrollArea className="h-64 w-full rounded-md border">
+                <div className="p-2 space-y-2">
+                  {availableGenericItemsOptions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Aucun élément disponible à ajouter ou à re-parenté.
+                    </p>
+                  ) : (
+                    availableGenericItemsOptions.map(item => {
+                      const ItemIcon = iconMap[item.icon_name || 'Info'] || Info;
+                      return (
+                        <Card key={item.id} className="flex items-center justify-between p-3 rounded-android-tile">
+                          <div className="flex items-center gap-3">
+                            <ItemIcon className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-medium">{item.label}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
+                                {item.isConfiguredAsRoot && <span className="ml-2 italic">(Actuellement racine)</span>}
+                              </p>
+                            </div>
+                          </div>
+                          <Button size="sm" onClick={() => handleSelectGenericItem(item)}>
+                            Sélectionner
+                          </Button>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          ) : (
+            // Step 2: Choose Parent for Selected Item
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>2. Choisir le parent pour l'élément sélectionné</Label>
+                <Button variant="ghost" size="sm" onClick={handleCancelSelection}>
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Annuler la sélection
+                </Button>
+              </div>
+              <Card className="p-3 rounded-android-tile bg-muted/20">
+                <CardHeader className="p-0 pb-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <IconComponent className="h-5 w-5 text-primary" /> {selectedGenericItemInfo.label}
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    {getItemTypeLabel(selectedGenericItemInfo.type)} {selectedGenericItemInfo.route && `(${selectedGenericItemInfo.route})`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0 text-sm text-muted-foreground">
+                  {selectedGenericItemInfo.description || "Aucune description."}
+                </CardContent>
+              </Card>
+
+              <div>
+                <Label htmlFor="parent-search-input" className="mb-2 block">Rechercher un parent</Label>
+                <Input
+                  id="parent-search-input"
+                  placeholder="Rechercher un parent..."
+                  value={parentSearchQuery}
+                  onChange={(e) => setParentSearchQuery(e.target.value)}
+                  className="mb-2 rounded-android-tile"
+                />
+                <SearchableDropdown
+                  value={selectedParentForNewItem}
+                  onValueChange={setSelectedParentForNewItem}
+                  options={availableParentsOptions}
+                  placeholder="Sélectionner un parent..."
+                  emptyMessage="Aucun parent trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[999] rounded-android-tile"
+                />
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={handleAddExistingItem} disabled={isAddButtonDisabled}>
