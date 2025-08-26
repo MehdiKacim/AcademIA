@@ -236,9 +236,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   };
 
   // Log the items that are actually being rendered in the header
-  // CORRECTED: Filter for parent_nav_item_id being null OR undefined
-  const headerNavItems = fullNavTree.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
-  console.log("[DashboardLayout] Header Nav Items (filtered for parent_nav_item_id === null || undefined):", headerNavItems);
+  // User requested to remove the filter for header navigation items.
+  // This means all configured navigation items, including nested ones, will attempt to render in the header.
+  // This might lead to layout issues or unexpected behavior, especially on larger menus.
+  const headerNavItems = fullNavTree;
+  console.log("[DashboardLayout] Header Nav Items (ALL items, filter removed as requested):", headerNavItems);
 
   // Memoize the context value for Outlet
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
