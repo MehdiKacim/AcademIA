@@ -87,32 +87,41 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
   return (
-    <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-md bg-background flex items-center justify-between gap-2 mb-1 select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed pointer-events-auto */}
-      <div className="flex items-center gap-2 flex-grow">
-        {isDraggableAndDeletable && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            {...listeners}
-            {...attributes}
-            className="cursor-grab"
-          >
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
-            <span className="sr-only">Déplacer l'élément</span>
-          </Button>
-        )}
-        <IconComponent className="h-4 w-4 text-primary" />
-        <span className="font-medium text-sm">{item.label}</span>
-        <span className="text-xs text-muted-foreground italic">({getItemTypeLabel(item.type)})</span>
-        {item.is_global && <Globe className="h-3 w-3 text-muted-foreground ml-1" title="Configuration globale" />}
-      </div>
-      {isDraggableAndDeletable && (
-        <Button variant="destructive" size="sm" onClick={() => onRemove(item.configId!)}>
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      )}
-    </div>
+    <ContextMenu> {/* Re-added ContextMenu */}
+      <ContextMenuTrigger asChild>
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-md bg-background flex items-center justify-between gap-2 mb-1 select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed pointer-events-auto */}
+          <div className="flex items-center gap-2 flex-grow">
+            {isDraggableAndDeletable && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                {...listeners}
+                {...attributes}
+                className="cursor-grab"
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <span className="sr-only">Déplacer l'élément</span>
+              </Button>
+            )}
+            <IconComponent className="h-4 w-4 text-primary" />
+            <span className="font-medium text-sm">{item.label}</span>
+            <span className="text-xs text-muted-foreground italic">({getItemTypeLabel(item.type)})</span>
+            {item.is_global && <Globe className="h-3 w-3 text-muted-foreground ml-1" title="Configuration globale" />}
+          </div>
+          {isDraggableAndDeletable && (
+            <Button variant="destructive" size="sm" onClick={() => onRemove(item.configId!)}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-auto p-1">
+        <ContextMenuItem className="p-2" onClick={() => onRemove(item.configId!)}>
+          <Trash2 className="mr-2 h-4 w-4" /> Retirer
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 });
 
