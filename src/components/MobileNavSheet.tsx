@@ -14,9 +14,8 @@ import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSwipeable } from 'react-swipeable'; // Corrected import path
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { useSwipeable } from 'react-swipeable';
+// Removed format and fr imports as they are no longer used for time/date display
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
 import {
@@ -51,7 +50,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  // Removed currentTime state and its useEffect
 
   // Swipe handlers for closing the sheet on mobile
   const swipeHandlers = useSwipeable({
@@ -153,9 +151,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
-    ? drawerNavStack[drawerNavStack.length - 1].icon_name // Get icon_name from the current item in stack
+    ? drawerNavStack[drawerNavStack.length - 1].icon_name
     : 'Menu'; // Default icon for the root "Menu"
-  const currentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info; // Fallback to 'Info' if name is undefined
+  const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info; // Fallback to 'Info' if name is undefined
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -165,8 +163,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         {...swipeHandlers}
       >
         <div className="p-4 flex-shrink-0">
-          {/* Removed time and date display */}
-
           <div className="android-search-bar mb-4">
             <Search className="h-5 w-5 text-android-on-surface-variant" />
             <Input
@@ -187,7 +183,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               <div className="w-10 h-10"></div> {/* Placeholder to keep alignment */}
             )}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
-              {currentDrawerIconComponent && React.createElement(currentDrawerIconComponent, { className: "h-6 w-6 text-primary" })}
+              {CurrentDrawerIconComponent && <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />}
               {currentDrawerTitle}
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
@@ -264,9 +260,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "android-tile", // Base Android tile style
-                      isLinkActive && "active", // Active state from Android tile
-                      "transition-all duration-200 ease-in-out" // Keep transition
+                      "android-tile flex-col items-start justify-start h-auto min-h-[100px] text-left w-full",
+                      isLinkActive ? "active" : "",
+                      "transition-all duration-200 ease-in-out"
                     )}
                     onClick={() => handleItemClick(item)}
                   >
