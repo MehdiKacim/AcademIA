@@ -20,10 +20,11 @@ import {
   Info,
   BotMessageSquare, // Added BotMessageSquare for AiA Bot
   UserCog, // Added UserCog for Admin access button
+  Menu, // Added Menu icon for mobile navigation
 } from "lucide-react"; // Import all necessary icons
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-import BottomNavigationBar from "@/components/BottomNavigationBar";
+// Removed BottomNavigationBar import
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
@@ -56,7 +57,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
+  // Removed isMoreDrawerOpen state
   const logoTapCountRef = useRef(0);
   const location = useLocation();
 
@@ -199,50 +200,45 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
     <div className="flex flex-col min-h-screen bg-background overflow-x-hidden">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80">
-        <Logo onLogoClick={handleLogoClick} />
-        {!isMobile && (
-          <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {staticHeaderNavItems.map((item) => {
-              const isActive = 
-                (item.route === '/' && location.pathname === '/' && !location.hash) ||
-                (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route);
-              
-              const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm">
+        <div className="flex items-center gap-4">
+          <Logo onLogoClick={handleLogoClick} />
+        </div>
+        <nav className="hidden md:flex items-center gap-4">
+          {staticHeaderNavItems.map((item) => {
+            const isActive = 
+              (item.route === '/' && location.pathname === '/' && !location.hash) ||
+              (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route);
+            
+            const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
-              return (
-                <Link
-                  key={item.id}
-                  to={item.route!}
-                  className={cn(
-                    "flex flex-col items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                    isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <IconComponent className="h-5 w-5 mb-1" /> {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        )}
-        <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+            return (
+              <Link
+                key={item.id}
+                to={item.route!}
+                className={cn(
+                  "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
+                  isActive ? "text-primary font-semibold bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
+                )}
+              >
+                <IconComponent className="h-5 w-5 mr-2" /> {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="outline" size="icon" onClick={() => setIsAboutModalOpen(true)} className="md:hidden">
+          <Button variant="ghost" size="icon" onClick={() => setIsAboutModalOpen(true)} className="hidden sm:flex">
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
           </Button>
-          <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="hidden md:flex">
-            <Info className="h-5 w-5 mr-2" /> À propos
+          <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
+            <LogIn className="h-5 w-5 mr-2" /> Connexion
           </Button>
-          {!isMobile && (
-            <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
-              <LogIn className="h-5 w-5 mr-2" /> Authentification
-            </Button>
-          )}
         </div>
       </header>
 
-      <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-24 md:pt-32", isMobile && "pb-20")}>
+      <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-24 md:pt-32")}>
         <section
           id="accueil"
           ref={sectionRefs.accueil}
@@ -306,7 +302,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
           className="py-20 w-full px-4"
         >
           <h3 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-            Notre Méthodologie Révolutionnaire
+              Notre Méthodologie Révolutionnaire
           </h3>
           <p className="text-lg text-muted-foreground mb-12 max-w-3xl mx-auto">
             Un parcours d'apprentissage unique, guidé par l'intelligence
@@ -339,16 +335,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
         </Button>
       </footer>
 
-      <BottomNavigationBar
-        allNavItemsForDrawer={[]} // Pass empty array as nav items are now static for index
-        currentUser={currentUserProfile}
-        onOpenAboutModal={() => setIsAboutModalOpen(true)}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)} // Pass the handler here
-        isMoreDrawerOpen={isMoreDrawerOpen}
-        setIsMoreDrawerOpen={setIsMoreDrawerOpen}
-        unreadMessagesCount={0}
-        onOpenGlobalSearch={() => { /* No-op on index page */ }}
-      />
+      {/* Removed BottomNavigationBar */}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>

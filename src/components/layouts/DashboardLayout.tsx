@@ -1,12 +1,12 @@
 console.log("[DashboardLayout.tsx] Module loaded."); // Early log to confirm file loading
 
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
-import BottomNavigationBar from "@/components/BottomNavigationBar";
+// Removed BottomNavigationBar import
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
@@ -31,7 +31,7 @@ import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
 import AboutModal from "@/components/AboutModal"; // Importation manquante
-// Removed import for loadNavItems from "@/lib/navItems"
+import MobileNavSheet from "@/components/MobileNavSheet"; // New import
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -50,7 +50,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
+  // Removed isMoreDrawerOpen state
+  const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false); // New state for mobile nav sheet
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -249,12 +250,20 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 transition-opacity duration-300 ease-in-out",
+          "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
           // Removed desktop auto-hide classes
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
         )}
       >
-        <Logo />
+        <div className="flex items-center gap-4">
+          {isMobile && currentUserProfile && (
+            <Button variant="ghost" size="icon" onClick={() => setIsMobileNavSheetOpen(true)}>
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Ouvrir le menu</span>
+            </Button>
+          )}
+          <Logo />
+        </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && ( // Use headerNavItems here
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {headerNavItems.map(item => { // Only top-level items
@@ -365,7 +374,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 {desktopNavStack.length > 1 && ( // Show back button if deeper than root
-                  <ArrowLeft className="h-5 w-5 cursor-pointer" onClick={handleDesktopBackToCategories} />
+                  <Button variant="ghost" size="icon" onClick={handleDesktopBackToCategories} className="mr-2">
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="sr-only">Retour</span>
+                  </Button>
                 )}
                 {/* Display current category label/icon from the stack */}
                 {desktopNavStack.length > 0 ? (
@@ -428,7 +440,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       <main
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto",
-          isMobile && "pb-20",
           !isMobile && isDesktopOverlayOpen && "pt-[calc(68px+1rem+100px)]" // Adjust padding when overlay is open
         )}
       >
@@ -440,16 +451,17 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           À propos
         </Button>
       </footer>
-      <BottomNavigationBar
-        allNavItemsForDrawer={fullNavTree}
-        onOpenGlobalSearch={currentUserProfile ? () => setIsSearchOverlayOpen(true) : undefined}
-        currentUser={currentUserProfile}
-        onOpenAboutModal={() => setIsAboutModalOpen(true)}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)}
-        isMoreDrawerOpen={isMoreDrawerOpen}
-        setIsMoreDrawerOpen={setIsMoreDrawerOpen}
-        unreadMessagesCount={unreadMessages}
-      />
+      {currentUserProfile && (
+        <MobileNavSheet
+          isOpen={isMobileNavSheetOpen}
+          onClose={() => setIsMobileNavSheetOpen(false)}
+          navItems={fullNavTree}
+          onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)}
+          onOpenAboutModal={() => setIsAboutModalOpen(true)}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          unreadMessagesCount={unreadMessages}
+        />
+      )}
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <FloatingAiAPersistentChat isVisible={floatingAiAChatButtonVisible} />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}

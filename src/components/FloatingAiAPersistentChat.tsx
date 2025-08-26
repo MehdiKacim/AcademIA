@@ -16,7 +16,7 @@ const FloatingAiAPersistentChat = ({ isVisible }: FloatingAiAChatButtonProps) =>
   return (
     <div className={cn(
       "fixed z-50 p-4 transition-all duration-300 ease-in-out",
-      isMobile ? "bottom-[4.5rem] right-4" : "bottom-4 right-4",
+      isMobile ? "bottom-4 right-4" : "bottom-4 right-4", // Adjusted for no bottom nav
       isVisible ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-12 pointer-events-none"
     )}>
       <Button
