@@ -239,37 +239,60 @@ import {
             className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t backdrop-blur-lg bg-background/80 py-1 px-2 shadow-lg md:hidden"
           >
             {fixedBottomNavItems.map((item: NavItem) => {
-              const isLinkActive = 
-                (item.route === '/' && location.pathname === '/' && !location.hash) ||
-                (item.route && !item.route.startsWith('#') && location.pathname.startsWith(item.route));
               const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-
-              return (
-                <NavLink
-                  key={item.id}
-                  to={item.route || '#'}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0",
-                      fixedBottomNavItems.length === 1 ? "w-full" : "w-1/5", // Make full width if only one item
-                      isActive || isLinkActive
-                        ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    )
-                  }
-                  onClick={item.onClick ? () => handleDrawerItemClick(item) : undefined}
-                >
-                  <React.Fragment> {/* Wrap children with Fragment */}
-                    <IconComponent className="h-5 w-5 mb-1" />
-                    {item.label}
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
-                      </span>
-                    )}
-                  </React.Fragment>
-                </NavLink>
+              const commonClasses = cn(
+                "flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-colors relative flex-shrink-0",
+                fixedBottomNavItems.length === 1 ? "w-full" : "w-1/5", // Make full width if only one item
+                "text-muted-foreground hover:text-foreground" // Default text color
               );
+
+              const childrenContent = (
+                <React.Fragment>
+                  <IconComponent className="h-5 w-5 mb-1" />
+                  {item.label}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                      {item.badge}
+                    </span>
+                  )}
+                </React.Fragment>
+              );
+
+              if (item.onClick) {
+                // Render as Button if it has an onClick handler
+                return (
+                  <Button
+                    key={item.id}
+                    variant="ghost" // Use ghost variant for a similar look to NavLink
+                    className={commonClasses}
+                    onClick={() => handleDrawerItemClick(item)}
+                  >
+                    {childrenContent}
+                  </Button>
+                );
+              } else {
+                // Render as NavLink for actual routes
+                const isLinkActive = 
+                  (item.route === '/' && location.pathname === '/' && !location.hash) ||
+                  (item.route && !item.route.startsWith('#') && location.pathname.startsWith(item.route));
+
+                return (
+                  <NavLink
+                    key={item.id}
+                    to={item.route || '#'}
+                    className={({ isActive }) =>
+                      cn(
+                        commonClasses,
+                        isActive || isLinkActive
+                          ? "text-primary" // Active link color
+                          : ""
+                      )
+                    }
+                  >
+                    {childrenContent}
+                  </NavLink>
+                );
+              }
             })}
 
             <Button
