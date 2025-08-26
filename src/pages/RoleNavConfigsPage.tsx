@@ -30,8 +30,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
 import {
   DndContext,
   closestCenter,
@@ -226,10 +225,6 @@ const RoleNavConfigsPage = () => {
   const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
 
   // States for search in dropdowns
-  const [openAddExistingPopover, setOpenAddExistingPopover] = useState(false);
-  const [addExistingSearch, setAddExistingSearch] = useState('');
-  const [openEditParentPopover, setOpenEditParentPopover] = useState(false);
-  const [editParentSearch, setEditParentSearch] = useState('');
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
   const [selectedParentForEdit, setSelectedParentForEdit] = useState<string | null>(null); // New state for parent selection in edit dialog
 
@@ -443,8 +438,6 @@ const RoleNavConfigsPage = () => {
           showError(`Erreur lors de l'ajout de l'élément au menu du rôle: ${error.message}`);
         } finally {
           setSelectedGenericItemToAdd(null); // Reset after operation
-          setOpenAddExistingPopover(false); // Close popover
-          setAddExistingSearch(''); // Clear search
         }
       };
       addItem();
@@ -803,59 +796,23 @@ const RoleNavConfigsPage = () => {
             <CardContent className="space-y-2">
               <div>
                 <Label htmlFor="add-existing-to-role">Ajouter un élément générique existant</Label>
-                <Popover open={openAddExistingPopover} onOpenChange={setOpenAddExistingPopover}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openAddExistingPopover}
-                      className="w-full justify-between"
-                      id="add-existing-to-role"
-                    >
-                      {selectedGenericItemToAdd
-                        ? allGenericNavItems.find(item => item.id === selectedGenericItemToAdd)?.label
-                        : "Ajouter un élément existant au menu de ce rôle"}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command filter={false} shouldFilter={false}> {/* Added shouldFilter={false} */}
-                      <CommandInput
-                        placeholder="Rechercher un élément..."
-                        value={addExistingSearch}
-                        onValueChange={setAddExistingSearch}
-                      />
-                      <CommandList>
-                        <CommandEmpty>Aucun élément trouvé.</CommandEmpty>
-                        <CommandGroup>
-                          {allGenericNavItems
-                            .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-                            .filter(item => item.label.toLowerCase().includes(addExistingSearch.toLowerCase()))
-                            .map(item => (
-                              <CommandItem
-                                key={item.id}
-                                value={item.id} // Keep item.id as value
-                                onSelect={() => {
-                                  console.log("Selected item for add (onSelect):", item.id); // Diagnostic log
-                                  setSelectedGenericItemToAdd(item.id); // Just set the state
-                                  // The useEffect will handle the rest
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedGenericItemToAdd === item.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4 mr-2" })}
-                                <span>{item.label} ({getItemTypeLabel(item.type)}) {item.route && `(${item.route})`}</span>
-                              </CommandItem>
-                            ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <SearchableDropdown
+                  value={selectedGenericItemToAdd}
+                  onValueChange={setSelectedGenericItemToAdd}
+                  options={allGenericNavItems
+                    .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
+                    .map(item => ({
+                      id: item.id,
+                      label: item.label,
+                      icon_name: item.icon_name,
+                      level: 0, // Top level for adding
+                      isNew: false,
+                    }))}
+                  placeholder="Ajouter un élément existant au menu de ce rôle"
+                  searchPlaceholder="Rechercher un élément..."
+                  emptyMessage="Aucun élément disponible."
+                  iconMap={iconMap}
+                />
               </div>
 
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -896,80 +853,25 @@ const RoleNavConfigsPage = () => {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-parent" className="text-right">Parent</Label>
-                <Popover open={openEditParentPopover} onOpenChange={setOpenEditParentPopover}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openEditParentPopover}
-                      className="col-span-3 justify-between"
-                      id="edit-config-parent-select"
-                    >
-                      {selectedParentForEdit
-                        ? availableParentsForConfig.find(p => p.id === selectedParentForEdit)?.label || "Sélectionner un parent..."
-                        : "Aucun (élément racine)"}
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command filter={false} shouldFilter={false}> {/* Added shouldFilter={false} */}
-                      <CommandInput
-                        placeholder="Rechercher un parent..."
-                        value={editParentSearch}
-                        onValueChange={setEditParentSearch}
-                      />
-                      <CommandList>
-                        <CommandEmpty>Aucun parent trouvé.</CommandEmpty>
-                        <CommandGroup>
-                          <CommandItem
-                            value="none"
-                            onSelect={() => {
-                              setSelectedParentForEdit(null);
-                              setOpenEditParentPopover(false);
-                              setEditParentSearch(''); // Clear search after selection
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedParentForEdit === null ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            Aucun (élément racine)
-                          </CommandItem>
-                          {availableParentsForConfig
-                            .filter(item => item.label.toLowerCase().includes(editParentSearch.toLowerCase()))
-                            .map((item) => {
-                              const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
-                              return (
-                                <CommandItem
-                                  key={item.id}
-                                  value={item.id} // Keep item.id as value
-                                  onSelect={() => {
-                                    setSelectedParentForEdit(item.id);
-                                    setOpenEditParentPopover(false);
-                                    setEditParentSearch(''); // Clear search after selection
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      selectedParentForEdit === item.id ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  <div className="flex items-center gap-2">
-                                    {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
-                                    <IconComponentToRender className="h-4 w-4" /> 
-                                    <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && <span className="font-bold text-primary">(Nouveau)</span>}</span>
-                                  </div>
-                                </CommandItem>
-                              );
-                            })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <SearchableDropdown
+                  value={selectedParentForEdit}
+                  onValueChange={setSelectedParentForEdit}
+                  options={[
+                    { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false }, // Option for no parent
+                    ...availableParentsForConfig.map(item => ({
+                      id: item.id,
+                      label: item.label,
+                      icon_name: item.icon_name,
+                      level: item.level,
+                      isNew: item.isNew,
+                    }))
+                  ]}
+                  placeholder="Sélectionner un parent..."
+                  searchPlaceholder="Rechercher un parent..."
+                  emptyMessage="Aucun parent trouvé."
+                  iconMap={iconMap}
+                  className="col-span-3"
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>

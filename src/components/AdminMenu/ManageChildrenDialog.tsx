@@ -41,6 +41,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { Switch } from '@/components/ui/switch'; // Import Switch
 import { Loader2 } from 'lucide-react'; // Import Loader2
+import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
 
 // Map icon_name strings to Lucide React components (re-declare or import from a central place)
 const iconMap: { [key: string]: React.ElementType } = {
@@ -392,27 +393,21 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                   <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col gap-4">
-                  <Select value={selectedGenericItemToAdd || ""} onValueChange={setSelectedGenericItemToAdd}>
-                    <SelectTrigger id="add-child-select">
-                      <SelectValue placeholder="Sélectionner un élément à ajouter" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
-                      <ScrollArea className="h-40">
-                        {availableChildrenForAdd.length === 0 ? (
-                          <SelectItem value="no-items" disabled><span>Aucun élément disponible</span></SelectItem>
-                        ) : (
-                          availableChildrenForAdd.map(item => (
-                            <SelectItem key={item.id} value={item.id}>
-                              <div className="flex items-center gap-2">
-                                {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
-                                <span>{item.label} ({getItemTypeLabel(item.type)}) {item.route && `(${item.route})`}</span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  <SearchableDropdown
+                    value={selectedGenericItemToAdd}
+                    onValueChange={setSelectedGenericItemToAdd}
+                    options={availableChildrenForAdd.map(item => ({
+                      id: item.id,
+                      label: item.label,
+                      icon_name: item.icon_name,
+                      level: 0,
+                      isNew: false,
+                    }))}
+                    placeholder="Sélectionner un élément à ajouter"
+                    searchPlaceholder="Rechercher un élément..."
+                    emptyMessage="Aucun élément disponible."
+                    iconMap={iconMap}
+                  />
                   <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
                   </Button>
@@ -463,11 +458,16 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             </SelectTrigger>
                             <SelectContent className="backdrop-blur-lg bg-background/80">
                               <ScrollArea className="h-40">
-                                {navItemTypes.map(type => (
-                                  <SelectItem key={type} value={type}>
-                                    {getItemTypeLabel(type)}
-                                  </SelectItem>
-                                ))}
+                                {Object.keys(iconMap).sort().map(iconName => {
+                                  const IconComponent = iconMap[iconName];
+                                  return (
+                                    <SelectItem key={iconName} value={iconName}>
+                                      <div className="flex items-center gap-2">
+                                        <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
+                                      </div>
+                                    </SelectItem>
+                                  );
+                                })}
                               </ScrollArea>
                             </SelectContent>
                           </Select>
