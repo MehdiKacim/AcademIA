@@ -64,6 +64,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
   const swipeHandlers = useSwipeable({
     onSwipedDown: onClose,
+    onSwipedRight: onClose, // Added swipe right to close
     preventScrollOnSwipe: true,
     trackMouse: true,
   });
