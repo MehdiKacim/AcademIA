@@ -218,6 +218,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         setIsMobileNavSheetOpen(true);
       }
     },
+    onSwipedRight: () => { // New: Handle swipe right to go back
+      if (isMobile && !isMobileNavSheetOpen && !isSearchOverlayOpen && !isChatOpen) {
+        navigate(-1); // Go back in history
+      }
+    },
     preventScrollOnSwipe: true,
     trackMouse: true,
     delta: 50,
