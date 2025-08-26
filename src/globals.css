@@ -26,6 +26,18 @@
     --input: 214.3 31.8% 85%; /* Bordure d'input plus claire */
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+
+    /* Couleurs de base inspirées du thème sombre d'Android 16 */
+    --color-surface-dark: #1F1A21;
+    --color-surface-container: #2B262E;
+    --color-on-surface-variant: #C9C4CD;
+    --color-on-surface-light: #E6E1E9;
+    --color-accent-blue: #70D6FF;
+    --color-accent-red: #FF8585;
+    --color-accent-pink: #FF80A9;
+    --color-accent-purple: #B283E6;
+    --color-accent-orange: #FFB380;
+    --color-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
   }
 
   [data-theme="dark"] {
@@ -90,6 +102,82 @@
     overflow-x: hidden; 
   }
 
+}
+
+/* Styles pour le corps de la page, imitant le fond sombre */
+body {
+  background-color: var(--color-surface-dark);
+}
+
+/* Style de base pour une "carte" ou tuile */
+.android-card {
+  background-color: var(--color-surface-container);
+  border-radius: 28px;
+  box-shadow: var(--color-shadow);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--color-on-surface-light);
+}
+
+/* Style pour l'icône dans la tuile */
+.android-card .icon-container {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Styles pour les différentes couleurs d'icônes */
+.icon-blue { background-color: var(--color-accent-blue); }
+.icon-red { background-color: var(--color-accent-red); }
+.icon-pink { background-color: var(--color-accent-pink); }
+.icon-purple { background-color: var(--color-accent-purple); }
+.icon-orange { background-color: var(--color-accent-orange); }
+
+/* Style pour le texte de la tuile */
+.android-card .text-content {
+  flex-grow: 1;
+}
+.android-card .title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--color-on-surface-light);
+}
+.android-card .subtitle {
+  font-size: 14px;
+  color: var(--color-on-surface-variant);
+  margin: 0;
+}
+
+/* Style pour la tuile "Rechercher dans les paramètres" */
+.search-bar {
+  background-color: var(--color-surface-container);
+  border-radius: 28px;
+  box-shadow: var(--color-shadow);
+  padding: 12px 20px;
+  margin: 16px;
+  color: var(--color-on-surface-variant);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* Style pour la tuile "Internet" et "Bluetooth" */
+.android-pill-button {
+    background-color: #70D6FF;
+    border-radius: 28px;
+    box-shadow: var(--color-shadow);
+    padding: 12px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #1F1A21;
 }
 
 @layer components {
