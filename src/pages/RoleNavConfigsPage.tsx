@@ -828,7 +828,7 @@ const RoleNavConfigsPage = () => {
                             .map(item => (
                               <CommandItem
                                 key={item.id}
-                                value={item.label} // Changed value to item.label
+                                value={item.id} // Changed value to item.id
                                 onSelect={() => {
                                   console.log("Selected item for add:", item.id); // Diagnostic log
                                   handleAddExistingGenericItemToRole(item.id);
@@ -923,7 +923,6 @@ const RoleNavConfigsPage = () => {
                           <CommandItem
                             value="none"
                             onSelect={() => {
-                              console.log("Selected parent: None"); // Diagnostic log
                               setEditConfigParentId(null);
                               setOpenEditParentPopover(false);
                               setEditParentSearch(''); // Clear search after selection
@@ -938,19 +937,14 @@ const RoleNavConfigsPage = () => {
                             Aucun (élément racine)
                           </CommandItem>
                           {availableParentsForConfig
-                            .filter(item => {
-                              const match = item.label.toLowerCase().includes(editParentSearch.toLowerCase());
-                              console.log(`Filtering parent: ${item.label}, search: ${editParentSearch}, match: ${match}`); // Diagnostic log
-                              return match;
-                            })
+                            .filter(item => item.label.toLowerCase().includes(editParentSearch.toLowerCase()))
                             .map((item) => {
                               const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                               return (
                                 <CommandItem
                                   key={item.id}
-                                  value={item.id} // Kept item.id as value for technical reference
+                                  value={item.id} // Changed value to item.id
                                   onSelect={() => {
-                                    console.log("Selected parent:", item.id); // Diagnostic log
                                     setEditConfigParentId(item.id);
                                     setOpenEditParentPopover(false);
                                     setEditParentSearch(''); // Clear search after selection
