@@ -18,6 +18,7 @@ import { useSwipeable } from 'react-swipeable';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Import Avatar components
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home,
@@ -118,11 +119,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 2 },
   ];
 
-  // Define static top-level items
-  const staticTopLevelItems: NavItem[] = [
-    { id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount },
-    { id: 'static-notifications', label: 'Notifications', icon_name: 'BellRing', is_external: false, type: 'route', route: '/notifications', order_index: 101 },
-  ];
+  // Define static top-level items (excluding Messages and Notifications, now in header)
+  const staticTopLevelItems: NavItem[] = [];
 
   const currentItemsToDisplay = React.useMemo(() => {
     let itemsToFilter: NavItem[] = [];
@@ -169,27 +167,53 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         className="w-full h-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg"
         {...swipeHandlers}
       >
+        {/* Custom Header for Mobile Nav Sheet */}
         <div className="p-4 flex-shrink-0 border-b border-border">
           <div className="flex items-center justify-between">
-            {/* Left side: Back button or placeholder */}
-            {drawerNavStack.length > 0 ? (
-              <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
-                <ArrowLeft className="h-5 w-5" />
-                <span className="sr-only">Retour</span>
-              </Button>
-            ) : (
-              <div className="w-10 h-10"></div> // Placeholder for alignment
-            )}
-
-            {/* Center: Dynamic Title */}
-            <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
-              {React.createElement(CurrentDrawerIconComponent, { className: "h-6 w-6 text-primary" })}
-              {currentDrawerTitle}
-            </SheetTitle>
-
-            {/* Right side: Theme Toggle */}
+            {/* Left side: Back button and current menu label */}
             <div className="flex items-center gap-2">
+              {drawerNavStack.length > 0 ? (
+                <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
+                  <ArrowLeft className="h-5 w-5" />
+                  <span className="sr-only">Retour</span>
+                </Button>
+              ) : (
+                <div className="w-10 h-10"></div> // Placeholder for alignment
+              )}
+              <span className="text-sm font-medium text-muted-foreground">
+                {currentDrawerTitle}
+              </span>
+            </div>
+
+            {/* Right side: Quick access items */}
+            <div className="flex items-center gap-2">
+              {currentUserProfile && (
+                <>
+                  {/* Messages with badge */}
+                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative">
+                    <MessageSquare className="h-5 w-5" />
+                    {unreadMessagesCount > 0 && (
+                      <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                        {unreadMessagesCount}
+                      </span>
+                    )}
+                    <span className="sr-only">Messagerie</span>
+                  </Button>
+                  {/* User Profile/Account (Avatar/Name) */}
+                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
+                      <AvatarFallback>{currentUserProfile.first_name[0]}{currentUserProfile.last_name[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="sr-only">Mon Compte</span>
+                  </Button>
+                </>
+              )}
               <ThemeToggle />
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Fermer</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -227,7 +251,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                       <IconComponent className="h-6 w-6" />
                     </div>
                     <span className="title text-base font-medium line-clamp-2">{item.label}</span>
-                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && ( // Apply badge to messages
+                    {item.badge !== undefined && item.badge > 0 && ( // Apply badge to messages
                       <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
                         {item.badge}
                       </span>
