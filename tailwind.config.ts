@@ -71,7 +71,7 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
         "card-lg": "28px", // Nouveau rayon de bordure pour les cartes
-        "android-tile": "1.75rem", // 28px for Android-like tiles
+        "android-tile": "2.5rem", // Increased to 40px for a more rounded look
       },
       boxShadow: {
         "card-shadow": "0 4px 12px rgba(0, 0, 0, 0.08)", // Nouvelle ombre pour les cartes

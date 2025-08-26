@@ -112,7 +112,7 @@ body {
 /* Style de base pour une "carte" ou tuile */
 .android-tile {
   background-color: hsl(var(--android-surface-container));
-  border-radius: var(--radius-android-tile);
+  /* border-radius: var(--radius-android-tile); */ /* Removed explicit border-radius */
   box-shadow: var(--android-shadow);
   padding: 16px 20px;
   display: flex;
@@ -136,7 +136,7 @@ body {
 .android-tile .icon-container {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  /* border-radius: 12px; */ /* Removed explicit border-radius */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -177,7 +177,7 @@ body {
 /* Style pour la tuile "Rechercher dans les paramètres" */
 .android-search-bar {
   background-color: hsl(var(--android-surface-container));
-  border-radius: var(--radius-android-tile);
+  /* border-radius: var(--radius-android-tile); */ /* Removed explicit border-radius */
   box-shadow: var(--android-shadow);
   padding: 12px 20px;
   color: hsl(var(--android-on-surface-variant));
@@ -203,7 +203,7 @@ body {
 /* Style pour les boutons de pied de page */
 .android-footer-button {
   background-color: hsl(var(--android-surface-container));
-  border-radius: var(--radius-android-tile);
+  /* border-radius: var(--radius-android-tile); */ /* Removed explicit border-radius */
   box-shadow: var(--android-shadow);
   color: hsl(var(--android-on-surface-light));
   font-weight: 500;
