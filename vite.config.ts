@@ -15,7 +15,8 @@ export default defineConfig(() => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // Removed: "react-dom": "react-dom/client",
+      // NEW: Réintroduction de l'alias pour forcer la résolution de 'react-dom' vers 'react-dom/client'
+      "react-dom": "react-dom/client",
     },
   },
   // Exclure @dnd-kit/core de l'optimisation des dépendances de Vite
