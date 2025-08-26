@@ -17,4 +17,8 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Exclure @dnd-kit/core de l'optimisation des dépendances de Vite
+  optimizeDeps: {
+    exclude: ['@dnd-kit/core'],
+  },
 }));
