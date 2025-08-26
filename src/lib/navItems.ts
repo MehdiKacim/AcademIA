@@ -299,4 +299,15 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
   }
 };
 
-// Removed bootstrapDefaultNavItemsForRole and reinitializeAllMenus functions
+/**
+ * Déclenche le bootstrap des éléments de navigation et des configurations de rôle par défaut.
+ */
+export const bootstrapNavItems = async (): Promise<void> => {
+  console.log("[bootstrapNavItems] Invoking 'bootstrap-nav' Edge Function...");
+  const { data, error } = await supabase.functions.invoke('bootstrap-nav');
+  if (error) {
+    console.error("Error bootstrapping nav items via Edge Function:", error);
+    throw error;
+  }
+  console.log("[bootstrapNavItems] Bootstrap successful:", data);
+};

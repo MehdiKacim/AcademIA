@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus } from "lucide-react"; // Removed RefreshCw and Menu icons
+import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus, RefreshCw } from "lucide-react"; // Added RefreshCw icon
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal';
 import { clearAllAppData } from '@/lib/dataReset';
@@ -26,7 +26,7 @@ import InputWithStatus from './InputWithStatus';
 import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Profile, ALL_ROLES } from '@/lib/dataModels';
-// Removed bootstrapDefaultNavItemsForRole and reinitializeAllMenus imports
+import { bootstrapNavItems } from '@/lib/navItems'; // Import bootstrapNavItems
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useRole } from '@/contexts/RoleContext';
 
@@ -54,13 +54,6 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   const debounceTimeoutRefUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Removed states for bootstrapping role navigation
-  // const [roleToBootstrap, setRoleToBootstrap] = useState<Profile['role'] | 'none'>('none');
-  // const [isBootstrapping, setIsBootstrapping] = useState(false);
-  // const [isBootstrapSectionOpen, setIsBootstrapSectionOpen] = useState(false);
-  // const [isReinitializingAllMenus, setIsReinitializingAllMenus] = useState(false);
-
-
   useEffect(() => {
     // Reset form fields and states when modal closes
     if (!isOpen) {
@@ -72,11 +65,6 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       setAdminPassword('');
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
-      // Removed reset for bootstrapping states
-      // setRoleToBootstrap('none');
-      // setIsBootstrapping(false);
-      // setIsBootstrapSectionOpen(false);
-      // setIsReinitializingAllMenus(false);
     }
   }, [isOpen]);
 
@@ -202,7 +190,22 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
     }
   };
 
-  // Removed handleBootstrapRoleNav and handleReinitializeAllMenus functions
+  const handleBootstrapNavItems = async () => {
+    if (window.confirm("Êtes-vous sûr de vouloir initialiser les menus de navigation par défaut pour TOUS les rôles ? Cela écrasera toutes les configurations de menu existantes.")) {
+      try {
+        await bootstrapNavItems();
+        showSuccess("Menus de navigation par défaut initialisés pour tous les rôles !");
+        // Force a re-fetch of user profile and nav items to update the UI
+        if (currentUserProfile?.id) {
+          await fetchUserProfile(currentUserProfile.id);
+        }
+        onClose();
+      } catch (error: any) {
+        console.error("Error bootstrapping nav items:", error);
+        showError(`Erreur lors de l'initialisation des menus: ${error.message}`);
+      }
+    }
+  };
 
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
     <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80">
@@ -221,8 +224,9 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
             </Button>
             
-            {/* Removed Collapsible for Initialiser Navigation par Rôle */}
-            {/* Removed Button for Réinitialiser tous les menus */}
+            <Button onClick={handleBootstrapNavItems} className="w-full" variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" /> Initialiser menus par défaut
+            </Button>
 
             <Button onClick={handleClearAllData} className="w-full" variant="destructive">
               <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
