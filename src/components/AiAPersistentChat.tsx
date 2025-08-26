@@ -14,7 +14,7 @@ import {
   useSensors,
   useDraggable, // Import useDraggable
 } from '@dnd-kit/core';
-import { LongPressSensor } from '@dnd-kit/core/dist/sensors'; // CORRECTED: Import LongPressSensor from the correct sub-path
+// Removed: import { LongPressSensor } from '@dnd-kit/core/dist/sensors'; 
 import { CSS } from '@dnd-kit/utilities';
 
 interface Message {
@@ -42,13 +42,12 @@ const AiAPersistentChat = () => {
         distance: 5, // Enable drag after 5px movement
       },
     }),
-    // NEW: Add LongPressSensor for mobile touch interactions
-    useSensor(LongPressSensor, {
-      activationConstraint: {
-        delay: 250, // Start drag after 250ms long press
-        tolerance: 5, // Allow slight movement during long press
-      },
-    })
+    // Removed: useSensor(LongPressSensor, {
+    //   activationConstraint: {
+    //     delay: 250, // Start drag after 250ms long press
+    //     tolerance: 5, // Allow slight movement during long press
+    //   },
+    // })
   );
 
   // Use useDraggable hook for the entire chat component
