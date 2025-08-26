@@ -91,7 +91,7 @@ const Dashboard = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Mes Cours Actuels</CardTitle>
               <CardDescription>Continuez votre apprentissage.</CardDescription>
@@ -106,7 +106,7 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours Terminés</CardTitle>
               <CardDescription>Votre succès jusqu'à présent.</CardDescription>
@@ -121,7 +121,7 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Progression Globale</CardTitle>
               <CardDescription>Votre avancement général.</CardDescription>
@@ -149,7 +149,7 @@ const Dashboard = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Mes Cours Créés</CardTitle>
               <CardDescription>Gérez vos contenus d'apprentissage.</CardDescription>
@@ -162,7 +162,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Impact sur les Élèves</CardTitle>
               <CardDescription>Nombre total d'élèves inscrits à vos cours.</CardDescription>
@@ -175,7 +175,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Gestion des Classes</CardTitle>
               <CardDescription>Organisez vos élèves en classes.</CardDescription>
@@ -202,7 +202,7 @@ const Dashboard = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Élèves Supervisés</CardTitle>
               <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
@@ -215,7 +215,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Élèves en Difficulté</CardTitle>
               <CardDescription>Élèves nécessitant une attention particulière.</CardDescription>
@@ -228,7 +228,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Performance des Classes</CardTitle>
               <CardDescription>Vue d'overview de la progression par classe.</CardDescription>
@@ -250,7 +250,7 @@ const Dashboard = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Utilisateurs Administrateurs</CardTitle>
               <CardDescription>Nombre total d'administrateurs sur la plateforme.</CardDescription>
@@ -262,7 +262,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Directeurs</CardTitle>
               <CardDescription>Nombre total de directeurs sur la plateforme.</CardDescription>
@@ -274,7 +274,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Directeurs Adjoints</CardTitle>
               <CardDescription>Nombre total de directeurs adjoints sur la plateforme.</CardDescription>
@@ -298,7 +298,7 @@ const Dashboard = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Mon Rôle</CardTitle>
               <CardDescription>Vue d'overview de votre rôle.</CardDescription>
@@ -310,7 +310,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Personnel & Élèves</CardTitle>
               <CardDescription>Nombre de professeurs et d'élèves.</CardDescription>
@@ -322,7 +322,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Structure Pédagogique</CardTitle>
               <CardDescription>Cursus et classes.</CardDescription>
@@ -334,7 +334,7 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Analytiques</CardTitle>
               <CardDescription>Accédez aux statistiques détaillées.</CardDescription>

@@ -131,7 +131,7 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
                   <ContextMenuTrigger asChild>
                     <Card
                       className={cn(
-                        "cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
+                        "cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors rounded-android-tile", // Apply rounded-android-tile
                         selectedContactId === contactProfile.id && "bg-accent text-accent-foreground",
                         isArchivedView && "opacity-60 border-dashed border-muted-foreground/50" // Visual indicator for archived
                       )}
@@ -163,7 +163,7 @@ const MessageList = ({ recentMessages, allProfiles, onSelectContact, selectedCon
                       </CardContent>
                     </Card>
                   </ContextMenuTrigger>
-                  <ContextMenuContent className="w-auto p-1">
+                  <ContextMenuContent className="w-auto p-1 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     {isArchivedView ? (
                       <ContextMenuItem className="p-2" onClick={() => onUnarchiveConversation(contactProfile.id)}>
                         <ArchiveRestore className="mr-2 h-4 w-4" /> Désarchiver

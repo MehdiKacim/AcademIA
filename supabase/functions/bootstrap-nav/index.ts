@@ -63,7 +63,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
   ],
   director: [
     { nav_item_key: 'nav-dashboard', parent_nav_item_key: null, order_index: 0 },
-    { nav_item_key: 'nav-admin-users', parent_nav_item_key: null, order_index: 1 }, // Directors manage users
+    { nav_item_key: 'nav-admin-users', parent_nav_item_key: null, order_index: 1 },
     { nav_item_key: 'nav-subjects', parent_nav_item_key: null, order_index: 2 },
     { nav_item_key: 'nav-school-years', parent_nav_item_key: null, order_index: 3 },
     { nav_item_key: 'nav-professor-assignments', parent_nav_item_key: null, order_index: 4 },
@@ -81,7 +81,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
   ],
   deputy_director: [
     { nav_item_key: 'nav-dashboard', parent_nav_item_key: null, order_index: 0 },
-    { nav_item_key: 'nav-admin-users', parent_nav_item_key: null, order_index: 1 }, // Deputy Directors manage users
+    { nav_item_key: 'nav-admin-users', parent_nav_item_key: null, order_index: 1 },
     { nav_item_key: 'nav-subjects', parent_nav_item_key: null, order_index: 2 },
     { nav_item_key: 'nav-school-years', parent_nav_item_key: null, order_index: 3 },
     { nav_item_key: 'nav-professor-assignments', parent_nav_item_key: null, order_index: 4 },
@@ -99,10 +99,10 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
   ],
   professeur: [
     { nav_item_key: 'nav-dashboard', parent_nav_item_key: null, order_index: 0 },
-    { nav_item_key: 'cat-my-content', parent_nav_item_key: null, order_index: 1 }, // Reference the generic category
+    { nav_item_key: 'cat-my-content', parent_nav_item_key: null, order_index: 1 },
     { nav_item_key: 'nav-courses', parent_nav_item_key: 'cat-my-content', order_index: 0 },
     { nav_item_key: 'nav-create-course', parent_nav_item_key: 'cat-my-content', order_index: 1 },
-    { nav_item_key: 'cat-pedagogy', parent_nav_item_key: null, order_index: 2 }, // Reference the generic category
+    { nav_item_key: 'cat-pedagogy', parent_nav_item_key: null, order_index: 2 },
     { nav_item_key: 'nav-classes', parent_nav_item_key: 'cat-pedagogy', order_index: 0 },
     { nav_item_key: 'nav-students', parent_nav_item_key: 'cat-pedagogy', order_index: 1 },
     { nav_item_key: 'nav-pedagogical-management', parent_nav_item_key: 'cat-pedagogy', order_index: 2 },
@@ -116,7 +116,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
   ],
   tutor: [
     { nav_item_key: 'nav-dashboard', parent_nav_item_key: null, order_index: 0 },
-    { nav_item_key: 'cat-student-monitoring', parent_nav_item_key: null, order_index: 1 }, // Reference the generic category
+    { nav_item_key: 'cat-student-monitoring', parent_nav_item_key: null, order_index: 1 },
     { nav_item_key: 'nav-pedagogical-management', parent_nav_item_key: 'cat-student-monitoring', order_index: 0 },
     { nav_item_key: 'nav-students', parent_nav_item_key: 'cat-student-monitoring', order_index: 1 },
     { nav_item_key: 'nav-analytics', parent_nav_item_key: null, order_index: 2 },

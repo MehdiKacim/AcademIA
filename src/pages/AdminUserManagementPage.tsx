@@ -609,7 +609,7 @@ const AdminUserManagementPage = () => {
 
       {/* Section: Créer un nouvel utilisateur (Collapsible) */}
       <Collapsible open={isNewUserFormOpen} onOpenChange={setIsNewUserFormOpen}>
-        <Card>
+        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardHeader>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
@@ -667,10 +667,10 @@ const AdminUserManagementPage = () => {
                   }}
                   disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')} // Disable if director/professeur/tutor
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     {rolesForCreation.map(role => (
                       <SelectItem key={role} value={role}>
                         {role === 'student' ? 'Élève' :
@@ -693,7 +693,7 @@ const AdminUserManagementPage = () => {
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full justify-start text-left font-normal",
+                              "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                               !newUserEnrollmentStartDate && "text-muted-foreground"
                             )}
                           >
@@ -701,7 +701,7 @@ const AdminUserManagementPage = () => {
                             {newUserEnrollmentStartDate ? format(newUserEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <Calendar
                             mode="single"
                             selected={newUserEnrollmentStartDate}
@@ -719,7 +719,7 @@ const AdminUserManagementPage = () => {
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full justify-start text-left font-normal",
+                              "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                               !newUserEnrollmentEndDate && "text-muted-foreground"
                             )}
                           >
@@ -727,7 +727,7 @@ const AdminUserManagementPage = () => {
                             {newUserEnrollmentEndDate ? format(newUserEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <Calendar
                             mode="single"
                             selected={newUserEnrollmentEndDate}
@@ -750,7 +750,7 @@ const AdminUserManagementPage = () => {
       </Collapsible>
 
       {/* Section: Liste de tous les utilisateurs */}
-      <Card>
+      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserRoundCog className="h-6 w-6 text-primary" /> Liste de tous les utilisateurs
@@ -775,10 +775,10 @@ const AdminUserManagementPage = () => {
                 onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}
                 disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')} // Disable if director/professeur/tutor
               >
-                <SelectTrigger id="role-filter">
+                <SelectTrigger id="role-filter" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <SelectValue placeholder="Tous les rôles" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                   {(currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') ? (
                     <>
                       <SelectItem value="professeur">Professeur</SelectItem>
@@ -812,7 +812,7 @@ const AdminUserManagementPage = () => {
               </p>
             ) : (
               filteredUsers.map((user) => (
-                <Card key={user.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <Card key={user.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <div className="flex-grow">
                     <p className="font-medium">{user.first_name} {user.last_name} <span className="text-sm text-muted-foreground">(@{user.username})</span></p>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -856,7 +856,7 @@ const AdminUserManagementPage = () => {
       {/* Edit User Dialog */}
       {userToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <DialogHeader>
               <DialogTitle>Modifier l'utilisateur</DialogTitle>
               <DialogDescription>
@@ -913,10 +913,10 @@ const AdminUserManagementPage = () => {
                     (currentRole === 'administrator' && ['student', 'professeur', 'tutor'].includes(userToEdit?.role || '')) // Admin cannot change student/prof/tutor roles
                   }
                 >
-                  <SelectTrigger id="editRole" className="col-span-3">
+                  <SelectTrigger id="editRole" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <SelectValue placeholder="Sélectionner un rôle" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     {(currentRole === 'director' || currentRole === 'deputy_director') ? (
                       <>
                         <SelectItem value="professeur">Professeur</SelectItem>
@@ -948,7 +948,7 @@ const AdminUserManagementPage = () => {
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "col-span-3 justify-start text-left font-normal",
+                            "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                             !editEnrollmentStartDate && "text-muted-foreground"
                           )}
                         >
@@ -956,7 +956,7 @@ const AdminUserManagementPage = () => {
                           {editEnrollmentStartDate ? format(editEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                         <Calendar
                           mode="single"
                           selected={editEnrollmentStartDate}
@@ -974,7 +974,7 @@ const AdminUserManagementPage = () => {
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "col-span-3 justify-start text-left font-normal",
+                            "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                             !editEnrollmentEndDate && "text-muted-foreground"
                           )}
                         >
@@ -982,7 +982,7 @@ const AdminUserManagementPage = () => {
                           {editEnrollmentEndDate ? format(editEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                         <Calendar
                           mode="single"
                           selected={editEnrollmentEndDate}

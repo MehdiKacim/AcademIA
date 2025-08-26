@@ -130,6 +130,7 @@ interface StudentClassEnrollment { // New interface for student-class liaison
   student_id: string; // Link to the student's Profile
   class_id: string; // Link to the Class
   school_year_id: string; // Changed: Link to SchoolYear
+  school_year_name?: string; // For convenience when fetching
   created_at?: string;
   updated_at?: string;
 }
@@ -229,7 +230,7 @@ interface Document {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Object.entries(dataModels).map(([name, schema]) => (
-        <Card key={name}>
+        <Card key={name} className="rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardHeader className="flex flex-row items-center gap-3">
             {getIcon(name)}
             <CardTitle>{name}</CardTitle>

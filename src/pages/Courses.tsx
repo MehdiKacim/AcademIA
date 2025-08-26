@@ -101,7 +101,7 @@ const Courses = () => {
                 <Card
                   key={course.id}
                   className={cn(
-                    "flex flex-col shadow-lg transition-all duration-300 ease-in-out",
+                    "flex flex-col shadow-lg transition-all duration-300 ease-in-out rounded-android-tile", // Apply rounded-android-tile
                     course.isCompleted && "border-green-500 ring-2 ring-green-500/50"
                   )}
                 >
@@ -153,7 +153,7 @@ const Courses = () => {
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => (
-              <Card key={course.id}>
+              <Card key={course.id} className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                 <CardHeader>
                   <CardTitle>{course.title}</CardTitle>
                   <CardDescription>{course.description}</CardDescription>
@@ -189,7 +189,7 @@ const Courses = () => {
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((data: any, index: number) => (
-              <Card key={index}>
+              <Card key={index} className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                 <CardHeader>
                   <CardTitle>{data.courseTitle}</CardTitle>
                   <CardDescription>Élève: {data.studentName}</CardDescription>

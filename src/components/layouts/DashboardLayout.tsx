@@ -27,9 +27,9 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
-import AboutModal from "@/components/AboutModal"; // Importation manquante
-import MobileNavSheet from "@/components/MobileNavSheet"; // New import
-import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
+import AboutModal from "@/components/AboutModal";
+import MobileNavSheet from "@/components/MobileNavSheet";
+import { useSwipeable } from 'react-swipeable';
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -42,31 +42,28 @@ const iconMap: { [key: string]: React.ElementType } = {
 
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
-  const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole(); // Get navItems from useRole
+  const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole();
   const { isChatOpen } = useCourseChat();
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false); // New state for mobile nav sheet
+  const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [desktopNavStack, setDesktopNavStack] = useState<NavItem[]>([]); // Stack of parent categories
+  const [desktopNavStack, setDesktopNavStack] = useState<NavItem[]>([]);
   const [isDesktopOverlayOpen, setIsDesktopOverlayOpen] = useState(false);
 
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
-  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Initialize with null
+  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
 
-  // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
-    console.log("[DashboardLayout] fullNavTree memo re-calculated. Input navItems (from RoleContext):", navItems);
     return navItems;
-  }, [navItems]); // Dependency on navItems from context
+  }, [navItems]);
 
-  // Log navItems and currentUserProfile when they are available
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
       console.log("[DashboardLayout] Current User Profile:", currentUserProfile);
@@ -175,7 +172,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   }, [currentUserProfile?.id]);
 
   useEffect(() => {
-    startAutoHideTimer(); // Initial hide timer
+    startAutoHideTimer();
 
     window.addEventListener('mousemove', resetAndShowButton);
     window.addEventListener('keydown', resetAndShowButton);
@@ -212,11 +209,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   };
 
   const headerNavItems = fullNavTree;
-  console.log("[DashboardLayout] Header Nav Items (ALL items, filter removed as requested):", headerNavItems);
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
-  // New: Global swipe-down handler for mobile to open the nav sheet
   const globalSwipeHandlers = useSwipeable({
     onSwipedDown: () => {
       if (isMobile && currentUserProfile && !isMobileNavSheetOpen) {
@@ -225,7 +220,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     },
     preventScrollOnSwipe: true,
     trackMouse: true,
-    delta: 50, // Minimum distance in pixels to be considered a swipe
+    delta: 50,
   });
 
   return (
@@ -237,7 +232,13 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         )}
       >
         <div className="flex items-center gap-4">
-          {/* Removed the hamburger menu button */}
+          {/* Mobile menu button */}
+          {isMobile && currentUserProfile && (
+            <Button variant="ghost" size="icon" onClick={() => setIsMobileNavSheetOpen(true)}>
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Ouvrir le menu</span>
+            </Button>
+          )}
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
@@ -247,7 +248,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
               if (isCategory) {
-                console.log(`[DashboardLayout] Rendering category button: ${item.label}, children count: ${item.children?.length || 0}`);
                 return (
                   <Button
                     key={item.id}
@@ -261,7 +261,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                 );
               } else {
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                console.log(`[DashboardLayout] Rendering direct link/action: ${item.label}, route: ${item.route}`);
                 return (
                   <NavLink
                     key={item.id}
@@ -303,10 +302,40 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             </Tooltip>
           )}
 
-          {/* Removed ThemeToggle from here */}
-          {/* Removed About button from here */}
-          {/* Removed Auth button from here */}
-          {/* Removed Profile Dropdown from here */}
+          {currentUserProfile && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Menu utilisateur</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
+                <DropdownMenuLabel>{currentUserProfile.first_name} {currentUserProfile.last_name}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="mr-2 h-4 w-4" /> Mon Profil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" /> Paramètres
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {!currentUserProfile && (
+            <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
+              <LogIn className="h-5 w-5 mr-2" /> Connexion
+            </Button>
+          )}
+          <ThemeToggle />
+          <Button variant="ghost" size="icon" onClick={() => setIsAboutModalOpen(true)} className="hidden sm:flex">
+            <Info className="h-5 w-5" />
+            <span className="sr-only">À propos</span>
+          </Button>
         </div>
       </header>
 
@@ -359,7 +388,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                       }
                     }}
                     className={cn(
-                      "flex flex-col items-center justify-center p-4 rounded-lg border text-center h-24",
+                      "flex flex-col items-center justify-center p-4 rounded-android-tile border text-center h-24", // Apply rounded-android-tile
                       isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
                       "transition-all duration-200 ease-in-out"
                     )}

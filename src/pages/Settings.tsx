@@ -43,7 +43,7 @@ const Settings = () => {
         Gérez les préférences de votre compte et de l'application.
       </p>
 
-      <Card>
+      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <SunMoon className="h-6 w-6 text-primary" />
@@ -59,7 +59,7 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-6 w-6 text-primary" />
@@ -87,7 +87,7 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-6 w-6 text-primary" />
@@ -117,7 +117,7 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="h-6 w-6 text-primary" />

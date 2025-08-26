@@ -48,7 +48,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
           <React.Fragment key={module.title}>
             <Card
               className={cn(
-                "relative w-full p-6 text-center shadow-xl transition-all duration-300 ease-in-out",
+                "relative w-full p-6 text-center shadow-xl transition-all duration-300 ease-in-out rounded-android-tile", // Apply rounded-android-tile
                 accessible ? "border-primary/50 bg-background hover:shadow-2xl" : "border-dashed border-muted-foreground/30 bg-muted/10 opacity-70 cursor-not-allowed",
                 isCompleted && "border-green-500 ring-2 ring-green-500/50"
               )}
@@ -76,7 +76,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
               <CardContent className="p-0">
                 <p className="text-sm text-muted-foreground mb-4">Progression: {progress}%</p>
                 <Link to={`/courses/${course.id}/modules/${index}`}>
-                  <Button className="w-full" disabled={!accessible}>
+                  <Button className="w-full">
                     {accessible ? (isCompleted ? "Revoir le module" : "Commencer le module") : "Verrouillé"}
                   </Button>
                 </Link>
@@ -84,7 +84,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
                 {/* Section pour l'affichage des sections du module */}
                 <div className="mt-6">
                   <h4 className="text-lg font-semibold mb-3 text-left">Sections du module:</h4>
-                  <div className="flex flex-row space-x-4 overflow-x-auto pb-4 scrollbar-hide md:flex-col md:space-y-4 md:space-x-0 md:overflow-x-visible md:pb-0 md:items-center"> {/* Responsive layout for sections */}
+                  <div className="flex flex-row space-x-4 overflow-x-auto pb-4 scrollbar-hide md:flex-col md:space-y-4 md:space-x-0 md:overflow-x-visible md:pb-0 md:items-center">
                     {module.sections.map((section, sectionIndex) => {
                       const sectionIsCompleted = studentCourseProgress?.modules_progress
                         .find(mp => mp.module_index === index)
@@ -96,8 +96,8 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
                             <Link
                               to={`/courses/${course.id}/modules/${index}#section-${sectionIndex}`}
                               className={cn(
-                                "block p-4 border rounded-lg text-center flex flex-col items-center justify-center transition-all duration-200",
-                                "w-40 flex-shrink-0 md:w-full", // Fixed width for mobile, full width for desktop
+                                "block p-4 border rounded-android-tile text-center flex flex-col items-center justify-center transition-all duration-200", // Apply rounded-android-tile
+                                "w-40 flex-shrink-0 md:w-full",
                                 sectionIsCompleted ? "border-green-500 bg-green-50/20" : "border-muted-foreground/30 bg-muted/10",
                                 !accessible && "opacity-50 cursor-not-allowed pointer-events-none"
                               )}
@@ -111,7 +111,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
                             </Link>
                           </div>
                           {sectionIndex < module.sections.length - 1 && (
-                            <div className="hidden md:flex relative w-1 h-8 bg-border items-center justify-center"> {/* Only show on desktop */}
+                            <div className="hidden md:flex relative w-1 h-8 bg-border items-center justify-center">
                               <ArrowDown className={cn(
                                 "h-4 w-4 absolute text-border",
                                 sectionIsCompleted ? "text-primary animate-bounce" : "text-muted-foreground"
@@ -127,7 +127,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
             </Card>
             {/* Flèche entre les modules, visible uniquement sur mobile (quand la grille est une seule colonne) */}
             {index < course.modules.length - 1 && (
-              <div className="md:hidden relative w-full flex justify-center py-4"> {/* Visible only on mobile */}
+              <div className="md:hidden relative w-full flex justify-center py-4">
                 <div className="relative w-1 h-16 bg-border flex items-center justify-center">
                   <ArrowDown className={cn(
                     "h-6 w-6 absolute text-border",

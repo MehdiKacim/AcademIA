@@ -152,7 +152,7 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
       ref={setNodeRef}
       style={style}
       className={cn(
-        "p-4 border-l-4 border-primary/50 space-y-4 relative",
+        "p-4 border-l-4 border-primary/50 space-y-4 relative rounded-android-tile", // Apply rounded-android-tile
         isDragging ? "ring-2 ring-primary/50 shadow-xl" : ""
       )}
     >
@@ -198,7 +198,7 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
       <div className="space-y-4 pl-4 border-l border-muted-foreground/50">
         <h4 className="text-md font-semibold">Sections du module</h4>
         {sectionFields.map((section, sectionIndex) => (
-          <Card key={section.id} className="p-3 bg-muted/20 space-y-3">
+          <Card key={section.id} className="p-3 bg-muted/20 space-y-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <div className="flex justify-between items-center">
               <h5 className="text-base font-medium">Section {sectionIndex + 1}</h5>
               <Button
@@ -297,10 +297,10 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                     </FormItem>
                   )}
                 />
-                <div className="space-y-3 mt-4 p-3 border rounded-md bg-background">
+                <div className="space-y-3 mt-4 p-3 border rounded-md bg-background rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <h6 className="text-sm font-semibold">Questions du Quiz</h6>
                   {form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions`)?.map((question, questionIndex) => (
-                    <Card key={questionIndex} className="p-3 bg-muted/10 space-y-2">
+                    <Card key={questionIndex} className="p-3 bg-muted/10 space-y-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
                       <div className="flex justify-between items-center">
                         <h6 className="text-sm font-medium">Question {questionIndex + 1}</h6>
                         <Button
@@ -607,7 +607,7 @@ const CreateCourse = () => {
           {courseId ? "Modifier le cours" : "Créer un nouveau cours"}
         </h1>
         
-        <Card>
+        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardHeader>
             <CardTitle>Informations Générales du Cours</CardTitle>
             <CardDescription>Remplissez les détails de base de votre cours.</CardDescription>
@@ -716,7 +716,7 @@ const CreateCourse = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardHeader>
             <CardTitle>Modules du Cours</CardTitle>
             <CardDescription>Définissez la structure de vos modules et sections. Utilisez la poignée pour réorganiser les modules.</CardDescription>

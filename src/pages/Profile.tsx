@@ -124,7 +124,7 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader className="flex flex-row items-center justify-between space-x-4">
               <div className="flex items-center space-x-4">
                 <User className="h-12 w-12 text-primary" />
@@ -153,7 +153,7 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Progression Globale</CardTitle>
               <CardDescription>Votre avancement général dans les cours.</CardDescription>
@@ -164,7 +164,7 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground mt-2">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours Terminés</CardTitle>
               <CardDescription>Votre succès jusqu'à présent.</CardDescription>
@@ -183,7 +183,7 @@ const Profile = () => {
               </ul>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Activité Récente</CardTitle>
               <CardDescription>Vos dernières actions sur la plateforme.</CardDescription>
@@ -217,7 +217,7 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader className="flex flex-row items-center justify-between space-x-4">
               <div className="flex items-center space-x-4">
                 <PenTool className="h-12 w-12 text-primary" />
@@ -241,7 +241,7 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours Créés</CardTitle>
               <CardDescription>Vos contributions à la plateforme.</CardDescription>
@@ -251,7 +251,7 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground">Dont {publishedCoursesCount} publiés.</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Impact sur les Élèves</CardTitle>
               <CardDescription>Nombre total d'élèves inscrits à vos cours.</CardDescription>
@@ -261,7 +261,7 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground">élèves uniques.</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours Populaires</CardTitle>
               <CardDescription>Vos cours les plus consultés.</CardDescription>
@@ -279,7 +279,7 @@ const Profile = () => {
               </ul>
             </CardContent>
           </Card>
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Activité Récente</CardTitle>
               <CardDescription>Vos dernières actions en tant que créateur.</CardDescription>
@@ -310,7 +310,7 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader className="flex flex-row items-center justify-between space-x-4">
               <div className="flex items-center space-x-4">
                 <Users className="h-12 w-12 text-primary" />
@@ -334,7 +334,7 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Élèves Supervisés</CardTitle>
               <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
@@ -344,7 +344,7 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground">Élèves en difficulté : {studentsAtRisk}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Progression des Élèves</CardTitle>
               <CardDescription>Vue d'overview de l'avancement de vos élèves.</CardDescription>
@@ -364,7 +364,7 @@ const Profile = () => {
               </ul>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Alertes Récentes</CardTitle>
               <CardDescription>Informations importantes sur vos élèves.</CardDescription>
@@ -388,7 +388,7 @@ const Profile = () => {
       // For admin/director roles, we can show basic profile info and maybe some high-level stats
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader className="flex flex-row items-center justify-between space-x-4">
               <div className="flex items-center space-x-4">
                 <BriefcaseBusiness className="h-12 w-12 text-primary" />
@@ -414,7 +414,7 @@ const Profile = () => {
             </CardContent>
           </Card>
           {/* Add more admin/director specific cards here if needed, e.g., quick stats or links */}
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Accès Rapide</CardTitle>
               <CardDescription>Liens utiles pour votre rôle.</CardDescription>
@@ -439,7 +439,7 @@ const Profile = () => {
             </CardContent>
           </Card>
           {currentRole === 'administrator' && (
-            <Card>
+            <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
               <CardHeader>
                 <CardTitle>Outils Administrateur</CardTitle>
                 <CardDescription>Accès aux fonctions d'administration avancées.</CardDescription>

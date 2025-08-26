@@ -62,7 +62,7 @@ const ChangePasswordDialog = ({ isOpen, onClose }: ChangePasswordDialogProps) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
         <DialogHeader>
           <DialogTitle>Changer le mot de passe</DialogTitle>
           <DialogDescription>

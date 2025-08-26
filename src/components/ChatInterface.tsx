@@ -157,7 +157,7 @@ const ChatInterface = ({ contact, onMessageSent, initialCourseId, initialCourseT
                       variant="secondary"
                       size="sm"
                       onClick={() => handleDownloadFile(msg.file_url!)}
-                      className="flex items-center gap-1"
+                      className="flex items-center gap-1 rounded-android-tile" // Apply rounded-android-tile
                     >
                       <Paperclip className="h-4 w-4" />
                       <Download className="h-4 w-4" />
@@ -181,7 +181,7 @@ const ChatInterface = ({ contact, onMessageSent, initialCourseId, initialCourseT
       </ScrollArea>
       <div className="p-4 border-t border-border">
         {attachedFile && (
-          <div className="flex items-center justify-between p-2 mb-2 border rounded-md bg-muted text-muted-foreground">
+          <div className="flex items-center justify-between p-2 mb-2 border rounded-md bg-muted text-muted-foreground rounded-android-tile"> {/* Apply rounded-android-tile */}
             <span>Fichier attaché: {attachedFile.name}</span>
             <Button variant="ghost" size="icon" onClick={handleRemoveFile}>
               <XCircle className="h-4 w-4" />

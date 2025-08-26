@@ -104,7 +104,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
       <>
         <p className="text-lg text-muted-foreground mb-8">Surveillez la progression de vos élèves et recevez des alertes importantes.</p>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Élèves Supervisés</CardTitle>
               <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
@@ -114,7 +114,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
               <p className="text-sm text-muted-foreground">Élèves en difficulté : {studentsAtRisk}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Progression Moyenne</CardTitle>
               <CardDescription>Vue d'overview de l'avancement de vos élèves.</CardDescription>
@@ -124,7 +124,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
               <p className="text-sm text-muted-foreground">Contactez les enseignants si nécessaire.</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Performance des Élèves</CardTitle>
               <CardDescription>Scores moyens de vos élèves.</CardDescription>
@@ -149,7 +149,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
               </ResponsiveContainer>
             </CardContent>
           </Card>
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Tendances de Progression Individuelle</CardTitle>
               <CardDescription>Suivi de la progression de certains élèves au fil du temps.</CardDescription>
@@ -183,7 +183,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
       <>
         <p className="text-lg text-muted-foreground mb-8">Notifications pour les élèves en difficulté et suggestions d'interventions.</p>
         <div className="grid gap-6">
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Alertes Récentes</CardTitle>
               <CardDescription>Informations importantes sur vos élèves.</CardDescription>
@@ -208,7 +208,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
               </ul>
             </CardContent>
           </Card>
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Recommandations d'Intervention</CardTitle>
               <CardDescription>Actions suggérées pour aider vos élèves.</CardDescription>
@@ -229,7 +229,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
       <>
         <p className="text-lg text-muted-foreground mb-8">Statistiques agrégées par classe.</p>
         <div className="grid gap-6">
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Performance Moyenne par Classe</CardTitle>
               <CardDescription>Progression moyenne et nombre d'élèves par classe.</CardDescription>
@@ -255,7 +255,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
               </ResponsiveContainer>
             </CardContent>
           </Card>
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Détail des Classes</CardTitle>
               <CardDescription>Liste des classes avec leurs statistiques clés.</CardDescription>

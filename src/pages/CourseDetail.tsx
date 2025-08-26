@@ -95,6 +95,9 @@ const CourseDetail = () => {
         <p className="text-lg text-muted-foreground">
           Le cours que vous recherchez n'existe pas.
         </p>
+        <Button onClick={() => navigate("/courses")} className="mt-4">
+          Retour à la liste des cours
+        </Button>
       </div>
     );
   }
@@ -160,7 +163,7 @@ const CourseDetail = () => {
         <img
           src={course.image_url}
           alt={`Image pour le cours ${course.title}`}
-          className="w-full h-64 object-cover rounded-lg mb-8 shadow-md"
+          className="w-full h-64 object-cover rounded-android-tile mb-8 shadow-md" // Apply rounded-android-tile
         />
       )}
       <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -172,7 +175,7 @@ const CourseDetail = () => {
         <h2 className="text-2xl font-semibold mb-4">Compétences à acquérir</h2>
         <div className="flex flex-wrap gap-2 mb-6">
           {course.skills_to_acquire.map((skill, index) => (
-            <Badge key={index} variant="secondary" className="text-sm px-3 py-1">
+            <Badge key={index} variant="secondary" className="text-sm px-3 py-1 rounded-android-tile"> {/* Apply rounded-android-tile */}
               {skill}
             </Badge>
           ))}
@@ -181,7 +184,7 @@ const CourseDetail = () => {
 
       <section>
         <h2 className="text-2xl font-semibold mb-4">Progression du cours</h2>
-        <Card className="mb-6">
+        <Card className="mb-6 rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Progress value={progressPercentage} className="w-full" />
@@ -209,7 +212,7 @@ const CourseDetail = () => {
         <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
           <Bot className="h-6 w-6 text-primary" /> Demandez à AiA sur ce cours
         </h2>
-        <Card>
+        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardContent className="p-6 space-y-4">
             <p className="text-muted-foreground mb-4">
               Cliquez ci-dessous pour poser une question à AiA concernant ce cours.

@@ -147,7 +147,7 @@ const Analytics = () => {
               <SelectTrigger id="select-curriculum">
                 <SelectValue placeholder="Tous les cursus" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                 <SelectItem value="all">Tous les cursus</SelectItem>
                 {curricula
                   .map(cur => (
@@ -164,7 +164,7 @@ const Analytics = () => {
               <SelectTrigger id="select-class">
                 <SelectValue placeholder="Toutes les classes" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                 <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes
                   .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)

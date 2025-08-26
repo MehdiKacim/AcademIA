@@ -197,7 +197,7 @@ const Messages = () => {
       await fetchAllData();
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
-      showError(`Erreur lors du désarchivage: ${err.message}`);
+      showError(`Erreur lors du désarchivage: ${error.message}`);
     }
   };
 
@@ -317,7 +317,7 @@ const Messages = () => {
           isMobile ? (selectedContact ? "hidden" : "flex-grow") : "w-full md:w-1/3 flex-shrink-0"
         )}>
           {(currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && (
-            <div className="p-4 border-b border-border space-y-4">
+            <div className="p-4 border-b border-border space-y-4 rounded-android-tile"> {/* Apply rounded-android-tile */}
               <h3 className="text-lg font-semibold">Démarrer une nouvelle conversation</h3>
               <div className="grid grid-cols-1 gap-4">
                 {/* Filters for Professeur/Tutor/Director/Deputy Director/Admin */}
@@ -330,10 +330,10 @@ const Messages = () => {
                         setSelectedCurriculumId(value === "all" ? "" : value);
                         setSelectedClassId("");
                       }}>
-                        <SelectTrigger id="select-curriculum">
+                        <SelectTrigger id="select-curriculum" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <SelectValue placeholder="Tous les cursus" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <SelectItem value="all">Tous les cursus</SelectItem>
                           {curricula
                             .map(cur => (
@@ -347,10 +347,10 @@ const Messages = () => {
                     <div>
                       <Label htmlFor="select-class">Filtrer par Classe</Label>
                       <Select value={selectedClassId} onValueChange={(value) => setSelectedClassId(value === "all" ? "" : value)}>
-                        <SelectTrigger id="select-class">
+                        <SelectTrigger id="select-class" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <SelectValue placeholder="Toutes les classes" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <SelectItem value="all">Toutes les classes</SelectItem>
                           {classes
                             .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
@@ -381,10 +381,10 @@ const Messages = () => {
                       if (contact) handleSelectContact(contact);
                       else showError("Contact non trouvé.");
                     }}>
-                      <SelectTrigger id="new-chat-select-contact">
+                      <SelectTrigger id="new-chat-select-contact" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                         <SelectValue placeholder="Sélectionner un contact" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                         {availableContactsForNewChat.map(profile => (
                           <SelectItem key={profile.id} value={profile.id}>
                             {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'}
@@ -402,7 +402,7 @@ const Messages = () => {
           )}
 
           {currentRole === 'student' && (
-            <div className="p-4 border-b border-border space-y-4">
+            <div className="p-4 border-b border-border space-y-4 rounded-android-tile"> {/* Apply rounded-android-tile */}
               <h3 className="text-lg font-semibold">Démarrer une nouvelle conversation</h3>
               <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -419,10 +419,10 @@ const Messages = () => {
                 if (contact) handleSelectContact(contact);
                 else showError("Contact non trouvé.");
               }}>
-                <SelectTrigger id="new-chat-select-student">
+                <SelectTrigger id="new-chat-select-student" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <SelectValue placeholder="Sélectionner un contact" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                   {availableContactsForNewChat.length === 0 ? (
                     <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
                   ) : (
@@ -444,14 +444,14 @@ const Messages = () => {
             <Button
               variant={!showArchived ? "default" : "outline"}
               onClick={() => setShowArchived(false)}
-              className="flex-1"
+              className="flex-1 rounded-android-tile" // Apply rounded-android-tile
             >
               <MessageSquare className="h-4 w-4 mr-2" /> Récentes
             </Button>
             <Button
               variant={showArchived ? "default" : "outline"}
               onClick={() => setShowArchived(true)}
-              className="flex-1"
+              className="flex-1 rounded-android-tile" // Apply rounded-android-tile
             >
               <Archive className="h-4 w-4 mr-2" /> Archivées
             </Button>
@@ -478,7 +478,7 @@ const Messages = () => {
           isMobile ? (selectedContact ? "flex-grow" : "hidden") : "w-full md:w-2/3 flex-grow"
         )}>
           {isMobile && selectedContact && (
-            <Button variant="outline" onClick={() => setSelectedContact(null)} className="mb-4 w-fit">
+            <Button variant="outline" onClick={() => setSelectedContact(null)} className="mb-4 w-fit rounded-android-tile"> {/* Apply rounded-android-tile */}
               <ArrowLeft className="h-4 w-4 mr-2" /> Retour aux conversations
             </Button>
           )}

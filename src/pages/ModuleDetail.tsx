@@ -328,7 +328,7 @@ const ModuleDetail = () => {
       <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `module-${course.id}-${currentModuleIndex}` : null)}>
         <ContextMenuTrigger asChild>
           <Card className={cn(
-            "relative",
+            "relative rounded-android-tile", // Apply rounded-android-tile
             highlightedElementId === `module-${course.id}-${currentModuleIndex}` ? "bg-primary/10" : ""
           )}>
             <CardHeader>
@@ -358,7 +358,7 @@ const ModuleDetail = () => {
                           id={`section-${index}`} // Ajout de l'ID pour le défilement
                           ref={el => sectionRefs.current[index] = el}
                           className={cn(
-                            "p-4 border rounded-md cursor-context-menu",
+                            "p-4 border rounded-android-tile cursor-context-menu", // Apply rounded-android-tile
                             highlightedElementId === `section-${course.id}-${currentModuleIndex}-${index}` ? "bg-primary/10" : "bg-muted/10",
                             !isSectionAccessible && "opacity-50 cursor-not-allowed",
                             section.type === 'quiz' && "border-dashed border-primary/50 bg-primary/5"
@@ -371,7 +371,7 @@ const ModuleDetail = () => {
                               {isSectionCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
                             </h3>
                             {quizResult && (
-                              <Badge variant={quizResult.passed ? "default" : "destructive"} className="text-sm">
+                              <Badge variant={quizResult.passed ? "default" : "destructive"} className="text-sm rounded-android-tile"> {/* Apply rounded-android-tile */}
                                 {quizResult.score}/{quizResult.total} ({((quizResult.score / quizResult.total) * 100).toFixed(0)}%) {quizResult.passed ? 'Réussi' : 'Échoué'}
                               </Badge>
                             )}
@@ -381,7 +381,7 @@ const ModuleDetail = () => {
                           ) : (
                             <>
                               {section.type === 'video' && section.url ? (
-                                <div className="relative w-full aspect-video my-4 rounded-md overflow-hidden">
+                                <div className="relative w-full aspect-video my-4 rounded-android-tile overflow-hidden"> {/* Apply rounded-android-tile */}
                                   <iframe
                                     src={section.url}
                                     title={section.title}
@@ -391,7 +391,7 @@ const ModuleDetail = () => {
                                   ></iframe>
                                 </div>
                               ) : section.type === 'image' && section.url ? (
-                                <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-md my-4" />
+                                <img src={section.url} alt={section.title} className="max-w-full h-auto rounded-android-tile my-4" /> // Apply rounded-android-tile
                               ) : section.type === 'quiz' && section.questions ? (
                                 <div className="my-4">
                                   <QuizComponent
@@ -417,7 +417,7 @@ const ModuleDetail = () => {
                           )}
                         </div>
                       </ContextMenuTrigger>
-                      <ContextMenuContent className="w-auto p-1">
+                      <ContextMenuContent className="w-auto p-1 rounded-android-tile"> {/* Apply rounded-android-tile */}
                         {currentUserProfile && (
                           <>
                             <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === sectionNoteKey ? null : sectionNoteKey)}>
@@ -472,7 +472,7 @@ const ModuleDetail = () => {
             </CardContent>
           </Card>
         </ContextMenuTrigger>
-        <ContextMenuContent className="w-auto p-1">
+        <ContextMenuContent className="w-auto p-1 rounded-android-tile"> {/* Apply rounded-android-tile */}
           {currentUserProfile && (
             <>
               <ContextMenuItem className="p-2" onClick={() => setVisibleNotesKey(visibleNotesKey === moduleNoteKey ? null : moduleNoteKey)}>

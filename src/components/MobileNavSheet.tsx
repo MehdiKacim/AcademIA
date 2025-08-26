@@ -101,7 +101,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       newStack.pop();
       return newStack;
     });
-    // Removed setSearchQuery('');
+    // Removed searchQuery state
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -109,8 +109,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     onClose();
     navigate("/");
   }, [signOut, onClose, navigate]);
-
-  // Removed handleToggleTheme as ThemeToggle now handles its own state and logic
 
   // Define virtual NavItems for profile actions
   const profileActions: NavItem[] = [
@@ -124,10 +122,13 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     let itemsToFilter: NavItem[] = [];
 
     if (drawerNavStack.length === 0) {
-      itemsToFilter = navItems.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
+      // Filter out 'profile' and 'settings' if they are already in the header
+      itemsToFilter = navItems.filter(item => 
+        (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined) &&
+        item.id !== 'nav-profile' && item.id !== 'nav-settings' // Assuming these IDs for profile and settings
+      );
     } else {
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
-      // If the active category is the virtual "Mon Compte" category, show its actions
       if (activeCategory.id === 'profile-category') {
         itemsToFilter = profileActions;
       } else {

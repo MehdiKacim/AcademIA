@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { NotebookText, Search, ArrowLeft } from "lucide-react";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes"; // Import getAllNotesData
@@ -125,7 +125,7 @@ const AllNotes = () => {
       </p>
 
       {allNotes.length === 0 ? (
-        <Card className="flex-grow flex items-center justify-center">
+        <Card className="flex-grow flex items-center justify-center rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardContent className="p-6 text-center text-muted-foreground">
             <NotebookText className="h-12 w-12 mx-auto mb-4 text-primary" />
             <p>Vous n'avez pas encore pris de notes. Commencez un cours pour en ajouter !</p>
@@ -147,7 +147,7 @@ const AllNotes = () => {
                     <Card
                       key={noteGroup.key}
                       className={cn(
-                        "cursor-pointer hover:shadow-md transition-shadow",
+                        "cursor-pointer hover:shadow-md transition-shadow rounded-android-tile", // Apply rounded-android-tile
                         selectedNoteGroupKey === noteGroup.key ? "border-primary ring-2 ring-primary/50 bg-primary/5" : ""
                       )}
                       onClick={() => handleSelectNoteGroup(noteGroup.key)}
