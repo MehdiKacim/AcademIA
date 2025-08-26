@@ -210,9 +210,11 @@ const AddExistingNavItemDialog = ({
     }
   };
 
+  const isAddButtonDisabled = isAdding || !selectedGenericItemToAdd || availableGenericItemsOptions.length === 0;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-card z-[100] rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <DialogContent className="sm:max-w-[600px] bg-card z-[100] rounded-android-tile">
         <DialogHeader>
           <DialogTitle>Ajouter un élément existant au menu</DialogTitle>
           <DialogDescription>
@@ -234,10 +236,16 @@ const AddExistingNavItemDialog = ({
               onValueChange={setSelectedGenericItemToAdd}
               options={availableGenericItemsOptions}
               placeholder="Sélectionner un élément..."
-              emptyMessage="Aucun élément disponible."
+              emptyMessage="Aucun élément disponible à ajouter."
               iconMap={iconMap}
               popoverContentClassName="z-[999] rounded-android-tile"
+              disabled={availableGenericItemsOptions.length === 0} // Explicitly disable if no options
             />
+            {availableGenericItemsOptions.length === 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Tous les éléments génériques sont déjà configurés pour ce rôle ou aucun n'est disponible.
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="parent-search-input">Rechercher un parent</Label>
@@ -260,7 +268,7 @@ const AddExistingNavItemDialog = ({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleAddExistingItem} disabled={isAdding || !selectedGenericItemToAdd}>
+          <Button onClick={handleAddExistingItem} disabled={isAddButtonDisabled}>
             {isAdding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément
           </Button>
         </DialogFooter>
