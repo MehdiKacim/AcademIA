@@ -806,22 +806,29 @@ const RoleNavConfigsPage = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command>
+                    <Command filter={false}> {/* Added filter={false} */}
                       <CommandInput
                         placeholder="Rechercher un élément..."
                         value={addExistingSearch}
-                        onValueChange={setAddExistingSearch}
+                        onValueChange={(value) => {
+                          console.log("Add existing search input changed:", value); // Diagnostic log
+                          setAddExistingSearch(value);
+                        }}
                       />
                       <CommandList>
                         <CommandEmpty>Aucun élément trouvé.</CommandEmpty>
                         <CommandGroup>
                           {allGenericNavItems
                             .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-                            .filter(item => item.label.toLowerCase().includes(addExistingSearch.toLowerCase()))
+                            .filter(item => {
+                              const match = item.label.toLowerCase().includes(addExistingSearch.toLowerCase());
+                              console.log(`Filtering generic item: ${item.label}, search: ${addExistingSearch}, match: ${match}`); // Diagnostic log
+                              return match;
+                            })
                             .map(item => (
                               <CommandItem
                                 key={item.id}
-                                value={item.id} // Changed value to item.id
+                                value={item.label} // Changed value to item.label
                                 onSelect={() => {
                                   console.log("Selected item for add:", item.id); // Diagnostic log
                                   handleAddExistingGenericItemToRole(item.id);
@@ -901,11 +908,14 @@ const RoleNavConfigsPage = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command>
+                    <Command filter={false}> {/* Added filter={false} */}
                       <CommandInput
                         placeholder="Rechercher un parent..."
                         value={editParentSearch}
-                        onValueChange={setEditParentSearch}
+                        onValueChange={(value) => {
+                          console.log("Edit parent search input changed:", value); // Diagnostic log
+                          setEditParentSearch(value);
+                        }}
                       />
                       <CommandList>
                         <CommandEmpty>Aucun parent trouvé.</CommandEmpty>
@@ -928,13 +938,17 @@ const RoleNavConfigsPage = () => {
                             Aucun (élément racine)
                           </CommandItem>
                           {availableParentsForConfig
-                            .filter(item => item.label.toLowerCase().includes(editParentSearch.toLowerCase()))
+                            .filter(item => {
+                              const match = item.label.toLowerCase().includes(editParentSearch.toLowerCase());
+                              console.log(`Filtering parent: ${item.label}, search: ${editParentSearch}, match: ${match}`); // Diagnostic log
+                              return match;
+                            })
                             .map((item) => {
                               const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
                               return (
                                 <CommandItem
                                   key={item.id}
-                                  value={item.id} // Changed value to item.id
+                                  value={item.id} // Kept item.id as value for technical reference
                                   onSelect={() => {
                                     console.log("Selected parent:", item.id); // Diagnostic log
                                     setEditConfigParentId(item.id);
