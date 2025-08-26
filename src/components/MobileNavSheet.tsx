@@ -183,7 +183,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               <div className="w-10 h-10"></div> {/* Placeholder to keep alignment */}
             )}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
-              {CurrentDrawerIconComponent && <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />}
+              {/* Simplified rendering of the icon component */}
+              <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
               {currentDrawerTitle}
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
