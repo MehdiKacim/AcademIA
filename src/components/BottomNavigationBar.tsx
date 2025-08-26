@@ -299,8 +299,10 @@ import {
                       </Button>
                     )}
                     <DrawerTitle className="flex-grow text-center flex items-center justify-center gap-2">
-                      {currentDrawerIcon && React.createElement(currentDrawerIcon, { className: "h-6 w-6 text-primary" })}
-                      {currentDrawerTitle}
+                      <React.Fragment> {/* Wrap content of DrawerTitle */}
+                        {currentDrawerIcon && React.createElement(currentDrawerIcon, { className: "h-6 w-6 text-primary" })}
+                        {currentDrawerTitle}
+                      </React.Fragment>
                     </DrawerTitle>
                     <DrawerClose asChild>
                       <Button variant="ghost" size="icon" className="absolute right-4">
