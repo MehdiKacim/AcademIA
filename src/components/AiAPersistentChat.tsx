@@ -48,9 +48,11 @@ const AiAPersistentChat = () => {
     id: 'aia-chat-draggable',
   });
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
+  // Refined style application for transform and touch-action
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    touchAction: 'none', // Crucial for mobile dragging, applied to the draggable element
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -129,9 +131,7 @@ const AiAPersistentChat = () => {
     <DndContext sensors={sensors}>
       <div
         ref={setNodeRef} // Apply the ref from useDraggable
-        style={style} // Apply the transform from useDraggable
-        {...listeners} // Apply listeners for dragging
-        {...attributes} // Apply other attributes (e.g., aria-labelledby)
+        style={style} // Apply the transform and touch-action from useDraggable
         className={cn(
           "fixed flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile",
           isMinimized
@@ -141,6 +141,8 @@ const AiAPersistentChat = () => {
               : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg bg-card border border-primary/20 shadow-lg" // Maximized desktop
         )}
         onClick={isMinimized ? () => setIsMinimized(false) : undefined}
+        // Conditionally apply listeners/attributes to the draggable handle
+        {...(isMinimized ? { ...listeners, ...attributes } : {})} // When minimized, the whole div is the handle
       >
         {isMinimized ? (
           <div className="flex items-center justify-center h-full w-full">
@@ -149,7 +151,7 @@ const AiAPersistentChat = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between p-4 border-b border-border shrink-0 cursor-grab" {...listeners} {...attributes}> {/* Apply drag handle to header when maximized */}
+            <div className="flex items-center justify-between p-4 border-b border-border shrink-0 cursor-grab" {...listeners} {...attributes}> {/* When maximized, the header is the handle */}
               <h3 className="flex items-center gap-2 text-lg font-semibold">
                 <Bot className="h-6 w-6 text-primary" /> AiA
               </h3>
@@ -158,7 +160,7 @@ const AiAPersistentChat = () => {
                   <Minus className="h-4 w-4" />
                   <span className="sr-only">Minimiser</span>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={closeChat}> {/* This now correctly calls closeChat from context */}
+                <Button variant="ghost" size="icon" onClick={closeChat}>
                   <X className="h-4 w-4" />
                   <span className="sr-only">Fermer le chat</span>
                 </Button>
