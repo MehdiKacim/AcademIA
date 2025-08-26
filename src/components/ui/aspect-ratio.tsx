@@ -1,5 +1,18 @@
-import * as AspectRatioPrimitive from "@radix-ui/react-aspect-ratio";
+import * as React from "react"
+import * as AspectRatioPrimitive from "@radix-ui/react-aspect-ratio"
 
-const AspectRatio = AspectRatioPrimitive.Root;
+import { cn } from "@/lib/utils"
 
-export { AspectRatio };
+const AspectRatio = React.forwardRef<
+  React.ElementRef<typeof AspectRatioPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof AspectRatioPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <AspectRatioPrimitive.Root
+    ref={ref}
+    className={cn("rounded-card-lg", className)} // Applique le nouveau rayon de bordure
+    {...props}
+  />
+))
+AspectRatio.displayName = AspectRatioPrimitive.Root.displayName
+
+export { AspectRatio }

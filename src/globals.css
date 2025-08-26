@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 98%; /* Slightly off-white for cards to distinguish from background */
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 220 80% 50%; /* Adjusted for a more vibrant blue */
+    --background: 210 20% 96.1%; /* Un fond gris clair, similaire à #f0f2f5 */
+    --foreground: 222.2 84% 15%; /* Gris foncé pour le texte, similaire à #333333 */
+    --card: 0 0% 100%; /* Blanc pour les cartes */
+    --card-foreground: 222.2 84% 15%;
+    --popover: 0 0% 100%; /* Blanc pour les popovers */
+    --popover-foreground: 222.2 84% 15%;
+    --primary: 220 80% 50%; /* Garde le bleu vibrant existant */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 90%; /* Made secondary button background more distinct */
+    --secondary: 210 40% 90%; /* Gris clair pour le secondaire */
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --success: 142.1 76.2% 36.3%; /* Green for success */
-    --success-foreground: 355.7 100% 97.3%; /* Text color for success */
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215.4 16.3% 40%; /* Gris moyen pour le texte muted, similaire à #888888, #555555 */
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 70%; /* Darker border for better visibility */
-    --input: 214.3 31.8% 70%; /* Darker input border */
+    --border: 214.3 31.8% 85%; /* Bordure plus claire */
+    --input: 214.3 31.8% 85%; /* Bordure d'input plus claire */
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
   }
@@ -31,15 +31,15 @@
   [data-theme="dark"] {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 8%; /* Slightly lighter card background for distinction */
+    --card: 222.2 84% 8%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 8%; /* Changed to match card for better distinction */
+    --popover: 222.2 84% 8%;
     --popover-foreground: 210 40% 98%;
-    --primary: 200 90% 70%; /* Adjusted for a lighter blue in dark mode */
+    --primary: 200 90% 70%;
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-    --success: 120 60% 40%; /* Slightly different green for dark mode */
+    --success: 120 60% 40%;
     --success-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
@@ -53,15 +53,15 @@
   }
 
   [data-theme="dark-purple"] {
-    --background: 260 20% 15%; /* Dark purple background */
-    --foreground: 270 40% 95%; /* Light text */
-    --card: 260 20% 20%; /* Slightly lighter purple for cards */
+    --background: 260 20% 15%;
+    --foreground: 270 40% 95%;
+    --card: 260 20% 20%;
     --card-foreground: 270 40% 95%;
     --popover: 260 20% 20%;
     --popover-foreground: 270 40% 95%;
-    --primary: 270 70% 60%; /* Vibrant purple */
+    --primary: 270 70% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 260 15% 30%; /* Muted purple secondary */
+    --secondary: 260 15% 30%;
     --secondary-foreground: 270 40% 95%;
     --success: 120 60% 40%;
     --success-foreground: 210 40% 98%;
@@ -83,29 +83,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    /* Removed user-select: none; to improve mobile scrolling */
+    @apply bg-background text-foreground font-sans; /* Applique la nouvelle pile de polices */
   }
 
-  /* Removed overflow-x-hidden from html, body to allow horizontal scrolling */
-  /* Changed to overflow-x-hidden to prevent horizontal scroll on main body,
-     but allow internal components to scroll if needed */
   html, body {
     overflow-x: hidden; 
   }
 
-  /* --- REMOVED SCROLLBAR HIDING CSS --- */
-  /*
-  ::-webkit-scrollbar {
-    display: none;
-    width: 0px;
-  }
-
-  .overflow-y-auto, .overflow-auto {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  */
 }
 
 @layer components {

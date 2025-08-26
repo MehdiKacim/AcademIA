@@ -58,9 +58,16 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
+        lg: "0.5rem", // Keep default for general large radius
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        "card-lg": "28px", // Nouveau rayon de bordure pour les cartes
+      },
+      boxShadow: {
+        "card-shadow": "0 4px 12px rgba(0, 0, 0, 0.08)", // Nouvelle ombre pour les cartes
+      },
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'], // Pile de polices système
       },
       keyframes: {
         "accordion-down": {
