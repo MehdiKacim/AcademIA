@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
 import { Button } from "@/components/ui/button";
-// Removed BottomNavigationBar import
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
@@ -32,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
 import AboutModal from "@/components/AboutModal"; // Importation manquante
 import MobileNavSheet from "@/components/MobileNavSheet"; // New import
+import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -50,21 +50,17 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  // Removed isMoreDrawerOpen state
   const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false); // New state for mobile nav sheet
   const navigate = useNavigate();
   const location = useLocation();
 
-  // New states for desktop category navigation
   const [desktopNavStack, setDesktopNavStack] = useState<NavItem[]>([]); // Stack of parent categories
   const [isDesktopOverlayOpen, setIsDesktopOverlayOpen] = useState(false);
 
   const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Initialize with null
 
-  // New states for desktop menu auto-hide
   const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
-  // Removed desktopMenuTimerRef as auto-hide is disabled for desktop
 
   // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
@@ -96,8 +92,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     startAutoHideTimer();
   }, [startAutoHideTimer]);
 
-  // Removed functions to manage desktop menu auto-hide timer (startDesktopMenuAutoHideTimer, showDesktopMenuAndResetTimer)
-
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -126,25 +120,13 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [handleKeyDown]);
 
-  // New useEffect to manage desktop menu visibility based on activity and overlay state
   useEffect(() => {
     if (isMobile || !currentUserProfile) {
-      setIsDesktopMenuVisible(true); // Ensure menu is always visible on mobile or if not logged in
-      // Clear any existing timer if it was somehow set
-      // if (desktopMenuTimerRef.current) {
-      //   clearTimeout(desktopMenuTimerRef.current);
-      //   desktopMenuTimerRef.current = null;
-      // }
+      setIsDesktopMenuVisible(true);
       return;
     }
-
-    // For desktop, when logged in, the menu should always be visible
     setIsDesktopMenuVisible(true);
-    // No auto-hide logic for desktop
   }, [isMobile, currentUserProfile]);
-
-  // Removed useEffect for mouse/keyboard/scroll events as auto-hide is disabled for desktop
-
 
   useEffect(() => {
     let channel: any;
@@ -194,11 +176,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [currentUserProfile?.id]);
 
-  // This useEffect now handles both initial timer and resetting on activity
   useEffect(() => {
     startAutoHideTimer(); // Initial hide timer
 
-    // Add event listeners for user activity to reset the timer and show the button
     window.addEventListener('mousemove', resetAndShowButton);
     window.addEventListener('keydown', resetAndShowButton);
     window.addEventListener('scroll', resetAndShowButton);
@@ -207,68 +187,66 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       if (autoHideTimerRef.current) {
         clearTimeout(autoHideTimerRef.current);
       }
-      // Clean up event listeners
       window.removeEventListener('mousemove', resetAndShowButton);
       window.removeEventListener('keydown', resetAndShowButton);
       window.removeEventListener('scroll', resetAndShowButton);
     };
-  }, [startAutoHideTimer, resetAndShowButton]); // Add resetAndShowButton to dependencies
+  }, [startAutoHideTimer, resetAndShowButton]);
 
   const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
 
-  // New handler for desktop category clicks
   const handleDesktopCategoryClick = (categoryItem: NavItem) => {
     console.log("[DashboardLayout] handleDesktopCategoryClick: Pushing category to stack:", categoryItem.label);
     setDesktopNavStack(prevStack => [...prevStack, categoryItem]);
     setIsDesktopOverlayOpen(true);
   };
 
-  // New handler to go back from desktop category items to categories
   const handleDesktopBackToCategories = () => {
     console.log("[DashboardLayout] handleDesktopBackToCategories: Popping from stack.");
     setDesktopNavStack(prevStack => {
       const newStack = [...prevStack];
-      newStack.pop(); // Remove the current category
+      newStack.pop();
       if (newStack.length === 0) {
-        setIsDesktopOverlayOpen(false); // Close overlay if stack is empty
+        setIsDesktopOverlayOpen(false);
       }
       return newStack;
     });
   };
 
-  // Log the items that are actually being rendered in the header
-  // User requested to remove the filter for header navigation items.
-  // This means all configured navigation items, including nested ones, will attempt to render in the header.
-  // This might lead to layout issues or unexpected behavior, especially on larger menus.
   const headerNavItems = fullNavTree;
   console.log("[DashboardLayout] Header Nav Items (ALL items, filter removed as requested):", headerNavItems);
 
-  // Memoize the context value for Outlet
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
+  // New: Global swipe-down handler for mobile to open the nav sheet
+  const globalSwipeHandlers = useSwipeable({
+    onSwipedDown: () => {
+      if (isMobile && currentUserProfile && !isMobileNavSheetOpen) {
+        setIsMobileNavSheetOpen(true);
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackMouse: true,
+    delta: 50, // Minimum distance in pixels to be considered a swipe
+  });
+
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40">
+    <div {...globalSwipeHandlers} className="flex flex-col min-h-screen bg-muted/40">
       <header
         className={cn(
           "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
-          // Removed desktop auto-hide classes
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
         )}
       >
         <div className="flex items-center gap-4">
-          {isMobile && currentUserProfile && (
-            <Button variant="ghost" size="icon" onClick={() => setIsMobileNavSheetOpen(true)}>
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Ouvrir le menu</span>
-            </Button>
-          )}
+          {/* Removed the hamburger menu button */}
           <Logo />
         </div>
-        {!isMobile && currentUserProfile && headerNavItems.length > 0 && ( // Use headerNavItems here
+        {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {headerNavItems.map(item => { // Only top-level items
+            {headerNavItems.map(item => {
               const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-              const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined); // Determine if it's a category
+              const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
               if (isCategory) {
                 console.log(`[DashboardLayout] Rendering category button: ${item.label}, children count: ${item.children?.length || 0}`);
@@ -276,14 +254,14 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   <Button
                     key={item.id}
                     variant="ghost"
-                    onClick={() => handleDesktopCategoryClick(item)} // Pass the category item itself
+                    onClick={() => handleDesktopCategoryClick(item)}
                     className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
                   >
                     {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
                     {item.label}
                   </Button>
                 );
-              } else { // Direct link or action
+              } else {
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                 console.log(`[DashboardLayout] Rendering direct link/action: ${item.label}, route: ${item.route}`);
                 return (
@@ -368,31 +346,30 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </header>
 
       {/* Desktop Category Items Overlay (Full-width drawer) */}
-      {!isMobile && isDesktopOverlayOpen && ( // Use isDesktopOverlayOpen
+      {!isMobile && isDesktopOverlayOpen && (
         <div className="fixed top-[68px] left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8">
           <div className="max-w-7xl mx-auto flex flex-col gap-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
-                {desktopNavStack.length > 1 && ( // Show back button if deeper than root
+                {desktopNavStack.length > 1 && (
                   <Button variant="ghost" size="icon" onClick={handleDesktopBackToCategories} className="mr-2">
                     <ArrowLeft className="h-5 w-5" />
                     <span className="sr-only">Retour</span>
                   </Button>
                 )}
-                {/* Display current category label/icon from the stack */}
                 {desktopNavStack.length > 0 ? (
                   <>
                     {React.createElement(iconMap[desktopNavStack[desktopNavStack.length - 1].icon_name || 'Info'], { className: "h-6 w-6 text-primary" })}
                     {desktopNavStack[desktopNavStack.length - 1].label}
                   </>
-                ) : "Menu"} {/* Default title if stack is empty (shouldn't happen if overlay is open) */}
+                ) : "Menu"}
               </h2>
-              <Button variant="ghost" onClick={() => { setIsDesktopOverlayOpen(false); setDesktopNavStack([]); }}> {/* Reset stack on direct close */}
+              <Button variant="ghost" onClick={() => { setIsDesktopOverlayOpen(false); setDesktopNavStack([]); }}>
                 <X className="h-5 w-5 mr-2" /> Fermer
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {desktopNavStack.length > 0 && desktopNavStack[desktopNavStack.length - 1].children?.map((item) => { // Render children of the current category on top of stack
+              {desktopNavStack.length > 0 && desktopNavStack[desktopNavStack.length - 1].children?.map((item) => {
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                 const isSubCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.children && item.children.length > 0;
@@ -404,11 +381,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     onClick={() => {
                       if (isSubCategory) {
                         console.log("[DashboardLayout] Clicked sub-category:", item.label);
-                        handleDesktopCategoryClick(item); // Push this sub-category to stack
+                        handleDesktopCategoryClick(item);
                       } else {
                         console.log("[DashboardLayout] Clicked direct link/action:", item.label);
-                        setIsDesktopOverlayOpen(false); // Close overlay
-                        setDesktopNavStack([]); // Reset stack
+                        setIsDesktopOverlayOpen(false);
+                        setDesktopNavStack([]);
                         if (item.route) {
                           navigate(item.route);
                         } else if (item.onClick) {
@@ -440,10 +417,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       <main
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 pt-24 md:pt-32 overflow-y-auto",
-          !isMobile && isDesktopOverlayOpen && "pt-[calc(68px+1rem+100px)]" // Adjust padding when overlay is open
+          !isMobile && isDesktopOverlayOpen && "pt-[calc(68px+1rem+100px)]"
         )}
       >
-        <Outlet context={outletContextValue} /> {/* Pass setIsAdminModalOpen via context */}
+        <Outlet context={outletContextValue} />
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
