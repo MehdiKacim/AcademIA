@@ -18,10 +18,10 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   let query = supabase
     .from('role_nav_configs')
     .select(`
-      id, // This is the configId (unique for this role's menu item instance)
-      nav_item_id, // This is the generic nav_item.id (from public.nav_items)
+      id,
+      nav_item_id,
       role,
-      parent_nav_item_id, // This is the generic nav_item.id of the parent (from public.nav_items)
+      parent_nav_item_id,
       order_index,
       nav_item:nav_items!role_nav_configs_nav_item_id_fkey (
         id,
@@ -37,6 +37,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     .order('order_index', { ascending: true });
 
   const { data: fetchedConfigs, error: configsError } = await query;
+    query.get
 
   if (configsError) {
     console.error(`[loadNavItems] Error loading role nav configs for ${userRole}:`, configsError);

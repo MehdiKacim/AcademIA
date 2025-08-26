@@ -59,6 +59,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       showError("DIAGNOSTIC: Votre email n'est pas confirmé. Veuillez vérifier vos paramètres Supabase (Email Confirm).");
     } else if (userToCheck) {
       console.log("[RoleContext] DIAGNOSTIC: User email IS confirmed:", userToCheck.email);
+      console.log("[RoleContext] DIAGNOSTIC: User JWT role from user_metadata:", userToCheck.user_metadata.role); // <-- NOUVEAU LOG ICI
     }
 
     const profile = await getProfileById(userId); // Use the updated getProfileById
