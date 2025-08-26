@@ -16,7 +16,7 @@ interface Message {
 const AiAPersistentChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isMinimized, setIsMinimized] = useState(false); // Internal state for minimization
+  const [isMinimized, setIsMinimized] = useState(true); // Start minimized by default
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const messageIdCounter = useRef(0); 
@@ -50,6 +50,8 @@ const AiAPersistentChat = () => {
         scrollToBottom();
       }, 100); 
       return () => clearTimeout(timer);
+    } else {
+      setIsMinimized(true); // Minimize when chat is closed from context
     }
   }, [isChatOpen, initialChatMessage, setInitialChatMessage]);
 
@@ -98,16 +100,17 @@ const AiAPersistentChat = () => {
     }
   };
 
-  if (!isChatOpen) {
-    return null;
+  // The chat is always rendered, but its visibility and state depend on isChatOpen and isMinimized
+  if (!isChatOpen && isMinimized) {
+    return null; // Only render if chat is explicitly open or if it's minimized but still part of the UI flow
   }
 
   return (
     <div
       className={cn(
-        "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000] transition-all duration-300 ease-in-out",
+        "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile",
         isMinimized
-          ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-pointer" // Minimized state: small button
+          ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-pointer flex items-center justify-center bg-primary/80 backdrop-blur-lg border border-primary/50 shadow-lg" // Minimized state: small button with blur
           : isMobile
             ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg" // Maximized mobile
             : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg" // Maximized desktop
@@ -116,7 +119,7 @@ const AiAPersistentChat = () => {
     >
       {isMinimized ? (
         <div className="flex items-center justify-center h-full w-full">
-          <Bot className="h-10 w-10 text-primary" />
+          <Bot className="h-10 w-10 text-primary-foreground" /> {/* Icon color for contrast */}
           <span className="sr-only">Ouvrir le chat AiA</span>
         </div>
       ) : (

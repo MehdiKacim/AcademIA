@@ -21,7 +21,6 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import FloatingAiAPersistentChat from "@/components/FloatingAiAPersistentChat";
 import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
@@ -56,8 +55,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [desktopNavStack, setDesktopNavStack] = useState<NavItem[]>([]);
   const [isDesktopOverlayOpen, setIsDesktopOverlayOpen] = useState(false);
 
-  const [isAiAChatButtonVisible, setIsAiAChatButtonVisible] = useState(true);
-  const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Removed isAiAChatButtonVisible and autoHideTimerRef as FloatingAiAPersistentChat is removed.
 
   const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
 
@@ -74,19 +72,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     }
   }, [currentUserProfile, navItems]);
 
-  const startAutoHideTimer = useCallback(() => {
-    if (autoHideTimerRef.current) {
-      clearTimeout(autoHideTimerRef.current);
-    }
-    autoHideTimerRef.current = setTimeout(() => {
-      setIsAiAChatButtonVisible(false);
-    }, 5000);
-  }, []);
-
-  const resetAndShowButton = useCallback(() => {
-    setIsAiAChatButtonVisible(true);
-    startAutoHideTimer();
-  }, [startAutoHideTimer]);
+  // Removed startAutoHideTimer and resetAndShowButton as FloatingAiAPersistentChat is removed.
 
   const handleLogout = async () => {
     await signOut();
@@ -172,24 +158,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [currentUserProfile?.id]);
 
-  useEffect(() => {
-    startAutoHideTimer();
+  // Removed useEffect for auto-hide timer and event listeners as FloatingAiAPersistentChat is removed.
 
-    window.addEventListener('mousemove', resetAndShowButton);
-    window.addEventListener('keydown', resetAndShowButton);
-    window.addEventListener('scroll', resetAndShowButton);
-
-    return () => {
-      if (autoHideTimerRef.current) {
-        clearTimeout(autoHideTimerRef.current);
-      }
-      window.removeEventListener('mousemove', resetAndShowButton);
-      window.removeEventListener('keydown', resetAndShowButton);
-      window.removeEventListener('scroll', resetAndShowButton);
-    };
-  }, [startAutoHideTimer, resetAndShowButton]);
-
-  const floatingAiAChatButtonVisible = isAiAChatButtonVisible && !isChatOpen;
+  // Removed floatingAiAChatButtonVisible as FloatingAiAPersistentChat is removed.
 
   const handleDesktopCategoryClick = (categoryItem: NavItem) => {
     // console.log("[DashboardLayout] handleDesktopCategoryClick: Pushing category to stack:", categoryItem.label);
@@ -455,7 +426,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <FloatingAiAPersistentChat isVisible={floatingAiAChatButtonVisible} />}
+      {/* Removed FloatingAiAPersistentChat */}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
