@@ -314,7 +314,7 @@ const StudentManagementPage = () => {
   // Removed establishmentsToDisplayForNewStudent
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Élèves
       </h1>
@@ -495,7 +495,7 @@ const StudentManagementPage = () => {
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                       {/* Removed Unassign from Establishment button */}
-                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToUser(profile)}>
+                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </Button>
                       {currentRole === 'administrator' && ( // Only administrator can delete

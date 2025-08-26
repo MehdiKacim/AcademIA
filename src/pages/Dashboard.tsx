@@ -13,6 +13,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress"; // Import Progress component
 
 const Dashboard = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -116,7 +117,7 @@ const Dashboard = () => {
               <p className="text-sm text-muted-foreground">cours terminés sur {enrolledCourses.length} inscrits.</p>
               {completedCoursesCount > 0 && (
                 <Link to="/courses" className="mt-4 block">
-                  <Button variant="outline" className="w-full">Voir tous les cours terminés</Button>
+                  <Button variant="outline" className="w-full">Voir tous les cours terminées</Button>
                 </Link>
               )}
             </CardContent>
@@ -352,7 +353,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Tableau de bord {currentUserProfile?.first_name} {currentUserProfile?.last_name} ({currentRole === 'student' ? 'Élève' : currentRole === 'professeur' ? 'Professeur' : currentRole === 'tutor' ? 'Tuteur' : currentRole === 'director' ? 'Directeur' : currentRole === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'})
       </h1>

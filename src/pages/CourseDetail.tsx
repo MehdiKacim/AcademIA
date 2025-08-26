@@ -158,7 +158,7 @@ const CourseDetail = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
       {course.image_url && (
         <img
           src={course.image_url}

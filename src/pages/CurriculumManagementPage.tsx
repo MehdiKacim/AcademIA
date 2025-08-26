@@ -23,7 +23,7 @@ import {
 } from '@/lib/courseData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
-// Removed EditCurriculumDialog import
+import EditCurriculumDialog from '@/components/EditCurriculumDialog'; // Re-added EditCurriculumDialog import
 
 const CurriculumManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -193,7 +193,7 @@ const CurriculumManagementPage = () => {
   const curriculaToDisplay = curricula; // All curricula are now global
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Cursus
       </h1>

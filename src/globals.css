@@ -31,9 +31,9 @@
   [data-theme="dark"] {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 84% 9%; /* Ajusté: Rendre la carte légèrement plus foncée que l'arrière-plan */
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 84% 9%; /* Ajusté: Correspondre à la carte */
     --popover-foreground: 210 40% 98%;
     --primary: 200 90% 70%;
     --primary-foreground: 222.2 47.4% 11.2%;

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"; // Import cn
 import React, { useState, useMemo, useEffect } from "react"; // Import useState and useMemo
 import { getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supabase function
 import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import types
+import { Progress } from "@/components/ui/progress"; // Import Progress
 
 const Courses = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -208,7 +209,7 @@ const Courses = () => {
   };
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         {currentRole === 'student' ? 'Mes Cours' : currentRole === 'professeur' ? 'Gestion des Cours' : 'Cours des Élèves'}
       </h1>

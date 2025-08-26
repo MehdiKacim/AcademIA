@@ -314,7 +314,7 @@ const ModuleDetail = () => {
   const allSectionsInModuleCompleted = moduleProgress?.sections_progress.every(section => section.is_completed) || false;
 
   return (
-    <div className="flex flex-col gap-8 max-w-screen-xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8"> {/* Added responsive padding and max-width */}
       <div className="flex items-center justify-between mb-6">
         <Button variant="outline" onClick={() => navigate(`/courses/${courseId}`)}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Retour au cours

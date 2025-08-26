@@ -599,7 +599,7 @@ const AdminUserManagementPage = () => {
   // Removed establishmentsToDisplayForNewUser and establishmentsToDisplayForFilter
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         {currentRole === 'director' || currentRole === 'deputy_director' ? "Gestion des Professeurs" : "Gestion des Utilisateurs"}
       </h1>

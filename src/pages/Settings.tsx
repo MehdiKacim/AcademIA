@@ -22,7 +22,7 @@ const Settings = () => {
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
 
   const handleSavePreferences = () => {
-    console.log("Saving preferences:", { language, emailNotifications, appNotifications });
+    // console.log("Saving preferences:", { language, emailNotifications, appNotifications }); // Removed log
     showSuccess("Préférences enregistrées !");
   };
 
@@ -35,7 +35,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Paramètres
       </h1>

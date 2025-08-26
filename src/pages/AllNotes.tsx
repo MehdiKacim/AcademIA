@@ -116,7 +116,7 @@ const AllNotes = () => {
   }
 
   return (
-    <div className="space-y-8 h-[calc(100vh-120px)] flex flex-col">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 h-[calc(100vh-120px)] flex flex-col"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Toutes mes notes
       </h1>
@@ -138,6 +138,15 @@ const AllNotes = () => {
             "flex flex-col",
             isMobile ? (selectedNoteGroupKey ? "hidden" : "flex-grow") : "w-full md:w-1/3 flex-shrink-0"
           )}>
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher dans les notes..."
+                className="pl-10 rounded-android-tile"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
             <div className="flex-grow overflow-y-auto pb-4 md:pr-2">
               {filteredNotes.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Aucune note trouvée pour votre recherche.</p>
@@ -162,7 +171,7 @@ const AllNotes = () => {
                       </CardHeader>
                       <CardContent>
                         <p className="text-xs text-muted-foreground italic">
-                          {noteGroup.notes.length > 0 ? `Dernière note: "${noteGroup.notes[noteGroup.notes.length - 1].substring(0, 50)}..."` : "Aucune note."}
+                          {noteGroup.notes.length > 0 ? `Dernière note: "${noteGroup.notes[noteGroup.notes.length - 1].replace(/<[^>]*>/g, '').substring(0, 50)}..."` : "Aucune note."}
                         </p>
                       </CardContent>
                     </Card>

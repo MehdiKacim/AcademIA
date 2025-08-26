@@ -197,7 +197,7 @@ const Messages = () => {
       await fetchAllData();
     } catch (error: any) {
       console.error("[Messages] Error during unarchiving:", error);
-      showError(`Erreur lors du désarchivage: ${error.message}`);
+      showError(`Erreur lors du désarchivage: ${err.message}`);
     }
   };
 
@@ -302,7 +302,7 @@ const Messages = () => {
   }
 
   return (
-    <div className="space-y-8 h-[calc(100vh-120px)] flex flex-col">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 h-[calc(100vh-120px)] flex flex-col"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Messagerie
       </h1>
