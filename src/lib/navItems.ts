@@ -33,7 +33,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         type
       )
     `)
-    .eq('role', userRole)
+    .eq('role', userRole) // This is the WHERE clause on role
     .order('order_index', { ascending: true });
 
   const { data: fetchedConfigs, error: configsError } = await query;
@@ -45,9 +45,8 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, JSON.stringify(fetchedConfigs, null, 2));
 
-  // Create a flat list of all configured NavItem objects
-  const allConfiguredItemsFlat: NavItem[] = [];
-  const configuredItemMapByConfigId = new Map<string, NavItem>(); // Key: configId (unique instance)
+  // Create a flat list of all configured NavItem objects, keyed by their configId for easy lookup
+  const configuredItemsMap = new Map<string, NavItem>(); // Key: configId (unique instance of a configured item)
 
   fetchedConfigs.forEach((config: any) => {
     if (config.nav_item) {
@@ -66,47 +65,51 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         parent_nav_item_id: config.parent_nav_item_id || undefined, // Generic nav_item ID of the parent
         order_index: config.order_index,
       };
-      allConfiguredItemsFlat.push(navItem);
-      configuredItemMapByConfigId.set(navItem.configId!, navItem);
+      configuredItemsMap.set(navItem.configId!, navItem);
     } else {
       console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
     }
   });
 
-  console.log(`[loadNavItems] All configured items flat (count): ${allConfiguredItemsFlat.length}, content:`, JSON.stringify(allConfiguredItemsFlat, null, 2));
+  console.log(`[loadNavItems] Populated configuredItemsMap (count): ${configuredItemsMap.size}`);
 
   const rootItems: NavItem[] = [];
 
   // Build the hierarchy
-  allConfiguredItemsFlat.forEach(item => {
-    console.log(`[loadNavItems] Processing item: ${item.label} (ID: ${item.id}, ConfigID: ${item.configId}, ParentID: ${item.parent_nav_item_id}, Type: ${item.type})`);
+  // Iterate over the map values to ensure we process each configured item
+  configuredItemsMap.forEach(item => {
+    console.log(`[loadNavItems] Processing item: ${item.label} (Generic ID: ${item.id}, ConfigID: ${item.configId}, ParentGenericID: ${item.parent_nav_item_id}, Type: ${item.type})`);
 
     if (item.parent_nav_item_id) {
-      // Find the parent item in the flat list by its generic ID
-      // We need to find the *configured instance* of the parent.
-      // A parent must be a 'category_or_action' type and not have a route itself.
-      const parentCandidate = allConfiguredItemsFlat.find(
-        p => p.id === item.parent_nav_item_id && // Generic ID matches
-             p.type === 'category_or_action' && // Must be a category
-             !p.route // Must not be a route itself (i.e., a true category)
-      );
+      // Find the parent configured item. The parent_nav_item_id refers to the *generic ID* of the parent.
+      // We need to find a configured item in our `configuredItemsMap` whose `id` (generic ID) matches `item.parent_nav_item_id`.
+      // And that parent must itself be a category.
+      let parentConfiguredItem: NavItem | undefined;
+      for (const configuredItem of configuredItemsMap.values()) {
+        if (configuredItem.id === item.parent_nav_item_id && configuredItem.type === 'category_or_action' && !configuredItem.route) {
+          parentConfiguredItem = configuredItem;
+          break;
+        }
+      }
 
-      if (parentCandidate) {
-        console.log(`[loadNavItems] Found parent candidate for ${item.label}: ${parentCandidate.label} (ConfigID: ${parentCandidate.configId}). Adding as child.`);
-        parentCandidate.children?.push(item);
+      if (parentConfiguredItem) {
+        console.log(`[loadNavItems] Found parent for ${item.label}: ${parentConfiguredItem.label} (ConfigID: ${parentConfiguredItem.configId}). Adding as child.`);
+        parentConfiguredItem.children?.push(item);
       } else {
-        console.warn(`[loadNavItems] No suitable parent candidate found for ${item.label} (ParentID: ${item.parent_nav_item_id}). Adding to rootItems as fallback.`);
+        // If a parent_nav_item_id is specified but no suitable parent configured item is found,
+        // it means the parent is either not configured as a category for this role, or it's a dangling reference.
+        // For now, we'll treat it as a root item.
+        console.warn(`[loadNavItems] No suitable parent configured item found for ${item.label} (ParentGenericID: ${item.parent_nav_item_id}). Adding to rootItems as fallback.`);
         rootItems.push(item);
       }
     } else {
-      console.log(`[loadNavItems] Item ${item.label} has no parent_nav_item_id. Adding to rootItems.`);
       rootItems.push(item); // This is a root item
     }
   });
 
   // Sort children within each parent and root items
   rootItems.sort((a, b) => a.order_index - b.order_index);
-  configuredItemMapByConfigId.forEach(item => { // Iterate over map values to ensure all items are processed
+  configuredItemsMap.forEach(item => {
     if (item.children) {
       item.children.sort((a, b) => a.order_index - b.order_index);
     }
