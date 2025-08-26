@@ -37,117 +37,115 @@ import RoleNavConfigsPage from "./pages/RoleNavConfigsPage"; // Import new page
 
 const queryClient = new QueryClient();
 
+// Define AuthenticatedAppRoutes outside the App component
+const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isAdminModalOpen: boolean; setIsAdminModalOpen: (isOpen: boolean) => void }) => {
+  const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
+
+  // Determine the initial theme based on user profile or default to 'system'
+  const initialTheme = currentUserProfile?.theme || "system";
+
+  // Component mapping for dynamic routes
+  const routeComponentMap: { [key: string]: React.ElementType } = {
+    "/dashboard": Dashboard,
+    "/courses": Courses,
+    "/create-course": CreateCourse,
+    "/create-course/:courseId": CreateCourse,
+    "/analytics": Analytics,
+    "/courses/:courseId": CourseDetail,
+    "/courses/:courseId/modules/:moduleIndex": ModuleDetail,
+    "/all-notes": AllNotes,
+    "/messages": Messages,
+    "/profile": Profile,
+    "/settings": Settings,
+    "/data-model": DataModelViewer,
+    "/admin-users": AdminUserManagementPage,
+    "/subjects": SubjectManagementPage,
+    "/school-years": SchoolYearManagementPage,
+    "/professor-assignments": ProfessorSubjectAssignmentPage,
+    "/curricula": CurriculumManagementPage,
+    "/classes": ClassManagementPage,
+    "/students": StudentManagementPage,
+    "/pedagogical-management": PedagogicalManagementPage,
+    "/admin-menu-management/generic-items": GenericNavItemsPage, // New route
+    "/admin-menu-management/role-configs": RoleNavConfigsPage, // New route
+  };
+
+  useEffect(() => {
+    console.log("[App.tsx] routeComponentMap keys:", Object.keys(routeComponentMap));
+    console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
+    console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
+  }, [dynamicRoutes, currentUserProfile]); // Log when dynamicRoutes or currentUserProfile change
+
+  if (isLoadingUser) {
+    console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
+    return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
+  }
+
+  console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is false. Rendering BrowserRouter. Current dynamicRoutes:", dynamicRoutes.map(r => r.route)); // Add this line
+  console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile); // Add this line
+
+  return (
+    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner 
+          position="top-center" 
+          className="top-16 z-[9999]"
+          toastOptions={{
+            duration: 5000,
+            classNames: {
+              toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none",
+              success: "bg-success text-success-foreground border-success",
+              error: "bg-destructive text-destructive-foreground border-destructive",
+              loading: "bg-primary text-primary-foreground border-primary",
+            },
+          }}
+        />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
+
+            <Route element={<ProtectedRoute />}>
+              <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
+                {/* Redirect for the parent category route */}
+                <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
+                {/* Dynamically generated routes */}
+                {dynamicRoutes.map(item => {
+                  const Component = routeComponentMap[item.route!];
+                  console.log(`[App.tsx] Mapping route: ${item.route} to Component: ${Component ? Component.name : 'NOT_FOUND'}`); // <-- ADDED LOG HERE
+                  return Component ? (
+                    <Route
+                      key={item.id}
+                      path={item.route}
+                      element={<Component />}
+                    />
+                  ) : null;
+                })}
+              </Route>
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+        <AdminModal 
+          isOpen={isAdminModalOpen} 
+          onClose={() => setIsAdminModalOpen(false)} 
+        />
+      </TooltipProvider>
+    </ThemeProvider>
+  );
+};
+
 const App = () => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-
-  // This component will now be the direct child of RoleProvider
-  const AuthenticatedAppRoutes = () => {
-    const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
-
-    // Determine the initial theme based on user profile or default to 'system'
-    const initialTheme = currentUserProfile?.theme || "system";
-
-    // Component mapping for dynamic routes
-    const routeComponentMap: { [key: string]: React.ElementType } = {
-      "/dashboard": Dashboard,
-      "/courses": Courses,
-      "/create-course": CreateCourse,
-      "/create-course/:courseId": CreateCourse,
-      "/analytics": Analytics,
-      "/courses/:courseId": CourseDetail,
-      "/courses/:courseId/modules/:moduleIndex": ModuleDetail,
-      "/all-notes": AllNotes,
-      "/messages": Messages,
-      "/profile": Profile,
-      "/settings": Settings,
-      "/data-model": DataModelViewer,
-      "/admin-users": AdminUserManagementPage,
-      "/subjects": SubjectManagementPage,
-      "/school-years": SchoolYearManagementPage,
-      "/professor-assignments": ProfessorSubjectAssignmentPage,
-      "/curricula": CurriculumManagementPage,
-      "/classes": ClassManagementPage,
-      "/students": StudentManagementPage,
-      "/pedagogical-management": PedagogicalManagementPage,
-      "/admin-menu-management/generic-items": GenericNavItemsPage, // New route
-      "/admin-menu-management/role-configs": RoleNavConfigsPage, // New route
-    };
-
-    useEffect(() => {
-      console.log("[App.tsx] routeComponentMap keys:", Object.keys(routeComponentMap));
-      console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
-      console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
-    }, [dynamicRoutes, currentUserProfile]); // Log when dynamicRoutes or currentUserProfile change
-
-    if (isLoadingUser) {
-      console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
-      return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
-    }
-
-    console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is false. Rendering BrowserRouter. Current dynamicRoutes:", dynamicRoutes.map(r => r.route)); // Add this line
-    console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile); // Add this line
-
-    return (
-      <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
-        <TooltipProvider>
-          <Toaster />
-          <Sonner 
-            position="top-center" 
-            className="top-16 z-[9999]"
-            toastOptions={{
-              duration: 5000,
-              classNames: {
-                toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none",
-                success: "bg-success text-success-foreground border-success",
-                error: "bg-destructive text-destructive-foreground border-destructive",
-                loading: "bg-primary text-primary-foreground border-primary",
-              },
-            }}
-          />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
-
-              <Route element={<ProtectedRoute />}>
-                <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
-                  {/* Redirect for the parent category route */}
-                  <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
-                  {/* Dynamically generated routes */}
-                  {dynamicRoutes.map(item => {
-                    const Component = routeComponentMap[item.route!];
-                    console.log(`[App.tsx] Mapping route: ${item.route} to Component: ${Component ? Component.name : 'NOT_FOUND'}`); // <-- ADDED LOG HERE
-                    return Component ? (
-                      <Route
-                        key={item.id}
-                        path={item.route}
-                        element={<Component />}
-                      />
-                    ) : null;
-                  })}
-                </Route>
-              </Route>
-
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          <AdminModal 
-            isOpen={isAdminModalOpen} 
-            onClose={() => setIsAdminModalOpen(false)} 
-          />
-        </TooltipProvider>
-      </ThemeProvider>
-    );
-  };
 
   return (
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
         <CourseChatProvider>
-          <AuthenticatedAppRoutes />
+          <AuthenticatedAppRoutes isAdminModalOpen={isAdminModalOpen} setIsAdminModalOpen={setIsAdminModalOpen} />
         </CourseChatProvider>
       </RoleProvider>
     </QueryClientProvider>
   );
 };
-
-export default App;
