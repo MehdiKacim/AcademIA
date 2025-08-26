@@ -27,6 +27,15 @@ interface AddExistingNavItemDialogProps {
   iconMap: { [key: string]: React.ElementType };
 }
 
+// Helper function to get item type label
+const getItemTypeLabel = (type: NavItem['type']) => {
+  switch (type) {
+    case 'route': return "Route";
+    case 'category_or_action': return "Catégorie/Action";
+    default: return "Inconnu";
+  }
+};
+
 const AddExistingNavItemDialog = ({
   isOpen,
   onClose,
