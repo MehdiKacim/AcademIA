@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Search as SearchIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,47 +16,43 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "./scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface SearchableDropdownOption {
+interface DropdownOption {
   id: string;
   label: string;
   icon_name?: string;
-  level?: number; // For indentation in hierarchical lists
-  isNew?: boolean; // To indicate if it's a new generic item to be configured
+  level?: number; // For hierarchical display
+  isNew?: boolean; // To indicate if it's a new generic item
 }
 
 interface SearchableDropdownProps {
+  options: DropdownOption[];
   value: string | null;
-  onValueChange: (value: string | null) => void;
-  options: SearchableDropdownOption[];
+  onValueChange: (value: string) => void;
   placeholder?: string;
   searchPlaceholder?: string;
   emptyMessage?: string;
-  className?: string;
-  popoverContentClassName?: string; // Allow custom class for PopoverContent
-  iconMap?: { [key: string]: React.ElementType }; // Map icon_name to Lucide React components
-  align?: "start" | "center" | "end";
-  sideOffset?: number;
+  iconMap?: { [key: string]: React.ElementType };
+  className?: string; // For styling the trigger
+  popoverContentClassName?: string; // For styling the popover content
 }
 
 const SearchableDropdown = React.forwardRef<
-  HTMLButtonElement,
+  React.ElementRef<typeof PopoverTrigger>,
   SearchableDropdownProps
 >(
   (
     {
+      options,
       value,
       onValueChange,
-      options,
-      placeholder = "Sélectionner une option...",
+      placeholder = "Sélectionner...",
       searchPlaceholder = "Rechercher...",
-      emptyMessage = "Aucune option trouvée.",
+      emptyMessage = "Aucun élément trouvé.",
+      iconMap = {},
       className,
       popoverContentClassName,
-      iconMap = {},
-      align = "center",
-      sideOffset = 4,
       ...props
     },
     ref,
@@ -65,92 +61,73 @@ const SearchableDropdown = React.forwardRef<
 
     const selectedOption = options.find((option) => option.id === value);
 
-    const IconComponent = selectedOption?.icon_name
-      ? iconMap[selectedOption.icon_name]
-      : undefined;
-
-    const IconComponentToRender = (iconName?: string) => {
-      if (!iconName) return null;
-      const Component = iconMap[iconName];
-      return Component ? <Component className="h-4 w-4" /> : null;
+    const renderOptionLabel = (option: DropdownOption) => {
+      const IconComponent = option.icon_name
+        ? iconMap[option.icon_name] || Info
+        : undefined;
+      return (
+        <div className="flex items-center">
+          {option.level !== undefined && option.level > 0 && (
+            <span style={{ marginLeft: `${option.level * 10}px` }}></span>
+          )}
+          {IconComponent && <IconComponent className="mr-2 h-4 w-4" />}
+          {option.label}
+          {option.isNew && (
+            <span className="ml-2 text-xs text-muted-foreground italic">
+              (Nouveau)
+            </span>
+          )}
+        </div>
+      );
     };
-
-    console.log("[SearchableDropdown] Current value prop:", value);
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+        <PopoverTrigger asChild ref={ref} {...props}>
           <Button
-            ref={ref}
             variant="outline"
             role="combobox"
             aria-expanded={open}
             className={cn("w-full justify-between", className)}
-            {...props}
           >
-            <div className="flex items-center gap-2">
-              {IconComponent && <IconComponent className="h-4 w-4" />}
-              {selectedOption ? (
-                <span className="truncate">{selectedOption.label}</span>
-              ) : (
-                <span className="text-muted-foreground">{placeholder}</span>
-              )}
-            </div>
+            {selectedOption ? (
+              renderOptionLabel(selectedOption)
+            ) : (
+              <span>{placeholder}</span>
+            )}
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent
-          className={cn(
-            "z-50 rounded-md border text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 backdrop-blur-lg bg-background/80 w-[var(--radix-popover-trigger-width)] p-0",
-            popoverContentClassName,
-            "min-w-[200px]"
-          )}
-          align={align}
-          sideOffset={sideOffset}
-        >
-          <Command>
+        <PopoverContent className={cn("w-[var(--radix-popover-trigger-width)] p-0 z-[999]", popoverContentClassName)}>
+          <Command className="relative z-[1]"> {/* Added z-[1] to Command */}
             <CommandInput placeholder={searchPlaceholder} />
             <CommandList>
-              <ScrollArea className="h-40">
-                {options.length === 0 ? (
-                  <CommandEmpty className="py-2 text-center text-muted-foreground">
-                    {emptyMessage}
-                  </CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {options.map((option) => {
-                      return (
-                        <CommandItem
-                          key={option.id}
-                          value={option.label}
-                          onSelect={() => {
-                            console.log(`[SearchableDropdown] Attempting to select: ${option.label} (ID: ${option.id})`);
-                            onValueChange(option.id); // Directly set the new value
-                            setOpen(false); // Close the dropdown after selection
-                          }}
-                          style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px` }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              value === option.id ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                          <div className="flex items-center gap-2">
-                            {IconComponentToRender(option.icon_name)}
-                            <span>{option.label}</span>
-                            {option.isNew && (
-                              <span className="font-bold text-primary ml-1">
-                                (Nouveau)
-                              </span>
-                            )}
-                          </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                )}
-              </ScrollArea>
+              <CommandEmpty>{emptyMessage}</CommandEmpty>
+              <CommandGroup>
+                <ScrollArea className="h-40">
+                  {options.map((option) => (
+                    <CommandItem
+                      key={option.id}
+                      value={option.label} // Use label for search matching
+                      onSelect={(currentValue) => {
+                        const selected = options.find(o => o.label.toLowerCase() === currentValue.toLowerCase());
+                        if (selected) {
+                          onValueChange(selected.id);
+                        }
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === option.id ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      {renderOptionLabel(option)}
+                    </CommandItem>
+                  ))}
+                </ScrollArea>
+              </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
