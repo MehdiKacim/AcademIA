@@ -122,10 +122,11 @@ const SearchableDropdown = React.forwardRef<
                           key={option.id}
                           value={option.label}
                           onSelect={() => {
+                            console.log(`[SearchableDropdown] Clicked option: ${option.label} (ID: ${option.id})`);
                             onValueChange(option.id === value ? null : option.id);
                             setOpen(false);
                           }}
-                          style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px` }} // Indent based on level
+                          style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px`, pointerEvents: 'auto' }} // Added pointerEvents: 'auto'
                         >
                           <Check
                             className={cn(
