@@ -44,7 +44,7 @@ import { Loader2 } from 'lucide-react'; // Import Loader2
 import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
 
 // Map icon_name strings to Lucide React components (re-declare or import from a central place)
-const iconMap: { [key: string]: React.ElementType } = {
+const iconMap: { [key: string]: ReactType } = { // Changed to ReactType
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe
 };
 
@@ -407,7 +407,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                     searchPlaceholder="Rechercher un élément..."
                     emptyMessage="Aucun élément disponible."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[101]"
+                    popoverContentClassName="z-[999]" // Increased z-index
                   />
                   <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
@@ -457,7 +457,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <SelectTrigger id="new-child-type">
                               <SelectValue placeholder="Sélectionner un type" />
                             </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[101]">
+                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999]"> {/* Increased z-index */}
                               <ScrollArea className="h-40">
                                 {Object.keys(iconMap).sort().map(iconName => {
                                   const IconComponent = iconMap[iconName];
@@ -487,7 +487,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <SelectTrigger id="new-child-icon">
                               <SelectValue placeholder="Sélectionner une icône" />
                             </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[101]">
+                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999]"> {/* Increased z-index */}
                               <ScrollArea className="h-40">
                                 {Object.keys(iconMap).sort().map(iconName => {
                                   const IconComponent = iconMap[iconName];

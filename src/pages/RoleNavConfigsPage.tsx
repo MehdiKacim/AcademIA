@@ -831,7 +831,7 @@ const RoleNavConfigsPage = () => {
                     searchPlaceholder="Rechercher un élément..."
                     emptyMessage="Aucun élément disponible."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[101]"
+                    popoverContentClassName="z-[999]" // Increased z-index
                   />
                 </div>
               </div>
@@ -892,7 +892,7 @@ const RoleNavConfigsPage = () => {
                   emptyMessage="Aucun parent trouvé."
                   iconMap={iconMap}
                   className="col-span-3"
-                  popoverContentClassName="z-[101]"
+                  popoverContentClassName="z-[999]" // Increased z-index
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
