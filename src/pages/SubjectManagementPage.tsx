@@ -139,7 +139,7 @@ const SubjectManagementPage = () => {
       </p>
 
       <Collapsible open={isNewSubjectFormOpen} onOpenChange={setIsNewSubjectFormOpen}>
-        <Card>
+        <Card className="rounded-android-tile">
           <CardHeader>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
@@ -171,7 +171,7 @@ const SubjectManagementPage = () => {
         </Card>
       </Collapsible>
 
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookText className="h-6 w-6 text-primary" /> Liste des Matières
@@ -184,7 +184,7 @@ const SubjectManagementPage = () => {
               <p className="text-muted-foreground">Aucune matière à afficher.</p>
             ) : (
               subjectsToDisplay.map(sub => (
-                <Card key={sub.id} className="p-3 flex items-center justify-between border rounded-md bg-background">
+                <Card key={sub.id} className="p-3 flex items-center justify-between border rounded-android-tile bg-background">
                   <span>{sub.name}</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditSubject(sub)}>

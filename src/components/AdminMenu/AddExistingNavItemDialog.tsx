@@ -212,7 +212,7 @@ const AddExistingNavItemDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-card z-[100]">
+      <DialogContent className="sm:max-w-[600px] bg-card z-[100] rounded-android-tile"> {/* Apply rounded-android-tile */}
         <DialogHeader>
           <DialogTitle>Ajouter un élément existant au menu</DialogTitle>
           <DialogDescription>
@@ -227,7 +227,7 @@ const AddExistingNavItemDialog = ({
               placeholder="Rechercher un élément..."
               value={genericItemSearchQuery}
               onChange={(e) => setGenericItemSearchQuery(e.target.value)}
-              className="mb-2"
+              className="mb-2 rounded-android-tile"
             />
             <SearchableDropdown
               value={selectedGenericItemToAdd}
@@ -236,7 +236,7 @@ const AddExistingNavItemDialog = ({
               placeholder="Sélectionner un élément..."
               emptyMessage="Aucun élément disponible."
               iconMap={iconMap}
-              popoverContentClassName="z-[999]"
+              popoverContentClassName="z-[999] rounded-android-tile"
             />
           </div>
           <div>
@@ -246,7 +246,7 @@ const AddExistingNavItemDialog = ({
               placeholder="Rechercher un parent..."
               value={parentSearchQuery}
               onChange={(e) => setParentSearchQuery(e.target.value)}
-              className="mb-2"
+              className="mb-2 rounded-android-tile"
             />
             <SearchableDropdown
               value={selectedParentForNewItem}
@@ -255,7 +255,7 @@ const AddExistingNavItemDialog = ({
               placeholder="Sélectionner un parent..."
               emptyMessage="Aucun parent trouvé."
               iconMap={iconMap}
-              popoverContentClassName="z-[999]"
+              popoverContentClassName="z-[999] rounded-android-tile"
             />
           </div>
         </div>

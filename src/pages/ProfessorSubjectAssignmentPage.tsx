@@ -287,7 +287,7 @@ const ProfessorSubjectAssignmentPage = () => {
     let filtered = assignments;
 
     // Removed establishment filter
-    // if (selectedEstablishmentFilter) {
+    // if (selectedEstablishmentFilter && selectedEstablishmentFilter !== 'all') {
     //   filtered = filtered.filter(assignment => {
     //     const cls = classes.find(c => c.id === assignment.class_id);
     //     return cls?.establishment_id === selectedEstablishmentFilter;
@@ -357,7 +357,7 @@ const ProfessorSubjectAssignmentPage = () => {
       </p>
 
       {/* Section: Ajouter une nouvelle affectation */}
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PlusCircle className="h-6 w-6 text-primary" /> Ajouter une nouvelle affectation
@@ -369,10 +369,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div>
               <Label htmlFor="new-professor">Professeur</Label>
               <Select value={newAssignmentProfessorId} onValueChange={setNewAssignmentProfessorId}>
-                <SelectTrigger id="new-professor">
+                <SelectTrigger id="new-professor" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner un professeur" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
                       {prof.first_name} {prof.last_name} (@{prof.username})
@@ -384,10 +384,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div>
               <Label htmlFor="new-subject">Matière</Label>
               <Select value={newAssignmentSubjectId} onValueChange={setNewAssignmentSubjectId}>
-                <SelectTrigger id="new-subject">
+                <SelectTrigger id="new-subject" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner une matière" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
                       {sub.name}
@@ -399,10 +399,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div>
               <Label htmlFor="new-class">Classe</Label>
               <Select value={newAssignmentClassId} onValueChange={setNewAssignmentClassId}>
-                <SelectTrigger id="new-class">
+                <SelectTrigger id="new-class" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner une classe" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
@@ -414,10 +414,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div>
               <Label htmlFor="new-school-year">Année scolaire</Label>
               <Select value={newAssignmentSchoolYearId} onValueChange={setNewAssignmentSchoolYearId}>
-                <SelectTrigger id="new-school-year">
+                <SelectTrigger id="new-school-year" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}
@@ -432,7 +432,7 @@ const ProfessorSubjectAssignmentPage = () => {
       </Card>
 
       {/* Section: Liste des affectations */}
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserRoundCog className="h-6 w-6 text-primary" /> Liste des Affectations
@@ -445,7 +445,7 @@ const ProfessorSubjectAssignmentPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Rechercher par professeur, matière, classe ou année..."
-                className="pl-10"
+                className="pl-10 rounded-android-tile"
                 value={assignmentSearchQuery}
                 onChange={(e) => setAssignmentSearchQuery(e.target.value)}
               />
@@ -454,10 +454,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="professor-filter">Filtrer par Professeur</Label>
               <Select value={selectedProfessorFilter || "all"} onValueChange={(value) => setSelectedProfessorFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="professor-filter">
+                <SelectTrigger id="professor-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Tous les professeurs" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
                       {prof.first_name} {prof.last_name}
@@ -469,10 +469,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="subject-filter">Filtrer par Matière</Label>
               <Select value={selectedSubjectFilter || "all"} onValueChange={(value) => setSelectedSubjectFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="subject-filter">
+                <SelectTrigger id="subject-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les matières" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   <SelectItem value="all">Toutes les matières</SelectItem>
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
@@ -485,10 +485,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="class-filter">Filtrer par Classe</Label>
               <Select value={selectedClassFilter || "all"} onValueChange={(value) => setSelectedClassFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="class-filter">
+                <SelectTrigger id="class-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getSchoolYearName(cls.school_year_id)})
@@ -500,10 +500,10 @@ const ProfessorSubjectAssignmentPage = () => {
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="school-year-filter">Filtrer par Année Scolaire</Label>
               <Select value={selectedSchoolYearFilter || "all"} onValueChange={(value) => setSelectedSchoolYearFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="school-year-filter">
+                <SelectTrigger id="school-year-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
@@ -517,7 +517,7 @@ const ProfessorSubjectAssignmentPage = () => {
               <p className="text-muted-foreground text-center py-4">Aucune affectation trouvée pour votre recherche ou vos filtres.</p>
             ) : (
               filteredAssignments.map((assignment) => (
-                <Card key={assignment.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <Card key={assignment.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <div className="flex-grow">
                     <p className="font-medium">
                       <span className="text-primary">{getProfessorName(assignment.professor_id)}</span> enseigne <span className="text-primary">{getSubjectName(assignment.subject_id)}</span> à la classe <span className="text-primary">{getClassName(assignment.class_id)}</span> pour l'année <span className="text-primary">{getSchoolYearName(assignment.school_year_id)}</span>.
@@ -542,7 +542,7 @@ const ProfessorSubjectAssignmentPage = () => {
       {/* Edit Assignment Dialog */}
       {currentAssignmentToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <DialogHeader>
               <DialogTitle>Modifier l'affectation</DialogTitle>
               <DialogDescription>
@@ -553,10 +553,10 @@ const ProfessorSubjectAssignmentPage = () => {
               <div>
                 <Label htmlFor="edit-professor">Professeur</Label>
                 <Select value={editProfessorId} onValueChange={setEditProfessorId}>
-                  <SelectTrigger id="edit-professor">
+                  <SelectTrigger id="edit-professor" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner un professeur" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                     {filteredProfessors.map(prof => (
                       <SelectItem key={prof.id} value={prof.id}>
                         {prof.first_name} {prof.last_name} (@{prof.username})
@@ -568,10 +568,10 @@ const ProfessorSubjectAssignmentPage = () => {
               <div>
                 <Label htmlFor="edit-subject">Matière</Label>
                 <Select value={editSubjectId} onValueChange={setEditSubjectId}>
-                  <SelectTrigger id="edit-subject">
+                  <SelectTrigger id="edit-subject" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner une matière" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                     {filteredSubjects.map(sub => (
                       <SelectItem key={sub.id} value={sub.id}>
                         {sub.name}
@@ -583,10 +583,10 @@ const ProfessorSubjectAssignmentPage = () => {
               <div>
                 <Label htmlFor="edit-class">Classe</Label>
                 <Select value={editClassId} onValueChange={setEditClassId}>
-                  <SelectTrigger id="edit-class">
+                  <SelectTrigger id="edit-class" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner une classe" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                     {filteredClasses.map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
                         {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
@@ -598,10 +598,10 @@ const ProfessorSubjectAssignmentPage = () => {
               <div>
                 <Label htmlFor="edit-school-year">Année scolaire</Label>
                 <Select value={editSchoolYearId} onValueChange={setEditSchoolYearId}>
-                  <SelectTrigger id="edit-school-year">
+                  <SelectTrigger id="edit-school-year" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner l'année scolaire" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                     {schoolYears.map(year => (
                       <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                     ))}

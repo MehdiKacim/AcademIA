@@ -201,7 +201,7 @@ const CurriculumManagementPage = () => {
         Créez et gérez des cursus scolaires.
       </p>
 
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LayoutList className="h-6 w-6 text-primary" /> Cursus Scolaires
@@ -227,7 +227,7 @@ const CurriculumManagementPage = () => {
               <p className="text-muted-foreground">Aucun cursus à afficher.</p>
             ) : (
               curriculaToDisplay.map(cur => (
-                <div key={cur.id} className="flex items-center justify-between p-3 border rounded-md bg-background">
+                <div key={cur.id} className="flex items-center justify-between p-3 border rounded-android-tile bg-background">
                   <span>{cur.name} ({cur.course_ids.length} cours, {classes.filter(cls => cls.curriculum_id === cur.id).length} classes)</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleOpenManageCoursesModal(cur)}>
@@ -250,7 +250,7 @@ const CurriculumManagementPage = () => {
       {/* Manage Curriculum Courses Modal */}
       {isManageCoursesModalOpen && selectedCurriculumForCourses && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl backdrop-blur-lg bg-background/80">
+          <Card className="w-full max-w-2xl backdrop-blur-lg bg-background/80 rounded-android-tile">
             <CardHeader>
               <CardTitle>Gérer les cours pour "{selectedCurriculumForCourses.name}"</CardTitle>
               <CardDescription>Sélectionnez les cours qui feront partie de ce cursus.</CardDescription>
@@ -263,7 +263,7 @@ const CurriculumManagementPage = () => {
                   allCourses
                     .filter(course => currentRole === 'administrator' || course.creator_id === currentUserProfile?.id)
                     .map(course => (
-                      <div key={course.id} className="flex items-center justify-between p-2 border rounded-md">
+                      <div key={course.id} className="flex items-center justify-between p-2 border rounded-android-tile">
                         <span>{course.title}</span>
                         <input
                           type="checkbox"

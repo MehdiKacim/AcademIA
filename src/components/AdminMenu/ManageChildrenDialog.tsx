@@ -89,7 +89,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   return (
     <ContextMenu> {/* Re-added ContextMenu */}
       <ContextMenuTrigger asChild>
-        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-md bg-background flex items-center justify-between gap-2 mb-1", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto */}
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto */}
           <div className="flex items-center gap-2 flex-grow">
             {isDraggableAndDeletable && (
               <Button
@@ -116,7 +116,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
           )}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-auto p-1 pointer-events-auto"> {/* Added pointer-events-auto */}
+      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile"> {/* Apply rounded-android-tile */}
         <ContextMenuItem className="p-2" onClick={() => onRemove(item.configId!)}>
           <Trash2 className="mr-2 h-4 w-4" /> Retirer
         </ContextMenuItem>
@@ -363,7 +363,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   const renderChildItemsList = (items: NavItem[], containerId: string, isDraggableAndDeletable: boolean, onRemove?: (configId: string) => void) => {
     return (
-      <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
+      <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-android-tile">
         {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2"><span>Déposez des éléments ici</span></p>}
         <SortableContext items={items.map(item => item.configId || item.id)} strategy={verticalListSortingStrategy}>
           {items.map(item => (
@@ -383,7 +383,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100]"> {/* Added z-index here */}
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile"> {/* Added z-index here, apply rounded-android-tile */}
         <DialogHeader className="mb-4">
           <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             Gérer les sous-éléments de "{parentItem.label}"
@@ -395,7 +395,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         <div className="flex-grow overflow-y-auto pr-2">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-              <Card className="flex flex-col">
+              <Card className="flex flex-col rounded-android-tile">
                 <CardHeader>
                   <CardTitle className="text-lg">Ajouter un sous-élément existant</CardTitle>
                   <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
@@ -408,7 +408,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                       placeholder="Rechercher un élément..."
                       value={genericItemSearchQuery}
                       onChange={(e) => setGenericItemSearchQuery(e.target.value)}
-                      className="mb-2"
+                      className="mb-2 rounded-android-tile"
                     />
                   </div>
                   <SearchableDropdown
@@ -424,7 +424,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                     placeholder="Sélectionner un élément à ajouter"
                     emptyMessage="Aucun élément disponible."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[999]" // Increased z-index
+                    popoverContentClassName="z-[999] rounded-android-tile" // Increased z-index, apply rounded-android-tile
                   />
                   <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
@@ -432,7 +432,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                 </CardContent>
               </Card>
 
-              <Card className="flex flex-col">
+              <Card className="flex flex-col rounded-android-tile">
                 <CardHeader>
                   <CardTitle className="text-lg">Sous-éléments actuels</CardTitle>
                   <CardDescription>Réorganisez ou supprimez les sous-éléments.</CardDescription>
@@ -444,7 +444,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
               {/* New section for creating a new generic item and adding it as a child */}
               <Collapsible open={isNewChildFormOpen} onOpenChange={setIsNewChildFormOpen} className="lg:col-span-2">
-                <Card>
+                <Card className="rounded-android-tile">
                   <CardHeader>
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" className="w-full justify-between p-0">
@@ -471,10 +471,10 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               setNewChildIsExternal(false);
                             }
                           }}>
-                            <SelectTrigger id="new-child-type">
+                            <SelectTrigger id="new-child-type" className="rounded-android-tile">
                               <SelectValue placeholder="Sélectionner un type" />
                             </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999]"> {/* Increased z-index */}
+                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
                               <ScrollArea className="h-40">
                                 {Object.keys(iconMap).sort().map(iconName => {
                                   const IconComponent = iconMap[iconName];
@@ -501,10 +501,10 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                         <div>
                           <Label htmlFor="new-child-icon">Nom de l'icône (Lucide React)</Label>
                           <Select value={newChildIconName} onValueChange={setNewChildIconName}>
-                            <SelectTrigger id="new-child-icon">
+                            <SelectTrigger id="new-child-icon" className="rounded-android-tile">
                               <SelectValue placeholder="Sélectionner une icône" />
                             </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999]"> {/* Increased z-index */}
+                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
                               <ScrollArea className="h-40">
                                 {Object.keys(iconMap).sort().map(iconName => {
                                   const IconComponent = iconMap[iconName];

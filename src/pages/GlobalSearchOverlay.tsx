@@ -168,7 +168,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed inset-x-0 top-[68px] z-[999] bg-background/95 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8 h-[calc(100vh-68px)]"
+          className="fixed inset-x-0 top-[68px] z-[999] bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8 h-[calc(100vh-68px)]"
         >
           <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full">
             <div className="flex items-center gap-4 flex-shrink-0">
@@ -177,7 +177,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                 <Input
                   ref={inputRef}
                   placeholder="Rechercher dans tout AcademIA..."
-                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50"
+                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50 rounded-android-tile" // Apply rounded-android-tile
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -211,7 +211,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                       <div className="grid gap-3 md:grid-cols-2">
                         {resultsOfType.map(result => (
                           <Link to={result.link} key={result.id} onClick={onClose}>
-                            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
+                            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile"> {/* Apply rounded-android-tile */}
                               <CardHeader className="flex-row items-center gap-3 pb-2">
                                 <result.icon className="h-5 w-5 text-primary" />
                                 <CardTitle className="text-lg">{result.title}</CardTitle>

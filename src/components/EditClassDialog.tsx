@@ -109,7 +109,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
         <DialogHeader>
           <DialogTitle>Modifier la classe</DialogTitle>
           <DialogDescription>
@@ -135,10 +135,10 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
               Cursus
             </Label>
             <Select value={curriculumId} onValueChange={setCurriculumId}>
-              <SelectTrigger id="curriculum" className="col-span-3">
+              <SelectTrigger id="curriculum" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
                 <SelectValue placeholder="Sélectionner un cursus" />
               </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80">
+              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                 {curriculaToDisplay.map(cur => (
                   <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
                 ))}
@@ -150,10 +150,10 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
               Année scolaire
             </Label>
             <Select value={schoolYearId} onValueChange={setSchoolYearId}>
-              <SelectTrigger id="schoolYear" className="col-span-3">
+              <SelectTrigger id="schoolYear" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
                 <SelectValue placeholder="Sélectionner l'année scolaire" />
               </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80">
+              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                 {schoolYears.map(year => (
                   <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                 ))}

@@ -19,7 +19,7 @@ const AboutModal = ({ isOpen, onClose }: AboutModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
-        "w-full h-svh flex flex-col p-6 backdrop-blur-lg bg-background/80", // Full screen on mobile
+        "w-full h-svh flex flex-col p-6 backdrop-blur-lg bg-background/80 rounded-android-tile", // Full screen on mobile, apply rounded-android-tile
         "sm:max-w-2xl sm:h-[90vh]" // Max width and height on larger screens
       )}>
         <DialogHeader className="mb-4 text-center flex-shrink-0">

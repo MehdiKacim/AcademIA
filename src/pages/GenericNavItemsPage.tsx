@@ -232,7 +232,7 @@ const GenericNavItemsPage = () => {
       </p>
 
       <Collapsible open={isNewItemFormOpen} onOpenChange={setIsNewItemFormOpen}>
-        <Card>
+        <Card className="rounded-android-tile">
           <CardHeader>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
@@ -259,10 +259,10 @@ const GenericNavItemsPage = () => {
                       setNewItemIsExternal(false);
                     }
                   }}>
-                    <SelectTrigger id="new-item-type">
+                    <SelectTrigger id="new-item-type" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                       <ScrollArea className="h-40">
                         {navItemTypes.map(type => (
                           <SelectItem key={type} value={type}>
@@ -284,10 +284,10 @@ const GenericNavItemsPage = () => {
                 <div>
                   <Label htmlFor="new-item-icon">Nom de l'icône (Lucide React)</Label>
                   <Select value={newItemIconName} onValueChange={setNewItemIconName}>
-                    <SelectTrigger id="new-item-icon">
+                    <SelectTrigger id="new-item-icon" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner une icône" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                       <ScrollArea className="h-40">
                         {Object.keys(iconMap).sort().map(iconName => {
                           const IconComponent = iconMap[iconName];
@@ -316,7 +316,7 @@ const GenericNavItemsPage = () => {
         </Card>
       </Collapsible>
 
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LayoutList className="h-6 w-6 text-primary" /> Liste des éléments génériques
@@ -328,7 +328,7 @@ const GenericNavItemsPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Filtrer les éléments par libellé, route, description ou icône..."
-              className="pl-10"
+              className="pl-10 rounded-android-tile"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
             />
@@ -345,7 +345,7 @@ const GenericNavItemsPage = () => {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
-                <ScrollArea className="h-[300px] w-full rounded-md border">
+                <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
@@ -401,7 +401,7 @@ const GenericNavItemsPage = () => {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
-                <ScrollArea className="h-[300px] w-full rounded-md border">
+                <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
@@ -452,7 +452,7 @@ const GenericNavItemsPage = () => {
       {/* Edit Generic Nav Item Dialog */}
       {currentItemToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] backdrop-blur-lg bg-background/80">
+          <DialogContent className="sm:max-w-[600px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
             <DialogHeader>
               <DialogTitle>Modifier l'élément de navigation générique</DialogTitle>
               <DialogDescription>
@@ -472,10 +472,10 @@ const GenericNavItemsPage = () => {
                     setEditItemIsExternal(false);
                   }
                 }}>
-                  <SelectTrigger id="edit-item-type" className="col-span-3">
+                  <SelectTrigger id="edit-item-type" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <SelectValue placeholder="Sélectionner un type" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <ScrollArea className="h-40">
                       {navItemTypes.map(type => (
                         <SelectItem key={type} value={type}>
@@ -497,10 +497,10 @@ const GenericNavItemsPage = () => {
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-item-icon">Icône</Label>
                 <Select value={editItemIconName} onValueChange={setEditItemIconName}>
-                  <SelectTrigger id="edit-item-icon" className="col-span-3">
+                  <SelectTrigger id="edit-item-icon" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <SelectValue placeholder="Sélectionner une icône" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <ScrollArea className="h-40">
                       {Object.keys(iconMap).sort().map(iconName => {
                         const IconComponent = iconMap[iconName];

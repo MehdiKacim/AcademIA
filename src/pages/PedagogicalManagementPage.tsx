@@ -335,7 +335,7 @@ const PedagogicalManagementPage = () => {
       </p>
 
       {/* Section: Affecter un élève à une classe */}
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" /> Affecter un élève à une classe
@@ -351,14 +351,14 @@ const PedagogicalManagementPage = () => {
                   variant="outline"
                   role="combobox"
                   aria-expanded={openStudentSelectClass}
-                  className="w-full justify-between"
+                  className="w-full justify-between rounded-android-tile"
                   id="select-student-for-class-assignment"
                 >
                   {selectedStudentForClassAssignment ? `${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} (@${selectedStudentForClassAssignment.username})` : "Rechercher un élève..."}
                   <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile">
                 <Command>
                   <CommandInput
                     placeholder="Rechercher par nom d'utilisateur..."
@@ -415,7 +415,7 @@ const PedagogicalManagementPage = () => {
           </div>
 
             {selectedStudentForClassAssignment && (
-              <div className="p-4 border rounded-md bg-muted/20 space-y-3">
+              <div className="p-4 border rounded-android-tile bg-muted/20 space-y-3">
                 <div className="flex items-center gap-2">
                   <UserCheck className="h-5 w-5 text-green-500" />
                   <p className="font-medium text-lg">{selectedStudentForClassAssignment.first_name} {selectedStudentForClassAssignment.last_name}</p>
@@ -432,10 +432,10 @@ const PedagogicalManagementPage = () => {
                 <div>
                   <Label htmlFor="class-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir la classe d'affectation</Label>
                   <Select value={classToAssign} onValueChange={setClassToAssign}>
-                    <SelectTrigger id="class-to-assign" className="w-full">
+                    <SelectTrigger id="class-to-assign" className="w-full rounded-android-tile">
                       <SelectValue placeholder="Sélectionner une classe" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-android-tile">
                       {classesToDisplayForAssignment
                         .map(cls => (
                           <SelectItem key={cls.id} value={cls.id}>
@@ -450,10 +450,10 @@ const PedagogicalManagementPage = () => {
                   <div>
                     <Label htmlFor="enrollment-school-year" className="text-base font-semibold mb-2 block mt-4">Année scolaire</Label>
                     <Select value={enrollmentSchoolYearId} onValueChange={setEnrollmentSchoolYearId}>
-                      <SelectTrigger id="enrollment-school-year" className="w-full">
+                      <SelectTrigger id="enrollment-school-year" className="w-full rounded-android-tile">
                         <SelectValue placeholder="Sélectionner l'année scolaire" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-android-tile">
                         {schoolYearsOptions.map(year => (
                           <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                         ))}
@@ -476,7 +476,7 @@ const PedagogicalManagementPage = () => {
         </Card>
 
       {/* Section: Liste des élèves par classe */}
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-primary" /> Élèves par Classe
@@ -489,7 +489,7 @@ const PedagogicalManagementPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Rechercher par nom, email ou @username..."
-                className="pl-10"
+                className="pl-10 rounded-android-tile"
                 value={studentSearchQuery}
                 onChange={(e) => setStudentSearchQuery(e.target.value)}
               />
@@ -508,10 +508,10 @@ const PedagogicalManagementPage = () => {
                   return params;
                 }, { replace: true });
               }}>
-                <SelectTrigger id="class-filter">
+                <SelectTrigger id="class-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {classesToDisplayForFilter
                     .map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
@@ -524,10 +524,10 @@ const PedagogicalManagementPage = () => {
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="school-year-filter">Filtrer par Année Scolaire</Label>
               <Select value={selectedSchoolYearFilter || "all"} onValueChange={(value) => setSelectedSchoolYearFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="school-year-filter">
+                <SelectTrigger id="school-year-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYearsOptions.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.label}</SelectItem>
@@ -549,7 +549,7 @@ const PedagogicalManagementPage = () => {
                 const currentClass = currentEnrollment ? classes.find(c => c.id === currentEnrollment.class_id) : undefined;
 
                 return (
-                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <div className="flex-grow">
                       <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
                       <p className="text-sm text-muted-foreground">{profile.email}</p>

@@ -71,7 +71,7 @@ const StudentManagementPage = () => {
   const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // States for student list section
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [studentSearchQuery, setSearchStudentQuery] = useState('');
   // Removed selectedEstablishmentFilter
 
   // Get classId from URL for initial filtering (now removed from student list)
@@ -324,7 +324,7 @@ const StudentManagementPage = () => {
 
       {/* Section: Créer un nouvel élève */}
       <Collapsible open={isNewStudentFormOpen} onOpenChange={setIsNewStudentFormOpen}>
-        <Card>
+        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
           <CardHeader>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
@@ -378,7 +378,7 @@ const StudentManagementPage = () => {
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                           !newStudentEnrollmentStartDate && "text-muted-foreground"
                         )}
                       >
@@ -386,7 +386,7 @@ const StudentManagementPage = () => {
                         {newStudentEnrollmentStartDate ? format(newStudentEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                       <Calendar
                         mode="single"
                         selected={newStudentEnrollmentStartDate}
@@ -404,7 +404,7 @@ const StudentManagementPage = () => {
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                           !newStudentEnrollmentEndDate && "text-muted-foreground"
                         )}
                       >
@@ -412,7 +412,7 @@ const StudentManagementPage = () => {
                         {newStudentEnrollmentEndDate ? format(newStudentEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                         <Calendar
                           mode="single"
                           selected={newStudentEnrollmentEndDate}
@@ -435,7 +435,7 @@ const StudentManagementPage = () => {
       {/* Removed Section: Affecter un élève à un établissement (Admin only) */}
 
       {/* Section: Liste de tous les élèves */}
-      <Card>
+      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-primary" /> Mes Élèves
@@ -448,9 +448,9 @@ const StudentManagementPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Rechercher par nom, email ou @username..."
-                className="pl-10"
+                className="pl-10 rounded-android-tile"
                 value={studentSearchQuery}
-                onChange={(e) => setStudentSearchQuery(e.target.value)}
+                onChange={(e) => setSearchStudentQuery(e.target.value)}
               />
             </div>
             {/* Removed Establishment Filter */}
@@ -475,7 +475,7 @@ const StudentManagementPage = () => {
                 const currentClass = currentClassEnrollment ? classes.find(c => c.id === currentClassEnrollment.class_id) : undefined;
 
                 return (
-                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <div className="flex-grow">
                       <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
                       <p className="text-sm text-muted-foreground">{profile.email}</p>
@@ -495,7 +495,7 @@ const StudentManagementPage = () => {
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                       {/* Removed Unassign from Establishment button */}
-                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
+                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToUser(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </Button>
                       {currentRole === 'administrator' && ( // Only administrator can delete

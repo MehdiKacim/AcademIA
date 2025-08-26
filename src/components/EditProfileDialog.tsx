@@ -125,7 +125,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
         <DialogHeader>
           <DialogTitle>Modifier le profil</DialogTitle>
           <DialogDescription>
@@ -190,7 +190,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "col-span-3 justify-start text-left font-normal",
+                        "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                         !enrollmentStartDate && "text-muted-foreground"
                       )}
                     >
@@ -198,7 +198,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                       {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <Calendar
                       mode="single"
                       selected={enrollmentStartDate}
@@ -218,7 +218,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "col-span-3 justify-start text-left font-normal",
+                        "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                         !enrollmentEndDate && "text-muted-foreground"
                       )}
                     >
@@ -226,7 +226,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                       {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80">
+                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
                     <Calendar
                       mode="single"
                       selected={enrollmentEndDate}

@@ -120,7 +120,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           ref={setNodeRef} 
           style={style} 
           className={cn(
-            "p-3 border rounded-md flex items-center justify-between gap-2 mb-2",
+            "p-3 border rounded-android-tile flex items-center justify-between gap-2 mb-2", // Apply rounded-android-tile
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50"
@@ -186,7 +186,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
       </ContextMenuTrigger>
       {/* Only show "Gérer les sous-éléments" for true categories (type 'category_or_action' with no route) */}
       {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
-        <ContextMenuContent className="w-auto p-1 pointer-events-auto"> {/* Added pointer-events-auto */}
+        <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile"> {/* Apply rounded-android-tile */}
           <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
             <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
           </ContextMenuItem>
@@ -644,7 +644,7 @@ const RoleNavConfigsPage = () => {
 
   const renderNavItemsList = (items: NavItem[], level: number, containerId: string) => {
     return (
-      <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
+      <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-android-tile">
         {items.length === 0 && <p className="text-muted-foreground text-center text-sm py-2"><span>Déposez des éléments ici</span></p>}
         <SortableContext items={items.map(item => item.configId || item.id)} strategy={verticalListSortingStrategy}>
           {items.map(item => (
@@ -739,7 +739,7 @@ const RoleNavConfigsPage = () => {
         Sélectionnez un rôle pour voir et gérer les éléments de menu qui lui sont associés.
       </p>
 
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserRoundCog className="h-6 w-6 text-primary" /> Configurer les menus par rôle
@@ -750,10 +750,10 @@ const RoleNavConfigsPage = () => {
           <div>
             <Label htmlFor="role-filter">Rôle sélectionné</Label>
             <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
-              <SelectTrigger id="role-filter">
+              <SelectTrigger id="role-filter" className="rounded-android-tile">
                 <SelectValue placeholder="Sélectionner un rôle..." />
               </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80">
+              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                 <SelectItem value="all">Sélectionner un rôle...</SelectItem>
                 {ALL_ROLES.map(role => (
                   <SelectItem key={role} value={role}>
@@ -778,7 +778,7 @@ const RoleNavConfigsPage = () => {
 
       {selectedRoleFilter !== 'all' && (
         <div className="grid grid-cols-1 gap-8">
-          <Card>
+          <Card className="rounded-android-tile">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {selectedRoleFilter}
@@ -787,7 +787,7 @@ const RoleNavConfigsPage = () => {
             </CardHeader>
             <ContextMenu> {/* Re-added ContextMenu */}
               <ContextMenuTrigger asChild>
-                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-md"> {/* Removed problematic classes */}
+                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-android-tile"> {/* Removed problematic classes */}
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                     {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
                     <DragOverlay>
@@ -810,7 +810,7 @@ const RoleNavConfigsPage = () => {
                   </DndContext>
                 </CardContent>
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-auto p-1 pointer-events-auto"> {/* Added pointer-events-auto */}
+              <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile"> {/* Apply rounded-android-tile */}
                 <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
                 </ContextMenuItem>
@@ -823,7 +823,7 @@ const RoleNavConfigsPage = () => {
       {/* Edit Role Config Dialog */}
       {currentConfigToEdit && currentItemToEdit && (
         <Dialog open={isEditConfigDialogOpen} onOpenChange={setIsEditConfigDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] bg-card z-[100]">
+          <DialogContent className="sm:max-w-[600px] bg-card z-[100] rounded-android-tile"> {/* Apply rounded-android-tile */}
             <DialogHeader>
               <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
               <DialogDescription>
@@ -838,7 +838,7 @@ const RoleNavConfigsPage = () => {
                   placeholder="Rechercher un parent..."
                   value={parentSearchQuery}
                   onChange={(e) => setParentSearchQuery(e.target.value)}
-                  className="col-span-3"
+                  className="col-span-3 rounded-android-tile"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -860,12 +860,12 @@ const RoleNavConfigsPage = () => {
                   emptyMessage="Aucun parent trouvé."
                   iconMap={iconMap}
                   className="col-span-3"
-                  popoverContentClassName="z-[999]" // Increased z-index
+                  popoverContentClassName="z-[999] rounded-android-tile" // Increased z-index, apply rounded-android-tile
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
-                <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="col-span-3" />
+                <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="col-span-3 rounded-android-tile" />
               </div>
             </div>
             <DialogFooter>

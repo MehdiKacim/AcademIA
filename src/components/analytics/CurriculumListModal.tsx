@@ -25,7 +25,7 @@ const CurriculumListModal = ({ isOpen, onClose, title, description, curricula, e
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80">
+      <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
         <DialogHeader className="mb-4">
           <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             {title}
@@ -40,7 +40,7 @@ const CurriculumListModal = ({ isOpen, onClose, title, description, curricula, e
               <p className="text-muted-foreground text-center py-4">Aucun cursus trouvé.</p>
             ) : (
               curricula.map(curriculum => (
-                <Card key={curriculum.id} className="p-3">
+                <Card key={curriculum.id} className="p-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <CardContent className="p-0 flex items-center gap-3">
                     <LayoutList className="h-8 w-8 text-primary" />
                     <div className="flex-grow">
@@ -48,9 +48,7 @@ const CurriculumListModal = ({ isOpen, onClose, title, description, curricula, e
                       {curriculum.description && (
                         <p className="text-sm text-muted-foreground line-clamp-1">{curriculum.description}</p>
                       )}
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Building2 className="h-3 w-3" /> {getEstablishmentName(curriculum.establishment_id)}
-                      </p>
+                      {/* Removed establishment_id display */}
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <BookOpen className="h-3 w-3" /> {curriculum.course_ids.length} cours
                       </p>

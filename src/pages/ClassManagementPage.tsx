@@ -237,7 +237,7 @@ const ClassManagementPage = () => {
       </p>
 
       {(currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can add
-        <Card>
+        <Card className="rounded-android-tile">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-6 w-6 text-primary" /> Ajouter une nouvelle classe
@@ -256,10 +256,10 @@ const ClassManagementPage = () => {
               {/* Removed Establishment Select */}
               <Label htmlFor="new-class-curriculum">Cursus</Label>
               <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
-                <SelectTrigger id="new-class-curriculum">
+                <SelectTrigger id="new-class-curriculum" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner un cursus" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {curriculaToDisplay.map(cur => (
                     <SelectItem key={cur.id} value={cur.id}>
                       {cur.name}
@@ -269,10 +269,10 @@ const ClassManagementPage = () => {
               </Select>
               <Label htmlFor="new-class-school-year">Année scolaire</Label>
               <Select value={newClassSchoolYearId} onValueChange={setNewClassSchoolYearId}>
-                <SelectTrigger id="new-class-school-year">
+                <SelectTrigger id="new-class-school-year" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}
@@ -286,7 +286,7 @@ const ClassManagementPage = () => {
         </Card>
       )}
           
-      <Card>
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" /> Liste de toutes les classes
@@ -298,7 +298,7 @@ const ClassManagementPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Rechercher par nom de classe..."
-              className="pl-10"
+              className="pl-10 rounded-android-tile"
               value={classSearchQuery}
               onChange={(e) => setClassSearchQuery(e.target.value)}
             />
@@ -308,7 +308,7 @@ const ClassManagementPage = () => {
               <p className="text-muted-foreground text-center py-4">Aucune classe trouvée pour votre recherche.</p>
             ) : (
               filteredClasses.map((cls) => (
-                <Card key={cls.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <Card key={cls.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <div className="flex-grow">
                     <p className="font-medium">{cls.name}</p>
                     <p className="text-sm text-muted-foreground">

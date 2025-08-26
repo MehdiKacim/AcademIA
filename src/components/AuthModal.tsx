@@ -29,7 +29,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent className="h-auto mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 overflow-hidden"> {/* Added overflow-hidden here */}
+        <DrawerContent className="h-auto mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile"> {/* Added overflow-hidden here, apply rounded-android-tile */}
           <div className="mx-auto w-full max-w-sm">
             <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
             <DrawerFooter>
@@ -43,7 +43,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md p-0 backdrop-blur-lg bg-background/80 overflow-hidden"> {/* Added overflow-hidden here */}
+      <DialogContent className="w-full max-w-md p-0 backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile"> {/* Added overflow-hidden here, apply rounded-android-tile */}
         {/* AuthMenu handles its own header and content */}
         <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
       </DialogContent>

@@ -208,7 +208,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   };
 
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
-    <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80">
+    <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
       <React.Fragment> {/* Added React.Fragment here */}
         <Header className="mb-4 text-center">
           <Title className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -253,7 +253,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                       {showCreateAdminForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-4 p-4 border rounded-md bg-muted/20">
+                  <CollapsibleContent className="space-y-4 p-4 border rounded-android-tile bg-muted/20"> {/* Apply rounded-android-tile */}
                     <p className="text-sm text-muted-foreground">
                       Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
                     </p>

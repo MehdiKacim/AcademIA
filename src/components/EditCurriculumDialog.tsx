@@ -81,7 +81,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
         <DialogHeader>
           <DialogTitle>Modifier le cursus</DialogTitle>
           <DialogDescription>
