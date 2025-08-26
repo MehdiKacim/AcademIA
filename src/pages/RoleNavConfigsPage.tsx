@@ -722,8 +722,8 @@ const RoleNavConfigsPage = () => {
       level: 0,
       isNew: false,
     }));
-  console.log("[RoleNavConfigsPage] Dropdown options for 'Ajouter un élément existant':", dropdownOptions);
-  console.log("[RoleNavConfigsPage] Current selectedGenericItemToAdd:", selectedGenericItemToAdd);
+  // Removed the problematic console.log line
+  // console.log("[RoleNavConfigsPage] Current selectedGenericItemToAdd:", selectedGenericItemToAdd);
 
   return (
     <div className="space-y-8">
