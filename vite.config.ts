@@ -22,5 +22,7 @@ export default defineConfig(() => ({
   // Exclure @dnd-kit/core de l'optimisation des dépendances de Vite
   optimizeDeps: {
     exclude: ['@dnd-kit/core'],
+    // NEW: Explicitly include react-dom/client to ensure it's correctly pre-bundled
+    include: ['react-dom/client'],
   },
 }));
