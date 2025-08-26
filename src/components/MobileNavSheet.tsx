@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight } from "lucide-react"; // Added more icons for Android-like quick settings
+import { ArrowLeft, X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -17,7 +17,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useSwipeable } from 'react-swipeable';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useTheme } from 'next-themes'; // Import useTheme
+import { useTheme } from 'next-themes';
+import { ThemeToggle } from './theme-toggle'; // Import ThemeToggle
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Import DropdownMenu components
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -40,7 +49,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const location = useLocation();
   const { theme, setTheme } = useTheme();
 
-  const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]); // Stack for nested navigation
+  const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -54,9 +63,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
   // Swipe handlers for closing the sheet on mobile
   const swipeHandlers = useSwipeable({
-    onSwipedDown: onClose, // Close the sheet when swiped down
+    onSwipedDown: onClose,
     preventScrollOnSwipe: true,
-    trackMouse: true, // For testing on desktop
+    trackMouse: true,
   });
 
   // Reset stack and search when sheet opens/closes
@@ -72,20 +81,19 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
     if (isCategory) {
       setDrawerNavStack(prevStack => [...prevStack, item]);
-      setSearchQuery(''); // Clear search when entering a category
+      setSearchQuery('');
     } else if (item.route) {
       if (item.is_external) {
         window.open(item.route, '_blank');
       } else if (item.route.startsWith('#')) {
-        // Handle hash links for the Index page
         navigate(`/${item.route}`);
       } else {
         navigate(item.route);
       }
-      onClose(); // Close sheet after navigation
+      onClose();
     } else if (item.onClick) {
       item.onClick();
-      if (item.label !== "Recherche") { // Keep search overlay open if it's the search button
+      if (item.label !== "Recherche") {
         onClose();
       }
     }
@@ -97,7 +105,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       newStack.pop();
       return newStack;
     });
-    setSearchQuery(''); // Clear search when going back
+    setSearchQuery('');
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -117,11 +125,36 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       itemsToFilter = activeCategory.children || [];
     }
 
+    // Add ThemeToggle and Profile Dropdown as virtual NavItems if at the root level
+    if (drawerNavStack.length === 0 && currentUserProfile) {
+      itemsToFilter.push(
+        {
+          id: 'theme-toggle-item',
+          label: 'Thème',
+          icon_name: theme === 'dark' ? 'Sun' : 'Moon',
+          is_external: false,
+          type: 'category_or_action',
+          onClick: handleToggleTheme, // Use the existing toggle function
+          order_index: 998, // High order to place it near the bottom
+        },
+        {
+          id: 'profile-menu-item',
+          label: 'Mon Compte',
+          icon_name: 'User',
+          is_external: false,
+          type: 'category_or_action',
+          onClick: () => {}, // Placeholder, actual dropdown handled in render
+          order_index: 999, // Highest order to place it at the very bottom
+        }
+      );
+    }
+
+
     return itemsToFilter.filter(item =>
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, searchQuery]);
+  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[drawerNavStack[drawerNavStack.length - 1].icon_name || 'Info'] : null;
@@ -143,7 +176,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
             <span className="font-medium">{format(currentTime, 'EEE. dd MMM', { locale: fr })}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          {/* Removed static quick settings tiles */}
+          {/* <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="android-tile active flex-row items-center justify-start gap-3 !p-3">
               <div className="icon-container !bg-transparent">
                 <Wifi className="h-6 w-6 text-primary-foreground" />
@@ -171,7 +205,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               </div>
               <span className="title">{theme === 'dark' ? 'Mode Clair' : 'Mode Sombre'}</span>
             </div>
-          </div>
+          </div> */}
 
           <div className="android-search-bar mb-4">
             <Search className="h-5 w-5 text-android-on-surface-variant" />
@@ -213,6 +247,57 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               currentItemsToDisplay.map((item) => {
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+
+                // Special handling for ThemeToggle and Profile Dropdown
+                if (item.id === 'theme-toggle-item') {
+                  return (
+                    <div key={item.id} className="col-span-full"> {/* Make theme toggle full width */}
+                      <div className="android-tile flex-row items-center justify-between h-auto min-h-[60px] text-left w-full !p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="icon-container">
+                            <IconComponent className="h-6 w-6" />
+                          </div>
+                          <span className="title text-base font-medium">{item.label}</span>
+                        </div>
+                        <ThemeToggle /> {/* Render the actual ThemeToggle component */}
+                      </div>
+                    </div>
+                  );
+                } else if (item.id === 'profile-menu-item' && currentUserProfile) {
+                  return (
+                    <div key={item.id} className="col-span-full"> {/* Make profile menu full width */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="android-tile flex-row items-center justify-between h-auto min-h-[60px] text-left w-full !p-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="icon-container">
+                                <IconComponent className="h-6 w-6" />
+                              </div>
+                              <span className="title text-base font-medium">{currentUserProfile.first_name} {currentUserProfile.last_name}</span>
+                            </div>
+                            <ChevronUp className="h-5 w-5 rotate-90" /> {/* Placeholder for dropdown arrow */}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80 z-[999]">
+                          <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => { navigate("/profile"); onClose(); }}>
+                            <User className="mr-2 h-4 w-4" /> Mon profil
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { navigate("/settings"); onClose(); }}>
+                            <Settings className="mr-2 h-4 w-4" /> Paramètres
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  );
+                }
 
                 return (
                   <Button

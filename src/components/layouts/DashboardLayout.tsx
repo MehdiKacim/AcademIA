@@ -1,5 +1,3 @@
-console.log("[DashboardLayout.tsx] Module loaded."); // Early log to confirm file loading
-
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -305,43 +303,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
             </Tooltip>
           )}
 
-          <ThemeToggle />
-          {!isMobile && (
-            <Button variant="outline" size="icon" onClick={() => setIsAboutModalOpen(true)}>
-              <Info className="h-5 w-5" />
-              <span className="sr-only">À propos</span>
-            </Button>
-          )}
-          {!isMobile && !currentUserProfile && (
-            <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
-              <LogIn className="h-5 w-5 mr-2" /> Authentification
-            </Button>
-          )}
-          {currentUserProfile && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  <span className="text-sm font-medium hidden md:block">
-                    {currentUserProfile.first_name} {currentUserProfile.last_name}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80 z-50">
-                <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <User className="mr-2 h-4 w-4" /> Mon profil
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  <Settings className="mr-2 h-4 w-4" /> Paramètres
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Removed ThemeToggle from here */}
+          {/* Removed About button from here */}
+          {/* Removed Auth button from here */}
+          {/* Removed Profile Dropdown from here */}
         </div>
       </header>
 
