@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -85,54 +84,55 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
       <TooltipProvider>
-        <Toaster />
-        <Sonner 
-          position="top-center" 
-          className="top-16 z-[9999]"
-          toastOptions={{
-            duration: 5000,
-            classNames: {
-              toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none",
-              success: "bg-success text-success-foreground border-success",
-              error: "bg-destructive text-destructive-foreground border-destructive",
-              loading: "bg-primary text-primary-foreground border-primary",
-            },
-          }}
-        />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
+        <React.Fragment> {/* Wrap multiple children in a Fragment */}
+          <Sonner 
+            position="top-center" 
+            className="top-16 z-[9999]"
+            toastOptions={{
+              duration: 5000,
+              classNames: {
+                toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none",
+                success: "bg-success text-success-foreground border-success",
+                error: "bg-destructive text-destructive-foreground border-destructive",
+                loading: "bg-primary text-primary-foreground border-primary",
+              },
+            }}
+          />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
-            <Route element={<ProtectedRoute />}>
-              <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
-                <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
-                {/* Always include the Dashboard route */}
-                <Route path="/dashboard" element={<Dashboard />} />
-                {dynamicRoutes.map(item => {
-                  const Component = baseRouteComponentMap[item.route!];
-                  // Only render if component exists and it's not the dashboard (already handled)
-                  if (Component && item.route !== "/dashboard") {
-                    console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
-                    return (
-                      <Route
-                        key={item.id}
-                        path={item.route}
-                        element={<Component />}
-                      />
-                    );
-                  }
-                  return null;
-                })}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
+                  <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
+                  {/* Always include the Dashboard route */}
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  {dynamicRoutes.map(item => {
+                    const Component = baseRouteComponentMap[item.route!];
+                    // Only render if component exists and it's not the dashboard (already handled)
+                    if (Component && item.route !== "/dashboard") {
+                      console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
+                      return (
+                        <Route
+                          key={item.id}
+                          path={item.route}
+                          element={<Component />}
+                        />
+                      );
+                    }
+                    return null;
+                  })}
+                </Route>
               </Route>
-            </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-        <AdminModal 
-          isOpen={isAdminModalOpen} 
-          onClose={() => setIsAdminModalOpen(false)} 
-        />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+          <AdminModal 
+            isOpen={isAdminModalOpen} 
+            onClose={() => setIsAdminModalOpen(false)} 
+          />
+        </React.Fragment>
       </TooltipProvider>
     </ThemeProvider>
   );
