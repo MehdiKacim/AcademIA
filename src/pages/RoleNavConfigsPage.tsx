@@ -118,7 +118,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "p-3 border rounded-md flex items-center justify-between gap-2 mb-2 select-none", // Removed cursor-context-menu and pointer-events-auto
+        "p-3 border rounded-md flex items-center justify-between gap-2 mb-2", // Removed cursor-context-menu select-none pointer-events-auto
         isDragging && "ring-2 ring-primary/50 shadow-xl",
         item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
         item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50"
@@ -777,10 +777,9 @@ const RoleNavConfigsPage = () => {
               <CardTitle className="flex items-center gap-2">
                 <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {selectedRoleFilter}
               </CardTitle>
-              <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
+              <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le bouton "Gérer les sous-éléments" pour les catégories.</CardDescription>
             </CardHeader>
-            {/* Removed ContextMenu wrapper here */}
-            <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-md"> {/* Removed cursor-context-menu select-none pointer-events-auto */}
+            <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-md"> {/* Removed ContextMenuTrigger and related classes */}
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
                 <DragOverlay>
