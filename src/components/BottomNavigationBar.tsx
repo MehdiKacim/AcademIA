@@ -328,9 +328,9 @@ import {
                       </React.Fragment>
                     </DrawerTitle>
                     <DrawerClose asChild>
+                      {/* Simplified DrawerClose button */}
                       <Button variant="ghost" size="icon" className="absolute right-4">
                         <X className="h-5 w-5" />
-                        <span className="sr-only">Fermer le menu</span>
                       </Button>
                     </DrawerClose>
                   </div>
