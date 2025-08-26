@@ -352,6 +352,68 @@ const RoleNavConfigsPage = () => {
     fetchAndStructureNavItems();
   }, [fetchAndStructureNavItems]);
 
+  // Memoize availableParentsForConfig to ensure it's only computed when dependencies change
+  const availableParentsForConfig = useMemo(() => {
+    if (!currentItemToEdit) {
+      return [];
+    }
+
+    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
+    const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
+
+    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
+
+    // 1. Add already configured categories that are valid parents
+    allConfiguredItemsFlat.forEach(item => {
+      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+      const isNotSelf = item.id !== currentItemToEdit.id;
+      const isNotDescendant = !descendantsOfCurrentItem.has(item.id);
+
+      if (isCategory && isNotSelf && isNotDescendant) {
+        let level = 0;
+        let currentParentId = item.parent_nav_item_id;
+        while (currentParentId) {
+          level++;
+          const parent = allConfiguredItemsFlat.find(i => i.id === currentParentId);
+          currentParentId = parent?.parent_nav_item_id;
+        }
+        potentialParents.push({
+          id: item.id,
+          label: item.label,
+          level: level,
+          icon_name: item.icon_name,
+          typeLabel: getItemTypeLabel(item.type),
+          isNew: false, // This is an existing configured parent
+        });
+      }
+    });
+
+    // 2. Add generic categories that are NOT YET configured for this role and are valid parents
+    allGenericNavItems.forEach(item => {
+      // Only consider if it's a category and not already configured for this role
+      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+      const isNotConfiguredForRole = !configuredItemIds.has(item.id);
+      const isNotSelf = item.id !== currentItemToEdit.id;
+      const isNotDescendant = !descendantsOfCurrentItem.has(item.id); // Check against descendants of currentItemToEdit
+
+      if (isCategory && isNotConfiguredForRole && isNotSelf && isNotDescendant) {
+        // For new generic items, assume level 0 for display in the dropdown
+        potentialParents.push({
+          id: item.id,
+          label: item.label,
+          level: 0, // Treat as a potential root-level parent for now
+          icon_name: item.icon_name,
+          typeLabel: getItemTypeLabel(item.type),
+          isNew: true, // This is a new generic parent to be configured
+        });
+      }
+    });
+
+    const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
+    return sortedParents;
+  }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds]);
+
+
   // Effect to handle adding the selected generic item
   useEffect(() => {
     if (selectedGenericItemToAdd && selectedRoleFilter !== 'all') {
@@ -639,66 +701,6 @@ const RoleNavConfigsPage = () => {
     );
   };
 
-  const availableParentsForConfig = useMemo(() => {
-    if (!currentItemToEdit) {
-      return [];
-    }
-
-    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
-    const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
-
-    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
-
-    // 1. Add already configured categories that are valid parents
-    allConfiguredItemsFlat.forEach(item => {
-      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-      const isNotSelf = item.id !== currentItemToEdit.id;
-      const isNotDescendant = !descendantsOfCurrentItem.has(item.id);
-
-      if (isCategory && isNotSelf && isNotDescendant) {
-        let level = 0;
-        let currentParentId = item.parent_nav_item_id;
-        while (currentParentId) {
-          level++;
-          const parent = allConfiguredItemsFlat.find(i => i.id === currentParentId);
-          currentParentId = parent?.parent_nav_item_id;
-        }
-        potentialParents.push({
-          id: item.id,
-          label: item.label,
-          level: level,
-          icon_name: item.icon_name,
-          typeLabel: getItemTypeLabel(item.type),
-          isNew: false, // This is an existing configured parent
-        });
-      }
-    });
-
-    // 2. Add generic categories that are NOT YET configured for this role and are valid parents
-    allGenericNavItems.forEach(item => {
-      // Only consider if it's a category and not already configured for this role
-      const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-      const isNotConfiguredForRole = !configuredItemIds.has(item.id);
-      const isNotSelf = item.id !== currentItemToEdit.id;
-      const isNotDescendant = !descendantsOfCurrentItem.has(item.id); // Check against descendants of currentItemToEdit
-
-      if (isCategory && isNotConfiguredForRole && isNotSelf && isNotDescendant) {
-        // For new generic items, assume level 0 for display in the dropdown
-        potentialParents.push({
-          id: item.id,
-          label: item.label,
-          level: 0, // Treat as a potential root-level parent for now
-          icon_name: item.icon_name,
-          typeLabel: getItemTypeLabel(item.type),
-          isNew: true, // This is a new generic parent to be configured
-        });
-      }
-    });
-
-    const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
-    return sortedParents;
-  }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds]);
-
   const handleResetRoleNav = async () => {
     if (selectedRoleFilter === 'all') {
       showError("Veuillez sélectionner un rôle spécifique à réinitialiser.");
@@ -922,7 +924,6 @@ const RoleNavConfigsPage = () => {
                           <CommandItem
                             value="none"
                             onSelect={() => {
-                              console.log("Selected parent: None"); // Diagnostic log
                               setSelectedParentForEdit(null);
                               setOpenEditParentPopover(false);
                               setEditParentSearch(''); // Clear search after selection
@@ -945,7 +946,6 @@ const RoleNavConfigsPage = () => {
                                   key={item.id}
                                   value={item.id} // Keep item.id as value
                                   onSelect={() => {
-                                    console.log("Selected parent:", item.id); // Diagnostic log
                                     setSelectedParentForEdit(item.id);
                                     setOpenEditParentPopover(false);
                                     setEditParentSearch(''); // Clear search after selection
