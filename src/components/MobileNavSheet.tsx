@@ -149,7 +149,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="top"
-        className="w-full h-[calc(100vh-68px)] flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg"
+        className="w-full h-[calc(100vh-68px)] flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg fixed top-[68px]" // Added fixed top-[68px]
         {...swipeHandlers}
       >
         <div className="p-4 flex-shrink-0 border-b border-border">
