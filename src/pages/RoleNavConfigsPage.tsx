@@ -821,8 +821,9 @@ const RoleNavConfigsPage = () => {
                             .map(item => (
                               <CommandItem
                                 key={item.id}
-                                value={item.label}
+                                value={item.id} // Changed value to item.id
                                 onSelect={() => {
+                                  console.log("Selected item for add:", item.id); // Diagnostic log
                                   handleAddExistingGenericItemToRole(item.id);
                                   setSelectedGenericItemToAdd(item.id); // Update selected item for display
                                   setOpenAddExistingPopover(false);
@@ -912,6 +913,7 @@ const RoleNavConfigsPage = () => {
                           <CommandItem
                             value="none"
                             onSelect={() => {
+                              console.log("Selected parent: None"); // Diagnostic log
                               setEditConfigParentId(null);
                               setOpenEditParentPopover(false);
                               setEditParentSearch(''); // Clear search after selection
@@ -932,8 +934,9 @@ const RoleNavConfigsPage = () => {
                               return (
                                 <CommandItem
                                   key={item.id}
-                                  value={item.label}
+                                  value={item.id} // Changed value to item.id
                                   onSelect={() => {
+                                    console.log("Selected parent:", item.id); // Diagnostic log
                                     setEditConfigParentId(item.id);
                                     setOpenEditParentPopover(false);
                                     setEditParentSearch(''); // Clear search after selection
