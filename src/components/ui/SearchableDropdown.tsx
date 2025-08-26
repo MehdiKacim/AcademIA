@@ -75,6 +75,8 @@ const SearchableDropdown = React.forwardRef<
       return Component ? <Component className="h-4 w-4" /> : null;
     };
 
+    console.log("[SearchableDropdown] Current value prop:", value);
+
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -122,11 +124,11 @@ const SearchableDropdown = React.forwardRef<
                           key={option.id}
                           value={option.label}
                           onSelect={() => {
-                            console.log(`[SearchableDropdown] Clicked option: ${option.label} (ID: ${option.id})`);
-                            onValueChange(option.id === value ? null : option.id);
-                            setOpen(false);
+                            console.log(`[SearchableDropdown] Attempting to select: ${option.label} (ID: ${option.id})`);
+                            onValueChange(option.id); // Directly set the new value
+                            setOpen(false); // Close the dropdown after selection
                           }}
-                          style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px`, pointerEvents: 'auto' }} // Added pointerEvents: 'auto'
+                          style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px` }}
                         >
                           <Check
                             className={cn(
