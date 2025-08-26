@@ -44,7 +44,7 @@ import { Loader2 } from 'lucide-react'; // Import Loader2
 import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
 
 // Map icon_name strings to Lucide React components (re-declare or import from a central place)
-const iconMap: { [key: string]: ReactType } = { // Changed to ReactType
+const iconMap: { [key: string]: React.ElementType } = { // Changed ReactType to React.ElementType
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe
 };
 
