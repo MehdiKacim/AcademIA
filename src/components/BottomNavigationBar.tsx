@@ -116,7 +116,7 @@ import {
         if (!currentUser) {
           return [
             // Removed 'Accueil' entry as requested
-            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_external: false, onClick: onOpenAuthModal, order_index: 1 } // Direct call to onOpenAuthModal
+            { id: 'auth-anon', icon_name: 'LogIn', label: "Authentification", is_external: false, onClick: onOpenAuthModal, order_index: 1, type: 'category_or_action' } // Direct call to onOpenAuthModal
           ];
         }
         // For authenticated users, return an empty array to only show the "Menu" button

@@ -187,7 +187,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
     // Updated NavItem interface for dynamic menu management
     export interface NavItem {
       id: string; // Unique ID from DB (UUID)
-      logical_id?: string; // New: Logical ID for internal reference (e.g., 'dashboard-generic-item-id')
       label: string;
       route?: string; // Optional route for navigation
       icon_name?: string; // Lucide icon name as string

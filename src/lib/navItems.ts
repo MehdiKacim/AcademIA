@@ -26,7 +26,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
       order_index,
       nav_item:nav_items!role_nav_configs_nav_item_id_fkey (
         id,
-        logical_id,
         label,
         route,
         icon_name,
@@ -54,7 +53,6 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     if (config.nav_item) {
       const navItem: NavItem = {
         id: config.nav_item.id, // This is the actual DB UUID
-        logical_id: config.nav_item.logical_id || undefined, // Include logical_id
         label: config.nav_item.label,
         route: config.nav_item.route || undefined,
         icon_name: config.nav_item.icon_name || undefined,
@@ -121,7 +119,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
   const { data, error } = await supabase
     .from('nav_items')
-    .select('id, logical_id, label, route, icon_name, description, is_external, type'); // Include logical_id
+    .select('id, label, route, icon_name, description, is_external, type'); // Removed logical_id
 
   if (error) {
     console.error("Error loading raw nav items:", error);
@@ -129,7 +127,6 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
   }
   return data.map(item => ({
     id: item.id, // This is the actual DB UUID
-    logical_id: item.logical_id || undefined, // Include logical_id
     label: item.label,
     route: item.route || undefined,
     icon_name: item.icon_name || undefined,

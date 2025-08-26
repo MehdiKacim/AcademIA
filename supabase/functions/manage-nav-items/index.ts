@@ -57,7 +57,7 @@ serve(async (req) => {
       case 'create':
         // For 'create' action, the payload might contain a logical_id, remove it before insert
         const itemToCreate = { ...payload };
-        delete itemToCreate.logical_id; // Ensure logical_id is not inserted into DB 'id' column
+        // Removed delete itemToCreate.logical_id;
         ({ data, error } = await supabaseAdminClient
           .from('nav_items')
           .insert({ ...itemToCreate, type: itemToCreate.type || 'route' }) // Ensure type is set, default to 'route'
@@ -73,7 +73,7 @@ serve(async (req) => {
       case 'update':
         // For 'update' action, ensure logical_id is not passed to DB
         const itemToUpdate = { ...payload };
-        delete itemToUpdate.logical_id;
+        // Removed delete itemToUpdate.logical_id;
         ({ data, error } = await supabaseAdminClient
           .from('nav_items')
           .update({ ...itemToUpdate, updated_at: new Date().toISOString(), type: itemToUpdate.type || 'route' }) // Ensure type is updated
