@@ -1,8 +1,4 @@
-import * as React from "react";
-import { Check, ChevronDown } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Command,
   CommandEmpty,
@@ -11,19 +7,18 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { ScrollArea } from "./scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Check, ChevronDown, Loader2, Search as SearchIcon } from "lucide-react"; // Import SearchIcon
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SearchableDropdownOption {
   id: string;
   label: string;
   icon_name?: string;
-  level: number; // For indentation in display
-  isNew: boolean; // To indicate if it's a new generic item to be configured
+  level?: number; // For indentation in hierarchical menus
+  isNew?: boolean; // To indicate if it's a new generic item not yet configured
 }
 
 interface SearchableDropdownProps {
@@ -32,122 +27,123 @@ interface SearchableDropdownProps {
   onValueChange: (value: string | null) => void;
   placeholder?: string;
   emptyMessage?: string;
-  iconMap: { [key: string]: React.ElementType };
   className?: string;
   popoverContentClassName?: string;
+  isLoading?: boolean;
+  iconMap?: { [key: string]: React.ElementType }; // Map for Lucide icons
 }
 
-const SearchableDropdown = React.forwardRef<
-  HTMLButtonElement,
-  SearchableDropdownProps
->(
-  (
-    {
-      options,
-      value,
-      onValueChange,
-      placeholder = "Sélectionner une option...",
-      emptyMessage = "Aucune option trouvée.",
-      iconMap,
-      className,
-      popoverContentClassName,
-      ...props
-    },
-    ref,
-  ) => {
-    const [open, setOpen] = React.useState(false);
-    const [searchValue, setSearchValue] = React.useState("");
+const SearchableDropdown = ({
+  options,
+  value,
+  onValueChange,
+  placeholder = "Sélectionner...",
+  emptyMessage = "Aucun élément trouvé.",
+  className,
+  popoverContentClassName,
+  isLoading = false,
+  iconMap = {},
+}: SearchableDropdownProps) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
-    const selectedOption = options.find((option) => option.id === value);
+  const selectedOption = useMemo(() => {
+    return options.find((option) => option.id === value);
+  }, [options, value]);
 
-    const filteredOptions = React.useMemo(() => {
-      if (!searchValue) return options;
-      const lowerCaseSearch = searchValue.toLowerCase();
-      return options.filter((option) =>
-        option.label.toLowerCase().includes(lowerCaseSearch),
-      );
-    }, [options, searchValue]);
+  const filteredOptions = useMemo(() => {
+    if (!search) return options;
+    const lowerCaseSearch = search.toLowerCase();
+    return options.filter(option =>
+      option.label.toLowerCase().includes(lowerCaseSearch)
+    );
+  }, [options, search]);
 
-    const IconComponent = selectedOption?.icon_name
-      ? iconMap[selectedOption.icon_name]
-      : null;
-
+  const renderOption = useCallback((option: SearchableDropdownOption) => {
+    const IconComponent = option.icon_name ? iconMap[option.icon_name] : null;
     return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            ref={ref}
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("w-full justify-between", className)}
-            {...props}
-          >
-            <div className="flex items-center gap-2">
-              {IconComponent && (
-                <IconComponent className="h-4 w-4 shrink-0 opacity-50" />
-              )}
-              {selectedOption ? selectedOption.label : placeholder}
-            </div>
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className={cn(
-            "w-[var(--radix-popover-trigger-width)] p-0 z-[999]",
-            popoverContentClassName,
-          )}
+      <div className="flex items-center gap-2">
+        {option.level !== undefined && option.level > 0 && (
+          <span style={{ marginLeft: `${option.level * 16}px` }} className="inline-block"></span>
+        )}
+        {IconComponent && <IconComponent className="h-4 w-4" />}
+        <span>{option.label}</span>
+        {option.isNew && <span className="ml-2 text-xs text-muted-foreground">(Nouveau)</span>}
+      </div>
+    );
+  }, [iconMap]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full justify-between", className)}
         >
-          <Command className="z-50 backdrop-blur-lg bg-background/80">
-            <CommandInput
-              placeholder="Rechercher une option..."
-              value={searchValue}
-              onValueChange={setSearchValue}
-            />
-            <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
-              <CommandEmpty>{emptyMessage}</CommandEmpty>
-              <CommandGroup>
+          <React.Fragment> {/* Wrap all children of Button */}
+            {value ? (
+              <div className="flex items-center gap-2">
+                {selectedOption?.icon_name && React.createElement(iconMap[selectedOption.icon_name], { className: "h-4 w-4" })}
+                <span>{selectedOption?.label}</span>
+              </div>
+            ) : (
+              <span>{placeholder}</span>
+            )}
+            {isLoading ? (
+              <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            )}
+          </React.Fragment>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className={cn("w-[var(--radix-popover-trigger-width)] p-0", popoverContentClassName)}>
+        <Command>
+          <CommandInput
+            placeholder="Rechercher..."
+            value={search}
+            onValueChange={setSearch}
+            icon={SearchIcon} // Use SearchIcon here
+          />
+          <CommandList>
+            {isLoading ? (
+              <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> <span>Chargement...</span>
+              </CommandEmpty>
+            ) : (
+              <>
+                {filteredOptions.length === 0 && <CommandEmpty>{emptyMessage}</CommandEmpty>}
                 <ScrollArea className="h-40">
-                  {filteredOptions.map((option) => {
-                    const OptionIcon = option.icon_name
-                      ? iconMap[option.icon_name]
-                      : null;
-                    return (
+                  <CommandGroup>
+                    {filteredOptions.map((option) => (
                       <CommandItem
                         key={option.id}
                         value={option.label}
                         onSelect={() => {
                           onValueChange(option.id === value ? null : option.id);
                           setOpen(false);
-                          setSearchValue(""); // Clear search after selection
                         }}
-                        className="relative flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 pointer-events-auto" // Added pointer-events-auto
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            value === option.id ? "opacity-100" : "opacity-0",
+                            value === option.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        <div className="flex items-center">
-                          {OptionIcon && (
-                            <OptionIcon className="mr-2 h-4 w-4" />
-                          )}
-                          {option.label}
-                        </div>
+                        {renderOption(option)}
                       </CommandItem>
-                    );
-                  })}
+                    ))}
+                  </CommandGroup>
                 </ScrollArea>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    );
-  },
-);
-
-SearchableDropdown.displayName = "SearchableDropdown";
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 export default SearchableDropdown;
