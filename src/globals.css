@@ -29,27 +29,27 @@
   }
 
   [data-theme="dark"] {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 8%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 200 90% 70%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --success: 120 60% 40%;
-    --success-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 220 15% 8%; /* Gris-bleu très foncé */
+    --foreground: 210 20% 90%; /* Blanc cassé */
+    --card: 220 15% 12%; /* Gris-bleu foncé pour les cartes */
+    --card-foreground: 210 20% 90%;
+    --popover: 220 15% 12%; /* Gris-bleu foncé pour les popovers */
+    --popover-foreground: 210 20% 90%;
+    --primary: 210 80% 60%; /* Bleu vibrant */
+    --primary-foreground: 210 40% 98%; /* Blanc */
+    --secondary: 210 15% 30%; /* Bleu-gris plus doux */
+    --secondary-foreground: 210 40% 98%; /* Blanc */
+    --success: 142.1 76.2% 36.3%; /* Vert standard */
+    --success-foreground: 210 40% 98%; /* Blanc */
+    --muted: 220 10% 20%; /* Gris légèrement plus foncé pour muted */
+    --muted-foreground: 215 20.2% 65.1%; /* Gris moyen */
+    --accent: 210 15% 30%; /* Similaire au secondaire */
+    --accent-foreground: 210 40% 98%; /* Blanc */
+    --destructive: 0 62.8% 30.6%; /* Rouge standard */
+    --destructive-foreground: 210 40% 98%; /* Blanc */
+    --border: 220 10% 25%; /* Bordure subtile */
+    --input: 220 10% 25%; /* Input subtil */
+    --ring: 210 80% 70%; /* Anneau de focus plus lumineux */
   }
 
   [data-theme="dark-purple"] {
