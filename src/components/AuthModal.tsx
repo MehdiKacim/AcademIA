@@ -10,12 +10,15 @@ import {
   Drawer,
   DrawerContent,
   DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
+  DrawerTitle as DrawerPrimitiveTitle,
+  DrawerDescription as DrawerPrimitiveDescription,
   DrawerFooter,
-} from "@/components/ui/drawer"; // Import Drawer components
-import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile
-import AuthMenu from './AuthMenu'; // Import the AuthMenu component
+  DrawerClose,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import AuthMenu from './AuthMenu';
+import { Button } from "@/components/ui/button"; // Import Button for the close icon
+import { X } from "lucide-react"; // Import X icon
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,13 +32,21 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent className="h-auto mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile"> {/* Added overflow-hidden here, apply rounded-android-tile */}
-          <div className="mx-auto w-full max-w-sm">
-            <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
-            <DrawerFooter>
-              {/* Footer content if needed, or just for spacing */}
-            </DrawerFooter>
-          </div>
+        <DrawerContent className="h-auto mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile">
+          <DrawerHeader className="text-center relative">
+            <DrawerPrimitiveTitle className="text-2xl font-bold">Connexion</DrawerPrimitiveTitle>
+            <DrawerPrimitiveDescription>Entrez vos identifiants pour accéder à votre espace.</DrawerPrimitiveDescription>
+            <DrawerClose asChild>
+              <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Fermer</span>
+              </Button>
+            </DrawerClose>
+          </DrawerHeader>
+          <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
+          <DrawerFooter>
+            {/* Footer content if needed, or just for spacing */}
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     );
@@ -43,8 +54,15 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md p-0 backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile"> {/* Added overflow-hidden here, apply rounded-android-tile */}
-        {/* AuthMenu handles its own header and content */}
+      <DialogContent className="w-full max-w-md p-0 backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile">
+        <DialogHeader className="text-center relative pb-2">
+          <DialogTitle className="text-2xl">Connexion</DialogTitle>
+          <DialogDescription>Entrez vos identifiants pour accéder à votre espace.</DialogDescription>
+          <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-4">
+            <X className="h-5 w-5" />
+            <span className="sr-only">Fermer</span>
+          </Button>
+        </DialogHeader>
         <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
       </DialogContent>
     </Dialog>
