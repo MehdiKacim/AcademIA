@@ -202,7 +202,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 <span className="sr-only">Fermer</span>
               </Button>
             </div>
-          </div>
           <SheetTitle className="sr-only">Menu de navigation mobile</SheetTitle>
           <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
         </SheetHeader>
