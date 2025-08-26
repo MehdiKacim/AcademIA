@@ -259,13 +259,15 @@ import {
                   }
                   onClick={item.onClick ? () => handleDrawerItemClick(item) : undefined}
                 >
-                  <IconComponent className="h-5 w-5 mb-1" />
-                  {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                      {item.badge}
-                    </span>
-                  )}
+                  <React.Fragment> {/* Wrap children with Fragment */}
+                    <IconComponent className="h-5 w-5 mb-1" />
+                    {item.label}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                        {item.badge}
+                      </span>
+                    )}
+                  </React.Fragment>
                 </NavLink>
               );
             })}
@@ -278,8 +280,10 @@ import {
                 fixedBottomNavItems.length === 0 ? "w-full" : "w-1/5" // Make it full width if no other fixed items
               )}
             >
-              <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" />
-              Menu
+              <React.Fragment> {/* Wrap children with Fragment */}
+                <ChevronUp className="h-5 w-5 mb-1 animate-bounce-slow" />
+                Menu
+              </React.Fragment>
             </Button>
           </div>
 
@@ -342,13 +346,15 @@ import {
                             )}
                             onClick={() => handleDrawerItemClick(item)}
                           >
-                            <IconComponent className="h-6 w-6 mb-2" />
-                            <span className="text-xs font-medium line-clamp-2">{item.label}</span>
-                            {item.badge !== undefined && item.badge > 0 && (
-                              <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                                {item.badge}
-                              </span>
-                            )}
+                            <React.Fragment> {/* Wrap children with Fragment */}
+                              <IconComponent className="h-6 w-6 mb-2" />
+                              <span className="text-xs font-medium line-clamp-2">{item.label}</span>
+                              {item.badge !== undefined && item.badge > 0 && (
+                                <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </React.Fragment>
                           </Button>
                         );
                       })}
