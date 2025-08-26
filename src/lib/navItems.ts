@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { NavItem, Profile, RoleNavItemConfig } from "./dataModels"; // Import RoleNavItemConfig
+import { NavItem, Profile, RoleNavItemConfig } from "./dataModels";
 
 /**
  * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
@@ -15,14 +15,13 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
 
-  // Step 1: Load role-specific configurations
   let query = supabase
     .from('role_nav_configs')
     .select(`
-      id,
-      nav_item_id,
+      id, // This is the configId (unique for this role's menu item instance)
+      nav_item_id, // This is the generic nav_item.id (from public.nav_items)
       role,
-      parent_nav_item_id,
+      parent_nav_item_id, // This is the generic nav_item.id of the parent (from public.nav_items)
       order_index,
       nav_item:nav_items!role_nav_configs_nav_item_id_fkey (
         id,
@@ -46,40 +45,68 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, fetchedConfigs);
 
-  const configs = fetchedConfigs as RoleNavItemConfig[];
-  const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id (DB UUID) to NavItem object
+  const configuredItemsMap = new Map<string, NavItem>(); // Key: config.id (unique instance)
+  const itemsByGenericId = new Map<string, NavItem[]>(); // Key: generic_nav_item.id, Value: list of NavItem instances
 
-  configs.forEach((config: any) => {
+  // First pass: Create all NavItem objects and populate maps
+  fetchedConfigs.forEach((config: any) => {
     if (config.nav_item) {
       const navItem: NavItem = {
-        id: config.nav_item.id, // This is the actual DB UUID
+        id: config.nav_item.id, // Generic nav_item ID
         label: config.nav_item.label,
         route: config.nav_item.route || undefined,
         icon_name: config.nav_item.icon_name || undefined,
         description: config.nav_item.description || undefined,
         is_external: config.nav_item.is_external,
-        type: config.nav_item.type, // Ensure type is included
+        type: config.nav_item.type,
         children: [], // Initialize empty children array
-        parent_nav_item_id: config.parent_nav_item_id || undefined, // This is also a DB UUID
+        
+        // Properties from role_nav_configs
+        configId: config.id, // Unique ID for this configured instance
+        parent_nav_item_id: config.parent_nav_item_id || undefined, // Generic nav_item ID of the parent
         order_index: config.order_index,
-        configId: config.id, // This is the config's own UUID
-        // is_global is a frontend concept, not directly from DB here
       };
-      navItemNodes.set(navItem.id, navItem);
-    } else {
-      console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
+      configuredItemsMap.set(navItem.configId!, navItem);
+
+      if (!itemsByGenericId.has(navItem.id)) {
+        itemsByGenericId.set(navItem.id, []);
+      }
+      itemsByGenericId.get(navItem.id)?.push(navItem);
     }
   });
-  console.log(`[loadNavItems] Populated navItemNodes for ${userRole} (count): ${navItemNodes.size}`);
+
+  console.log(`[loadNavItems] Populated configuredItemsMap (count): ${configuredItemsMap.size}`);
+  console.log(`[loadNavItems] Populated itemsByGenericId:`, itemsByGenericId);
 
   const rootItems: NavItem[] = [];
 
-  // Assign children and identify root items
-  navItemNodes.forEach(item => {
-    if (item.parent_nav_item_id && navItemNodes.has(item.parent_nav_item_id)) {
-      const parent = navItemNodes.get(item.parent_nav_item_id);
-      if (parent) {
-        parent.children?.push(item);
+  // Second pass: Build the hierarchy
+  configuredItemsMap.forEach(item => {
+    if (item.parent_nav_item_id) {
+      // Find the parent *configured item* whose generic ID matches item.parent_nav_item_id
+      // This is the crucial part. We need to find the *specific instance* of the parent.
+      // If multiple configured items have the same generic ID, we need a rule.
+      // A common rule is that a parent must be a 'category_or_action' type and not have a route itself.
+      // And it must be a *different* configured item than the current one.
+
+      let foundParent: NavItem | undefined;
+      const potentialParents = itemsByGenericId.get(item.parent_nav_item_id) || [];
+
+      for (const p of potentialParents) {
+        // A potential parent must be a category (no route) and not the item itself
+        if (p.configId !== item.configId && p.type === 'category_or_action' && !p.route) {
+          foundParent = p;
+          break;
+        }
+      }
+
+      if (foundParent) {
+        foundParent.children?.push(item);
+      } else {
+        // If a parent_nav_item_id is specified but no suitable parent configured item is found,
+        // it means the parent is either not configured as a category for this role, or it's a dangling reference.
+        // For now, we'll treat it as a root item.
+        rootItems.push(item);
       }
     } else {
       rootItems.push(item); // This is a root item
@@ -88,7 +115,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   // Sort children within each parent and root items
   rootItems.sort((a, b) => a.order_index - b.order_index);
-  navItemNodes.forEach(item => {
+  configuredItemsMap.forEach(item => {
     if (item.children) {
       item.children.sort((a, b) => a.order_index - b.order_index);
     }
