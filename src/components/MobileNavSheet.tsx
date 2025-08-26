@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing } from "lucide-react"; // Added BellRing
+import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -18,8 +18,8 @@ import { useSwipeable } from 'react-swipeable';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Import Avatar components
-import Logo from './Logo'; // Import the Logo component
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Logo from './Logo';
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home,
@@ -40,7 +40,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   MessageSquareQuote: MessageSquareQuote,
   ShieldCheck: ShieldCheck,
   Target: Target,
-  BellRing: BellRing, // Added BellRing to iconMap
+  BellRing: BellRing,
 };
 
 interface MobileNavSheetProps {
@@ -60,18 +60,16 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const { theme, setTheme } = useTheme();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
-  // Removed searchQuery state
 
   const swipeHandlers = useSwipeable({
-    onSwipedRight: onClose, // Only swipe right to close
-    preventScrollOnSwipe: true, // Prevent scrolling while swiping
-    trackMouse: true, // For testing on desktop
+    onSwipedRight: onClose,
+    preventScrollOnSwipe: true,
+    trackMouse: true,
   });
 
   React.useEffect(() => {
     if (!isOpen) {
       setDrawerNavStack([]);
-      // Removed setSearchQuery('');
     }
   }, [isOpen]);
 
@@ -80,7 +78,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
     if (isCategory) {
       setDrawerNavStack(prevStack => [...prevStack, item]);
-      // Removed setSearchQuery('');
     } else if (item.route) {
       if (item.is_external) {
         window.open(item.route, '_blank');
@@ -104,7 +101,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       newStack.pop();
       return newStack;
     });
-    // Removed searchQuery state
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -113,21 +109,18 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     navigate("/");
   }, [signOut, onClose, navigate]);
 
-  // Define static NavItems for profile actions
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
     { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 2 },
   ];
 
-  // Define static top-level items (excluding Messages and Notifications, now in header)
   const staticTopLevelItems: NavItem[] = [];
 
   const currentItemsToDisplay = React.useMemo(() => {
     let itemsToFilter: NavItem[] = [];
 
     if (drawerNavStack.length === 0) {
-      // Combine dynamic navItems with static top-level items
       itemsToFilter = [...navItems.filter(item => 
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
       ), ...staticTopLevelItems];
@@ -139,14 +132,14 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           icon_name: 'User',
           is_external: false,
           type: 'category_or_action',
-          children: staticProfileActions, // Use static profile actions
+          children: staticProfileActions,
           order_index: 999,
         });
       }
     } else {
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
       if (activeCategory.id === 'profile-category') {
-        itemsToFilter = staticProfileActions; // Always show static profile actions
+        itemsToFilter = staticProfileActions;
       } else {
         itemsToFilter = activeCategory.children || [];
       }
@@ -179,16 +172,19 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                   <span className="sr-only">Retour</span>
                 </Button>
               ) : (
-                <div className="w-10 h-10"></div> // Placeholder for alignment
+                <div className="w-10 h-10"></div>
               )}
-              <Logo iconClassName="h-8 w-8" textClassName="text-xl" /> {/* App Logo and Name */}
+              <Logo iconClassName="h-8 w-8" textClassName="text-xl" />
             </div>
 
             {/* Right side: Quick access items */}
             <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Fermer</span>
+              </Button>
               {currentUserProfile && (
                 <>
-                  {/* Messages with badge */}
                   <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative">
                     <MessageSquare className="h-5 w-5" />
                     {unreadMessagesCount > 0 && (
@@ -198,7 +194,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     )}
                     <span className="sr-only">Messagerie</span>
                   </Button>
-                  {/* User Profile/Account (Avatar/Name) */}
                   <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
@@ -209,7 +204,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 </>
               )}
               <ThemeToggle />
-              {/* Removed the close button */}
             </div>
           </div>
         </div>
@@ -250,11 +244,11 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     )}
                     onClick={() => handleItemClick(item)}
                   >
-                    <div className="icon-container">
+                    <div className="icon-container rounded-lg"> {/* Added rounded-lg here */}
                       <IconComponent className="h-6 w-6" />
                     </div>
                     <span className="title text-base font-medium line-clamp-2">{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && ( // Apply badge to messages
+                    {item.badge !== undefined && item.badge > 0 && (
                       <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
                         {item.badge}
                       </span>
