@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-// Keep only essential icons for now for diagnostic
 import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
@@ -18,9 +17,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useSwipeable } from 'react-swipeable';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
-import { motion, AnimatePresence } from 'framer-motion'; // Import framer-motion
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Map icon_name strings to Lucide React components (reduced for diagnostic)
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home,
   MessageSquare: MessageSquare,
@@ -45,7 +43,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 interface MobileNavSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  navItems: NavItem[]; // Full structured nav items for the current user's role
+  navItems: NavItem[];
   onOpenGlobalSearch: () => void;
   onOpenAboutModal: () => void;
   onOpenAuthModal: () => void;
@@ -59,7 +57,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const { theme, setTheme } = useTheme();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Removed searchQuery state
 
   const swipeHandlers = useSwipeable({
     onSwipedDown: onClose,
@@ -70,7 +68,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   React.useEffect(() => {
     if (!isOpen) {
       setDrawerNavStack([]);
-      setSearchQuery('');
+      // Removed setSearchQuery('');
     }
   }, [isOpen]);
 
@@ -79,7 +77,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
     if (isCategory) {
       setDrawerNavStack(prevStack => [...prevStack, item]);
-      setSearchQuery('');
+      // Removed setSearchQuery('');
     } else if (item.route) {
       if (item.is_external) {
         window.open(item.route, '_blank');
@@ -103,7 +101,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       newStack.pop();
       return newStack;
     });
-    setSearchQuery('');
+    // Removed setSearchQuery('');
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -124,14 +122,13 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   ];
 
   const currentItemsToDisplay = React.useMemo(() => {
-    const lowerCaseQuery = searchQuery.toLowerCase();
+    // Removed lowerCaseQuery and search filtering
     let itemsToFilter: NavItem[] = [];
 
     if (drawerNavStack.length === 0) {
       itemsToFilter = navItems.filter(item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined);
     } else {
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
-      // If the active category is the virtual "Mon Compte" category, show its actions
       if (activeCategory.id === 'profile-category') {
         itemsToFilter = profileActions;
       } else {
@@ -139,41 +136,16 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       }
     }
 
-    // Add ThemeToggle and a virtual "Mon Compte" category at the root level
-    if (drawerNavStack.length === 0 && currentUserProfile) {
-      itemsToFilter.push(
-        {
-          id: 'theme-toggle-item',
-          label: 'Thème',
-          icon_name: theme === 'dark' ? 'Sun' : 'Moon',
-          is_external: false,
-          type: 'category_or_action',
-          onClick: handleToggleTheme,
-          order_index: 998,
-        },
-        {
-          id: 'profile-category', // This is now a category
-          label: 'Mon Compte',
-          icon_name: 'User',
-          is_external: false,
-          type: 'category_or_action',
-          children: profileActions, // Its children are the profile actions
-          order_index: 999,
-        }
-      );
-    }
-
-    return itemsToFilter.filter(item =>
-      item.label.toLowerCase().includes(lowerCaseQuery) ||
-      (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
-    ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme, profileActions]);
+    // Removed ThemeToggle and "Mon Compte" category from here as they are now in the header
+    
+    return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
+  }, [navItems, drawerNavStack, currentUserProfile, theme, handleToggleTheme, profileActions]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
     ? drawerNavStack[drawerNavStack.length - 1].icon_name
-    : 'Menu'; // Default icon for the root "Menu"
-  const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info; // Fallback to 'Info' if name is undefined
+    : 'Menu';
+  const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -182,15 +154,37 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         className="w-full h-[calc(100vh-68px)] flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg"
         {...swipeHandlers}
       >
-        <div className="p-4 flex-shrink-0">
-          <div className="android-search-bar mb-4">
-            <Search className="h-5 w-5 text-android-on-surface-variant" />
-            <Input
-              placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full !p-0 !bg-transparent !border-none !ring-0 !shadow-none"
-            />
+        <div className="p-4 flex-shrink-0 border-b border-border">
+          <div className="flex items-center justify-between mb-4">
+            {/* "Mon Compte" button */}
+            {currentUserProfile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleItemClick({
+                  id: 'profile-category',
+                  label: 'Mon Compte',
+                  icon_name: 'User',
+                  is_external: false,
+                  type: 'category_or_action',
+                  children: profileActions,
+                  order_index: 999,
+                })}
+                className="flex items-center gap-1 text-sm"
+              >
+                <User className="h-5 w-5" />
+                <span>Mon Compte</span>
+              </Button>
+            )}
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            {/* Close button */}
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
+              <X className="h-5 w-5" />
+              <span className="sr-only">Fermer le menu</span>
+            </Button>
           </div>
 
           <div className="flex items-center justify-between">
@@ -200,33 +194,26 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 <span className="sr-only">Retour</span>
               </Button>
             ) : (
-              // Placeholder to keep alignment
               <div className="w-10 h-10"></div> 
             )}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
-              {/* Dynamic icon and title */}
               {React.createElement(CurrentDrawerIconComponent, { className: "h-6 w-6 text-primary" })}
               {currentDrawerTitle}
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
-              <X className="h-5 w-5" />
-              <span className="sr-only">Fermer le menu</span>
-            </Button>
+            <div className="w-10 h-10"></div> {/* Placeholder for alignment */}
           </div>
         </div>
 
         <ScrollArea className="flex-grow p-4">
           <motion.div 
-            key={drawerNavStack.length} // Key change to trigger exit/enter animations
-            initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }} // Slide in from right if deeper, left if shallower
+            key={drawerNavStack.length}
+            initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }} // Slide out to left if deeper, right if shallower
+            exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="grid grid-cols-2 sm:grid-cols-3 gap-4"
           >
-            {currentItemsToDisplay.length === 0 && searchQuery.trim() !== '' ? (
-              <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément trouvé pour "{searchQuery}".</p>
-            ) : currentItemsToDisplay.length === 0 && searchQuery.trim() === '' ? (
+            {currentItemsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
             ) : (
               currentItemsToDisplay.map((item) => {
@@ -255,7 +242,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                       </span>
                     )}
                     {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
-                    {isCategory && <ChevronUp className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />} {/* Indicate category */}
+                    {isCategory && <ChevronUp className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />}
                   </Button>
                 );
               })
