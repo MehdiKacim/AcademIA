@@ -43,12 +43,12 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     return [];
   }
 
-  console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, fetchedConfigs);
+  console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, JSON.stringify(fetchedConfigs, null, 2));
 
-  const configuredItemsMap = new Map<string, NavItem>(); // Key: config.id (unique instance)
-  const itemsByGenericId = new Map<string, NavItem[]>(); // Key: generic_nav_item.id, Value: list of NavItem instances
+  // Create a flat list of all configured NavItem objects
+  const allConfiguredItemsFlat: NavItem[] = [];
+  const configuredItemMapByConfigId = new Map<string, NavItem>(); // Key: configId (unique instance)
 
-  // First pass: Create all NavItem objects and populate maps
   fetchedConfigs.forEach((config: any) => {
     if (config.nav_item) {
       const navItem: NavItem = {
@@ -66,42 +66,31 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         parent_nav_item_id: config.parent_nav_item_id || undefined, // Generic nav_item ID of the parent
         order_index: config.order_index,
       };
-      configuredItemsMap.set(navItem.configId!, navItem);
-
-      if (!itemsByGenericId.has(navItem.id)) {
-        itemsByGenericId.set(navItem.id, []);
-      }
-      itemsByGenericId.get(navItem.id)?.push(navItem);
+      allConfiguredItemsFlat.push(navItem);
+      configuredItemMapByConfigId.set(navItem.configId!, navItem);
+    } else {
+      console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
     }
   });
 
-  console.log(`[loadNavItems] Populated configuredItemsMap (count): ${configuredItemsMap.size}`);
-  console.log(`[loadNavItems] Populated itemsByGenericId:`, itemsByGenericId);
+  console.log(`[loadNavItems] All configured items flat (count): ${allConfiguredItemsFlat.length}, content:`, JSON.stringify(allConfiguredItemsFlat, null, 2));
 
   const rootItems: NavItem[] = [];
 
-  // Second pass: Build the hierarchy
-  configuredItemsMap.forEach(item => {
+  // Build the hierarchy
+  allConfiguredItemsFlat.forEach(item => {
     if (item.parent_nav_item_id) {
-      // Find the parent *configured item* whose generic ID matches item.parent_nav_item_id
-      // This is the crucial part. We need to find the *specific instance* of the parent.
-      // If multiple configured items have the same generic ID, we need a rule.
-      // A common rule is that a parent must be a 'category_or_action' type and not have a route itself.
-      // And it must be a *different* configured item than the current one.
+      // Find the parent item in the flat list by its generic ID
+      // We need to find the *configured instance* of the parent.
+      // A parent must be a 'category_or_action' type and not have a route itself.
+      const parentCandidate = allConfiguredItemsFlat.find(
+        p => p.id === item.parent_nav_item_id && // Generic ID matches
+             p.type === 'category_or_action' && // Must be a category
+             !p.route // Must not be a route itself (i.e., a true category)
+      );
 
-      let foundParent: NavItem | undefined;
-      const potentialParents = itemsByGenericId.get(item.parent_nav_item_id) || [];
-
-      for (const p of potentialParents) {
-        // A potential parent must be a category (no route) and not the item itself
-        if (p.configId !== item.configId && p.type === 'category_or_action' && !p.route) {
-          foundParent = p;
-          break;
-        }
-      }
-
-      if (foundParent) {
-        foundParent.children?.push(item);
+      if (parentCandidate) {
+        parentCandidate.children?.push(item);
       } else {
         // If a parent_nav_item_id is specified but no suitable parent configured item is found,
         // it means the parent is either not configured as a category for this role, or it's a dangling reference.
@@ -115,13 +104,13 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   // Sort children within each parent and root items
   rootItems.sort((a, b) => a.order_index - b.order_index);
-  configuredItemsMap.forEach(item => {
+  allConfiguredItemsFlat.forEach(item => {
     if (item.children) {
       item.children.sort((a, b) => a.order_index - b.order_index);
     }
   });
 
-  console.log(`[loadNavItems] Final structured nav items for ${userRole} (root items count): ${rootItems.length}, items:`, rootItems);
+  console.log(`[loadNavItems] Final structured nav items for ${userRole} (root items count): ${rootItems.length}, items:`, JSON.stringify(rootItems, null, 2));
 
   // Apply badge for messages
   const applyMessageBadge = (items: NavItem[]) => {
