@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react" // Import React for React.Fragment
+import React from "react"
 import {
   Toast,
   ToastClose,
@@ -10,30 +10,32 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
-// import { cn } from "@/lib/utils" // Removed unused import
 
 export function Toaster() {
   const { toasts } = useToast()
 
   return (
-    <React.Fragment> {/* Wrap both in a Fragment */}
+    <React.Fragment>
       <ToastProvider>
-        {toasts.map(function ({ id, title, description, action, ...props }) {
-          return (
-            <Toast key={id} {...props}>
-              <div className="grid gap-1">
-                {title && <ToastTitle>{title}</ToastTitle>}
-                {description && (
-                  <ToastDescription>{description}</ToastDescription>
-                )}
-              </div>
-              {action}
-              <ToastClose />
-            </Toast>
-          )
-        })}
+        {/* Envelopper le résultat de .map() dans un Fragment pour que ToastProvider reçoive un seul enfant */}
+        <React.Fragment>
+          {toasts.map(function ({ id, title, description, action, ...props }) {
+            return (
+              <Toast key={id} {...props}>
+                <div className="grid gap-1">
+                  {title && <ToastTitle>{title}</ToastTitle>}
+                  {description && (
+                    <ToastDescription>{description}</ToastDescription>
+                  )}
+                </div>
+                {action}
+                <ToastClose />
+              </Toast>
+            )
+          })}
+        </React.Fragment>
       </ToastProvider>
-      <ToastViewport /> {/* This is now a sibling to ToastProvider */}
+      <ToastViewport />
     </React.Fragment>
   )
 }
