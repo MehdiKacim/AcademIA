@@ -121,7 +121,7 @@ const SearchableDropdown = React.forwardRef<
                           setOpen(false);
                           setSearchValue(""); // Clear search after selection
                         }}
-                        className="relative flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50" // Removed select-none
+                        className="relative flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 pointer-events-auto" // Added pointer-events-auto
                       >
                         <Check
                           className={cn(

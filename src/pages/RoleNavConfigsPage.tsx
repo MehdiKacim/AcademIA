@@ -120,7 +120,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           ref={setNodeRef} 
           style={style} 
           className={cn(
-            "p-3 border rounded-md flex items-center justify-between gap-2 mb-2", // Removed select-none and pointer-events-auto
+            "p-3 border rounded-md flex items-center justify-between gap-2 mb-2",
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50"
@@ -186,7 +186,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
       </ContextMenuTrigger>
       {/* Only show "Gérer les sous-éléments" for true categories (type 'category_or_action' with no route) */}
       {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
-        <ContextMenuContent className="w-auto p-1">
+        <ContextMenuContent className="w-auto p-1 pointer-events-auto"> {/* Added pointer-events-auto */}
           <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
             <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
           </ContextMenuItem>
@@ -810,7 +810,7 @@ const RoleNavConfigsPage = () => {
                   </DndContext>
                 </CardContent>
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-auto p-1">
+              <ContextMenuContent className="w-auto p-1 pointer-events-auto"> {/* Added pointer-events-auto */}
                 <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
                 </ContextMenuItem>
