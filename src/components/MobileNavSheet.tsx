@@ -14,6 +14,7 @@ import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -37,6 +38,13 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]); // Stack for nested navigation
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Swipe handlers for closing the sheet on mobile
+  const swipeHandlers = useSwipeable({
+    onSwipedDown: onClose, // Close the sheet when swiped down
+    preventScrollOnSwipe: true,
+    trackMouse: true, // For testing on desktop
+  });
 
   // Reset stack and search when sheet opens/closes
   React.useEffect(() => {
@@ -107,7 +115,11 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="left" className="w-full sm:max-w-sm flex flex-col p-0 backdrop-blur-lg bg-background/80">
+      <SheetContent
+        side="top" // Changed from "left" to "top"
+        className="w-full h-[calc(100vh-68px)] flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg" // Adjusted height and added rounded-b-lg
+        {...swipeHandlers} // Apply swipe handlers here
+      >
         <SheetHeader className="p-4 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between">
             {drawerNavStack.length > 0 ? (
