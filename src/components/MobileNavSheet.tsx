@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare } from "lucide-react";
+import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing } from "lucide-react"; // Added BellRing
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -38,6 +38,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   MessageSquareQuote: MessageSquareQuote,
   ShieldCheck: ShieldCheck,
   Target: Target,
+  BellRing: BellRing, // Added BellRing to iconMap
 };
 
 interface MobileNavSheetProps {
@@ -121,25 +122,27 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     let itemsToFilter: NavItem[] = [];
 
     if (drawerNavStack.length === 0) {
-      // For top-level, show main nav items and "Mon Compte" if logged in
       itemsToFilter = navItems.filter(item => 
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
       );
       if (currentUserProfile) {
-        // Add a virtual category for "Mon Compte" to group profile actions
         itemsToFilter.push({
           id: 'profile-category',
           label: 'Mon Compte',
           icon_name: 'User',
           is_external: false,
           type: 'category_or_action',
-          children: profileActions, // Attach profile actions as children
-          order_index: 999, // Place it at the end
+          children: profileActions,
+          order_index: 999,
         });
       }
     } else {
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
-      itemsToFilter = activeCategory.children || [];
+      if (activeCategory.id === 'profile-category') {
+        itemsToFilter = profileActions;
+      } else {
+        itemsToFilter = activeCategory.children || [];
+      }
     }
     
     return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
@@ -155,7 +158,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="top"
-        className="w-full h-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg" // Reverted positioning
+        className="w-full h-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg"
         {...swipeHandlers}
       >
         <div className="p-4 flex-shrink-0 border-b border-border">
@@ -176,13 +179,10 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               {currentDrawerTitle}
             </SheetTitle>
 
-            {/* Right side: Theme Toggle and Close button */}
+            {/* Right side: Theme Toggle */}
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Fermer le menu</span>
-              </Button>
+              {/* Removed the close button (X) */}
             </div>
           </div>
         </div>
@@ -220,9 +220,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                       <IconComponent className="h-6 w-6" />
                     </div>
                     <span className="title text-base font-medium line-clamp-2">{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && (
+                    {item.route === '/messages' && unreadMessagesCount > 0 && ( // Apply badge to messages
                       <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
-                        {item.badge}
+                        {unreadMessagesCount}
                       </span>
                     )}
                     {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}

@@ -25,6 +25,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import Messages from "./pages/Messages";
+import NotificationsPage from "./pages/NotificationsPage"; // New: Import NotificationsPage
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
@@ -52,6 +53,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     "/courses/:courseId/modules/:moduleIndex": ModuleDetail,
     "/all-notes": AllNotes,
     "/messages": Messages,
+    "/notifications": NotificationsPage, // New: Add NotificationsPage route
     "/profile": Profile,
     "/settings": Settings,
     "/data-model": DataModelViewer,
