@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X, Menu } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X, Menu, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -228,6 +228,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     delta: 50,
   });
 
+  // Determine if there's history to go back to (simple check)
+  const canGoBack = location.key !== 'default' && window.history.length > 1;
+
   return (
     <div {...globalSwipeHandlers} className="flex flex-col min-h-screen bg-muted/40">
       <header
@@ -420,7 +423,21 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           À propos
         </Button>
       </footer>
-      {/* Removed BottomNavigationBar */}
+      
+      {/* Mobile Navigation Sheet Trigger Indicator (Swipe Down) */}
+      {isMobile && currentUserProfile && !isMobileNavSheetOpen && !isSearchOverlayOpen && !isChatOpen && (
+        <div className="fixed bottom-0 inset-x-0 z-40 flex justify-center pb-2 pointer-events-none">
+          <ChevronDown className="h-8 w-8 text-muted-foreground animate-bounce-slow" />
+        </div>
+      )}
+
+      {/* Mobile Back Gesture Indicator (Swipe Right) */}
+      {isMobile && currentUserProfile && !isMobileNavSheetOpen && !isSearchOverlayOpen && !isChatOpen && canGoBack && (
+        <div className="fixed left-0 inset-y-0 z-40 flex items-center pl-2 pointer-events-none">
+          <ArrowLeft className="h-8 w-8 text-muted-foreground animate-wiggle-horizontal" />
+        </div>
+      )}
+
       {currentUserProfile && (
         <MobileNavSheet
           isOpen={isMobileNavSheetOpen}
