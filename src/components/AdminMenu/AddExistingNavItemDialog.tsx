@@ -65,16 +65,26 @@ const AddExistingNavItemDialog = ({
   }, [isOpen]);
 
   const availableGenericItemsOptions = useMemo(() => {
-    const filtered = allGenericNavItems
-      .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-      .filter(item => item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase())); // Apply search filter
+    const itemsNotYetConfigured = allGenericNavItems.filter(
+      item => !allConfiguredItemsFlat.some(configured => configured.id === item.id)
+    );
+
+    const configuredRootItems = allConfiguredItemsFlat.filter(
+      item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined
+    );
+
+    const combinedItems = [...itemsNotYetConfigured, ...configuredRootItems];
+
+    const filtered = combinedItems.filter(item =>
+      item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase())
+    );
       
     return filtered.map(item => ({
-        id: item.id,
+        id: item.id, // This is the generic nav_item_id
         label: item.label,
         icon_name: item.icon_name,
         level: 0,
-        isNew: false,
+        isNew: !allConfiguredItemsFlat.some(configured => configured.id === item.id), // Mark as new if not already configured
       }));
   }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
@@ -146,6 +156,9 @@ const AddExistingNavItemDialog = ({
         return;
       }
 
+      const selectedItemInfo = availableGenericItemsOptions.find(opt => opt.id === selectedGenericItemToAdd);
+      const isNewConfiguration = selectedItemInfo?.isNew; // Check if it's a truly new configuration
+
       let finalParentId: string | null = selectedParentForNewItem === 'none' ? null : selectedParentForNewItem;
 
       // If the selected parent is a new generic item (not yet configured for this role),
@@ -191,15 +204,35 @@ const AddExistingNavItemDialog = ({
         }
       }
 
-      // Add the new configuration for the selected generic item
-      const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-        nav_item_id: genericItem.id,
-        role: selectedRoleFilter,
-        parent_nav_item_id: finalParentId,
-        order_index: 9999, // Will be re-indexed by fetchAndStructureNavItems
-      };
-      await addRoleNavItemConfig(newConfig);
-      showSuccess(`'${genericItem.label}' ajouté au menu du rôle !`);
+      if (isNewConfiguration) {
+        // Add a new configuration for the selected generic item
+        const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+          nav_item_id: genericItem.id,
+          role: selectedRoleFilter,
+          parent_nav_item_id: finalParentId,
+          order_index: 9999, // Will be re-indexed by fetchAndStructureNavItems
+        };
+        await addRoleNavItemConfig(newConfig);
+        showSuccess(`'${genericItem.label}' ajouté au menu du rôle !`);
+      } else {
+        // Update existing configuration (re-parenting)
+        const existingConfig = allConfiguredItemsFlat.find(item => item.id === genericItem.id);
+        if (!existingConfig || !existingConfig.configId) {
+          showError("Configuration existante introuvable pour la mise à jour.");
+          setIsAdding(false);
+          return;
+        }
+        const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+          id: existingConfig.configId,
+          nav_item_id: genericItem.id,
+          role: selectedRoleFilter,
+          parent_nav_item_id: finalParentId,
+          order_index: 9999, // Will be re-indexed by fetchAndStructureNavItems
+        };
+        await updateRoleNavItemConfig(updatedConfig);
+        showSuccess(`'${genericItem.label}' déplacé dans le menu du rôle !`);
+      }
+
       onItemAdded(); // Trigger refresh in parent
       onClose();
     } catch (error: any) {
