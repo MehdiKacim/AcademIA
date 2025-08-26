@@ -208,16 +208,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     });
   };
 
-  // Static desktop navigation items (Messagerie, Notifications)
-  const staticDesktopNavItems: NavItem[] = [
-    { id: 'static-messages-desktop', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessages },
-    { id: 'static-notifications-desktop', label: 'Notifications', icon_name: 'BellRing', is_external: false, type: 'route', route: '/notifications', order_index: 101 },
-  ];
-
-  const headerNavItems = React.useMemo(() => {
-    // Combine dynamic navItems with static desktop items
-    return [...fullNavTree, ...staticDesktopNavItems].sort((a, b) => a.order_index - b.order_index);
-  }, [fullNavTree, staticDesktopNavItems]);
+  const headerNavItems = fullNavTree;
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
@@ -241,7 +232,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         )}
       >
         <div className="flex items-center gap-4">
-          {/* Removed Mobile menu button (hamburger) */}
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
@@ -279,9 +269,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   >
                     {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
                     {item.label}
-                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                    {item.route === '/messages' && unreadMessages > 0 && (
                       <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
+                        {unreadMessages}
                       </span>
                     )}
                   </NavLink>
@@ -291,7 +281,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {!isMobile && currentUserProfile && (
+          {currentUserProfile && ( // This button is now always rendered for authenticated users
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
