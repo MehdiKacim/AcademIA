@@ -89,7 +89,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       onClose();
     } else if (item.onClick) {
       item.onClick();
-      if (item.label !== "Recherche") {
+      if (item.label !== "Recherche") { // Keep search drawer open if it's the search button
         onClose();
       }
     }

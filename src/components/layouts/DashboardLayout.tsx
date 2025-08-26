@@ -43,7 +43,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
   const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole();
-  const { isChatOpen } = useCourseChat();
+  const { isChatOpen, openChat } = useCourseChat(); // Get openChat from context
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -55,13 +55,29 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const [desktopNavStack, setDesktopNavStack] = useState<NavItem[]>([]);
   const [isDesktopOverlayOpen, setIsDesktopOverlayOpen] = useState(false);
 
-  // Removed isAiAChatButtonVisible and autoHideTimerRef as FloatingAiAPersistentChat is removed.
-
   const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
 
-  const fullNavTree = React.useMemo((): NavItem[] => {
-    return navItems;
-  }, [navItems]);
+  // Helper function to inject onClick handlers for specific action items
+  const injectActionHandlers = useCallback((items: NavItem[]): NavItem[] => {
+    return items.map(item => {
+      let newItem = { ...item };
+      if (newItem.id === 'nav-global-search') {
+        newItem.onClick = () => setIsSearchOverlayOpen(true);
+      } else if (newItem.id === 'nav-about') {
+        newItem.onClick = () => setIsAboutModalOpen(true);
+      } else if (newItem.id === 'nav-aia-chat') {
+        newItem.onClick = () => openChat();
+      }
+      if (newItem.children && newItem.children.length > 0) {
+        newItem.children = injectActionHandlers(newItem.children);
+      }
+      return newItem;
+    });
+  }, [openChat]);
+
+  const fullNavTreeWithActions = React.useMemo((): NavItem[] => {
+    return injectActionHandlers(navItems);
+  }, [navItems, injectActionHandlers]);
 
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
@@ -71,8 +87,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       // console.log("[DashboardLayout] Current User Profile:", currentUserProfile, "but navItems is empty.");
     }
   }, [currentUserProfile, navItems]);
-
-  // Removed startAutoHideTimer and resetAndShowButton as FloatingAiAPersistentChat is removed.
 
   const handleLogout = async () => {
     await signOut();
@@ -158,18 +172,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     };
   }, [currentUserProfile?.id]);
 
-  // Removed useEffect for auto-hide timer and event listeners as FloatingAiAPersistentChat is removed.
-
-  // Removed floatingAiAChatButtonVisible as FloatingAiAPersistentChat is removed.
-
   const handleDesktopCategoryClick = (categoryItem: NavItem) => {
-    // console.log("[DashboardLayout] handleDesktopCategoryClick: Pushing category to stack:", categoryItem.label);
     setDesktopNavStack(prevStack => [...prevStack, categoryItem]);
     setIsDesktopOverlayOpen(true);
   };
 
   const handleDesktopBackToCategories = () => {
-    // console.log("[DashboardLayout] handleDesktopBackToCategories: Popping from stack.");
     setDesktopNavStack(prevStack => {
       const newStack = [...prevStack];
       newStack.pop();
@@ -180,19 +188,19 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     });
   };
 
-  const headerNavItems = fullNavTree;
+  const headerNavItems = fullNavTreeWithActions; // Use the tree with injected actions
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
-  const headerSwipeHandlers = useSwipeable({ // Renamed to headerSwipeHandlers
+  const globalSwipeHandlers = useSwipeable({ // Moved swipe handlers to the main div
     onSwipedDown: () => {
       if (isMobile && currentUserProfile && !isMobileNavSheetOpen) {
         setIsMobileNavSheetOpen(true);
       }
     },
-    onSwipedRight: () => { // New: Handle swipe right to go back
+    onSwipedRight: () => {
       if (isMobile && !isMobileNavSheetOpen && !isSearchOverlayOpen && !isChatOpen) {
-        navigate(-1); // Go back in history
+        navigate(-1);
       }
     },
     preventScrollOnSwipe: true,
@@ -200,13 +208,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     delta: 50,
   });
 
-  // Determine if there's history to go back to (simple check)
   const canGoBack = location.key !== 'default' && window.history.length > 1;
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40"> {/* Removed globalSwipeHandlers from here */}
+    <div className="flex flex-col min-h-screen bg-muted/40" {...globalSwipeHandlers}> {/* Apply globalSwipeHandlers here */}
       <header
-        {...headerSwipeHandlers} // Applied headerSwipeHandlers here
         className={cn(
           "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
@@ -247,6 +253,12 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                           : "text-muted-foreground hover:text-foreground"
                       )
                     }
+                    onClick={(e) => {
+                      if (item.onClick) {
+                        e.preventDefault(); // Prevent default NavLink behavior if onClick is present
+                        item.onClick();
+                      }
+                    }}
                   >
                     {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
                     {item.label}
@@ -262,7 +274,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {currentUserProfile && ( // This button is now always rendered for authenticated users
+          {currentUserProfile && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
@@ -340,7 +352,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               {desktopNavStack.length > 0 && desktopNavStack[desktopNavStack.length - 1].children?.map((item) => {
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                const isSubCategory = item.type === 'category_or_or_action' && (item.route === null || item.route === undefined) && item.children && item.children.length > 0;
+                const isSubCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.children && item.children.length > 0;
 
                 return (
                   <Button
@@ -348,10 +360,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     variant="outline"
                     onClick={() => {
                       if (isSubCategory) {
-                        // console.log("[DashboardLayout] Clicked sub-category:", item.label);
                         handleDesktopCategoryClick(item);
                       } else {
-                        // console.log("[DashboardLayout] Clicked direct link/action:", item.label);
                         setIsDesktopOverlayOpen(false);
                         setDesktopNavStack([]);
                         if (item.route) {
@@ -408,17 +418,11 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         </Button>
       </footer>
       
-      {/* Mobile Navigation Sheet Trigger Indicator (Swipe Down) */}
-      {/* Removed the ChevronDown indicator */}
-
-      {/* Mobile Back Gesture Indicator (Swipe Right) */}
-      {/* Removed the ArrowLeft indicator */}
-
       {currentUserProfile && (
         <MobileNavSheet
           isOpen={isMobileNavSheetOpen}
           onClose={() => setIsMobileNavSheetOpen(false)}
-          navItems={fullNavTree}
+          navItems={fullNavTreeWithActions} // Use the tree with injected actions
           onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)}
           onOpenAboutModal={() => setIsAboutModalOpen(true)}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
@@ -426,7 +430,6 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
-      {/* Removed FloatingAiAPersistentChat */}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
