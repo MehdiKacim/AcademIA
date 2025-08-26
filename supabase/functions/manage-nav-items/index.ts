@@ -6,84 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Define default nav item structures for each role
-const DEFAULT_NAV_ITEMS_BY_ROLE = {
-  administrator: [
-    { item: { logical_id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false, type: 'route' } },
-    { item: { logical_id: 'menu-management-category-id', label: 'Gestion des Menus', route: null, icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false, type: 'category_or_action' } },
-    { item: { logical_id: 'generic-items-route-id', label: 'Éléments de navigation', route: '/admin-menu-management/generic-items', icon_name: 'LayoutList', description: "Gérez les définitions de base des éléments de navigation", is_external: false, type: 'route' }, parentId: 'menu-management-category-id' },
-    { item: { logical_id: 'role-configs-route-id', label: 'Configuration par rôle', route: '/admin-menu-management/role-configs', icon_name: 'UserRoundCog', description: "Configurez les menus pour chaque rôle utilisateur", is_external: false, type: 'route' }, parentId: 'menu-management-category-id' },
-    { item: { logical_id: 'user-management-route-id', label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'UsersRound', description: "Gérez les profils et les rôles des utilisateurs", is_external: false, type: 'route' } },
-    { item: { logical_id: 'subject-management-route-id', label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Créez et gérez les matières scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'school-year-management-route-id', label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Créez et gérez les années scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'professor-assignment-route-id', label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières et classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'curriculum-management-route-id', label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Créez et gérez les cursus scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'class-management-route-id', label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Créez et gérez les classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'pedagogical-management-route-id', label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations des élèves aux classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false, type: 'route' } },
-    { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
-    { item: { logical_id: 'analytics-route-id', label: 'Analytiques', route: '/analytics', icon_name: 'LineChart', description: "Consultez les statistiques de l'application", is_external: false, type: 'route' } },
-  ],
-  student: [
-    { item: { logical_id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de votre progression", is_external: false, type: 'route' } },
-    { item: { logical_id: 'my-courses-route-id', label: 'Mes Cours', route: '/courses', icon_name: 'BookOpen', description: "Accédez à vos cours et suivez votre progression", is_external: false, type: 'route' } },
-    { item: { logical_id: 'all-notes-route-id', label: 'Toutes mes notes', route: '/all-notes', icon_name: 'NotebookText', description: "Retrouvez toutes vos notes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec vos professeurs et tuteurs", is_external: false, type: 'route' } },
-    { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
-    { item: { logical_id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez vos statistiques d'apprentissage", is_external: false, type: 'route' } },
-  ],
-  professeur: [
-    { item: { logical_id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de vos cours et élèves", is_external: false, type: 'route' } },
-    { item: { logical_id: 'course-management-route-id', label: 'Gestion des Cours', route: '/courses', icon_name: 'BookOpen', description: "Gérez les cours que vous avez créés", is_external: false, type: 'route' } },
-    { item: { logical_id: 'create-course-route-id', label: 'Créer un cours', route: '/create-course', icon_name: 'PlusSquare', description: "Créez un nouveau cours", is_external: false, type: 'route' } },
-    { item: { logical_id: 'class-management-route-id', label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Gérez les classes que vous supervisez", is_external: false, type: 'route' } },
-    { item: { logical_id: 'pedagogical-management-route-id', label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations des élèves aux classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec vos élèves et collègues", is_external: false, type: 'route' } },
-    { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
-    { item: { logical_id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de vos cours et élèves", is_external: false, type: 'route' } },
-  ],
-  tutor: [
-    { item: { logical_id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de vos élèves", is_external: false, type: 'route' } },
-    { item: { logical_id: 'pedagogical-management-route-id', label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations des élèves aux classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec vos élèves et collègues", is_external: false, type: 'route' } },
-    { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
-    { item: { logical_id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de vos élèves", is_external: false, type: 'route' } },
-  ],
-  director: [
-    { item: { logical_id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de votre établissement", is_external: false, type: 'route' } },
-    { item: { logical_id: 'user-management-route-id', label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'UsersRound', description: "Gérez les profils et les rôles des utilisateurs", is_external: false, type: 'route' } },
-    { item: { logical_id: 'subject-management-route-id', label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Créez et gérez les matières scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'school-year-management-route-id', label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Créez et gérez les années scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'professor-assignment-route-id', label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières et classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'curriculum-management-route-id', label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Créez et gérez les cursus scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'class-management-route-id', label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Créez et gérez les classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'pedagogical-management-route-id', label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations des élèves aux classes", is_external: false, type: 'route' } }
-    ,
-    { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false, type: 'route' } },
-    { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
-    { item: { logical_id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de votre établissement", is_external: false, type: 'route' } },
-  ],
-  deputy_director: [
-    { item: { logical_id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de votre établissement", is_external: false, type: 'route' } },
-    { item: { logical_id: 'user-management-route-id', label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'UsersRound', description: "Gérez les profils et les rôles des utilisateurs", is_external: false, type: 'route' } },
-    { item: { logical_id: 'subject-management-route-id', label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Créez et gérez les matières scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'school-year-management-route-id', label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Créez et gérez les années scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'professor-assignment-route-id', label: 'Gestion des Affectations Professeurs-Matières', route: '/professor-assignments', icon_name: 'UserCheck', description: "Affectez les professeurs aux matières et classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'curriculum-management-route-id', label: 'Gestion des Cursus', route: '/curricula', icon_name: 'LayoutList', description: "Créez et gérez les cursus scolaires", is_external: false, type: 'route' } },
-    { item: { logical_id: 'class-management-route-id', label: 'Gestion des Classes', route: '/classes', icon_name: 'Users', description: "Créez et gérez les classes", is_external: false, type: 'route' } },
-    { item: { logical_id: 'pedagogical-management-route-id', label: 'Gestion Pédagogique', route: '/pedagogical-management', icon_name: 'GraduationCap', description: "Gérez les affectations des élèves aux classes", is_external: false, type: 'route' } }
-    ,
-    { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false, type: 'route' } },
-    { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
-    { item: { logical_id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de votre établissement", is_external: false, type: 'route' } },
-  ],
-};
+// Removed DEFAULT_NAV_ITEMS_BY_ROLE
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -107,13 +30,8 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     // Permission check:
-    // 1. Allow 'bootstrap_defaults' if no user is authenticated (for initial setup)
-    // 2. For all other actions, or if 'bootstrap_defaults' is called with an authenticated user,
-    //    require the user to be an 'administrator'.
-    if (!user && action === 'bootstrap_defaults') {
-      // Proceed with bootstrap_defaults using service role key, no further user check needed here
-      // The rest of the function will use supabaseAdminClient
-    } else if (userError || !user) {
+    // For all actions, require the user to be an 'administrator'.
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized: User not authenticated.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
@@ -169,115 +87,7 @@ serve(async (req) => {
           .delete()
           .eq('id', payload.id));
         break;
-      case 'bootstrap_defaults':
-        const { role: bootstrapRole } = payload;
-        console.log(`[Edge Function] Bootstrapping defaults for role: ${bootstrapRole}`);
-
-        const defaultItemsForRole = DEFAULT_NAV_ITEMS_BY_ROLE[bootstrapRole];
-        if (!defaultItemsForRole || defaultItemsForRole.length === 0) {
-          // If no default items, just delete existing configs and return success
-          const { error: deleteConfigsError } = await supabaseAdminClient
-            .from('role_nav_configs')
-            .delete()
-            .eq('role', bootstrapRole);
-
-          if (deleteConfigsError) {
-            console.error(`[Edge Function] Error deleting existing role nav configs for ${bootstrapRole}:`, deleteConfigsError);
-            throw deleteConfigsError;
-          }
-          console.log(`[Edge Function] Deleted existing role nav configs for ${bootstrapRole}. No new items to insert.`);
-          data = []; // Return empty data
-          break; // Exit switch case
-        }
-
-        // Step 1: Delete existing configs for this role to ensure a clean slate
-        const { error: deleteConfigsError } = await supabaseAdminClient
-          .from('role_nav_configs')
-          .delete()
-          .eq('role', bootstrapRole);
-
-        if (deleteConfigsError) {
-          console.error(`[Edge Function] Error deleting existing role nav configs for ${bootstrapRole}:`, deleteConfigsError);
-          throw deleteConfigsError;
-        }
-        console.log(`[Edge Function] Deleted existing role nav configs for ${bootstrapRole}.`);
-
-        // Map to store actual DB IDs of generic nav_items, keyed by their predefined LOGICAL IDs
-        const logicalIdToDbIdMap = new Map<string, string>();
-
-        // Step 2: Ensure all generic nav_items exist and get their DB IDs
-        for (const entry of defaultItemsForRole) { // Renamed itemData to entry for clarity
-          const itemData = entry.item; // This is the actual nav_item object with logical_id
-          const navItemPayloadForDb = { ...itemData };
-          delete navItemPayloadForDb.logical_id; // Remove logical_id from the payload for DB insert/check
-
-          // Try to find an existing nav_item by logical_id first
-          const { data: existingLogicalIdItem, error: fetchLogicalIdError } = await supabaseAdminClient
-            .from('nav_items')
-            .select('id')
-            .eq('logical_id', itemData.logical_id)
-            .maybeSingle();
-          if (fetchLogicalIdError) throw fetchLogicalIdError;
-
-          if (existingLogicalIdItem) {
-            logicalIdToDbIdMap.set(itemData.logical_id, existingLogicalIdItem.id); // Map logical ID to existing DB ID
-          } else {
-            // Insert new item, letting DB generate UUID for 'id'
-            const { data: newItem, error: insertItemError } = await supabaseAdminClient
-              .from('nav_items')
-              .insert({ ...navItemPayloadForDb, logical_id: itemData.logical_id }) // Include logical_id in insert
-              .select('id')
-              .single();
-            if (insertItemError) throw insertItemError;
-            logicalIdToDbIdMap.set(itemData.logical_id, newItem.id); // Map logical ID to new generated DB ID
-          }
-        }
-        console.log("[Edge Function] logicalIdToDbIdMap after processing generic items:", logicalIdToDbIdMap);
-
-        // Step 3: Prepare flattened configs for insertion, maintaining order and hierarchy
-        const configsToInsert = [];
-        const processItems = (items: typeof defaultItemsForRole, parentLogicalId: string | null) => {
-          items.forEach((entry, index) => {
-            const itemData = entry.item;
-            const dbId = logicalIdToDbIdMap.get(itemData.logical_id);
-            const parentDbId = parentLogicalId ? logicalIdToDbIdMap.get(parentLogicalId) : null;
-
-            if (!dbId) throw new Error(`DB ID not found for logical ID: ${itemData.logical_id}`);
-
-            configsToInsert.push({
-              nav_item_id: dbId,
-              role: bootstrapRole,
-              parent_nav_item_id: parentDbId,
-              order_index: index, // Use the order in the predefined array
-            });
-
-            // Recursively process children if any
-            const children = defaultItemsForRole.filter(childEntry => childEntry.parentId === itemData.logical_id);
-            if (children.length > 0) {
-              processItems(children, itemData.logical_id);
-            }
-          });
-        };
-
-        // Start processing from root items (those without a parentId in the default structure)
-        const rootDefaultItems = defaultItemsForRole.filter(entry => !entry.parentId);
-        processItems(rootDefaultItems, null);
-
-        console.log("[Edge Function] Flattened configs for DB (count):", configsToInsert.length, "configs:", configsToInsert);
-
-        // Step 4: Insert new configs
-        const { data: configsInsertResult, error: configsInsertError } = await supabaseAdminClient
-          .from('role_nav_configs')
-          .insert(configsToInsert)
-          .select();
-
-        if (configsInsertError) {
-          console.error("[Edge Function] Error inserting default role nav configs:", configsInsertError);
-          throw configsInsertError;
-        }
-        data = configsInsertResult;
-        console.log(`[Edge Function] Inserted ${configsInsertResult.length} new role nav configs for role ${bootstrapRole}.`);
-        break;
+      // Removed case 'bootstrap_defaults'
       case 'create_config': // New action for creating role_nav_configs
         ({ data, error } = await supabaseAdminClient
           .from('role_nav_configs')
@@ -311,6 +121,7 @@ serve(async (req) => {
           .delete()
           .eq('role', payload.role));
         break;
+      // Removed case 'reinitialize_all_menus'
       default:
         return new Response(JSON.stringify({ error: 'Invalid action.' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
