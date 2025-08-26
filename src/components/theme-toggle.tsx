@@ -7,6 +7,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Profile } from "@/lib/dataModels" // Import Profile type
+import { cn } from "@/lib/utils"; // Import cn for conditional styling
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -29,11 +30,15 @@ export function ThemeToggle() {
 
   return (
     <Select value={theme} onValueChange={handleThemeChange}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className={cn(
+        "w-fit px-3 py-2 rounded-full", // Make it fit content and rounded
+        "border-none bg-muted/50 hover:bg-muted/80", // Android-like background
+        "text-muted-foreground hover:text-foreground" // Text color
+      )}>
         <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         <span className="sr-only">Toggle theme</span>
-        <SelectValue placeholder="Sélectionner un thème" />
+        {/* Removed SelectValue to make it icon-only for compact display */}
       </SelectTrigger>
       <SelectContent className="backdrop-blur-lg bg-background/80">
         <SelectItem value="light">Clair</SelectItem>
