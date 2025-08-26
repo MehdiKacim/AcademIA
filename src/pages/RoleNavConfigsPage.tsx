@@ -57,7 +57,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 // All possible roles for selection
-const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
+const navItemTypes: NavItem['type'][] = ['route', 'category_or_or_action'];
 
 // Helper function moved to top-level scope
 const getItemTypeLabel = (type: NavItem['type']) => {
@@ -208,7 +208,7 @@ const RoleNavConfigsPage = () => {
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
   const [editConfigParentId, setEditConfigParentId] = useState<string | null>(null); // Can be null for root
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
-  const [isSavingConfigEdit, setIsSavingEdit] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
@@ -831,6 +831,7 @@ const RoleNavConfigsPage = () => {
                     searchPlaceholder="Rechercher un élément..."
                     emptyMessage="Aucun élément disponible."
                     iconMap={iconMap}
+                    popoverContentClassName="z-[101]" {/* Added z-index here */}
                   />
                 </div>
               </div>
@@ -891,6 +892,7 @@ const RoleNavConfigsPage = () => {
                   emptyMessage="Aucun parent trouvé."
                   iconMap={iconMap}
                   className="col-span-3"
+                  popoverContentClassName="z-[101]" {/* Added z-index here */}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -900,7 +902,7 @@ const RoleNavConfigsPage = () => {
             </div>
             <DialogFooter>
               <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingConfigEdit}>
-                {isSavingConfigEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+                {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
               </Button>
             </DialogFooter>
           </DialogContent>
