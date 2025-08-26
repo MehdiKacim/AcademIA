@@ -161,10 +161,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         className="w-full h-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg"
         {...swipeHandlers}
       >
-        {/* Custom Header for Mobile Nav Sheet */}
-        <div className="p-4 flex-shrink-0 border-b border-border">
+        <SheetHeader className="p-4 flex-shrink-0 border-b border-border">
           <div className="flex items-center justify-between">
-            {/* Left side: Back button and App Logo/Name */}
             <div className="flex items-center gap-2">
               {drawerNavStack.length > 0 ? (
                 <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
@@ -177,7 +175,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               <Logo iconClassName="h-8 w-8" textClassName="text-xl" />
             </div>
 
-            {/* Right side: Quick access items */}
             <div className="flex items-center gap-2">
               {currentUserProfile && (
                 <>
@@ -206,7 +203,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               </Button>
             </div>
           </div>
-        </div>
+          <SheetTitle className="sr-only">Menu de navigation mobile</SheetTitle>
+          <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
+        </SheetHeader>
 
         <ScrollArea className="flex-grow p-4">
           {/* Menu Title (moved here) */}
