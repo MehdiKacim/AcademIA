@@ -65,7 +65,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
     ,
     { item: { logical_id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false, type: 'route' } },
     { item: { logical_id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { logical_id: 'settings-route-id', label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
+    { item: { logical_id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
     { item: { logical_id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de votre établissement", is_external: false, type: 'route' } },
   ],
   deputy_director: [
@@ -211,35 +211,21 @@ serve(async (req) => {
           const navItemPayloadForDb = { ...itemData };
           delete navItemPayloadForDb.logical_id; // Remove logical_id from the payload for DB insert/check
 
-          // Try to find an existing nav_item by label and route (or label and null route for categories)
-          let existingDbItem = null;
-          if (navItemPayloadForDb.route) {
-            const { data: existingRouteItem, error: fetchRouteError } = await supabaseAdminClient
-              .from('nav_items')
-              .select('id')
-              .eq('label', navItemPayloadForDb.label)
-              .eq('route', navItemPayloadForDb.route)
-              .maybeSingle();
-            if (fetchRouteError) throw fetchRouteError;
-            existingDbItem = existingRouteItem;
-          } else { // Category or action without a route
-            const { data: existingCategoryItem, error: fetchCategoryError } = await supabaseAdminClient
-              .from('nav_items')
-              .select('id')
-              .eq('label', navItemPayloadForDb.label)
-              .is('route', null) // Categories typically have null route
-              .maybeSingle();
-            if (fetchCategoryError) throw fetchCategoryError;
-            existingDbItem = existingCategoryItem;
-          }
+          // Try to find an existing nav_item by logical_id first
+          const { data: existingLogicalIdItem, error: fetchLogicalIdError } = await supabaseAdminClient
+            .from('nav_items')
+            .select('id')
+            .eq('logical_id', itemData.logical_id)
+            .maybeSingle();
+          if (fetchLogicalIdError) throw fetchLogicalIdError;
 
-          if (existingDbItem) {
-            logicalIdToDbIdMap.set(itemData.logical_id, existingDbItem.id); // Map logical ID to existing DB ID
+          if (existingLogicalIdItem) {
+            logicalIdToDbIdMap.set(itemData.logical_id, existingLogicalIdItem.id); // Map logical ID to existing DB ID
           } else {
             // Insert new item, letting DB generate UUID for 'id'
             const { data: newItem, error: insertItemError } = await supabaseAdminClient
               .from('nav_items')
-              .insert(navItemPayloadForDb) // Insert the cleaned payload
+              .insert({ ...navItemPayloadForDb, logical_id: itemData.logical_id }) // Include logical_id in insert
               .select('id')
               .single();
             if (insertItemError) throw insertItemError;
@@ -248,69 +234,41 @@ serve(async (req) => {
         }
         console.log("[Edge Function] logicalIdToDbIdMap after processing generic items:", logicalIdToDbIdMap);
 
-        // Step 3: Build the hierarchical structure for default configs and assign order_index
-        const tempTree = new Map<string, any>(); // Map logical ID to temp item object
+        // Step 3: Prepare flattened configs for insertion, maintaining order and hierarchy
+        const configsToInsert = [];
+        const processItems = (items: typeof defaultItemsForRole, parentLogicalId: string | null) => {
+          items.forEach((entry, index) => {
+            const itemData = entry.item;
+            const dbId = logicalIdToDbIdMap.get(itemData.logical_id);
+            const parentDbId = parentLogicalId ? logicalIdToDbIdMap.get(parentLogicalId) : null;
 
-        // First pass: create temp items and map logical IDs to their DB IDs
-        for (const entry of defaultItemsForRole) { // Use 'entry'
-          const itemData = entry.item; // Extract itemData
-          const dbId = logicalIdToDbIdMap.get(itemData.logical_id);
-          if (!dbId) throw new Error(`DB ID not found for logical ID: ${itemData.logical_id}`);
-          tempTree.set(itemData.logical_id, {
-            nav_item_id: dbId, // Use actual DB ID
-            role: bootstrapRole, // Assign role here
-            parent_nav_item_id: null, // Default to null, will be updated
-            order_index: 0, // Default to 0, will be updated
-            _predefinedId: itemData.logical_id, // Keep predefined ID for sorting
-            _children: [], // Temporary array for building hierarchy
-          });
-        }
+            if (!dbId) throw new Error(`DB ID not found for logical ID: ${itemData.logical_id}`);
 
-        // Second pass: build the hierarchy
-        for (const entry of defaultItemsForRole) { // Use 'entry'
-          const itemData = entry.item; // Extract itemData
-          const logicalParentId = entry.parentId; // Extract parentId from entry
-          const currentItem = tempTree.get(itemData.logical_id);
-          if (currentItem && logicalParentId) {
-            const parentItem = tempTree.get(logicalParentId);
-            if (parentItem) {
-              currentItem.parent_nav_item_id = logicalIdToDbIdMap.get(logicalParentId); // Use actual DB ID for parent
-              parentItem._children.push(currentItem);
-            }
-          }
-        }
-
-        // Third pass: Flatten the tree and assign order_index
-        let currentOrderIndex = 0;
-        const flattenedConfigsForDb = [];
-
-        const processNode = (nodeList: any[], parentDbId: string | null) => {
-          // Sort children by their predefined ID for consistent ordering
-          nodeList.sort((a, b) => a._predefinedId.localeCompare(b._predefinedId));
-          nodeList.forEach((item: any) => {
-            item.order_index = currentOrderIndex++;
-            flattenedConfigsForDb.push({
-              nav_item_id: item.nav_item_id,
+            configsToInsert.push({
+              nav_item_id: dbId,
               role: bootstrapRole,
-              parent_nav_item_id: parentDbId, // This is the parent's DB ID
-              order_index: item.order_index,
+              parent_nav_item_id: parentDbId,
+              order_index: index, // Use the order in the predefined array
             });
-            if (item._children.length > 0) {
-              processNode(item._children, item.nav_item_id); // Pass current item's DB ID as parent for its children
+
+            // Recursively process children if any
+            const children = defaultItemsForRole.filter(childEntry => childEntry.parentId === itemData.logical_id);
+            if (children.length > 0) {
+              processItems(children, itemData.logical_id);
             }
           });
         };
 
-        // Start processing from root items (those without a parent in tempTree)
-        const rootTempItems = Array.from(tempTree.values()).filter(item => !item.parent_nav_item_id);
-        processNode(rootTempItems, null);
+        // Start processing from root items (those without a parentId in the default structure)
+        const rootDefaultItems = defaultItemsForRole.filter(entry => !entry.parentId);
+        processItems(rootDefaultItems, null);
 
-        console.log("[Edge Function] Flattened configs for DB (count):", flattenedConfigsForDb.length, "configs:", flattenedConfigsForDb);
+        console.log("[Edge Function] Flattened configs for DB (count):", configsToInsert.length, "configs:", configsToInsert);
 
         // Step 4: Insert new configs
         const { data: configsInsertResult, error: configsInsertError } = await supabaseAdminClient
           .from('role_nav_configs')
-          .insert(flattenedConfigsForDb)
+          .insert(configsToInsert)
           .select();
 
         if (configsInsertError) {
