@@ -14,7 +14,7 @@ import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSwipeable } from 'embla-carousel-react'; // Corrected import path for useSwipeable
+import { useSwipeable } from 'react-swipeable'; // Corrected import path
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useTheme } from 'next-themes';
@@ -162,7 +162,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
-  const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[drawerNavStack[drawerNavStack.length - 1].icon_name || 'Info'] : null;
+  const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[currentDrawerTitle === "Menu" ? 'Menu' : currentDrawerIcon?.name || 'Info'] : null; // Adjusted to handle 'Menu' title
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
