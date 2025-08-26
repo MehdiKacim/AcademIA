@@ -9,12 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight } from "lucide-react";
+import { ArrowLeft, X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight, ChevronUp } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSwipeable } from 'react-swipeable';
+import { useSwipeable } from 'embla-carousel-react'; // Corrected import path for useSwipeable
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useTheme } from 'next-themes';
@@ -30,7 +30,7 @@ import {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight, ChevronUp
 };
 
 interface MobileNavSheetProps {
@@ -159,7 +159,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme]); // Added handleToggleTheme to dependencies
+  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[drawerNavStack[drawerNavStack.length - 1].icon_name || 'Info'] : null;
