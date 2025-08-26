@@ -14,7 +14,7 @@ import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSwipeable } from 'react-swipeable'; // Corrected import path
+import { useSwipeable } from 'react-swipeable';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useTheme } from 'next-themes';
@@ -51,15 +51,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // Removed currentTime state and its useEffect
 
   // Swipe handlers for closing the sheet on mobile
   const swipeHandlers = useSwipeable({
@@ -114,7 +106,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     navigate("/");
   }, [signOut, onClose, navigate]);
 
-  // Moved handleToggleTheme here
   const handleToggleTheme = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   }, [theme, setTheme]);
@@ -139,8 +130,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           icon_name: theme === 'dark' ? 'Sun' : 'Moon',
           is_external: false,
           type: 'category_or_action',
-          onClick: handleToggleTheme, // Now correctly referenced
-          order_index: 998, // High order to place it near the bottom
+          onClick: handleToggleTheme,
+          order_index: 998,
         },
         {
           id: 'profile-menu-item',
@@ -148,12 +139,11 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           icon_name: 'User',
           is_external: false,
           type: 'category_or_action',
-          onClick: () => {}, // Placeholder, actual dropdown handled in render
-          order_index: 999, // Highest order to place it at the very bottom
+          onClick: () => {},
+          order_index: 999,
         }
       );
     }
-
 
     return itemsToFilter.filter(item =>
       item.label.toLowerCase().includes(lowerCaseQuery) ||
@@ -162,7 +152,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
-  const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[currentDrawerTitle === "Menu" ? 'Menu' : currentDrawerIcon?.name || 'Info'] : null; // Adjusted to handle 'Menu' title
+  const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[drawerNavStack[drawerNavStack.length - 1].icon_name || 'Info'] : null;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -172,10 +162,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         {...swipeHandlers}
       >
         <div className="p-4 flex-shrink-0">
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-            <span className="font-medium">{format(currentTime, 'HH:mm')}</span>
-            <span className="font-medium">{format(currentTime, 'EEE. dd MMM', { locale: fr })}</span>
-          </div>
+          {/* Removed time and date display */}
 
           <div className="android-search-bar mb-4">
             <Search className="h-5 w-5 text-android-on-surface-variant" />
@@ -194,7 +181,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 <span className="sr-only">Retour</span>
               </Button>
             ) : (
-              <div className="w-10 h-10"></div> // Placeholder to keep alignment
+              <div className="w-10 h-10"></div> {/* Placeholder to keep alignment */}
             )}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
               {currentDrawerIcon && React.createElement(currentDrawerIcon, { className: "h-6 w-6 text-primary" })}
@@ -274,9 +261,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "android-tile flex-col items-start justify-start h-auto min-h-[100px] text-left w-full",
-                      isLinkActive ? "active" : "",
-                      "transition-all duration-200 ease-in-out"
+                      "android-tile", // Base Android tile style
+                      isLinkActive && "active", // Active state from Android tile
+                      "transition-all duration-200 ease-in-out" // Keep transition
                     )}
                     onClick={() => handleItemClick(item)}
                   >
