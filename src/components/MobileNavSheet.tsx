@@ -111,20 +111,28 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     navigate("/");
   }, [signOut, onClose, navigate]);
 
-  // Define virtual NavItems for profile actions
-  const profileActions: NavItem[] = [
+  // Define static NavItems for profile actions
+  const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
     { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 2 },
+  ];
+
+  // Define static top-level items
+  const staticTopLevelItems: NavItem[] = [
+    { id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount },
+    { id: 'static-notifications', label: 'Notifications', icon_name: 'BellRing', is_external: false, type: 'route', route: '/notifications', order_index: 101 },
   ];
 
   const currentItemsToDisplay = React.useMemo(() => {
     let itemsToFilter: NavItem[] = [];
 
     if (drawerNavStack.length === 0) {
-      itemsToFilter = navItems.filter(item => 
+      // Combine dynamic navItems with static top-level items
+      itemsToFilter = [...navItems.filter(item => 
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
-      );
+      ), ...staticTopLevelItems];
+
       if (currentUserProfile) {
         itemsToFilter.push({
           id: 'profile-category',
@@ -132,21 +140,21 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           icon_name: 'User',
           is_external: false,
           type: 'category_or_action',
-          children: profileActions,
+          children: staticProfileActions, // Use static profile actions
           order_index: 999,
         });
       }
     } else {
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
       if (activeCategory.id === 'profile-category') {
-        itemsToFilter = profileActions;
+        itemsToFilter = staticProfileActions; // Always show static profile actions
       } else {
         itemsToFilter = activeCategory.children || [];
       }
     }
     
     return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, profileActions]);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, staticTopLevelItems]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -179,7 +187,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               {currentDrawerTitle}
             </SheetTitle>
 
-            {/* Right side: Theme Toggle (no close button) */}
+            {/* Right side: Theme Toggle */}
             <div className="flex items-center gap-2">
               <ThemeToggle />
             </div>
@@ -219,9 +227,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                       <IconComponent className="h-6 w-6" />
                     </div>
                     <span className="title text-base font-medium line-clamp-2">{item.label}</span>
-                    {item.route === '/messages' && unreadMessagesCount > 0 && ( // Apply badge to messages
+                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && ( // Apply badge to messages
                       <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
-                        {unreadMessagesCount}
+                        {item.badge}
                       </span>
                     )}
                     {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}

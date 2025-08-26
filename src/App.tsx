@@ -52,10 +52,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     "/courses/:courseId": CourseDetail,
     "/courses/:courseId/modules/:moduleIndex": ModuleDetail,
     "/all-notes": AllNotes,
-    "/messages": Messages,
-    "/notifications": NotificationsPage, // New: Add NotificationsPage route
-    "/profile": Profile,
-    "/settings": Settings,
+    // Removed static routes from here
     "/data-model": DataModelViewer,
     "/admin-users": AdminUserManagementPage,
     "/subjects": SubjectManagementPage,
@@ -109,10 +106,16 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
                   <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
                   {/* Always include the Dashboard route */}
                   <Route path="/dashboard" element={<Dashboard />} />
+                  {/* Static routes */}
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  {/* Dynamic routes */}
                   {dynamicRoutes.map(item => {
                     const Component = baseRouteComponentMap[item.route!];
-                    // Only render if component exists and it's not the dashboard (already handled)
-                    if (Component && item.route !== "/dashboard") {
+                    // Only render if component exists and it's not a static route (already handled)
+                    if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages", "/notifications"].includes(item.route!)) {
                       console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
                       return (
                         <Route
