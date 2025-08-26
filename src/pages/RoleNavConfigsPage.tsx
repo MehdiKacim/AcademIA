@@ -114,85 +114,79 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
   const hasChildren = item.children && item.children.length > 0;
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div 
-          ref={setNodeRef} 
-          style={style} 
-          className={cn(
-            "p-3 border rounded-md flex items-center justify-between gap-2 mb-2 cursor-context-menu select-none pointer-events-auto", // Added select-none and pointer-events-auto
-            isDragging && "ring-2 ring-primary/50 shadow-xl",
-            item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
-            item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50"
-          )}
-        >
-          <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={(e) => {
-            if (hasChildren) {
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={cn(
+        "p-3 border rounded-md flex items-center justify-between gap-2 mb-2 select-none", // Removed cursor-context-menu and pointer-events-auto
+        isDragging && "ring-2 ring-primary/50 shadow-xl",
+        item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
+        item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50"
+      )}
+    >
+      <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={(e) => {
+        if (hasChildren) {
+          e.stopPropagation();
+          onToggleExpand(item.id);
+        }
+      }}>
+        {isDraggableAndDeletable && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            {...listeners}
+            {...attributes}
+            className="cursor-grab"
+          >
+            <GripVertical className="h-5 w-5" />
+            <span className="sr-only">Déplacer l'élément</span>
+          </Button>
+        )}
+        {hasChildren && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
               e.stopPropagation();
               onToggleExpand(item.id);
-            }
-          }}>
-            {isDraggableAndDeletable && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                {...listeners}
-                {...attributes}
-                className="cursor-grab"
-              >
-                <GripVertical className="h-5 w-5" />
-                <span className="sr-only">Déplacer l'élément</span>
-              </Button>
-            )}
-            {hasChildren && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleExpand(item.id);
-                }}
-                className="h-5 w-5"
-              >
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                <span className="sr-only">{isExpanded ? 'Réduire' : 'Étendre'}</span>
-              </Button>
-            )}
-            <IconComponent className="h-5 w-5 text-primary" />
-            <span className="font-medium">{item.label}</span>
-            <span className="text-sm text-muted-foreground italic">({getItemTypeLabel(item.type)})</span>
-            {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
-            {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
-            {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            {config && (
-              <Button variant="outline" size="sm" onClick={() => onEditRoleConfig(item, config)}>
-                <UserRoundCog className="h-4 w-4" />
-              </Button>
-            )}
-            {isDraggableAndDeletable && (
-              <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, item.configId)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </ContextMenuTrigger>
-      {/* Only show "Gérer les sous-éléments" for true categories (type 'category_or_action' with no route) */}
-      {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
-        <ContextMenuContent className="w-auto p-1">
-          <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
-            <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
-          </ContextMenuItem>
-        </ContextMenuContent>
-      )}
-    </ContextMenu>
+            }}
+            className="h-5 w-5"
+          >
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span className="sr-only">{isExpanded ? 'Réduire' : 'Étendre'}</span>
+          </Button>
+        )}
+        <IconComponent className="h-5 w-5 text-primary" />
+        <span className="font-medium">{item.label}</span>
+        <span className="text-sm text-muted-foreground italic">({getItemTypeLabel(item.type)})</span>
+        {item.route && <span className="text-sm text-muted-foreground italic">{item.route}</span>}
+        {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
+        {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        {config && (
+          <Button variant="outline" size="sm" onClick={() => onEditRoleConfig(item, config)}>
+            <UserRoundCog className="h-4 w-4" />
+          </Button>
+        )}
+        {isDraggableAndDeletable && (
+          <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, item.configId)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+        {/* Only show "Gérer les sous-éléments" for true categories (type 'category_or_action' with no route) */}
+        {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
+          <Button variant="outline" size="sm" onClick={() => onManageChildren(item)}>
+            <LayoutList className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </div>
   );
 });
 
@@ -727,7 +721,6 @@ const RoleNavConfigsPage = () => {
       level: 0,
       isNew: false,
     }));
-  console.log("[RoleNavConfigsPage] Dropdown options for 'Ajouter un élément existant':", dropdownOptions);
   // Removed the problematic console.log line
   // console.log("[RoleNavConfigsPage] Current selectedGenericItemToAdd:", selectedGenericItemToAdd);
 
@@ -786,37 +779,34 @@ const RoleNavConfigsPage = () => {
               </CardTitle>
               <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
             </CardHeader>
-            <ContextMenu>
-              <ContextMenuTrigger asChild>
-                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-md cursor-context-menu select-none pointer-events-auto"> {/* Added select-none and pointer-events-auto */}
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                    {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
-                    <DragOverlay>
-                      {activeDragItem ? (
-                        <SortableNavItem
-                          item={activeDragItem}
-                          level={0}
-                          onEditGenericItem={handleEditGenericItem}
-                          onEditRoleConfig={handleEditRoleConfig}
-                          onDelete={handleDeleteGenericNavItem}
-                          onManageChildren={handleManageChildren}
-                          isDragging={true}
-                          isDraggableAndDeletable={true}
-                          selectedRoleFilter={selectedRoleFilter}
-                          isExpanded={false}
-                          onToggleExpand={() => {}}
-                        />
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
-                </CardContent>
-              </ContextMenuTrigger>
-              <ContextMenuContent className="w-auto p-1">
-                <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true)}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+            {/* Removed ContextMenu wrapper here */}
+            <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-md"> {/* Removed cursor-context-menu select-none pointer-events-auto */}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
+                <DragOverlay>
+                  {activeDragItem ? (
+                    <SortableNavItem
+                      item={activeDragItem}
+                      level={0}
+                      onEditGenericItem={handleEditGenericItem}
+                      onEditRoleConfig={handleEditRoleConfig}
+                      onDelete={handleDeleteGenericNavItem}
+                      onManageChildren={handleManageChildren}
+                      isDragging={true}
+                      isDraggableAndDeletable={true}
+                      selectedRoleFilter={selectedRoleFilter}
+                      isExpanded={false}
+                      onToggleExpand={() => {}}
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            </CardContent>
+            <div className="p-4 pt-0 flex justify-end">
+              <Button onClick={() => setIsAddExistingItemDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
+              </Button>
+            </div>
           </Card>
         </div>
       )}

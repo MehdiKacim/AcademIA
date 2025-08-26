@@ -125,8 +125,10 @@ const AddExistingNavItemDialog = ({
     
     // Apply search filter
     const lowerCaseQuery = parentSearchQuery.toLowerCase();
-    return sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery));
-
+    return [
+      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false },
+      ...sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery))
+    ];
   }, [allConfiguredItemsFlat, allGenericNavItems, parentSearchQuery]);
 
   const handleAddExistingItem = async () => {
