@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2, RefreshCw } from "lucide-react";
+import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2, RefreshCw, Check } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems";
@@ -30,7 +30,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DndContext,
@@ -224,6 +224,13 @@ const RoleNavConfigsPage = () => {
 
   const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
   const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
+
+  // States for search in dropdowns
+  const [openAddExistingPopover, setOpenAddExistingPopover] = useState(false);
+  const [addExistingSearch, setAddExistingSearch] = useState('');
+  const [openEditParentPopover, setOpenEditParentPopover] = useState(false);
+  const [editParentSearch, setEditParentSearch] = useState('');
+
 
   const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
     for (const item of items) {
@@ -781,29 +788,60 @@ const RoleNavConfigsPage = () => {
             <CardContent className="space-y-2">
               <div>
                 <Label htmlFor="add-existing-to-role">Ajouter un élément générique existant</Label>
-                <Select onValueChange={handleAddExistingGenericItemToRole} value="">
-                  <SelectTrigger id="add-existing-to-role">
-                    <SelectValue placeholder="Ajouter un élément existant au menu de ce rôle" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
-                    <ScrollArea className="h-40">
-                      {allGenericNavItems.filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id)).length === 0 ? (
-                        <SelectItem value="no-available-items" disabled>Aucun élément générique disponible à ajouter</SelectItem>
-                      ) : (
-                        allGenericNavItems
-                          .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-                          .map(item => (
-                            <SelectItem key={item.id} value={item.id}>
-                              <div className="flex items-center gap-2">
-                                {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4" })}
+                <Popover open={openAddExistingPopover} onOpenChange={setOpenAddExistingPopover}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openAddExistingPopover}
+                      className="w-full justify-between"
+                      id="add-existing-to-role"
+                    >
+                      {selectedGenericItemToAdd
+                        ? allGenericNavItems.find(item => item.id === selectedGenericItemToAdd)?.label
+                        : "Ajouter un élément existant au menu de ce rôle"}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                    <Command>
+                      <CommandInput
+                        placeholder="Rechercher un élément..."
+                        value={addExistingSearch}
+                        onValueChange={setAddExistingSearch}
+                      />
+                      <CommandList>
+                        <CommandEmpty>Aucun élément trouvé.</CommandEmpty>
+                        <CommandGroup>
+                          {allGenericNavItems
+                            .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
+                            .filter(item => item.label.toLowerCase().includes(addExistingSearch.toLowerCase()))
+                            .map(item => (
+                              <CommandItem
+                                key={item.id}
+                                value={item.label}
+                                onSelect={() => {
+                                  handleAddExistingGenericItemToRole(item.id);
+                                  setSelectedGenericItemToAdd(item.id); // Update selected item for display
+                                  setOpenAddExistingPopover(false);
+                                  setAddExistingSearch(''); // Clear search after selection
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedGenericItemToAdd === item.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {iconMap[item.icon_name || 'Info'] && React.createElement(iconMap[item.icon_name || 'Info'], { className: "h-4 w-4 mr-2" })}
                                 <span>{item.label} ({getItemTypeLabel(item.type)}) {item.route && `(${item.route})`}</span>
-                              </div>
-                            </SelectItem>
-                          ))
-                      )}
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -844,36 +882,80 @@ const RoleNavConfigsPage = () => {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-parent" className="text-right">Parent</Label>
-                <Select 
-                  value={editConfigParentId || "none"} 
-                  onValueChange={(value) => {
-                    console.log("Select onValueChange:", value);
-                    setEditConfigParentId(value === "none" ? null : value);
-                  }}
-                >
-                  <SelectTrigger id="edit-config-parent-select" className="col-span-3">
-                    <SelectValue placeholder="Sélectionner un parent..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card z-[101]">
-                    <SelectItem value="none">Aucun (élément racine)</SelectItem>
-                    {availableParentsForConfig
-                      .map((item) => {
-                      const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
-                      return (
-                        <SelectItem key={item.id} value={item.id}>
-                          <div className="flex items-center gap-2">
-                            {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
-                            <IconComponentToRender className="h-4 w-4" /> 
-                            <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && <span className="font-bold text-primary">(Nouveau)</span>}</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                    {availableParentsForConfig.length === 0 && (
-                      <SelectItem value="no-parents" disabled>Aucune catégorie disponible.</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
+                <Popover open={openEditParentPopover} onOpenChange={setOpenEditParentPopover}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openEditParentPopover}
+                      className="col-span-3 justify-between"
+                      id="edit-config-parent-select"
+                    >
+                      {editConfigParentId
+                        ? availableParentsForConfig.find(p => p.id === editConfigParentId)?.label || "Sélectionner un parent..."
+                        : "Aucun (élément racine)"}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                    <Command>
+                      <CommandInput
+                        placeholder="Rechercher un parent..."
+                        value={editParentSearch}
+                        onValueChange={setEditParentSearch}
+                      />
+                      <CommandList>
+                        <CommandEmpty>Aucun parent trouvé.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="none"
+                            onSelect={() => {
+                              setEditConfigParentId(null);
+                              setOpenEditParentPopover(false);
+                              setEditParentSearch(''); // Clear search after selection
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                editConfigParentId === null ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            Aucun (élément racine)
+                          </CommandItem>
+                          {availableParentsForConfig
+                            .filter(item => item.label.toLowerCase().includes(editParentSearch.toLowerCase()))
+                            .map((item) => {
+                              const IconComponentToRender: React.ElementType = (item.icon_name && typeof item.icon_name === 'string' && iconMap[item.icon_name]) ? iconMap[item.icon_name] : Info;
+                              return (
+                                <CommandItem
+                                  key={item.id}
+                                  value={item.label}
+                                  onSelect={() => {
+                                    setEditConfigParentId(item.id);
+                                    setOpenEditParentPopover(false);
+                                    setEditParentSearch(''); // Clear search after selection
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      editConfigParentId === item.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    {Array(item.level).fill('—').join('') && <span>{Array(item.level).fill('—').join('')}</span>}
+                                    <IconComponentToRender className="h-4 w-4" /> 
+                                    <span>{item.label} ({getItemTypeLabel(item.type)}) {item.isNew && <span className="font-bold text-primary">(Nouveau)</span>}</span>
+                                  </div>
+                                </CommandItem>
+                              );
+                            })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
