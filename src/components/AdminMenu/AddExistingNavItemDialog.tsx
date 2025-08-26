@@ -49,7 +49,7 @@ const AddExistingNavItemDialog = ({
   getDescendantIds,
   iconMap,
 }: AddExistingNavItemDialogProps) => {
-  const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(selectedGenericItemToAdd);
+  const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null); // Corrected initialization
   const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean } & NavItem) | null>(null); // Store full info
   const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
