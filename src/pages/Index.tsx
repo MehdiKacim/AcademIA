@@ -61,15 +61,22 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const logoTapCountRef = useRef(0);
   const location = useLocation();
 
-  // Removed dynamic navItems state and useEffect for loading them
+  // Removed dynamic navItems state and useEffect for loading. It now comes from props.
   // const [navItems, setNavItems] = useState<NavItem[]>([]); 
   // useEffect(() => {
-  //   const fetchNavItems = async () => {
-  //     const loadedItems = await loadNavItems(currentRole);
-  //     setNavItems(loadedItems);
-  //   };
-  //   fetchNavItems();
-  // }, [currentRole]);
+  //   if (currentUser) { // Only load dynamic nav items if user is authenticated
+  //     const fetchNavItems = async () => {
+  //       console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
+  //       const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
+  //       setDynamicNavItems(loadedItems);
+  //       console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
+  //     };
+  //     fetchNavItems();
+  //   } else {
+  //     setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
+  //     console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
+  //   }
+  // }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
 
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
     queryKey: ['latestApkRelease'],
@@ -263,12 +270,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               <Button size="lg" onClick={() => setIsAuthModalOpen(true)}>
                 Découvrir AiA
               </Button>
-              <Button size="lg" variant="outline" onClick={() => {
-                console.log("Bouton Accès Admin cliqué !"); // Debug log
-                setIsAdminModalOpen(true);
-              }}>
-                <UserCog className="h-5 w-5 mr-2" /> Accès Admin
-              </Button>
+              {/* Removed Admin Access Button */}
             </div>
           </div>
         </section>

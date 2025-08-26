@@ -21,10 +21,10 @@ const FloatingAiAPersistentChat = ({ isVisible }: FloatingAiAChatButtonProps) =>
     )}>
       <Button
         size="lg"
-        className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
+        className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow bg-primary/80 backdrop-blur-lg border border-primary/50 hover:bg-primary/90" // Added blur and adjusted background
         onClick={() => openChat()}
       >
-        <Bot className="h-7 w-7 text-white" /> {/* Added text-white class here */}
+        <Bot className="h-7 w-7 text-primary-foreground" /> {/* Adjusted text color for contrast */}
         <span className="sr-only">Ouvrir le chat AiA</span>
       </Button>
     </div>
