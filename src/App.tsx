@@ -42,7 +42,8 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
 
   const initialTheme = currentUserProfile?.theme || "dark";
 
-  const routeComponentMap: { [key: string]: React.ElementType } = {
+  // Define a base map of route paths to components
+  const baseRouteComponentMap: { [key: string]: React.ElementType } = {
     "/dashboard": Dashboard,
     "/courses": Courses,
     "/create-course": CreateCourse,
@@ -68,7 +69,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
   };
 
   useEffect(() => {
-    console.log("[App.tsx] routeComponentMap keys:", Object.keys(routeComponentMap));
+    console.log("[App.tsx] baseRouteComponentMap keys:", Object.keys(baseRouteComponentMap));
     console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
     console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
   }, [dynamicRoutes, currentUserProfile]);
@@ -105,16 +106,22 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
                 <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
+                {/* Always include the Dashboard route */}
+                <Route path="/dashboard" element={<Dashboard />} />
                 {dynamicRoutes.map(item => {
-                  const Component = routeComponentMap[item.route!];
-                  console.log(`[App.tsx] Mapping route: ${item.route} to Component: ${Component ? Component.name : 'NOT_FOUND'}`);
-                  return Component ? (
-                    <Route
-                      key={item.id}
-                      path={item.route}
-                      element={<Component />}
-                    />
-                  ) : null;
+                  const Component = baseRouteComponentMap[item.route!];
+                  // Only render if component exists and it's not the dashboard (already handled)
+                  if (Component && item.route !== "/dashboard") {
+                    console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
+                    return (
+                      <Route
+                        key={item.id}
+                        path={item.route}
+                        element={<Component />}
+                      />
+                    );
+                  }
+                  return null;
                 })}
               </Route>
             </Route>
