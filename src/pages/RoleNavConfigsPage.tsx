@@ -66,7 +66,7 @@ import {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check: Check
 };
 
 // All possible roles for selection
@@ -226,6 +226,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
 });
 
 const RoleNavConfigsPage = () => {
+  const [isAddExistingItemDialogOpen, setIsAddExistingItemDialogOpen] = useState(false); // New state for the AddExistingNavItemDialog
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const isMobile = useIsMobile(); // Use the hook
   const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]);
