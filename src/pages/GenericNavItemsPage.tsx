@@ -347,46 +347,48 @@ const GenericNavItemsPage = () => {
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
-                        <th className="p-2 text-left font-semibold">Libellé</th>
-                        <th className="p-2 text-left font-semibold">Route/Action</th>
-                        <th className="p-2 text-left font-semibold">Icône</th>
-                        <th className="p-2 text-left font-semibold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {categoriesAndActions.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune catégorie/action générique à afficher.</td>
+                  <div className="overflow-x-auto"> {/* Added overflow-x-auto here */}
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
+                          <th className="p-2 text-left font-semibold">Libellé</th>
+                          <th className="p-2 text-left font-semibold">Route/Action</th>
+                          <th className="p-2 text-left font-semibold">Icône</th>
+                          <th className="p-2 text-left font-semibold">Actions</th>
                         </tr>
-                      ) : (
-                        categoriesAndActions.map(item => {
-                          const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                          return (
-                            <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                              <td className="p-2">{item.label}</td>
-                              <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
-                              <td className="p-2">
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> 
-                                </div>
-                              </td>
-                              <td className="p-2 flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {categoriesAndActions.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune catégorie/action générique à afficher.</td>
+                          </tr>
+                        ) : (
+                          categoriesAndActions.map(item => {
+                            const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                            return (
+                              <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                                <td className="p-2">{item.label}</td>
+                                <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
+                                <td className="p-2">
+                                  <div className="flex items-center gap-2">
+                                    <IconComponent className="h-4 w-4" /> 
+                                  </div>
+                                </td>
+                                <td className="p-2 flex gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </ScrollArea>
               </CollapsibleContent>
             </Collapsible>
@@ -403,46 +405,48 @@ const GenericNavItemsPage = () => {
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
-                        <th className="p-2 text-left font-semibold">Libellé</th>
-                        <th className="p-2 text-left font-semibold">Route</th>
-                        <th className="p-2 text-left font-semibold">Icône</th>
-                        <th className="p-2 text-left font-semibold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {routes.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune route générique à afficher.</td>
+                  <div className="overflow-x-auto"> {/* Added overflow-x-auto here */}
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
+                          <th className="p-2 text-left font-semibold">Libellé</th>
+                          <th className="p-2 text-left font-semibold">Route</th>
+                          <th className="p-2 text-left font-semibold">Icône</th>
+                          <th className="p-2 text-left font-semibold">Actions</th>
                         </tr>
-                      ) : (
-                        routes.map(item => {
-                          const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                          return (
-                            <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                              <td className="p-2">{item.label}</td>
-                              <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
-                              <td className="p-2">
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" /> 
-                                </div>
-                              </td>
-                              <td className="p-2 flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {routes.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="p-4 text-center text-muted-foreground">Aucune route générique à afficher.</td>
+                          </tr>
+                        ) : (
+                          routes.map(item => {
+                            const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                            return (
+                              <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                                <td className="p-2">{item.label}</td>
+                                <td className="p-2">{item.route || '-'} {item.is_external && <ExternalLink className="inline h-3 w-3 ml-1" />}</td>
+                                <td className="p-2">
+                                  <div className="flex items-center gap-2">
+                                    <IconComponent className="h-4 w-4" /> 
+                                  </div>
+                                </td>
+                                <td className="p-2 flex gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </ScrollArea>
               </CollapsibleContent>
             </Collapsible>
@@ -453,7 +457,7 @@ const GenericNavItemsPage = () => {
       {/* Edit Generic Nav Item Dialog */}
       {currentItemToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply responsive dimensions */}
             <DialogHeader>
               <DialogTitle>Modifier l'élément de navigation générique</DialogTitle>
               <DialogDescription>
@@ -461,11 +465,11 @@ const GenericNavItemsPage = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-item-label" className="text-right">Libellé</Label>
-                <Input id="edit-item-label" value={editItemLabel} onChange={(e) => setEditItemLabel(e.target.value)} className="col-span-3" required />
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <Label htmlFor="edit-item-label" className="sm:text-right">Libellé</Label>
+                <Input id="edit-item-label" value={editItemLabel} onChange={(e) => setEditItemLabel(e.target.value)} className="sm:col-span-3" required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
                 <Label htmlFor="edit-item-type">Type d'élément</Label>
                 <Select value={editItemType} onValueChange={(value: NavItem['type']) => {
                   setEditItemType(value);
@@ -473,7 +477,7 @@ const GenericNavItemsPage = () => {
                     setEditItemIsExternal(false);
                   }
                 }}>
-                  <SelectTrigger id="edit-item-type" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  <SelectTrigger id="edit-item-type" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
                     <SelectValue placeholder="Sélectionner un type" />
                   </SelectTrigger>
                   <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
@@ -487,18 +491,18 @@ const GenericNavItemsPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-item-route" className="text-right">Route</Label>
-                <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} />
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <Label htmlFor="edit-item-route" className="sm:text-right">Route</Label>
+                <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="sm:col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-item-is-external" className="text-right">Lien externe</Label>
-                <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="col-span-3" disabled={editItemType === 'category_or_action'} />
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <Label htmlFor="edit-item-is-external" className="sm:text-right">Lien externe</Label>
+                <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="sm:col-span-3" disabled={editItemType === 'category_or_action'} />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
                 <Label htmlFor="edit-item-icon">Icône</Label>
                 <Select value={editItemIconName} onValueChange={setEditItemIconName}>
-                  <SelectTrigger id="edit-item-icon" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  <SelectTrigger id="edit-item-icon" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
                     <SelectValue placeholder="Sélectionner une icône" />
                   </SelectTrigger>
                   <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
@@ -517,9 +521,9 @@ const GenericNavItemsPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-item-description" className="text-right">Description</Label>
-                <Textarea id="edit-item-description" value={editItemDescription} onChange={(e) => setEditItemDescription(e.target.value)} className="col-span-3" />
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <Label htmlFor="edit-item-description" className="sm:text-right">Description</Label>
+                <Textarea id="edit-item-description" value={editItemDescription} onChange={(e) => setEditItemDescription(e.target.value)} className="sm:col-span-3" />
               </div>
             </div>
             <DialogFooter>

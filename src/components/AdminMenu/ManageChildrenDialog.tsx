@@ -76,12 +76,15 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
     transition,
   } = useSortable({ id: item.configId!, disabled: !isDraggableAndDeletable });
 
+  // Adjust paddingLeft based on level and screen size
+  const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`; // Reduced indentation for mobile
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 100 : 'auto', // Bring dragged item to front
     opacity: isDragging ? 0.8 : 1,
-    paddingLeft: `${level * 20}px`,
+    paddingLeft: effectivePaddingLeft, // Apply responsive padding
   };
 
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
@@ -89,7 +92,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   return (
     <ContextMenu> {/* Re-added ContextMenu */}
       <ContextMenuTrigger asChild>
-        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto */}
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto, added flex-wrap */}
           <div className="flex items-center gap-2 flex-grow">
             {isDraggableAndDeletable && (
               <Button
@@ -110,7 +113,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
             {item.is_global && <Globe className="h-3 w-3 text-muted-foreground ml-1" title="Configuration globale" />}
           </div>
           {isDraggableAndDeletable && (
-            <Button variant="destructive" size="sm" onClick={() => onRemove(item.configId!)}>
+            <Button variant="destructive" size="sm" onClick={() => onRemove(item.configId!)} className="flex-shrink-0 mt-2 sm:mt-0"> {/* Allow button to wrap */}
               <Trash2 className="h-3 w-3" />
             </Button>
           )}
@@ -383,7 +386,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile"> {/* Added z-index here, apply rounded-android-tile */}
+      <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile"> {/* Apply responsive dimensions */}
         <DialogHeader className="mb-4">
           <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             Gérer les sous-éléments de "{parentItem.label}"

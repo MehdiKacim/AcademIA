@@ -69,21 +69,26 @@ const AddExistingNavItemDialog = ({
   }, [isOpen]);
 
   const availableGenericItemsOptions = useMemo(() => {
-    const items = allGenericNavItems
-      .filter(item => {
-        // An item is available if:
-        // 1. It's not yet configured for this role.
-        // 2. It IS configured for this role, but is currently a root item (no parent).
-        const isConfigured = allConfiguredItemsFlat.some(configured => configured.id === item.id);
-        const isConfiguredAsRoot = allConfiguredItemsFlat.some(configured => configured.id === item.id && (configured.parent_nav_item_id === null || configured.parent_nav_item_id === undefined));
-        
-        return !isConfigured || isConfiguredAsRoot;
-      })
-      .filter(item => item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase()));
+    const itemsNotYetConfigured = allGenericNavItems.filter(
+      item => !allConfiguredItemsFlat.some(configured => configured.id === item.id)
+    );
+
+    const configuredRootItems = allConfiguredItemsFlat.filter(
+      item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined
+    );
+
+    const combinedItems = [...itemsNotYetConfigured, ...configuredRootItems];
+
+    const filtered = combinedItems.filter(item =>
+      item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase())
+    );
       
-    return items.map(item => ({
-        ...item,
-        isConfiguredAsRoot: allConfiguredItemsFlat.some(configured => configured.id === item.id && (configured.parent_nav_item_id === null || configured.parent_nav_item_id === undefined)),
+    return filtered.map(item => ({
+        id: item.id, // This is the generic nav_item_id
+        label: item.label,
+        icon_name: item.icon_name,
+        level: 0,
+        isNew: !allConfiguredItemsFlat.some(configured => configured.id === item.id), // Mark as new if not already configured
       }));
   }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
@@ -155,6 +160,9 @@ const AddExistingNavItemDialog = ({
         return;
       }
 
+      const selectedItemInfo = availableGenericItemsOptions.find(opt => opt.id === selectedGenericItemToAdd);
+      const isNewConfiguration = selectedItemInfo?.isNew; // Check if it's a truly new configuration
+
       let finalParentId: string | null = selectedParentForNewItem === 'none' ? null : selectedParentForNewItem;
 
       // If the selected parent is a new generic item (not yet configured for this role),
@@ -200,7 +208,8 @@ const AddExistingNavItemDialog = ({
         }
       }
 
-      if (!selectedGenericItemInfo.isConfiguredAsRoot) { // If it's a truly new configuration
+      if (isNewConfiguration) {
+        // Add a new configuration for the selected generic item
         const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
           nav_item_id: genericItem.id,
           role: selectedRoleFilter,
@@ -238,7 +247,7 @@ const AddExistingNavItemDialog = ({
     }
   };
 
-  const isAddButtonDisabled = isAdding || !selectedGenericItemInfo || !selectedParentForNewItem;
+  const isAddButtonDisabled = isAdding || !selectedGenericItemToAdd || availableGenericItemsOptions.length === 0;
 
   const handleSelectGenericItem = (item: ({ isConfiguredAsRoot: boolean } & NavItem)) => {
     setSelectedGenericItemToAdd(item.id);
@@ -263,7 +272,7 @@ const AddExistingNavItemDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-card z-[100] rounded-android-tile">
+      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile"> {/* Apply responsive dimensions */}
         <DialogHeader>
           <DialogTitle>Ajouter un élément existant au menu</DialogTitle>
           <DialogDescription>

@@ -218,7 +218,7 @@ const EditRoleConfigDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-card z-[100] rounded-android-tile">
+      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile"> {/* Apply responsive dimensions */}
         <DialogHeader>
           <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
           <DialogDescription>
@@ -299,9 +299,9 @@ const EditRoleConfigDialog = ({
                 </CardContent>
               </Card>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-config-order" className="text-right">Ordre</Label>
-                <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="col-span-3 rounded-android-tile" />
+              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <Label htmlFor="edit-config-order" className="sm:text-right">Ordre</Label>
+                <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="sm:col-span-3 rounded-android-tile" />
               </div>
             </div>
           )}

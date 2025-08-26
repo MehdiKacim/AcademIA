@@ -94,12 +94,15 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
     transition,
   } = useSortable({ id: item.configId || item.id, disabled: !isDraggableAndDeletable });
 
+  // Adjust paddingLeft based on level and screen size
+  const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`; // Reduced indentation for mobile
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 100 : 'auto', // Bring dragged item to front
     opacity: isDragging ? 0.8 : 1,
-    paddingLeft: `${level * 20}px`,
+    paddingLeft: effectivePaddingLeft, // Apply responsive padding
   };
 
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
@@ -124,7 +127,8 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             "p-3 border rounded-android-tile flex items-center justify-between gap-2 mb-2", // Apply rounded-android-tile
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
-            item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50"
+            item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50",
+            "flex-wrap sm:flex-nowrap" // Allow wrapping on small screens
           )}
         >
           <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={(e) => {
@@ -168,7 +172,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
             {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0"> {/* Allow buttons to wrap on new line on small screens */}
             <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
               <Edit className="h-4 w-4" />
             </Button>
