@@ -209,97 +209,99 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
 
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
     <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80">
-      <Header className="mb-4 text-center">
-        <Title className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-          Accès Administrateur
-        </Title>
-        <Description className="text-center">
-          {currentUserProfile?.role === 'administrator' ? "Actions d'administration disponibles." : "Connectez-vous en tant qu'administrateur pour accéder à ces outils."}
-        </Description>
-      </Header>
-      <div className="space-y-4">
-        {currentUserProfile?.role === 'administrator' ? (
-          <>
-            <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full" variant="outline">
-              <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
-            </Button>
-            
-            <Button onClick={handleBootstrapNavItems} className="w-full" variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" /> Initialiser menus par défaut
-            </Button>
+      <React.Fragment> {/* Added React.Fragment here */}
+        <Header className="mb-4 text-center">
+          <Title className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+            Accès Administrateur
+          </Title>
+          <Description className="text-center">
+            {currentUserProfile?.role === 'administrator' ? "Actions d'administration disponibles." : "Connectez-vous en tant qu'administrateur pour accéder à ces outils."}
+          </Description>
+        </Header>
+        <div className="space-y-4">
+          {currentUserProfile?.role === 'administrator' ? (
+            <>
+              <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full" variant="outline">
+                <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
+              </Button>
+              
+              <Button onClick={handleBootstrapNavItems} className="w-full" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" /> Initialiser menus par défaut
+              </Button>
 
-            <Button onClick={handleClearAllData} className="w-full" variant="destructive">
-              <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
-            </Button>
+              <Button onClick={handleClearAllData} className="w-full" variant="destructive">
+                <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
+              </Button>
 
-            <Button onClick={onClose} className="w-full" variant="secondary">
-              Fermer
-            </Button>
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground text-center">
-              Pour accéder aux outils d'administration, veuillez vous connecter avec un compte ayant le rôle 'administrateur'.
-            </p>
-            {/* Show create initial admin form only if no user is logged in */}
-            {!currentUserProfile && (
-              <Collapsible open={showCreateAdminForm} onOpenChange={setShowCreateAdminForm}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    <div className="flex items-center gap-2">
-                      <UserPlus className="h-4 w-4" /> Créer un administrateur initial
-                    </div>
-                    {showCreateAdminForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 p-4 border rounded-md bg-muted/20">
-                  <p className="text-sm text-muted-foreground">
-                    Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
-                  </p>
-                  <Input
-                    placeholder="Prénom"
-                    value={adminFirstName}
-                    onChange={(e) => setAdminFirstName(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Nom"
-                    value={adminLastName}
-                    onChange={(e) => setAdminLastName(e.target.value)}
-                  />
-                  <InputWithStatus
-                    placeholder="Nom d'utilisateur"
-                    value={adminUsername}
-                    onChange={(e) => handleAdminUsernameChange(e.target.value)}
-                    status={usernameAvailabilityStatus}
-                    errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-                  />
-                  <InputWithStatus
-                    type="email"
-                    placeholder="Email"
-                    value={adminEmail}
-                    onChange={(e) => handleAdminEmailChange(e.target.value)}
-                    status={emailAvailabilityStatus}
-                    errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Mot de passe"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                  />
-                  <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
-                    {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
-                  </Button>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-            <Button onClick={onClose} className="w-full" variant="secondary">
-              Fermer
-            </Button>
-          </>
-        )}
-      </div>
-      <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />
+              <Button onClick={onClose} className="w-full" variant="secondary">
+                Fermer
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground text-center">
+                Pour accéder aux outils d'administration, veuillez vous connecter avec un compte ayant le rôle 'administrateur'.
+              </p>
+              {/* Show create initial admin form only if no user is logged in */}
+              {!currentUserProfile && (
+                <Collapsible open={showCreateAdminForm} onOpenChange={setShowCreateAdminForm}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <div className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" /> Créer un administrateur initial
+                      </div>
+                      {showCreateAdminForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 p-4 border rounded-md bg-muted/20">
+                    <p className="text-sm text-muted-foreground">
+                      Utilisez ceci si la base de données est vide ou si vous avez perdu l'accès administrateur.
+                    </p>
+                    <Input
+                      placeholder="Prénom"
+                      value={adminFirstName}
+                      onChange={(e) => setAdminFirstName(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Nom"
+                      value={adminLastName}
+                      onChange={(e) => setAdminLastName(e.target.value)}
+                    />
+                    <InputWithStatus
+                      placeholder="Nom d'utilisateur"
+                      value={adminUsername}
+                      onChange={(e) => handleAdminUsernameChange(e.target.value)}
+                      status={usernameAvailabilityStatus}
+                      errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                    />
+                    <InputWithStatus
+                      type="email"
+                      placeholder="Email"
+                      value={adminEmail}
+                      onChange={(e) => handleAdminEmailChange(e.target.value)}
+                      status={emailAvailabilityStatus}
+                      errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Mot de passe"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                    />
+                    <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
+                      {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
+                    </Button>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              <Button onClick={onClose} className="w-full" variant="secondary">
+                Fermer
+              </Button>
+            </>
+          )}
+        </div>
+        <DataModelModal isOpen={isDataModelModalOpen} onClose={() => setIsDataModelModalOpen(false)} />
+      </React.Fragment> {/* Close React.Fragment here */}
     </Wrapper>
   );
 
