@@ -6,6 +6,7 @@ import { Send, Bot, User as UserIcon, X, Minus, Maximize } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCourseChat } from "@/contexts/CourseChatContext";
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface Message {
   id: number;
@@ -14,6 +15,7 @@ interface Message {
 }
 
 const AiAPersistentChat = () => {
+  const { currentUserProfile } = useRole(); // Get currentUserProfile
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isMinimized, setIsMinimized] = useState(true); // Start minimized by default
@@ -36,22 +38,19 @@ const AiAPersistentChat = () => {
         { id: messageIdCounter.current, sender: 'aia', text: "Bonjour ! Je suis AiA, votre tuteur personnel. Comment puis-je vous aider aujourd'hui ?" },
       ]);
     }
-  }, []);
+  }, [messages.length]); // Depend on messages.length to only run once
 
-  // Ensure chat is maximized when opened from the floating button
+  // Effect to manage internal isMinimized state based on context's isChatOpen
   useEffect(() => {
     if (isChatOpen) {
-      setIsMinimized(false); // Always open in maximized state
+      setIsMinimized(false); // Force maximized when context says chat is open
       if (initialChatMessage) {
         setInput(initialChatMessage);
         setInitialChatMessage(null);
       }
-      const timer = setTimeout(() => {
-        scrollToBottom();
-      }, 100); 
-      return () => clearTimeout(timer);
     } else {
-      setIsMinimized(true); // Minimize when chat is closed from context
+      // When context's isChatOpen becomes false (e.g., from closeChat()), minimize it
+      setIsMinimized(true);
     }
   }, [isChatOpen, initialChatMessage, setInitialChatMessage]);
 
@@ -100,9 +99,9 @@ const AiAPersistentChat = () => {
     }
   };
 
-  // The chat is always rendered, but its visibility and state depend on isChatOpen and isMinimized
-  if (!isChatOpen && isMinimized) {
-    return null; // Only render if chat is explicitly open or if it's minimized but still part of the UI flow
+  // Only render the component if the user is logged in
+  if (!currentUserProfile) {
+    return null;
   }
 
   return (

@@ -43,7 +43,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
   const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole();
-  const { isChatOpen, openChat } = useCourseChat(); // Get openChat from context
+  const { isChatOpen } = useCourseChat(); // Get isChatOpen from context
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -66,14 +66,17 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       } else if (newItem.id === 'nav-about') {
         newItem.onClick = () => setIsAboutModalOpen(true);
       } else if (newItem.id === 'nav-aia-chat') {
-        newItem.onClick = () => openChat();
+        // The AiAPersistentChat component will manage its own open/minimize state
+        // We just need to ensure it's rendered and its internal state is handled.
+        // The openChat() from context is now primarily for external triggers.
+        newItem.onClick = () => { /* No direct action here, AiAPersistentChat handles its own visibility */ };
       }
       if (newItem.children && newItem.children.length > 0) {
         newItem.children = injectActionHandlers(newItem.children);
       }
       return newItem;
     });
-  }, [openChat]);
+  }, []);
 
   const fullNavTreeWithActions = React.useMemo((): NavItem[] => {
     return injectActionHandlers(navItems);
@@ -192,27 +195,27 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
-  const globalSwipeHandlers = useSwipeable({ // Moved swipe handlers to the main div
-    onSwipedDown: () => {
-      if (isMobile && currentUserProfile && !isMobileNavSheetOpen) {
-        setIsMobileNavSheetOpen(true);
-      }
-    },
-    onSwipedRight: () => {
-      if (isMobile && !isMobileNavSheetOpen && !isSearchOverlayOpen && !isChatOpen) {
-        navigate(-1);
-      }
-    },
-    preventScrollOnSwipe: true,
-    trackMouse: true,
-    delta: 50,
-  });
+  // Removed globalSwipeHandlers from the main div.
+  // The swipe-right-to-go-back gesture will now be handled by MobileNavSheet.
 
-  const canGoBack = location.key !== 'default' && window.history.length > 1;
+  const headerDoubleTapRef = useRef({ lastTap: 0 });
+  const handleHeaderClick = useCallback(() => {
+    if (isMobile && currentUserProfile) {
+      const now = Date.now();
+      const DOUBLE_TAP_DELAY = 300; // milliseconds
+      if (now - headerDoubleTapRef.current.lastTap < DOUBLE_TAP_DELAY) {
+        setIsMobileNavSheetOpen(true);
+        headerDoubleTapRef.current.lastTap = 0; // Reset to prevent triple taps
+      } else {
+        headerDoubleTapRef.current.lastTap = now;
+      }
+    }
+  }, [isMobile, currentUserProfile]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-muted/40" {...globalSwipeHandlers}> {/* Apply globalSwipeHandlers here */}
+    <div className="flex flex-col min-h-screen bg-muted/40">
       <header
+        onClick={handleHeaderClick} // Add onClick for double-tap detection
         className={cn(
           "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
