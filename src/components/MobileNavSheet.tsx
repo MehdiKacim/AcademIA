@@ -174,18 +174,11 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           </div>
 
           <div className="flex items-center justify-between">
-            {drawerNavStack.length > 0 ? (
-              <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
-                <ArrowLeft className="h-5 w-5" />
-                <span className="sr-only">Retour</span>
-              </Button>
-            ) : (
-              <div className="w-10 h-10"></div> {/* Placeholder to keep alignment */}
-            )}
+            {/* Simplified back button / placeholder */}
+            <div className="w-10 h-10"></div> 
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
-              {/* Simplified rendering of the icon component */}
-              <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
-              {currentDrawerTitle}
+              <Menu className="h-6 w-6 text-primary" /> {/* Static icon */}
+              {"Menu"} {/* Static title */}
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
               <X className="h-5 w-5" />
