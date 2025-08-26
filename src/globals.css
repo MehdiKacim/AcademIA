@@ -116,4 +116,9 @@
     left: 0 !important;
     transform: none !important;
   }
+
+  /* Force Radix UI Popover/Dropdown content to be above everything else */
+  [data-radix-popper-content-wrapper] {
+    z-index: 9999 !important; 
+  }
 }
