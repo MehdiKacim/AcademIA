@@ -6,13 +6,13 @@ import { Send, Bot, User as UserIcon, X, Minus, Maximize } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import { useRole } from '@/contexts/RoleContext'; // Import useRole
+import { useRole } from '@/contexts/RoleContext';
 import {
   DndContext,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
+  useDraggable, // Import useDraggable
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -35,11 +35,6 @@ const AiAPersistentChat = () => {
 
   const isMobile = useIsMobile();
 
-  // State for drag position
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [initialDragOffset, setInitialDragOffset] = useState({ x: 0, y: 0 });
-  const chatRef = useRef<HTMLDivElement>(null);
-
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -48,23 +43,14 @@ const AiAPersistentChat = () => {
     })
   );
 
-  const handleDragStart = (event: any) => {
-    if (chatRef.current) {
-      const rect = chatRef.current.getBoundingClientRect();
-      setInitialDragOffset({
-        x: event.active.coords.x.current - rect.left,
-        y: event.active.coords.y.current - rect.top,
-      });
-    }
-  };
+  // Use useDraggable hook for the entire chat component
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: 'aia-chat-draggable',
+  });
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { delta } = event;
-    setPosition(({ x, y }) => ({
-      x: x + delta.x,
-      y: y + delta.y,
-    }));
-  };
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -140,20 +126,19 @@ const AiAPersistentChat = () => {
   }
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors}>
       <div
-        ref={chatRef}
-        style={{
-          transform: `translate(${position.x}px, ${position.y}px)`,
-          touchAction: 'none', // Prevent scrolling during drag
-        }}
+        ref={setNodeRef} // Apply the ref from useDraggable
+        style={style} // Apply the transform from useDraggable
+        {...listeners} // Apply listeners for dragging
+        {...attributes} // Apply other attributes (e.g., aria-labelledby)
         className={cn(
-          "fixed bg-card border border-primary/20 shadow-lg shadow-primary/10 flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile",
+          "fixed flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile",
           isMinimized
-            ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-grab flex items-center justify-center bg-primary/80 backdrop-blur-lg border border-primary/50 shadow-lg" // Minimized state: small button with blur
+            ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-grab flex items-center justify-center bg-primary/80 backdrop-blur-lg border border-primary/50 shadow-lg" // Minimized state with blur and transparency
             : isMobile
-              ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg" // Maximized mobile
-              : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg" // Maximized desktop
+              ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg bg-card border border-primary/20 shadow-lg" // Maximized mobile
+              : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg bg-card border border-primary/20 shadow-lg" // Maximized desktop
         )}
         onClick={isMinimized ? () => setIsMinimized(false) : undefined}
       >
@@ -164,7 +149,7 @@ const AiAPersistentChat = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between p-4 border-b border-border shrink-0 cursor-grab" {...(sensors.length > 0 ? { 'data-dnd-context-handle': true } : {})}> {/* Add data-dnd-context-handle for drag handle */}
+            <div className="flex items-center justify-between p-4 border-b border-border shrink-0 cursor-grab" {...listeners} {...attributes}> {/* Apply drag handle to header when maximized */}
               <h3 className="flex items-center gap-2 text-lg font-semibold">
                 <Bot className="h-6 w-6 text-primary" /> AiA
               </h3>
@@ -173,7 +158,7 @@ const AiAPersistentChat = () => {
                   <Minus className="h-4 w-4" />
                   <span className="sr-only">Minimiser</span>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={closeChat}> {/* Use closeChat from context */}
+                <Button variant="ghost" size="icon" onClick={closeChat}> {/* This now correctly calls closeChat from context */}
                   <X className="h-4 w-4" />
                   <span className="sr-only">Fermer le chat</span>
                 </Button>
