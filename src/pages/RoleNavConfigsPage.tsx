@@ -9,10 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2, RefreshCw } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
-import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole, bootstrapDefaultNavItemsForRole } from "@/lib/navItems";
+import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems";
 import { useRole } from '@/contexts/RoleContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea }
@@ -189,7 +189,7 @@ const RoleNavConfigsPage = () => {
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
   const [editConfigParentId, setEditConfigParentId] = useState<string | null>(null); // Can be null for root
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
-  const [isSavingConfigEdit, setIsSavingConfigEdit] = useState(false); // Corrected state variable name
+  const [isSavingConfigEdit, setIsSavingEdit] = useState(false); // Corrected state variable name
 
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
@@ -410,26 +410,26 @@ const RoleNavConfigsPage = () => {
                 showSuccess(`Catégorie '${selectedParentInfo.label}' ajoutée au menu du rôle.`);
             } else {
                 showError(`Échec de l'ajout de la catégorie '${selectedParentInfo.label}' au menu du rôle.`);
-                setIsSavingConfigEdit(false);
+                setIsSavingEdit(false);
                 return;
             }
         } catch (error: any) {
             console.error("Error adding new generic parent to role config:", error);
             showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
-            setIsSavingConfigEdit(false);
+            setIsSavingEdit(false);
             return;
         }
     }
 
     if (finalParentId && finalParentId === currentItemToEdit.id) {
       showError("Un élément ne peut pas être son propre parent.");
-      setIsSavingConfigEdit(false);
+      setIsSavingEdit(false);
       return;
     }
     const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
     if (finalParentId && descendantsOfCurrentItem.has(finalParentId)) {
       showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
-      setIsSavingConfigEdit(false);
+      setIsSavingEdit(false);
       return;
     }
 
@@ -668,7 +668,7 @@ const RoleNavConfigsPage = () => {
     if (window.confirm(`Êtes-vous sûr de vouloir réinitialiser la navigation par défaut pour le rôle '${selectedRoleFilter}' ? Cela écrasera toutes les configurations existantes pour ce rôle.`)) {
       try {
         await resetRoleNavConfigsForRole(selectedRoleFilter as Profile['role']);
-        await bootstrapDefaultNavItemsForRole(selectedRoleFilter as Profile['role']);
+        // Removed call to bootstrapDefaultNavItemsForRole
         showSuccess(`Navigation par défaut réinitialisée pour le rôle '${selectedRoleFilter}' !`);
         await fetchAndStructureNavItems(); // Re-fetch to update UI
       } catch (error: any) {
