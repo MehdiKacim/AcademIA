@@ -230,6 +230,8 @@ const RoleNavConfigsPage = () => {
   const [addExistingSearch, setAddExistingSearch] = useState('');
   const [openEditParentPopover, setOpenEditParentPopover] = useState(false);
   const [editParentSearch, setEditParentSearch] = useState('');
+  // Corrected: Declare selectedGenericItemToAdd state variable
+  const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
 
 
   const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
