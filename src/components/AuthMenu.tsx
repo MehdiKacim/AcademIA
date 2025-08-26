@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LoginForm } from "@/components/LoginForm";
 import { showSuccess, showError } from '@/utils/toast';
 import { ArrowLeft } from 'lucide-react'; // Import ArrowLeft
-import useEmblaCarousel from 'embla-carousel-react'; // Keep Embla for now, will remove if only one slide is truly needed
+// Removed: import useEmblaCarousel from 'embla-carousel-react'; // Keep Embla for now, will remove if only one slide is truly needed
 
 interface AuthMenuProps {
   onClose: () => void;
