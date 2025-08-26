@@ -72,11 +72,8 @@ const SearchableDropdown = React.forwardRef<
     const IconComponentToRender = (iconName?: string) => {
       if (!iconName) return null;
       const Component = iconMap[iconName];
-      console.log(`[IconComponentToRender] iconName: ${iconName}, Component:`, Component); // Added log
       return Component ? <Component className="h-4 w-4" /> : null;
     };
-
-    console.log("[SearchableDropdown] Current value prop:", value);
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -120,13 +117,11 @@ const SearchableDropdown = React.forwardRef<
                 ) : (
                   <CommandGroup>
                     {options.map((option) => {
-                      console.log(`[SearchableDropdown] Option: ${option.label} (ID: ${option.id}), Current Value: ${value}, Is Selected: ${value === option.id}`);
                       return (
                         <CommandItem
                           key={option.id}
                           value={option.label}
                           onSelect={() => {
-                            console.log(`[SearchableDropdown] Selected option: ${option.label} (ID: ${option.id})`);
                             onValueChange(option.id === value ? null : option.id);
                             setOpen(false);
                           }}
