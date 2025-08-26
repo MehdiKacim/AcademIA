@@ -63,10 +63,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   // Removed searchQuery state
 
   const swipeHandlers = useSwipeable({
-    onSwipedDown: onClose,
-    onSwipedRight: onClose, // Added swipe right to close
-    preventScrollOnSwipe: true,
-    trackMouse: true,
+    onSwipedRight: onClose, // Only swipe right to close
+    preventScrollOnSwipe: true, // Prevent scrolling while swiping
+    trackMouse: true, // For testing on desktop
   });
 
   React.useEffect(() => {
@@ -210,10 +209,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 </>
               )}
               <ThemeToggle />
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Fermer</span>
-              </Button>
+              {/* Removed the close button */}
             </div>
           </div>
         </div>
