@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp }
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
@@ -708,7 +708,7 @@ const RoleNavConfigsPage = () => {
                       )}
                       onClick={() => handleSelectRole(role)}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 select-none">
                         <UserRoundCog className="h-5 w-5 text-primary" />
                         <p className="font-medium">{getRoleDisplayName(role)}</p>
                       </div>
@@ -752,7 +752,7 @@ const RoleNavConfigsPage = () => {
                       )}
                       onClick={() => handleSelectRole(role)}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 select-none">
                         <UserRoundCog className="h-5 w-5 text-primary" />
                         <p className="font-medium">{getRoleDisplayName(role)}</p>
                       </div>
