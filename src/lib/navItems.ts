@@ -79,6 +79,8 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   // Build the hierarchy
   allConfiguredItemsFlat.forEach(item => {
+    console.log(`[loadNavItems] Processing item: ${item.label} (ID: ${item.id}, ConfigID: ${item.configId}, ParentID: ${item.parent_nav_item_id}, Type: ${item.type})`);
+
     if (item.parent_nav_item_id) {
       // Find the parent item in the flat list by its generic ID
       // We need to find the *configured instance* of the parent.
@@ -90,21 +92,21 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
       );
 
       if (parentCandidate) {
+        console.log(`[loadNavItems] Found parent candidate for ${item.label}: ${parentCandidate.label} (ConfigID: ${parentCandidate.configId}). Adding as child.`);
         parentCandidate.children?.push(item);
       } else {
-        // If a parent_nav_item_id is specified but no suitable parent configured item is found,
-        // it means the parent is either not configured as a category for this role, or it's a dangling reference.
-        // For now, we'll treat it as a root item.
+        console.warn(`[loadNavItems] No suitable parent candidate found for ${item.label} (ParentID: ${item.parent_nav_item_id}). Adding to rootItems as fallback.`);
         rootItems.push(item);
       }
     } else {
+      console.log(`[loadNavItems] Item ${item.label} has no parent_nav_item_id. Adding to rootItems.`);
       rootItems.push(item); // This is a root item
     }
   });
 
   // Sort children within each parent and root items
   rootItems.sort((a, b) => a.order_index - b.order_index);
-  allConfiguredItemsFlat.forEach(item => {
+  configuredItemMapByConfigId.forEach(item => { // Iterate over map values to ensure all items are processed
     if (item.children) {
       item.children.sort((a, b) => a.order_index - b.order_index);
     }
