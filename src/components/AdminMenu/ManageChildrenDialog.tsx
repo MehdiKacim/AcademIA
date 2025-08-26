@@ -89,7 +89,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   return (
     <ContextMenu> {/* Re-added ContextMenu */}
       <ContextMenuTrigger asChild>
-        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-md bg-background flex items-center justify-between gap-2 mb-1 select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed pointer-events-auto */}
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-md bg-background flex items-center justify-between gap-2 mb-1", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto */}
           <div className="flex items-center gap-2 flex-grow">
             {isDraggableAndDeletable && (
               <Button
