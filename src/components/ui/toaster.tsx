@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react" // Import React for React.Fragment
 import {
   Toast,
   ToastClose,
@@ -9,28 +10,30 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+// import { cn } from "@/lib/utils" // Removed unused import
 
 export function Toaster() {
   const { toasts } = useToast()
 
   return (
-    <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
-            <ToastClose />
-          </Toast>
-        )
-      })}
-      <ToastViewport />
-    </ToastProvider>
+    <React.Fragment> {/* Wrap both in a Fragment */}
+      <ToastProvider>
+        {toasts.map(function ({ id, title, description, action, ...props }) {
+          return (
+            <Toast key={id} {...props}>
+              <div className="grid gap-1">
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && (
+                  <ToastDescription>{description}</ToastDescription>
+                )}
+              </div>
+              {action}
+              <ToastClose />
+            </Toast>
+          )
+        })}
+      </ToastProvider>
+      <ToastViewport /> {/* This is now a sibling to ToastProvider */}
+    </React.Fragment>
   )
 }
