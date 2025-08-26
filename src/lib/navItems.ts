@@ -169,6 +169,31 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  */
 export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
   console.log("[addNavItem] Sending payload to Edge Function:", newItem); // Add this log
+
+  // Check for existing item with same label or route (if route is not null)
+  const { data: existingItems, error: fetchError } = await supabase
+    .from('nav_items')
+    .select('id, label, route')
+    .or(`label.eq.${newItem.label},route.eq.${newItem.route}`);
+
+  if (fetchError) {
+    console.error("Error checking for existing nav items:", fetchError);
+    throw new Error("Erreur lors de la vérification des éléments de navigation existants.");
+  }
+
+  if (existingItems && existingItems.length > 0) {
+    const duplicateLabel = existingItems.some(item => item.label === newItem.label);
+    const duplicateRoute = newItem.route && existingItems.some(item => item.route === newItem.route);
+
+    if (duplicateLabel && duplicateRoute) {
+      throw new Error("Un élément avec le même libellé ET la même route existe déjà.");
+    } else if (duplicateLabel) {
+      throw new Error("Un élément avec le même libellé existe déjà.");
+    } else if (duplicateRoute) {
+      throw new Error("Un élément avec la même route existe déjà.");
+    }
+  }
+
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'create', payload: newItem },
   });
