@@ -19,6 +19,7 @@ import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Import Avatar components
+import Logo from './Logo'; // Import the Logo component
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home,
@@ -170,7 +171,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         {/* Custom Header for Mobile Nav Sheet */}
         <div className="p-4 flex-shrink-0 border-b border-border">
           <div className="flex items-center justify-between">
-            {/* Left side: Back button and current menu label */}
+            {/* Left side: Back button and App Logo/Name */}
             <div className="flex items-center gap-2">
               {drawerNavStack.length > 0 ? (
                 <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
@@ -180,9 +181,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               ) : (
                 <div className="w-10 h-10"></div> // Placeholder for alignment
               )}
-              <span className="text-sm font-medium text-muted-foreground">
-                {currentDrawerTitle}
-              </span>
+              <Logo iconClassName="h-8 w-8" textClassName="text-xl" /> {/* App Logo and Name */}
             </div>
 
             {/* Right side: Quick access items */}
@@ -219,6 +218,13 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         </div>
 
         <ScrollArea className="flex-grow p-4">
+          {/* Menu Title (moved here) */}
+          {drawerNavStack.length > 0 && (
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
+              {currentDrawerTitle}
+            </h2>
+          )}
           <motion.div 
             key={drawerNavStack.length}
             initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}
