@@ -32,19 +32,16 @@ import { RoleProvider, useRole } from "./contexts/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { CourseChatProvider } from "./contexts/CourseChatContext";
 import AdminModal from "./components/AdminModal";
-import GenericNavItemsPage from "./pages/GenericNavItemsPage"; // Import new page
-import RoleNavConfigsPage from "./pages/RoleNavConfigsPage"; // Import new page
+import GenericNavItemsPage from "./pages/GenericNavItemsPage";
+import RoleNavConfigsPage from "./pages/RoleNavConfigsPage";
 
 const queryClient = new QueryClient();
 
-// Define AuthenticatedAppRoutes outside the App component
 const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isAdminModalOpen: boolean; setIsAdminModalOpen: (isOpen: boolean) => void }) => {
   const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
 
-  // Determine the initial theme based on user profile or default to 'system'
   const initialTheme = currentUserProfile?.theme || "system";
 
-  // Component mapping for dynamic routes
   const routeComponentMap: { [key: string]: React.ElementType } = {
     "/dashboard": Dashboard,
     "/courses": Courses,
@@ -66,23 +63,23 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     "/classes": ClassManagementPage,
     "/students": StudentManagementPage,
     "/pedagogical-management": PedagogicalManagementPage,
-    "/admin-menu-management/generic-items": GenericNavItemsPage, // New route
-    "/admin-menu-management/role-configs": RoleNavConfigsPage, // New route
+    "/admin-menu-management/generic-items": GenericNavItemsPage,
+    "/admin-menu-management/role-configs": RoleNavConfigsPage,
   };
 
   useEffect(() => {
     console.log("[App.tsx] routeComponentMap keys:", Object.keys(routeComponentMap));
     console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
     console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
-  }, [dynamicRoutes, currentUserProfile]); // Log when dynamicRoutes or currentUserProfile change
+  }, [dynamicRoutes, currentUserProfile]);
 
   if (isLoadingUser) {
     console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
     return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
   }
 
-  console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is false. Rendering BrowserRouter. Current dynamicRoutes:", dynamicRoutes.map(r => r.route)); // Add this line
-  console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile); // Add this line
+  console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is false. Rendering BrowserRouter. Current dynamicRoutes:", dynamicRoutes.map(r => r.route));
+  console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile);
 
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
@@ -107,12 +104,10 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
 
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
-                {/* Redirect for the parent category route */}
                 <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
-                {/* Dynamically generated routes */}
                 {dynamicRoutes.map(item => {
                   const Component = routeComponentMap[item.route!];
-                  console.log(`[App.tsx] Mapping route: ${item.route} to Component: ${Component ? Component.name : 'NOT_FOUND'}`); // <-- ADDED LOG HERE
+                  console.log(`[App.tsx] Mapping route: ${item.route} to Component: ${Component ? Component.name : 'NOT_FOUND'}`);
                   return Component ? (
                     <Route
                       key={item.id}
@@ -149,3 +144,5 @@ const App = () => {
     </QueryClientProvider>
   );
 };
+
+export default App;
