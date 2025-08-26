@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner"; // Changed import name to Toaster
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
@@ -85,7 +85,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
       <TooltipProvider>
         <React.Fragment> {/* Wrap multiple children in a Fragment */}
-          <Sonner 
+          <Toaster // Changed from Sonner to Toaster
             position="top-center" 
             className="top-16 z-[9999]"
             toastOptions={{
