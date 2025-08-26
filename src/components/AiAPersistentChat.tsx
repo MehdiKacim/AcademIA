@@ -51,7 +51,7 @@ const AiAPersistentChat = () => {
   // Refined style application for transform and touch-action
   const style = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    touchAction: 'none', // Crucial for mobile dragging, applied to the draggable element
+    // touchAction: 'none', // This is now handled by the Tailwind class 'touch-none'
   };
 
   const scrollToBottom = () => {
@@ -131,9 +131,10 @@ const AiAPersistentChat = () => {
     <DndContext sensors={sensors}>
       <div
         ref={setNodeRef} // Apply the ref from useDraggable
-        style={style} // Apply the transform and touch-action from useDraggable
+        style={style} // Apply the transform from useDraggable
+        {...(isMinimized ? { ...listeners, ...attributes } : {})} // Conditionally apply listeners/attributes to the draggable handle
         className={cn(
-          "fixed flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile",
+          "fixed flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile touch-none", // ADDED touch-none here
           isMinimized
             ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-grab flex items-center justify-center bg-primary/80 backdrop-blur-lg border border-primary/50 shadow-lg" // Minimized state with blur and transparency
             : isMobile
@@ -141,8 +142,6 @@ const AiAPersistentChat = () => {
               : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg bg-card border border-primary/20 shadow-lg" // Maximized desktop
         )}
         onClick={isMinimized ? () => setIsMinimized(false) : undefined}
-        // Conditionally apply listeners/attributes to the draggable handle
-        {...(isMinimized ? { ...listeners, ...attributes } : {})} // When minimized, the whole div is the handle
       >
         {isMinimized ? (
           <div className="flex items-center justify-center h-full w-full">
@@ -151,7 +150,7 @@ const AiAPersistentChat = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between p-4 border-b border-border shrink-0 cursor-grab" {...listeners} {...attributes}> {/* When maximized, the header is the handle */}
+            <div className="flex items-center justify-between p-4 border-b border-border shrink-0 cursor-grab" {...listeners} {...attributes}> {/* When maximized, the header is the drag handle */}
               <h3 className="flex items-center gap-2 text-lg font-semibold">
                 <Bot className="h-6 w-6 text-primary" /> AiA
               </h3>
