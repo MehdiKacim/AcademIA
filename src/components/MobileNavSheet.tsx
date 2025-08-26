@@ -18,7 +18,7 @@ import { useSwipeable } from 'react-swipeable';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useTheme } from 'next-themes';
-import { ThemeToggle } from './theme-toggle'; // Import ThemeToggle
+import { ThemeToggle } from './theme-toggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; // Import DropdownMenu components
+} from "@/components/ui/dropdown-menu";
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -114,6 +114,11 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     navigate("/");
   }, [signOut, onClose, navigate]);
 
+  // Moved handleToggleTheme here
+  const handleToggleTheme = useCallback(() => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  }, [theme, setTheme]);
+
   const currentItemsToDisplay = React.useMemo(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
     let itemsToFilter: NavItem[] = [];
@@ -134,7 +139,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           icon_name: theme === 'dark' ? 'Sun' : 'Moon',
           is_external: false,
           type: 'category_or_action',
-          onClick: handleToggleTheme, // Use the existing toggle function
+          onClick: handleToggleTheme, // Now correctly referenced
           order_index: 998, // High order to place it near the bottom
         },
         {
@@ -154,14 +159,10 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme]);
+  }, [navItems, drawerNavStack, searchQuery, currentUserProfile, theme, handleToggleTheme]); // Added handleToggleTheme to dependencies
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[drawerNavStack[drawerNavStack.length - 1].icon_name || 'Info'] : null;
-
-  const handleToggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -175,37 +176,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
             <span className="font-medium">{format(currentTime, 'HH:mm')}</span>
             <span className="font-medium">{format(currentTime, 'EEE. dd MMM', { locale: fr })}</span>
           </div>
-
-          {/* Removed static quick settings tiles */}
-          {/* <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="android-tile active flex-row items-center justify-start gap-3 !p-3">
-              <div className="icon-container !bg-transparent">
-                <Wifi className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div className="flex flex-col items-start">
-                <span className="title !text-primary-foreground">Internet</span>
-                <span className="subtitle !text-primary-foreground/80">box didou</span>
-              </div>
-            </div>
-            <div className="android-tile flex-row items-center justify-start gap-3 !p-3">
-              <div className="icon-container">
-                <Bluetooth className="h-6 w-6" />
-              </div>
-              <span className="title">Bluetooth</span>
-            </div>
-            <div className="android-tile flex-row items-center justify-start gap-3 !p-3">
-              <div className="icon-container">
-                <Moon className="h-6 w-6" />
-              </div>
-              <span className="title">Modes</span>
-            </div>
-            <div className="android-tile flex-row items-center justify-start gap-3 !p-3" onClick={handleToggleTheme}>
-              <div className="icon-container">
-                {theme === 'dark' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
-              </div>
-              <span className="title">{theme === 'dark' ? 'Mode Clair' : 'Mode Sombre'}</span>
-            </div>
-          </div> */}
 
           <div className="android-search-bar mb-4">
             <Search className="h-5 w-5 text-android-on-surface-variant" />
