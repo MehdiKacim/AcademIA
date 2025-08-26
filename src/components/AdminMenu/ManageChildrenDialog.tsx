@@ -92,8 +92,8 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   return (
     <ContextMenu> {/* Re-added ContextMenu */}
       <ContextMenuTrigger asChild>
-        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto, added flex-wrap */}
-          <div className="flex items-center gap-2 flex-grow">
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto, added flex-wrap */}
+          <div className="flex items-center gap-2 flex-grow select-none"> {/* Added select-none here */}
             {isDraggableAndDeletable && (
               <Button
                 type="button"
@@ -168,9 +168,10 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   useEffect(() => {
     if (isOpen && parentItem) {
-      console.log("[ManageChildrenDialog] Effect triggered. parentItem:", parentItem);
-      console.log("[ManageChildrenDialog] allGenericNavItems:", allGenericNavItems);
-      console.log("[ManageChildrenDialog] allConfiguredItemsFlat:", allConfiguredItemsFlat);
+      console.log("[ManageChildrenDialog] Dialog opened for parent:", parentItem.label, "(ID:", parentItem.id, ")");
+      console.log("[ManageChildrenDialog] Parent children (initial):", parentItem.children?.map(c => c.label));
+      console.log("[ManageChildrenDialog] All generic nav items:", allGenericNavItems.map(i => ({ id: i.id, label: i.label })));
+      console.log("[ManageChildrenDialog] All configured items flat:", allConfiguredItemsFlat.map(i => ({ id: i.id, label: i.label, configId: i.configId, parent: i.parent_nav_item_id })));
 
       // Filter generic items:
       // 1. Not the parent itself
@@ -178,6 +179,9 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       // 3. Not already a descendant of this parent (to prevent circular dependency)
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
       const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat); // Use the passed getDescendantIds and allConfiguredItemsFlat
+
+      console.log("[ManageChildrenDialog] Current direct child generic IDs:", Array.from(currentChildIds));
+      console.log("[ManageChildrenDialog] Descendant generic IDs of parent:", Array.from(descendantsOfParent));
 
       const filteredAvailable = allGenericNavItems.filter(
         item => item.id !== parentItem.id && // Cannot be the parent itself
@@ -189,7 +193,9 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       const lowerCaseQuery = genericItemSearchQuery.toLowerCase();
       const finalFilteredAvailable = filteredAvailable.filter(item => item.label.toLowerCase().includes(lowerCaseQuery));
 
-      console.log("[ManageChildrenDialog] Filtered available children for add:", finalFilteredAvailable);
+      console.log("[ManageChildrenDialog] Filtered available children for add (before search):", filteredAvailable.map(i => i.label));
+      console.log("[ManageChildrenDialog] Final filtered available children for add (after search):", finalFilteredAvailable.map(i => i.label));
+
       setAvailableChildrenForAdd(finalFilteredAvailable);
       setCurrentChildren(parentItem.children || []);
       setSelectedGenericItemToAdd(null); // Reset selection

@@ -495,9 +495,9 @@ const GenericNavItemsPage = () => {
                 <Label htmlFor="edit-item-route" className="sm:text-right">Route</Label>
                 <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="sm:col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
-                <Label htmlFor="edit-item-is-external" className="sm:text-right">Lien externe</Label>
+              <div className="flex items-center space-x-2">
                 <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="sm:col-span-3" disabled={editItemType === 'category_or_action'} />
+                <Label htmlFor="edit-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
                 <Label htmlFor="edit-item-icon">Icône</Label>

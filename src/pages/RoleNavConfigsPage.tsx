@@ -128,10 +128,10 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50",
-            "flex-wrap sm:flex-nowrap" // Allow wrapping on small screens
+            "flex-wrap sm:flex-nowrap select-none" // Added select-none here
           )}
         >
-          <div className="flex items-center gap-2 flex-grow cursor-pointer" onClick={(e) => {
+          <div className="flex items-center gap-2 flex-grow cursor-pointer select-none" onClick={(e) => { // Added select-none here
             if (hasChildren) {
               e.stopPropagation();
               onToggleExpand(item.id);

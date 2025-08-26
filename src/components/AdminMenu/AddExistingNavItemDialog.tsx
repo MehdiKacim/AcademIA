@@ -84,11 +84,8 @@ const AddExistingNavItemDialog = ({
     );
       
     return filtered.map(item => ({
-        id: item.id, // This is the generic nav_item_id
-        label: item.label,
-        icon_name: item.icon_name,
-        level: 0,
-        isNew: !allConfiguredItemsFlat.some(configured => configured.id === item.id), // Mark as new if not already configured
+        ...item,
+        isConfiguredAsRoot: allConfiguredItemsFlat.some(configured => configured.id === item.id && (configured.parent_nav_item_id === null || configured.parent_nav_item_id === undefined)),
       }));
   }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
@@ -247,7 +244,7 @@ const AddExistingNavItemDialog = ({
     }
   };
 
-  const isAddButtonDisabled = isAdding || !selectedGenericItemToAdd || availableGenericItemsOptions.length === 0;
+  const isAddButtonDisabled = isAdding || !selectedGenericItemInfo || !selectedParentForNewItem;
 
   const handleSelectGenericItem = (item: ({ isConfiguredAsRoot: boolean } & NavItem)) => {
     setSelectedGenericItemToAdd(item.id);
@@ -302,7 +299,7 @@ const AddExistingNavItemDialog = ({
                       const ItemIcon = iconMap[item.icon_name || 'Info'] || Info;
                       return (
                         <Card key={item.id} className="flex items-center justify-between p-3 rounded-android-tile">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
                             <ItemIcon className="h-5 w-5 text-primary" />
                             <div>
                               <p className="font-medium">{item.label}</p>
