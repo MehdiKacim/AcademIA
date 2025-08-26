@@ -186,7 +186,8 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
 
     // Updated NavItem interface for dynamic menu management
     export interface NavItem {
-      id: string; // Unique ID from DB
+      id: string; // Unique ID from DB (UUID)
+      logical_id?: string; // New: Logical ID for internal reference (e.g., 'dashboard-generic-item-id')
       label: string;
       route?: string; // Optional route for navigation
       icon_name?: string; // Lucide icon name as string
@@ -197,19 +198,19 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       onClick?: () => void; // For trigger items (e.g., opening modals)
       badge?: number; // For unread message count
       // Properties from role_nav_configs, added for convenience in frontend tree building
-      parent_nav_item_id?: string;
+      parent_nav_item_id?: string; // This is a DB UUID
       order_index: number; // Made mandatory for sorting
-      configId?: string; // The ID of the role_nav_configs entry
+      configId?: string; // The ID of the role_nav_configs entry (UUID)
       is_global?: boolean; // Added is_global to NavItem
       // Removed allowed_roles as it's now handled by role_nav_configs
     }
 
     // New interface for role-specific navigation configuration
     export interface RoleNavItemConfig {
-      id: string; // Unique ID for this config entry
-      nav_item_id: string; // FK to NavItem
+      id: string; // Unique ID for this config entry (UUID)
+      nav_item_id: string; // FK to NavItem (DB UUID)
       role: Profile['role'];
-      parent_nav_item_id?: string; // FK to NavItem (parent in the role's menu tree)
+      parent_nav_item_id?: string; // FK to NavItem (parent in the role's menu tree, DB UUID)
       order_index: number;
       created_at?: string;
       updated_at?: string;

@@ -85,7 +85,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
 
   const config: RoleNavItemConfig | undefined = item.configId && selectedRoleFilter !== 'all' ? {
     id: item.configId,
-    nav_item_id: selectedRoleFilter === 'all' ? item.id : item.id, // Ensure nav_item_id is correct
+    nav_item_id: item.id, // Ensure nav_item_id is correct
     role: selectedRoleFilter as Profile['role'],
     parent_nav_item_id: item.parent_nav_item_id,
     order_index: item.order_index,

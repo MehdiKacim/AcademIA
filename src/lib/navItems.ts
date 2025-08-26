@@ -47,12 +47,12 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
   console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, fetchedConfigs);
 
   const configs = fetchedConfigs as RoleNavItemConfig[];
-  const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id to NavItem object
+  const navItemNodes = new Map<string, NavItem>(); // Map nav_item.id (DB UUID) to NavItem object
 
   configs.forEach((config: any) => {
     if (config.nav_item) {
       const navItem: NavItem = {
-        id: config.nav_item.id,
+        id: config.nav_item.id, // This is the actual DB UUID
         label: config.nav_item.label,
         route: config.nav_item.route || undefined,
         icon_name: config.nav_item.icon_name || undefined,
@@ -60,9 +60,9 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
         is_external: config.nav_item.is_external,
         type: config.nav_item.type, // Ensure type is included
         children: [], // Initialize empty children array
-        parent_nav_item_id: config.parent_nav_item_id || undefined,
+        parent_nav_item_id: config.parent_nav_item_id || undefined, // This is also a DB UUID
         order_index: config.order_index,
-        configId: config.id,
+        configId: config.id, // This is the config's own UUID
         // is_global is a frontend concept, not directly from DB here
       };
       navItemNodes.set(navItem.id, navItem);
@@ -126,7 +126,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     throw error; // Throw error to be caught by calling component
   }
   return data.map(item => ({
-    id: item.id,
+    id: item.id, // This is the actual DB UUID
     label: item.label,
     route: item.route || undefined,
     icon_name: item.icon_name || undefined,
