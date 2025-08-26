@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"; // Import ChevronDown, ChevronUp
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems";
@@ -51,10 +51,11 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils'; // Import cn for conditional styling
+import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog'; // New import
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp // Added ChevronDown, ChevronUp here
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp
 };
 
 // All possible roles for selection
@@ -202,7 +203,7 @@ const RoleNavConfigsPage = () => {
   const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]);
 
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
-  const [selectedGenericItemTypeFilter, setSelectedGenericItemTypeFilter] = useState<'all' | NavItem['type']>('all'); // New state for type filter
+  // Removed selectedGenericItemTypeFilter as it's now handled within AddExistingNavItemDialog
 
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
   const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
@@ -229,6 +230,8 @@ const RoleNavConfigsPage = () => {
   // States for search in dropdowns
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
   const [selectedParentForEdit, setSelectedParentForEdit] = useState<string | null>(null); // New state for parent selection in edit dialog
+
+  const [isAddExistingItemDialogOpen, setIsAddExistingItemDialogOpen] = useState(false); // New state for the add existing item dialog
 
 
   const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
@@ -411,41 +414,11 @@ const RoleNavConfigsPage = () => {
   }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds]);
 
 
-  // Effect to handle adding the selected generic item
+  // Effect to handle adding the selected generic item (now triggered by AddExistingNavItemDialog)
   useEffect(() => {
-    if (selectedGenericItemToAdd && selectedRoleFilter !== 'all') {
-      const addItem = async () => {
-        console.log("[RoleNavConfigsPage] Attempting to add item:", selectedGenericItemToAdd);
-        const role = selectedRoleFilter as Profile['role'];
-        const navItemId = selectedGenericItemToAdd;
-
-        const isAlreadyConfigured = allConfiguredItemsFlat.some(item => item.id === navItemId);
-        if (isAlreadyConfigured) {
-          showError("Cet élément est déjà configuré pour ce rôle.");
-          setSelectedGenericItemToAdd(null); // Reset after error
-          return;
-        }
-
-        try {
-          const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-            nav_item_id: navItemId,
-            role: role,
-            parent_nav_item_id: null,
-            order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length,
-          };
-          await addRoleNavItemConfig(newConfig);
-          showSuccess("Élément ajouté au menu du rôle !");
-          await fetchAndStructureNavItems();
-        } catch (error: any) {
-          console.error("Error adding generic item to role menu:", error);
-          showError(`Erreur lors de l'ajout de l'élément au menu du rôle: ${error.message}`);
-        } finally {
-          setSelectedGenericItemToAdd(null); // Reset after operation
-        }
-      };
-      addItem();
-    }
-  }, [selectedGenericItemToAdd, selectedRoleFilter, allConfiguredItemsFlat, configuredItemsTree, fetchAndStructureNavItems]);
+    // This useEffect is no longer needed here as the logic is moved to AddExistingNavItemDialog
+    // It will be triggered by the onItemAdded callback from the dialog.
+  }, []);
 
 
   const handleDeleteGenericNavItem = async (navItemId: string, configId?: string) => {
@@ -705,7 +678,6 @@ const RoleNavConfigsPage = () => {
     if (window.confirm(`Êtes-vous sûr de vouloir réinitialiser la navigation par défaut pour le rôle '${selectedRoleFilter}' ? Cela écrasera toutes les configurations existantes pour ce rôle.`)) {
       try {
         await resetRoleNavConfigsForRole(selectedRoleFilter as Profile['role']);
-        // Removed call to bootstrapDefaultNavItemsForRole
         showSuccess(`Navigation par défaut réinitialisée pour le rôle '${selectedRoleFilter}' !`);
         await fetchAndStructureNavItems(); // Re-fetch to update UI
       } catch (error: any) {
@@ -744,7 +716,6 @@ const RoleNavConfigsPage = () => {
   // Log the options being passed to the SearchableDropdown
   const dropdownOptions = allGenericNavItems
     .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-    .filter(item => selectedGenericItemTypeFilter === 'all' || item.type === selectedGenericItemTypeFilter)
     .map(item => ({
       id: item.id,
       label: item.label,
@@ -810,63 +781,37 @@ const RoleNavConfigsPage = () => {
               </CardTitle>
               <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="add-existing-type-filter">Filtrer par type d'élément</Label>
-                  <Select value={selectedGenericItemTypeFilter} onValueChange={(value: 'all' | NavItem['type']) => setSelectedGenericItemTypeFilter(value)}>
-                    <SelectTrigger id="add-existing-type-filter">
-                      <SelectValue placeholder="Tous les types" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
-                      <SelectItem value="all">Tous les types</SelectItem>
-                      {navItemTypes.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {getItemTypeLabel(type)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="add-existing-to-role">Ajouter un élément générique existant</Label>
-                  <SearchableDropdown
-                    value={selectedGenericItemToAdd}
-                    onValueChange={(val) => {
-                      console.log("[RoleNavConfigsPage] SearchableDropdown onValueChange called with:", val);
-                      setSelectedGenericItemToAdd(val);
-                    }}
-                    options={dropdownOptions} // Use the pre-filtered and mapped options
-                    placeholder="Ajouter un élément existant au menu de ce rôle"
-                    searchPlaceholder="Rechercher un élément..."
-                    emptyMessage="Aucun élément disponible."
-                    iconMap={iconMap}
-                    popoverContentClassName="z-[999]" // Increased z-index
-                  />
-                </div>
-              </div>
-
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
-                <DragOverlay>
-                  {activeDragItem ? (
-                    <SortableNavItem
-                      item={activeDragItem}
-                      level={0}
-                      onEditGenericItem={handleEditGenericItem}
-                      onEditRoleConfig={handleEditRoleConfig}
-                      onDelete={handleDeleteGenericNavItem}
-                      onManageChildren={handleManageChildren}
-                      isDragging={true}
-                      isDraggableAndDeletable={true}
-                      selectedRoleFilter={selectedRoleFilter}
-                      isExpanded={false}
-                      onToggleExpand={() => {}}
-                    />
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </CardContent>
+            <ContextMenu>
+              <ContextMenuTrigger asChild>
+                <CardContent className="space-y-2">
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                    {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
+                    <DragOverlay>
+                      {activeDragItem ? (
+                        <SortableNavItem
+                          item={activeDragItem}
+                          level={0}
+                          onEditGenericItem={handleEditGenericItem}
+                          onEditRoleConfig={handleEditRoleConfig}
+                          onDelete={handleDeleteGenericNavItem}
+                          onManageChildren={handleManageChildren}
+                          isDragging={true}
+                          isDraggableAndDeletable={true}
+                          selectedRoleFilter={selectedRoleFilter}
+                          isExpanded={false}
+                          onToggleExpand={() => {}}
+                        />
+                      ) : null}
+                    </DragOverlay>
+                  </DndContext>
+                </CardContent>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-auto p-1">
+                <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true)}>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           </Card>
         </div>
       )}
@@ -930,6 +875,20 @@ const RoleNavConfigsPage = () => {
           allConfiguredItemsFlat={allConfiguredItemsFlat}
           onChildrenUpdated={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
+        />
+      )}
+
+      {/* New Add Existing Nav Item Dialog */}
+      {selectedRoleFilter !== 'all' && (
+        <AddExistingNavItemDialog
+          isOpen={isAddExistingItemDialogOpen}
+          onClose={() => setIsAddExistingItemDialogOpen(false)}
+          selectedRoleFilter={selectedRoleFilter as Profile['role']}
+          allGenericNavItems={allGenericNavItems}
+          allConfiguredItemsFlat={allConfiguredItemsFlat}
+          onItemAdded={fetchAndStructureNavItems}
+          getDescendantIds={getDescendantIds}
+          iconMap={iconMap}
         />
       )}
     </div>
