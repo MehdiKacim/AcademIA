@@ -420,7 +420,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onClose={() => setIsMobileNavSheetOpen(false)}
           navItems={fullNavTree}
           onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)}
-          onOpenAboutModal={() => setIsAboutModalOpen(true)}
+          onOpenAboutModal={()={() => setIsAboutModalOpen(true)}}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           unreadMessagesCount={unreadMessages}
         />

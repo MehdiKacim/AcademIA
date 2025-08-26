@@ -124,8 +124,8 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
-            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <User className="h-12 w-12 text-primary" />
                 <div>
@@ -144,7 +144,7 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
               </Button>
             </CardHeader>
@@ -217,8 +217,8 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
-            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <PenTool className="h-12 w-12 text-primary" />
                 <div>
@@ -232,7 +232,7 @@ const Profile = () => {
                   {/* Removed establishment_id display */}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
               </Button>
             </CardHeader>
@@ -279,7 +279,7 @@ const Profile = () => {
               </ul>
             </CardContent>
           </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <Card className="lg:col-span-full rounded-android-tile"> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Activité Récente</CardTitle>
               <CardDescription>Vos dernières actions en tant que créateur.</CardDescription>
@@ -310,8 +310,8 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
-            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <Users className="h-12 w-12 text-primary" />
                 <div>
@@ -325,7 +325,7 @@ const Profile = () => {
                   {/* Removed establishment_id display */}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
               </Button>
             </CardHeader>
@@ -388,8 +388,8 @@ const Profile = () => {
       // For admin/director roles, we can show basic profile info and maybe some high-level stats
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
-            <CardHeader className="flex flex-row items-center justify-between space-x-4">
+          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <BriefcaseBusiness className="h-12 w-12 text-primary" />
                 <div>
@@ -402,7 +402,7 @@ const Profile = () => {
                   </CardDescription>
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)}>
+              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
               </Button>
             </CardHeader>
