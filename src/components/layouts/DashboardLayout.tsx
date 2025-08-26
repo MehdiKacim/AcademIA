@@ -425,18 +425,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       </footer>
       
       {/* Mobile Navigation Sheet Trigger Indicator (Swipe Down) */}
-      {isMobile && currentUserProfile && !isMobileNavSheetOpen && !isSearchOverlayOpen && !isChatOpen && (
-        <div className="fixed bottom-0 inset-x-0 z-40 flex justify-center pb-2 pointer-events-none">
-          <ChevronDown className="h-8 w-8 text-muted-foreground animate-bounce-slow" />
-        </div>
-      )}
+      {/* Removed the ChevronDown indicator */}
 
       {/* Mobile Back Gesture Indicator (Swipe Right) */}
-      {isMobile && currentUserProfile && !isMobileNavSheetOpen && !isSearchOverlayOpen && !isChatOpen && canGoBack && (
-        <div className="fixed left-0 inset-y-0 z-40 flex items-center pl-2 pointer-events-none">
-          <ArrowLeft className="h-8 w-8 text-muted-foreground animate-wiggle-horizontal" />
-        </div>
-      )}
+      {/* Removed the ArrowLeft indicator */}
 
       {currentUserProfile && (
         <MobileNavSheet

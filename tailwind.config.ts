@@ -125,11 +125,6 @@ export default {
             animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
           },
         },
-        "wiggle-horizontal": { // Nouvelle keyframe pour l'animation de glissement
-          "0%, 100%": { transform: "translateX(0)" },
-          "50%": { transform: "translateX(5px)" },
-          "75%": { transform: "translateX(-5px)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -137,7 +132,6 @@ export default {
         blob: "blob 7s infinite",
         "background-pan": "background-pan 3s linear infinite",
         "bounce-slow": "bounce-slow 2s infinite", // Nouvelle animation
-        "wiggle-horizontal": "wiggle-horizontal 2s ease-in-out infinite", // Nouvelle animation
       },
     },
   },
