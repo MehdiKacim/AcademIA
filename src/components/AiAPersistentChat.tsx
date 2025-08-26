@@ -14,6 +14,7 @@ import {
   useSensors,
   useDraggable, // Import useDraggable
 } from '@dnd-kit/core';
+import { LongPressSensor } from '@dnd-kit/core/sensors'; // NEW: Import LongPressSensor
 import { CSS } from '@dnd-kit/utilities';
 
 interface Message {
@@ -39,6 +40,13 @@ const AiAPersistentChat = () => {
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 5, // Enable drag after 5px movement
+      },
+    }),
+    // NEW: Add LongPressSensor for mobile touch interactions
+    useSensor(LongPressSensor, {
+      activationConstraint: {
+        delay: 250, // Start drag after 250ms long press
+        tolerance: 5, // Allow slight movement during long press
       },
     })
   );
@@ -132,9 +140,9 @@ const AiAPersistentChat = () => {
         ref={setNodeRef} // Apply the ref from useDraggable
         style={style} // Apply the transform from useDraggable
         className={cn(
-          "fixed flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile",
+          "fixed flex flex-col z-[1000] transition-all duration-300 ease-in-out rounded-android-tile touch-none", // Apply touch-none here
           isMinimized
-            ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-grab flex items-center justify-center bg-primary/80 backdrop-blur-lg border border-primary/50 shadow-lg draggable-element" // Minimized state with blur and transparency, apply draggable-element
+            ? "bottom-4 right-4 h-14 w-14 rounded-full cursor-grab flex items-center justify-center bg-primary/80 backdrop-blur-lg border border-primary/50 shadow-lg" // Minimized state with blur and transparency
             : isMobile
               ? "bottom-20 right-4 w-[calc(100%-2rem)] h-[60vh] rounded-lg bg-card border border-primary/20 shadow-lg" // Maximized mobile
               : "bottom-4 right-4 w-[400px] h-[500px] rounded-lg bg-card border border-primary/20 shadow-lg" // Maximized desktop
