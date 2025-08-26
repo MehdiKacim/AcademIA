@@ -200,7 +200,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 <span className="sr-only">Retour</span>
               </Button>
             ) : (
-              <div className="w-10 h-10"></div> {/* Placeholder to keep alignment */}
+              // Placeholder to keep alignment
+              <div className="w-10 h-10"></div> 
             )}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
               {/* Dynamic icon and title */}
