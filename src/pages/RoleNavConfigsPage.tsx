@@ -208,7 +208,7 @@ const RoleNavConfigsPage = () => {
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
   const [editConfigParentId, setEditConfigParentId] = useState<string | null>(null); // Can be null for root
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
-  const [isSavingConfigEdit, setIsSavingEdit] = useState(false); // Corrected state variable name
+  const [isSavingConfigEdit, setIsSavingEdit] = useState(false);
 
   const [isManageChildrenDialogOpen, setIsManageChildrenDialogOpen] = useState(false);
   const [selectedParentForChildrenManagement, setSelectedParentForChildrenManagement] = useState<NavItem | null>(null);
@@ -230,8 +230,8 @@ const RoleNavConfigsPage = () => {
   const [addExistingSearch, setAddExistingSearch] = useState('');
   const [openEditParentPopover, setOpenEditParentPopover] = useState(false);
   const [editParentSearch, setEditParentSearch] = useState('');
-  // Corrected: Declare selectedGenericItemToAdd state variable
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+  const [selectedParentForEdit, setSelectedParentForEdit] = useState<string | null>(null); // New state for parent selection in edit dialog
 
 
   const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
@@ -352,35 +352,43 @@ const RoleNavConfigsPage = () => {
     fetchAndStructureNavItems();
   }, [fetchAndStructureNavItems]);
 
-  const handleAddExistingGenericItemToRole = async (navItemId: string) => {
-    if (selectedRoleFilter === 'all') {
-      showError("Veuillez sélectionner un rôle spécifique pour ajouter un élément.");
-      return;
-    }
-    const role = selectedRoleFilter as Profile['role'];
+  // Effect to handle adding the selected generic item
+  useEffect(() => {
+    if (selectedGenericItemToAdd && selectedRoleFilter !== 'all') {
+      const addItem = async () => {
+        const role = selectedRoleFilter as Profile['role'];
+        const navItemId = selectedGenericItemToAdd;
 
-    const isAlreadyConfigured = allConfiguredItemsFlat.some(item => item.id === navItemId);
-    if (isAlreadyConfigured) {
-      showError("Cet élément est déjà configuré pour ce rôle.");
-      return;
-    }
+        const isAlreadyConfigured = allConfiguredItemsFlat.some(item => item.id === navItemId);
+        if (isAlreadyConfigured) {
+          showError("Cet élément est déjà configuré pour ce rôle.");
+          setSelectedGenericItemToAdd(null); // Reset after error
+          return;
+        }
 
-    try {
-      const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-        nav_item_id: navItemId,
-        role: role,
-        parent_nav_item_id: null,
-        order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length,
+        try {
+          const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+            nav_item_id: navItemId,
+            role: role,
+            parent_nav_item_id: null,
+            order_index: configuredItemsTree.filter(item => item.parent_nav_item_id === null).length,
+          };
+          await addRoleNavItemConfig(newConfig);
+          showSuccess("Élément ajouté au menu du rôle !");
+          await fetchAndStructureNavItems();
+        } catch (error: any) {
+          console.error("Error adding generic item to role menu:", error);
+          showError(`Erreur lors de l'ajout de l'élément au menu du rôle: ${error.message}`);
+        } finally {
+          setSelectedGenericItemToAdd(null); // Reset after operation
+          setOpenAddExistingPopover(false); // Close popover
+          setAddExistingSearch(''); // Clear search
+        }
       };
-      await addRoleNavItemConfig(newConfig);
-      showSuccess("Élément ajouté au menu du rôle !");
-
-      await fetchAndStructureNavItems();
-    } catch (error: any) {
-      console.error("Error adding generic item to role menu:", error);
-      showError(`Erreur lors de l'ajout de l'élément au menu du rôle: ${error.message}`);
+      addItem();
     }
-  };
+  }, [selectedGenericItemToAdd, selectedRoleFilter, allConfiguredItemsFlat, configuredItemsTree, fetchAndStructureNavItems]);
+
 
   const handleDeleteGenericNavItem = async (navItemId: string, configId?: string) => {
     if (selectedRoleFilter !== 'all' && configId) {
@@ -407,82 +415,85 @@ const RoleNavConfigsPage = () => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
     setEditConfigParentId(config.parent_nav_item_id || null);
+    setSelectedParentForEdit(config.parent_nav_item_id || null); // Initialize new state
     setEditConfigOrderIndex(config.order_index);
     setIsEditConfigDialogOpen(true);
   };
 
-  const handleSaveEditedRoleConfig = async () => {
-    console.log("[handleSaveEditedRoleConfig] Function called.");
-    console.log("[handleSaveEditedRoleConfig] isSavingConfigEdit state:", isSavingConfigEdit); // Diagnostic log
-    if (!currentConfigToEdit || !currentItemToEdit || selectedRoleFilter === 'all') return;
+  // Effect to handle saving the edited role config
+  useEffect(() => {
+    if (isSavingConfigEdit && currentConfigToEdit && currentItemToEdit && selectedRoleFilter !== 'all') {
+      const saveConfig = async () => {
+        let finalParentId: string | null = selectedParentForEdit; // Use the new state
 
-    let finalParentId: string | null = editConfigParentId; // This is the ID from the dropdown
+        // Check if the selected parent is a new generic item (not yet configured for this role)
+        const selectedParentInfo = availableParentsForConfig.find(p => p.id === finalParentId);
 
-    // Check if the selected parent is a new generic item (not yet configured for this role)
-    const selectedParentInfo = availableParentsForConfig.find(p => p.id === finalParentId);
-
-    if (selectedParentInfo?.isNew) {
-        // This means we need to create a role_nav_config for this generic item first
-        try {
-            const newParentConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-                nav_item_id: finalParentId!, // The ID of the generic item
-                role: selectedRoleFilter as Profile['role'],
-                parent_nav_item_id: null, // Initially, add it as a root item for the role
-                order_index: 9999, // A high number, will be re-indexed later
-            };
-            const addedConfig = await addRoleNavItemConfig(newParentConfig);
-            if (addedConfig) {
-                // Now, the generic item is configured for this role, and we can use its ID as the parent
-                // The actual parent_nav_item_id for the item being edited will be the generic item's ID
-                finalParentId = addedConfig.nav_item_id; // Use the generic item's ID as the parent
-                showSuccess(`Catégorie '${selectedParentInfo.label}' ajoutée au menu du rôle.`);
-            } else {
-                showError(`Échec de l'ajout de la catégorie '${selectedParentInfo.label}' au menu du rôle.`);
+        if (selectedParentInfo?.isNew) {
+            try {
+                const newParentConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+                    nav_item_id: finalParentId!,
+                    role: selectedRoleFilter as Profile['role'],
+                    parent_nav_item_id: null,
+                    order_index: 9999,
+                };
+                const addedConfig = await addRoleNavItemConfig(newParentConfig);
+                if (addedConfig) {
+                    finalParentId = addedConfig.nav_item_id;
+                    showSuccess(`Catégorie '${selectedParentInfo.label}' ajoutée au menu du rôle.`);
+                } else {
+                    showError(`Échec de l'ajout de la catégorie '${selectedParentInfo.label}' au menu du rôle.`);
+                    setIsSavingEdit(false);
+                    return;
+                }
+            } catch (error: any) {
+                console.error("Error adding new generic parent to role config:", error);
+                showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
                 setIsSavingEdit(false);
                 return;
             }
-        } catch (error: any) {
-            console.error("Error adding new generic parent to role config:", error);
-            showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
-            setIsSavingEdit(false);
-            return;
         }
-    }
 
-    if (finalParentId && finalParentId === currentItemToEdit.id) {
-      showError("Un élément ne peut pas être son propre parent.");
-      setIsSavingEdit(false);
-      return;
-    }
-    const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
-    if (finalParentId && descendantsOfCurrentItem.has(finalParentId)) {
-      showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
-      setIsSavingEdit(false);
-      return;
-    }
+        if (finalParentId && finalParentId === currentItemToEdit.id) {
+          showError("Un élément ne peut pas être son propre parent.");
+          setIsSavingEdit(false);
+          return;
+        }
+        const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
+        if (finalParentId && descendantsOfCurrentItem.has(finalParentId)) {
+          showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
+          setIsSavingEdit(false);
+          return;
+        }
 
-    setIsSavingEdit(true); // Corrected state setter name
-    try {
-      const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-        id: currentConfigToEdit.id,
-        nav_item_id: currentConfigToEdit.nav_item_id,
-        role: currentConfigToEdit.role,
-        parent_nav_item_id: finalParentId,
-        order_index: editConfigOrderIndex,
+        try {
+          const updatedConfigData: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+            id: currentConfigToEdit.id,
+            nav_item_id: currentConfigToEdit.nav_item_id,
+            role: currentConfigToEdit.role,
+            parent_nav_item_id: finalParentId,
+            order_index: editConfigOrderIndex,
+          };
+          console.log("[handleSaveEditedRoleConfig] Updating config with parent_nav_item_id:", updatedConfigData.parent_nav_item_id);
+          await updateRoleNavItemConfig(updatedConfigData);
+          showSuccess("Configuration de rôle mise à jour !");
+          await fetchAndStructureNavItems();
+          setIsEditConfigDialogOpen(false);
+          setCurrentConfigToEdit(null);
+          setCurrentItemToEdit(null);
+        } catch (error: any) {
+          console.error("Error updating role config:", error);
+          showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
+        } finally {
+          setIsSavingEdit(false);
+        }
       };
-      console.log("[handleSaveEditedRoleConfig] Updating config with parent_nav_item_id:", updatedConfigData.parent_nav_item_id); // Diagnostic log
-      await updateRoleNavItemConfig(updatedConfigData);
-      showSuccess("Configuration de rôle mise à jour !");
-      await fetchAndStructureNavItems();
-      setIsEditConfigDialogOpen(false);
-      setCurrentConfigToEdit(null);
-      setCurrentItemToEdit(null);
-    } catch (error: any) {
-      console.error("Error updating role config:", error);
-      showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
-    } finally {
-      setIsSavingEdit(false); // Corrected state setter name
+      saveConfig();
     }
+  }, [isSavingConfigEdit, currentConfigToEdit, currentItemToEdit, selectedRoleFilter, selectedParentForEdit, editConfigOrderIndex, availableParentsForConfig, allConfiguredItemsFlat, getDescendantIds, fetchAndStructureNavItems]);
+
+  const handleSaveEditedRoleConfig = () => {
+    setIsSavingEdit(true); // Trigger the useEffect
   };
 
   const handleDragStart = (event: any) => {
@@ -806,35 +817,26 @@ const RoleNavConfigsPage = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command filter={false}> {/* Added filter={false} */}
+                    <Command filter={false} shouldFilter={false}> {/* Added shouldFilter={false} */}
                       <CommandInput
                         placeholder="Rechercher un élément..."
                         value={addExistingSearch}
-                        onValueChange={(value) => {
-                          console.log("Add existing search input changed:", value); // Diagnostic log
-                          setAddExistingSearch(value);
-                        }}
+                        onValueChange={setAddExistingSearch}
                       />
                       <CommandList>
                         <CommandEmpty>Aucun élément trouvé.</CommandEmpty>
                         <CommandGroup>
                           {allGenericNavItems
                             .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-                            .filter(item => {
-                              const match = item.label.toLowerCase().includes(addExistingSearch.toLowerCase());
-                              console.log(`Filtering generic item: ${item.label}, search: ${addExistingSearch}, match: ${match}`); // Diagnostic log
-                              return match;
-                            })
+                            .filter(item => item.label.toLowerCase().includes(addExistingSearch.toLowerCase()))
                             .map(item => (
                               <CommandItem
                                 key={item.id}
-                                value={item.id} // Changed value to item.id
+                                value={item.id} // Keep item.id as value
                                 onSelect={() => {
-                                  console.log("Selected item for add:", item.id); // Diagnostic log
-                                  handleAddExistingGenericItemToRole(item.id);
-                                  setSelectedGenericItemToAdd(item.id); // Update selected item for display
-                                  setOpenAddExistingPopover(false);
-                                  setAddExistingSearch(''); // Clear search after selection
+                                  console.log("Selected item for add (onSelect):", item.id); // Diagnostic log
+                                  setSelectedGenericItemToAdd(item.id); // Just set the state
+                                  // The useEffect will handle the rest
                                 }}
                               >
                                 <Check
@@ -901,21 +903,18 @@ const RoleNavConfigsPage = () => {
                       className="col-span-3 justify-between"
                       id="edit-config-parent-select"
                     >
-                      {editConfigParentId
-                        ? availableParentsForConfig.find(p => p.id === editConfigParentId)?.label || "Sélectionner un parent..."
+                      {selectedParentForEdit
+                        ? availableParentsForConfig.find(p => p.id === selectedParentForEdit)?.label || "Sélectionner un parent..."
                         : "Aucun (élément racine)"}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command filter={false}> {/* Added filter={false} */}
+                    <Command filter={false} shouldFilter={false}> {/* Added shouldFilter={false} */}
                       <CommandInput
                         placeholder="Rechercher un parent..."
                         value={editParentSearch}
-                        onValueChange={(value) => {
-                          console.log("Edit parent search input changed:", value); // Diagnostic log
-                          setEditParentSearch(value);
-                        }}
+                        onValueChange={setEditParentSearch}
                       />
                       <CommandList>
                         <CommandEmpty>Aucun parent trouvé.</CommandEmpty>
@@ -923,7 +922,8 @@ const RoleNavConfigsPage = () => {
                           <CommandItem
                             value="none"
                             onSelect={() => {
-                              setEditConfigParentId(null);
+                              console.log("Selected parent: None"); // Diagnostic log
+                              setSelectedParentForEdit(null);
                               setOpenEditParentPopover(false);
                               setEditParentSearch(''); // Clear search after selection
                             }}
@@ -931,7 +931,7 @@ const RoleNavConfigsPage = () => {
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                editConfigParentId === null ? "opacity-100" : "opacity-0"
+                                selectedParentForEdit === null ? "opacity-100" : "opacity-0"
                               )}
                             />
                             Aucun (élément racine)
@@ -943,9 +943,10 @@ const RoleNavConfigsPage = () => {
                               return (
                                 <CommandItem
                                   key={item.id}
-                                  value={item.id} // Changed value to item.id
+                                  value={item.id} // Keep item.id as value
                                   onSelect={() => {
-                                    setEditConfigParentId(item.id);
+                                    console.log("Selected parent:", item.id); // Diagnostic log
+                                    setSelectedParentForEdit(item.id);
                                     setOpenEditParentPopover(false);
                                     setEditParentSearch(''); // Clear search after selection
                                   }}
@@ -953,7 +954,7 @@ const RoleNavConfigsPage = () => {
                                   <Check
                                     className={cn(
                                       "mr-2 h-4 w-4",
-                                      editConfigParentId === item.id ? "opacity-100" : "opacity-0"
+                                      selectedParentForEdit === item.id ? "opacity-100" : "opacity-0"
                                     )}
                                   />
                                   <div className="flex items-center gap-2">
