@@ -75,6 +75,8 @@ const SearchableDropdown = React.forwardRef<
       return Component ? <Component className="h-4 w-4" /> : null;
     };
 
+    console.log("[SearchableDropdown] Current value prop:", value);
+
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -101,7 +103,7 @@ const SearchableDropdown = React.forwardRef<
           className={cn(
             "z-50 rounded-md border text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 backdrop-blur-lg bg-background/80 w-[var(--radix-popover-trigger-width)] p-0",
             popoverContentClassName,
-            "min-w-[200px]" // Added minimum width here
+            "min-w-[200px]"
           )}
           align={align}
           sideOffset={sideOffset}
@@ -116,33 +118,37 @@ const SearchableDropdown = React.forwardRef<
                   </CommandEmpty>
                 ) : (
                   <CommandGroup>
-                    {options.map((option) => (
-                      <CommandItem
-                        key={option.id}
-                        value={option.label}
-                        onSelect={() => {
-                          onValueChange(option.id === value ? null : option.id);
-                          setOpen(false);
-                        }}
-                        style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px` }} // Indent based on level
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            value === option.id ? "opacity-100" : "opacity-0",
-                          )}
-                        />
-                        <div className="flex items-center gap-2">
-                          {IconComponentToRender(option.icon_name)}
-                          <span>{option.label}</span>
-                          {option.isNew && (
-                            <span className="font-bold text-primary ml-1">
-                              (Nouveau)
-                            </span>
-                          )}
-                        </div>
-                      </CommandItem>
-                    ))}
+                    {options.map((option) => {
+                      console.log(`[SearchableDropdown] Option: ${option.label} (ID: ${option.id}), Current Value: ${value}, Is Selected: ${value === option.id}`);
+                      return (
+                        <CommandItem
+                          key={option.id}
+                          value={option.label}
+                          onSelect={() => {
+                            console.log(`[SearchableDropdown] Selected option: ${option.label} (ID: ${option.id})`);
+                            onValueChange(option.id === value ? null : option.id);
+                            setOpen(false);
+                          }}
+                          style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px` }} // Indent based on level
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              value === option.id ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <div className="flex items-center gap-2">
+                            {IconComponentToRender(option.icon_name)}
+                            <span>{option.label}</span>
+                            {option.isNew && (
+                              <span className="font-bold text-primary ml-1">
+                                (Nouveau)
+                              </span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
                   </CommandGroup>
                 )}
               </ScrollArea>
