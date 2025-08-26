@@ -56,15 +56,26 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // New Android-inspired colors
+        'android-surface-container': 'hsl(var(--android-surface-container))',
+        'android-on-surface-variant': 'hsl(var(--android-on-surface-variant))',
+        'android-on-surface-light': 'hsl(var(--android-on-surface-light))',
+        'android-accent-blue': 'hsl(var(--android-accent-blue))',
+        'android-accent-red': 'hsl(var(--android-accent-red))',
+        'android-accent-pink': 'hsl(var(--android-accent-pink))',
+        'android-accent-purple': 'hsl(var(--android-accent-purple))',
+        'android-accent-orange': 'hsl(var(--android-accent-orange))',
       },
       borderRadius: {
         lg: "0.5rem", // Keep default for general large radius
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
         "card-lg": "28px", // Nouveau rayon de bordure pour les cartes
+        "android-tile": "1.75rem", // 28px for Android-like tiles
       },
       boxShadow: {
         "card-shadow": "0 4px 12px rgba(0, 0, 0, 0.08)", // Nouvelle ombre pour les cartes
+        "android-shadow": "0px 4px 15px rgba(0, 0, 0, 0.15)", // Android-like shadow
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'], // Pile de polices système

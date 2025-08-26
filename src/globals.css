@@ -28,40 +28,40 @@
     --radius: 0.5rem;
 
     /* Couleurs de base inspirées du thème sombre d'Android 16 */
-    --color-surface-dark: #1F1A21;
-    --color-surface-container: #2B262E;
-    --color-on-surface-variant: #C9C4CD;
-    --color-on-surface-light: #E6E1E9;
-    --color-accent-blue: #70D6FF;
-    --color-accent-red: #FF8585;
-    --color-accent-pink: #FF80A9;
-    --color-accent-purple: #B283E6;
-    --color-accent-orange: #FFB380;
-    --color-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+    --android-surface-dark: 220 15% 8%; /* Background principal du panneau */
+    --android-surface-container: 220 15% 12%; /* Fond des tuiles/cartes */
+    --android-on-surface-variant: 215 10% 75%; /* Texte secondaire */
+    --android-on-surface-light: 210 20% 90%; /* Texte principal */
+    --android-accent-blue: 200 90% 70%; /* Bleu pour les éléments actifs */
+    --android-accent-red: 0 80% 70%; /* Rouge pour les alertes */
+    --android-accent-pink: 330 80% 70%;
+    --android-accent-purple: 270 70% 60%;
+    --android-accent-orange: 30 90% 70%;
+    --android-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
   }
 
   [data-theme="dark"] {
-    --background: 220 15% 8%; /* Gris-bleu très foncé */
-    --foreground: 210 20% 90%; /* Blanc cassé */
-    --card: 220 15% 12%; /* Gris-bleu foncé pour les cartes */
-    --card-foreground: 210 20% 90%;
-    --popover: 220 15% 12%; /* Gris-bleu foncé pour les popovers */
-    --popover-foreground: 210 20% 90%;
-    --primary: 210 80% 60%; /* Bleu vibrant */
+    --background: var(--android-surface-dark); /* Utilise le fond Android pour le thème sombre */
+    --foreground: var(--android-on-surface-light);
+    --card: var(--android-surface-container);
+    --card-foreground: var(--android-on-surface-light);
+    --popover: var(--android-surface-container);
+    --popover-foreground: var(--android-on-surface-light);
+    --primary: var(--android-accent-blue);
     --primary-foreground: 210 40% 98%; /* Blanc */
     --secondary: 210 15% 30%; /* Bleu-gris plus doux */
     --secondary-foreground: 210 40% 98%; /* Blanc */
     --success: 142.1 76.2% 36.3%; /* Vert standard */
     --success-foreground: 210 40% 98%; /* Blanc */
     --muted: 220 10% 20%; /* Gris légèrement plus foncé pour muted */
-    --muted-foreground: 215 20.2% 65.1%; /* Gris moyen */
+    --muted-foreground: var(--android-on-surface-variant);
     --accent: 210 15% 30%; /* Similaire au secondaire */
     --accent-foreground: 210 40% 98%; /* Blanc */
     --destructive: 0 62.8% 30.6%; /* Rouge standard */
     --destructive-foreground: 210 40% 98%; /* Blanc */
     --border: 220 10% 25%; /* Bordure subtile */
     --input: 220 10% 25%; /* Input subtil */
-    --ring: 210 80% 70%; /* Anneau de focus plus lumineux */
+    --ring: var(--android-accent-blue); /* Anneau de focus plus lumineux */
   }
 
   [data-theme="dark-purple"] {
@@ -110,74 +110,114 @@ body {
 }
 
 /* Style de base pour une "carte" ou tuile */
-.android-card {
-  background-color: var(--color-surface-container);
-  border-radius: 28px;
-  box-shadow: var(--color-shadow);
+.android-tile {
+  background-color: hsl(var(--android-surface-container));
+  border-radius: var(--radius-android-tile);
+  box-shadow: var(--android-shadow);
   padding: 16px 20px;
-  margin-bottom: 12px;
   display: flex;
-  align-items: center;
-  gap: 16px;
-  color: var(--color-on-surface-light);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  color: hsl(var(--android-on-surface-light));
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-/* Style pour l'icône dans la tuile */
-.android-card .icon-container {
+.android-tile:hover {
+  background-color: hsl(var(--android-surface-container) / 0.8);
+  box-shadow: var(--android-shadow);
+}
+
+.android-tile.active {
+  background-color: hsl(var(--android-accent-blue));
+  color: hsl(var(--primary-foreground));
+}
+
+.android-tile .icon-container {
   width: 44px;
   height: 44px;
   border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: hsl(var(--android-on-surface-variant) / 0.2); /* Default icon background */
 }
 
-/* Styles pour les différentes couleurs d'icônes */
-.icon-blue { background-color: var(--color-accent-blue); }
-.icon-red { background-color: var(--color-accent-red); }
-.icon-pink { background-color: var(--color-accent-pink); }
-.icon-purple { background-color: var(--color-accent-purple); }
-.icon-orange { background-color: var(--color-accent-orange); }
-
-/* Style pour le texte de la tuile */
-.android-card .text-content {
-  flex-grow: 1;
+.android-tile.active .icon-container {
+  background-color: hsl(var(--primary-foreground) / 0.2); /* Active icon background */
 }
-.android-card .title {
+
+.android-tile .icon-container svg {
+  color: hsl(var(--android-on-surface-light));
+}
+
+.android-tile.active .icon-container svg {
+  color: hsl(var(--primary-foreground));
+}
+
+.android-tile .title {
   font-size: 16px;
   font-weight: 500;
   margin: 0;
-  color: var(--color-on-surface-light);
+  color: hsl(var(--android-on-surface-light));
 }
-.android-card .subtitle {
+.android-tile.active .title {
+  color: hsl(var(--primary-foreground));
+}
+
+.android-tile .subtitle {
   font-size: 14px;
-  color: var(--color-on-surface-variant);
+  color: hsl(var(--android-on-surface-variant));
   margin: 0;
+}
+.android-tile.active .subtitle {
+  color: hsl(var(--primary-foreground) / 0.8);
 }
 
 /* Style pour la tuile "Rechercher dans les paramètres" */
-.search-bar {
-  background-color: var(--color-surface-container);
-  border-radius: 28px;
-  box-shadow: var(--color-shadow);
+.android-search-bar {
+  background-color: hsl(var(--android-surface-container));
+  border-radius: var(--radius-android-tile);
+  box-shadow: var(--android-shadow);
   padding: 12px 20px;
-  margin: 16px;
-  color: var(--color-on-surface-variant);
+  color: hsl(var(--android-on-surface-variant));
   font-size: 16px;
   font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-/* Style pour la tuile "Internet" et "Bluetooth" */
-.android-pill-button {
-    background-color: #70D6FF;
-    border-radius: 28px;
-    box-shadow: var(--color-shadow);
-    padding: 12px 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    color: #1F1A21;
+.android-search-bar input {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  flex-grow: 1;
+  color: hsl(var(--android-on-surface-light));
+}
+
+.android-search-bar input::placeholder {
+  color: hsl(var(--android-on-surface-variant));
+}
+
+/* Style pour les boutons de pied de page */
+.android-footer-button {
+  background-color: hsl(var(--android-surface-container));
+  border-radius: var(--radius-android-tile);
+  box-shadow: var(--android-shadow);
+  color: hsl(var(--android-on-surface-light));
+  font-weight: 500;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.android-footer-button:hover {
+  background-color: hsl(var(--android-surface-container) / 0.8);
+  box-shadow: var(--android-shadow);
 }
 
 @layer components {

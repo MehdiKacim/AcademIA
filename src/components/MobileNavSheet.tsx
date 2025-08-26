@@ -9,16 +9,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, ExternalLink, BarChart2 } from "lucide-react";
+import { ArrowLeft, X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight } from "lucide-react"; // Added more icons for Android-like quick settings
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSwipeable } from 'react-swipeable'; // Import useSwipeable
+import { useSwipeable } from 'react-swipeable';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useTheme } from 'next-themes'; // Import useTheme
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, BarChart2
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, BarChart2, Wifi, Bluetooth, Moon, Sun, Flashlight
 };
 
 interface MobileNavSheetProps {
@@ -35,9 +38,19 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]); // Stack for nested navigation
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Swipe handlers for closing the sheet on mobile
   const swipeHandlers = useSwipeable({
@@ -113,57 +126,89 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIcon = drawerNavStack.length > 0 ? iconMap[drawerNavStack[drawerNavStack.length - 1].icon_name || 'Info'] : null;
 
+  const handleToggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
-        side="top" // Changed from "left" to "top"
-        className="w-full h-[calc(100vh-68px)] flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg" // Adjusted height and added rounded-b-lg
-        {...swipeHandlers} // Apply swipe handlers here
+        side="top"
+        className="w-full h-[calc(100vh-68px)] flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg"
+        {...swipeHandlers}
       >
-        <SheetHeader className="p-4 border-b border-border flex-shrink-0">
+        <div className="p-4 flex-shrink-0">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+            <span className="font-medium">{format(currentTime, 'HH:mm')}</span>
+            <span className="font-medium">{format(currentTime, 'EEE. dd MMM', { locale: fr })}</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="android-tile active flex-row items-center justify-start gap-3 !p-3">
+              <div className="icon-container !bg-transparent">
+                <Wifi className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="title !text-primary-foreground">Internet</span>
+                <span className="subtitle !text-primary-foreground/80">box didou</span>
+              </div>
+            </div>
+            <div className="android-tile flex-row items-center justify-start gap-3 !p-3">
+              <div className="icon-container">
+                <Bluetooth className="h-6 w-6" />
+              </div>
+              <span className="title">Bluetooth</span>
+            </div>
+            <div className="android-tile flex-row items-center justify-start gap-3 !p-3">
+              <div className="icon-container">
+                <Moon className="h-6 w-6" />
+              </div>
+              <span className="title">Modes</span>
+            </div>
+            <div className="android-tile flex-row items-center justify-start gap-3 !p-3" onClick={handleToggleTheme}>
+              <div className="icon-container">
+                {theme === 'dark' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+              </div>
+              <span className="title">{theme === 'dark' ? 'Mode Clair' : 'Mode Sombre'}</span>
+            </div>
+          </div>
+
+          <div className="android-search-bar mb-4">
+            <Search className="h-5 w-5 text-android-on-surface-variant" />
+            <Input
+              placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full !p-0 !bg-transparent !border-none !ring-0 !shadow-none"
+            />
+          </div>
+
           <div className="flex items-center justify-between">
             {drawerNavStack.length > 0 ? (
-              <Button variant="ghost" size="icon" onClick={handleBack} className="absolute left-4">
+              <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
                 <ArrowLeft className="h-5 w-5" />
                 <span className="sr-only">Retour</span>
               </Button>
             ) : (
-              <Button variant="ghost" size="icon" onClick={onClose} className="absolute left-4">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Fermer le menu</span>
-              </Button>
+              <div className="w-10 h-10"></div> // Placeholder to keep alignment
             )}
             <SheetTitle className="flex-grow text-center flex items-center justify-center gap-2">
               {currentDrawerIcon && React.createElement(currentDrawerIcon, { className: "h-6 w-6 text-primary" })}
               {currentDrawerTitle}
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4">
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
               <X className="h-5 w-5" />
               <span className="sr-only">Fermer le menu</span>
             </Button>
           </div>
-          <SheetDescription className="text-center">
-            {drawerNavStack.length > 0 ? `Éléments de la catégorie ${currentDrawerTitle}` : "Toutes les options de navigation."}
-          </SheetDescription>
         </SheetHeader>
 
-        {currentUserProfile && (
-          <div className="p-4 border-b border-border flex-shrink-0">
-            <Input
-              placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-            />
-          </div>
-        )}
-
         <ScrollArea className="flex-grow p-4">
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {currentItemsToDisplay.length === 0 && searchQuery.trim() !== '' ? (
-              <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
+              <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément trouvé pour "{searchQuery}".</p>
             ) : currentItemsToDisplay.length === 0 && searchQuery.trim() === '' ? (
-              <p className="text-muted-foreground text-center py-4">Aucun élément de menu configuré pour ce rôle.</p>
+              <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
             ) : (
               currentItemsToDisplay.map((item) => {
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
@@ -172,22 +217,24 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 return (
                   <Button
                     key={item.id}
-                    variant="outline"
+                    variant="ghost"
                     className={cn(
-                      "flex items-center justify-start h-auto py-3 px-4 text-left w-full",
-                      isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
+                      "android-tile flex-col items-start justify-start h-auto min-h-[100px] text-left w-full",
+                      isLinkActive ? "active" : "",
                       "transition-all duration-200 ease-in-out"
                     )}
                     onClick={() => handleItemClick(item)}
                   >
-                    <IconComponent className="h-5 w-5 mr-3" />
-                    <span className="text-base font-medium flex-grow text-left">{item.label}</span>
+                    <div className="icon-container">
+                      <IconComponent className="h-6 w-6" />
+                    </div>
+                    <span className="title text-base font-medium line-clamp-2">{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
+                      <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
                         {item.badge}
                       </span>
                     )}
-                    {item.is_external && <ExternalLink className="h-4 w-4 ml-2 text-muted-foreground" />}
+                    {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
                   </Button>
                 );
               })
@@ -196,18 +243,23 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         </ScrollArea>
 
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          {currentUserProfile ? (
-            <Button variant="destructive" className="w-full" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+          <div className="flex justify-between gap-2">
+            {currentUserProfile ? (
+              <Button variant="destructive" className="android-footer-button flex-grow" onClick={handleLogout}>
+                <LogOut className="h-5 w-5" /> Déconnexion
+              </Button>
+            ) : (
+              <Button variant="default" className="android-footer-button flex-grow" onClick={onOpenAuthModal}>
+                <User className="h-5 w-5" /> Se connecter
+              </Button>
+            )}
+            <Button variant="outline" className="android-footer-button flex-grow" onClick={onOpenAboutModal}>
+              <Info className="h-5 w-5" /> À propos
             </Button>
-          ) : (
-            <Button variant="default" className="w-full" onClick={onOpenAuthModal}>
-              <User className="mr-2 h-4 w-4" /> Se connecter
-            </Button>
-          )}
-          <Button variant="outline" className="w-full" onClick={onOpenAboutModal}>
-            <Info className="mr-2 h-4 w-4" /> À propos
-          </Button>
+          </div>
+          <div className="flex justify-center pt-2">
+            <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
+          </div>
         </div>
       </SheetContent>
     </Sheet>
