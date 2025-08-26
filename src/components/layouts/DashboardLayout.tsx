@@ -232,13 +232,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
         )}
       >
         <div className="flex items-center gap-4">
-          {/* Mobile menu button */}
-          {isMobile && currentUserProfile && (
-            <Button variant="ghost" size="icon" onClick={() => setIsMobileNavSheetOpen(true)}>
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Ouvrir le menu</span>
-            </Button>
-          )}
+          {/* Removed Mobile menu button (hamburger) */}
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
@@ -276,9 +270,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   >
                     {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
                     {item.label}
-                    {item.badge !== undefined && item.badge > 0 && (
+                    {item.route === '/messages' && unreadMessages > 0 && (
                       <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
+                        {unreadMessages}
                       </span>
                     )}
                   </NavLink>
@@ -422,6 +416,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           À propos
         </Button>
       </footer>
+      {/* Removed BottomNavigationBar */}
       {currentUserProfile && (
         <MobileNavSheet
           isOpen={isMobileNavSheetOpen}

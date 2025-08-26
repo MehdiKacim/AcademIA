@@ -179,10 +179,9 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               {currentDrawerTitle}
             </SheetTitle>
 
-            {/* Right side: Theme Toggle */}
+            {/* Right side: Theme Toggle (no close button) */}
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              {/* Removed the close button (X) */}
             </div>
           </div>
         </div>
