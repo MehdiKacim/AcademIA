@@ -11,8 +11,8 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
   administrator: [
     { item: { id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de l'application", is_external: false, type: 'route' } },
     { item: { id: 'menu-management-category-id', label: 'Gestion des Menus', route: null, icon_name: 'LayoutList', description: "Configurez les menus de navigation", is_external: false, type: 'category_or_action' } },
-    { item: { id: 'generic-items-route-id', label: 'Éléments de navigation', route: '/admin-menu-management/generic-items', icon_name: 'LayoutList', description: "Gérez les définitions de base des éléments de navigation", is_external: false, type: 'route' }, parentLabel: 'Gestion des Menus' },
-    { item: { id: 'role-configs-route-id', label: 'Configuration par rôle', route: '/admin-menu-management/role-configs', icon_name: 'UserRoundCog', description: "Configurez les menus pour chaque rôle utilisateur", is_external: false, type: 'route' }, parentLabel: 'Gestion des Menus' },
+    { item: { id: 'generic-items-route-id', label: 'Éléments de navigation', route: '/admin-menu-management/generic-items', icon_name: 'LayoutList', description: "Gérez les définitions de base des éléments de navigation", is_external: false, type: 'route' }, parentId: 'menu-management-category-id' },
+    { item: { id: 'role-configs-route-id', label: 'Configuration par rôle', route: '/admin-menu-management/role-configs', icon_name: 'UserRoundCog', description: "Configurez les menus pour chaque rôle utilisateur", is_external: false, type: 'route' }, parentId: 'menu-management-category-id' },
     { item: { id: 'user-management-route-id', label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'UsersRound', description: "Gérez les profils et les rôles des utilisateurs", is_external: false, type: 'route' } },
     { item: { id: 'subject-management-route-id', label: 'Gestion des Matières', route: '/subjects', icon_name: 'BookText', description: "Créez et gérez les matières scolaires", is_external: false, type: 'route' } },
     { item: { id: 'school-year-management-route-id', label: 'Gestion des Années Scolaires', route: '/school-years', icon_name: 'CalendarDays', description: "Créez et gérez les années scolaires", is_external: false, type: 'route' } },
@@ -65,8 +65,8 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
     ,
     { item: { id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false, type: 'route' } },
     { item: { id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
-    { item: { id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de votre établissement", is_external: false, type: 'route' } },
+    { item: { id: 'settings-route-id', label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
+    { item: { id: 'analytics-route-id', label: 'Analytiques', route: '/analytics', icon_name: 'LineChart', description: "Consultez les statistiques de votre établissement", is_external: false, type: 'route' } },
   ],
   deputy_director: [
     { item: { id: 'dashboard-generic-item-id', label: 'Tableau de bord', route: '/dashboard', icon_name: 'LayoutDashboard', description: "Vue d'overview de votre établissement", is_external: false, type: 'route' } },
@@ -80,7 +80,7 @@ const DEFAULT_NAV_ITEMS_BY_ROLE = {
     ,
     { item: { id: 'messages-route-id', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', description: "Communiquez avec les autres utilisateurs", is_external: false, type: 'route' } },
     { item: { id: 'profile-route-id', label: 'Mon Profil', route: '/profile', icon_name: 'User', description: "Affichez et modifiez votre profil", is_external: false, type: 'route' } },
-    { item: { id: 'settings-route-id', label: 'Paramètres', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
+    { item: { id: 'settings-route-id', label: 'Paramètres', route: '/settings', icon_name: 'Settings', description: "Gérez les préférences de l'application", is_external: false, type: 'route' } },
     { item: { id: 'analytics-route-id', label: 'Analytiques', icon_name: 'LineChart', description: "Consultez les statistiques de votre établissement", is_external: false, type: 'route' } },
   ],
 };
@@ -196,119 +196,90 @@ serve(async (req) => {
         }
         console.log(`[Edge Function] Deleted existing role nav configs for ${bootstrapRole}.`);
 
-        const navItemMap = new Map(); // Map label to nav_item_id
+        // Map to store actual DB IDs of generic nav_items, keyed by their predefined IDs
+        const genericNavItemDbIds = new Map<string, string>();
 
-        // Step 2: Ensure all generic nav_items exist and get their IDs
+        // Step 2: Ensure all generic nav_items exist and get their DB IDs
         for (const { item: itemData } of defaultItemsForRole) {
           const { data: existingItem, error: fetchError } = await supabaseAdminClient
             .from('nav_items')
             .select('id')
-            .eq('id', itemData.id) // Use the provided ID for lookup
+            .eq('id', itemData.id) // Use the predefined ID for lookup
             .maybeSingle();
 
           if (fetchError) {
-            console.error(`[Edge Function] Error checking for existing nav item '${itemData.label}':`, fetchError);
+            console.error(`[Edge Function] Error checking for existing nav item '${itemData.label}' (ID: ${itemData.id}):`, fetchError);
             throw fetchError;
           }
 
           if (existingItem) {
-            navItemMap.set(itemData.label, existingItem.id);
+            genericNavItemDbIds.set(itemData.id, existingItem.id);
           } else {
-            console.log(`[Edge Function] Inserting new generic nav_item: ${itemData.label} with ID ${itemData.id}`);
+            console.log(`[Edge Function] Inserting new generic nav_item: ${itemData.label} (ID: ${itemData.id})`);
             const { data: newItem, error: insertItemError } = await supabaseAdminClient
               .from('nav_items')
               .insert(itemData)
               .select('id')
               .single();
             if (insertItemError) {
-              console.error(`[Edge Function] Error inserting nav item '${itemData.label}':`, insertItemError);
+              console.error(`[Edge Function] Error inserting nav item '${itemData.label}' (ID: ${itemData.id}):`, insertItemError);
               throw insertItemError;
             }
-            navItemMap.set(itemData.label, newItem.id);
+            genericNavItemDbIds.set(itemData.id, newItem.id);
           }
         }
-        console.log("[Edge Function] navItemMap after generic item processing:", navItemMap);
+        console.log("[Edge Function] genericNavItemDbIds after processing generic items:", genericNavItemDbIds);
 
         // Step 3: Build the hierarchical structure for default configs and assign order_index
-        const structuredDefaultItems = [];
-        const tempItemMap = new Map(); // Map nav_item.id to NavItem with children array
+        // This temporary structure will hold items with their children and order_index
+        const tempConfigItems: { [key: string]: any } = {};
 
-        // First pass: create all NavItem objects with their generic IDs
+        // Initialize all items in tempConfigItems
         defaultItemsForRole.forEach(({ item: itemData }) => {
-          const navItemId = navItemMap.get(itemData.label);
-          if (navItemId) {
-            tempItemMap.set(navItemId, {
-              id: navItemId,
-              label: itemData.label,
-              route: itemData.route || undefined,
-              icon_name: itemData.icon_name || undefined,
-              description: itemData.description || undefined,
-              is_external: itemData.is_external,
-              type: itemData.type, // Set the type here
-              children: [], // Initialize children
-              order_index: 0, // Will be set later
-              parent_nav_item_id: undefined, // Will be set later
-            });
+          tempConfigItems[itemData.id] = {
+            nav_item_id: genericNavItemDbIds.get(itemData.id), // Use actual DB ID
+            role: bootstrapRole,
+            parent_nav_item_id: null, // Default to null, will be updated
+            order_index: 0, // Default to 0, will be updated
+            _predefinedId: itemData.id, // Keep predefined ID for sorting
+            _children: [], // Temporary array for building hierarchy
+          };
+        });
+
+        // Build the hierarchy
+        defaultItemsForRole.forEach(({ item: itemData, parentId }) => {
+          const currentItem = tempConfigItems[itemData.id];
+          if (parentId && tempConfigItems[parentId]) {
+            currentItem.parent_nav_item_id = genericNavItemDbIds.get(parentId); // Use actual DB ID for parent
+            tempConfigItems[parentId]._children.push(currentItem);
           }
         });
 
-        // Second pass: assign parent_nav_item_id and build the tree structure
-        defaultItemsForRole.forEach(({ item: itemData, parentLabel }) => {
-          const navItemId = navItemMap.get(itemData.label);
-          if (navItemId) {
-            const currentItem = tempItemMap.get(navItemId);
-            if (currentItem) {
-              if (parentLabel) {
-                const parentNavItemId = navItemMap.get(parentLabel);
-                if (parentNavItemId) {
-                  const parentItem = tempItemMap.get(parentNavItemId);
-                  if (parentItem) {
-                    currentItem.parent_nav_item_id = parentNavItemId;
-                    parentItem.children?.push(currentItem);
-                  }
-                } else {
-                  console.warn(`[Edge Function] Parent label '${parentLabel}' not found in navItemMap for item '${itemData.label}'. It will be treated as a root item.`);
-                  structuredDefaultItems.push(currentItem); // Treat as root if parent not found
-                }
-              } else {
-                structuredDefaultItems.push(currentItem); // Root item
-              }
-            }
-          }
-        });
-        console.log("[Edge Function] Structured default items (before order assignment):", structuredDefaultItems);
-
-        // Third pass: assign order_index based on the structured tree
-        const assignOrderIndices = (items, parentId) => {
-          items.sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically for consistent default order
-          items.forEach((item, index) => {
-            item.order_index = index;
-            item.parent_nav_item_id = parentId === null ? undefined : parentId; // Ensure parent_nav_item_id is undefined for root items
-            if (item.children && item.children.length > 0) {
-              assignOrderIndices(item.children, item.id);
-            }
-          });
-        };
-
-        assignOrderIndices(structuredDefaultItems, null);
-        console.log("[Edge Function] Structured default items (after order assignment):", structuredDefaultItems);
-
-        // Flatten the structuredDefaultItems back into a list for DB insertion
+        // Flatten the tree and assign order_index
         const flattenedConfigsForDb = [];
-        const flattenTree = (items) => {
-          items.forEach(item => {
+        let currentOrderIndex = 0;
+
+        const processNode = (nodeList: any[]) => {
+          // Sort children by their predefined ID for consistent ordering
+          nodeList.sort((a, b) => a._predefinedId.localeCompare(b._predefinedId));
+          nodeList.forEach(item => {
+            item.order_index = currentOrderIndex++;
             flattenedConfigsForDb.push({
-              nav_item_id: item.id,
-              role: bootstrapRole,
-              parent_nav_item_id: item.parent_nav_item_id || null, // Ensure null for root items
+              nav_item_id: item.nav_item_id,
+              role: item.role,
+              parent_nav_item_id: item.parent_nav_item_id,
               order_index: item.order_index,
             });
-            if (item.children) {
-              flattenTree(item.children);
+            if (item._children.length > 0) {
+              processNode(item._children);
             }
           });
         };
-        flattenTree(structuredDefaultItems);
+
+        // Start processing from root items (those without a parent in tempConfigItems)
+        const rootItems = Object.values(tempConfigItems).filter(item => !item.parent_nav_item_id);
+        processNode(rootItems);
+
         console.log("[Edge Function] Flattened configs for DB (count):", flattenedConfigsForDb.length, "configs:", flattenedConfigsForDb);
 
         // Step 4: Insert new configs
