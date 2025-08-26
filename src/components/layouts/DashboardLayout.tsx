@@ -213,7 +213,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
 
-  const globalSwipeHandlers = useSwipeable({
+  const headerSwipeHandlers = useSwipeable({ // Renamed to headerSwipeHandlers
     onSwipedDown: () => {
       if (isMobile && currentUserProfile && !isMobileNavSheetOpen) {
         setIsMobileNavSheetOpen(true);
@@ -233,8 +233,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const canGoBack = location.key !== 'default' && window.history.length > 1;
 
   return (
-    <div {...globalSwipeHandlers} className="flex flex-col min-h-screen bg-muted/40">
+    <div className="flex flex-col min-h-screen bg-muted/40"> {/* Removed globalSwipeHandlers from here */}
       <header
+        {...headerSwipeHandlers} // Applied headerSwipeHandlers here
         className={cn(
           "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
