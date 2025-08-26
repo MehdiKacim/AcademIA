@@ -37,7 +37,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     .order('order_index', { ascending: true });
 
   const { data: fetchedConfigs, error: configsError } = await query;
-    query.get
+    // Removed the erroneous `query.get` line here.
 
   if (configsError) {
     console.error(`[loadNavItems] Error loading role nav configs for ${userRole}:`, configsError);
