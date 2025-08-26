@@ -213,4 +213,9 @@
   [data-radix-popper-content-wrapper] {
     z-index: 9999 !important; 
   }
+
+  /* Custom class for draggable elements to ensure touch-action: none */
+  .draggable-element {
+    touch-action: none;
+  }
 }
