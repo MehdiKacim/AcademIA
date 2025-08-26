@@ -9,7 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, GripVertical, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2, RefreshCw, Check, BarChart2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems";
@@ -139,7 +140,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
                 {...attributes}
                 className="cursor-grab"
               >
-                <GripVertical className="h-5 w-5 text-muted-foreground" />
+                <GripVertical className="h-5 w-5" />
                 <span className="sr-only">Déplacer l'élément</span>
               </Button>
             )}
@@ -739,6 +740,20 @@ const RoleNavConfigsPage = () => {
     );
   }
 
+  // Log the options being passed to the SearchableDropdown
+  const dropdownOptions = allGenericNavItems
+    .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
+    .filter(item => selectedGenericItemTypeFilter === 'all' || item.type === selectedGenericItemTypeFilter)
+    .map(item => ({
+      id: item.id,
+      label: item.label,
+      icon_name: item.icon_name,
+      level: 0,
+      isNew: false,
+    }));
+  console.log("[RoleNavConfigsPage] Dropdown options for 'Ajouter un élément existant':", dropdownOptions);
+  console.log("[RoleNavConfigsPage] Current selectedGenericItemToAdd:", selectedGenericItemToAdd);
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -816,17 +831,11 @@ const RoleNavConfigsPage = () => {
                   <Label htmlFor="add-existing-to-role">Ajouter un élément générique existant</Label>
                   <SearchableDropdown
                     value={selectedGenericItemToAdd}
-                    onValueChange={setSelectedGenericItemToAdd}
-                    options={allGenericNavItems
-                      .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-                      .filter(item => selectedGenericItemTypeFilter === 'all' || item.type === selectedGenericItemTypeFilter) // Apply new filter
-                      .map(item => ({
-                        id: item.id,
-                        label: item.label,
-                        icon_name: item.icon_name,
-                        level: 0, // Top level for adding
-                        isNew: false,
-                      }))}
+                    onValueChange={(val) => {
+                      console.log("[RoleNavConfigsPage] SearchableDropdown onValueChange called with:", val);
+                      setSelectedGenericItemToAdd(val);
+                    }}
+                    options={dropdownOptions} // Use the pre-filtered and mapped options
                     placeholder="Ajouter un élément existant au menu de ce rôle"
                     searchPlaceholder="Rechercher un élément..."
                     emptyMessage="Aucun élément disponible."
