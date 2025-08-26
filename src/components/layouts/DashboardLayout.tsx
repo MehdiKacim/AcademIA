@@ -63,7 +63,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
 
   // New states for desktop menu auto-hide
   const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
-  const desktopMenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Removed desktopMenuTimerRef as auto-hide is disabled for desktop
 
   // This function generates the full, structured navigation tree for desktop sidebar
   const fullNavTree = React.useMemo((): NavItem[] => {
@@ -95,20 +95,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     startAutoHideTimer();
   }, [startAutoHideTimer]);
 
-  // Functions to manage desktop menu auto-hide timer
-  const startDesktopMenuAutoHideTimer = useCallback(() => {
-    if (desktopMenuTimerRef.current) {
-      clearTimeout(desktopMenuTimerRef.current);
-    }
-    desktopMenuTimerRef.current = setTimeout(() => {
-      setIsDesktopMenuVisible(false);
-    }, 5000); // 5 seconds
-  }, []);
-
-  const showDesktopMenuAndResetTimer = useCallback(() => {
-    setIsDesktopMenuVisible(true);
-    startDesktopMenuAutoHideTimer();
-  }, [startDesktopMenuAutoHideTimer]);
+  // Removed functions to manage desktop menu auto-hide timer (startDesktopMenuAutoHideTimer, showDesktopMenuAndResetTimer)
 
   const handleLogout = async () => {
     await signOut();
@@ -142,47 +129,20 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   useEffect(() => {
     if (isMobile || !currentUserProfile) {
       setIsDesktopMenuVisible(true); // Ensure menu is always visible on mobile or if not logged in
-      if (desktopMenuTimerRef.current) {
-        clearTimeout(desktopMenuTimerRef.current);
-        desktopMenuTimerRef.current = null;
-      }
+      // Clear any existing timer if it was somehow set
+      // if (desktopMenuTimerRef.current) {
+      //   clearTimeout(desktopMenuTimerRef.current);
+      //   desktopMenuTimerRef.current = null;
+      // }
       return;
     }
 
-    if (isDesktopOverlayOpen) {
-      // If desktop overlay is open, keep menu visible and clear any auto-hide timer
-      setIsDesktopMenuVisible(true);
-      if (desktopMenuTimerRef.current) {
-        clearTimeout(desktopMenuTimerRef.current);
-        desktopMenuTimerRef.current = null;
-      }
-    } else {
-      // If overlay is closed, manage auto-hide based on activity
-      startDesktopMenuAutoHideTimer();
-    }
+    // For desktop, when logged in, the menu should always be visible
+    setIsDesktopMenuVisible(true);
+    // No auto-hide logic for desktop
+  }, [isMobile, currentUserProfile]);
 
-    // Cleanup function for this effect
-    return () => {
-      if (desktopMenuTimerRef.current) {
-        clearTimeout(desktopMenuTimerRef.current);
-      }
-    };
-  }, [isMobile, currentUserProfile, isDesktopOverlayOpen, startDesktopMenuAutoHideTimer]);
-
-  // Existing useEffect for mouse/keyboard/scroll events, now also dependent on isDesktopOverlayOpen
-  useEffect(() => {
-    if (!isMobile && currentUserProfile && !isDesktopOverlayOpen) { // Only add listeners if not mobile, logged in, and overlay is NOT open
-      window.addEventListener('mousemove', showDesktopMenuAndResetTimer);
-      window.addEventListener('keydown', showDesktopMenuAndResetTimer);
-      window.addEventListener('scroll', showDesktopMenuAndResetTimer);
-
-      return () => {
-        window.removeEventListener('mousemove', showDesktopMenuAndResetTimer);
-        window.removeEventListener('keydown', showDesktopMenuAndResetTimer);
-        window.removeEventListener('scroll', showDesktopMenuAndResetTimer);
-      };
-    }
-  }, [isMobile, currentUserProfile, isDesktopOverlayOpen, showDesktopMenuAndResetTimer]);
+  // Removed useEffect for mouse/keyboard/scroll events as auto-hide is disabled for desktop
 
 
   useEffect(() => {
@@ -288,8 +248,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       <header
         className={cn(
           "fixed top-0 left-0 right-0 z-50 px-2 py-4 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 transition-opacity duration-300 ease-in-out",
-          !isMobile && currentUserProfile && !isDesktopMenuVisible && !isDesktopOverlayOpen && "opacity-0 pointer-events-none",
-          !isMobile && currentUserProfile && (isDesktopMenuVisible || isDesktopOverlayOpen) && "opacity-100 pointer-events-auto"
+          // Removed desktop auto-hide classes
+          !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
         )}
       >
         <Logo />
