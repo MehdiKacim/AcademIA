@@ -30,7 +30,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
+import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import {
   DndContext,
   closestCenter,
@@ -201,6 +201,7 @@ const RoleNavConfigsPage = () => {
   const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]);
 
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
+  const [selectedGenericItemTypeFilter, setSelectedGenericItemTypeFilter] = useState<'all' | NavItem['type']>('all'); // New state for type filter
 
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
   const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
@@ -794,25 +795,44 @@ const RoleNavConfigsPage = () => {
               <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div>
-                <Label htmlFor="add-existing-to-role">Ajouter un élément générique existant</Label>
-                <SearchableDropdown
-                  value={selectedGenericItemToAdd}
-                  onValueChange={setSelectedGenericItemToAdd}
-                  options={allGenericNavItems
-                    .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-                    .map(item => ({
-                      id: item.id,
-                      label: item.label,
-                      icon_name: item.icon_name,
-                      level: 0, // Top level for adding
-                      isNew: false,
-                    }))}
-                  placeholder="Ajouter un élément existant au menu de ce rôle"
-                  searchPlaceholder="Rechercher un élément..."
-                  emptyMessage="Aucun élément disponible."
-                  iconMap={iconMap}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="add-existing-type-filter">Filtrer par type d'élément</Label>
+                  <Select value={selectedGenericItemTypeFilter} onValueChange={(value: 'all' | NavItem['type']) => setSelectedGenericItemTypeFilter(value)}>
+                    <SelectTrigger id="add-existing-type-filter">
+                      <SelectValue placeholder="Tous les types" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                      <SelectItem value="all">Tous les types</SelectItem>
+                      {navItemTypes.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {getItemTypeLabel(type)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="add-existing-to-role">Ajouter un élément générique existant</Label>
+                  <SearchableDropdown
+                    value={selectedGenericItemToAdd}
+                    onValueChange={setSelectedGenericItemToAdd}
+                    options={allGenericNavItems
+                      .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
+                      .filter(item => selectedGenericItemTypeFilter === 'all' || item.type === selectedGenericItemTypeFilter) // Apply new filter
+                      .map(item => ({
+                        id: item.id,
+                        label: item.label,
+                        icon_name: item.icon_name,
+                        level: 0, // Top level for adding
+                        isNew: false,
+                      }))}
+                    placeholder="Ajouter un élément existant au menu de ce rôle"
+                    searchPlaceholder="Rechercher un élément..."
+                    emptyMessage="Aucun élément disponible."
+                    iconMap={iconMap}
+                  />
+                </div>
               </div>
 
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
