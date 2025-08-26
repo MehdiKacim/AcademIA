@@ -1,13 +1,12 @@
 import * as React from "react";
-import { Check, ChevronDown, Search as SearchIcon } from "lucide-react";
+import { Check, ChevronDown, Search as SearchIcon, Info } from "lucide-react"; // Import Info icon
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  Command,
+  Command, // Keep Command for CommandItem and CommandList
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -31,7 +30,6 @@ interface SearchableDropdownProps {
   value: string | null;
   onValueChange: (value: string) => void;
   placeholder?: string;
-  searchPlaceholder?: string;
   emptyMessage?: string;
   iconMap?: { [key: string]: React.ElementType };
   className?: string; // For styling the trigger
@@ -48,7 +46,6 @@ const SearchableDropdown = React.forwardRef<
       value,
       onValueChange,
       placeholder = "Sélectionner...",
-      searchPlaceholder = "Rechercher...",
       emptyMessage = "Aucun élément trouvé.",
       iconMap = {},
       className,
@@ -99,8 +96,7 @@ const SearchableDropdown = React.forwardRef<
           </Button>
         </PopoverTrigger>
         <PopoverContent className={cn("w-[var(--radix-popover-trigger-width)] p-0 z-[999]", popoverContentClassName)}>
-          <Command className="relative z-[1]"> {/* Added z-[1] to Command */}
-            <CommandInput placeholder={searchPlaceholder} />
+          <Command>
             <CommandList>
               <CommandEmpty>{emptyMessage}</CommandEmpty>
               <CommandGroup>
@@ -109,11 +105,8 @@ const SearchableDropdown = React.forwardRef<
                     <CommandItem
                       key={option.id}
                       value={option.label} // Use label for search matching
-                      onSelect={(currentValue) => {
-                        const selected = options.find(o => o.label.toLowerCase() === currentValue.toLowerCase());
-                        if (selected) {
-                          onValueChange(selected.id);
-                        }
+                      onSelect={() => {
+                        onValueChange(option.id);
                         setOpen(false);
                       }}
                     >

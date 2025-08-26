@@ -120,7 +120,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           ref={setNodeRef} 
           style={style} 
           className={cn(
-            "p-3 border rounded-md flex items-center justify-between gap-2 mb-2 cursor-context-menu", // Added cursor-context-menu
+            "p-3 border rounded-md flex items-center justify-between gap-2 mb-2 cursor-context-menu select-none pointer-events-auto", // Added select-none and pointer-events-auto
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50"
@@ -229,6 +229,7 @@ const RoleNavConfigsPage = () => {
 
   // States for search in dropdowns
   const [selectedParentForEdit, setSelectedParentForEdit] = useState<string | null>(null); // New state for parent selection in edit dialog
+  const [parentSearchQuery, setParentSearchQuery] = useState(''); // New state for parent search input
 
   const [isAddExistingItemDialogOpen, setIsAddExistingItemDialogOpen] = useState(false); // New state for the add existing item dialog
 
@@ -409,8 +410,12 @@ const RoleNavConfigsPage = () => {
     });
 
     const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
-    return sortedParents;
-  }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds]);
+    
+    // Apply search filter
+    const lowerCaseQuery = parentSearchQuery.toLowerCase();
+    return sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery));
+
+  }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds, parentSearchQuery]);
 
 
   // Effect to handle adding the selected generic item (now triggered by AddExistingNavItemDialog)
@@ -722,6 +727,7 @@ const RoleNavConfigsPage = () => {
       level: 0,
       isNew: false,
     }));
+  console.log("[RoleNavConfigsPage] Dropdown options for 'Ajouter un élément existant':", dropdownOptions);
   // Removed the problematic console.log line
   // console.log("[RoleNavConfigsPage] Current selectedGenericItemToAdd:", selectedGenericItemToAdd);
 
@@ -782,7 +788,7 @@ const RoleNavConfigsPage = () => {
             </CardHeader>
             <ContextMenu>
               <ContextMenuTrigger asChild>
-                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-md cursor-context-menu"> {/* Added cursor-context-menu here */}
+                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-md cursor-context-menu select-none pointer-events-auto"> {/* Added select-none and pointer-events-auto */}
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                     {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
                     <DragOverlay>
@@ -827,6 +833,16 @@ const RoleNavConfigsPage = () => {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="parent-search-input" className="text-right">Rechercher parent</Label>
+                <Input
+                  id="parent-search-input"
+                  placeholder="Rechercher un parent..."
+                  value={parentSearchQuery}
+                  onChange={(e) => setParentSearchQuery(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-config-parent" className="text-right">Parent</Label>
                 <SearchableDropdown
                   value={selectedParentForEdit}
@@ -842,7 +858,6 @@ const RoleNavConfigsPage = () => {
                     }))
                   ]}
                   placeholder="Sélectionner un parent..."
-                  searchPlaceholder="Rechercher un parent..."
                   emptyMessage="Aucun parent trouvé."
                   iconMap={iconMap}
                   className="col-span-3"

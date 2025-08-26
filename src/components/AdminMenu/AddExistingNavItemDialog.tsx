@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2, Home, Info } from "lucide-react";
+import { PlusCircle, Loader2, Home, Info, Search as SearchIcon } from "lucide-react"; // Import SearchIcon
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { addRoleNavItemConfig, updateRoleNavItemConfig } from "@/lib/navItems";
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input'; // Import Input
 
 interface AddExistingNavItemDialogProps {
   isOpen: boolean;
@@ -49,6 +50,8 @@ const AddExistingNavItemDialog = ({
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
   const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [genericItemSearchQuery, setGenericItemSearchQuery] = useState(''); // New state for generic item search
+  const [parentSearchQuery, setParentSearchQuery] = useState(''); // New state for parent search
 
   // Reset states when dialog opens/closes
   React.useEffect(() => {
@@ -56,20 +59,24 @@ const AddExistingNavItemDialog = ({
       setSelectedGenericItemToAdd(null);
       setSelectedParentForNewItem(null);
       setIsAdding(false);
+      setGenericItemSearchQuery('');
+      setParentSearchQuery('');
     }
   }, [isOpen]);
 
   const availableGenericItemsOptions = useMemo(() => {
-    return allGenericNavItems
+    const filtered = allGenericNavItems
       .filter(item => !allConfiguredItemsFlat.some(configured => configured.id === item.id))
-      .map(item => ({
+      .filter(item => item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase())); // Apply search filter
+      
+    return filtered.map(item => ({
         id: item.id,
         label: item.label,
         icon_name: item.icon_name,
         level: 0,
         isNew: false,
       }));
-  }, [allGenericNavItems, allConfiguredItemsFlat]);
+  }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
   const availableParentsOptions = useMemo(() => {
     const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
@@ -115,11 +122,12 @@ const AddExistingNavItemDialog = ({
     });
 
     const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
-    return [
-      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false },
-      ...sortedParents
-    ];
-  }, [allConfiguredItemsFlat, allGenericNavItems]);
+    
+    // Apply search filter
+    const lowerCaseQuery = parentSearchQuery.toLowerCase();
+    return sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery));
+
+  }, [allConfiguredItemsFlat, allGenericNavItems, parentSearchQuery]);
 
   const handleAddExistingItem = async () => {
     if (!selectedGenericItemToAdd) {
@@ -211,26 +219,38 @@ const AddExistingNavItemDialog = ({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div>
-            <Label htmlFor="select-generic-item">Élément générique à ajouter</Label>
+            <Label htmlFor="generic-item-search-input">Rechercher un élément générique</Label>
+            <Input
+              id="generic-item-search-input"
+              placeholder="Rechercher un élément..."
+              value={genericItemSearchQuery}
+              onChange={(e) => setGenericItemSearchQuery(e.target.value)}
+              className="mb-2"
+            />
             <SearchableDropdown
               value={selectedGenericItemToAdd}
               onValueChange={setSelectedGenericItemToAdd}
               options={availableGenericItemsOptions}
               placeholder="Sélectionner un élément..."
-              searchPlaceholder="Rechercher un élément..."
               emptyMessage="Aucun élément disponible."
               iconMap={iconMap}
               popoverContentClassName="z-[999]"
             />
           </div>
           <div>
-            <Label htmlFor="select-parent-for-new-item">Parent (optionnel)</Label>
+            <Label htmlFor="parent-search-input">Rechercher un parent</Label>
+            <Input
+              id="parent-search-input"
+              placeholder="Rechercher un parent..."
+              value={parentSearchQuery}
+              onChange={(e) => setParentSearchQuery(e.target.value)}
+              className="mb-2"
+            />
             <SearchableDropdown
               value={selectedParentForNewItem}
               onValueChange={setSelectedParentForNewItem}
               options={availableParentsOptions}
               placeholder="Sélectionner un parent..."
-              searchPlaceholder="Rechercher un parent..."
               emptyMessage="Aucun parent trouvé."
               iconMap={iconMap}
               popoverContentClassName="z-[999]"

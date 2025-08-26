@@ -50,6 +50,15 @@ const iconMap: { [key: string]: React.ElementType } = { // Changed ReactType to 
 
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
 
+// Helper function moved to top-level scope
+const getItemTypeLabel = (type: NavItem['type']) => {
+  switch (type) {
+    case 'route': return "Route";
+    case 'category_or_action': return "Catégorie/Action";
+    default: return "Inconnu";
+  }
+};
+
 interface SortableChildItemProps {
   item: NavItem;
   level: number;
@@ -77,16 +86,8 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
 
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
-  const getItemTypeLabel = (type: NavItem['type']) => {
-    switch (type) {
-      case 'route': return "Route";
-      case 'category_or_action': return "Catégorie/Action"; // Updated label
-      default: return "Inconnu";
-    }
-  };
-
   return (
-    <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-md bg-background flex items-center justify-between gap-2 mb-1", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
+    <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-md bg-background flex items-center justify-between gap-2 mb-1 select-none pointer-events-auto", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Added select-none and pointer-events-auto */}
       <div className="flex items-center gap-2 flex-grow">
         {isDraggableAndDeletable && (
           <Button
@@ -131,6 +132,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+  const [genericItemSearchQuery, setGenericItemSearchQuery] = useState(''); // New state for search input
 
   // States for new generic item creation form
   const [isNewChildFormOpen, setIsNewChildFormOpen] = useState(false);
@@ -170,12 +172,17 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                 !currentChildIds.has(item.id) && // Not already a direct child
                 !descendantsOfParent.has(item.id) // Not already a descendant
       );
-      console.log("[ManageChildrenDialog] Filtered available children for add:", filteredAvailable);
-      setAvailableChildrenForAdd(filteredAvailable);
+      
+      // Apply search filter
+      const lowerCaseQuery = genericItemSearchQuery.toLowerCase();
+      const finalFilteredAvailable = filteredAvailable.filter(item => item.label.toLowerCase().includes(lowerCaseQuery));
+
+      console.log("[ManageChildrenDialog] Filtered available children for add:", finalFilteredAvailable);
+      setAvailableChildrenForAdd(finalFilteredAvailable);
       setCurrentChildren(parentItem.children || []);
       setSelectedGenericItemToAdd(null); // Reset selection
     }
-  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds]); // Add getDescendantIds to deps
+  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds, genericItemSearchQuery]); // Add genericItemSearchQuery to deps
 
   const handleDragStart = (event: any) => {
     const { active } = event;
@@ -345,14 +352,6 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
     }
   };
 
-  const getItemTypeLabel = (type: NavItem['type']) => {
-    switch (type) {
-      case 'route': return "Route";
-      case 'category_or_action': return "Catégorie/Action";
-      default: return "Inconnu";
-    }
-  };
-
   const renderChildItemsList = (items: NavItem[], containerId: string, isDraggableAndDeletable: boolean, onRemove?: (configId: string) => void) => {
     return (
       <div id={containerId} className="min-h-[50px] p-2 border border-dashed border-muted-foreground/30 rounded-md">
@@ -393,6 +392,16 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                   <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col gap-4">
+                  <div>
+                    <Label htmlFor="generic-item-search-input">Rechercher un élément</Label>
+                    <Input
+                      id="generic-item-search-input"
+                      placeholder="Rechercher un élément..."
+                      value={genericItemSearchQuery}
+                      onChange={(e) => setGenericItemSearchQuery(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
                   <SearchableDropdown
                     value={selectedGenericItemToAdd}
                     onValueChange={setSelectedGenericItemToAdd}
@@ -404,7 +413,6 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                       isNew: false,
                     }))}
                     placeholder="Sélectionner un élément à ajouter"
-                    searchPlaceholder="Rechercher un élément..."
                     emptyMessage="Aucun élément disponible."
                     iconMap={iconMap}
                     popoverContentClassName="z-[999]" // Increased z-index
