@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ['[data-theme="dark"]'], // Updated to target data-theme attribute for dark mode
+  darkMode: ['[data-theme="dark"]'],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -36,7 +36,7 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        success: { // Nouvelle couleur pour les messages de succès
+        success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
@@ -56,29 +56,20 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // New Android-inspired colors
-        'android-surface-container': 'hsl(var(--android-surface-container))',
-        'android-on-surface-variant': 'hsl(var(--android-on-surface-variant))',
-        'android-on-surface-light': 'hsl(var(--android-on-surface-light))',
-        'android-accent-blue': 'hsl(var(--android-accent-blue))',
-        'android-accent-red': 'hsl(var(--android-accent-red))',
-        'android-accent-pink': 'hsl(var(--android-accent-pink))',
-        'android-accent-purple': 'hsl(var(--android-accent-purple))',
-        'android-accent-orange': 'hsl(var(--android-accent-orange))',
       },
       borderRadius: {
-        lg: "0.5rem", // Keep default for general large radius
+        lg: "0.5rem",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        "card-lg": "28px", // Nouveau rayon de bordure pour les cartes
-        "android-tile": "2.5rem", // Increased to 40px for a more rounded look
+        "card-lg": "28px",
+        "android-tile": "2.5rem",
       },
       boxShadow: {
-        "card-shadow": "0 4px 12px rgba(0, 0, 0, 0.08)", // Nouvelle ombre pour les cartes
-        "android-shadow": "0px 4px 15px rgba(0, 0, 0, 0.15)", // Android-like shadow
+        "card-shadow": "0 4px 12px rgba(0, 0, 0, 0.08)",
+        "android-shadow": "0px 4px 15px rgba(0, 0, 0, 0.15)",
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'], // Pile de polices système
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {
@@ -115,7 +106,7 @@ export default {
           "0%": { backgroundPosition: "0% center" },
           "100%": { backgroundPosition: "-200% center" },
         },
-        "bounce-slow": { // Nouvelle keyframe
+        "bounce-slow": {
           "0%, 100%": {
             transform: "translateY(0)",
             animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)",
@@ -131,7 +122,7 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         blob: "blob 7s infinite",
         "background-pan": "background-pan 3s linear infinite",
-        "bounce-slow": "bounce-slow 2s infinite", // Nouvelle animation
+        "bounce-slow": "bounce-slow 2s infinite",
       },
     },
   },

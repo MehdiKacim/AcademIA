@@ -26,42 +26,30 @@
     --input: 214.3 31.8% 85%; /* Bordure d'input plus claire */
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
-
-    /* Couleurs de base inspirées du thème sombre d'Android 16 */
-    --android-surface-dark: 220 15% 8%; /* Background principal du panneau */
-    --android-surface-container: 220 15% 12%; /* Fond des tuiles/cartes */
-    --android-on-surface-variant: 215 10% 75%; /* Texte secondaire */
-    --android-on-surface-light: 210 20% 90%; /* Texte principal */
-    --android-accent-blue: 200 90% 70%; /* Bleu pour les éléments actifs */
-    --android-accent-red: 0 80% 70%; /* Rouge pour les alertes */
-    --android-accent-pink: 330 80% 70%;
-    --android-accent-purple: 270 70% 60%;
-    --android-accent-orange: 30 90% 70%;
-    --android-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
   }
 
   [data-theme="dark"] {
-    --background: var(--android-surface-dark); /* Utilise le fond Android pour le thème sombre */
-    --foreground: var(--android-on-surface-light);
-    --card: var(--android-surface-container);
-    --card-foreground: var(--android-on-surface-light);
-    --popover: var(--android-surface-container);
-    --popover-foreground: var(--android-on-surface-light);
-    --primary: var(--android-accent-blue);
-    --primary-foreground: 210 40% 98%; /* Blanc */
-    --secondary: 210 15% 30%; /* Bleu-gris plus doux */
-    --secondary-foreground: 210 40% 98%; /* Blanc */
-    --success: 142.1 76.2% 36.3%; /* Vert standard */
-    --success-foreground: 210 40% 98%; /* Blanc */
-    --muted: 220 10% 20%; /* Gris légèrement plus foncé pour muted */
-    --muted-foreground: var(--android-on-surface-variant);
-    --accent: 210 15% 30%; /* Similaire au secondaire */
-    --accent-foreground: 210 40% 98%; /* Blanc */
-    --destructive: 0 62.8% 30.6%; /* Rouge standard */
-    --destructive-foreground: 210 40% 98%; /* Blanc */
-    --border: 220 10% 25%; /* Bordure subtile */
-    --input: 220 10% 25%; /* Input subtil */
-    --ring: var(--android-accent-blue); /* Anneau de focus plus lumineux */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 200 90% 70%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 
   [data-theme="dark-purple"] {
@@ -95,7 +83,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans; /* Applique la nouvelle pile de polices */
+    @apply bg-background text-foreground font-sans;
   }
 
   html, body {
@@ -104,51 +92,45 @@
 
 }
 
-/* Styles pour le corps de la page, imitant le fond sombre */
-body {
-  background-color: var(--color-surface-dark);
-}
-
 /* Style de base pour une "carte" ou tuile */
 .android-tile {
-  background-color: hsl(var(--android-surface-container));
-  /* border-radius: var(--radius-android-tile); */ /* Removed explicit border-radius */
+  background-color: hsl(var(--card)); /* Utilise la variable --card */
   box-shadow: var(--android-shadow);
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  color: hsl(var(--android-on-surface-light));
+  color: hsl(var(--foreground)); /* Utilise la variable --foreground */
   transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .android-tile:hover {
-  background-color: hsl(var(--android-surface-container) / 0.8);
+  background-color: hsl(var(--accent)); /* Utilise la variable --accent */
   box-shadow: var(--android-shadow);
 }
 
 .android-tile.active {
-  background-color: hsl(var(--android-accent-blue));
+  background-color: hsl(var(--primary)); /* Utilise la variable --primary */
   color: hsl(var(--primary-foreground));
 }
 
 .android-tile .icon-container {
   width: 44px;
   height: 44px;
-  /* border-radius: 12px; */ /* Removed explicit border-radius */
+  border-radius: 0.5rem; /* Applique rounded-lg */
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: hsl(var(--android-on-surface-variant) / 0.2); /* Default icon background */
+  background-color: hsl(var(--muted) / 0.2); /* Utilise la variable --muted */
 }
 
 .android-tile.active .icon-container {
-  background-color: hsl(var(--primary-foreground) / 0.2); /* Active icon background */
+  background-color: hsl(var(--primary-foreground) / 0.2);
 }
 
 .android-tile .icon-container svg {
-  color: hsl(var(--android-on-surface-light));
+  color: hsl(var(--foreground)); /* Utilise la variable --foreground */
 }
 
 .android-tile.active .icon-container svg {
@@ -159,7 +141,7 @@ body {
   font-size: 16px;
   font-weight: 500;
   margin: 0;
-  color: hsl(var(--android-on-surface-light));
+  color: hsl(var(--foreground)); /* Utilise la variable --foreground */
 }
 .android-tile.active .title {
   color: hsl(var(--primary-foreground));
@@ -167,7 +149,7 @@ body {
 
 .android-tile .subtitle {
   font-size: 14px;
-  color: hsl(var(--android-on-surface-variant));
+  color: hsl(var(--muted-foreground)); /* Utilise la variable --muted-foreground */
   margin: 0;
 }
 .android-tile.active .subtitle {
@@ -176,11 +158,10 @@ body {
 
 /* Style pour la tuile "Rechercher dans les paramètres" */
 .android-search-bar {
-  background-color: hsl(var(--android-surface-container));
-  /* border-radius: var(--radius-android-tile); */ /* Removed explicit border-radius */
+  background-color: hsl(var(--card)); /* Utilise la variable --card */
   box-shadow: var(--android-shadow);
   padding: 12px 20px;
-  color: hsl(var(--android-on-surface-variant));
+  color: hsl(var(--muted-foreground)); /* Utilise la variable --muted-foreground */
   font-size: 16px;
   font-weight: 400;
   display: flex;
@@ -193,19 +174,18 @@ body {
   border: none;
   outline: none;
   flex-grow: 1;
-  color: hsl(var(--android-on-surface-light));
+  color: hsl(var(--foreground)); /* Utilise la variable --foreground */
 }
 
 .android-search-bar input::placeholder {
-  color: hsl(var(--android-on-surface-variant));
+  color: hsl(var(--muted-foreground)); /* Utilise la variable --muted-foreground */
 }
 
 /* Style pour les boutons de pied de page */
 .android-footer-button {
-  background-color: hsl(var(--android-surface-container));
-  /* border-radius: var(--radius-android-tile); */ /* Removed explicit border-radius */
+  background-color: hsl(var(--card)); /* Utilise la variable --card */
   box-shadow: var(--android-shadow);
-  color: hsl(var(--android-on-surface-light));
+  color: hsl(var(--foreground)); /* Utilise la variable --foreground */
   font-weight: 500;
   padding: 12px 20px;
   display: flex;
@@ -216,7 +196,7 @@ body {
 }
 
 .android-footer-button:hover {
-  background-color: hsl(var(--android-surface-container) / 0.8);
+  background-color: hsl(var(--accent)); /* Utilise la variable --accent */
   box-shadow: var(--android-shadow);
 }
 

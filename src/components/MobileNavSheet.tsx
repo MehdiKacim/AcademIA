@@ -167,7 +167,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
             {/* Left side: Back button and App Logo/Name */}
             <div className="flex items-center gap-2">
               {drawerNavStack.length > 0 ? (
-                <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
+                <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                   <ArrowLeft className="h-5 w-5" />
                   <span className="sr-only">Retour</span>
                 </Button>
@@ -181,7 +181,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
             <div className="flex items-center gap-2">
               {currentUserProfile && (
                 <>
-                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative">
+                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                     <MessageSquare className="h-5 w-5" />
                     {unreadMessagesCount > 0 && (
                       <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
@@ -190,7 +190,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     )}
                     <span className="sr-only">Messagerie</span>
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative">
+                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
                       <AvatarFallback>{currentUserProfile.first_name[0]}{currentUserProfile.last_name[0]}</AvatarFallback>
@@ -200,7 +200,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 </>
               )}
               <ThemeToggle />
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10">
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                 <X className="h-5 w-5" />
                 <span className="sr-only">Fermer</span>
               </Button>
