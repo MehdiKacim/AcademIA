@@ -278,17 +278,19 @@ const AddExistingNavItemDialog = ({
                           <Card 
                             key={item.id} 
                             className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20"
-                            onClick={() => handleSelectGenericItem(item)} // Added onClick handler
+                            onClick={() => handleSelectGenericItem(item)} // Re-added onClick handler
                           >
-                            <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
-                              <ItemIcon className="h-5 w-5 text-primary" />
-                              <div>
-                                <p className="font-medium">{item.label}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
-                                </p>
+                            <React.Fragment> {/* Added React.Fragment */}
+                              <div className="flex items-center gap-3 select-none">
+                                <ItemIcon className="h-5 w-5 text-primary" />
+                                <div>
+                                  <p className="font-medium">{item.label}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
+                            </React.Fragment>
                           </Card>
                         );
                       })
