@@ -8,13 +8,19 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
 import { clearAllAppData } from "@/lib/dataReset";
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom'; // Import useOutletContext
 import AboutModal from "@/components/AboutModal";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
+import { Profile } from '@/lib/dataModels'; // Import Profile type
+
+interface SettingsPageOutletContext {
+  onInitiateThemeChange: (newTheme: Profile['theme']) => void;
+}
 
 const Settings = () => {
   const { currentRole } = useRole(); // Get currentRole
+  const { onInitiateThemeChange } = useOutletContext<SettingsPageOutletContext>(); // Get onInitiateThemeChange from context
   const [language, setLanguage] = useState('fr');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [appNotifications, setAppNotifications] = useState(true);
@@ -55,7 +61,7 @@ const Settings = () => {
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <Label htmlFor="theme-toggle">Mode clair/sombre</Label>
-          <ThemeToggle />
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
         </CardContent>
       </Card>
 

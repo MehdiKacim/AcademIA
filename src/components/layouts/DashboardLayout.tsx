@@ -199,7 +199,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
   const headerNavItems = fullNavTreeWithActions; // Use the tree with injected actions
 
-  const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen }), [setIsAdminModalOpen]);
+  const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen, onInitiateThemeChange }), [setIsAdminModalOpen, onInitiateThemeChange]);
 
   // Removed globalSwipeHandlers from the main div.
   // The swipe-right-to-go-back gesture will now be handled by MobileNavSheet.

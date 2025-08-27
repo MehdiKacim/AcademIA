@@ -37,6 +37,7 @@ import { useCourseChat } from '@/contexts/CourseChatContext'; // Import useCours
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
+  onInitiateThemeChange: (newTheme: string) => void; // New prop
 }
 
 // Map icon_name strings to Lucide React components
@@ -44,7 +45,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, 
 };
 
-const Index = ({ setIsAdminModalOpen }: IndexProps) => {
+const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -235,7 +236,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
           <Button variant="ghost" size="icon" onClick={() => setIsAboutModalOpen(true)} className="hidden sm:flex">
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
