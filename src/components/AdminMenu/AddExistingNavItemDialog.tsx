@@ -67,9 +67,10 @@ const AddExistingNavItemDialog = ({
       setIsAdding(false);
       setGenericItemSearchQuery('');
       setParentSearchQuery('');
-      console.log("[AddExistingNavItemDialog] Dialog opened. Available generic items options:", availableGenericItemsOptions); // Diagnostic log
+      // Log here, after states are reset and memoized options are available
+      console.log("[AddExistingNavItemDialog] Dialog opened. Available generic items options:", availableGenericItemsOptions);
     }
-  }, [isOpen, defaultParentId, availableGenericItemsOptions]); // Add availableGenericItemsOptions to dependencies
+  }, [isOpen, defaultParentId]); // Removed availableGenericItemsOptions from dependencies
 
   const availableGenericItemsOptions = useMemo(() => {
     const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
@@ -278,7 +279,7 @@ const AddExistingNavItemDialog = ({
                         return (
                           <Card 
                             key={item.id} 
-                            className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20"
+                            className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20 pointer-events-auto" // Added pointer-events-auto
                             onClick={() => handleSelectGenericItem(item)} // Added onClick handler
                           >
                             <React.Fragment> {/* Added React.Fragment */}
