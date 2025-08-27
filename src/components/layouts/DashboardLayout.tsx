@@ -53,13 +53,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const navigate = useNavigate();
   const location = useLocation();
 
-  // New state for desktop submenu
-  const [activeDesktopSubmenuParent, setActiveDesktopSubmenuParent] = useState<NavItem | null>(null);
-
-  // Refs for click outside logic
-  const headerRef = useRef<HTMLElement>(null);
-  const submenuRef = useRef<HTMLElement>(null);
-
   // Helper function to inject onClick handlers for specific action items
   const injectActionHandlers = useCallback((items: NavItem[]): NavItem[] => {
     return items.map(item => {
@@ -167,24 +160,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     };
   }, [currentUserProfile?.id]);
 
-  // Handle clicks outside the header/submenu to close the submenu
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        activeDesktopSubmenuParent &&
-        headerRef.current && !headerRef.current.contains(event.target as Node) &&
-        submenuRef.current && !submenuRef.current.contains(event.target as Node)
-      ) {
-        setActiveDesktopSubmenuParent(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [activeDesktopSubmenuParent]);
-
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen, onInitiateThemeChange }), [setIsAdminModalOpen, onInitiateThemeChange]);
 
   const headerDoubleTapRef = useRef({ lastTap: 0 });
@@ -201,26 +176,60 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     }
   }, [isMobile, currentUserProfile]);
 
-  // Handler for navigation items (both top-level direct links and submenu items)
-  const handleNavItemClick = useCallback((item: NavItem) => {
-    if (item.route) {
-      if (item.is_external) {
-        window.open(item.route, '_blank');
-      } else if (item.route.startsWith('#')) {
-        navigate(`/${item.route}`);
+  // Recursive function to render dropdown menu items
+  const renderDropdownItems = (items: NavItem[], level: number = 0) => {
+    return items.map(item => {
+      const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
+      const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+
+      if (item.children && item.children.length > 0) {
+        return (
+          <DropdownMenuSub key={item.id}>
+            <DropdownMenuSubTrigger className={cn(isLinkActive && "text-primary font-semibold")}>
+              <IconComponent className="mr-2 h-4 w-4" />
+              <span>{item.label}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="backdrop-blur-lg bg-background/80">
+              {renderDropdownItems(item.children, level + 1)}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        );
       } else {
-        navigate(item.route);
+        return (
+          <DropdownMenuItem
+            key={item.id}
+            onClick={() => {
+              if (item.route) {
+                if (item.is_external) {
+                  window.open(item.route, '_blank');
+                } else if (item.route.startsWith('#')) {
+                  navigate(`/${item.route}`);
+                } else {
+                  navigate(item.route);
+                }
+              } else if (item.onClick) {
+                item.onClick();
+              }
+            }}
+            className={cn(isLinkActive && "text-primary font-semibold")}
+          >
+            <IconComponent className="mr-2 h-4 w-4" />
+            <span>{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                {item.badge}
+              </span>
+            )}
+            {item.is_external && <ExternalLink className="ml-auto h-3 w-3" />}
+          </DropdownMenuItem>
+        );
       }
-    } else if (item.onClick) {
-      item.onClick();
-    }
-    setActiveDesktopSubmenuParent(null); // Always close submenu on any navigation/action
-  }, [navigate]);
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header
-        ref={headerRef} // Attach ref to header
         onClick={handleHeaderClick}
         className={cn(
           "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
@@ -237,32 +246,77 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                 const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
-                return (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    onClick={() => {
-                      if (isCategory) {
-                        setActiveDesktopSubmenuParent(activeDesktopSubmenuParent?.id === item.id ? null : item);
-                      } else {
-                        handleNavItemClick(item); // Use the unified handler for direct links/actions
+                if (isCategory) {
+                  return (
+                    <DropdownMenu key={item.id}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                            isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
+                          )}
+                        >
+                          <IconComponent className="mr-2 h-4 w-4" />
+                          {item.label}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                            <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                              {item.badge}
+                            </span>
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="backdrop-blur-lg bg-background/80">
+                        {renderDropdownItems(item.children || [])}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                } else if (item.onClick) {
+                  return (
+                    <Button
+                      key={item.id}
+                      variant="ghost"
+                      onClick={() => {
+                        item.onClick && item.onClick();
+                      }}
+                      className={cn(
+                        "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                        isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
+                      )}
+                    >
+                      <IconComponent className="mr-2 h-4 w-4" />
+                      {item.label}
+                      {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                        <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Button>
+                  );
+                } else { // item.type === 'route'
+                  return (
+                    <NavLink
+                      key={item.id}
+                      to={item.route!}
+                      className={({ isActive }) =>
+                        cn(
+                          "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                          isActive || isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
+                        )
                       }
-                    }}
-                    className={cn(
-                      "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                      isLinkActive || (activeDesktopSubmenuParent?.id === item.id) ? "text-primary font-semibold" : "text-muted-foreground"
-                    )}
-                  >
-                    <IconComponent className="mr-2 h-4 w-4" />
-                    {item.label}
-                    {isCategory && <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
-                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Button>
-                );
+                      target={item.is_external ? "_blank" : undefined}
+                    >
+                      <IconComponent className="mr-2 h-4 w-4" />
+                      {item.label}
+                      {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                        <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                          {item.badge}
+                        </span>
+                      )}
+                    </NavLink>
+                  );
+                }
               })}
             </nav>
           )}
@@ -334,45 +388,10 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         </div>
       </header>
 
-      {/* Dynamic Submenu Bar for Desktop */}
-      {activeDesktopSubmenuParent && !isMobile && (
-        <nav
-          ref={submenuRef} // Attach ref to submenu
-          className="fixed top-[68px] left-0 right-0 z-40 flex items-center justify-start h-12 px-4 border-b backdrop-blur-lg bg-background/80 shadow-sm overflow-x-auto whitespace-nowrap scrollbar-hide"
-        >
-          {activeDesktopSubmenuParent.children?.map(subItem => {
-            const IconComponent = subItem.icon_name ? (iconMap[subItem.icon_name] || Info) : Info;
-            const isLinkActive = subItem.route && (location.pathname + location.search).startsWith(subItem.route);
-
-            return (
-              <Button
-                key={subItem.id}
-                variant="ghost"
-                onClick={() => handleNavItemClick(subItem)} // Use the unified handler
-                className={cn(
-                  "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                  isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                )}
-              >
-                <IconComponent className="mr-2 h-4 w-4" />
-                {subItem.label}
-                {subItem.route === '/messages' && subItem.badge !== undefined && subItem.badge > 0 && (
-                  <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                    {subItem.badge}
-                  </span>
-                )}
-                {subItem.is_external && <ExternalLink className="ml-auto h-3 w-3" />}
-              </Button>
-            );
-          })}
-        </nav>
-      )}
-
       <main
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
-          // Adjust padding-top based on whether the submenu is present
-          !isMobile && currentUserProfile && activeDesktopSubmenuParent ? "pt-[116px]" : "pt-20 md:pt-24" // 68px (header) + 48px (submenu) = 116px
+          "pt-20 md:pt-24" // Adjusted padding-top to only account for the main header
         )}
       >
         <AnimatePresence mode="wait">
@@ -406,9 +425,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange}
           isMobile={isMobile}
-          isDesktopImmersiveOpen={false} // No longer used for desktop immersive
-          onCloseDesktopImmersive={() => {}} // No longer used
-          desktopImmersiveParent={null} // No longer used
+          isDesktopImmersiveOpen={false} // Not used for desktop immersive
+          onCloseDesktopImmersive={() => {}} // Not used
+          desktopImmersiveParent={null} // Not used
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
