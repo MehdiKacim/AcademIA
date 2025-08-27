@@ -13,7 +13,7 @@ import { PlusCircle, UserPlus, UserCheck, Check, XCircle, Mail, Search, Edit, Tr
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, checkUsernameExists, checkEmailExists, deleteProfile, updateProfile, getProfileById } from '@/lib/studentData';
-import { Profile } from '@/lib/dataModels'; // Removed Establishment import
+import { Profile, ALL_ROLES } from '@/lib/dataModels'; // Import ALL_ROLES
 import { supabase } from '@/integrations/supabase/client';
 import InputWithStatus from '@/components/InputWithStatus';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -266,6 +266,10 @@ const AdminUserManagementPage = () => {
       }
       
       showSuccess(`Utilisateur ${newUserFirstName} ${newUserLastName} (${finalNewUserRole}) créé avec succès !`);
+      // After creating the admin, ensure their default navigation items are set up
+      // Removed bootstrapDefaultNavItemsForRole call
+      // showSuccess("Navigation administrateur par défaut configurée !");
+
       setNewUserFirstName('');
       setNewUserLastName('');
       setNewUserUsername('');
@@ -562,10 +566,10 @@ const AdminUserManagementPage = () => {
                       return false;
                     })
                     .map(role => (
-                      <SelectItem key={role} value={role}>
-                        {getRoleDisplayName(role)}
-                      </SelectItem>
-                    ))}
+                          <SelectItem key={role} value={role}>
+                            {getRoleDisplayName(role)}
+                          </SelectItem>
+                        ))}
                 </SelectContent>
               </Select>
             </div>
