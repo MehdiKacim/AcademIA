@@ -275,7 +275,11 @@ const AddExistingNavItemDialog = ({
                       availableGenericItemsOptions.map(item => {
                         const ItemIcon = iconMap[item.icon_name || 'Info'] || Info;
                         return (
-                          <Card key={item.id} className="flex items-center justify-between p-3 rounded-android-tile">
+                          <Card 
+                            key={item.id} 
+                            className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20"
+                            onClick={() => handleSelectGenericItem(item)} // Added onClick handler
+                          >
                             <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
                               <ItemIcon className="h-5 w-5 text-primary" />
                               <div>
@@ -284,10 +288,10 @@ const AddExistingNavItemDialog = ({
                                   {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
                                 </p>
                               </div>
-                            </Card>
-                          );
-                        })}
-                      </div>
+                            </div>
+                          </Card>
+                        );
+                      })
                     )}
                   </div>
                 </ScrollArea>
