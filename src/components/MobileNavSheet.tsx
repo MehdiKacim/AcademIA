@@ -272,24 +272,22 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           </motion.div>
         </ScrollArea>
 
-        {/* Floating buttons for Logout and About */}
-        <div className="fixed bottom-4 right-4 z-50 flex flex-row gap-2 items-end"> {/* Changed flex-col to flex-row */}
-          {currentUserProfile ? (
-            <Button variant="destructive" className="shadow-lg bg-destructive/80 hover:bg-destructive rounded-android-tile" onClick={handleLogout}>
-              <LogOut className="h-5 w-5 mr-2" /> Déconnexion
+        {/* Footer with buttons and swipe indicator */}
+        <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
+          <div className="flex justify-end gap-2"> {/* Changed justify-between to justify-end */}
+            {currentUserProfile ? (
+              <Button variant="destructive" className="shadow-lg bg-destructive/80 hover:bg-destructive rounded-android-tile" onClick={handleLogout}>
+                <LogOut className="h-5 w-5 mr-2" /> Déconnexion
+              </Button>
+            ) : (
+              <Button variant="default" className="shadow-lg rounded-android-tile" onClick={onOpenAuthModal}>
+                <User className="h-5 w-5 mr-2" /> Se connecter
+              </Button>
+            )}
+            <Button variant="outline" className="shadow-lg bg-background/80 backdrop-blur-lg rounded-android-tile" onClick={() => navigate('/about')}>
+              <Info className="h-5 w-5 mr-2" /> À propos
             </Button>
-          ) : (
-            <Button variant="default" className="shadow-lg rounded-android-tile" onClick={onOpenAuthModal}>
-              <User className="h-5 w-5 mr-2" /> Se connecter
-            </Button>
-          )}
-          <Button variant="outline" className="shadow-lg bg-background/80 backdrop-blur-lg rounded-android-tile" onClick={() => navigate('/about')}>
-            <Info className="h-5 w-5 mr-2" /> À propos
-          </Button>
-        </div>
-
-        {/* Bottom indicator */}
-        <div className="p-4 border-t border-border flex-shrink-0">
+          </div>
           <div className="flex justify-center pt-2">
             <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
           </div>
