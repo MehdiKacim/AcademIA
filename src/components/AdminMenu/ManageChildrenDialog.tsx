@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, ChevronDown
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, ChevronDown, Code
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
@@ -34,7 +34,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
-import { cn } from '@/lib/utils'; // Corrected: Added 'from' keyword
+import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/card";
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, ChevronDown
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, ChevronDown, Code
 };
 
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
@@ -388,7 +388,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                     <CardTitle className="text-lg">Ajouter un sous-élément existant</CardTitle>
                     <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
                   </CardHeader>
-                  <CardContent className="flex-grow flex flex-col gap-4">
+                  <CardContent className="flex-grow flex-col gap-4">
                     <div>
                       <Label htmlFor="generic-item-selector">Rechercher un élément</Label>
                       <SimpleItemSelector
