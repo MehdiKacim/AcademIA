@@ -61,6 +61,8 @@ const Dashboard = () => {
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
+  const gradientClasses = "text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan";
+
   const renderDashboardContent = () => {
     if (!currentUserProfile) {
       return (
@@ -111,7 +113,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Mes Cours Actuels</CardTitle>
+                <CardTitle className={gradientClasses}>Mes Cours Actuels</CardTitle>
                 <CardDescription>Continuez votre apprentissage.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -128,7 +130,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Cours Terminés</CardTitle>
+                <CardTitle className={gradientClasses}>Cours Terminés</CardTitle>
                 <CardDescription>Votre succès jusqu'à présent.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -145,7 +147,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Progression Globale</CardTitle>
+                <CardTitle className={gradientClasses}>Progression Globale</CardTitle>
                 <CardDescription>Votre avancement général.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -186,7 +188,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Mes Cours Créés</CardTitle>
+                <CardTitle className={gradientClasses}>Mes Cours Créés</CardTitle>
                 <CardDescription>Gérez vos contenus d'apprentissage.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -201,7 +203,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Impact sur les Élèves</CardTitle>
+                <CardTitle className={gradientClasses}>Impact sur les Élèves</CardTitle>
                 <CardDescription>Nombre total d'élèves inscrits à vos cours.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -216,7 +218,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Gestion des Classes</CardTitle>
+                <CardTitle className={gradientClasses}>Gestion des Classes</CardTitle>
                 <CardDescription>Organisez vos élèves en classes.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -255,7 +257,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Élèves Supervisés</CardTitle>
+                <CardTitle className={gradientClasses}>Élèves Supervisés</CardTitle>
                 <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -270,7 +272,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Élèves en Difficulté</CardTitle>
+                <CardTitle className={gradientClasses}>Élèves en Difficulté</CardTitle>
                 <CardDescription>Élèves nécessitant une attention particulière.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -285,7 +287,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Performance des Classes</CardTitle>
+                <CardTitle className={gradientClasses}>Performance des Classes</CardTitle>
                 <CardDescription>Vue d'overview de la progression par classe.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -319,7 +321,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Utilisateurs Administrateurs</CardTitle>
+                <CardTitle className={gradientClasses}>Utilisateurs Administrateurs</CardTitle>
                 <CardDescription>Nombre total d'administrateurs sur la plateforme.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -333,7 +335,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Directeurs</CardTitle>
+                <CardTitle className={gradientClasses}>Directeurs</CardTitle>
                 <CardDescription>Nombre total de directeurs sur la plateforme.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -347,7 +349,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Directeurs Adjoints</CardTitle>
+                <CardTitle className={gradientClasses}>Directeurs Adjoints</CardTitle>
                 <CardDescription>Nombre total de directeurs adjoints sur la plateforme.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -382,7 +384,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Mon Rôle</CardTitle>
+                <CardTitle className={gradientClasses}>Mon Rôle</CardTitle>
                 <CardDescription>Vue d'overview de votre rôle.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -396,7 +398,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Personnel & Élèves</CardTitle>
+                <CardTitle className={gradientClasses}>Personnel & Élèves</CardTitle>
                 <CardDescription>Nombre de professeurs et d'élèves.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -410,7 +412,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants}>
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Structure Pédagogique</CardTitle>
+                <CardTitle className={gradientClasses}>Structure Pédagogique</CardTitle>
                 <CardDescription>Cursus et classes.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -424,7 +426,7 @@ const Dashboard = () => {
           <motion.div variants={cardVariants} className="lg:col-span-3">
             <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
               <CardHeader>
-                <CardTitle>Analytiques</CardTitle>
+                <CardTitle className={gradientClasses}>Analytiques</CardTitle>
                 <CardDescription>Accédez aux statistiques détaillées.</CardDescription>
               </CardHeader>
               <CardContent>
