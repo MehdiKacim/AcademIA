@@ -16,6 +16,7 @@ import { CheckCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion"; // Import motion for animations
 import { cn } from "@/lib/utils"; // Import cn for conditional styling
+import { showError } from "@/utils/toast"; // Import showError
 
 const Dashboard = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -28,17 +29,22 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const loadedCourses = await loadCourses();
-      setCourses(loadedCourses);
-      const loadedProgresses = await getAllStudentCourseProgress();
-      setStudentCourseProgresses(loadedProgresses);
-      const loadedProfiles = await getAllProfiles();
-      setAllProfiles(loadedProfiles);
-      const loadedClasses = await loadClasses();
-      setClasses(loadedClasses);
-      const loadedCurricula = await loadCurricula();
-      setCurricula(loadedCurricula);
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+      try {
+        const loadedCourses = await loadCourses();
+        setCourses(loadedCourses);
+        const loadedProgresses = await getAllStudentCourseProgress();
+        setStudentCourseProgresses(loadedProgresses);
+        const loadedProfiles = await getAllProfiles();
+        setAllProfiles(loadedProfiles);
+        const loadedClasses = await loadClasses();
+        setClasses(loadedClasses);
+        const loadedCurricula = await loadCurricula();
+        setCurricula(loadedCurricula);
+        setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+      } catch (error: any) {
+        console.error("Error fetching data for Dashboard:", error);
+        showError(`Erreur lors du chargement des données du tableau de bord: ${error.message}`);
+      }
     };
     fetchData();
   }, [currentUserProfile]);

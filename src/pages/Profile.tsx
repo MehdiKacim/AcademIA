@@ -37,14 +37,19 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // console.log("[Profile Page] useEffect: Fetching courses and student progress..."); // Removed log
-      const loadedCourses = await loadCourses();
-      setCourses(loadedCourses);
-      // console.log("[Profile Page] Loaded courses:", loadedCourses); // Removed log
-      const loadedProgresses = await getAllStudentCourseProgress();
-      setStudentCourseProgresses(loadedProgresses);
-      // console.log("[Profile Page] Loaded student progresses:", loadedProgresses); // Removed log
-      // Removed setEstablishments
+      try {
+        // console.log("[Profile Page] useEffect: Fetching courses and student progress..."); // Removed log
+        const loadedCourses = await loadCourses();
+        setCourses(loadedCourses);
+        // console.log("[Profile Page] Loaded courses:", loadedCourses); // Removed log
+        const loadedProgresses = await getAllStudentCourseProgress();
+        setStudentCourseProgresses(loadedProgresses);
+        // console.log("[Profile Page] Loaded student progresses:", loadedProgresses); // Removed log
+        // Removed setEstablishments
+      } catch (error: any) {
+        console.error("Error fetching data for Profile page:", error);
+        showError(`Erreur lors du chargement des données du profil: ${error.message}`);
+      }
     };
     fetchData();
   }, [currentUserProfile]); // Re-fetch if user profile changes

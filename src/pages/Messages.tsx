@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, Search, Archive } from "lucide-react";
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
-import { Profile, Message, Curriculum, Class, StudentClassEnrollment } from '@/lib/dataModels'; // Removed Establishment import
+import { Profile, Message, Curriculum, Class, StudentClassEnrollment } => '@/lib/dataModels'; // Removed Establishment import
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, getAllStudentClassEnrollments } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -64,23 +64,29 @@ const Messages = () => {
     }
 
     setIsLoadingProfiles(true);
-    const profiles = await getAllProfiles();
-    setAllProfiles(profiles);
-    
-    const recent = await getRecentConversations(currentUserId);
-    setRecentConversations(recent);
+    try {
+      const profiles = await getAllProfiles();
+      setAllProfiles(profiles);
+      
+      const recent = await getRecentConversations(currentUserId);
+      setRecentConversations(recent);
 
-    const archived = await getArchivedConversations(currentUserId);
-    setArchivedConversations(archived);
+      const archived = await getArchivedConversations(currentUserId);
+      setArchivedConversations(archived);
 
-    const totalUnread = await getUnreadMessageCount(currentUserId);
-    setUnreadMessageCount(totalUnread);
+      const totalUnread = await getUnreadMessageCount(currentUserId);
+      setUnreadMessageCount(totalUnread);
 
-    // Removed loadEstablishments
-    setCurricula(await loadCurricula());
-    setClasses(await loadClasses());
-    setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
-    setIsLoadingProfiles(false);
+      // Removed loadEstablishments
+      setCurricula(await loadCurricula());
+      setClasses(await loadClasses());
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+    } catch (error: any) {
+      console.error("Error fetching all data for Messages:", error);
+      showError(`Erreur lors du chargement des données de messagerie: ${error.message}`);
+    } finally {
+      setIsLoadingProfiles(false);
+    }
   };
 
   useEffect(() => {
@@ -356,7 +362,7 @@ const Messages = () => {
                             .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
                             .map(cls => (
                               <SelectItem key={cls.id} value={cls.id}>
-                                {cls.name} ({getCurriculumName(cls.curriculum_id)})
+                                {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getClassName(cls.school_year_id)}
                               </SelectItem>
                             ))}
                         </SelectContent>

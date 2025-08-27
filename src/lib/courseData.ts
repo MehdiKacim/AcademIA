@@ -345,7 +345,7 @@ export const loadClasses = async (): Promise<Class[]> => {
     .select('*, school_years(name)'); // Join to get school year name
   if (error) {
     // console.error("Error loading classes:", error);
-    return [];
+    throw error; // Throw the error to be caught by the caller
   }
   return data.map((cls: any) => ({
     id: cls.id,
@@ -574,6 +574,7 @@ export const addSchoolYear = async (newSchoolYear: Omit<SchoolYear, 'id' | 'crea
     const { error: deactivateError } = await supabase
       .from('school_years')
       .update({ is_active: false, updated_at: new Date().toISOString() })
+      .neq('id', newSchoolYear.id) // Exclude the current one
       .eq('is_active', true);
     if (deactivateError) {
       // console.error("Error deactivating previous active school year:", deactivateError);

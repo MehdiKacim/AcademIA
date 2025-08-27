@@ -80,13 +80,18 @@ const ProfessorSubjectAssignmentPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setProfessors(await getProfilesByRole('professeur'));
-      setSubjects(await loadSubjects());
-      setClasses(await loadClasses());
-      setSchoolYears(await loadSchoolYears());
-      // Removed loadEstablishments
-      setCurricula(await loadCurricula());
-      setAssignments(await loadProfessorSubjectAssignments());
+      try {
+        setProfessors(await getProfilesByRole('professeur'));
+        setSubjects(await loadSubjects());
+        setClasses(await loadClasses());
+        setSchoolYears(await loadSchoolYears());
+        // Removed loadEstablishments
+        setCurricula(await loadCurricula());
+        setAssignments(await loadProfessorSubjectAssignments());
+      } catch (error: any) {
+        console.error("Error fetching data for ProfessorSubjectAssignmentPage:", error);
+        showError(`Erreur lors du chargement des données d'affectation des professeurs: ${error.message}`);
+      }
     };
     fetchData();
   }, [currentUserProfile]);

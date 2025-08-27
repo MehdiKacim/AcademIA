@@ -36,9 +36,14 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
 
   useEffect(() => {
     const fetchData = async () => {
-      setCurricula(await loadCurricula());
-      // Removed loadEstablishments
-      setSchoolYears(await loadSchoolYears()); // Load school years
+      try {
+        setCurricula(await loadCurricula());
+        // Removed loadEstablishments
+        setSchoolYears(await loadSchoolYears()); // Load school years
+      } catch (error: any) {
+        console.error("Error fetching data for EditClassDialog:", error);
+        showError(`Erreur lors du chargement des données pour la modification de classe: ${error.message}`);
+      }
     };
     fetchData();
   }, []);

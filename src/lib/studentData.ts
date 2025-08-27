@@ -336,7 +336,7 @@ export const getStudentClassEnrollments = async (studentId: string): Promise<Stu
     .eq('student_id', studentId);
   if (error) {
     // console.error("Error fetching student class enrollments:", error);
-    return [];
+    throw error; // Throw the error to be caught by the caller
   }
   return data.map((enrollment: any) => ({
     id: enrollment.id,
@@ -359,7 +359,7 @@ export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrol
     .select('*, school_years(name)'); // Join to get school year name
   if (error) {
     // console.error("Error fetching all student class enrollments:", error);
-    return [];
+    throw error; // Throw the error to be caught by the caller
   }
   return data.map((enrollment: any) => ({
     id: enrollment.id,

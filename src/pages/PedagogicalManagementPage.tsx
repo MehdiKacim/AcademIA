@@ -72,7 +72,7 @@ const PedagogicalManagementPage = () => {
   const debounceTimeoutRefClass = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // States for student list section (within classes)
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [studentSearchQuery, setSearchStudentQuery] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
   // Removed selectedEstablishmentFilter
   const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null); // Changed to schoolYearFilter
@@ -82,12 +82,17 @@ const PedagogicalManagementPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setClasses(await loadClasses());
-      setCurricula(await loadCurricula());
-      // Removed loadEstablishments
-      setAllProfiles(await getAllProfiles());
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
-      setSchoolYears(await loadSchoolYears());
+      try {
+        setClasses(await loadClasses());
+        setCurricula(await loadCurricula());
+        // Removed loadEstablishments
+        setAllProfiles(await getAllProfiles());
+        setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+        setSchoolYears(await loadSchoolYears());
+      } catch (error: any) {
+        console.error("Error fetching data for PedagogicalManagementPage:", error);
+        showError(`Erreur lors du chargement des données de gestion pédagogique: ${error.message}`);
+      }
     };
     fetchData();
   }, [currentUserProfile]);
@@ -492,7 +497,7 @@ const PedagogicalManagementPage = () => {
                 placeholder="Rechercher par nom, email ou @username..."
                 className="pl-10 rounded-android-tile"
                 value={studentSearchQuery}
-                onChange={(e) => setStudentSearchQuery(e.target.value)}
+                onChange={(e) => setSearchStudentQuery(e.target.value)}
               />
             </div>
             {/* Removed Establishment Filter */}
@@ -562,7 +567,7 @@ const PedagogicalManagementPage = () => {
                       )}
                       {currentClass ? (
                         <p className="text-xs text-muted-foreground">
-                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {currentClass.school_year_name}
+                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {getSchoolYearName(currentClass.school_year_id)}
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground italic">Non affecté à une classe pour l'année scolaire en cours</p>

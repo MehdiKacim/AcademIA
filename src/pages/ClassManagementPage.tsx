@@ -68,12 +68,17 @@ const ClassManagementPage = () => {
   // Load initial data
   useEffect(() => {
     const fetchData = async () => {
-      setClasses(await loadClasses());
-      setCurricula(await loadCurricula());
-      // Removed loadEstablishments
-      setAllProfiles(await getAllProfiles());
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Initialize here
-      setSchoolYears(await loadSchoolYears()); // Load school years
+      try {
+        setClasses(await loadClasses());
+        setCurricula(await loadCurricula());
+        // Removed loadEstablishments
+        setAllProfiles(await getAllProfiles());
+        setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Initialize here
+        setSchoolYears(await loadSchoolYears()); // Load school years
+      } catch (error: any) {
+        console.error("Error fetching data for ClassManagementPage:", error);
+        showError(`Erreur lors du chargement des données de gestion des classes: ${error.message}`);
+      }
     };
     fetchData();
   }, [currentUserProfile]);

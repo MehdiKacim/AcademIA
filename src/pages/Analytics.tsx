@@ -17,6 +17,7 @@ import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Course, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels"; // Removed Establishment
+import { showError } from "@/utils/toast"; // Import showError
 
 const Analytics = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -38,12 +39,17 @@ const Analytics = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setCourses(await loadCourses());
-      setAllProfiles(await getAllProfiles());
-      setStudentCourseProgresses(await getAllStudentCourseProgress());
-      setClasses(await loadClasses());
-      setCurricula(await loadCurricula());
-      // Removed setEstablishments
+      try {
+        setCourses(await loadCourses());
+        setAllProfiles(await getAllProfiles());
+        setStudentCourseProgresses(await getAllStudentCourseProgress());
+        setClasses(await loadClasses());
+        setCurricula(await loadCurricula());
+        // Removed setEstablishments
+      } catch (error: any) {
+        console.error("Error fetching data for Analytics:", error);
+        showError(`Erreur lors du chargement des données analytiques: ${error.message}`);
+      }
     };
     fetchData();
   }, [currentUserProfile]);
