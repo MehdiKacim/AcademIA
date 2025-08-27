@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } '@/lib/utils'; // Import cn for conditional styling
+import { cn } from '@/lib/utils'; // Import cn for conditional styling
 import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 // Map icon_name strings to Lucide React components
