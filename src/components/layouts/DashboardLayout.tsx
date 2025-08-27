@@ -42,7 +42,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
-  const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole();
+  const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems, unreadNotificationsCount } = useRole(); // New: Get unreadNotificationsCount
   const { isChatOpen, openChat, closeChat } = useCourseChat(); // Updated useCourseChat
   const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false); // New state for GlobalSearchOverlay
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -76,8 +76,18 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   }, [setIsGlobalSearchOverlayOpen, setIsAboutModalOpen, openChat]); // Add dependencies
 
   const fullNavTreeWithActions = React.useMemo((): NavItem[] => {
-    return injectActionHandlers(navItems);
-  }, [navItems, injectActionHandlers]);
+    // Pass unreadMessages and unreadNotificationsCount to loadNavItems
+    const updatedNavItems = navItems.map(item => {
+      if (item.route === '/messages') {
+        return { ...item, badge: unreadMessages };
+      }
+      if (item.route === '/notifications') {
+        return { ...item, badge: unreadNotificationsCount };
+      }
+      return item;
+    });
+    return injectActionHandlers(updatedNavItems);
+  }, [navItems, injectActionHandlers, unreadMessages, unreadNotificationsCount]); // Add unreadNotificationsCount to dependencies
 
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
@@ -255,9 +265,14 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   >
                     {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
                     {item.label}
-                    {item.route === '/messages' && unreadMessages > 0 && ( // Only for messages
+                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && ( // Only for messages
                       <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {unreadMessages}
+                        {item.badge}
+                      </span>
+                    )}
+                    {item.route === '/notifications' && item.badge !== undefined && item.badge > 0 && ( // New: For notifications
+                      <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                        {item.badge}
                       </span>
                     )}
                   </Button>
@@ -285,9 +300,14 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                   >
                     {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
                     {item.label}
-                    {item.route === '/messages' && unreadMessages > 0 && (
+                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
                       <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {unreadMessages}
+                        {item.badge}
+                      </span>
+                    )}
+                    {item.route === '/notifications' && item.badge !== undefined && item.badge > 0 && ( // New: For notifications
+                      <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                        {item.badge}
                       </span>
                     )}
                   </NavLink>
@@ -465,6 +485,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onOpenAboutModal={() => setIsAboutModalOpen(true)}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           unreadMessagesCount={unreadMessages}
+          unreadNotificationsCount={unreadNotificationsCount} // New: Pass unreadNotificationsCount
         />
       )}
       {currentUserProfile && <AiAPersistentChat />} {/* Render AiAPersistentChat */}

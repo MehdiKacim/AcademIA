@@ -2,6 +2,7 @@ import { resetCourses, resetCurricula, resetClasses, resetSubjects, resetClassSu
     import { resetProfiles, resetStudentCourseProgress, resetStudentClassEnrollments } from "./studentData"; // Import resetStudentClassEnrollments
     import { resetNotes } from "./notes";
     import { resetNavItems, resetRoleNavConfigs } from "./navItems"; // Import resetRoleNavConfigs
+    import { resetNotifications } from "./notificationData"; // New: Import resetNotifications
 
     export const clearAllAppData = async () => {
       // Call specific reset functions for each data type using Supabase
@@ -15,6 +16,7 @@ import { resetCourses, resetCurricula, resetClasses, resetSubjects, resetClassSu
       await resetClasses();
       await resetSubjects(); // New: Reset subjects
       await resetSchoolYears(); // New: Reset school years
+      await resetNotifications(); // New: Reset notifications
       // Removed resetEstablishments();
       await resetProfiles(); // Reset profiles last, as other tables might reference it
       await resetRoleNavConfigs(); // New: Reset role nav configs

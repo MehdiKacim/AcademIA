@@ -166,6 +166,18 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       created_at: string;
     }
 
+    // New interface for persistent notifications
+    export interface Notification {
+      id: string;
+      user_id: string;
+      title: string;
+      message: string;
+      type: 'info' | 'warning' | 'success' | 'alert';
+      is_read: boolean;
+      link?: string; // Optional link for navigation
+      created_at: string;
+    }
+
     // New interfaces for global search (placeholders)
     export interface Event {
       id: string;

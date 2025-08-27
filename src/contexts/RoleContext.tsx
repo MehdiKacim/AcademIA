@@ -6,6 +6,7 @@ import { showError } from '@/utils/toast'; // Import showError for diagnostic me
 import { getProfileById } from '@/lib/studentData'; // Import getProfileById
 import { loadNavItems } from '@/lib/navItems'; // Import loadNavItems
 import { User as SupabaseUser } from '@supabase/supabase-js'; // Import Supabase User type
+import { getUnreadNotificationCount } from '@/lib/notificationData'; // New: Import getUnreadNotificationCount
 
 interface RoleContextType {
   currentUserProfile: Profile | null;
@@ -17,6 +18,7 @@ interface RoleContextType {
   fetchUserProfile: (userId: string, user?: SupabaseUser) => Promise<void>; // Add optional user parameter
   navItems: NavItem[]; // Expose structured nav items
   dynamicRoutes: NavItem[]; // Expose flattened dynamic routes for React Router
+  unreadNotificationsCount: number; // New: Expose unread notifications count
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [navItems, setNavItems] = useState<NavItem[]>([]); // State for structured nav items
   const [dynamicRoutes, setDynamicRoutes] = useState<NavItem[]>([]); // State for flattened dynamic routes
   const [isLoadingUser, setIsLoadingUser] = useState(true); // Initialize as true
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0); // New: State for unread notifications
 
   const fetchUserProfile = useCallback(async (userId: string, userFromSession?: SupabaseUser) => {
     setIsLoadingUser(true);
@@ -50,6 +53,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUserProfile(null);
       setNavItems([]);
       setDynamicRoutes([]);
+      setUnreadNotificationsCount(0); // Clear notifications
       setIsLoadingUser(false);
       return;
     }
@@ -68,9 +72,14 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       // console.log("[RoleContext] fetchUserProfile: Profile fetched:", profile);
       // console.log("[RoleContext] fetchUserProfile: Profile role:", profile.role); // Log the role
       setCurrentUserProfile(profile);
+
+      // Fetch unread notifications count
+      const unreadNotifs = await getUnreadNotificationCount(userId);
+      setUnreadNotificationsCount(unreadNotifs);
+
       // Now load nav items based on the fetched profile's role
       try {
-        const loadedNavItems = await loadNavItems(profile.role, 0); // Removed establishment_id
+        const loadedNavItems = await loadNavItems(profile.role, 0, unreadNotifs); // Pass unreadNotifs
         setNavItems(loadedNavItems);
         // console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
 
@@ -102,6 +111,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUserProfile(null);
       setNavItems([]);
       setDynamicRoutes([]);
+      setUnreadNotificationsCount(0); // Clear notifications
     }
     // console.log("[RoleContext] fetchUserProfile: Setting isLoadingUser to false. Final dynamicRoutes (map):", dynamicRoutes.map(r => r.route)); // Add this line
     setIsLoadingUser(false);
@@ -121,6 +131,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         setCurrentUserProfile(null);
         setNavItems([]); // Clear nav items
         setDynamicRoutes([]); // Clear dynamic routes
+        setUnreadNotificationsCount(0); // Clear notifications
         setIsLoadingUser(false);
       }
     });
@@ -144,6 +155,39 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       }
     };
   }, [fetchUserProfile]); // Dependency on fetchUserProfile
+
+  // New useEffect for real-time notification updates
+  useEffect(() => {
+    let notificationChannel: any;
+    if (currentUserProfile?.id) {
+      notificationChannel = supabase
+        .channel(`notifications_channel_${currentUserProfile.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${currentUserProfile.id}`
+          },
+          async (payload) => {
+            // console.log("[RoleContext] Notification change detected:", payload);
+            const newCount = await getUnreadNotificationCount(currentUserProfile.id);
+            setUnreadNotificationsCount(newCount);
+            // Also re-fetch nav items to update the badge
+            const loadedNavItems = await loadNavItems(currentUserProfile.role, 0, newCount);
+            setNavItems(loadedNavItems);
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (notificationChannel) {
+        supabase.removeChannel(notificationChannel);
+      }
+    };
+  }, [currentUserProfile?.id, currentUserProfile?.role]); // Re-subscribe if user or role changes
 
   const updateUserTheme = async (theme: Profile['theme']) => { // Updated type here
     if (currentUserProfile) {
@@ -170,6 +214,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       setCurrentUserProfile(null); // Clear profile on successful sign out
       setNavItems([]); // Clear nav items
       setDynamicRoutes([]); // Clear dynamic routes
+      setUnreadNotificationsCount(0); // Clear notifications
       // The onAuthStateChange listener will also catch this and update state
     }
     setIsLoadingUser(false); // Reset loading state
@@ -178,7 +223,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const currentRole = currentUserProfile ? currentUserProfile.role : null;
 
   return (
-    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut, fetchUserProfile, navItems, dynamicRoutes }}>
+    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut, fetchUserProfile, navItems, dynamicRoutes, unreadNotificationsCount }}>
       {children}
     </RoleContext.Provider>
   );

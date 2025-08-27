@@ -64,6 +64,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     "/pedagogical-management": PedagogicalManagementPage,
     "/admin-menu-management/generic-items": GenericNavItemsPage,
     "/admin-menu-management/role-configs": RoleNavConfigsPage,
+    "/notifications": NotificationsPage, // New: Add NotificationsPage to the map
   };
 
   useEffect(() => {
@@ -110,12 +111,11 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/messages" element={<Messages />} />
-                  <Route path="/notifications" element={<NotificationsPage />} />
                   {/* Dynamic routes */}
                   {dynamicRoutes.map(item => {
                     const Component = baseRouteComponentMap[item.route!];
                     // Only render if component exists and it's not a static route (already handled)
-                    if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages", "/notifications"].includes(item.route!)) {
+                    if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages"].includes(item.route!)) {
                       // console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
                       return (
                         <Route

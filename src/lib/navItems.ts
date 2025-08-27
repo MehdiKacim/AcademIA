@@ -5,10 +5,11 @@ import { NavItem, Profile, RoleNavItemConfig } from "./dataModels";
  * Récupère tous les éléments de navigation depuis Supabase, triés et structurés hiérarchiquement pour un rôle donné.
  * @param userRole Le rôle de l'utilisateur actuel pour filtrer les éléments autorisés.
  * @param unreadMessagesCount Le nombre de messages non lus pour mettre à jour le badge.
+ * @param unreadNotificationsCount Le nombre de notifications non lues pour mettre à jour le badge.
  * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
  */
-export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
-  // console.log(`[loadNavItems] Called with userRole: ${userRole}, unreadMessagesCount: ${unreadMessagesCount}`);
+export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0, unreadNotificationsCount: number = 0): Promise<NavItem[]> => {
+  // console.log(`[loadNavItems] Called with userRole: ${userRole}, unreadMessagesCount: ${unreadMessagesCount}, unreadNotificationsCount: ${unreadNotificationsCount}`);
 
   if (!userRole) {
     // console.log("[loadNavItems] No user role, returning empty array.");
@@ -118,18 +119,21 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
 
   // console.log(`[loadNavItems] Final structured nav items for ${userRole} (root items count): ${rootItems.length}, items:`, JSON.stringify(rootItems, null, 2));
 
-  // Apply badge for messages
-  const applyMessageBadge = (items: NavItem[]) => {
+  // Apply badge for messages and notifications
+  const applyBadges = (items: NavItem[]) => {
     items.forEach(item => {
       if (item.route === '/messages') {
         item.badge = unreadMessagesCount;
       }
+      if (item.route === '/notifications') { // New: Apply badge for notifications
+        item.badge = unreadNotificationsCount;
+      }
       if (item.children) {
-        applyMessageBadge(item.children);
+        applyBadges(item.children);
       }
     });
   };
-  applyMessageBadge(rootItems);
+  applyBadges(rootItems);
 
   return rootItems;
 };
