@@ -261,11 +261,11 @@ const RoleNavConfigsPage = () => {
   const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
   const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
 
-  const findItemInTree = useCallback((items: NavItem[], targetConfigId: string): NavItem | undefined => {
+  const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
     for (const item of items) {
-      if (item.configId === targetConfigId || item.id === targetConfigId) return item;
+      if (item.configId === targetId || item.id === targetId) return item;
       if (item.children) {
-        const foundChild = findItemInTree(item.children, targetConfigId);
+        const foundChild = findItemInTree(item.children, targetId);
         if (foundChild) return foundChild;
       }
     }
@@ -343,21 +343,23 @@ const RoleNavConfigsPage = () => {
         groupedByParent.get(parentId)?.push(item);
       });
 
-      const sortAndReindex = async (items: NavItem[], parentId: string | null) => {
+      const sortAndReindex = async (items: NavItem[], currentParentId: string | null) => {
         items.sort((a, b) => a.order_index - b.order_index);
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          if (item.order_index !== i || (item.parent_nav_item_id || null) !== parentId) {
-            const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-              id: item.configId!,
-              nav_item_id: item.id,
-              role: role,
-              parent_nav_item_id: parentId,
-              order_index: i,
-            };
-            await updateRoleNavItemConfig(updatedConfig);
-            item.order_index = i;
-            item.parent_nav_item_id = parentId;
+          if (item.configId) { // Only update if it's a configured item
+            if (item.order_index !== i || (item.parent_nav_item_id || null) !== currentParentId) {
+              const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
+                id: item.configId!,
+                nav_item_id: item.id,
+                role: role,
+                parent_nav_item_id: currentParentId,
+                order_index: i,
+              };
+              await updateRoleNavItemConfig(updatedConfig);
+              item.order_index = i;
+              item.parent_nav_item_id = currentParentId;
+            }
           }
         }
       };
@@ -457,79 +459,62 @@ const RoleNavConfigsPage = () => {
     const activeConfigId = active.id as string;
     const overId = over.id as string;
 
-    // Helper to find the list an item belongs to and its index
-    const findListAndIndex = (items: NavItem[], targetConfigId: string, currentParentId: string | null = null): { parentId: string | null, index: number, list: NavItem[] } | null => {
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].configId === targetConfigId) {
-          return { parentId: currentParentId, index: i, list: items };
-        }
-        if (items[i].children && items[i].children.length > 0) {
-          const found = findListAndIndex(items[i].children, targetConfigId, items[i].id);
-          if (found) return found;
+    // Find the active item's current position in the tree
+    const findItemAndParentInTree = (items: NavItem[], targetConfigId: string, currentParentId: string | null = null): { item: NavItem, parentId: string | null, list: NavItem[] } | null => {
+      for (const list of [items, ...(items.flatMap(i => i.children || []))]) { // Check root and all children lists
+        const foundItem = list.find(i => i.configId === targetConfigId);
+        if (foundItem) {
+          return { item: foundItem, parentId: currentParentId, list: list };
         }
       }
       return null;
     };
 
-    const activeItemInfo = findListAndIndex(configuredItemsTree, activeConfigId);
-    if (!activeItemInfo) {
+    const activeItemLocation = findItemAndParentInTree(configuredItemsTree, activeConfigId);
+    if (!activeItemLocation) {
       showError("Élément déplacé introuvable dans la structure actuelle.");
       setActiveDragItem(null);
       setActiveDragConfig(null);
       return;
     }
 
-    const { parentId: oldParentId, index: oldIndex, list: oldList } = activeItemInfo;
-
-    // Determine the new parent and new index
     let newParentId: string | null = null;
     let newIndex: number = 0;
-    let destinationList: NavItem[] = [];
 
     const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId);
-    const overIsRootContainer = overId === 'configured-container'; // Dropped on the root container
-    const overIsChildContainer = overId.startsWith('configured-container-children-of-'); // Dropped on a child container
+    const overIsRootContainer = overId === 'configured-container';
+    const overIsChildContainer = overId.startsWith('configured-container-children-of-');
 
     if (overConfiguredItem) {
       // Dropped on another item.
-      // The new parent is the parent of the item it was dropped on.
-      // The new index is the index of the item it was dropped on.
-      const overItemInfo = findListAndIndex(configuredItemsTree, overId);
-      if (!overItemInfo) {
+      // Determine if it's dropped *into* a category or *next to* an item.
+      const overItemLocation = findItemAndParentInTree(configuredItemsTree, overId);
+      if (!overItemLocation) {
         showError("Cible de dépôt introuvable.");
         setActiveDragItem(null);
         setActiveDragConfig(null);
         return;
       }
-      newParentId = overItemInfo.parentId;
-      newIndex = overItemInfo.index;
-      destinationList = overItemInfo.list;
 
-      // Special handling for dropping on a category item itself
-      if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) {
-        // If dropped directly on an expanded category, add as a child
-        if (expandedItems[overConfiguredItem.id]) {
-          newParentId = overConfiguredItem.id;
-          newIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
-          destinationList = overConfiguredItem.children || [];
+      if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined) && expandedItems[overConfiguredItem.id]) {
+        // Dropped directly into an expanded category
+        newParentId = overConfiguredItem.id;
+        newIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
+      } else {
+        // Dropped next to an item (or on a collapsed category)
+        newParentId = overItemLocation.parentId;
+        newIndex = overItemLocation.list.findIndex(item => item.configId === overId);
+        if (newIndex !== -1) {
+          // Insert *after* the item it was dropped on
+          newIndex++;
         } else {
-          // If dropped on a collapsed category, treat as dropping *after* it in its parent list
-          newParentId = overItemInfo.parentId;
-          newIndex = overItemInfo.index + 1;
-          destinationList = overItemInfo.list;
+          // Fallback if index not found (shouldn't happen if overItemLocation is valid)
+          newIndex = overItemLocation.list.length;
         }
-      } else if (overConfiguredItem.type === 'route') {
-        // Cannot drop on a route item to make it a parent
-        showError("Vous ne pouvez pas déposer un élément sur une route.");
-        setActiveDragItem(null);
-        setActiveDragConfig(null);
-        return;
       }
-
     } else if (overIsRootContainer) {
       newParentId = null;
       newIndex = configuredItemsTree.length; // Add to the end of root items
-      destinationList = configuredItemsTree;
     } else if (overIsChildContainer) {
       newParentId = overId.replace('configured-container-children-of-', '');
       const parentItem = allConfiguredItemsFlat.find(item => item.id === newParentId);
@@ -540,7 +525,6 @@ const RoleNavConfigsPage = () => {
         return;
       }
       newIndex = parentItem.children?.length || 0; // Add to the end of its children
-      destinationList = parentItem.children || [];
     } else {
       showError("Cible de dépôt non valide.");
       setActiveDragItem(null);
@@ -563,46 +547,44 @@ const RoleNavConfigsPage = () => {
       return;
     }
 
-    // Perform the move in the local state
-    let newTree = JSON.parse(JSON.stringify(configuredItemsTree)); // Deep copy to avoid direct state mutation
+    // Deep copy the current tree to perform local modifications
+    let updatedTree = JSON.parse(JSON.stringify(configuredItemsTree));
 
-    // 1. Remove from old position
-    const removeRecursive = (items: NavItem[], targetConfigId: string): NavItem[] => {
-      return items.filter(item => item.configId !== targetConfigId).map(item => {
-        if (item.children) {
-          return { ...item, children: removeRecursive(item.children, targetConfigId) };
-        }
-        return item;
-      });
+    // 1. Remove the active item from its old position in the copied tree
+    const removeNode = (nodes: NavItem[], configIdToRemove: string): NavItem[] => {
+      return nodes.filter(node => node.configId !== configIdToRemove).map(node => ({
+        ...node,
+        children: node.children ? removeNode(node.children, configIdToRemove) : [],
+      }));
     };
-    newTree = removeRecursive(newTree, activeConfigId);
+    updatedTree = removeNode(updatedTree, activeConfigId);
 
-    // 2. Add to new position
-    const addRecursive = (items: NavItem[], newItem: NavItem, targetParentId: string | null, targetIndex: number): NavItem[] => {
+    // 2. Prepare the item to be inserted with its new parent_nav_item_id
+    const itemToInsert = { ...activeDragItem, parent_nav_item_id: newParentId };
+
+    // 3. Insert the item into its new position in the copied tree
+    const insertNode = (nodes: NavItem[], nodeToInsert: NavItem, targetParentId: string | null, targetIndex: number): NavItem[] => {
       if (targetParentId === null) {
-        const updatedItems = [...items];
-        updatedItems.splice(targetIndex, 0, newItem);
-        return updatedItems;
+        // Insert at root level
+        const newRootNodes = [...nodes];
+        newRootNodes.splice(targetIndex, 0, nodeToInsert);
+        return newRootNodes;
+      } else {
+        // Insert into children of a specific parent
+        return nodes.map(node => {
+          if (node.id === targetParentId) {
+            const newChildren = [...(node.children || [])];
+            newChildren.splice(targetIndex, 0, nodeToInsert);
+            return { ...node, children: newChildren };
+          }
+          return { ...node, children: node.children ? insertNode(node.children, nodeToInsert, targetParentId, targetIndex) : [] };
+        });
       }
-      return items.map(item => {
-        if (item.id === targetParentId) { // Match by generic ID for parent
-          const updatedChildren = [...(item.children || [])];
-          updatedChildren.splice(targetIndex, 0, newItem);
-          return { ...item, children: updatedChildren };
-        }
-        if (item.children) {
-          return { ...item, children: addRecursive(item.children, newItem, targetParentId, targetIndex) };
-        }
-        return item;
-      });
     };
+    updatedTree = insertNode(updatedTree, itemToInsert, newParentId, newIndex);
 
-    const movedItem = { ...activeDragItem, parent_nav_item_id: newParentId };
-    newTree = addRecursive(newTree, movedItem, newParentId, newIndex);
-
-    // 3. Re-index all affected lists and prepare for DB update
+    // 4. Re-index all affected items and collect updates for the database
     const itemsToUpdateInDb: RoleNavItemConfig[] = [];
-
     const reindexAndCollect = (items: NavItem[], currentParentId: string | null = null) => {
       items.forEach((item, index) => {
         if (item.configId) {
@@ -619,9 +601,9 @@ const RoleNavConfigsPage = () => {
         }
       });
     };
-    reindexAndCollect(newTree, null);
+    reindexAndCollect(updatedTree, null);
 
-    // Perform batch update to DB
+    // 5. Perform batch update to DB
     try {
       for (const config of itemsToUpdateInDb) {
         await updateRoleNavItemConfig(config);
