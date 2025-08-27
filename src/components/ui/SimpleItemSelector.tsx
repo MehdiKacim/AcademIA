@@ -76,21 +76,21 @@ const SimpleItemSelector = React.forwardRef<HTMLDivElement, SimpleItemSelectorPr
                     )}
                     onClick={() => !disabled && onValueChange(option.id)}
                   >
-                    <CardContent className="p-3 flex items-center gap-3">
-                      {OptionIcon && React.createElement(OptionIcon, { className: cn("h-5 w-5", value === option.id ? "text-primary-foreground" : "text-primary") })}
+                    <CardContent className="p-2 flex items-center gap-2"> {/* Reduced padding and gap */}
+                      {OptionIcon && React.createElement(OptionIcon, { className: cn("h-4 w-4", value === option.id ? "text-primary-foreground" : "text-primary") })} {/* Reduced icon size */}
                       <div className="flex-grow">
-                        <p className={cn("font-medium", value === option.id ? "text-primary-foreground" : "text-foreground")}>
+                        <p className={cn("font-medium text-sm", value === option.id ? "text-primary-foreground" : "text-foreground")}> {/* Reduced font size */}
                           {option.label}
                           {option.typeLabel && <span className={cn("text-xs ml-1", value === option.id ? "text-primary-foreground/80" : "text-muted-foreground")}>({option.typeLabel})</span>}
                         </p>
                         {option.description && (
-                          <p className={cn("text-sm line-clamp-1", value === option.id ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                          <p className={cn("text-xs line-clamp-1", value === option.id ? "text-primary-foreground/70" : "text-muted-foreground")}> {/* Reduced font size */}
                             {option.description}
                           </p>
                         )}
                         {option.isNew && <span className={cn("text-xs italic ml-1", value === option.id ? "text-primary-foreground/60" : "text-muted-foreground")}> (Nouveau)</span>}
                       </div>
-                      {value === option.id && <Check className="h-5 w-5 text-primary-foreground" />}
+                      {value === option.id && <Check className="h-4 w-4 text-primary-foreground" />} {/* Reduced icon size */}
                     </CardContent>
                   </Card>
                 );
