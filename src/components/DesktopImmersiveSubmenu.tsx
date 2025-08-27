@@ -35,9 +35,9 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
           ref={null} // No need for ref here, it's a direct child of main
-          className="fixed top-[68px] left-0 right-0 z-40 hidden md:flex flex-col h-48 p-4 border-b backdrop-blur-lg bg-background/80 shadow-lg overflow-hidden" // Removed py-3, added p-4, removed overflow-y-auto
+          className="fixed top-[68px] left-0 right-0 z-40 hidden md:flex flex-col h-56 px-4 py-3 backdrop-blur-lg bg-background/80 shadow-lg overflow-hidden" // Changed h-48 to h-56, removed border-b, changed p-4 to px-4 py-3
         >
-          <div className="flex items-center justify-between border-b border-border pb-2 mb-4">
+          <div className="flex items-center justify-between border-b border-border pb-3 mb-4"> {/* Changed pb-2 mb-4 to pb-3 */}
             <div className="flex items-center gap-3">
               <parentIconComponent className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">{parentItem.label}</h2>
@@ -59,7 +59,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
                   variant="ghost"
                   onClick={() => onItemClick(item)}
                   className={cn(
-                    "android-tile flex-col items-start justify-start h-auto min-h-[100px] text-left w-full",
+                    "android-tile flex-col items-start justify-start h-auto min-h-[80px] text-left w-full", // Changed min-h-[100px] to min-h-[80px]
                     "rounded-android-tile hover:scale-[1.02] transition-transform",
                     isLinkActive ? "active" : "",
                     "transition-all duration-200 ease-in-out"
