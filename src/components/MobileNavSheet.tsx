@@ -232,7 +232,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" // Adjusted grid columns and gap
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
           >
             {currentItemsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
@@ -247,17 +247,17 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "android-tile flex-col items-start justify-start h-auto min-h-[100px] text-left w-full", // Increased min-height
+                      "android-tile flex-row items-center justify-start h-auto min-h-[60px] text-left w-full", // Changed to flex-row, items-center, min-h-[60px]
                       "rounded-android-tile hover:scale-[1.02] transition-transform", // Added hover effect
                       isLinkActive ? "active" : "",
                       "transition-all duration-200 ease-in-out"
                     )}
                     onClick={() => handleItemClick(item)}
                   >
-                    <div className="icon-container rounded-lg">
+                    <div className="icon-container rounded-lg mr-3"> {/* Added mr-3 for spacing */}
                       <IconComponent className="h-6 w-6" />
                     </div>
-                    <span className="title text-base font-medium line-clamp-2">{item.label}</span>
+                    <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span> {/* Added flex-grow */}
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
                         {item.badge}
