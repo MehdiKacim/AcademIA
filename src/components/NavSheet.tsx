@@ -81,8 +81,9 @@ const NavSheet = ({
   const { openChat } = useCourseChat();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Keep search query for filtering within the mobile menu
 
+  // Determine which state to use for opening/closing based on isMobile
   const currentOpenState = isMobile ? isOpen : isDesktopImmersiveOpen;
   const currentOnClose = isMobile ? onClose : onCloseDesktopImmersive;
 
@@ -101,14 +102,12 @@ const NavSheet = ({
     if (!currentOpenState) {
       setDrawerNavStack([]);
       setSearchQuery('');
-    } else if (isDesktopImmersiveOpen) { // Only check isDesktopImmersiveOpen here
-      if (desktopImmersiveParent) { // Now check desktopImmersiveParent
-        setDrawerNavStack([desktopImmersiveParent]);
-        setSearchQuery('');
-      } else {
-        // If desktop immersive is open but no parent, close it
-        onCloseDesktopImmersive();
-      }
+    } else if (isDesktopImmersiveOpen && desktopImmersiveParent) {
+      setDrawerNavStack([desktopImmersiveParent]);
+      setSearchQuery('');
+    } else if (isDesktopImmersiveOpen && !desktopImmersiveParent) {
+      // If desktop immersive is open but no parent, close it
+      onCloseDesktopImmersive();
     }
   }, [currentOpenState, isDesktopImmersiveOpen, desktopImmersiveParent, onCloseDesktopImmersive]);
 
@@ -214,7 +213,7 @@ const NavSheet = ({
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnClose]); // Added currentOnClose to dependencies
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnClose]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -285,14 +284,7 @@ const NavSheet = ({
               {currentDrawerTitle}
             </h2>
           )}
-          <div className="p-4 border-b border-border">
-            <Input
-              placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-            />
-          </div>
+          {/* Removed search input from mobile NavSheet */}
           <motion.div
             key={drawerNavStack.length}
             initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}

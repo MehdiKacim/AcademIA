@@ -25,10 +25,11 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem, Profile } from "@/lib/dataModels";
-import NavSheet from "@/components/NavSheet"; // Updated import name
+import NavSheet from "@/components/NavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
+import DesktopSubMenuOverlay from "@/components/DesktopSubMenuOverlay"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -47,8 +48,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false);
-  const [isDesktopImmersiveNavOpen, setIsDesktopImmersiveNavOpen] = useState(false); // New state
-  const [desktopImmersiveNavParent, setDesktopImmersiveNavParent] = useState<NavItem | null>(null); // New state
+  const [isDesktopSubMenuOpen, setIsDesktopSubMenuOpen] = useState(false); // New state for desktop sub-menu overlay
+  const [desktopSubMenuParent, setDesktopSubMenuParent] = useState<NavItem | null>(null); // New state for parent item
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -177,10 +178,24 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     }
   }, [isMobile, currentUserProfile]);
 
-  const handleOpenDesktopImmersiveNav = useCallback((item: NavItem) => {
-    setDesktopImmersiveNavParent(item);
-    setIsDesktopImmersiveNavOpen(true);
-  }, []);
+  const handleDesktopNavItemClick = useCallback((item: NavItem) => {
+    if (item.children && item.children.length > 0) {
+      setDesktopSubMenuParent(item);
+      setIsDesktopSubMenuOpen(true);
+    } else if (item.route) {
+      if (item.is_external) {
+        window.open(item.route, '_blank');
+      } else if (item.route.startsWith('#')) {
+        navigate(`/${item.route}`);
+      } else {
+        navigate(item.route);
+      }
+      setIsDesktopSubMenuOpen(false); // Close sub-menu if open
+    } else if (item.onClick) {
+      item.onClick();
+      setIsDesktopSubMenuOpen(false); // Close sub-menu if open
+    }
+  }, [navigate]);
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -195,36 +210,38 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
-          <div className="flex-grow flex justify-center"> {/* This div will center the buttons */}
+          <nav className="flex-grow flex justify-center"> {/* This div will center the buttons */}
             {headerNavItems.filter(item => !item.parent_nav_item_id).map(item => { // Filter for top-level items
                 const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
-                const isActionItem = item.type === 'category_or_action' && !item.children;
+                const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
 
-                if (isCategoryWithChildren) {
+                const commonButtonClasses = cn(
+                  "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                  isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
+                );
+
+                if (item.children && item.children.length > 0) {
                     return (
                         <Button
                             key={item.id}
                             variant="ghost"
-                            onClick={() => handleOpenDesktopImmersiveNav(item)} // New handler
-                            className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => handleDesktopNavItemClick(item)}
+                            className={commonButtonClasses}
                         >
                             <IconComponent className="mr-2 h-4 w-4" />
                             {item.label}
                         </Button>
                     );
-                } else if (isActionItem) {
+                } else if (item.onClick) {
                     return (
                         <Button
                             key={item.id}
                             variant="ghost"
                             onClick={(e) => {
-                                if (item.onClick) {
-                                    e.preventDefault();
-                                    item.onClick();
-                                }
+                                e.preventDefault(); // Prevent default form submission if button is inside a form
+                                handleDesktopNavItemClick(item);
                             }}
-                            className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                            className={commonButtonClasses}
                         >
                             <IconComponent className="mr-2 h-4 w-4" />
                             {item.label}
@@ -236,16 +253,13 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                         </Button>
                     );
                 } else { // item.type === 'route'
-                    const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                     return (
                         <NavLink
                             key={item.id}
                             to={item.route!}
-                            className={cn(
-                                "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
-                                isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                            )}
+                            className={commonButtonClasses}
                             target={item.is_external ? "_blank" : undefined}
+                            onClick={() => setIsDesktopSubMenuOpen(false)} // Close sub-menu if open
                         >
                             <IconComponent className="mr-2 h-4 w-4" />
                             {item.label}
@@ -258,7 +272,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                     );
                 }
             })}
-          </div>
+          </nav>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           {currentUserProfile && (
@@ -362,13 +376,22 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange}
           isMobile={isMobile} // Pass isMobile prop
-          isDesktopImmersiveOpen={isDesktopImmersiveNavOpen} // New prop
-          onCloseDesktopImmersive={() => setIsDesktopImmersiveNavOpen(false)} // New prop
-          desktopImmersiveParent={desktopImmersiveNavParent} // New prop
+          isDesktopImmersiveOpen={isDesktopSubMenuOpen} // Use new state
+          onCloseDesktopImmersive={() => setIsDesktopSubMenuOpen(false)} // Use new state
+          desktopImmersiveParent={desktopSubMenuParent} // Use new state
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />}
+      {currentUserProfile && (
+        <DesktopSubMenuOverlay
+          isOpen={isDesktopSubMenuOpen}
+          onClose={() => setIsDesktopSubMenuOpen(false)}
+          parentItem={desktopSubMenuParent}
+          iconMap={iconMap}
+          unreadMessagesCount={unreadMessages}
+        />
+      )}
     </div>
   );
 };
