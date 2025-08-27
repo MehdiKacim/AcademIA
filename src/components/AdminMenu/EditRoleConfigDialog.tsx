@@ -234,7 +234,7 @@ const EditRoleConfigDialog = ({
                   placeholder="Sélectionner un parent..."
                   emptyMessage="Aucun parent disponible."
                   iconMap={iconMap}
-                  disabled={false} // Explicitly enable
+                  // disabled={false} // Supprimé temporairement
                 />
               </div>
             ) : (

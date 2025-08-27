@@ -276,6 +276,7 @@ const AddExistingNavItemDialog = ({
                   placeholder="Rechercher un élément..."
                   emptyMessage="Aucun élément disponible à ajouter."
                   iconMap={iconMap}
+                  // disabled={false} // Supprimé temporairement
                 />
               </div>
             ) : (
@@ -312,6 +313,7 @@ const AddExistingNavItemDialog = ({
                     placeholder="Sélectionner un parent..."
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
+                    // disabled={false} // Supprimé temporairement
                   />
                   {selectedParentForNewItem === 'none' && (
                     <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">

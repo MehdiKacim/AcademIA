@@ -34,7 +34,7 @@ interface SimpleItemSelectorProps {
   emptyMessage: string;
   iconMap: { [key: string]: React.ElementType }; // Pass iconMap as prop
   popoverContentClassName?: string;
-  disabled?: boolean; // Nouvelle prop pour contrôler l'état désactivé
+  // disabled?: boolean; // Supprimé temporairement
 }
 
 const SimpleItemSelector = ({
@@ -48,7 +48,7 @@ const SimpleItemSelector = ({
   emptyMessage,
   iconMap,
   popoverContentClassName,
-  disabled = false, // Valeur par défaut à false
+  // disabled = false, // Supprimé temporairement
 }: SimpleItemSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -106,7 +106,7 @@ const SimpleItemSelector = ({
           aria-expanded={isOpen}
           className="w-full justify-between rounded-android-tile"
           id={id}
-          disabled={disabled} // Transmettre la prop disabled au bouton
+          // disabled={disabled} // Supprimé temporairement
         >
           {selectedOption ? (
             <div className="flex items-center gap-2">
