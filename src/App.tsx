@@ -95,7 +95,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     // Cache la superposition après la durée de l'animation
     setTimeout(() => {
       setIsThemeTransitionActive(false);
-    }, 1500); // Durée ajustée pour correspondre à l'animation de la superposition
+    }, 2500); // Durée ajustée à 2.5 secondes
   }, [setTheme]);
 
   if (isLoadingUser) {
