@@ -311,8 +311,8 @@ const AdminUserManagementPage = () => {
         
         // The profile and enrollments should be cascade deleted by DB foreign keys
         // Re-fetch all data to update the UI
-        setAllProfiles(await getAllProfiles());
-        setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+        setAllUsers(await getAllProfiles()); // Corrected to setAllUsers
+        // setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // This state is not used in this component, but if it were, it would need to be refreshed.
         showSuccess("Élève et compte supprimés !");
       } catch (error: any) {
         console.error("Error deleting student:", error);
@@ -330,24 +330,29 @@ const AdminUserManagementPage = () => {
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
-  const studentsToDisplay = React.useMemo(() => {
-    let students = allProfiles.filter(p => p.role === 'student');
+  const filteredUsersToDisplay = React.useMemo(() => { // Renamed from studentsToDisplay to filteredUsersToDisplay
+    let users = allUsers;
+
+    // Filter by role
+    if (selectedRoleFilter !== 'all') {
+      users = users.filter(p => p.role === selectedRoleFilter);
+    }
 
     // Removed filtering by current user's establishment
     
     // Removed establishment filter
     
-    if (studentSearchQuery.trim()) {
-      const lowerCaseQuery = studentSearchQuery.toLowerCase();
-      students = students.filter(s =>
+    if (userListSearchQuery.trim()) { // Changed from studentSearchQuery to userListSearchQuery
+      const lowerCaseQuery = userListSearchQuery.toLowerCase();
+      users = users.filter(s =>
         s.first_name?.toLowerCase().includes(lowerCaseQuery) ||
         s.last_name?.toLowerCase().includes(lowerCaseQuery) ||
         s.username?.toLowerCase().includes(lowerCaseQuery.replace('@', '')) ||
         s.email?.toLowerCase().includes(lowerCaseQuery)
       );
     }
-    return students;
-  }, [allProfiles, currentUserProfile, currentRole, studentSearchQuery]); // Removed selectedEstablishmentFilter
+    return users;
+  }, [allUsers, currentUserProfile, currentRole, userListSearchQuery, selectedRoleFilter]); // Removed selectedEstablishmentFilter
 
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
@@ -383,128 +388,152 @@ const AdminUserManagementPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-        Gestion des Élèves
+        Gestion des Utilisateurs
       </h1>
       <p className="text-lg text-muted-foreground mb-8">
-        Gérez les profils des élèves.
+        Gérez les profils des utilisateurs de la plateforme.
       </p>
 
-      {/* Section: Créer un nouvel élève */}
-      <Collapsible open={isNewStudentFormOpen} onOpenChange={setIsNewStudentFormOpen}>
-        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
-          <CardHeader>
+      {/* Section: Créer un nouvel utilisateur */}
+      <Card className="rounded-android-tile"> {/* Outer Card for styling the whole collapsible section */}
+        <Collapsible open={isNewUserFormOpen} onOpenChange={setIsNewUserFormOpen}>
+          <CardHeader> {/* This CardHeader is part of the outer Card */}
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
                 <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-6 w-6 text-primary" /> Créer un nouvel élève
+                  <UserPlus className="h-6 w-6 text-primary" /> Créer un nouvel utilisateur
                 </CardTitle>
-                {isNewStudentFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                {isNewUserFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </Button>
             </CollapsibleTrigger>
+            <CardDescription>Créez un nouveau compte utilisateur avec un rôle spécifique.</CardDescription>
           </CardHeader>
-          <CollapsibleContent className="space-y-4 p-4"> {/* Apply padding directly to CollapsibleContent */}
+          <CollapsibleContent className="space-y-4 p-4"> {/* This is the collapsible part */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   placeholder="Prénom"
-                  value={newStudentFirstName}
-                  onChange={(e) => setNewStudentFirstName(e.target.value)}
+                  value={newUserFirstName}
+                  onChange={(e) => setNewUserFirstName(e.target.value)}
                 />
                 <Input
                   placeholder="Nom"
-                  value={newStudentLastName}
-                  onChange={(e) => setNewStudentLastName(e.target.value)}
+                  value={newUserLastName}
+                  onChange={(e) => setNewUserLastName(e.target.value)}
                 />
                 <InputWithStatus
                   placeholder="Nom d'utilisateur"
-                  value={newStudentUsername}
-                  onChange={(e) => handleNewStudentUsernameChange(e.target.value)}
+                  value={newUserUsername}
+                  onChange={(e) => handleNewUserUsernameChange(e.target.value)}
                   status={usernameAvailabilityStatus}
                   errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
                 />
                 <InputWithStatus
                   type="email"
                   placeholder="Email"
-                  value={newStudentEmail}
-                  onChange={(e) => handleNewStudentEmailChange(e.target.value)}
+                  value={newUserEmail}
+                  onChange={(e) => handleNewUserEmailChange(e.target.value)}
                   status={emailAvailabilityStatus}
                   errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
                 />
                 <Input
                   type="password"
                   placeholder="Mot de passe"
-                  value={newStudentPassword}
-                  onChange={(e) => setNewStudentPassword(e.target.value)}
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
                 />
-                {/* Removed Establishment selection */}
                 <div>
-                  <Label htmlFor="new-student-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                          !newStudentEnrollmentStartDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {newStudentEnrollmentStartDate ? format(newStudentEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                      <Calendar
-                        mode="single"
-                        selected={newStudentEnrollmentStartDate}
-                        onSelect={setNewStudentEnrollmentStartDate}
-                        initialFocus
-                        locale={fr}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Label htmlFor="new-user-role">Rôle</Label>
+                  <Select value={newUserRole} onValueChange={(value: Profile['role']) => setNewUserRole(value)}>
+                    <SelectTrigger id="new-user-role" className="rounded-android-tile">
+                      <SelectValue placeholder="Sélectionner un rôle" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                      {ALL_ROLES
+                        .filter(role => {
+                          if (currentRole === 'administrator') return true; // Admin can create any role
+                          if (currentRole === 'director' || currentRole === 'deputy_director') return ['professeur', 'tutor', 'student'].includes(role);
+                          if (currentRole === 'professeur' || currentRole === 'tutor') return role === 'student';
+                          return false;
+                        })
+                        .map(role => (
+                          <SelectItem key={role} value={role}>
+                            {getRoleDisplayName(role)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label htmlFor="new-student-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                          !newStudentEnrollmentEndDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {newStudentEnrollmentEndDate ? format(newStudentEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                        <Calendar
-                          mode="single"
-                          selected={newStudentEnrollmentEndDate}
-                          onSelect={setNewStudentEnrollmentEndDate}
-                          initialFocus
-                          locale={fr}
-                        />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                {newUserRole === 'student' && (
+                  <>
+                    <div>
+                      <Label htmlFor="new-user-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal rounded-android-tile",
+                              !newUserEnrollmentStartDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {newUserEnrollmentStartDate ? format(newUserEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                          <Calendar
+                            mode="single"
+                            selected={newUserEnrollmentStartDate}
+                            onSelect={setNewUserEnrollmentStartDate}
+                            initialFocus
+                            locale={fr}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label htmlFor="new-user-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal rounded-android-tile",
+                              !newUserEnrollmentEndDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {newUserEnrollmentEndDate ? format(newUserEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                            <Calendar
+                              mode="single"
+                              selected={newUserEnrollmentEndDate}
+                              onSelect={setNewUserEnrollmentEndDate}
+                              initialFocus
+                              locale={fr}
+                            />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
+                )}
               </div>
-              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate}>
-                {isCreatingStudent ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'élève
+              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole === 'student' && (!newUserEnrollmentStartDate || !newUserEnrollmentEndDate))}>
+                {isCreatingUser ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
               </Button>
           </CollapsibleContent>
         </Collapsible>
       </Card>
 
-      {/* Removed Section: Affecter un élève à un établissement (Admin only) */}
-
-      {/* Section: Liste de tous les élèves */}
-      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      {/* Section: Liste de tous les utilisateurs */}
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" /> Mes Élèves
+            <Users className="h-6 w-6 text-primary" /> Liste des Utilisateurs
           </CardTitle>
-          <CardDescription>Visualisez et gérez les élèves.</CardDescription>
+          <CardDescription>Visualisez et gérez les utilisateurs existants.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -513,56 +542,76 @@ const AdminUserManagementPage = () => {
               <Input
                 placeholder="Rechercher par nom, email ou @username..."
                 className="pl-10 rounded-android-tile"
-                value={studentSearchQuery}
-                onChange={(e) => setSearchStudentQuery(e.target.value)}
+                value={userListSearchQuery}
+                onChange={(e) => setUserListSearchQuery(e.target.value)}
               />
             </div>
-            {/* Removed Establishment Filter */}
+            <div className="flex-shrink-0 sm:w-1/3">
+              <Label htmlFor="role-filter">Filtrer par Rôle</Label>
+              <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
+                <SelectTrigger id="role-filter" className="rounded-android-tile">
+                  <SelectValue placeholder="Tous les rôles" />
+                </SelectTrigger>
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectItem value="all">Tous les rôles</SelectItem>
+                  {ALL_ROLES
+                    .filter(role => {
+                      if (currentRole === 'administrator') return true;
+                      if (currentRole === 'director' || currentRole === 'deputy_director') return ['professeur', 'tutor', 'student'].includes(role);
+                      if (currentRole === 'professeur' || currentRole === 'tutor') return role === 'student';
+                      return false;
+                    })
+                    .map(role => (
+                      <SelectItem key={role} value={role}>
+                        {getRoleDisplayName(role)}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
-            {studentsToDisplay.length === 0 ? (
+            {filteredUsersToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                {studentSearchQuery.trim() === ''
-                  ? <span>Aucun élève à afficher. Utilisez la recherche ou les filtres.</span>
-                  : <span>Aucun élève trouvé pour votre recherche ou vos filtres.</span>}
+                {userListSearchQuery.trim() === '' && selectedRoleFilter === 'all'
+                  ? <span>Aucun utilisateur à afficher. Utilisez la recherche ou les filtres.</span>
+                  : <span>Aucun utilisateur trouvé pour votre recherche ou vos filtres.</span>}
               </p>
             ) : (
-              studentsToDisplay.map((profile) => {
-                const currentEnrollments = allStudentClassEnrollments.filter(e => e.student_id === profile.id);
-                const currentClassEnrollment = currentEnrollments.find(e => {
-                  const cls = classes.find(c => c.id === e.class_id);
-                  const currentYear = new Date().getFullYear();
-                  const nextYear = currentYear + 1;
-                  const currentSchoolYearName = `${currentYear}-${nextYear}`;
-                  return cls?.school_year_name === currentSchoolYearName; // Check for current school year
-                });
-                const currentClass = currentClassEnrollment ? classes.find(c => c.id === currentClassEnrollment.class_id) : undefined;
-
+              filteredUsersToDisplay.map((profile) => {
+                const RoleIcon = iconMap[profile.role] || User;
                 return (
-                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile">
                     <div className="flex-grow">
-                      <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
+                      <p className="font-medium flex items-center gap-2">
+                        <RoleIcon className="h-4 w-4 text-primary" /> {profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span>
+                      </p>
                       <p className="text-sm text-muted-foreground">{profile.email}</p>
-                      {/* Removed establishment_id display */}
+                      <p className="text-xs text-muted-foreground">Rôle: {getRoleDisplayName(profile.role)}</p>
                       {profile.enrollment_start_date && profile.enrollment_end_date && (
                         <p className="text-xs text-muted-foreground">
                           <span>Du {format(parseISO(profile.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(profile.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
                         </p>
                       )}
-                      {currentClass ? (
-                        <p className="text-xs text-muted-foreground">
-                          Classe actuelle: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {currentClass.school_year_name}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic">Non affecté à une classe pour l'année scolaire en cours</p>
-                      )}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                      {/* Removed Unassign from Establishment button */}
-                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
+                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToUser(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </Button>
-                      {currentRole === 'administrator' && ( // Only administrator can delete
+                      <Button variant="outline" size="sm" onClick={() => {
+                        setUserToEdit(profile);
+                        setEditFirstName(profile.first_name || '');
+                        setEditLastName(profile.last_name || '');
+                        setEditUsername(profile.username);
+                        setEditEmail(profile.email || '');
+                        setEditRole(profile.role);
+                        setEditEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
+                        setEditEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
+                        setIsEditDialogOpen(true);
+                      }}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      {currentRole === 'administrator' && (
                         <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -575,8 +624,238 @@ const AdminUserManagementPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      {userToEdit && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+            <div className="flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Modifier l'utilisateur</DialogTitle>
+                <DialogDescription>
+                  Mettez à jour les informations de l'utilisateur.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4 flex-grow">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-first-name" className="text-right">
+                    Prénom
+                  </Label>
+                  <Input
+                    id="edit-first-name"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-last-name" className="text-right">
+                    Nom
+                  </Label>
+                  <Input
+                    id="edit-last-name"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-username" className="text-right">
+                    Nom d'utilisateur
+                  </Label>
+                  <InputWithStatus
+                    id="edit-username"
+                    value={editUsername}
+                    onChange={(e) => {
+                      setEditUsername(e.target.value);
+                      if (debounceTimeoutRefEditUsername.current) clearTimeout(debounceTimeoutRefEditUsername.current);
+                      if (e.target.value.trim() === '') {
+                        setEditUsernameAvailabilityStatus('idle');
+                        return;
+                      }
+                      debounceTimeoutRefEditUsername.current = setTimeout(() => {
+                        validateUsername(e.target.value, userToEdit.id).then(isValid => setEditUsernameAvailabilityStatus(isValid ? 'available' : 'taken'));
+                      }, 500);
+                    }}
+                    status={editUsernameAvailabilityStatus}
+                    errorMessage={editUsernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-email" className="text-right">
+                    Email
+                  </Label>
+                  <InputWithStatus
+                    id="edit-email"
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => {
+                      setEditEmail(e.target.value);
+                      if (debounceTimeoutRefEditEmail.current) clearTimeout(debounceTimeoutRefEditEmail.current);
+                      if (e.target.value.trim() === '') {
+                        setEditEmailAvailabilityStatus('idle');
+                        return;
+                      }
+                      debounceTimeoutRefEditEmail.current = setTimeout(() => {
+                        validateEmail(e.target.value, userToEdit.id).then(isValid => setEditEmailAvailabilityStatus(isValid ? 'available' : 'taken'));
+                      }, 500);
+                    }}
+                    status={editEmailAvailabilityStatus}
+                    errorMessage={editEmailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-role" className="text-right">
+                    Rôle
+                  </Label>
+                  <Select value={editRole} onValueChange={(value: Profile['role']) => setEditRole(value)} disabled={currentRole !== 'administrator'}>
+                    <SelectTrigger id="edit-role" className="col-span-3 rounded-android-tile">
+                      <SelectValue placeholder="Sélectionner un rôle" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                      {ALL_ROLES
+                        .filter(role => {
+                          if (currentRole === 'administrator') return true;
+                          if (currentRole === 'director' || currentRole === 'deputy_director') return ['professeur', 'tutor', 'student'].includes(role);
+                          if (currentRole === 'professeur' || currentRole === 'tutor') return role === 'student';
+                          return false;
+                        })
+                        .map(role => (
+                          <SelectItem key={role} value={role}>
+                            {getRoleDisplayName(role)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editRole === 'student' && (
+                  <>
+                    <div>
+                      <Label htmlFor="edit-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal rounded-android-tile",
+                              !editEnrollmentStartDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {editEnrollmentStartDate ? format(editEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                          <Calendar
+                            mode="single"
+                            selected={editEnrollmentStartDate}
+                            onSelect={setEditEnrollmentStartDate}
+                            initialFocus
+                            locale={fr}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal rounded-android-tile",
+                              !editEnrollmentEndDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {editEnrollmentEndDate ? format(editEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                          <Calendar
+                            mode="single"
+                            selected={editEnrollmentEndDate}
+                            onSelect={setEditEnrollmentEndDate}
+                            initialFocus
+                            locale={fr}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
+                )}
+              </div>
+              <DialogFooter>
+                <Button onClick={async () => {
+                  if (!userToEdit) return;
+                  if (!editFirstName.trim() || !editLastName.trim() || !editUsername.trim() || !editEmail.trim()) {
+                    showError("Tous les champs sont requis.");
+                    return;
+                  }
+                  if (editUsernameAvailabilityStatus === 'taken' || editEmailAvailabilityStatus === 'taken') {
+                    showError("Le nom d'utilisateur ou l'email est déjà pris.");
+                    return;
+                  }
+                  if (editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking') {
+                    showError("Veuillez attendre la vérification de la disponibilité du nom d'utilisateur et de l'email.");
+                    return;
+                  }
+                  if (editRole === 'student' && (!editEnrollmentStartDate || !editEnrollmentEndDate)) {
+                    showError("Les dates d'inscription sont requises pour les élèves.");
+                    return;
+                  }
+                  if (editEnrollmentStartDate && editEnrollmentEndDate && editEnrollmentStartDate >= editEnrollmentEndDate) {
+                    showError("La date de fin d'inscription doit être postérieure à la date de début.");
+                    return;
+                  }
+
+                  setIsSavingEdit(true);
+                  try {
+                    const updatedProfileData: Partial<Profile> = {
+                      id: userToEdit.id,
+                      first_name: editFirstName.trim(),
+                      last_name: editLastName.trim(),
+                      username: editUsername.trim(),
+                      email: editEmail.trim(),
+                      role: editRole,
+                      enrollment_start_date: editEnrollmentStartDate ? editEnrollmentStartDate.toISOString().split('T')[0] : undefined,
+                      enrollment_end_date: editEnrollmentEndDate ? editEnrollmentEndDate.toISOString().split('T')[0] : undefined,
+                    };
+                    await updateProfile(updatedProfileData);
+
+                    // Update auth.users email if changed
+                    const { data: { user: authUser } } = await supabase.auth.getUser();
+                    if (authUser && editEmail.trim() !== authUser.email) {
+                      const { error: emailUpdateError } = await supabase.auth.updateUser({ email: editEmail.trim() });
+                      if (emailUpdateError) {
+                        showError(`Erreur lors de la mise à jour de l'email d'authentification: ${emailUpdateError.message}`);
+                        return;
+                      }
+                    }
+
+                    showSuccess("Utilisateur mis à jour avec succès !");
+                    await fetchUserProfile(userToEdit.id); // Refresh current user's profile if it was the one edited
+                    setAllUsers(await getAllProfiles()); // Refresh all users
+                    setIsEditDialogOpen(false);
+                    setUserToEdit(null);
+                  } catch (error: any) {
+                    console.error("Error saving user edit:", error);
+                    showError(`Erreur lors de la sauvegarde des modifications: ${error.message}`);
+                  } finally {
+                    setIsSavingEdit(false);
+                  }
+                }} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || (editRole === 'student' && (!editEnrollmentStartDate || !editEnrollmentEndDate))}>
+                  {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
 
-export default StudentManagementPage;
+export default AdminUserManagementPage;
