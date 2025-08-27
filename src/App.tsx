@@ -36,6 +36,8 @@ import GenericNavItemsPage from "./pages/GenericNavItemsPage";
 import RoleNavConfigsPage from "./pages/RoleNavConfigsPage";
 import ThemeTransitionOverlay from "./components/ThemeTransitionOverlay"; // Import the new component
 import { useTheme } from "next-themes"; // Import useTheme from next-themes
+import AuthPage from './pages/AuthPage'; // New: Import AuthPage
+import ResetPassword from './pages/ResetPassword'; // New: Import ResetPassword
 
 const queryClient = new QueryClient();
 
@@ -126,7 +128,10 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
           />
           <BrowserRouter>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />} /> 
+              <Route path="/auth" element={<AuthPage />} /> {/* New AuthPage route */}
+              <Route path="/reset-password" element={<ResetPassword />} /> {/* New ResetPassword route */}
 
               <Route element={<ProtectedRoute />}>
                 <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />}> {/* Pass the handler */}

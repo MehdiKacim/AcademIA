@@ -4,13 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 interface LoginFormProps {
   onSuccess: () => void;
-  // onSwitchToSignup: () => void; // Removed prop
+  onSwitchToSignup: () => void; // Re-added prop for consistency with AuthPage
+  onForgotPasswordClick: () => void; // New prop
 }
 
-export const LoginForm = ({ onSuccess }: LoginFormProps) => { // Removed onSwitchToSignup from props
+export const LoginForm = ({ onSuccess, onSwitchToSignup, onForgotPasswordClick }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -58,9 +60,8 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => { // Removed onSwitc
         />
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Connexion en cours..." : "Se connecter"}
+        {isLoading ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Se connecter"}
       </Button>
-      {/* Removed signup link */}
     </form>
   );
 };

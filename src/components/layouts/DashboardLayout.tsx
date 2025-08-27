@@ -47,7 +47,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const { isChatOpen, openChat, closeChat } = useCourseChat(); // Updated useCourseChat
   const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false); // New state for GlobalSearchOverlay
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // Removed isAuthModalOpen state
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false);
   const navigate = useNavigate();
@@ -102,9 +102,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     navigate("/");
   };
 
-  const handleAuthSuccess = () => {
-    setIsAuthModalOpen(false);
-  };
+  // Removed handleAuthSuccess
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const isModifierPressed = event.ctrlKey || event.metaKey;
@@ -359,7 +357,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             </DropdownMenu>
           )}
           {!currentUserProfile && (
-            <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
+            <Button variant="outline" onClick={() => navigate('/auth')}> {/* Redirect to AuthPage */}
               <LogIn className="h-5 w-5 mr-2" /> Connexion
             </Button>
           )}
@@ -472,14 +470,14 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)} // Updated prop
           onOpenAiAChat={() => openChat()} // New prop
           onOpenAboutModal={() => setIsAboutModalOpen(true)}
-          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onOpenAuthModal={() => navigate('/auth')} // Redirect to AuthPage
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange} // Pass the handler here
         />
       )}
       {currentUserProfile && <AiAPersistentChat />} {/* Render AiAPersistentChat */}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />} {/* Render GlobalSearchOverlay */}
-      {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
+      {/* Removed AuthModal */}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
   );

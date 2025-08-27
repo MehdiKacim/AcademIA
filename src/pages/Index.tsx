@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
-import AuthModal from "@/components/AuthModal";
+// Removed AuthModal import
 import AboutModal from "@/components/AboutModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +57,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
   const { openChat } = useCourseChat(); // Get openChat from context
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // Removed isAuthModalOpen state
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   // Removed isMoreDrawerOpen state
   const logoTapCountRef = useRef(0);
@@ -140,9 +140,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     }
   }, [location.hash, location.pathname]);
 
-  const handleAuthSuccess = () => {
-    setIsAuthModalOpen(false);
-  };
+  // Removed handleAuthSuccess
 
   const methodology = [
     {
@@ -241,7 +239,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
           </Button>
-          <Button variant="outline" onClick={() => setIsAuthModalOpen(true)}>
+          <Button variant="outline" onClick={() => navigate('/auth')}> {/* Redirect to AuthPage */}
             <LogIn className="h-5 w-5 mr-2" /> Connexion
           </Button>
         </div>
@@ -269,7 +267,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <Button size="lg" onClick={() => setIsAuthModalOpen(true)}>
+              <Button size="lg" onClick={() => navigate('/auth')}> {/* Redirect to AuthPage */}
                 Découvrir AiA
               </Button>
               {/* Removed Admin Access Button */}
@@ -340,7 +338,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
       </footer>
 
       {/* Removed BottomNavigationBar */}
-      {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
+      {/* Removed AuthModal */}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
   );

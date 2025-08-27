@@ -204,23 +204,20 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
 
   const handleSignOut = async () => {
     setIsLoadingUser(true); // Set loading state while signing out
-    console.log("[RoleContext] Attempting to sign out by clearing localStorage..."); // Added log
-    
-    // Directly remove the Supabase auth token from localStorage
-    // The key format is typically 'sb-<project-id>-auth-token'
-    localStorage.removeItem('sb-hgzfbheisfbbtadvyecm-auth-token');
-    
-    // Clear client-side state
-    setCurrentUserProfile(null);
-    setNavItems([]);
-    setDynamicRoutes([]);
-    // Removed setUnreadNotificationsCount(0);
-
-    // Force a full page reload to reset all application state
-    window.location.reload();
-
-    console.log("[RoleContext] localStorage cleared and page reloaded.");
-    setIsLoadingUser(false); // Reset loading state (though page reload will handle this)
+    console.log("[RoleContext] Attempting to sign out..."); // Added log
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("[RoleContext] Error signing out:", error); // Updated log
+      showError(`Erreur lors de la déconnexion: ${error.message}`);
+    } else {
+      console.log("[RoleContext] Signed out successfully."); // Updated log
+      setCurrentUserProfile(null); // Clear profile on successful sign out
+      setNavItems([]); // Clear nav items
+      setDynamicRoutes([]); // Clear dynamic routes
+      // Removed setUnreadNotificationsCount(0);
+      // The onAuthStateChange listener will also catch this and update state
+    }
+    setIsLoadingUser(false); // Reset loading state
   };
 
   const currentRole = currentUserProfile ? currentUserProfile.role : null;
