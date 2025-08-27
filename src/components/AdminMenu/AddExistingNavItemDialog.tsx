@@ -284,13 +284,10 @@ const AddExistingNavItemDialog = ({
                                   {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
                                 </p>
                               </div>
-                            </div>
-                            <Button size="sm" onClick={() => handleSelectGenericItem(item)}>
-                              Sélectionner
-                            </Button>
-                          </Card>
-                        );
-                      })
+                            </Card>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 </ScrollArea>
@@ -327,7 +324,6 @@ const AddExistingNavItemDialog = ({
                     placeholder="Sélectionner un parent..."
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[999] rounded-android-tile"
                     disabled={defaultParentId === null} // Disable if defaultParentId is null
                   />
                   {defaultParentId === null && (

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -131,7 +131,7 @@ const EditRoleConfigDialog = ({
     // Apply search filter
     const lowerCaseQuery = parentSearchQuery.toLowerCase();
     return [
-      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false },
+      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action' },
       ...sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery))
     ];
   }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds, parentSearchQuery]);
@@ -267,9 +267,6 @@ const EditRoleConfigDialog = ({
                                 </p>
                               </div>
                             </div>
-                            <Button size="sm" onClick={() => handleSelectParent(item.id)}>
-                              Sélectionner
-                            </Button>
                           </Card>
                         );
                       })
