@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { loadCourses, loadCurricula, loadClasses } from "@/lib/courseData";
+import { loadCourses, loadCurricula, loadClasses, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
 import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData";
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
@@ -15,7 +15,7 @@ import TutorAnalyticsSection from "@/components/TutorAnalyticsSection";
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Course, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels";
+import { Course, Curriculum, Class, Profile, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { showError } from "@/utils/toast";
 
 const Analytics = () => {
@@ -30,9 +30,11 @@ const Analytics = () => {
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
 
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | undefined>(undefined);
   const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | undefined>(undefined);
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // New state for establishment filter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,6 +44,7 @@ const Analytics = () => {
         setStudentCourseProgresses(await getAllStudentCourseProgress());
         setClasses(await loadClasses());
         setCurricula(await loadCurricula());
+        setEstablishments(await loadEstablishments()); // Load establishments
       } catch (error: any) {
         console.error("Error fetching data for Analytics:", error);
         showError(`Erreur lors du chargement des données analytiques: ${error.message}`);
@@ -53,9 +56,18 @@ const Analytics = () => {
   useEffect(() => {
     setSelectedClassFilter(undefined);
     setSelectedCurriculumFilter(undefined);
-  }, [currentRole, currentUserProfile?.id]);
+    // Set default establishment filter based on user role
+    if (currentRole === 'administrator') {
+      setSelectedEstablishmentFilter('all');
+    } else if (currentUserProfile?.establishment_id) {
+      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
+    } else {
+      setSelectedEstablishmentFilter('all');
+    }
+  }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id]);
 
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   const handleSendMessageToUser = (userId: string) => {
     navigate(`/messages?contactId=${userId}`);
@@ -83,6 +95,7 @@ const Analytics = () => {
           view={view}
           selectedClassId={selectedClassFilter}
           selectedCurriculumId={selectedCurriculumFilter}
+          selectedEstablishmentId={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter} // Pass establishment filter
           selectedCourseId={courseIdFromUrl}
           allCourses={courses}
           allProfiles={allProfiles}
@@ -101,6 +114,7 @@ const Analytics = () => {
           view={view}
           selectedClassId={selectedClassFilter}
           selectedCurriculumId={selectedCurriculumFilter}
+          selectedEstablishmentId={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter} // Pass establishment filter
           onSendMessageToUser={handleSendMessageToUser}
         />
       );
@@ -110,6 +124,7 @@ const Analytics = () => {
           view={view}
           selectedClassId={selectedClassFilter}
           selectedCurriculumId={selectedCurriculumFilter}
+          selectedEstablishmentId={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter} // Pass establishment filter
           selectedCourseId={courseIdFromUrl}
           allCourses={courses}
           allProfiles={allProfiles}
@@ -130,21 +145,42 @@ const Analytics = () => {
 
       {(currentRole === 'administrator' || currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director') && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
+            <div>
+              <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
+              <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
+                <SelectTrigger id="establishment-filter" className="rounded-android-tile">
+                  <SelectValue placeholder="Tous les établissements" />
+                </SelectTrigger>
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectItem value="all">Tous les établissements</SelectItem>
+                  {establishments.filter(est => 
+                    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+                  ).map(est => (
+                    <SelectItem key={est.id} value={est.id}>
+                      {est.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
             <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
               setSelectedCurriculumFilter(value === "all" ? undefined : value);
               setSelectedClassFilter(undefined);
             }}>
-              <SelectTrigger id="select-curriculum">
+              <SelectTrigger id="select-curriculum" className="rounded-android-tile">
                 <SelectValue placeholder="Tous les cursus" />
               </SelectTrigger>
               <SelectContent className="rounded-android-tile">
                 <SelectItem value="all">Tous les cursus</SelectItem>
                 {curricula
+                  .filter(cur => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cur.establishment_id === selectedEstablishmentFilter)
                   .map(cur => (
                     <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name}
+                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -153,16 +189,17 @@ const Analytics = () => {
           <div>
             <Label htmlFor="select-class">Filtrer par Classe</Label>
             <Select value={selectedClassFilter || "all"} onValueChange={setSelectedClassFilter}>
-              <SelectTrigger id="select-class">
+              <SelectTrigger id="select-class" className="rounded-android-tile">
                 <SelectValue placeholder="Toutes les classes" />
               </SelectTrigger>
               <SelectContent className="rounded-android-tile">
                 <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes
                   .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)
+                  .filter(cls => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cls.establishment_id === selectedEstablishmentFilter)
                   .map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getCurriculumName(cls.curriculum_id)})
+                      {cls.name} ({getCurriculumName(cls.curriculum_id)}) ({getEstablishmentName(cls.establishment_id)})
                     </SelectItem>
                   ))}
               </SelectContent>

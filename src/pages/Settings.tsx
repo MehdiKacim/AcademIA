@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code, Info, LayoutList } from "lucide-react"; // Import LayoutList icon
+import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code, Info, LayoutList, Building2 } from "lucide-react"; // Import LayoutList icon
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -81,10 +81,10 @@ const Settings = () => {
             <div className="flex items-center justify-between">
               <Label htmlFor="language">Langue</Label>
               <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger id="language" className="w-[180px]">
+                <SelectTrigger id="language" className="w-[180px] rounded-android-tile">
                   <SelectValue placeholder="Sélectionner une langue" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   <SelectItem value="fr">Français</SelectItem>
                   <SelectItem value="en">English</SelectItem>
                 </SelectContent>
@@ -135,32 +135,39 @@ const Settings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" onClick={() => setIsChangePasswordDialogOpen(true)}>
+          <Button variant="outline" onClick={() => setIsChangePasswordDialogOpen(true)} className="rounded-android-tile">
             Changer le mot de passe
           </Button>
           <Link to="/data-model">
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2 rounded-android-tile">
               <Code className="h-4 w-4" /> Voir le modèle de données
             </Button>
           </Link>
           {currentRole === 'administrator' && ( // Only show for administrators
-            <Link to="/admin-menu-management">
-              <Button variant="outline" className="flex items-center gap-2">
-                <LayoutList className="h-4 w-4" /> Gérer les menus
-              </Button>
-            </Link>
+            <>
+              <Link to="/establishments">
+                <Button variant="outline" className="flex items-center gap-2 rounded-android-tile">
+                  <Building2 className="h-4 w-4" /> Gérer les établissements
+                </Button>
+              </Link>
+              <Link to="/admin-menu-management">
+                <Button variant="outline" className="flex items-center gap-2 rounded-android-tile">
+                  <LayoutList className="h-4 w-4" /> Gérer les menus
+                </Button>
+              </Link>
+            </>
           )}
-          <Button variant="outline" onClick={() => navigate('/about')} className="flex items-center gap-2"> {/* Navigate to /about */}
+          <Button variant="outline" onClick={() => navigate('/about')} className="flex items-center gap-2 rounded-android-tile"> {/* Navigate to /about */}
             <Info className="h-4 w-4" /> À propos
           </Button>
-          <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2">
+          <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2 rounded-android-tile">
             <Eraser className="h-4 w-4" /> Réinitialiser toutes les données
           </Button>
         </CardContent>
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSavePreferences}>
+        <Button onClick={handleSavePreferences} className="rounded-android-tile">
           Enregistrer toutes les préférences
         </Button>
       </div>

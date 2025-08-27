@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, Search, Archive } from "lucide-react";
+import { ArrowLeft, MessageSquare, Search, Archive, Building2 } from "lucide-react"; // Import Building2
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
-import { Profile, Message, Curriculum, Class, StudentClassEnrollment } from '@/lib/dataModels'; // Removed Establishment import
+import { Profile, Message, Curriculum, Class, StudentClassEnrollment, Establishment } from '@/lib/dataModels'; // Import Establishment
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, getAllStudentClassEnrollments } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +15,7 @@ import { getRecentConversations, getUnreadMessageCount, getArchivedConversations
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from '@/lib/utils';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { loadCurricula, loadClasses } from '@/lib/courseData'; // Removed loadEstablishments
+import { loadCurricula, loadClasses, loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
 
 // Helper to get the current school year
 const getCurrentSchoolYear = () => {
@@ -43,12 +43,12 @@ const Messages = () => {
 
   const [showArchived, setShowArchived] = useState(false);
 
-  // Removed establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
 
-  // Removed selectedEstablishmentId
+  const [selectedEstablishmentId, setSelectedEstablishmentId] = useState<string | 'all'>('all'); // New state for establishment filter
   const [selectedCurriculumId, setSelectedCurriculumId] = useState<string>("");
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [searchStudentQuery, setSearchStudentQuery] = useState('');
@@ -77,7 +77,7 @@ const Messages = () => {
       const totalUnread = await getUnreadMessageCount(currentUserId);
       setUnreadMessageCount(totalUnread);
 
-      // Removed loadEstablishments
+      setEstablishments(await loadEstablishments()); // Load establishments
       setCurricula(await loadCurricula());
       setClasses(await loadClasses());
       setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
@@ -207,7 +207,7 @@ const Messages = () => {
     }
   };
 
-  // Removed getEstablishmentName
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
@@ -216,6 +216,13 @@ const Messages = () => {
 
     let filteredContacts: Profile[] = [];
     let potentialContacts = allProfiles.filter(p => p.id !== currentUserProfile.id);
+
+    // Apply establishment filter first
+    if (selectedEstablishmentId !== 'all' && currentRole === 'administrator') {
+      potentialContacts = potentialContacts.filter(p => p.establishment_id === selectedEstablishmentId || (p.role === 'administrator' && !p.establishment_id));
+    } else if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
+      potentialContacts = potentialContacts.filter(p => p.establishment_id === currentUserProfile.establishment_id || (p.role === 'administrator' && !p.establishment_id));
+    }
 
     if (currentRole === 'student') {
       const studentEnrollments = allStudentClassEnrollments.filter(e => e.student_id === currentUserProfile.id && e.school_year_name === currentSchoolYear);
@@ -278,7 +285,7 @@ const Messages = () => {
     // Remove duplicates and sort
     const uniqueContacts = Array.from(new Map(finalFilteredContacts.map(item => [item.id, item])).values());
     return uniqueContacts.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
-  }, [allProfiles, currentUserProfile, currentRole, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear]);
+  }, [allProfiles, currentUserProfile, currentRole, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear, selectedEstablishmentId]);
 
 
   if (isLoadingUser || isLoadingProfiles) {
@@ -327,9 +334,32 @@ const Messages = () => {
               <h3 className="text-lg font-semibold">Démarrer une nouvelle conversation</h3>
               <div className="grid grid-cols-1 gap-4">
                 {/* Filters for Professeur/Tutor/Director/Deputy Director/Admin */}
-                {(currentRole === 'professeur' || currentRole === 'tutor') && (
+                {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
+                  <div>
+                    <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
+                    <Select value={selectedEstablishmentId} onValueChange={(value: string | 'all') => {
+                      setSelectedEstablishmentId(value);
+                      setSelectedCurriculumId("");
+                      setSelectedClassId("");
+                    }}>
+                      <SelectTrigger id="select-establishment" className="rounded-android-tile">
+                        <SelectValue placeholder="Tous les établissements" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <SelectItem value="all">Tous les établissements</SelectItem>
+                        {establishments.filter(est => 
+                          currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+                        ).map(est => (
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {(currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && (
                   <>
-                    {/* Removed Establishment Filter */}
                     <div>
                       <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
                       <Select value={selectedCurriculumId} onValueChange={(value) => {
@@ -342,9 +372,10 @@ const Messages = () => {
                         <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <SelectItem value="all">Tous les cursus</SelectItem>
                           {curricula
+                            .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === 'all' || cur.establishment_id === selectedEstablishmentId)
                             .map(cur => (
                               <SelectItem key={cur.id} value={cur.id}>
-                                {cur.name}
+                                {cur.name} ({getEstablishmentName(cur.establishment_id)})
                               </SelectItem>
                             ))}
                         </SelectContent>
@@ -360,9 +391,10 @@ const Messages = () => {
                           <SelectItem value="all">Toutes les classes</SelectItem>
                           {classes
                             .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
+                            .filter(cls => !selectedEstablishmentId || selectedEstablishmentId === 'all' || cls.establishment_id === selectedEstablishmentId)
                             .map(cls => (
                               <SelectItem key={cls.id} value={cls.id}>
-                                {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getClassName(cls.school_year_id)}
+                                {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getClassName(cls.school_year_id)} ({getEstablishmentName(cls.establishment_id)})
                               </SelectItem>
                             ))}
                         </SelectContent>
@@ -393,7 +425,7 @@ const Messages = () => {
                       <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                         {availableContactsForNewChat.map(profile => (
                           <SelectItem key={profile.id} value={profile.id}>
-                            {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'}
+                            {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'} ({getEstablishmentName(profile.establishment_id)})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -434,7 +466,7 @@ const Messages = () => {
                   ) : (
                     availableContactsForNewChat.map(profile => (
                       <SelectItem key={profile.id} value={profile.id}>
-                        {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'}
+                        {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'} ({getEstablishmentName(profile.establishment_id)})
                       </SelectItem>
                     ))
                   )}

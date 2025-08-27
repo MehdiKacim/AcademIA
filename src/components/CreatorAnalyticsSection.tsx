@@ -20,12 +20,13 @@ import {
 } from 'recharts';
 import { Course, Profile, Class, Curriculum, StudentCourseProgress, StudentClassEnrollment } from '@/lib/dataModels'; // Import StudentClassEnrollment
 import { getAllStudentClassEnrollments } from '@/lib/studentData'; // Import getAllStudentClassEnrollments
+import { showError } from "@/utils/toast"; // Import showError
 
 interface CreatorAnalyticsSectionProps {
   view: string | null;
   selectedClassId?: string;
   selectedCurriculumId?: string;
-  // Removed selectedEstablishmentId
+  selectedEstablishmentId?: string; // New prop for establishment filter
   selectedCourseId?: string; // New prop for filtering by specific course
   allCourses: Course[];
   allProfiles: Profile[];
@@ -34,18 +35,18 @@ interface CreatorAnalyticsSectionProps {
   allCurricula: Curriculum[];
 }
 
-const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, selectedCourseId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => { // Removed selectedEstablishmentId
+const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, selectedEstablishmentId, selectedCourseId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => { // Added selectedEstablishmentId
 
   // Filter courses based on selected curriculum, establishment, AND specific course ID
   const filteredCourses = React.useMemo(() => {
     let coursesToFilter = allCourses;
 
-    // Removed establishment filtering
-    // if (selectedEstablishmentId && selectedEstablishmentId !== 'all') {
-    //   const curriculaInEstablishment = allCurricula.filter(c => c.establishment_id === selectedEstablishmentId);
-    //   const courseIdsInEstablishment = new Set(curriculaInEstablishment.flatMap(c => c.course_ids));
-    //   coursesToFilter = coursesToFilter.filter(course => courseIdsInEstablishment.has(course.id));
-    // }
+    if (selectedEstablishmentId) {
+      // Filter courses by establishment via their associated subjects
+      const subjectsInEstablishment = allCurricula.filter(c => c.establishment_id === selectedEstablishmentId);
+      const courseIdsInEstablishment = new Set(subjectsInEstablishment.flatMap(c => c.course_ids));
+      coursesToFilter = coursesToFilter.filter(course => courseIdsInEstablishment.has(course.id));
+    }
 
     if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const curriculum = allCurricula.find(c => c.id === selectedCurriculumId);
@@ -59,34 +60,61 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
     }
     
     return coursesToFilter;
-  }, [allCourses, allCurricula, selectedCurriculumId, selectedCourseId]); // Removed selectedEstablishmentId
+  }, [allCourses, allCurricula, selectedCurriculumId, selectedEstablishmentId, selectedCourseId]); // Added selectedEstablishmentId
 
   // Filter students based on selected class, curriculum, or establishment
   const filteredStudentProfiles = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
 
-    // Removed establishment filtering
-    // if (selectedEstablishmentId && selectedEstablishmentId !== 'all') {
-    //   students = students.filter(s => s.establishment_id === selectedEstablishmentId);
-    // }
+    if (selectedEstablishmentId) {
+      students = students.filter(s => s.establishment_id === selectedEstablishmentId);
+    }
 
     if (selectedClassId && selectedClassId !== 'all') {
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
         // Students are linked to classes via student_class_enrollments
         // Await the promise here
-        const studentIdsInClass = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => e.class_id === selectedClass.id).map(e => e.student_id)));
+        const fetchStudentIds = async () => {
+          try {
+            const enrollments = await getAllStudentClassEnrollments();
+            return new Set(enrollments.filter(e => e.class_id === selectedClass.id).map(e => e.student_id));
+          } catch (error: any) {
+            console.error("Error fetching student enrollments in CreatorAnalyticsSection:", error);
+            showError(`Erreur lors du chargement des inscriptions des élèves: ${error.message}`);
+            return new Set<string>();
+          }
+        };
+        // This is a hacky way to handle async in useMemo, ideally, this should be managed with React Query or similar.
+        // For now, we'll return an empty set and rely on a re-render when the promise resolves.
+        let studentIdsInClass = new Set<string>();
+        fetchStudentIds().then(ids => {
+          studentIdsInClass = ids;
+        });
         return students.filter(student => studentIdsInClass.has(student.id));
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
       const classIdsInCurriculum = classesInCurriculum.map(cls => cls.id);
       // Await the promise here
-      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id)));
+      const fetchStudentIds = async () => {
+        try {
+          const enrollments = await getAllStudentClassEnrollments();
+          return new Set(enrollments.filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id));
+        } catch (error: any) {
+          console.error("Error fetching student enrollments in CreatorAnalyticsSection:", error);
+          showError(`Erreur lors du chargement des inscriptions des élèves: ${error.message}`);
+          return new Set<string>();
+        }
+      };
+      let studentIdsInCurriculum = new Set<string>();
+      fetchStudentIds().then(ids => {
+        studentIdsInCurriculum = ids;
+      });
       return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
     return students;
-  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId]); // Removed selectedEstablishmentId
+  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId, selectedEstablishmentId]); // Added selectedEstablishmentId
 
   // Dummy data for creator analytics
   const creatorAnalytics = {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock, NotebookText, BookText, ClipboardList, UserCheck, CalendarDays } from "lucide-react"; // Import new icons
+import { Code, Database, Users, BookOpen, LayoutList, School, User, GraduationCap, PenTool, Lock, NotebookText, BookText, ClipboardList, UserCheck, CalendarDays, Building2 } from "lucide-react"; // Import new icons
 
 const DataModelContent = () => {
   const dataModels = {
@@ -85,9 +85,9 @@ interface SchoolYear {
 interface Class {
   id: string; // UUID
   name: string;
-  curriculum_id: string; // UUID, référence public.curricula(id)
+  curriculum_id: string; // Link to parent curriculum
   creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
-  establishment_id?: string; // New: Link to parent establishment
+  establishment_id: string; // New: Link to parent establishment
   school_year_id: string; // Changed: Link to SchoolYear
   created_at: string;
 }
@@ -131,6 +131,7 @@ interface StudentClassEnrollment { // New interface for student-class liaison
   class_id: string; // Link to the Class
   school_year_id: string; // Changed: Link to SchoolYear
   school_year_name?: string; // For convenience when fetching
+  establishment_id: string; // New: Link to parent establishment
   created_at?: string;
   updated_at?: string;
 }
@@ -212,7 +213,7 @@ interface Document {
       case 'Auth.users (Supabase)': return <Lock className="h-5 w-5 text-primary" />;
       case 'public.roles': return <Users className="h-5 w-5 text-primary" />;
       case 'public.profiles': return <User className="h-5 w-5 text-primary" />;
-      case 'public.establishments': return <School className="h-5 w-5 text-primary" />;
+      case 'public.establishments': return <Building2 className="h-5 w-5 text-primary" />; // Changed to Building2
       case 'public.subjects': return <BookText className="h-5 w-5 text-primary" />; // New icon for subjects
       case 'public.curricula': return <LayoutList className="h-5 w-5 text-primary" />;
       case 'public.school_years': return <CalendarDays className="h-5 w-5 text-primary" />; // Icon for school years

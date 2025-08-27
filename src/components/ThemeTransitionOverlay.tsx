@@ -20,6 +20,14 @@ const ThemeTransitionOverlay = ({ isOpen, targetThemeName }: ThemeTransitionOver
         staggerChildren: 0.08, // Délai entre chaque lettre
       },
     },
+    exit: {
+      opacity: 0,
+      x: 20, // Animate out to the right
+      transition: {
+        duration: 0.4,
+        ease: "easeIn",
+      },
+    },
   };
 
   const letterVariants = {
@@ -55,7 +63,7 @@ const ThemeTransitionOverlay = ({ isOpen, targetThemeName }: ThemeTransitionOver
             variants={textVariants}
             initial="hidden"
             animate="visible"
-            exit="hidden" // Assure que le texte disparaît aussi
+            exit="exit" // Assure que le texte disparaît aussi
             transition={{ delay: 0.8, duration: 1.5, ease: "easeInOut" }} // Durée de l'animation du bloc de texte
           >
             {targetThemeName.split("").map((char, index) => (

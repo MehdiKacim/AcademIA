@@ -7,10 +7,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses } from "@/lib/courseData"; // Removed loadEstablishments
+import { loadCourses, loadEstablishments } from "@/lib/courseData"; // Re-added loadEstablishments
 import { getProfileById, updateProfile, getStudentCourseProgress, upsertStudentCourseProgress, getAllStudentCourseProgress, getUserFullName } from "@/lib/studentData";
 import type { Profile } from "@/lib/dataModels"; // Import Profile as type
-import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Removed Establishment type
+import { Course, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Re-added Establishment type
 import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock, BriefcaseBusiness, UserCog, Building2, CalendarDays } from "lucide-react"; // Added Building2 and CalendarDays icon
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -29,7 +29,7 @@ const Profile = () => {
   const { setIsAdminModalOpen } = useOutletContext<ProfilePageOutletContext>(); // Get setIsAdminModalOpen from context
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
-  // Removed establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -45,7 +45,7 @@ const Profile = () => {
         const loadedProgresses = await getAllStudentCourseProgress();
         setStudentCourseProgresses(loadedProgresses);
         // console.log("[Profile Page] Loaded student progresses:", loadedProgresses); // Removed log
-        // Removed setEstablishments
+        setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
       } catch (error: any) {
         console.error("Error fetching data for Profile page:", error);
         showError(`Erreur lors du chargement des données du profil: ${error.message}`);
@@ -73,7 +73,7 @@ const Profile = () => {
     navigate(`/messages?contactId=${userId}`);
   };
 
-  // Removed getEstablishmentName
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   if (isLoadingUser) {
     // console.log("[Profile Page] Displaying loading state."); // Removed log
@@ -141,7 +141,11 @@ const Profile = () => {
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     @{currentUserProfile.username}
                   </CardDescription>
-                  {/* Removed establishment_id display */}
+                  {currentUserProfile.establishment_id && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                    </CardDescription>
+                  )}
                   {currentUserProfile.enrollment_start_date && currentUserProfile.enrollment_end_date && (
                     <CardDescription className="flex items-center gap-2 text-muted-foreground">
                       <CalendarDays className="h-4 w-4" /> Du {format(parseISO(currentUserProfile.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(currentUserProfile.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })}
@@ -234,7 +238,11 @@ const Profile = () => {
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     @{currentUserProfile.username}
                   </CardDescription>
-                  {/* Removed establishment_id display */}
+                  {currentUserProfile.establishment_id && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                    </CardDescription>
+                  )}
                 </div>
               </div>
               <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
@@ -327,7 +335,11 @@ const Profile = () => {
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     @{currentUserProfile.username}
                   </CardDescription>
-                  {/* Removed establishment_id display */}
+                  {currentUserProfile.establishment_id && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                    </CardDescription>
+                  )}
                 </div>
               </div>
               <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
@@ -405,6 +417,11 @@ const Profile = () => {
                   <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     @{currentUserProfile.username}
                   </CardDescription>
+                  {currentUserProfile.establishment_id && (
+                    <CardDescription className="flex items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                    </CardDescription>
+                  )}
                 </div>
               </div>
               <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
@@ -415,7 +432,6 @@ const Profile = () => {
               <p className="text-lg text-muted-foreground">
                 Rôle actuel: {currentRole === 'administrator' ? 'Administrateur' : currentRole === 'director' ? 'Directeur' : 'Directeur Adjoint'}
               </p>
-              {/* Removed establishment_id display */}
             </CardContent>
           </Card>
           {/* Add more admin/director specific cards here if needed, e.g., quick stats or links */}
@@ -429,7 +445,7 @@ const Profile = () => {
                 {currentRole === 'administrator' && (
                   <>
                     <li><Link to="/admin-users" className="text-primary hover:underline">Gérer les utilisateurs</Link></li>
-                    {/* Removed link to establishments */}
+                    <li><Link to="/establishments" className="text-primary hover:underline">Gérer les établissements</Link></li>
                     <li><Link to="/analytics?view=overview" className="text-primary hover:underline">Voir les analytiques globales</Link></li>
                   </>
                 )}

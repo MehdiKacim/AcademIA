@@ -6,9 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses, loadClasses, loadCurricula } from "@/lib/courseData";
+import { loadCourses, loadClasses, loadCurricula, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
 import { getAllStudentCourseProgress, getAllProfiles, getAllStudentClassEnrollments } from "@/lib/studentData";
-import { Course, StudentCourseProgress, Profile, Class, Curriculum, StudentClassEnrollment } from "@/lib/dataModels";
+import { Course, StudentCourseProgress, Profile, Class, Curriculum, StudentClassEnrollment, Establishment } from "@/lib/dataModels"; // Import Establishment
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ const Dashboard = () => {
         setClasses(loadedClasses);
         const loadedCurricula = await loadCurricula();
         setCurricula(loadedCurricula);
+        setEstablishments(await loadEstablishments()); // Load establishments
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
       } catch (error: any) {
         console.error("Error fetching data for Dashboard:", error);
@@ -310,6 +312,7 @@ const Dashboard = () => {
     } else if (currentRole === 'administrator') {
       const totalDirectors = allProfiles.filter(p => p.role === 'director').length;
       const totalDeputyDirectors = allProfiles.filter(p => p.role === 'deputy_director').length;
+      const totalEstablishments = establishments.length;
 
       return (
         <motion.div 
@@ -366,13 +369,27 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </motion.div>
+          <motion.div variants={cardVariants}>
+            <Card className="rounded-android-tile hover:scale-[1.02] transition-transform bg-card/80 backdrop-blur-lg">
+              <CardHeader>
+                <CardTitle className={gradientClasses}>Établissements</CardTitle>
+                <CardDescription>Nombre total d'établissements gérés.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-primary">{totalEstablishments}</p>
+                <Link to="/establishments" className="mt-4 block">
+                  <Button variant="outline" className="w-full">Gérer les établissements</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
       );
     } else if (currentRole === 'director' || currentRole === 'deputy_director') {
-      const studentsInMyScope = allProfiles.filter(p => p.role === 'student').length;
-      const professeursInMyScope = allProfiles.filter(p => p.role === 'professeur').length;
-      const classesInMyScope = classes.length;
-      const curriculaInMyScope = curricula.length;
+      const studentsInMyScope = allProfiles.filter(p => p.role === 'student' && p.establishment_id === currentUserProfile.establishment_id).length;
+      const professeursInMyScope = allProfiles.filter(p => p.role === 'professeur' && p.establishment_id === currentUserProfile.establishment_id).length;
+      const classesInMyScope = classes.filter(cls => cls.establishment_id === currentUserProfile.establishment_id).length;
+      const curriculaInMyScope = curricula.filter(cur => cur.establishment_id === currentUserProfile.establishment_id).length;
 
       return (
         <motion.div 

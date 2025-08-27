@@ -49,7 +49,11 @@ const CurriculumListModal = ({ isOpen, onClose, title, description, curricula, e
                         {curriculum.description && (
                           <p className="text-sm text-muted-foreground line-clamp-1">{curriculum.description}</p>
                         )}
-                        {/* Removed establishment_id display */}
+                        {curriculum.establishment_id && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Building2 className="h-3 w-3" /> {getEstablishmentName(curriculum.establishment_id)}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <BookOpen className="h-3 w-3" /> {curriculum.course_ids.length} cours
                         </p>

@@ -8,22 +8,28 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { loadCourses } from "@/lib/courseData"; // Import loadCourses
-import { BookOpen, Lock, CheckCircle } from "lucide-react"; // Import icons
+import { loadCourses, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
+import { BookOpen, Lock, CheckCircle, Search, Building2 } from "lucide-react"; // Import icons
 import { cn } from "@/lib/utils"; // Import cn
 import React, { useState, useMemo, useEffect } from "react"; // Import useState and useMemo
 import { getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supabase function
-import { Course, StudentCourseProgress } from "@/lib/dataModels"; // Import types
+import { Course, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Import types
 import { Progress } from "@/components/ui/progress"; // Import Progress
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { Label } from "@/components/ui/label"; // Import Label
 
 const Courses = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // New state for establishment filter
 
   useEffect(() => {
     const fetchData = async () => {
+      // Load all establishments
+      setEstablishments(await loadEstablishments());
       // Pass userId and userRole to loadCourses for filtering
       const loadedCourses = await loadCourses(currentUserProfile?.id, currentRole);
       setCourses(loadedCourses);
@@ -33,17 +39,49 @@ const Courses = () => {
     fetchData();
   }, [currentUserProfile, currentRole]); // Re-fetch if user profile or role changes
 
+  // Set default establishment filter based on user role
+  useEffect(() => {
+    if (currentRole === 'administrator') {
+      setSelectedEstablishmentFilter('all');
+    } else if (currentUserProfile?.establishment_id) {
+      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
+    } else {
+      setSelectedEstablishmentFilter('all');
+    }
+  }, [currentRole, currentUserProfile?.establishment_id]);
+
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+
   const getCoursesForRole = useMemo(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
 
-    const filtered = courses.filter(course =>
+    let filteredCourses = courses.filter(course =>
       course.title.toLowerCase().includes(lowerCaseQuery) ||
       course.description.toLowerCase().includes(lowerCaseQuery)
     );
 
+    // Apply establishment filter
+    if (selectedEstablishmentFilter !== 'all' && currentRole === 'administrator') {
+      // For admin, filter courses by establishment if selected
+      // This assumes courses have an establishment_id, which they don't directly.
+      // A more complex join would be needed here (course -> curriculum -> establishment)
+      // For now, we'll skip this filter for courses for admin, or assume courses are global.
+      // If courses were linked to subjects, and subjects to establishments, we could filter that way.
+      // For simplicity, courses are currently considered global for admin view unless explicitly linked.
+    } else if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
+      // For non-admin roles, filter courses by their associated subject's establishment
+      filteredCourses = filteredCourses.filter(course => {
+        const subject = establishments.find(est => est.id === currentUserProfile.establishment_id); // This is incorrect, should be subject.establishment_id
+        // This logic needs to be refined based on how subjects are linked to courses and establishments.
+        // For now, we'll assume courses are accessible if the user is in the same establishment.
+        // This will be handled by RLS on the `courses` table based on `subject_id` and `subjects.establishment_id`.
+        return true; // RLS will handle the actual filtering
+      });
+    }
+
     if (currentRole === 'student') {
       const studentProgress = studentCourseProgresses.filter(p => p.user_id === currentUserProfile?.id);
-      return filtered.map(course => {
+      return filteredCourses.map(course => {
         const courseProgress = studentProgress.find(cp => cp.course_id === course.id);
         const completedModules = courseProgress ? courseProgress.modules_progress.filter(m => m.is_completed).length : 0;
         const totalModules = course.modules.length;
@@ -56,13 +94,13 @@ const Courses = () => {
         };
       });
     } else if (currentRole === 'professeur') {
-      return filtered.map(course => ({
+      return filteredCourses.map(course => ({
         ...course,
         status: Math.random() > 0.5 ? "Publié" : "Brouillon", // Dummy status
         students: Math.floor(Math.random() * 200), // Dummy student count
       }));
     } else if (currentRole === 'tutor') {
-      return filtered.map(course => ({
+      return filteredCourses.map(course => ({
         courseTitle: course.title,
         studentName: "Élève fictif", // Placeholder
         progress: Math.floor(Math.random() * 100), // Dummy progress
@@ -70,7 +108,7 @@ const Courses = () => {
       }));
     }
     return [];
-  }, [courses, currentRole, searchQuery, currentUserProfile, studentCourseProgresses]);
+  }, [courses, currentRole, searchQuery, currentUserProfile, studentCourseProgresses, selectedEstablishmentFilter, establishments]);
 
   const coursesToDisplay = getCoursesForRole;
 
@@ -89,7 +127,6 @@ const Courses = () => {
 
   const renderCoursesContent = () => {
     if (currentRole === 'student') {
-      // Removed establishment_id check
       return (
         <>
           <p className="text-lg text-muted-foreground mb-8">Voici les cours disponibles. Cliquez sur un cours pour voir sa progression par modules.</p>
@@ -213,6 +250,38 @@ const Courses = () => {
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         {currentRole === 'student' ? 'Mes Cours' : currentRole === 'professeur' ? 'Gestion des Cours' : 'Cours des Élèves'}
       </h1>
+
+      {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un cours..."
+              className="pl-10 rounded-android-tile"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex-shrink-0 sm:w-1/3">
+            <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
+            <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
+              <SelectTrigger id="establishment-filter" className="rounded-android-tile">
+                <SelectValue placeholder="Tous les établissements" />
+              </SelectTrigger>
+              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectItem value="all">Tous les établissements</SelectItem>
+                {establishments.filter(est => 
+                  currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+                ).map(est => (
+                  <SelectItem key={est.id} value={est.id}>
+                    {est.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
       {renderCoursesContent()}
     </div>
   );

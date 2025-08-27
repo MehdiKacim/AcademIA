@@ -25,8 +25,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, MinusCircle, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon, GripVertical } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { addCourseToStorage, loadCourses, updateCourseInStorage, loadSubjects } from "@/lib/courseData"; // Import loadSubjects
-import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Subject } from "@/lib/dataModels"; // Import Subject
+import { addCourseToStorage, loadCourses, updateCourseInStorage, loadSubjects, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
+import { Course, Module, ModuleSection, QuizQuestion, QuizOption, Subject, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { useParams, useNavigate } from "react-router-dom";
 import {
   DndContext,
@@ -455,6 +455,7 @@ const CreateCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]); // New state for subjects
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
   const [isSavingCourse, setIsSavingCourse] = useState(false); // New state for saving status
 
   const form = useForm<z.infer<typeof CourseSchema>>({
@@ -503,7 +504,8 @@ const CreateCourse = () => {
 
   useEffect(() => {
     const fetchCourseAndSubjects = async () => {
-      setSubjects(await loadSubjects()); // Load all subjects
+      setEstablishments(await loadEstablishments()); // Load all establishments
+      setSubjects(await loadSubjects(currentUserProfile?.establishment_id)); // Load subjects filtered by user's establishment
 
       if (courseId) {
         const courses = await loadCourses();
@@ -541,7 +543,7 @@ const CreateCourse = () => {
       }
     };
     fetchCourseAndSubjects();
-  }, [courseId, form, navigate]); // Removed currentUserProfile.establishment_id
+  }, [courseId, form, navigate, currentUserProfile?.establishment_id]); // Added currentUserProfile.establishment_id to dependencies
 
   const onSubmit = async (values: z.infer<typeof CourseSchema>) => {
     if (!currentUserProfile?.id) {
@@ -605,6 +607,10 @@ const CreateCourse = () => {
     );
   }
 
+  const subjectsToDisplay = subjects.filter(sub => 
+    currentRole === 'administrator' || sub.establishment_id === currentUserProfile?.establishment_id
+  );
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
@@ -652,15 +658,15 @@ const CreateCourse = () => {
                   <FormLabel>Matière</FormLabel> {/* Changed label */}
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-android-tile">
                         <SelectValue placeholder="Sélectionnez une matière" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
-                      {subjects.length === 0 ? (
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                      {subjectsToDisplay.length === 0 ? (
                         <SelectItem value="no-subjects" disabled>Aucune matière disponible</SelectItem>
                       ) : (
-                        subjects.map(subject => (
+                        subjectsToDisplay.map(subject => (
                           <SelectItem key={subject.id} value={subject.id}>{subject.name}</SelectItem>
                         ))
                       )}
@@ -678,11 +684,11 @@ const CreateCourse = () => {
                   <FormLabel>Niveau de difficulté</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-android-tile">
                         <SelectValue placeholder="Sélectionnez un niveau" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                       <SelectItem value="Débutant">Débutant</SelectItem>
                       <SelectItem value="Intermédiaire">Intermédiaire</SelectItem>
                       <SelectItem value="Avancé">Avancé</SelectItem>

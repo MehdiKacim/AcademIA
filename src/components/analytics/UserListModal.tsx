@@ -49,7 +49,11 @@ const UserListModal = ({ isOpen, onClose, title, description, users, establishme
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <Mail className="h-3 w-3" /> {user.email}
                         </p>
-                        {/* Removed establishment_id display */}
+                        {user.establishment_id && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Building2 className="h-3 w-3" /> {getEstablishmentName(user.establishment_id)}
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

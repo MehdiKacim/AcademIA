@@ -51,7 +51,11 @@ const ClassListModal = ({ isOpen, onClose, title, description, classes, curricul
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <LayoutList className="h-3 w-3" /> {getCurriculumName(cls.curriculum_id)}
                         </p>
-                        {/* Removed establishment_id display */}
+                        {cls.establishment_id && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Building2 className="h-3 w-3" /> {getEstablishmentName(cls.establishment_id)}
+                          </p>
+                        )}
                         {cls.school_year_name && (
                           <p className="text-xs text-muted-foreground">Année scolaire: {cls.school_year_name}</p>
                         )}

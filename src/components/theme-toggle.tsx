@@ -44,7 +44,7 @@ export function ThemeToggle({ onInitiateThemeChange }: ThemeToggleProps) {
         <span className="sr-only">Toggle theme</span>
         {/* Removed SelectValue to make it icon-only for compact display */}
       </SelectTrigger>
-      <SelectContent className="backdrop-blur-lg bg-background/80">
+      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
         <SelectItem value="light">Clair</SelectItem>
         <SelectItem value="dark">Sombre</SelectItem>
         <SelectItem value="dark-purple">Violet Sombre</SelectItem>

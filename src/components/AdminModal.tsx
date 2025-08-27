@@ -222,19 +222,19 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         <div className="space-y-4">
           {currentUserProfile?.role === 'administrator' ? (
             <>
-              <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full" variant="outline">
+              <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full rounded-android-tile" variant="outline">
                 <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
               </Button>
               
-              <Button onClick={handleBootstrapNavItems} className="w-full" variant="outline">
+              <Button onClick={handleBootstrapNavItems} className="w-full rounded-android-tile" variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" /> Initialiser menus par défaut
               </Button>
 
-              <Button onClick={handleClearAllData} className="w-full" variant="destructive">
+              <Button onClick={handleClearAllData} className="w-full rounded-android-tile" variant="destructive">
                 <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
               </Button>
 
-              <Button onClick={onClose} className="w-full" variant="secondary">
+              <Button onClick={onClose} className="w-full rounded-android-tile" variant="secondary">
                 Fermer
               </Button>
             </>
@@ -247,7 +247,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               {!currentUserProfile && (
                 <Collapsible open={showCreateAdminForm} onOpenChange={setShowCreateAdminForm}>
                   <CollapsibleTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between">
+                    <Button variant="outline" className="w-full justify-between rounded-android-tile">
                       <div className="flex items-center gap-2">
                         <UserPlus className="h-4 w-4" /> Créer un administrateur initial
                       </div>
@@ -262,11 +262,13 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                       placeholder="Prénom"
                       value={adminFirstName}
                       onChange={(e) => setAdminFirstName(e.target.value)}
+                      className="rounded-android-tile"
                     />
                     <Input
                       placeholder="Nom"
                       value={adminLastName}
                       onChange={(e) => setAdminLastName(e.target.value)}
+                      className="rounded-android-tile"
                     />
                     <InputWithStatus
                       placeholder="Nom d'utilisateur"
@@ -274,6 +276,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                       onChange={(e) => handleAdminUsernameChange(e.target.value)}
                       status={usernameAvailabilityStatus}
                       errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                      className="rounded-android-tile"
                     />
                     <InputWithStatus
                       type="email"
@@ -282,20 +285,22 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                       onChange={(e) => handleAdminEmailChange(e.target.value)}
                       status={emailAvailabilityStatus}
                       errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                      className="rounded-android-tile"
                     />
                     <Input
                       type="password"
                       placeholder="Mot de passe"
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
+                      className="rounded-android-tile"
                     />
-                    <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
+                    <Button onClick={handleCreateInitialAdmin} className="w-full rounded-android-tile" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
                       {isCreatingAdmin ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
                     </Button>
                   </CollapsibleContent>
                 </Collapsible>
               )}
-              <Button onClick={onClose} className="w-full" variant="secondary">
+              <Button onClick={onClose} className="w-full rounded-android-tile" variant="secondary">
                 Fermer
               </Button>
             </>

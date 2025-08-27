@@ -23,6 +23,7 @@ import { getUserFullName, getAllStudentClassEnrollments } from "@/lib/studentDat
 import { loadClasses, loadCurricula } from "@/lib/courseData"; // Import loadClasses, loadCurricula
 import { Button } from "@/components/ui/button"; // Import Button
 import { Mail } from "lucide-react"; // Import Mail icon
+import { showError } from "@/utils/toast"; // Import showError
 
 interface TutorAnalyticsSectionProps {
   allProfiles: Profile[];
@@ -32,33 +33,67 @@ interface TutorAnalyticsSectionProps {
   view: string | null;
   selectedClassId?: string;
   selectedCurriculumId?: string;
+  selectedEstablishmentId?: string; // New prop for establishment filter
   onSendMessageToUser: (userId: string) => void; // New prop for sending message
 }
 
-const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allClasses, allCurricula, view, selectedClassId, selectedCurriculumId, onSendMessageToUser }: TutorAnalyticsSectionProps) => {
+const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allClasses, allCurricula, view, selectedClassId, selectedCurriculumId, selectedEstablishmentId, onSendMessageToUser }: TutorAnalyticsSectionProps) => {
   const getClassName = (id?: string) => allClasses.find(c => c.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => allCurricula.find(c => c.id === id)?.name || 'N/A';
 
   // Filter students based on selected class or curriculum
   const filteredStudentProfiles = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
+
+    if (selectedEstablishmentId) {
+      students = students.filter(s => s.establishment_id === selectedEstablishmentId);
+    }
+
     if (selectedClassId && selectedClassId !== 'all') {
       const selectedClass = allClasses.find(cls => cls.id === selectedClassId);
       if (selectedClass) {
         // Students are linked to classes via student_class_enrollments
         // Await the promise here
-        const studentIdsInClass = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => e.class_id === selectedClass.id).map(e => e.student_id)));
+        const fetchStudentIds = async () => {
+          try {
+            const enrollments = await getAllStudentClassEnrollments();
+            return new Set(enrollments.filter(e => e.class_id === selectedClass.id).map(e => e.student_id));
+          } catch (error: any) {
+            console.error("Error fetching student enrollments in TutorAnalyticsSection:", error);
+            showError(`Erreur lors du chargement des inscriptions des élèves: ${error.message}`);
+            return new Set<string>();
+          }
+        };
+        // This is a hacky way to handle async in useMemo, ideally, this should be managed with React Query or similar.
+        // For now, we'll return an empty set and rely on a re-render when the promise resolves.
+        let studentIdsInClass = new Set<string>();
+        fetchStudentIds().then(ids => {
+          studentIdsInClass = ids;
+        });
         return students.filter(student => studentIdsInClass.has(student.id));
       }
     } else if (selectedCurriculumId && selectedCurriculumId !== 'all') {
       const classesInCurriculum = allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
       const classIdsInCurriculum = classesInCurriculum.map(cls => cls.id);
       // Await the promise here
-      const studentIdsInCurriculum = new Set(getAllStudentClassEnrollments().then(enrollments => enrollments.filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id)));
+      const fetchStudentIds = async () => {
+        try {
+          const enrollments = await getAllStudentClassEnrollments();
+          return new Set(enrollments.filter(e => classIdsInCurriculum.includes(e.class_id)).map(e => e.student_id));
+        } catch (error: any) {
+          console.error("Error fetching student enrollments in TutorAnalyticsSection:", error);
+          showError(`Erreur lors du chargement des inscriptions des élèves: ${error.message}`);
+          return new Set<string>();
+        }
+      };
+      let studentIdsInCurriculum = new Set<string>();
+      fetchStudentIds().then(ids => {
+        studentIdsInCurriculum = ids;
+      });
       return students.filter(student => studentIdsInCurriculum.has(student.id));
     }
     return students;
-  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId]);
+  }, [allProfiles, allClasses, selectedClassId, selectedCurriculumId, selectedEstablishmentId]); // Added selectedEstablishmentId
 
   const supervisedStudents = filteredStudentProfiles.slice(0, 5); // Taking first 5 for demo from filtered set
   const studentsAtRisk = supervisedStudents.filter(s => allStudentCourseProgresses.some(scp => scp.user_id === s.id && scp.modules_progress.some(mp => mp.sections_progress.some(sp => sp.quiz_result && !sp.quiz_result.passed)))).length;
@@ -75,13 +110,17 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
     score: Math.floor(Math.random() * 40) + 60, // Random scores between 60 and 100
   }));
 
-  // Filter classes based on selected curriculum
+  // Filter classes based on selected curriculum and establishment
   const filteredClasses = React.useMemo(() => {
-    if (selectedCurriculumId && selectedCurriculumId !== 'all') {
-      return allClasses.filter(cls => cls.curriculum_id === selectedCurriculumId);
+    let classesToFilter = allClasses;
+    if (selectedEstablishmentId) {
+      classesToFilter = classesToFilter.filter(cls => cls.establishment_id === selectedEstablishmentId);
     }
-    return allClasses;
-  }, [allClasses, selectedCurriculumId]);
+    if (selectedCurriculumId && selectedCurriculumId !== 'all') {
+      classesToFilter = classesToFilter.filter(cls => cls.curriculum_id === selectedCurriculumId);
+    }
+    return classesToFilter;
+  }, [allClasses, selectedCurriculumId, selectedEstablishmentId]);
 
   const classPerformanceData = filteredClasses.map(cls => ({
     name: cls.name,
