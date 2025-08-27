@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move // Added Move icon
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
@@ -51,10 +51,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
-import { cn } from '@/lib/utils'; // Import cn for conditional styling
-import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog'; // New import
-import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog'; // New import
-import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile
+import { cn } from '@/lib/utils';
+import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog';
+import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Drawer,
   DrawerContent,
@@ -62,17 +62,14 @@ import {
   DrawerTitle,
   DrawerDescription,
   DrawerFooter,
-} from "@/components/ui/drawer"; // Import Drawer components
+} from "@/components/ui/drawer";
 
-// Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
 };
 
-// All possible roles for selection
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
 
-// Helper function moved to top-level scope
 const getItemTypeLabel = (type: NavItem['type']) => {
   switch (type) {
     case 'route': return "Route";
@@ -81,7 +78,6 @@ const getItemTypeLabel = (type: NavItem['type']) => {
   }
 };
 
-// Helper to get role display name
 const getRoleDisplayName = (role: Profile['role'] | 'all') => {
   switch (role) {
     case 'student': return 'Élève';
@@ -102,7 +98,7 @@ interface SortableNavItemProps {
   onEditRoleConfig: (item: NavItem, config: RoleNavItemConfig) => void;
   onDelete: (navItemId: string, configId?: string) => void;
   onManageChildren: (parentItem: NavItem) => void;
-  onAssignParent: (item: NavItem, config: RoleNavItemConfig) => void; // New prop
+  onAssignParent: (item: NavItem, config: RoleNavItemConfig) => void;
   isDragging?: boolean;
   isDraggableAndDeletable: boolean;
   selectedRoleFilter: Profile['role'] | 'all';
@@ -119,22 +115,21 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
     transition,
   } = useSortable({ id: item.configId || item.id, disabled: !isDraggableAndDeletable });
 
-  // Adjust paddingLeft based on level and screen size
-  const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`; // Reduced indentation for mobile
+  const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`;
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 100 : 'auto', // Bring dragged item to front
+    zIndex: isDragging ? 100 : 'auto',
     opacity: isDragging ? 0.8 : 1,
-    paddingLeft: effectivePaddingLeft, // Apply responsive padding
+    paddingLeft: effectivePaddingLeft,
   };
 
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
   const config: RoleNavItemConfig | undefined = item.configId && selectedRoleFilter !== 'all' ? {
     id: item.configId,
-    nav_item_id: item.id, // Ensure nav_item_id is correct
+    nav_item_id: item.id,
     role: selectedRoleFilter as Profile['role'],
     parent_nav_item_id: item.parent_nav_item_id,
     order_index: item.order_index,
@@ -150,24 +145,24 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           ref={setNodeRef} 
           style={style} 
           className={cn(
-            "p-3 border rounded-android-tile flex items-center justify-between gap-2 mb-2", // Apply rounded-android-tile
+            "p-3 border rounded-android-tile flex items-center justify-between gap-2 mb-2",
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             isCategory ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             isCategory && level === 0 && "border-l-4 border-primary/50",
-            "flex-wrap sm:flex-nowrap select-none" // Added select-none here
+            "flex-wrap sm:flex-nowrap select-none"
           )}
         >
-          <div className="flex items-center gap-2 flex-grow cursor-pointer select-none" onClick={(e) => { // Added select-none here
+          <div className="flex items-center gap-2 flex-grow cursor-pointer select-none" onClick={(e) => {
             if (hasChildren) {
               e.stopPropagation();
               onToggleExpand(item.id);
             }
           }}>
             {isDraggableAndDeletable && (
-              <div // Changed from Button to div
+              <div
                 {...listeners}
                 {...attributes}
-                className="cursor-grab p-1 rounded-md hover:bg-muted/20" // Added styling for the handle
+                className="cursor-grab p-1 rounded-md hover:bg-muted/20"
               >
                 <GripVertical className="h-5 w-5" />
                 <span className="sr-only">Déplacer l'élément</span>
@@ -195,7 +190,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             {item.is_external && <ExternalLink className="h-4 w-4 text-muted-foreground ml-1" />}
             {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
           </div>
-          <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0"> {/* Allow buttons to wrap on new line on small screens */}
+          <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0">
             <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
               <Edit className="h-4 w-4" />
             </Button>
@@ -218,7 +213,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
           </ContextMenuItem>
         )}
-        {config && ( // Only show if there's a config to edit
+        {config && (
           <ContextMenuItem className="p-2" onClick={() => onAssignParent(item, config)}>
             <Move className="mr-2 h-4 w-4" /> Assigner un parent
           </ContextMenuItem>
@@ -229,17 +224,17 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
 });
 
 const RoleNavConfigsPage = () => {
-  const [isAddExistingItemDialogOpen, setIsAddExistingItemDialogOpen] = useState(false); // New state for the AddExistingNavItemDialog
-  const [addDialogDefaultParentId, setAddDialogDefaultParentId] = useState<string | null | undefined>(undefined); // New state for default parent ID
+  const [isAddExistingItemDialogOpen, setIsAddExistingItemDialogOpen] = useState(false);
+  const [addDialogDefaultParentId, setAddDialogDefaultParentId] = useState<string | null | undefined>(undefined);
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
-  const isMobile = useIsMobile(); // Use the hook
+  const isMobile = useIsMobile();
   const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]);
   const [configuredItemsTree, setConfiguredItemsTree] = useState<NavItem[]>([]);
   const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]);
 
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
-  const [isRoleSelectDialogOpen, setIsRoleSelectDialogOpen] = useState(false); // State for the custom role selection dialog
-  const [roleSearchQuery, setRoleSearchQuery] = useState(''); // Search query for roles
+  const [isRoleSelectDialogOpen, setIsRoleSelectDialogOpen] = useState(false);
+  const [roleSearchQuery, setRoleSearchQuery] = useState('');
 
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
   const [currentConfigToEdit, setCurrentConfigToEdit] = useState<RoleNavItemConfig | null>(null);
@@ -343,7 +338,7 @@ const RoleNavConfigsPage = () => {
               id: item.configId!,
               nav_item_id: item.id,
               role: role,
-              parent_nav_item_id: parentId, // <--- This is the parentId passed to sortAndReindex
+              parent_nav_item_id: parentId,
               order_index: i,
             };
             await updateRoleNavItemConfig(updatedConfig);
@@ -408,7 +403,7 @@ const RoleNavConfigsPage = () => {
   const handleAssignParent = (item: NavItem, config: RoleNavItemConfig) => {
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
-    setIsEditConfigDialogOpen(true); // Reuse the same dialog
+    setIsEditConfigDialogOpen(true);
   };
 
   const handleDragStart = (event: any) => {
@@ -536,7 +531,7 @@ const RoleNavConfigsPage = () => {
                 onEditRoleConfig={handleEditRoleConfig}
                 onDelete={handleDeleteGenericNavItem}
                 onManageChildren={handleManageChildren}
-                onAssignParent={handleAssignParent} // Pass the new handler
+                onAssignParent={handleAssignParent}
                 isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
                 isDraggableAndDeletable={true}
                 selectedRoleFilter={selectedRoleFilter}
@@ -564,7 +559,7 @@ const RoleNavConfigsPage = () => {
       try {
         await resetRoleNavConfigsForRole(selectedRoleFilter as Profile['role']);
         showSuccess(`Navigation par défaut réinitialisée pour le rôle '${selectedRoleFilter}' !`);
-        await fetchAndStructureNavItems(); // Re-fetch to update UI
+        await fetchAndStructureNavItems();
       } catch (error: any) {
         console.error("Error resetting role navigation defaults:", error);
         showError(`Erreur lors de la réinitialisation de la navigation: ${error.message}`);
@@ -575,7 +570,7 @@ const RoleNavConfigsPage = () => {
   const handleSelectRole = (role: Profile['role'] | 'all') => {
     setSelectedRoleFilter(role);
     setIsRoleSelectDialogOpen(false);
-    setRoleSearchQuery(''); // Clear search when role is selected
+    setRoleSearchQuery('');
   };
 
   const filteredRoles = useMemo(() => {
@@ -649,7 +644,7 @@ const RoleNavConfigsPage = () => {
       {selectedRoleFilter !== 'all' && (
         <div className="grid grid-cols-1 gap-8">
           <Card className="rounded-android-tile">
-            <CardHeader className="flex flex-row items-center justify-between"> {/* Make header a flex container */}
+            <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {getRoleDisplayName(selectedRoleFilter)}
@@ -660,7 +655,7 @@ const RoleNavConfigsPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setAddDialogDefaultParentId(null); // Set default parent to null for root
+                  setAddDialogDefaultParentId(null);
                   setIsAddExistingItemDialogOpen(true);
                 }}
                 className="flex-shrink-0"
@@ -682,7 +677,7 @@ const RoleNavConfigsPage = () => {
                           onEditRoleConfig={handleEditRoleConfig}
                           onDelete={handleDeleteGenericNavItem}
                           onManageChildren={handleManageChildren}
-                          onAssignParent={handleAssignParent} // Pass the new handler
+                          onAssignParent={handleAssignParent}
                           isDragging={true}
                           isDraggableAndDeletable={true}
                           selectedRoleFilter={selectedRoleFilter}
@@ -695,14 +690,12 @@ const RoleNavConfigsPage = () => {
                 </CardContent>
               </ContextMenuTrigger>
               <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
-                {/* Removed the "Ajouter un élément racine existant" ContextMenuItem here */}
               </ContextMenuContent>
             </ContextMenu>
           </Card>
         </div>
       )}
 
-      {/* Role Selection Dialog/Drawer */}
       {isMobile ? (
         <Drawer open={isRoleSelectDialogOpen} onOpenChange={setIsRoleSelectDialogOpen}>
           <DrawerContent className="h-svh mt-0 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 z-[100]">
@@ -793,7 +786,6 @@ const RoleNavConfigsPage = () => {
         </Dialog>
       )}
 
-      {/* Edit Role Config Dialog */}
       {currentConfigToEdit && currentItemToEdit && (
         <EditRoleConfigDialog
           isOpen={isEditConfigDialogOpen}
@@ -807,14 +799,13 @@ const RoleNavConfigsPage = () => {
           selectedRoleFilter={selectedRoleFilter as Profile['role']}
           allGenericNavItems={allGenericNavItems}
           allConfiguredItemsFlat={allConfiguredItemsFlat}
-          onSave={fetchAndStructureNavItems} // Callback to refresh the list
+          onSave={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
           iconMap={iconMap}
-          popoverContentClassName="z-[9999]" // Ensure high z-index for this dropdown's content
+          popoverContentClassName="z-[9999]"
         />
       )}
 
-      {/* Manage Children Dialog */}
       {selectedParentForChildrenManagement && (
         <ManageChildrenDialog
           isOpen={isManageChildrenDialogOpen}
@@ -828,7 +819,6 @@ const RoleNavConfigsPage = () => {
         />
       )}
 
-      {/* New Add Existing Nav Item Dialog */}
       {selectedRoleFilter !== 'all' && (
         <AddExistingNavItemDialog
           isOpen={isAddExistingItemDialogOpen}
@@ -839,7 +829,7 @@ const RoleNavConfigsPage = () => {
           onItemAdded={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
           iconMap={iconMap}
-          defaultParentId={addDialogDefaultParentId} // Pass the default parent ID
+          defaultParentId={addDialogDefaultParentId}
         />
       )}
     </div>

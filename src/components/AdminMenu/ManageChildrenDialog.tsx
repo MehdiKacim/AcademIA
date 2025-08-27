@@ -11,11 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, ChevronDown // Import ChevronDown here
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, ChevronDown
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
-import { addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, addNavItem, loadAllNavItemsRaw } from "@/lib/navItems"; // Import addNavItem and loadAllNavItemsRaw
+import { addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, addNavItem, loadAllNavItemsRaw } from "@/lib/navItems";
 import {
   DndContext,
   closestCenter,
@@ -27,38 +27,36 @@ import {
   DragOverlay,
 } from '@dnd-kit/core';
 import {
-  SortableContext, // Corrected import
+  SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable'; // Corrected import
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
-import { Textarea } from '@/components/ui/textarea'; // Import Textarea
-import { Switch } from '@/components/ui/switch'; // Import Switch
-import { Loader2 } from 'lucide-react'; // Import Loader2
-import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'; // Import ContextMenu
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Loader2 } from 'lucide-react';
+import SearchableDropdown from '@/components/ui/SearchableDropdown';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import {
-  Card, // Import Card
-  CardContent, // Import CardContent
-  CardHeader, // Import CardHeader
-  CardTitle, // Import CardTitle
-  CardDescription, // Import CardDescription
-} from "@/components/ui/card"; // Import Card components
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
-// Map icon_name strings to Lucide React components (re-declare or import from a central place)
-const iconMap: { [key: string]: React.ElementType } = { // Changed ReactType to React.ElementType
+const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, ChevronDown
 };
 
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
 
-// Helper function moved to top-level scope
 const getItemTypeLabel = (type: NavItem['type']) => {
   switch (type) {
     case 'route': return "Route";
@@ -84,29 +82,28 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
     transition,
   } = useSortable({ id: item.configId!, disabled: !isDraggableAndDeletable });
 
-  // Adjust paddingLeft based on level and screen size
-  const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`; // Reduced indentation for mobile
+  const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`;
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 100 : 'auto', // Bring dragged item to front
+    zIndex: isDragging ? 100 : 'auto',
     opacity: isDragging ? 0.8 : 1,
-    paddingLeft: effectivePaddingLeft, // Apply responsive padding
+    paddingLeft: effectivePaddingLeft,
   };
 
   const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
 
   return (
-    <ContextMenu> {/* Re-added ContextMenu */}
+    <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto, added flex-wrap */}
-          <div className="flex items-center gap-2 flex-grow select-none"> {/* Added select-none here */}
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
+          <div className="flex items-center gap-2 flex-grow select-none">
             {isDraggableAndDeletable && (
-              <div // Changed from Button to div
+              <div
                 {...listeners}
                 {...attributes}
-                className="cursor-grab p-1 rounded-md hover:bg-muted/20" // Added styling for the handle
+                className="cursor-grab p-1 rounded-md hover:bg-muted/20"
               >
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
                 <span className="sr-only">Déplacer l'élément</span>
@@ -118,13 +115,13 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
             {item.is_global && <Globe className="h-3 w-3 text-muted-foreground ml-1" title="Configuration globale" />}
           </div>
           {isDraggableAndDeletable && (
-            <Button variant="destructive" size="sm" onClick={() => onRemove(item.configId!)} className="flex-shrink-0 mt-2 sm:mt-0"> {/* Allow button to wrap */}
+            <Button variant="destructive" size="sm" onClick={() => onRemove(item.configId!)} className="flex-shrink-0 mt-2 sm:mt-0">
               <Trash2 className="h-3 w-3" />
             </Button>
           )}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
         <ContextMenuItem className="p-2" onClick={() => onRemove(item.configId!)}>
           <Trash2 className="mr-2 h-4 w-4" /> Retirer
         </ContextMenuItem>
@@ -138,27 +135,25 @@ interface ManageChildrenDialogProps {
   onClose: () => void;
   parentItem: NavItem;
   selectedRoleFilter: Profile['role'];
-  // Removed selectedEstablishmentFilter
   allGenericNavItems: NavItem[];
-  allConfiguredItemsFlat: NavItem[]; // New prop: flat list of all configured items for the current role/establishment
+  allConfiguredItemsFlat: NavItem[];
   onChildrenUpdated: () => void;
-  getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>; // Add as prop
+  getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
 }
 
-const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated, getDescendantIds }: ManageChildrenDialogProps) => { // Removed selectedEstablishmentFilter
+const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated, getDescendantIds }: ManageChildrenDialogProps) => {
   const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
-  const [genericItemSearchQuery, setGenericItemSearchQuery] = useState(''); // New state for search input
+  const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
 
-  // States for new generic item creation form
   const [isNewChildFormOpen, setIsNewChildFormOpen] = useState(false);
   const [newChildLabel, setNewChildLabel] = useState('');
   const [newChildRoute, setNewChildRoute] = useState('');
   const [newChildIconName, setNewChildIconName] = useState('');
   const [newChildDescription, setNewChildDescription] = useState('');
   const [newChildIsExternal, setNewChildIsExternal] = useState(false);
-  const [newChildType, setNewChildType] = useState<NavItem['type']>('route'); // New state for type
+  const [newChildType, setNewChildType] = useState<NavItem['type']>('route');
   const [isAddingNewChild, setIsAddingNewChild] = useState(false);
 
 
@@ -178,23 +173,18 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       console.log("[ManageChildrenDialog] All generic nav items:", allGenericNavItems.map(i => ({ id: i.id, label: i.label })));
       console.log("[ManageChildrenDialog] All configured items flat:", allConfiguredItemsFlat.map(i => ({ id: i.id, label: i.label, configId: i.configId, parent: i.parent_nav_item_id })));
 
-      // Filter generic items:
-      // 1. Not the parent itself
-      // 2. Not already a direct child of this parent
-      // 3. Not already a descendant of this parent (to prevent circular dependency)
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
-      const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat); // Use the passed getDescendantIds and allConfiguredItemsFlat
+      const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat);
 
       console.log("[ManageChildrenDialog] Current direct child generic IDs:", Array.from(currentChildIds));
       console.log("[ManageChildrenDialog] Descendant generic IDs of parent:", Array.from(descendantsOfParent));
 
       const filteredAvailable = allGenericNavItems.filter(
-        item => item.id !== parentItem.id && // Cannot be the parent itself
-                !currentChildIds.has(item.id) && // Not already a direct child
-                !descendantsOfParent.has(item.id) // Not already a descendant
+        item => item.id !== parentItem.id &&
+                !currentChildIds.has(item.id) &&
+                !descendantsOfParent.has(item.id)
       );
       
-      // Apply search filter
       const lowerCaseQuery = genericItemSearchQuery.toLowerCase();
       const finalFilteredAvailable = filteredAvailable.filter(item => item.label.toLowerCase().includes(lowerCaseQuery));
 
@@ -203,9 +193,9 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
       setAvailableChildrenForAdd(finalFilteredAvailable);
       setCurrentChildren(parentItem.children || []);
-      setSelectedGenericItemToAdd(null); // Reset selection
+      setSelectedGenericItemToAdd(null);
     }
-  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds, genericItemSearchQuery]); // Add genericItemSearchQuery to deps
+  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds, genericItemSearchQuery]);
 
   const handleDragStart = (event: any) => {
     const { active } = event;
@@ -225,14 +215,12 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
     const overId = over.id as string;
 
     try {
-      // Dropped into "Current Children" container (reorder)
       if (overId === 'current-children-container' || currentChildren.some(c => c.configId === overId)) {
         const oldIndex = currentChildren.findIndex(item => item.configId === activeConfigId);
         const newIndex = currentChildren.findIndex(item => item.configId === overId);
 
         if (oldIndex !== -1 && newIndex !== -1) {
           const newOrder = arrayMove(currentChildren, oldIndex, newIndex);
-          // Update order_index for all affected children in DB
           for (let i = 0; i < newOrder.length; i++) {
             const item = newOrder[i];
             if (item.order_index !== i) {
@@ -274,23 +262,20 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       return;
     }
 
-    // Check if the item is already configured for this role
     const existingConfiguredItem = allConfiguredItemsFlat.find(item => item.id === genericItem.id);
 
     try {
       if (existingConfiguredItem) {
-        // Scenario: Move an already configured item
         const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-          id: existingConfiguredItem.configId!, // Use the existing configId
+          id: existingConfiguredItem.configId!,
           nav_item_id: genericItem.id,
           role: selectedRoleFilter,
           parent_nav_item_id: parentItem.id,
-          order_index: currentChildren.length, // Add to the end of current children
+          order_index: currentChildren.length,
         };
         await updateRoleNavItemConfig(updatedConfig);
         showSuccess(`'${genericItem.label}' déplacé sous '${parentItem.label}' !`);
       } else {
-        // Scenario: Add a new configuration for this generic item
         const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
           nav_item_id: genericItem.id,
           role: selectedRoleFilter,
@@ -300,7 +285,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         await addRoleNavItemConfig(newConfig);
         showSuccess(`'${genericItem.label}' ajouté comme sous-élément !`);
       }
-      onChildrenUpdated(); // Refresh parent component's state
+      onChildrenUpdated();
     } catch (error: any) {
       console.error("Error adding/moving generic item as child:", error);
       showError(`Erreur lors de l'opération: ${error.message}`);
@@ -317,7 +302,6 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       return;
     }
     if (newChildType === 'category_or_action' && !newChildRoute.trim()) {
-      // Same logic as for new item: allow empty route for category, require for action
     }
 
     setIsAddingNewChild(true);
@@ -343,7 +327,6 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         showSuccess(`'${addedGenericItem.label}' créé et ajouté comme sous-élément !`);
         onChildrenUpdated();
 
-        // Reset form
         setNewChildLabel('');
         setNewChildRoute('');
         setNewChildIconName('');
@@ -398,7 +381,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile">
-        <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+        <div className="flex flex-col h-full">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               Gérer les sous-éléments de "{parentItem.label}"
@@ -434,12 +417,13 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                         label: item.label,
                         icon_name: item.icon_name,
                         level: 0,
-                        isNew: false,
+                        isNew: item.isNew, // Corrected: pass item.isNew
+                        typeLabel: getItemTypeLabel(item.type), // Pass typeLabel
                       }))}
                       placeholder="Sélectionner un élément à ajouter"
                       emptyMessage="Aucun élément disponible."
                       iconMap={iconMap}
-                      popoverContentClassName="z-[9999]" // Ensure high z-index for this dropdown's content
+                      popoverContentClassName="z-[9999]"
                     />
                     <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                       <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
@@ -447,8 +431,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                   </CardContent>
                 </Card>
 
-                {/* New section for creating a new generic item and adding it as a child */}
-                <Card className="rounded-android-tile lg:col-span-2"> {/* Collapsible is now inside Card */}
+                <Card className="rounded-android-tile lg:col-span-2">
                   <Collapsible open={isNewChildFormOpen} onOpenChange={setIsNewChildFormOpen}>
                     <CardHeader>
                       <CollapsibleTrigger asChild>
@@ -478,7 +461,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               <SelectTrigger id="new-child-type" className="rounded-android-tile">
                                 <SelectValue placeholder="Sélectionner un type" />
                               </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                                 <ScrollArea className="h-40">
                                   {Object.keys(iconMap).sort().map(iconName => {
                                     const IconComponent = iconMap[iconName];
@@ -508,7 +491,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               <SelectTrigger id="new-child-icon" className="rounded-android-tile">
                                 <SelectValue placeholder="Sélectionner une icône" />
                               </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                                 <ScrollArea className="h-40">
                                   {Object.keys(iconMap).sort().map(iconName => {
                                     const IconComponent = iconMap[iconName];

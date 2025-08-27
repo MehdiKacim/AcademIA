@@ -51,16 +51,24 @@ const AddExistingNavItemDialog = ({
   defaultParentId,
 }: AddExistingNavItemDialogProps) => {
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
-  const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem) | null>(null);
+  // selectedGenericItemInfo est maintenant un useMemo
   const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(defaultParentId === null ? 'none' : defaultParentId || null);
   const [isAdding, setIsAdding] = useState(false);
   const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
   const [parentSearchQuery, setParentSearchQuery] = useState('');
 
+  // Refactorisation: selectedGenericItemInfo est maintenant un useMemo
+  const selectedGenericItemInfo = useMemo(() => {
+    if (!selectedGenericItemToAdd) return null;
+    const item = allGenericNavItems.find(item => item.id === selectedGenericItemToAdd);
+    if (!item) return null;
+    const isConfiguredAsRoot = allConfiguredItemsFlat.some(configured => configured.id === item.id && configured.parent_nav_item_id === null);
+    return { ...item, isConfiguredAsRoot, isNew: !allConfiguredItemsFlat.some(configured => configured.id === item.id) };
+  }, [selectedGenericItemToAdd, allGenericNavItems, allConfiguredItemsFlat]);
+
   React.useEffect(() => {
     if (isOpen) {
       setSelectedGenericItemToAdd(null);
-      setSelectedGenericItemInfo(null);
       setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null);
       setIsAdding(false);
       setGenericItemSearchQuery('');
@@ -85,6 +93,7 @@ const AddExistingNavItemDialog = ({
       ...item,
       isConfiguredAsRoot: false,
       isNew: true,
+      typeLabel: getItemTypeLabel(item.type), // Ajout de typeLabel
     }));
   }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
@@ -214,19 +223,18 @@ const AddExistingNavItemDialog = ({
     }
   };
 
-  const isAddButtonDisabled = isAdding || !selectedGenericItemInfo || !selectedParentForNewItem;
+  const isAddButtonDisabled = isAdding || !selectedGenericItemToAdd || !selectedParentForNewItem;
 
-  const handleSelectGenericItem = (item: ({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem)) => {
-    setSelectedGenericItemToAdd(item.id);
-    setSelectedGenericItemInfo(item);
-    if (defaultParentId === undefined) {
+  const handleSelectGenericItem = (id: string | null) => {
+    console.log("[AddExistingNavItemDialog] handleSelectGenericItem called with ID:", id);
+    setSelectedGenericItemToAdd(id);
+    if (defaultParentId === undefined && id !== null) {
       setSelectedParentForNewItem('none');
     }
   };
 
   const handleCancelSelection = () => {
     setSelectedGenericItemToAdd(null);
-    setSelectedGenericItemInfo(null);
     setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null);
     setGenericItemSearchQuery('');
     setParentSearchQuery('');
@@ -245,7 +253,7 @@ const AddExistingNavItemDialog = ({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 flex-grow">
-            {!selectedGenericItemInfo ? (
+            {!selectedGenericItemToAdd ? (
               <div className="space-y-4">
                 <Label htmlFor="generic-item-search-input">1. Rechercher et sélectionner un élément générique</Label>
                 <Input
@@ -262,28 +270,22 @@ const AddExistingNavItemDialog = ({
                         Aucun élément disponible à ajouter.
                       </p>
                     ) : (
-                      availableGenericItemsOptions.map(item => {
-                        const ItemIcon = iconMap[item.icon_name || 'Info'] || Info;
-                        return (
-                          <Card 
-                            key={item.id} 
-                            className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20 pointer-events-auto"
-                            onClick={() => handleSelectGenericItem(item)}
-                          >
-                            <React.Fragment>
-                              <div className="flex items-center gap-3 select-none">
-                                <ItemIcon className="h-5 w-5 text-primary" />
-                                <div>
-                                  <p className="font-medium">{item.label}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
-                                  </p>
-                                </div>
-                              </div>
-                            </React.Fragment>
-                          </Card>
-                        );
-                      })
+                      <SearchableDropdown
+                        value={selectedGenericItemToAdd}
+                        onValueChange={handleSelectGenericItem}
+                        options={availableGenericItemsOptions.map(item => ({
+                          id: item.id,
+                          label: item.label,
+                          icon_name: item.icon_name,
+                          level: 0,
+                          isNew: item.isNew, // Corrected: pass item.isNew
+                          typeLabel: getItemTypeLabel(item.type), // Pass typeLabel
+                        }))}
+                        placeholder="Sélectionner un élément..."
+                        emptyMessage="Aucun élément disponible à ajouter."
+                        iconMap={iconMap}
+                        popoverContentClassName="z-[9999]"
+                      />
                     )}
                   </div>
                 </ScrollArea>
@@ -299,14 +301,14 @@ const AddExistingNavItemDialog = ({
                 <Card className="p-3 rounded-android-tile bg-muted/20">
                   <CardHeader className="p-0 pb-2">
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <IconComponent className="h-5 w-5 text-primary" /> {selectedGenericItemInfo.label}
+                      <IconComponent className="h-5 w-5 text-primary" /> {selectedGenericItemInfo?.label}
                     </CardTitle>
                     <CardDescription className="text-sm">
-                      {getItemTypeLabel(selectedGenericItemInfo.type)} {selectedGenericItemInfo.route && `(${selectedGenericItemInfo.route})`}
+                      {getItemTypeLabel(selectedGenericItemInfo?.type || 'route')} {selectedGenericItemInfo?.route && `(${selectedGenericItemInfo.route})`}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0 text-sm text-muted-foreground">
-                    {selectedGenericItemInfo.description || "Aucune description."}
+                    {selectedGenericItemInfo?.description || "Aucune description."}
                   </CardContent>
                 </Card>
 

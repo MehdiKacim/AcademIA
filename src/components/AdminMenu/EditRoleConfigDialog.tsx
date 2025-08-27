@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -27,13 +27,12 @@ interface EditRoleConfigDialogProps {
   selectedRoleFilter: Profile['role'];
   allGenericNavItems: NavItem[];
   allConfiguredItemsFlat: NavItem[];
-  onSave: () => void; // Callback to refresh parent list
+  onSave: () => void;
   getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
   iconMap: { [key: string]: React.ElementType };
-  popoverContentClassName?: string; // New prop for popover content class
+  popoverContentClassName?: string;
 }
 
-// Helper function to get item type label
 const getItemTypeLabel = (type: NavItem['type']) => {
   switch (type) {
     case 'route': return "Route";
@@ -53,24 +52,22 @@ const EditRoleConfigDialog = ({
   onSave,
   getDescendantIds,
   iconMap,
-  popoverContentClassName, // Destructure new prop
+  popoverContentClassName,
 }: EditRoleConfigDialogProps) => {
   const [selectedParentForEdit, setSelectedParentForEdit] = useState<string | null>(null);
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [parentSearchQuery, setParentSearchQuery] = useState('');
 
-  // State to manage the two-step selection process
   const [isParentSelectionStep, setIsParentSelectionStep] = useState(true);
 
   useEffect(() => {
     if (isOpen && currentConfigToEdit && currentItemToEdit) {
-      // Initialize states when dialog opens
       setSelectedParentForEdit(currentConfigToEdit.parent_nav_item_id || null);
       setEditConfigOrderIndex(currentConfigToEdit.order_index);
       setIsSavingEdit(false);
       setParentSearchQuery('');
-      setIsParentSelectionStep(true); // Always start with parent selection
+      setIsParentSelectionStep(true);
     }
   }, [isOpen, currentConfigToEdit, currentItemToEdit]);
 
@@ -82,7 +79,6 @@ const EditRoleConfigDialog = ({
 
     const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
 
-    // 1. Add already configured categories that are valid parents
     allConfiguredItemsFlat.forEach(item => {
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
       const isNotSelf = item.id !== currentItemToEdit.id;
@@ -102,35 +98,31 @@ const EditRoleConfigDialog = ({
           level: level,
           icon_name: item.icon_name,
           typeLabel: getItemTypeLabel(item.type),
-          isNew: false, // This is an existing configured parent
+          isNew: false,
         });
       }
     });
 
-    // 2. Add generic categories that are NOT YET configured for this role and are valid parents
     allGenericNavItems.forEach(item => {
-      // Only consider if it's a category and not already configured for this role
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
       const isNotConfiguredForRole = !configuredItemIds.has(item.id);
       const isNotSelf = item.id !== currentItemToEdit.id;
-      const isNotDescendant = !descendantsOfCurrentItem.has(item.id); // Check against descendants of currentItemToEdit
+      const isNotDescendant = !descendantsOfCurrentItem.has(item.id);
 
       if (isCategory && isNotConfiguredForRole && isNotSelf && isNotDescendant) {
-        // For new generic items, assume level 0 for display in the dropdown
         potentialParents.push({
           id: item.id,
           label: item.label,
-          level: 0, // Treat as a potential root-level parent for now
+          level: 0,
           icon_name: item.icon_name,
           typeLabel: getItemTypeLabel(item.type),
-          isNew: true, // This is a new generic parent to be configured
+          isNew: true,
         });
       }
     });
 
     const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
     
-    // Apply search filter
     const lowerCaseQuery = parentSearchQuery.toLowerCase();
     return [
       { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action' },
@@ -145,7 +137,6 @@ const EditRoleConfigDialog = ({
     try {
       let finalParentId: string | null = selectedParentForEdit === 'none' ? null : selectedParentForEdit;
 
-      // Check if the selected parent is a new generic item (not yet configured for this role)
       const selectedParentInfo = availableParentsOptions.find(p => p.id === finalParentId);
 
       if (selectedParentInfo?.isNew) {
@@ -194,7 +185,7 @@ const EditRoleConfigDialog = ({
       };
       await updateRoleNavItemConfig(updatedConfigData);
       showSuccess("Configuration de rôle mise à jour !");
-      onSave(); // Trigger refresh in parent
+      onSave();
       onClose();
     } catch (error: any) {
       console.error("Error updating role config:", error);
@@ -206,12 +197,12 @@ const EditRoleConfigDialog = ({
 
   const handleSelectParent = (parentId: string | null) => {
     setSelectedParentForEdit(parentId);
-    setIsParentSelectionStep(false); // Move to the next step
+    setIsParentSelectionStep(false);
   };
 
   const handleCancelParentSelection = () => {
     setSelectedParentForEdit(null);
-    setIsParentSelectionStep(true); // Go back to parent selection
+    setIsParentSelectionStep(true);
   };
 
   if (!currentConfigToEdit || !currentItemToEdit) return null;
@@ -221,16 +212,15 @@ const EditRoleConfigDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile">
-        <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+        <div className="flex flex-col h-full">
           <DialogHeader>
             <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
             <DialogDescription>
               Ajustez la position et le parent de cet élément dans le menu de ce rôle.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+          <div className="grid gap-4 py-4 flex-grow">
             {isParentSelectionStep ? (
-              // Step 1: Select Parent
               <div className="space-y-4">
                 <Label htmlFor="parent-search-input">1. Rechercher et sélectionner un parent</Label>
                 <Input
@@ -247,37 +237,21 @@ const EditRoleConfigDialog = ({
                         Aucun parent disponible.
                       </p>
                     ) : (
-                      availableParentsOptions.map(item => {
-                        const ParentIcon = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
-                        const isSelected = selectedParentForEdit === item.id;
-                        return (
-                          <Card 
-                            key={item.id} 
-                            className={cn(
-                              "flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20",
-                              isSelected && "border-primary ring-2 ring-primary/50 bg-primary/5"
-                            )}
-                            onClick={() => handleSelectParent(item.id)}
-                          >
-                            <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
-                              <ParentIcon className="h-5 w-5 text-primary" />
-                              <div>
-                                <p className="font-medium">{item.label}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {item.typeLabel} {item.id !== 'none' && item.id !== currentItemToEdit.id && `(ID: ${item.id.substring(0, 8)}...)`}
-                                  {item.isNew && <span className="ml-2 italic">(Nouvelle catégorie générique)</span>}
-                                </p>
-                              </div>
-                            </div>
-                          </Card>
-                        );
-                      })
+                      <SearchableDropdown
+                        value={selectedParentForEdit}
+                        onValueChange={handleSelectParent}
+                        options={availableParentsOptions}
+                        placeholder="Sélectionner un parent..."
+                        emptyMessage="Aucun parent trouvé."
+                        iconMap={iconMap}
+                        disabled={false}
+                        popoverContentClassName="z-[9999]"
+                      />
                     )}
                   </div>
                 </ScrollArea>
               </div>
             ) : (
-              // Step 2: Confirm Parent and Set Order
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>2. Confirmer le parent et définir l'ordre</Label>
@@ -299,7 +273,7 @@ const EditRoleConfigDialog = ({
                   </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-config-order" className="sm:text-right">Ordre</Label>
                   <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="sm:col-span-3 rounded-android-tile" />
                 </div>
