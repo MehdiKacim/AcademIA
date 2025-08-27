@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRole } from '@/contexts/RoleContext';
 import { useCourseChat } from '@/contexts/CourseChatContext';
-import { Input } from "@/components/ui/input"; // Added Input import
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea import
 
 interface DesktopSubMenuOverlayProps {
   isOpen: boolean;
