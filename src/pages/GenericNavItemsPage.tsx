@@ -141,6 +141,10 @@ const GenericNavItemsPage = () => {
   };
 
   const handleEditGenericNavItem = (item: NavItem) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à modifier les propriétés génériques des éléments.");
+      return;
+    }
     setCurrentItemToEdit(item);
     setEditItemLabel(item.label);
     setEditItemRoute(item.route || '');
@@ -238,7 +242,7 @@ const GenericNavItemsPage = () => {
           <CardHeader>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2">
                   <PlusCircle className="h-5 w-5 text-primary" /> Ajouter un nouvel élément générique
                 </CardTitle>
                 {isNewItemFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}

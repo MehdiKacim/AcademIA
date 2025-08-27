@@ -80,6 +80,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
     setNodeRef,
     transform,
     transition,
+    isDragging: isSortableDragging, // Use a different name to avoid conflict
   } = useSortable({ id: item.configId!, disabled: !isDraggableAndDeletable });
 
   const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`;
@@ -87,8 +88,8 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 100 : 'auto',
-    opacity: isDragging ? 0.8 : 1,
+    zIndex: isSortableDragging ? 100 : 'auto', // Use isSortableDragging here
+    opacity: isSortableDragging ? 0.8 : 1,
     paddingLeft: effectivePaddingLeft,
   };
 
@@ -97,7 +98,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}>
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isSortableDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Use isSortableDragging here */}
           <div className="flex items-center gap-2 flex-grow select-none">
             {isDraggableAndDeletable && (
               <div
