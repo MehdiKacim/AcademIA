@@ -13,7 +13,7 @@ import { PlusCircle, UserPlus, UserCheck, Check, XCircle, Mail, Search, Edit, Tr
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, checkUsernameExists, checkEmailExists, deleteProfile, updateProfile, getProfileById } from '@/lib/studentData';
-import { Profile, ALL_ROLES } from '@/lib/dataModels'; // Import ALL_ROLES
+import { Profile, ALL_ROLES } from '@/lib/dataModels';
 import { supabase } from '@/integrations/supabase/client';
 import InputWithStatus from '@/components/InputWithStatus';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // Removed loadEstablishments import
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
@@ -33,15 +33,40 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"; // Import Dialog components
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+} from "@/components/ui/dialog";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
+// Map icon_name strings to Lucide React components (already present in RoleNavConfigsPage, but needed here)
+const iconMap: { [key: string]: React.ElementType } = {
+  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: BookOpen, PlusSquare: PlusCircle, Users: Users, GraduationCap: GraduationCap, PenTool: PenTool, NotebookText: NotebookText, School: School, LayoutList: LayoutList, BriefcaseBusiness: BriefcaseBusiness, UserRoundCog: UserRoundCog, ClipboardCheck: ClipboardCheck, BotMessageSquare: BotMessageSquare, LayoutDashboard: LayoutDashboard, LineChart: LineChart, UsersRound: UsersRound, UserRoundSearch: UserRoundSearch, BellRing: BellRing, Building2: Building2, BookText: BookText, UserCog: UserCog, TrendingUp: TrendingUp, BookMarked: BookMarked, CalendarDays: CalendarDays, UserCheck: UserCheck,
+  // Icons for roles (also defined in RoleNavConfigsPage, but needed here for consistency)
+  student: GraduationCap,
+  professeur: PenTool,
+  tutor: Users,
+  director: BriefcaseBusiness,
+  deputy_director: BriefcaseBusiness, // Same as director for now
+  administrator: UserRoundCog,
+};
+
+// Helper function to get display name for roles
+const getRoleDisplayName = (role: Profile['role'] | 'all') => {
+  switch (role) {
+    case 'student': return 'Élève';
+    case 'professeur': return 'Professeur';
+    case 'tutor': return 'Tuteur';
+    case 'director': return 'Directeur';
+    case 'deputy_director': return 'Directeur Adjoint';
+    case 'administrator': return 'Administrateur';
+    case 'all': return 'Tous les rôles';
+    default: return 'Rôle inconnu';
+  }
+};
 
 const AdminUserManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser, fetchUserProfile } = useRole();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
-  // Removed establishments state
 
   // States for new user creation form
   const [newUserFirstName, setNewUserFirstName] = useState('');
@@ -52,7 +77,6 @@ const AdminUserManagementPage = () => {
   const [newUserRole, setNewUserRole] = useState<Profile['role']>(
     (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'student'
   );
-  // Removed newUserEstablishmentId
   const [newUserEnrollmentStartDate, setNewUserEnrollmentStartDate] = useState<Date | undefined>(undefined);
   const [newUserEnrollmentEndDate, setNewUserEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
@@ -68,7 +92,6 @@ const AdminUserManagementPage = () => {
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>(
     (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'all'
   );
-  // Removed selectedEstablishmentFilter
 
   // States for editing user
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -78,7 +101,6 @@ const AdminUserManagementPage = () => {
   const [editUsername, setEditUsername] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editRole, setEditRole] = useState<Profile['role']>('student');
-  // Removed editEstablishmentId
   const [editEnrollmentStartDate, setEditEnrollmentStartDate] = useState<Date | undefined>(undefined);
   const [editEnrollmentEndDate, setEditEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -92,7 +114,6 @@ const AdminUserManagementPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       setAllUsers(await getAllProfiles());
-      // Removed loadEstablishments
     };
     fetchData();
   }, [currentUserProfile]);
@@ -101,23 +122,15 @@ const AdminUserManagementPage = () => {
   useEffect(() => {
     if ((currentRole === 'director' || currentRole === 'deputy_director')) {
       setSelectedRoleFilter('professeur');
-      // Removed setSelectedEstablishmentFilter
-      setNewUserRole('professeur'); // Default new user role for directors
-      // Removed setNewUserEstablishmentId
-    } else if (currentRole === 'administrator') { // Admin specific defaults
-      setSelectedRoleFilter('all'); // Admin can see all roles by default
-      // Removed setSelectedEstablishmentFilter
-      setNewUserRole('director'); // Admin defaults to creating directors
-      // Removed setNewUserEstablishmentId
-    } else { // Professeur/Tutor defaults
+      setNewUserRole('professeur');
+    } else if (currentRole === 'administrator') {
+      setSelectedRoleFilter('all');
+      setNewUserRole('director');
+    } else {
       setSelectedRoleFilter('student');
-      // Removed setSelectedEstablishmentId
       setNewUserRole('student');
-      // Removed setNewUserEstablishmentId
     }
-  }, [currentRole, currentUserProfile?.id]); // Changed dependency from establishment_id to id
-
-  // Removed getEstablishmentName
+  }, [currentRole, currentUserProfile?.id]);
 
   // --- New User Creation Logic ---
   const validateUsername = useCallback(async (username: string, currentUserId?: string) => {
@@ -179,7 +192,7 @@ const AdminUserManagementPage = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!currentUserProfile || !['administrator', 'director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')) { // Added professeur and tutor
+    if (!currentUserProfile || !['administrator', 'director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à créer des utilisateurs.");
       return;
     }
@@ -201,31 +214,25 @@ const AdminUserManagementPage = () => {
     }
 
     let finalNewUserRole = newUserRole;
-    // Removed finalNewUserEstablishmentId
     let finalNewUserEnrollmentStartDate = newUserEnrollmentStartDate;
     let finalNewUserEnrollmentEndDate = newUserEnrollmentEndDate;
 
     // Role-based creation restrictions and defaults
     if (currentRole === 'director' || currentRole === 'deputy_director') {
-      // For directors, the default role on this page is 'professeur', but they can also create 'tutor' or 'student'
       if (!['professeur', 'tutor', 'student'].includes(newUserRole)) {
         showError("Les directeurs ne peuvent créer que des professeurs, tuteurs ou des élèves.");
         return;
       }
-      // Removed establishment_id logic for directors
-    } else if (currentRole === 'professeur' || currentRole === 'tutor') { // Professors and Tutors can only create students
+    } else if (currentRole === 'professeur' || currentRole === 'tutor') {
       if (newUserRole !== 'student') {
         showError("Les professeurs et tuteurs ne peuvent créer que des élèves.");
         return;
       }
-      // Removed establishment_id logic for professors/tutors
     } else if (currentRole === 'administrator') {
-      // Admin can only create director, deputy_director, or other administrators
       if (!['director', 'deputy_director', 'administrator'].includes(newUserRole)) {
         showError("Les administrateurs ne peuvent créer que des directeurs, directeurs adjoints ou d'autres administrateurs.");
         return;
       }
-      // Removed establishment_id requirement for admin
     }
 
     // Enrollment dates are only for students
@@ -253,7 +260,6 @@ const AdminUserManagementPage = () => {
           last_name: newUserLastName.trim(),
           username: newUserUsername.trim(),
           role: finalNewUserRole,
-          // Removed establishment_id
           enrollment_start_date: finalNewUserEnrollmentStartDate ? finalNewUserEnrollmentStartDate.toISOString().split('T')[0] : undefined,
           enrollment_end_date: finalNewUserEnrollmentEndDate ? finalNewUserEnrollmentEndDate.toISOString().split('T')[0] : undefined,
         },
@@ -266,9 +272,6 @@ const AdminUserManagementPage = () => {
       }
       
       showSuccess(`Utilisateur ${newUserFirstName} ${newUserLastName} (${finalNewUserRole}) créé avec succès !`);
-      // After creating the admin, ensure their default navigation items are set up
-      // Removed bootstrapDefaultNavItemsForRole call
-      // showSuccess("Navigation administrateur par défaut configurée !");
 
       setNewUserFirstName('');
       setNewUserLastName('');
@@ -277,9 +280,8 @@ const AdminUserManagementPage = () => {
       setNewUserPassword('');
       setNewUserRole(
         (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 
-        (currentRole === 'professeur' || currentRole === 'tutor') ? 'student' : 'director' // Admin defaults to director
-      ); // Reset to default based on role
-      // Removed setNewUserEstablishmentId
+        (currentRole === 'professeur' || currentRole === 'tutor') ? 'student' : 'director'
+      );
       setNewUserEnrollmentStartDate(undefined);
       setNewUserEnrollmentEndDate(undefined);
       setUsernameAvailabilityStatus('idle');
@@ -294,13 +296,8 @@ const AdminUserManagementPage = () => {
     }
   };
 
-  // Removed Debounced search for student to assign to establishment (Admin only)
-  // Removed handleAssignStudentToEstablishment
-  // Removed handleClearEstAssignmentForm
-  // Removed filteredStudentsForEstDropdown
-
   const handleDeleteStudent = async (studentProfileId: string) => {
-    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can delete
+    if (!currentUserProfile || currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à supprimer des élèves.");
       return;
     }
@@ -313,10 +310,7 @@ const AdminUserManagementPage = () => {
           return;
         }
         
-        // The profile and enrollments should be cascade deleted by DB foreign keys
-        // Re-fetch all data to update the UI
-        setAllUsers(await getAllProfiles()); // Corrected to setAllUsers
-        // setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // This state is not used in this component, but if it were, it would need to be refreshed.
+        setAllUsers(await getAllProfiles());
         showSuccess("Élève et compte supprimés !");
       } catch (error: any) {
         console.error("Error deleting student:", error);
@@ -334,19 +328,14 @@ const AdminUserManagementPage = () => {
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
-  const filteredUsersToDisplay = React.useMemo(() => { // Renamed from studentsToDisplay to filteredUsersToDisplay
+  const filteredUsersToDisplay = React.useMemo(() => {
     let users = allUsers;
 
-    // Filter by role
     if (selectedRoleFilter !== 'all') {
       users = users.filter(p => p.role === selectedRoleFilter);
     }
-
-    // Removed filtering by current user's establishment
     
-    // Removed establishment filter
-    
-    if (userListSearchQuery.trim()) { // Changed from studentSearchQuery to userListSearchQuery
+    if (userListSearchQuery.trim()) {
       const lowerCaseQuery = userListSearchQuery.toLowerCase();
       users = users.filter(s =>
         s.first_name?.toLowerCase().includes(lowerCaseQuery) ||
@@ -356,7 +345,7 @@ const AdminUserManagementPage = () => {
       );
     }
     return users;
-  }, [allUsers, currentUserProfile, currentRole, userListSearchQuery, selectedRoleFilter]); // Removed selectedEstablishmentFilter
+  }, [allUsers, currentUserProfile, currentRole, userListSearchQuery, selectedRoleFilter]);
 
   const currentYear = new Date().getFullYear();
   const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
@@ -387,10 +376,8 @@ const AdminUserManagementPage = () => {
     );
   }
 
-  // Removed establishmentsToDisplayForNewUser
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Utilisateurs
       </h1>
@@ -399,9 +386,9 @@ const AdminUserManagementPage = () => {
       </p>
 
       {/* Section: Créer un nouvel utilisateur */}
-      <Card className="rounded-android-tile"> {/* Outer Card for styling the whole collapsible section */}
+      <Card className="rounded-android-tile">
         <Collapsible open={isNewUserFormOpen} onOpenChange={setIsNewUserFormOpen}>
-          <CardHeader> {/* This CardHeader is part of the outer Card */}
+          <CardHeader>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
                 <CardTitle className="flex items-center gap-2">
@@ -412,7 +399,7 @@ const AdminUserManagementPage = () => {
             </CollapsibleTrigger>
             <CardDescription>Créez un nouveau compte utilisateur avec un rôle spécifique.</CardDescription>
           </CardHeader>
-          <CollapsibleContent className="space-y-4 p-4"> {/* This is the collapsible part */}
+          <CollapsibleContent className="space-y-4 p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   placeholder="Prénom"
@@ -454,7 +441,7 @@ const AdminUserManagementPage = () => {
                     <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                       {ALL_ROLES
                         .filter(role => {
-                          if (currentRole === 'administrator') return true; // Admin can create any role
+                          if (currentRole === 'administrator') return true;
                           if (currentRole === 'director' || currentRole === 'deputy_director') return ['professeur', 'tutor', 'student'].includes(role);
                           if (currentRole === 'professeur' || currentRole === 'tutor') return role === 'student';
                           return false;
@@ -840,8 +827,8 @@ const AdminUserManagementPage = () => {
                     }
 
                     showSuccess("Utilisateur mis à jour avec succès !");
-                    await fetchUserProfile(userToEdit.id); // Refresh current user's profile if it was the one edited
-                    setAllUsers(await getAllProfiles()); // Refresh all users
+                    await fetchUserProfile(userToEdit.id);
+                    setAllUsers(await getAllProfiles());
                     setIsEditDialogOpen(false);
                     setUserToEdit(null);
                   } catch (error: any) {
