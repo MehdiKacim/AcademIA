@@ -391,6 +391,10 @@ const RoleNavConfigsPage = () => {
   }, [fetchAndStructureNavItems]);
 
   const handleDeleteGenericNavItem = async (navItemId: string, configId?: string) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à supprimer des éléments de navigation.");
+      return;
+    }
     if (selectedRoleFilter !== 'all' && configId) {
       if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette configuration de rôle pour l'élément ? Cela supprimera toutes ses configurations de rôle associées. Cette action est irréversible.`)) {
         try {
@@ -407,22 +411,38 @@ const RoleNavConfigsPage = () => {
   };
 
   const handleEditGenericItem = (item: NavItem) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à modifier les propriétés génériques des éléments.");
+      return;
+    }
     showError("Veuillez utiliser la page 'Éléments de navigation' pour modifier les propriétés génériques des éléments.");
   };
 
   const handleEditRoleConfig = (item: NavItem, config: RoleNavItemConfig) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à modifier les configurations de rôle.");
+      return;
+    }
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
     setIsEditConfigDialogOpen(true);
   };
 
   const handleAssignParent = (item: NavItem, config: RoleNavItemConfig) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à assigner un parent.");
+      return;
+    }
     setCurrentItemToEdit(item);
     setCurrentConfigToEdit(config);
     setIsEditConfigDialogOpen(true);
   };
 
   const handleDragStart = (event: any) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à réorganiser les éléments.");
+      return;
+    }
     const { active } = event;
     const configuredItem = allConfiguredItemsFlat.find(item => item.configId === active.id);
     if (configuredItem && configuredItem.configId) {
@@ -442,6 +462,12 @@ const RoleNavConfigsPage = () => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à réorganiser les éléments.");
+      setActiveDragItem(null);
+      setActiveDragConfig(null);
+      return;
+    }
     const { active, over } = event;
 
     if (!activeDragItem || !activeDragConfig || !over || active.id === over.id) {
@@ -617,6 +643,10 @@ const RoleNavConfigsPage = () => {
   };
 
   const handleManageChildren = (parentItem: NavItem) => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à gérer les sous-éléments.");
+      return;
+    }
     setSelectedParentForChildrenManagement(parentItem);
     setIsManageChildrenDialogOpen(true);
   };
@@ -644,7 +674,7 @@ const RoleNavConfigsPage = () => {
                 onManageChildren={handleManageChildren}
                 onAssignParent={handleAssignParent}
                 isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
-                isDraggableAndDeletable={true}
+                isDraggableAndDeletable={currentRole === 'administrator'} // Only admin can drag/delete
                 selectedRoleFilter={selectedRoleFilter}
                 isExpanded={!!expandedItems[item.id]}
                 onToggleExpand={toggleExpand}
@@ -662,6 +692,10 @@ const RoleNavConfigsPage = () => {
   };
 
   const handleResetRoleNav = async () => {
+    if (currentRole !== 'administrator') {
+      showError("Vous n'êtes pas autorisé à réinitialiser la navigation.");
+      return;
+    }
     if (selectedRoleFilter === 'all') {
       showError("Veuillez sélectionner un rôle spécifique à réinitialiser.");
       return;
@@ -808,7 +842,7 @@ const RoleNavConfigsPage = () => {
                       onManageChildren={handleManageChildren}
                       onAssignParent={handleAssignParent}
                       isDragging={true}
-                      isDraggableAndDeletable={true}
+                      isDraggableAndDeletable={currentRole === 'administrator'}
                       selectedRoleFilter={selectedRoleFilter}
                       isExpanded={false}
                       onToggleExpand={() => {}}
