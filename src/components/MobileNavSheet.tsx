@@ -272,21 +272,27 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           </motion.div>
         </ScrollArea>
 
-        <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <div className="flex justify-between gap-2">
-            {currentUserProfile ? (
-              <Button variant="destructive" className="android-footer-button flex-grow rounded-android-tile" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" /> Déconnexion
-              </Button>
-            ) : (
-              <Button variant="default" className="android-footer-button flex-grow rounded-android-tile" onClick={onOpenAuthModal}>
-                <User className="h-5 w-5" /> Se connecter
-              </Button>
-            )}
-            <Button variant="outline" className="android-footer-button flex-grow rounded-android-tile" onClick={() => navigate('/about')}> {/* Navigate to /about */}
-              <Info className="h-5 w-5" /> À propos
+        {/* Floating buttons for Logout and About */}
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end">
+          {currentUserProfile ? (
+            <Button variant="destructive" size="icon" className="rounded-full h-12 w-12 shadow-lg" onClick={handleLogout}>
+              <LogOut className="h-6 w-6" />
+              <span className="sr-only">Déconnexion</span>
             </Button>
-          </div>
+          ) : (
+            <Button variant="default" size="icon" className="rounded-full h-12 w-12 shadow-lg" onClick={onOpenAuthModal}>
+              <User className="h-6 w-6" />
+              <span className="sr-only">Se connecter</span>
+            </Button>
+          )}
+          <Button variant="outline" size="icon" className="rounded-full h-12 w-12 shadow-lg bg-background/80 backdrop-blur-lg" onClick={() => navigate('/about')}>
+            <Info className="h-6 w-6" />
+            <span className="sr-only">À propos</span>
+          </Button>
+        </div>
+
+        {/* Bottom indicator */}
+        <div className="p-4 border-t border-border flex-shrink-0">
           <div className="flex justify-center pt-2">
             <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
           </div>
