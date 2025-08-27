@@ -24,7 +24,7 @@ import { format, parseISO, addYears, addDays } from 'date-fns'; // Added addDays
 import { fr } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge"; // Import Badge
 import {
