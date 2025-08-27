@@ -261,11 +261,11 @@ const RoleNavConfigsPage = () => {
   const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
   const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
 
-  const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
+  const findItemInTree = useCallback((items: NavItem[], targetConfigId: string): NavItem | undefined => {
     for (const item of items) {
-      if (item.configId === targetId || item.id === targetId) return item;
+      if (item.configId === targetConfigId || item.id === targetConfigId) return item;
       if (item.children) {
-        const foundChild = findItemInTree(item.children, targetId);
+        const foundChild = findItemInTree(item.children, targetConfigId);
         if (foundChild) return foundChild;
       }
     }
@@ -459,77 +459,74 @@ const RoleNavConfigsPage = () => {
     const activeConfigId = active.id as string;
     const overId = over.id as string;
 
-    // Find the active item's current position in the tree
-    const findItemAndParentInTree = (items: NavItem[], targetConfigId: string, currentParentId: string | null = null): { item: NavItem, parentId: string | null, list: NavItem[] } | null => {
-      for (const list of [items, ...(items.flatMap(i => i.children || []))]) { // Check root and all children lists
-        const foundItem = list.find(i => i.configId === targetConfigId);
-        if (foundItem) {
-          return { item: foundItem, parentId: currentParentId, list: list };
+    // Helper to find the list an item belongs to and its index
+    const findListAndIndex = (items: NavItem[], targetConfigId: string, currentParentId: string | null = null): { parentId: string | null, index: number, list: NavItem[] } | null => {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].configId === targetConfigId) {
+          return { parentId: currentParentId, index: i, list: items };
+        }
+        if (items[i].children && items[i].children.length > 0) {
+          const found = findListAndIndex(items[i].children, targetConfigId, items[i].id);
+          if (found) return found;
         }
       }
       return null;
     };
 
-    const activeItemLocation = findItemAndParentInTree(configuredItemsTree, activeConfigId);
-    if (!activeItemLocation) {
+    const activeItemInfo = findListAndIndex(configuredItemsTree, activeConfigId);
+    if (!activeItemInfo) {
       showError("Élément déplacé introuvable dans la structure actuelle.");
       setActiveDragItem(null);
       setActiveDragConfig(null);
       return;
     }
 
+    // Determine the new parent and new index
     let newParentId: string | null = null;
     let newIndex: number = 0;
 
+    const overSortable = over.data.current?.sortable;
     const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId);
     const overIsRootContainer = overId === 'configured-container';
     const overIsChildContainer = overId.startsWith('configured-container-children-of-');
 
-    if (overConfiguredItem) {
-      // Dropped on another item.
-      // Determine if it's dropped *into* a category or *next to* an item.
-      const overItemLocation = findItemAndParentInTree(configuredItemsTree, overId);
-      if (!overItemLocation) {
-        showError("Cible de dépôt introuvable.");
-        setActiveDragItem(null);
-        setActiveDragConfig(null);
-        return;
-      }
-
-      if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined) && expandedItems[overConfiguredItem.id]) {
-        // Dropped directly into an expanded category
-        newParentId = overConfiguredItem.id;
-        newIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
-      } else {
-        // Dropped next to an item (or on a collapsed category)
-        newParentId = overItemLocation.parentId;
-        newIndex = overItemLocation.list.findIndex(item => item.configId === overId);
-        if (newIndex !== -1) {
-          // Insert *after* the item it was dropped on
-          newIndex++;
-        } else {
-          // Fallback if index not found (shouldn't happen if overItemLocation is valid)
-          newIndex = overItemLocation.list.length;
+    if (overSortable) {
+        // Dropped on another sortable item
+        const overItemInfo = findListAndIndex(configuredItemsTree, overId);
+        if (!overItemInfo) {
+            showError("Cible de dépôt introuvable.");
+            setActiveDragItem(null);
+            setActiveDragConfig(null);
+            return;
         }
-      }
+
+        // If dropping on an expanded category, make it a child of that category
+        if (overConfiguredItem && overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined) && expandedItems[overConfiguredItem.id]) {
+            newParentId = overConfiguredItem.id;
+            newIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
+        } else {
+            // Dropped next to an item (or on a collapsed category/route)
+            newParentId = overItemInfo.parentId;
+            newIndex = overSortable.index; // Use the index provided by dnd-kit's sortable context
+        }
     } else if (overIsRootContainer) {
-      newParentId = null;
-      newIndex = configuredItemsTree.length; // Add to the end of root items
+        newParentId = null;
+        newIndex = configuredItemsTree.length; // Add to the end of root items
     } else if (overIsChildContainer) {
-      newParentId = overId.replace('configured-container-children-of-', '');
-      const parentItem = allConfiguredItemsFlat.find(item => item.id === newParentId);
-      if (!parentItem || parentItem.type === 'route') {
-        showError("Vous ne pouvez pas déposer un élément sous une route ou une cible invalide.");
+        newParentId = overId.replace('configured-container-children-of-', '');
+        const parentItem = allConfiguredItemsFlat.find(item => item.id === newParentId);
+        if (!parentItem || parentItem.type === 'route') {
+            showError("Vous ne pouvez pas déposer un élément sous une route ou une cible invalide.");
+            setActiveDragItem(null);
+            setActiveDragConfig(null);
+            return;
+        }
+        newIndex = parentItem.children?.length || 0; // Add to the end of its children
+    } else {
+        showError("Cible de dépôt non valide.");
         setActiveDragItem(null);
         setActiveDragConfig(null);
         return;
-      }
-      newIndex = parentItem.children?.length || 0; // Add to the end of its children
-    } else {
-      showError("Cible de dépôt non valide.");
-      setActiveDragItem(null);
-      setActiveDragConfig(null);
-      return;
     }
 
     // Prevent dropping an item into itself or its own descendants
@@ -565,21 +562,21 @@ const RoleNavConfigsPage = () => {
     // 3. Insert the item into its new position in the copied tree
     const insertNode = (nodes: NavItem[], nodeToInsert: NavItem, targetParentId: string | null, targetIndex: number): NavItem[] => {
       if (targetParentId === null) {
-        // Insert at root level
         const newRootNodes = [...nodes];
         newRootNodes.splice(targetIndex, 0, nodeToInsert);
         return newRootNodes;
-      } else {
-        // Insert into children of a specific parent
-        return nodes.map(node => {
-          if (node.id === targetParentId) {
-            const newChildren = [...(node.children || [])];
-            newChildren.splice(targetIndex, 0, nodeToInsert);
-            return { ...node, children: newChildren };
-          }
-          return { ...node, children: node.children ? insertNode(node.children, nodeToInsert, targetParentId, targetIndex) : [] };
-        });
       }
+      return nodes.map(node => {
+        if (node.id === targetParentId) {
+          const updatedChildren = [...(node.children || [])];
+          updatedChildren.splice(targetIndex, 0, nodeToInsert);
+          return { ...node, children: updatedChildren };
+        }
+        if (node.children) {
+          return { ...node, children: insertNode(node.children, nodeToInsert, targetParentId, targetIndex) };
+        }
+        return node; // Important: return the original node if no changes
+      });
     };
     updatedTree = insertNode(updatedTree, itemToInsert, newParentId, newIndex);
 
