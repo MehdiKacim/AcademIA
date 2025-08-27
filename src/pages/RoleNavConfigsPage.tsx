@@ -649,11 +649,24 @@ const RoleNavConfigsPage = () => {
       {selectedRoleFilter !== 'all' && (
         <div className="grid grid-cols-1 gap-8">
           <Card className="rounded-android-tile">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {getRoleDisplayName(selectedRoleFilter)}
-              </CardTitle>
-              <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between"> {/* Make header a flex container */}
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {getRoleDisplayName(selectedRoleFilter)}
+                </CardTitle>
+                <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setAddDialogDefaultParentId(null); // Set default parent to null for root
+                  setIsAddExistingItemDialogOpen(true);
+                }}
+                className="flex-shrink-0"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter racine
+              </Button>
             </CardHeader>
             <ContextMenu>
               <ContextMenuTrigger asChild>
@@ -682,12 +695,7 @@ const RoleNavConfigsPage = () => {
                 </CardContent>
               </ContextMenuTrigger>
               <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
-                <ContextMenuItem className="p-2" onClick={() => {
-                  setAddDialogDefaultParentId(null); // Set default parent to null for root
-                  setIsAddExistingItemDialogOpen(true);
-                }}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément racine existant
-                </ContextMenuItem>
+                {/* Removed the "Ajouter un élément racine existant" ContextMenuItem here */}
               </ContextMenuContent>
             </ContextMenu>
           </Card>
