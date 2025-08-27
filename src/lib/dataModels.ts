@@ -12,6 +12,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       username: string;
       email: string; // Added email to Profile interface
       role: 'student' | 'professeur' | 'tutor' | 'administrator' | 'director' | 'deputy_director'; // Replaced 'creator' with 'professeur'
+      establishment_id?: string; // New: Link to parent establishment
       enrollment_start_date?: string; // Added enrollment_start_date to Profile
       enrollment_end_date?: string; // Added enrollment_end_date to Profile
       theme?: 'dark' | 'light' | 'dark-purple'; // Updated: Removed 'modern-blue'
@@ -19,11 +20,19 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       updated_at?: string;
     }
 
-    // Removed Establishment interface and EstablishmentType
+    export interface Establishment { // Reintroduced Establishment interface
+      id: string; // UUID
+      name: string;
+      address?: string;
+      contact_email?: string;
+      created_at: string;
+      updated_at?: string;
+    }
 
     export interface Subject { // New: Subject interface
       id: string;
       name: string;
+      establishment_id: string; // New: Link to parent establishment
       created_at?: string;
       updated_at?: string;
     }
@@ -32,6 +41,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       id: string;
       name: string;
       description?: string;
+      establishment_id: string; // New: Link to parent establishment
       course_ids: string[]; // JSONB, liste d'UUIDs de public.courses(id)
       created_at?: string;
     }
@@ -51,6 +61,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       name: string;
       curriculum_id: string; // Link to parent curriculum
       creator_ids: string[]; // JSONB, liste d'UUIDs de public.profiles(id) (rôle 'professeur')
+      establishment_id: string; // New: Link to parent establishment
       school_year_id: string; // Changed: Link to SchoolYear
       school_year_name?: string; // For convenience when fetching
       created_at?: string;
@@ -73,6 +84,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       class_name?: string; // For convenience when fetching
       school_year_id: string;
       school_year_name?: string; // For convenience when fetching
+      establishment_id: string; // New: Link to parent establishment
       created_at?: string;
     }
 
@@ -82,6 +94,7 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       class_id: string; // Link to the Class
       school_year_id: string; // Changed: Link to SchoolYear
       school_year_name?: string; // For convenience when fetching
+      establishment_id: string; // New: Link to parent establishment
       created_at?: string;
       updated_at?: string;
     }
@@ -165,18 +178,6 @@ import { ElementType, JSX } from "react"; // Import ElementType and JSX for NavI
       is_archived: boolean; // New: for soft delete/archive feature
       created_at: string;
     }
-
-    // Removed interface for persistent notifications
-    // export interface Notification {
-    //   id: string;
-    //   user_id: string;
-    //   title: string;
-    //   message: string;
-    //   type: 'info' | 'warning' | 'success' | 'alert';
-    //   is_read: boolean;
-    //   link?: string; // Optional link for navigation
-    //   created_at: string;
-    // }
 
     // New interfaces for global search (placeholders)
     export interface Event {
