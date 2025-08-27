@@ -146,6 +146,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
+  const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]); // Déclaré ici
 
   const [isNewChildFormOpen, setIsNewChildFormOpen] = useState(false);
   const [newChildLabel, setNewChildLabel] = useState('');
