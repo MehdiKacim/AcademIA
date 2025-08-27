@@ -13,11 +13,11 @@ import { PlusCircle, Loader2, Home, Info, Search as SearchIcon, ArrowLeft, XCirc
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { addRoleNavItemConfig, updateRoleNavItemConfig } from "@/lib/navItems";
-import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import the new component
 
 interface EditRoleConfigDialogProps {
   isOpen: boolean;
@@ -77,7 +77,7 @@ const EditRoleConfigDialog = ({
     const descendantsOfCurrentItem = getDescendantIds(currentItemToEdit, allConfiguredItemsFlat);
     const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
 
-    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
+    const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean; description?: string }[] = [];
 
     allConfiguredItemsFlat.forEach(item => {
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
@@ -99,6 +99,7 @@ const EditRoleConfigDialog = ({
           icon_name: item.icon_name,
           typeLabel: getItemTypeLabel(item.type),
           isNew: false,
+          description: item.description,
         });
       }
     });
@@ -117,16 +118,16 @@ const EditRoleConfigDialog = ({
           icon_name: item.icon_name,
           typeLabel: getItemTypeLabel(item.type),
           isNew: true,
+          description: item.description,
         });
       }
     });
 
     const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
     
-    const lowerCaseQuery = parentSearchQuery.toLowerCase();
     return [
-      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action' },
-      ...sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery))
+      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action', description: "L'élément sera affiché au premier niveau du menu." },
+      ...sortedParents
     ];
   }, [currentItemToEdit, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds, parentSearchQuery]);
 
@@ -222,34 +223,18 @@ const EditRoleConfigDialog = ({
           <div className="grid gap-4 py-4 flex-grow">
             {isParentSelectionStep ? (
               <div className="space-y-4">
-                <Label htmlFor="parent-search-input">1. Rechercher et sélectionner un parent</Label>
-                <Input
-                  id="parent-search-input"
-                  placeholder="Rechercher un parent..."
-                  value={parentSearchQuery}
-                  onChange={(e) => setParentSearchQuery(e.target.value)}
-                  className="mb-2 rounded-android-tile"
+                <Label htmlFor="parent-selector">1. Rechercher et sélectionner un parent</Label>
+                <SimpleItemSelector
+                  id="parent-selector"
+                  options={availableParentsOptions}
+                  value={selectedParentForEdit}
+                  onValueChange={handleSelectParent}
+                  searchQuery={parentSearchQuery}
+                  onSearchQueryChange={setParentSearchQuery}
+                  placeholder="Sélectionner un parent..."
+                  emptyMessage="Aucun parent disponible."
+                  iconMap={iconMap}
                 />
-                <ScrollArea className="h-64 w-full rounded-md border">
-                  <div className="p-2 space-y-2">
-                    {availableParentsOptions.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        Aucun parent disponible.
-                      </p>
-                    ) : (
-                      <SearchableDropdown
-                        value={selectedParentForEdit}
-                        onValueChange={handleSelectParent}
-                        options={availableParentsOptions}
-                        placeholder="Sélectionner un parent..."
-                        emptyMessage="Aucun parent trouvé."
-                        iconMap={iconMap}
-                        disabled={false}
-                        popoverContentClassName="z-[9999]"
-                      />
-                    )}
-                  </div>
-                </ScrollArea>
               </div>
             ) : (
               <div className="space-y-4">

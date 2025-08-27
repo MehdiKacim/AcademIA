@@ -41,7 +41,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
-import SearchableDropdown from '@/components/ui/SearchableDropdown';
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import the new component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import {
   Card,
@@ -168,16 +168,8 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   useEffect(() => {
     if (isOpen && parentItem) {
-      console.log("[ManageChildrenDialog] Dialog opened for parent:", parentItem.label, "(ID:", parentItem.id, ")");
-      console.log("[ManageChildrenDialog] Parent children (initial):", parentItem.children?.map(c => c.label));
-      console.log("[ManageChildrenDialog] All generic nav items:", allGenericNavItems.map(i => ({ id: i.id, label: i.label })));
-      console.log("[ManageChildrenDialog] All configured items flat:", allConfiguredItemsFlat.map(i => ({ id: i.id, label: i.label, configId: i.configId, parent: i.parent_nav_item_id })));
-
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
       const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat);
-
-      console.log("[ManageChildrenDialog] Current direct child generic IDs:", Array.from(currentChildIds));
-      console.log("[ManageChildrenDialog] Descendant generic IDs of parent:", Array.from(descendantsOfParent));
 
       const filteredAvailable = allGenericNavItems.filter(
         item => item.id !== parentItem.id &&
@@ -185,17 +177,12 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                 !descendantsOfParent.has(item.id)
       );
       
-      const lowerCaseQuery = genericItemSearchQuery.toLowerCase();
-      const finalFilteredAvailable = filteredAvailable.filter(item => item.label.toLowerCase().includes(lowerCaseQuery));
-
-      console.log("[ManageChildrenDialog] Filtered available children for add (before search):", filteredAvailable.map(i => i.label));
-      console.log("[ManageChildrenDialog] Final filtered available children for add (after search):", finalFilteredAvailable.map(i => i.label));
-
-      setAvailableChildrenForAdd(finalFilteredAvailable);
+      setAvailableChildrenForAdd(filteredAvailable);
       setCurrentChildren(parentItem.children || []);
       setSelectedGenericItemToAdd(null);
+      setGenericItemSearchQuery('');
     }
-  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds, genericItemSearchQuery]);
+  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds]);
 
   const handleDragStart = (event: any) => {
     const { active } = event;
@@ -400,31 +387,26 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                   </CardHeader>
                   <CardContent className="flex-grow flex flex-col gap-4">
                     <div>
-                      <Label htmlFor="generic-item-search-input">Rechercher un élément</Label>
-                      <Input
-                        id="generic-item-search-input"
-                        placeholder="Rechercher un élément..."
-                        value={genericItemSearchQuery}
-                        onChange={(e) => setGenericItemSearchQuery(e.target.value)}
-                        className="mb-2 rounded-android-tile"
+                      <Label htmlFor="generic-item-selector">Rechercher un élément</Label>
+                      <SimpleItemSelector
+                        id="generic-item-selector"
+                        options={availableChildrenForAdd.map(item => ({
+                          id: item.id,
+                          label: item.label,
+                          icon_name: item.icon_name,
+                          description: item.description,
+                          isNew: !allConfiguredItemsFlat.some(configured => configured.id === item.id),
+                          typeLabel: getItemTypeLabel(item.type),
+                        }))}
+                        value={selectedGenericItemToAdd}
+                        onValueChange={setSelectedGenericItemToAdd}
+                        searchQuery={genericItemSearchQuery}
+                        onSearchQueryChange={setGenericItemSearchQuery}
+                        placeholder="Sélectionner un élément à ajouter"
+                        emptyMessage="Aucun élément disponible."
+                        iconMap={iconMap}
                       />
                     </div>
-                    <SearchableDropdown
-                      value={selectedGenericItemToAdd}
-                      onValueChange={setSelectedGenericItemToAdd}
-                      options={availableChildrenForAdd.map(item => ({
-                        id: item.id,
-                        label: item.label,
-                        icon_name: item.icon_name,
-                        level: 0,
-                        isNew: item.isNew, // Corrected: pass item.isNew
-                        typeLabel: getItemTypeLabel(item.type), // Pass typeLabel
-                      }))}
-                      placeholder="Sélectionner un élément à ajouter"
-                      emptyMessage="Aucun élément disponible."
-                      iconMap={iconMap}
-                      popoverContentClassName="z-[9999]"
-                    />
                     <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                       <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
                     </Button>
