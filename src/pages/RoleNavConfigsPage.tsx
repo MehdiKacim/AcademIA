@@ -65,7 +65,14 @@ import {
 } from "@/components/ui/drawer";
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move, Code
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move, Code,
+  // Icons for roles
+  student: GraduationCap,
+  professeur: PenTool,
+  tutor: Users,
+  director: BriefcaseBusiness,
+  deputy_director: BriefcaseBusiness, // Same as director for now
+  administrator: UserRoundCog,
 };
 
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
@@ -125,7 +132,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
     paddingLeft: effectivePaddingLeft,
   };
 
-  const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+  const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
 
   const config: RoleNavItemConfig | undefined = item.configId && selectedRoleFilter !== 'all' ? {
     id: item.configId,
@@ -233,7 +240,7 @@ const RoleNavConfigsPage = () => {
   const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]);
 
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
-  const [isRoleSelectDialogOpen, setIsRoleSelectDialogOpen] = useState(false);
+  // Removed isRoleSelectDialogOpen
   const [roleSearchQuery, setRoleSearchQuery] = useState('');
 
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
@@ -580,7 +587,6 @@ const RoleNavConfigsPage = () => {
 
   const handleSelectRole = (role: Profile['role'] | 'all') => {
     setSelectedRoleFilter(role);
-    setIsRoleSelectDialogOpen(false);
     setRoleSearchQuery('');
   };
 
@@ -627,25 +633,47 @@ const RoleNavConfigsPage = () => {
       <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UserRoundCog className="h-6 w-6 text-primary" /> Configurer les menus par rôle
+            <UserRoundCog className="h-6 w-6 text-primary" /> Sélectionner un rôle
           </CardTitle>
-          <CardDescription>Sélectionnez un rôle pour voir et gérer les éléments de menu qui lui sont associés.</CardDescription>
+          <CardDescription>Choisissez le rôle dont vous souhaitez configurer le menu.</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="role-filter-button">Rôle sélectionné</Label>
-            <Button
-              id="role-filter-button"
-              variant="outline"
-              className="w-full justify-between rounded-android-tile"
-              onClick={() => setIsRoleSelectDialogOpen(true)}
-            >
-              {getRoleDisplayName(selectedRoleFilter)}
-              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
+        <CardContent className="grid grid-cols-1 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un rôle..."
+              className="pl-10 rounded-android-tile"
+              value={roleSearchQuery}
+              onChange={(e) => setRoleSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredRoles.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4 col-span-full">Aucun rôle trouvé.</p>
+            ) : (
+              filteredRoles.map(role => {
+                const RoleIcon = iconMap[role as string] || User; // Get icon from map
+                return (
+                  <Button
+                    key={role}
+                    variant="outline"
+                    className={cn(
+                      "flex flex-col items-center justify-center h-24 w-full text-center p-2 rounded-android-tile",
+                      selectedRoleFilter === role ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
+                      "transition-all duration-200 ease-in-out"
+                    )}
+                    onClick={() => handleSelectRole(role)}
+                  >
+                    <RoleIcon className="h-6 w-6 mb-2" />
+                    <span className="text-sm font-medium line-clamp-1">{getRoleDisplayName(role)}</span>
+                    {selectedRoleFilter === role && <Check className="h-4 w-4 text-primary-foreground mt-1" />}
+                  </Button>
+                );
+              })
+            )}
           </div>
           {selectedRoleFilter !== 'all' && (
-            <Button onClick={handleResetRoleNav} variant="outline" className="mt-auto">
+            <Button onClick={handleResetRoleNav} variant="outline" className="mt-4">
               <RefreshCw className="h-4 w-4 mr-2" /> Réinitialiser la navigation pour ce rôle
             </Button>
           )}
@@ -701,95 +729,7 @@ const RoleNavConfigsPage = () => {
         </div>
       )}
 
-      {isMobile ? (
-        <Drawer open={isRoleSelectDialogOpen} onOpenChange={setIsRoleSelectDialogOpen}>
-          <DrawerContent className="h-svh mt-0 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 z-[100]">
-            <DrawerHeader className="text-center flex-shrink-0">
-              <DrawerTitle className="text-2xl font-bold">Sélectionner un rôle</DrawerTitle>
-              <DrawerDescription>Choisissez le rôle dont vous souhaitez configurer le menu.</DrawerDescription>
-            </DrawerHeader>
-            <div className="p-4 flex-shrink-0">
-              <Input
-                placeholder="Rechercher un rôle..."
-                value={roleSearchQuery}
-                onChange={(e) => setRoleSearchQuery(e.target.value)}
-                className="rounded-android-tile"
-              />
-            </div>
-            <ScrollArea className="flex-grow p-4">
-              <div className="grid grid-cols-1 gap-4">
-                {filteredRoles.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">Aucun rôle trouvé.</p>
-                ) : (
-                  filteredRoles.map(role => (
-                    <Card
-                      key={role}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-android-tile cursor-pointer hover:bg-muted/20",
-                        selectedRoleFilter === role && "border-primary ring-2 ring-primary/50 bg-primary/5"
-                      )}
-                      onClick={() => handleSelectRole(role)}
-                    >
-                      <div className="flex items-center gap-3 select-none">
-                        <UserRoundCog className="h-5 w-5 text-primary" />
-                        <p className="font-medium">{getRoleDisplayName(role)}</p>
-                      </div>
-                      {selectedRoleFilter === role && <Check className="h-5 w-5 text-green-500" />}
-                    </Card>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-            <DrawerFooter className="flex-shrink-0">
-              <Button variant="outline" onClick={() => setIsRoleSelectDialogOpen(false)}>Fermer</Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Dialog open={isRoleSelectDialogOpen} onOpenChange={setIsRoleSelectDialogOpen}>
-          <DialogContent className="w-full max-w-md h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile">
-            <DialogHeader className="flex-shrink-0">
-              <DialogTitle className="text-2xl font-bold">Sélectionner un rôle</DialogTitle>
-              <DialogDescription>Choisissez le rôle dont vous souhaitez configurer le menu.</DialogDescription>
-            </DialogHeader>
-            <div className="p-4 flex-shrink-0">
-              <Input
-                placeholder="Rechercher un rôle..."
-                value={roleSearchQuery}
-                onChange={(e) => setRoleSearchQuery(e.target.value)}
-                className="rounded-android-tile"
-              />
-            </div>
-            <ScrollArea className="flex-grow p-4">
-              <div className="grid grid-cols-1 gap-4">
-                {filteredRoles.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">Aucun rôle trouvé.</p>
-                ) : (
-                  filteredRoles.map(role => (
-                    <Card
-                      key={role}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-android-tile cursor-pointer hover:bg-muted/20",
-                        selectedRoleFilter === role && "border-primary ring-2 ring-primary/50 bg-primary/5"
-                      )}
-                      onClick={() => handleSelectRole(role)}
-                    >
-                      <div className="flex items-center gap-3 select-none">
-                        <UserRoundCog className="h-5 w-5 text-primary" />
-                        <p className="font-medium">{getRoleDisplayName(role)}</p>
-                      </div>
-                      {selectedRoleFilter === role && <Check className="h-5 w-5 text-green-500" />}
-                    </Card>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-            <DialogFooter className="flex-shrink-0">
-              <Button variant="outline" onClick={() => setIsRoleSelectDialogOpen(false)}>Fermer</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Removed Dialog/Drawer for role selection */}
 
       {currentConfigToEdit && currentItemToEdit && (
         <EditRoleConfigDialog
