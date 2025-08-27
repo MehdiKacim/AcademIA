@@ -35,6 +35,7 @@ import { CourseChatProvider } from "./contexts/CourseChatContext";
 import AdminModal from "./components/AdminModal";
 import GenericNavItemsPage from "./pages/GenericNavItemsPage";
 import RoleNavConfigsPage from "./pages/RoleNavConfigsPage";
+import EstablishmentManagementPage from "./pages/EstablishmentManagementPage"; // New: Import EstablishmentManagementPage
 import ThemeTransitionOverlay from "./components/ThemeTransitionOverlay"; // Import the new component
 import { useTheme } from "next-themes"; // Import useTheme from next-themes
 import AuthPage from './pages/AuthPage'; // New: Import AuthPage
@@ -66,6 +67,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     // Removed static routes from here
     "/data-model": DataModelViewer,
     "/admin-users": AdminUserManagementPage,
+    "/establishments": EstablishmentManagementPage, // New: Add EstablishmentManagementPage to the map
     "/subjects": SubjectManagementPage,
     "/school-years": SchoolYearManagementPage,
     "/professor-assignments": ProfessorSubjectAssignmentPage,

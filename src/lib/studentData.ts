@@ -21,6 +21,7 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
       theme,
       created_at,
       updated_at,
+      establishment_id,
       roles(name)
     `) // Select role_id and join to get role_name from roles table
     .eq('id', id)
@@ -42,6 +43,7 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
     email: data.email,
     // Assuming roles is an object with a name property, but Supabase sometimes returns an array for joined tables
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
+    establishment_id: data.establishment_id || undefined,
     enrollment_start_date: data.enrollment_start_date || undefined,
     enrollment_end_date: data.enrollment_end_date || undefined,
     theme: data.theme || undefined,
@@ -69,6 +71,7 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
       theme,
       created_at,
       updated_at,
+      establishment_id,
       roles(name)
     `)
     .eq('username', username)
@@ -86,6 +89,7 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
     username: data.username,
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
+    establishment_id: data.establishment_id || undefined,
     enrollment_start_date: data.enrollment_start_date || undefined,
     enrollment_end_date: data.enrollment_end_date || undefined,
     theme: data.theme || undefined,
@@ -140,6 +144,7 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
       theme,
       created_at,
       updated_at,
+      establishment_id,
       roles(name)
     `)
     .eq('email', email)
@@ -157,6 +162,7 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
     username: data.username,
     email: data.email,
     role: (data.roles as { name: Profile['role'] } | null)?.name || 'student',
+    establishment_id: data.establishment_id || undefined,
     enrollment_start_date: data.enrollment_start_date || undefined,
     enrollment_end_date: data.enrollment_end_date || undefined,
     theme: data.theme || undefined,
@@ -216,6 +222,7 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
     enrollment_start_date: updatedProfile.enrollment_start_date === '' ? null : updatedProfile.enrollment_start_date,
     enrollment_end_date: updatedProfile.enrollment_end_date === '' ? null : updatedProfile.enrollment_end_date,
     theme: updatedProfile.theme === undefined ? null : updatedProfile.theme,
+    establishment_id: updatedProfile.establishment_id === undefined ? null : updatedProfile.establishment_id, // Handle establishment_id
   };
 
   const { error } = await supabase
@@ -257,6 +264,7 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
       theme,
       created_at,
       updated_at,
+      establishment_id,
       roles(name)
     `);
   if (error) {
@@ -271,6 +279,7 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
     username: p.username,
     email: p.email,
     role: (p.roles as { name: Profile['role'] } | null)?.name || 'student',
+    establishment_id: p.establishment_id || undefined,
     enrollment_start_date: p.enrollment_start_date || undefined,
     enrollment_end_date: p.enrollment_end_date || undefined,
     theme: p.theme || undefined,
@@ -295,6 +304,7 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
       email,
       enrollment_start_date,
       enrollment_end_date,
+      establishment_id,
       roles(name)
     `)
     .eq('roles.name', role); // Filter by role name
@@ -311,6 +321,7 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
     username: p.username,
     email: p.email,
     role: (p.roles as { name: Profile['role'] } | null)?.name || 'student',
+    establishment_id: p.establishment_id || undefined,
     enrollment_start_date: p.enrollment_start_date || undefined,
     enrollment_end_date: p.enrollment_end_date || undefined,
   }));
@@ -344,6 +355,7 @@ export const getStudentClassEnrollments = async (studentId: string): Promise<Stu
     class_id: enrollment.class_id,
     school_year_id: enrollment.school_year_id,
     school_year_name: enrollment.school_years?.name, // For convenience
+    establishment_id: enrollment.establishment_id,
     created_at: enrollment.created_at,
     updated_at: enrollment.updated_at,
   }));
@@ -367,6 +379,7 @@ export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrol
     class_id: enrollment.class_id,
     school_year_id: enrollment.school_year_id,
     school_year_name: enrollment.school_years?.name, // For convenience
+    establishment_id: enrollment.establishment_id,
     created_at: enrollment.created_at,
     updated_at: enrollment.updated_at,
   }));
@@ -393,6 +406,7 @@ export const upsertStudentClassEnrollment = async (enrollment: Omit<StudentClass
     class_id: data.class_id,
     school_year_id: data.school_year_id,
     school_year_name: (data as any).school_years?.name,
+    establishment_id: data.establishment_id,
     created_at: data.created_at,
     updated_at: data.updated_at,
   };

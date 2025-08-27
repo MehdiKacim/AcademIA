@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
-import { Class, Curriculum, SchoolYear } from "@/lib/dataModels"; // Removed Establishment import, import SchoolYear
+import { Class, Curriculum, SchoolYear, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { updateClassInStorage, loadCurricula, loadSchoolYears } from "@/lib/courseData"; // Removed loadEstablishments, getEstablishmentAddress, import loadSchoolYears
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
@@ -21,41 +21,31 @@ interface EditClassDialogProps {
   onClose: () => void;
   classToEdit: Class;
   onSave: (updatedClass: Class) => void;
+  establishments: Establishment[]; // New prop for establishments
+  curricula: Curriculum[]; // New prop for curricula
+  schoolYears: SchoolYear[]; // New prop for schoolYears
 }
 
-const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDialogProps) => {
+const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave, establishments, curricula, schoolYears }: EditClassDialogProps) => {
   const { currentUserProfile, currentRole } = useRole();
   const [name, setName] = useState(classToEdit.name);
   const [curriculumId, setCurriculumId] = useState(classToEdit.curriculum_id);
-  // Removed establishmentId state
+  const [establishmentId, setEstablishmentId] = useState<string | null>(classToEdit.establishment_id || null); // Re-added establishmentId state
   const [schoolYearId, setSchoolYearId] = useState(classToEdit.school_year_id); // Changed to schoolYearId
-  const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  // Removed establishments state
-  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]); // New state for school years
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setCurricula(await loadCurricula());
-        // Removed loadEstablishments
-        setSchoolYears(await loadSchoolYears()); // Load school years
-      } catch (error: any) {
-        console.error("Error fetching data for EditClassDialog:", error);
-        showError(`Erreur lors du chargement des données pour la modification de classe: ${error.message}`);
-      }
-    };
-    fetchData();
-  }, []);
 
   useEffect(() => {
     if (isOpen && classToEdit) {
       setName(classToEdit.name);
       setCurriculumId(classToEdit.curriculum_id);
-      // Removed setEstablishmentId
+      setEstablishmentId(classToEdit.establishment_id || null);
       setSchoolYearId(classToEdit.school_year_id); // Set schoolYearId
     }
   }, [isOpen, classToEdit]);
+
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
+  const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
 
   const handleSave = async () => {
     if (!currentUserProfile || !['professeur', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) {
@@ -70,7 +60,10 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       showError("Le cursus est requis.");
       return;
     }
-    // Removed establishmentId check
+    if (!establishmentId && currentRole !== 'administrator') {
+      showError("L'établissement est requis pour la classe.");
+      return;
+    }
     if (!schoolYearId) { // Check for schoolYearId
       showError("L'année scolaire est requise.");
       return;
@@ -81,7 +74,17 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
       showError("Vous ne pouvez modifier que les classes que vous gérez.");
       return;
     }
-    // Removed Director/Deputy Director establishment_id check
+    // Director/Deputy Director establishment_id check
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && classToEdit.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier que les classes de votre établissement.");
+      return;
+    }
+    // Check if the selected curriculum belongs to the selected establishment
+    const selectedCurriculum = curricula.find(c => c.id === curriculumId);
+    if (establishmentId && selectedCurriculum && selectedCurriculum.establishment_id !== establishmentId) {
+      showError("Le cursus sélectionné n'appartient pas à l'établissement choisi.");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -89,7 +92,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
         ...classToEdit,
         name: name.trim(),
         curriculum_id: curriculumId,
-        // Removed establishment_id
+        establishment_id: establishmentId || '', // Use selected establishment_id
         school_year_id: schoolYearId, // Include new field
       };
       const savedClass = await updateClassInStorage(updatedClassData);
@@ -109,8 +112,12 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
     }
   };
 
-  // Removed establishmentsToDisplay
-  const curriculaToDisplay = curricula; // All curricula are now global
+  const establishmentsToDisplay = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
+  const curriculaToDisplay = curricula.filter(cur => 
+    currentRole === 'administrator' || cur.establishment_id === currentUserProfile?.establishment_id
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -135,7 +142,26 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
                 required
               />
             </div>
-            {/* Removed Establishment Select */}
+            {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur'].includes(currentRole || ''))) && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="establishment" className="text-right">
+                  Établissement
+                </Label>
+                <Select value={establishmentId || ""} onValueChange={(value) => setEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
+                  <SelectTrigger id="establishment" className="col-span-3 rounded-android-tile">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                    {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
+                    {establishmentsToDisplay.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="curriculum" className="text-right">
                 Cursus
@@ -145,9 +171,11 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
                   <SelectValue placeholder="Sélectionner un cursus" />
                 </SelectTrigger>
                 <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                  {curriculaToDisplay.map(cur => (
-                    <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
-                  ))}
+                  {curriculaToDisplay
+                    .filter(cur => !establishmentId || cur.establishment_id === establishmentId)
+                    .map(cur => (
+                      <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -168,7 +196,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSave} disabled={isLoading}>
+            <Button onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')}>
               {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
             </Button>
           </DialogFooter>

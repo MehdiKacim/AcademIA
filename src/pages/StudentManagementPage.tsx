@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react"; // Import UserPlus
-import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels"; // Removed Establishment import
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2 } from "lucide-react"; // Import UserPlus, Building2
+import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   loadClasses,
   loadCurricula,
-  // Removed loadEstablishments,
+  loadEstablishments, // Re-added loadEstablishments
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -48,7 +48,7 @@ const StudentManagementPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [classes, setClasses] = useState<Class[]>([]);
-  // Removed establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
@@ -59,7 +59,7 @@ const StudentManagementPage = () => {
   const [newStudentUsername, setNewStudentUsername] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
-  // Removed newStudentEstablishmentId
+  const [newStudentEstablishmentId, setNewStudentEstablishmentId] = useState<string | null>(null); // Re-added newStudentEstablishmentId
   const [newStudentEnrollmentStartDate, setNewStudentEnrollmentStartDate] = useState<Date | undefined>(undefined);
   const [newStudentEnrollmentEndDate, setNewStudentEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
@@ -72,7 +72,7 @@ const StudentManagementPage = () => {
 
   // States for student list section
   const [studentSearchQuery, setSearchStudentQuery] = useState('');
-  // Removed selectedEstablishmentFilter
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // Re-added selectedEstablishmentFilter
 
   // Get classId from URL for initial filtering (now removed from student list)
   const classIdFromUrl = searchParams.get('classId');
@@ -82,7 +82,7 @@ const StudentManagementPage = () => {
       try {
         setClasses(await loadClasses());
         setCurricula(await loadCurricula());
-        // Removed loadEstablishments
+        setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
         setAllProfiles(await getAllProfiles());
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
       } catch (error: any) {
@@ -95,10 +95,19 @@ const StudentManagementPage = () => {
 
   // Set initial establishment filter based on user role
   useEffect(() => {
-    // Removed establishment filter logic
-  }, [currentRole, currentUserProfile?.id]); // Changed dependency from establishment_id to id
+    if (currentRole === 'administrator') {
+      setSelectedEstablishmentFilter('all');
+      setNewStudentEstablishmentId(null);
+    } else if (currentUserProfile?.establishment_id) {
+      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
+      setNewStudentEstablishmentId(currentUserProfile.establishment_id);
+    } else {
+      setSelectedEstablishmentFilter('all');
+      setNewStudentEstablishmentId(null);
+    }
+  }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id]);
 
-  // Removed getEstablishmentName
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
 
@@ -166,7 +175,7 @@ const StudentManagementPage = () => {
       showError("Vous n'êtes pas autorisé à créer des élèves.");
       return;
     }
-    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentUsername.trim() || !newStudentEmail.trim() || !newStudentPassword.trim() || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate) { // Removed newStudentEstablishmentId
+    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentUsername.trim() || !newStudentEmail.trim() || !newStudentPassword.trim() || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate) {
       showError("Tous les champs requis doivent être remplis.");
       return;
     }
@@ -182,8 +191,16 @@ const StudentManagementPage = () => {
       showError("Veuillez attendre la vérification de la disponibilité du nom d'utilisateur et de l'email.");
       return;
     }
+    if (!newStudentEstablishmentId) {
+      showError("L'établissement est requis pour créer un élève.");
+      return;
+    }
 
-    // Removed role-based creation restrictions and defaults
+    // Role-based creation restrictions and defaults
+    if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && newStudentEstablishmentId !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez créer des élèves que dans votre établissement.");
+      return;
+    }
 
     setIsCreatingStudent(true);
     try {
@@ -195,7 +212,7 @@ const StudentManagementPage = () => {
           last_name: newStudentLastName.trim(),
           username: newStudentUsername.trim(),
           role: 'student', // Fixed role for this page
-          // Removed establishment_id
+          establishment_id: newStudentEstablishmentId,
           enrollment_start_date: newStudentEnrollmentStartDate.toISOString().split('T')[0],
           enrollment_end_date: newStudentEnrollmentEndDate.toISOString().split('T')[0],
         },
@@ -213,7 +230,7 @@ const StudentManagementPage = () => {
       setNewStudentUsername('');
       setNewStudentEmail('');
       setNewStudentPassword('');
-      // Removed setNewStudentEstablishmentId
+      setNewStudentEstablishmentId(currentUserProfile?.establishment_id || null);
       setNewStudentEnrollmentStartDate(undefined);
       setNewStudentEnrollmentEndDate(undefined);
       setUsernameAvailabilityStatus('idle');
@@ -227,11 +244,6 @@ const StudentManagementPage = () => {
       setIsCreatingStudent(false);
     }
   };
-
-  // Removed Debounced search for student to assign to establishment (Admin only)
-  // Removed handleAssignStudentToEstablishment
-  // Removed handleClearEstAssignmentForm
-  // Removed filteredStudentsForEstDropdown
 
   const handleDeleteStudent = async (studentProfileId: string) => {
     if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can delete
@@ -259,11 +271,6 @@ const StudentManagementPage = () => {
     }
   };
 
-  const handleUnassignStudentFromEstablishment = async (studentId: string, studentName: string) => {
-    showError("La gestion des établissements a été supprimée.");
-    return;
-  };
-
   const handleSendMessageToStudent = (studentProfile: Profile) => {
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
@@ -271,9 +278,15 @@ const StudentManagementPage = () => {
   const studentsToDisplay = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
 
-    // Removed filtering by current user's establishment
+    // Filter by current user's establishment if not admin
+    if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
+      students = students.filter(s => s.establishment_id === currentUserProfile.establishment_id);
+    }
     
-    // Removed establishment filter
+    // Apply establishment filter
+    if (selectedEstablishmentFilter !== 'all' && currentRole === 'administrator') {
+      students = students.filter(s => s.establishment_id === selectedEstablishmentFilter);
+    }
     
     if (studentSearchQuery.trim()) {
       const lowerCaseQuery = studentSearchQuery.toLowerCase();
@@ -285,10 +298,15 @@ const StudentManagementPage = () => {
       );
     }
     return students;
-  }, [allProfiles, currentUserProfile, currentRole, studentSearchQuery]); // Removed selectedEstablishmentFilter
+  }, [allProfiles, currentUserProfile, currentRole, studentSearchQuery, selectedEstablishmentFilter]);
 
-  const currentYear = new Date().getFullYear();
-  const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
+  const establishmentsToDisplayForNewStudent = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
+
+  const establishmentsToDisplayForFilter = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
 
   if (isLoadingUser) {
     return (
@@ -315,8 +333,6 @@ const StudentManagementPage = () => {
       </div>
     );
   }
-
-  // Removed establishmentsToDisplayForNewStudent
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
@@ -375,7 +391,24 @@ const StudentManagementPage = () => {
                   value={newStudentPassword}
                   onChange={(e) => setNewStudentPassword(e.target.value)}
                 />
-                {/* Removed Establishment selection */}
+                {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
+                  <div>
+                    <Label htmlFor="new-student-establishment">Établissement</Label>
+                    <Select value={newStudentEstablishmentId || ""} onValueChange={(value) => setNewStudentEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
+                      <SelectTrigger id="new-student-establishment" className="rounded-android-tile">
+                        <SelectValue placeholder="Sélectionner un établissement" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
+                        {establishmentsToDisplayForNewStudent.map(est => (
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="new-student-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
                   <Popover>
@@ -429,15 +462,13 @@ const StudentManagementPage = () => {
                   </Popover>
                 </div>
               </div>
-              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate}>
+              <Button onClick={handleCreateStudent} disabled={isCreatingStudent || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || !newStudentEnrollmentStartDate || !newStudentEnrollmentEndDate || !newStudentEstablishmentId}>
                 {isCreatingStudent ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'élève
               </Button>
             </CardContent>
           </CollapsibleContent>
         </Card>
       </Collapsible>
-
-      {/* Removed Section: Affecter un élève à un établissement (Admin only) */}
 
       {/* Section: Liste de tous les élèves */}
       <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
@@ -458,12 +489,29 @@ const StudentManagementPage = () => {
                 onChange={(e) => setSearchStudentQuery(e.target.value)}
               />
             </div>
-            {/* Removed Establishment Filter */}
+            {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
+              <div className="flex-shrink-0 sm:w-1/3">
+                <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
+                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
+                  <SelectTrigger id="establishment-filter" className="rounded-android-tile">
+                    <SelectValue placeholder="Tous les établissements" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectItem value="all">Tous les établissements</SelectItem>
+                    {establishmentsToDisplayForFilter.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             {studentsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                {studentSearchQuery.trim() === ''
+                {studentSearchQuery.trim() === '' && selectedEstablishmentFilter === 'all'
                   ? <span>Aucun élève à afficher. Utilisez la recherche ou les filtres.</span>
                   : <span>Aucun élève trouvé pour votre recherche ou vos filtres.</span>}
               </p>
@@ -484,7 +532,11 @@ const StudentManagementPage = () => {
                     <div className="flex-grow">
                       <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
                       <p className="text-sm text-muted-foreground">{profile.email}</p>
-                      {/* Removed establishment_id display */}
+                      {profile.establishment_id && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Building2 className="h-3 w-3" /> {getEstablishmentName(profile.establishment_id)}
+                        </p>
+                      )}
                       {profile.enrollment_start_date && profile.enrollment_end_date && (
                         <p className="text-xs text-muted-foreground">
                           <span>Du {format(parseISO(profile.enrollment_start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(profile.enrollment_end_date), 'dd/MM/yyyy', { locale: fr })})</span>
@@ -499,7 +551,6 @@ const StudentManagementPage = () => {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                      {/* Removed Unassign from Establishment button */}
                       <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </Button>

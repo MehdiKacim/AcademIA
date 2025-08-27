@@ -9,14 +9,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, BookText, School, ChevronDown, ChevronUp } from "lucide-react";
-import { Subject, Profile } from "@/lib/dataModels";
+import { PlusCircle, Edit, Trash2, BookText, School, ChevronDown, ChevronUp, Building2 } from "lucide-react";
+import { Subject, Profile, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
   loadSubjects,
   addSubjectToStorage,
   updateSubjectInStorage,
   deleteSubjectFromStorage,
+  loadEstablishments, // Re-added loadEstablishments
 } from '@/lib/courseData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
@@ -26,8 +27,10 @@ import EditSubjectDialog from '@/components/EditSubjectDialog'; // Re-added Edit
 const SubjectManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
 
   const [newSubjectName, setNewSubjectName] = useState('');
+  const [newSubjectEstablishmentId, setNewSubjectEstablishmentId] = useState<string | null>(null); // New: for establishment_id
   const [isNewSubjectFormOpen, setIsNewSubjectFormOpen] = useState(false);
 
   const [isEditSubjectDialogOpen, setIsEditSubjectDialogOpen] = useState(false);
@@ -35,10 +38,24 @@ const SubjectManagementPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setSubjects(await loadSubjects());
+      setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
+      setSubjects(await loadSubjects(currentUserProfile?.establishment_id)); // Filter by user's establishment
     };
     fetchData();
   }, [currentUserProfile]);
+
+  // Set default establishment for new subject
+  useEffect(() => {
+    if (currentUserProfile?.establishment_id) {
+      setNewSubjectEstablishmentId(currentUserProfile.establishment_id);
+    } else if (currentRole === 'administrator' && establishments.length > 0) {
+      setNewSubjectEstablishmentId(establishments[0].id);
+    } else {
+      setNewSubjectEstablishmentId(null);
+    }
+  }, [currentUserProfile, currentRole, establishments]);
+
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   const handleAddSubject = async () => {
     if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
@@ -49,14 +66,20 @@ const SubjectManagementPage = () => {
       showError("Le nom de la matière est requis.");
       return;
     }
+    if (!newSubjectEstablishmentId && currentRole !== 'administrator') {
+      showError("L'établissement est requis pour ajouter une matière.");
+      return;
+    }
 
     try {
       const newSub = await addSubjectToStorage({
         name: newSubjectName.trim(),
+        establishment_id: newSubjectEstablishmentId || '', // Use selected establishment_id
       });
       if (newSub) {
-        setSubjects(await loadSubjects());
+        setSubjects(await loadSubjects(currentUserProfile?.establishment_id)); // Refresh with filter
         setNewSubjectName('');
+        setNewSubjectEstablishmentId(currentUserProfile?.establishment_id || null); // Reset to default
         showSuccess("Matière ajoutée !");
         setIsNewSubjectFormOpen(false);
       } else {
@@ -78,10 +101,15 @@ const SubjectManagementPage = () => {
       showError("Matière introuvable.");
       return;
     }
+    // Role-based establishment_id check
+    if (currentRole !== 'administrator' && subjectToDelete.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez supprimer que les matières de votre établissement.");
+      return;
+    }
 
     try {
       await deleteSubjectFromStorage(id);
-      setSubjects(await loadSubjects());
+      setSubjects(await loadSubjects(currentUserProfile?.establishment_id)); // Refresh with filter
       showSuccess("Matière supprimée !");
     } catch (error: any) {
       console.error("Error deleting subject:", error);
@@ -94,12 +122,17 @@ const SubjectManagementPage = () => {
       showError("Vous n'êtes pas autorisé à modifier une matière.");
       return;
     }
+    // Role-based establishment_id check
+    if (currentRole !== 'administrator' && subject.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier que les matières de votre établissement.");
+      return;
+    }
     setCurrentSubjectToEdit(subject);
     setIsEditSubjectDialogOpen(true);
   };
 
   const handleSaveEditedSubject = async (updatedSubject: Subject) => {
-    setSubjects(await loadSubjects());
+    setSubjects(await loadSubjects(currentUserProfile?.establishment_id)); // Refresh with filter
   };
 
   if (isLoadingUser) {
@@ -128,7 +161,10 @@ const SubjectManagementPage = () => {
     );
   }
 
-  const subjectsToDisplay = subjects;
+  const establishmentsToDisplay = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
+  const subjectsToDisplay = subjects; // Already filtered by useEffect
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
@@ -163,7 +199,25 @@ const SubjectManagementPage = () => {
                   onChange={(e) => setNewSubjectName(e.target.value)}
                   required
                 />
-                <Button onClick={handleAddSubject} disabled={!newSubjectName.trim()}>
+                {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director'].includes(currentRole || ''))) && (
+                  <>
+                    <Label htmlFor="new-subject-establishment">Établissement</Label>
+                    <Select value={newSubjectEstablishmentId || ""} onValueChange={(value) => setNewSubjectEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
+                      <SelectTrigger id="new-subject-establishment" className="rounded-android-tile">
+                        <SelectValue placeholder="Sélectionner un établissement" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80">
+                        {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
+                        {establishmentsToDisplay.map(est => (
+                          <SelectItem key={est.id} value={est.id}>
+                            {est.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+                <Button onClick={handleAddSubject} disabled={!newSubjectName.trim() || (!newSubjectEstablishmentId && currentRole !== 'administrator')}>
                   <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la matière
                 </Button>
               </div>
@@ -186,7 +240,7 @@ const SubjectManagementPage = () => {
             ) : (
               subjectsToDisplay.map(sub => (
                 <Card key={sub.id} className="p-3 flex items-center justify-between border rounded-android-tile bg-background">
-                  <span>{sub.name}</span>
+                  <span>{sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditSubject(sub)}>
                       <Edit className="h-4 w-4" />
@@ -208,6 +262,7 @@ const SubjectManagementPage = () => {
           onClose={() => setIsEditSubjectDialogOpen(false)}
           subject={currentSubjectToEdit}
           onSave={handleSaveEditedSubject}
+          establishments={establishmentsToDisplay} // Pass establishments
         />
       )}
     </div>

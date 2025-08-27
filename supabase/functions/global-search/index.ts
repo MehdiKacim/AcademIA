@@ -25,27 +25,55 @@ serve(async (req) => {
     const { search_term } = await req.json();
     const searchTermLower = search_term.toLowerCase();
 
-    const { data: profiles, error: profilesError } = await supabaseClient
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Could not get user.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
+    const userRole = user.user_metadata.role as string;
+    const userEstablishmentId = user.user_metadata.establishment_id as string | undefined;
+
+    let profilesQuery = supabaseClient
       .from('profiles')
-      .select('id, first_name, last_name, username, email')
+      .select('id, first_name, last_name, username, email, establishment_id')
       .or(`first_name.ilike.%${searchTermLower}%,last_name.ilike.%${searchTermLower}%,username.ilike.%${searchTermLower}%,email.ilike.%${searchTermLower}%`);
 
-    const { data: courses, error: coursesError } = await supabaseClient
+    let coursesQuery = supabaseClient
       .from('courses')
       .select('id, title, description')
       .or(`title.ilike.%${searchTermLower}%,description.ilike.%${searchTermLower}%`);
 
-    const { data: messages, error: messagesError } = await supabaseClient
+    let messagesQuery = supabaseClient
       .from('messages')
       .select(`
         id,
         content,
         sender_id,
         receiver_id,
-        sender:profiles!messages_sender_id_fkey(first_name, last_name, username),
-        receiver:profiles!messages_receiver_id_fkey(first_name, last_name, username)
+        course_id,
+        sender:profiles!messages_sender_id_fkey(first_name, last_name, username, establishment_id),
+        receiver:profiles!messages_receiver_id_fkey(first_name, last_name, username, establishment_id)
       `)
       .or(`content.ilike.%${searchTermLower}%`);
+
+    // Apply establishment filter for non-administrators
+    if (userRole !== 'administrator' && userEstablishmentId) {
+      profilesQuery = profilesQuery.eq('establishment_id', userEstablishmentId);
+      // For courses, we need to check if the course is part of a curriculum linked to the user's establishment
+      // This is more complex and might require a join or a separate RPC. For simplicity, we'll filter courses
+      // that are directly linked to the establishment (if a course had an establishment_id, which it doesn't directly).
+      // A more robust solution would involve checking curricula -> classes -> courses.
+      // For now, we'll assume courses are global or filtered by RLS on curricula/classes.
+      // messagesQuery = messagesQuery.or(`sender:profiles.establishment_id.eq.${userEstablishmentId},receiver:profiles.establishment_id.eq.${userEstablishmentId}`);
+      // RLS on messages table should handle this automatically based on sender/receiver profiles.
+    }
+
+    const { data: profiles, error: profilesError } = await profilesQuery;
+    const { data: courses, error: coursesError } = await coursesQuery;
+    const { data: messages, error: messagesError } = await messagesQuery;
 
     // For events and documents, assuming they exist or are placeholders
     // For now, we'll return empty arrays as these tables are not defined yet.

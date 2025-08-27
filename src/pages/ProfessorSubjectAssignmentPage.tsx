@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, BookText, School, CalendarDays, UserRoundCog, Check, Search, XCircle } from "lucide-react";
-import { Profile, Class, Subject, SchoolYear, ProfessorSubjectAssignment, Curriculum } from "@/lib/dataModels"; // Removed Establishment import
+import { PlusCircle, Edit, Trash2, Users, BookText, School, CalendarDays, UserRoundCog, Check, Search, XCircle, Building2 } from "lucide-react"; // Import Building2
+import { Profile, Class, Subject, SchoolYear, ProfessorSubjectAssignment, Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -25,7 +25,7 @@ import {
   addProfessorSubjectAssignmentToStorage,
   updateProfessorSubjectAssignmentInStorage,
   deleteProfessorSubjectAssignmentFromStorage,
-  // Removed loadEstablishments,
+  loadEstablishments, // Re-added loadEstablishments
   loadCurricula,
 } from '@/lib/courseData';
 
@@ -50,7 +50,7 @@ const ProfessorSubjectAssignmentPage = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
-  // Removed establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [assignments, setAssignments] = useState<ProfessorSubjectAssignment[]>([]);
 
@@ -59,6 +59,7 @@ const ProfessorSubjectAssignmentPage = () => {
   const [newAssignmentSubjectId, setNewAssignmentSubjectId] = useState<string>("");
   const [newAssignmentClassId, setNewAssignmentClassId] = useState<string>("");
   const [newAssignmentSchoolYearId, setNewAssignmentSchoolYearId] = useState<string>("");
+  const [newAssignmentEstablishmentId, setNewAssignmentEstablishmentId] = useState<string | null>(null); // New: for establishment_id
   const [isAddingAssignment, setIsAddingAssignment] = useState(false);
 
   // States for editing assignment
@@ -68,6 +69,7 @@ const ProfessorSubjectAssignmentPage = () => {
   const [editSubjectId, setEditSubjectId] = useState<string>("");
   const [editClassId, setEditClassId] = useState<string>("");
   const [editSchoolYearId, setEditSchoolYearId] = useState<string>("");
+  const [editEstablishmentId, setEditEstablishmentId] = useState<string | null>(null); // New: for establishment_id
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // States for filtering assignments list
@@ -76,7 +78,7 @@ const ProfessorSubjectAssignmentPage = () => {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string | null>(null);
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
   const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null);
-  // Removed selectedEstablishmentFilter
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // Re-added selectedEstablishmentFilter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,7 +87,7 @@ const ProfessorSubjectAssignmentPage = () => {
         setSubjects(await loadSubjects());
         setClasses(await loadClasses());
         setSchoolYears(await loadSchoolYears());
-        // Removed loadEstablishments
+        setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
         setCurricula(await loadCurricula());
         setAssignments(await loadProfessorSubjectAssignments());
       } catch (error: any) {
@@ -98,7 +100,6 @@ const ProfessorSubjectAssignmentPage = () => {
 
   // Set default filters based on user role
   useEffect(() => {
-    // Removed establishment filter logic
     const activeYear = schoolYears.find(sy => sy.is_active);
     if (activeYear) {
       setNewAssignmentSchoolYearId(activeYear.id);
@@ -107,13 +108,24 @@ const ProfessorSubjectAssignmentPage = () => {
       setNewAssignmentSchoolYearId(schoolYears[0].id);
       setSelectedSchoolYearFilter(schoolYears[0].id);
     }
-  }, [currentRole, currentUserProfile?.id, schoolYears]); // Changed dependency from establishment_id to id
+
+    if (currentRole === 'administrator') {
+      setNewAssignmentEstablishmentId(null);
+      setSelectedEstablishmentFilter('all');
+    } else if (currentUserProfile?.establishment_id) {
+      setNewAssignmentEstablishmentId(currentUserProfile.establishment_id);
+      setSelectedEstablishmentFilter(currentUserProfile.establishment_id);
+    } else {
+      setNewAssignmentEstablishmentId(null);
+      setSelectedEstablishmentFilter('all');
+    }
+  }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id, schoolYears]);
 
   const getProfessorName = (id?: string) => professors.find(p => p.id === id)?.first_name + ' ' + professors.find(p => p.id === id)?.last_name || 'N/A';
   const getSubjectName = (id?: string) => subjects.find(s => s.id === id)?.name || 'N/A';
   const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
   const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
-  // Removed getEstablishmentName
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
 
   // --- New Assignment Logic ---
@@ -122,7 +134,7 @@ const ProfessorSubjectAssignmentPage = () => {
       showError("Vous n'êtes pas autorisé à ajouter des affectations.");
       return;
     }
-    if (!newAssignmentProfessorId || !newAssignmentSubjectId || !newAssignmentClassId || !newAssignmentSchoolYearId) {
+    if (!newAssignmentProfessorId || !newAssignmentSubjectId || !newAssignmentClassId || !newAssignmentSchoolYearId || !newAssignmentEstablishmentId) {
       showError("Tous les champs sont requis.");
       return;
     }
@@ -136,17 +148,32 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
 
-    // Removed director/deputy director establishment_id checks
+    // Director/Deputy Director establishment_id checks
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && newAssignmentEstablishmentId !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez créer des affectations que dans votre établissement.");
+      return;
+    }
+    // Check if selected class and subject belong to the selected establishment
+    if (selectedClass.establishment_id !== newAssignmentEstablishmentId || selectedSubject.establishment_id !== newAssignmentEstablishmentId) {
+      showError("La classe ou la matière sélectionnée n'appartient pas à l'établissement choisi.");
+      return;
+    }
+    // Check if selected professor belongs to the selected establishment
+    if (selectedProfessor.establishment_id !== newAssignmentEstablishmentId) {
+      showError("Le professeur sélectionné n'appartient pas à l'établissement choisi.");
+      return;
+    }
 
     // Check for existing assignment
     const existingAssignment = assignments.find(
       a => a.professor_id === newAssignmentProfessorId &&
            a.subject_id === newAssignmentSubjectId &&
            a.class_id === newAssignmentClassId &&
-           a.school_year_id === newAssignmentSchoolYearId
+           a.school_year_id === newAssignmentSchoolYearId &&
+           a.establishment_id === newAssignmentEstablishmentId
     );
     if (existingAssignment) {
-      showError("Cette affectation existe déjà pour cette année scolaire.");
+      showError("Cette affectation existe déjà pour cette année scolaire et cet établissement.");
       return;
     }
 
@@ -157,6 +184,7 @@ const ProfessorSubjectAssignmentPage = () => {
         subject_id: newAssignmentSubjectId,
         class_id: newAssignmentClassId,
         school_year_id: newAssignmentSchoolYearId,
+        establishment_id: newAssignmentEstablishmentId,
       };
       const addedAssignment = await addProfessorSubjectAssignmentToStorage(newAssignment);
       if (addedAssignment) {
@@ -166,6 +194,7 @@ const ProfessorSubjectAssignmentPage = () => {
         setNewAssignmentClassId("");
         const activeYear = schoolYears.find(sy => sy.is_active);
         setNewAssignmentSchoolYearId(activeYear ? activeYear.id : (schoolYears.length > 0 ? schoolYears[0].id : ""));
+        setNewAssignmentEstablishmentId(currentUserProfile?.establishment_id || null);
         showSuccess("Affectation ajoutée !");
       } else {
         showError("Échec de l'ajout de l'affectation.");
@@ -185,13 +214,18 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
     const classOfAssignment = classes.find(cls => cls.id === assignment.class_id);
-    // Removed director/deputy director establishment_id check
+    // Director/Deputy Director establishment_id check
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && assignment.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier que les affectations de votre établissement.");
+      return;
+    }
 
     setCurrentAssignmentToEdit(assignment);
     setEditProfessorId(assignment.professor_id);
     setEditSubjectId(assignment.subject_id);
     setEditClassId(assignment.class_id);
     setEditSchoolYearId(assignment.school_year_id);
+    setEditEstablishmentId(assignment.establishment_id || null);
     setIsEditDialogOpen(true);
   };
 
@@ -201,7 +235,7 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
     if (!currentAssignmentToEdit) return;
-    if (!editProfessorId || !editSubjectId || !editClassId || !editSchoolYearId) {
+    if (!editProfessorId || !editSubjectId || !editClassId || !editSchoolYearId || !editEstablishmentId) {
       showError("Tous les champs sont requis.");
       return;
     }
@@ -215,7 +249,21 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
 
-    // Removed director/deputy director establishment_id checks
+    // Director/Deputy Director establishment_id checks
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && editEstablishmentId !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez sauvegarder les affectations que dans votre établissement.");
+      return;
+    }
+    // Check if selected class and subject belong to the selected establishment
+    if (selectedClass.establishment_id !== editEstablishmentId || selectedSubject.establishment_id !== editEstablishmentId) {
+      showError("La classe ou la matière sélectionnée n'appartient pas à l'établissement choisi.");
+      return;
+    }
+    // Check if selected professor belongs to the selected establishment
+    if (selectedProfessor.establishment_id !== editEstablishmentId) {
+      showError("Le professeur sélectionné n'appartient pas à l'établissement choisi.");
+      return;
+    }
 
     // Check for duplicate assignment (excluding the current one being edited)
     const existingAssignment = assignments.find(
@@ -223,10 +271,11 @@ const ProfessorSubjectAssignmentPage = () => {
            a.professor_id === editProfessorId &&
            a.subject_id === editSubjectId &&
            a.class_id === editClassId &&
-           a.school_year_id === editSchoolYearId
+           a.school_year_id === editSchoolYearId &&
+           a.establishment_id === editEstablishmentId
     );
     if (existingAssignment) {
-      showError("Cette affectation existe déjà pour cette année scolaire.");
+      showError("Cette affectation existe déjà pour cette année scolaire et cet établissement.");
       return;
     }
 
@@ -238,6 +287,7 @@ const ProfessorSubjectAssignmentPage = () => {
         subject_id: editSubjectId,
         class_id: editClassId,
         school_year_id: editSchoolYearId,
+        establishment_id: editEstablishmentId,
       };
       const savedAssignment = await updateProfessorSubjectAssignmentInStorage(updatedAssignment);
       if (savedAssignment) {
@@ -268,7 +318,11 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
     const classOfAssignment = classes.find(cls => cls.id === assignmentToDelete.class_id);
-    // Removed director/deputy director establishment_id check
+    // Director/Deputy Director establishment_id check
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && assignmentToDelete.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez supprimer que les affectations de votre établissement.");
+      return;
+    }
 
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette affectation ? Cette action est irréversible.")) {
       try {
@@ -283,22 +337,28 @@ const ProfessorSubjectAssignmentPage = () => {
   };
 
   // --- Filtering Logic for Display ---
-  const filteredProfessors = professors; // All professors are now global
-
-  const filteredSubjects = subjects; // All subjects are now global
-
-  const filteredClasses = classes; // All classes are now global
+  const filteredProfessors = professors.filter(p => 
+    currentRole === 'administrator' || p.establishment_id === currentUserProfile?.establishment_id
+  );
+  const filteredSubjects = subjects.filter(s => 
+    currentRole === 'administrator' || s.establishment_id === currentUserProfile?.establishment_id
+  );
+  const filteredClasses = classes.filter(cls => 
+    currentRole === 'administrator' || cls.establishment_id === currentUserProfile?.establishment_id
+  );
+  const filteredEstablishments = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
 
   const filteredAssignments = React.useMemo(() => {
     let filtered = assignments;
 
-    // Removed establishment filter
-    // if (selectedEstablishmentFilter && selectedEstablishmentFilter !== 'all') {
-    //   filtered = filtered.filter(assignment => {
-    //     const cls = classes.find(c => c.id === assignment.class_id);
-    //     return cls?.establishment_id === selectedEstablishmentFilter;
-    //   });
-    // }
+    // Apply establishment filter
+    if (selectedEstablishmentFilter !== 'all' && currentRole === 'administrator') {
+      filtered = filtered.filter(assignment => assignment.establishment_id === selectedEstablishmentFilter);
+    } else if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
+      filtered = filtered.filter(assignment => assignment.establishment_id === currentUserProfile.establishment_id);
+    }
 
     if (selectedProfessorFilter) {
       filtered = filtered.filter(a => a.professor_id === selectedProfessorFilter);
@@ -319,11 +379,12 @@ const ProfessorSubjectAssignmentPage = () => {
         getProfessorName(a.professor_id).toLowerCase().includes(lowerCaseQuery) ||
         getSubjectName(a.subject_id).toLowerCase().includes(lowerCaseQuery) ||
         getClassName(a.class_id).toLowerCase().includes(lowerCaseQuery) ||
-        getSchoolYearName(a.school_year_id).toLowerCase().includes(lowerCaseQuery)
+        getSchoolYearName(a.school_year_id).toLowerCase().includes(lowerCaseQuery) ||
+        getEstablishmentName(a.establishment_id).toLowerCase().includes(lowerCaseQuery)
       );
     }
     return filtered;
-  }, [assignments, assignmentSearchQuery, selectedProfessorFilter, selectedSubjectFilter, selectedClassFilter, selectedSchoolYearFilter, professors, subjects, classes, schoolYears]); // Removed selectedEstablishmentFilter
+  }, [assignments, assignmentSearchQuery, selectedProfessorFilter, selectedSubjectFilter, selectedClassFilter, selectedSchoolYearFilter, selectedEstablishmentFilter, professors, subjects, classes, schoolYears, establishments, currentUserProfile, currentRole]);
 
   if (isLoadingUser) {
     return (
@@ -351,7 +412,9 @@ const ProfessorSubjectAssignmentPage = () => {
     );
   }
 
-  // Removed establishmentsToDisplayForFilter
+  const establishmentsToDisplayForFilter = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
@@ -381,7 +444,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
-                      {prof.first_name} {prof.last_name} (@{prof.username})
+                      {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id)})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -396,7 +459,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
-                      {sub.name}
+                      {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -411,7 +474,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
+                      {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id)})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -430,8 +493,26 @@ const ProfessorSubjectAssignmentPage = () => {
                 </SelectContent>
               </Select>
             </div>
+            {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
+              <div>
+                <Label htmlFor="new-assignment-establishment">Établissement</Label>
+                <Select value={newAssignmentEstablishmentId || ""} onValueChange={(value) => setNewAssignmentEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
+                  <SelectTrigger id="new-assignment-establishment" className="rounded-android-tile">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
+                    {filteredEstablishments.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
-          <Button onClick={handleAddAssignment} disabled={isAddingAssignment || !newAssignmentProfessorId || !newAssignmentSubjectId || !newAssignmentClassId || !newAssignmentSchoolYearId}>
+          <Button onClick={handleAddAssignment} disabled={isAddingAssignment || !newAssignmentProfessorId || !newAssignmentSubjectId || !newAssignmentClassId || !newAssignmentSchoolYearId || !newAssignmentEstablishmentId}>
             {isAddingAssignment ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'affectation
           </Button>
         </CardContent>
@@ -456,7 +537,24 @@ const ProfessorSubjectAssignmentPage = () => {
                 onChange={(e) => setAssignmentSearchQuery(e.target.value)}
               />
             </div>
-            {/* Removed Establishment Filter */}
+            {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
+              <div className="flex-shrink-0 sm:w-1/3">
+                <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
+                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
+                  <SelectTrigger id="establishment-filter" className="rounded-android-tile">
+                    <SelectValue placeholder="Tous les établissements" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectItem value="all">Tous les établissements</SelectItem>
+                    {establishmentsToDisplayForFilter.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="professor-filter">Filtrer par Professeur</Label>
               <Select value={selectedProfessorFilter || "all"} onValueChange={(value) => setSelectedProfessorFilter(value === "all" ? null : value)}>
@@ -528,7 +626,11 @@ const ProfessorSubjectAssignmentPage = () => {
                     <p className="font-medium">
                       <span className="text-primary">{getProfessorName(assignment.professor_id)}</span> enseigne <span className="text-primary">{getSubjectName(assignment.subject_id)}</span> à la classe <span className="text-primary">{getClassName(assignment.class_id)}</span> pour l'année <span className="text-primary">{getSchoolYearName(assignment.school_year_id)}</span>.
                     </p>
-                    {/* Removed establishment_id display */}
+                    {assignment.establishment_id && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Building2 className="h-3 w-3" /> {getEstablishmentName(assignment.establishment_id)}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     <Button variant="outline" size="sm" onClick={() => handleEditAssignment(assignment)}>
@@ -566,7 +668,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                     {filteredProfessors.map(prof => (
                       <SelectItem key={prof.id} value={prof.id}>
-                        {prof.first_name} {prof.last_name} (@{prof.username})
+                        {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id)})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -581,7 +683,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                     {filteredSubjects.map(sub => (
                       <SelectItem key={sub.id} value={sub.id}>
-                        {sub.name}
+                        {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -596,7 +698,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                     {filteredClasses.map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
+                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id)})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -615,8 +717,26 @@ const ProfessorSubjectAssignmentPage = () => {
                   </SelectContent>
                 </Select>
               </div>
+              {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
+                <div>
+                  <Label htmlFor="edit-assignment-establishment">Établissement</Label>
+                  <Select value={editEstablishmentId || ""} onValueChange={(value) => setEditEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
+                    <SelectTrigger id="edit-assignment-establishment" className="rounded-android-tile">
+                      <SelectValue placeholder="Sélectionner un établissement" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                      {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
+                      {filteredEstablishments.map(est => (
+                        <SelectItem key={est.id} value={est.id}>
+                          {est.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
-            <Button onClick={handleSaveEditedAssignment} disabled={isSavingEdit || !editProfessorId || !editSubjectId || !editClassId || !editSchoolYearId}>
+            <Button onClick={handleSaveEditedAssignment} disabled={isSavingEdit || !editProfessorId || !editSubjectId || !editClassId || !editSchoolYearId || !editEstablishmentId}>
               {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
             </Button>
             </div>

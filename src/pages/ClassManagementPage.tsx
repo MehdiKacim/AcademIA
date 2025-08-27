@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react"; // Import UserPlus
-import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels"; // Removed Establishment import
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2 } from "lucide-react"; // Import UserPlus, Building2
+import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -27,7 +27,7 @@ import {
   updateClassInStorage,
   addClassToStorage,
   deleteClassFromStorage,
-  // Removed loadEstablishments,
+  loadEstablishments, // Re-added loadEstablishments
   loadSchoolYears, // Import loadSchoolYears
 } from '@/lib/courseData';
 
@@ -47,7 +47,7 @@ const ClassManagementPage = () => {
   
   // Main states for data
   const [classes, setClasses] = useState<Class[]>([]);
-  // Removed establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
@@ -56,7 +56,7 @@ const ClassManagementPage = () => {
   // States for add/edit forms
   const [newClassName, setNewClassName] = useState('');
   const [newClassCurriculumId, setNewClassCurriculumId] = useState<string>("");
-  // Removed newClassEstablishmentId
+  const [newClassEstablishmentId, setNewClassEstablishmentId] = useState<string | null>(null); // Re-added newClassEstablishmentId
   const [newClassSchoolYearId, setNewClassSchoolYearId] = useState<string>(""); // Changed to schoolYearId
 
   // State for edit class dialog
@@ -69,9 +69,9 @@ const ClassManagementPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setClasses(await loadClasses());
-        setCurricula(await loadCurricula());
-        // Removed loadEstablishments
+        setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
+        setClasses(await loadClasses(currentUserProfile?.establishment_id)); // Filter by user's establishment
+        setCurricula(await loadCurricula(currentUserProfile?.establishment_id)); // Filter by user's establishment
         setAllProfiles(await getAllProfiles());
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Initialize here
         setSchoolYears(await loadSchoolYears()); // Load school years
@@ -83,8 +83,19 @@ const ClassManagementPage = () => {
     fetchData();
   }, [currentUserProfile]);
 
+  // Set default establishment for new class
+  useEffect(() => {
+    if (currentUserProfile?.establishment_id) {
+      setNewClassEstablishmentId(currentUserProfile.establishment_id);
+    } else if (currentRole === 'administrator' && establishments.length > 0) {
+      setNewClassEstablishmentId(establishments[0].id);
+    } else {
+      setNewClassEstablishmentId(null);
+    }
+  }, [currentUserProfile, currentRole, establishments]);
+
   // Helper functions to get names from IDs
-  // Removed getEstablishmentName
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
   const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
   
@@ -98,27 +109,40 @@ const ClassManagementPage = () => {
       showError("Le nom de la classe, le cursus et l'année scolaire sont requis.");
       return;
     }
+    if (!newClassEstablishmentId && currentRole !== 'administrator') {
+      showError("L'établissement est requis pour ajouter une classe.");
+      return;
+    }
     const selectedCurriculum = curricula.find(c => c.id === newClassCurriculumId);
     if (!selectedCurriculum) {
       showError("Cursus sélectionné introuvable.");
       return;
     }
-    // Removed curriculum establishment_id check
-    // Removed role-based establishment_id check
+    // Check if the selected curriculum belongs to the selected establishment
+    if (newClassEstablishmentId && selectedCurriculum.establishment_id !== newClassEstablishmentId) {
+      showError("Le cursus sélectionné n'appartient pas à l'établissement choisi.");
+      return;
+    }
+    // Role-based establishment_id check
+    if (currentRole !== 'administrator' && newClassEstablishmentId !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez créer des classes que dans votre établissement.");
+      return;
+    }
 
     const newCls: Omit<Class, 'id' | 'created_at' | 'school_year_name'> = { // Omit generated fields, removed establishment_id
       name: newClassName.trim(),
       curriculum_id: newClassCurriculumId,
       creator_ids: [currentUserProfile.id], // Assign current creator
+      establishment_id: newClassEstablishmentId || '', // Use selected establishment_id
       school_year_id: newClassSchoolYearId, // Changed to school_year_id
     };
     try {
       const addedClass = await addClassToStorage(newCls);
       if (addedClass) {
-        setClasses(await loadClasses()); // Re-fetch to get the new list
+        setClasses(await loadClasses(currentUserProfile?.establishment_id)); // Re-fetch to get the new list
         setNewClassName('');
         setNewClassCurriculumId("");
-        // Removed setNewClassEstablishmentId
+        setNewClassEstablishmentId(currentUserProfile?.establishment_id || null); // Reset to default
         setNewClassSchoolYearId(""); // Reset school year
         showSuccess("Classe ajoutée !");
       } else {
@@ -145,11 +169,15 @@ const ClassManagementPage = () => {
       showError("Vous ne pouvez supprimer que les classes que vous gérez.");
       return;
     }
-    // Removed director/deputy director establishment_id check
+    // Director/Deputy Director establishment_id check
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && classToDelete.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez supprimer que les classes de votre établissement.");
+      return;
+    }
 
     try {
       await deleteClassFromStorage(id);
-      setClasses(await loadClasses()); // Re-fetch to get the updated list
+      setClasses(await loadClasses(currentUserProfile?.establishment_id)); // Re-fetch to get the updated list
       // Remove class_id from associated student profiles
       // This logic is now handled by student_class_enrollments, not directly on profile
       // We need to delete enrollments for this class
@@ -174,13 +202,17 @@ const ClassManagementPage = () => {
       showError("Vous ne pouvez modifier que les classes que vous gérez.");
       return;
     }
-    // Removed director/deputy director establishment_id check
+    // Director/Deputy Director establishment_id check
+    if ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier que les classes de votre établissement.");
+      return;
+    }
     setCurrentClassToEdit(cls);
     setIsEditClassDialogOpen(true);
   };
 
   const handleSaveEditedClass = async (updatedClass: Class) => {
-    setClasses(await loadClasses()); // Re-fetch to get the updated list
+    setClasses(await loadClasses(currentUserProfile?.establishment_id)); // Re-fetch to get the updated list
   };
 
   const handleViewStudentsInClass = (classId: string) => {
@@ -190,18 +222,16 @@ const ClassManagementPage = () => {
   const filteredClasses = classSearchQuery.trim() === ''
     ? classes.filter(cls => (currentUserProfile && (
         (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id)) ||
-        (currentRole === 'tutor') || // Tutors see all classes
-        ((currentRole === 'director' || currentRole === 'deputy_director')) ||
+        (currentRole === 'tutor' && cls.establishment_id === currentUserProfile.establishment_id) || // Tutors see classes in their establishment
+        ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id === currentUserProfile.establishment_id) ||
         (currentRole === 'administrator')
       )))
     : classes.filter(cls => (currentUserProfile && (
         (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id)) ||
-        (currentRole === 'tutor') ||
-        ((currentRole === 'director' || currentRole === 'deputy_director')) ||
+        (currentRole === 'tutor' && cls.establishment_id === currentUserProfile.establishment_id) ||
+        ((currentRole === 'director' || currentRole === 'deputy_director') && cls.establishment_id === currentUserProfile.establishment_id) ||
         (currentRole === 'administrator')
       )) && cls.name.toLowerCase().includes(classSearchQuery.toLowerCase()));
-
-  // Removed the problematic line: const schoolYears = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
 
   if (isLoadingUser) {
     return (
@@ -229,8 +259,10 @@ const ClassManagementPage = () => {
     );
   }
 
-  // Removed establishmentsToDisplay
-  const curriculaToDisplay = curricula; // All curricula are now global
+  const establishmentsToDisplay = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
+  const curriculaToDisplay = curricula; // Already filtered by useEffect
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
@@ -258,18 +290,37 @@ const ClassManagementPage = () => {
                 value={newClassName}
                 onChange={(e) => setNewClassName(e.target.value)}
               />
-              {/* Removed Establishment Select */}
+              {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur'].includes(currentRole || ''))) && (
+                <>
+                  <Label htmlFor="new-class-establishment">Établissement</Label>
+                  <Select value={newClassEstablishmentId || ""} onValueChange={(value) => setNewClassEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
+                    <SelectTrigger id="new-class-establishment" className="rounded-android-tile">
+                      <SelectValue placeholder="Sélectionner un établissement" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                      {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
+                      {establishmentsToDisplay.map(est => (
+                        <SelectItem key={est.id} value={est.id}>
+                          {est.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
               <Label htmlFor="new-class-curriculum">Cursus</Label>
               <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
                 <SelectTrigger id="new-class-curriculum" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner un cursus" />
                 </SelectTrigger>
                 <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
-                  {curriculaToDisplay.map(cur => (
-                    <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name}
-                    </SelectItem>
-                  ))}
+                  {curriculaToDisplay
+                    .filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId)
+                    .map(cur => (
+                      <SelectItem key={cur.id} value={cur.id}>
+                        {cur.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <Label htmlFor="new-class-school-year">Année scolaire</Label>
@@ -283,7 +334,7 @@ const ClassManagementPage = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassSchoolYearId}>
+              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassSchoolYearId || (!newClassEstablishmentId && currentRole !== 'administrator')}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
               </Button>
             </div>
@@ -322,6 +373,11 @@ const ClassManagementPage = () => {
                     <p className="text-sm text-muted-foreground">
                       Année scolaire: {getSchoolYearName(cls.school_year_id)}
                     </p>
+                    {cls.establishment_id && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Building2 className="h-3 w-3" /> {getEstablishmentName(cls.establishment_id)}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Élèves: {allProfiles.filter(p => p.role === 'student' && allStudentClassEnrollments.some(e => e.student_id === p.id && e.class_id === cls.id)).length}
                     </p>
@@ -354,6 +410,9 @@ const ClassManagementPage = () => {
           onClose={() => setIsEditClassDialogOpen(false)}
           classToEdit={currentClassToEdit}
           onSave={handleSaveEditedClass}
+          establishments={establishmentsToDisplay} // Pass establishments
+          curricula={curriculaToDisplay} // Pass curricula
+          schoolYears={schoolYears} // Pass schoolYears
         />
       )}
     </div>

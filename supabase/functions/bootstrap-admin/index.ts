@@ -29,6 +29,7 @@ serve(async (req) => {
         last_name,
         username,
         role: 'administrator', // Always create an administrator for this bootstrap function
+        establishment_id: null, // Ensure admin is NOT linked to an establishment
       },
     });
 

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
-import { Subject } from "@/lib/dataModels"; // Removed Establishment import
+import { Subject, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { updateSubjectInStorage } from "@/lib/courseData"; // Removed loadEstablishments
 import { useRole } from '@/contexts/RoleContext';
 
@@ -21,21 +21,19 @@ interface EditSubjectDialogProps {
   onClose: () => void;
   subject: Subject;
   onSave: (updatedSubject: Subject) => void;
+  establishments: Establishment[]; // New prop for establishments
 }
 
-const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDialogProps) => {
+const EditSubjectDialog = ({ isOpen, onClose, subject, onSave, establishments }: EditSubjectDialogProps) => {
   const { currentUserProfile, currentRole } = useRole();
   const [name, setName] = useState(subject.name);
-  // Removed establishmentId state
-  // Removed establishments state
+  const [establishmentId, setEstablishmentId] = useState<string | null>(subject.establishment_id || null); // Re-added establishmentId state
   const [isLoading, setIsLoading] = useState(false);
-
-  // Removed useEffect for fetching establishments
 
   useEffect(() => {
     if (isOpen && subject) {
       setName(subject.name);
-      // Removed setEstablishmentId
+      setEstablishmentId(subject.establishment_id || null);
     }
   }, [isOpen, subject]);
 
@@ -44,19 +42,27 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
       showError("Vous n'êtes pas autorisé à modifier une matière.");
       return;
     }
-    // Removed role-based establishment_id check
+    // Role-based establishment_id check
+    if (currentRole !== 'administrator' && subject.establishment_id !== currentUserProfile.establishment_id) {
+      showError("Vous ne pouvez modifier que les matières de votre établissement.");
+      return;
+    }
     if (!name.trim()) {
       showError("Le nom de la matière est requis.");
       return;
     }
-    // Removed establishmentId check
+    if (!establishmentId && currentRole !== 'administrator') {
+      showError("L'établissement est requis pour la matière.");
+      return;
+    }
 
     setIsLoading(true);
     try {
       const updatedSubjectData: Subject = {
         ...subject,
         name: name.trim(),
-      }; // Removed establishment_id
+        establishment_id: establishmentId || '', // Use selected establishment_id
+      };
       const savedSubject = await updateSubjectInStorage(updatedSubjectData);
 
       if (savedSubject) {
@@ -74,7 +80,9 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
     }
   };
 
-  // Removed establishmentsToDisplay
+  const establishmentsToDisplay = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -99,10 +107,29 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
                 required
               />
             </div>
-            {/* Removed Establishment Select */}
+            {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director'].includes(currentRole || ''))) && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="establishment" className="text-right">
+                  Établissement
+                </Label>
+                <Select value={establishmentId || ""} onValueChange={(value) => setEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
+                  <SelectTrigger id="establishment" className="col-span-3 rounded-android-tile">
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                    {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
+                    {establishmentsToDisplay.map(est => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button onClick={handleSave} disabled={isLoading}>
+            <Button onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')}>
               {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
             </Button>
           </DialogFooter>
