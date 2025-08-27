@@ -635,7 +635,12 @@ const RoleNavConfigsPage = () => {
       showSuccess("Élément de navigation réorganisé/déplacé !");
       await fetchAndStructureNavItems(); // Re-fetch to ensure UI is consistent with DB
     } catch (error: any) {
-      showError(`Erreur lors de la mise à jour de la base de données: ${error.message}`);
+      // Check if the error is due to authentication
+      if (error.message && error.message.includes("Non authentifié")) {
+        showError("Votre session a expiré. Veuillez vous reconnecter pour réorganiser les menus.");
+      } else {
+        showError(`Erreur lors de la mise à jour de la base de données: ${error.message}`);
+      }
     } finally {
       setActiveDragItem(null);
       setActiveDragConfig(null);

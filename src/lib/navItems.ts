@@ -163,12 +163,23 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
   }));
 };
 
+// Helper to check for active session
+const ensureAuthenticated = async () => {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session) {
+    throw new Error("Non authentifié. Veuillez vous reconnecter.");
+  }
+  return session;
+};
+
 /**
  * Ajoute un nouvel élément de navigation générique.
  * @param newItem Les données du nouvel élément de navigation.
  * @returns L'élément de navigation ajouté.
  */
 export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
+
   // console.log("[addNavItem] Sending payload to Edge Function:", newItem); // Add this log
 
   // Check for existing item with same label or route (if route is not null)
@@ -212,6 +223,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
  * @returns L'élément de navigation mis à jour.
  */
 export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'update', payload: updatedItem },
   });
@@ -228,6 +240,7 @@ export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'u
  * @param navItemId L'ID de l'élément de navigation à supprimer.
  */
 export const deleteNavItem = async (navItemId: string): Promise<void> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   const { error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'delete', payload: { id: navItemId } },
   });
@@ -244,6 +257,8 @@ export const deleteNavItem = async (navItemId: string): Promise<void> => {
  * @returns Un tableau de configurations de navigation.
  */
 export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promise<RoleNavItemConfig[]> => {
+  // No authentication check here, as this is for reading configurations,
+  // and the RLS policies on `role_nav_configs` will handle access.
   let query = supabase
     .from('role_nav_configs')
     .select('*')
@@ -265,6 +280,7 @@ export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promis
  * @returns La configuration ajoutée.
  */
 export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   // console.log("[addRoleNavItemConfig] Adding new config:", newConfig); // Diagnostic log
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'create_config', payload: newConfig }, // New action for config
@@ -283,6 +299,7 @@ export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'i
  * @returns La configuration mise à jour.
  */
 export const updateRoleNavItemConfig = async (updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   // console.log("[updateRoleNavItemConfig] Updating config:", updatedConfig); // Diagnostic log
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'update_config', payload: updatedConfig }, // New action for config
@@ -300,6 +317,7 @@ export const updateRoleNavItemConfig = async (updatedConfig: Omit<RoleNavItemCon
  * @param configId L'ID de la configuration à supprimer.
  */
 export const deleteRoleNavItemConfig = async (configId: string): Promise<void> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   const { error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'delete_config', payload: { id: configId } }, // New action for config
   });
@@ -314,6 +332,7 @@ export const deleteRoleNavItemConfig = async (configId: string): Promise<void> =
  * Réinitialise la table nav_items (pour le développement/test).
  */
 export const resetNavItems = async (): Promise<void> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   const { error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'reset_nav_items' }, // New action for reset
   });
@@ -327,6 +346,7 @@ export const resetNavItems = async (): Promise<void> => {
  * Réinitialise la table role_nav_configs (pour le développement/test).
  */
 export const resetRoleNavConfigs = async (): Promise<void> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   const { error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'reset_role_nav_configs' }, // New action for reset
   });
@@ -338,6 +358,7 @@ export const resetRoleNavConfigs = async (): Promise<void> => {
 
 // New helper function to delete role_nav_configs for a specific role
 export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise<void> => { // Removed establishmentId
+  await ensureAuthenticated(); // Ensure user is authenticated
   // console.warn(`[resetRoleNavConfigsForRole] Deleting all role_nav_configs for role: ${role}`);
   const { error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'reset_role_nav_configs_for_role', payload: { role } }, // Removed establishment_id
@@ -352,6 +373,7 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
  * Déclenche le bootstrap des éléments de navigation et des configurations de rôle par défaut.
  */
 export const bootstrapNavItems = async (): Promise<void> => {
+  await ensureAuthenticated(); // Ensure user is authenticated
   // console.log("[bootstrapNavItems] Invoking 'bootstrap-nav' Edge Function...");
   const { data, error } = await supabase.functions.invoke('bootstrap-nav');
   if (error) {
