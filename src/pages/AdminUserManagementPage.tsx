@@ -608,8 +608,8 @@ const AdminUserManagementPage = () => {
       </p>
 
       {/* Section: Créer un nouvel utilisateur (Collapsible) */}
-      <Collapsible open={isNewUserFormOpen} onOpenChange={setIsNewUserFormOpen}>
-        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+        <Collapsible open={isNewUserFormOpen} onOpenChange={setIsNewUserFormOpen}>
           <CardHeader>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
@@ -619,133 +619,133 @@ const AdminUserManagementPage = () => {
                 {isNewUserFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    placeholder="Prénom"
-                    value={newUserFirstName}
-                    onChange={(e) => setNewUserFirstName(e.target.value)}
-                  />
-                  <Input
-                    placeholder="Nom"
-                    value={newUserLastName}
-                    onChange={(e) => setNewUserLastName(e.target.value)}
-                  />
-                  <InputWithStatus
-                    placeholder="Nom d'utilisateur"
-                    value={newUserUsername}
-                    onChange={(e) => handleNewUserUsernameChange(e.target.value)}
-                    status={usernameAvailabilityStatus}
-                    errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-                  />
-                  <InputWithStatus
-                    type="email"
-                    placeholder="Email"
-                    value={newUserEmail}
-                    onChange={(e) => handleNewUserEmailChange(e.target.value)}
-                    status={emailAvailabilityStatus}
-                    errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Mot de passe"
-                    value={newUserPassword}
-                    onChange={(e) => setNewUserPassword(e.target.value)}
-                  />
-                  <Select 
-                    value={newUserRole} 
-                    onValueChange={(value: Profile['role']) => {
-                      setNewUserRole(value);
-                      // Reset enrollment dates if not a student
-                      if (value !== 'student') {
-                        setNewUserEnrollmentStartDate(undefined);
-                        setNewUserEnrollmentEndDate(undefined);
-                      }
-                    }}
-                    disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')} // Disable if director/professeur/tutor
-                  >
-                    <SelectTrigger className="rounded-android-tile"> {/* Apply rounded-android-tile */}
-                      <SelectValue placeholder="Sélectionner un rôle" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                      {rolesForCreation.map(role => (
-                        <SelectItem key={role} value={role}>
-                          {role === 'student' ? 'Élève' :
-                           role === 'professeur' ? 'Professeur' :
-                           role === 'tutor' ? 'Tuteur' :
-                           role === 'director' ? 'Directeur' :
-                           role === 'deputy_director' ? 'Directeur Adjoint' :
-                           'Administrateur (Super Admin)'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {/* Removed Establishment selection */}
-                  {newUserRole === 'student' && (
-                    <>
-                      <div>
-                        <Label htmlFor="new-user-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                                !newUserEnrollmentStartDate && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarDays className="mr-2 h-4 w-4" />
-                              {newUserEnrollmentStartDate ? format(newUserEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                            <Calendar
-                              mode="single"
-                              selected={newUserEnrollmentStartDate}
-                              onSelect={setNewUserEnrollmentStartDate}
-                              initialFocus
-                              locale={fr}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <div>
-                        <Label htmlFor="new-user-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                                !newUserEnrollmentEndDate && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarDays className="mr-2 h-4 w-4" />
-                              {newUserEnrollmentEndDate ? format(newUserEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                            <Calendar
-                              mode="single"
-                              selected={newUserEnrollmentEndDate}
-                              onSelect={setNewUserEnrollmentEndDate}
-                              initialFocus
-                              locale={fr}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </>
-                  )}
-                </div>
-                <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole === 'student' && (!newUserEnrollmentStartDate || !newUserEnrollmentEndDate))}>
-                  {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
-                </Button>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  placeholder="Prénom"
+                  value={newUserFirstName}
+                  onChange={(e) => setNewUserFirstName(e.target.value)}
+                />
+                <Input
+                  placeholder="Nom"
+                  value={newUserLastName}
+                  onChange={(e) => setNewUserLastName(e.target.value)}
+                />
+                <InputWithStatus
+                  placeholder="Nom d'utilisateur"
+                  value={newUserUsername}
+                  onChange={(e) => handleNewUserUsernameChange(e.target.value)}
+                  status={usernameAvailabilityStatus}
+                  errorMessage={usernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
+                />
+                <InputWithStatus
+                  type="email"
+                  placeholder="Email"
+                  value={newUserEmail}
+                  onChange={(e) => handleNewUserEmailChange(e.target.value)}
+                  status={emailAvailabilityStatus}
+                  errorMessage={emailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
+                />
+                <Input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
+                />
+                <Select 
+                  value={newUserRole} 
+                  onValueChange={(value: Profile['role']) => {
+                    setNewUserRole(value);
+                    // Reset enrollment dates if not a student
+                    if (value !== 'student') {
+                      setNewUserEnrollmentStartDate(undefined);
+                      setNewUserEnrollmentEndDate(undefined);
+                    }
+                  }}
+                  disabled={['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')} // Disable if director/professeur/tutor
+                >
+                  <SelectTrigger className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <SelectValue placeholder="Sélectionner un rôle" />
+                  </SelectTrigger>
+                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    {rolesForCreation.map(role => (
+                      <SelectItem key={role} value={role}>
+                        {role === 'student' ? 'Élève' :
+                         role === 'professeur' ? 'Professeur' :
+                         role === 'tutor' ? 'Tuteur' :
+                         role === 'director' ? 'Directeur' :
+                         role === 'deputy_director' ? 'Directeur Adjoint' :
+                         'Administrateur (Super Admin)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {/* Removed Establishment selection */}
+                {newUserRole === 'student' && (
+                  <>
+                    <div>
+                      <Label htmlFor="new-user-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                              !newUserEnrollmentStartDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {newUserEnrollmentStartDate ? format(newUserEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                          <Calendar
+                            mode="single"
+                            selected={newUserEnrollmentStartDate}
+                            onSelect={setNewUserEnrollmentStartDate}
+                            initialFocus
+                            locale={fr}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label htmlFor="new-user-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                              !newUserEnrollmentEndDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {newUserEnrollmentEndDate ? format(newUserEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                          <Calendar
+                            mode="single"
+                            selected={newUserEnrollmentEndDate}
+                            onSelect={setNewUserEnrollmentEndDate}
+                            initialFocus
+                            locale={fr}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
+                )}
+              </div>
+              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole === 'student' && (!newUserEnrollmentStartDate || !newUserEnrollmentEndDate))}>
+                {isCreatingUser ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
+              </Button>
+            </CardContent>
+          </CollapsibleContent>
         </Collapsible>
+      </Card>
 
       {/* Section: Liste de tous les utilisateurs */}
       <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
