@@ -33,10 +33,12 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
         <DrawerContent className="h-auto mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile">
-          <div className="flex flex-col h-full relative"> {/* Added relative here for absolute positioning of close button */}
+          <div className="flex flex-col h-full relative">
             <DrawerHeader className="text-center">
-              <DrawerPrimitiveTitle className="text-2xl font-bold">Connexion</DrawerPrimitiveTitle>
-              <DrawerPrimitiveDescription>Entrez vos identifiants pour accéder à votre espace.</DrawerPrimitiveDescription>
+              <React.Fragment> {/* Wrap children in a Fragment */}
+                <DrawerPrimitiveTitle className="text-2xl font-bold">Connexion</DrawerPrimitiveTitle>
+                <DrawerPrimitiveDescription>Entrez vos identifiants pour accéder à votre espace.</DrawerPrimitiveDescription>
+              </React.Fragment>
             </DrawerHeader>
             <DrawerClose asChild className="absolute right-4 top-4">
               <Button variant="ghost" size="icon">
@@ -57,10 +59,12 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-md p-0 backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile">
-        <div className="flex flex-col h-full relative"> {/* Added relative here for absolute positioning of close button */}
+        <div className="flex flex-col h-full relative">
           <DialogHeader className="text-center pb-2">
-            <DialogTitle className="text-2xl">Connexion</DialogTitle>
-            <DialogDescription>Entrez vos identifiants pour accéder à votre espace.</DialogDescription>
+            <React.Fragment> {/* Wrap children in a Fragment */}
+              <DialogTitle className="text-2xl">Connexion</DialogTitle>
+              <DialogDescription>Entrez vos identifiants pour accéder à votre espace.</DialogDescription>
+            </React.Fragment>
           </DialogHeader>
           <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-4">
             <X className="h-5 w-5" />
