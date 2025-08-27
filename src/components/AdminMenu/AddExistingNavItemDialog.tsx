@@ -50,7 +50,7 @@ const AddExistingNavItemDialog = ({
   iconMap,
 }: AddExistingNavItemDialogProps) => {
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null); // Corrected initialization
-  const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean } & NavItem) | null>(null); // Store full info
+  const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem) | null>(null); // Store full info, added isNew
   const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
@@ -69,24 +69,22 @@ const AddExistingNavItemDialog = ({
   }, [isOpen]);
 
   const availableGenericItemsOptions = useMemo(() => {
-    const itemsNotYetConfigured = allGenericNavItems.filter(
-      item => !allConfiguredItemsFlat.some(configured => configured.id === item.id)
+    const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
+
+    const filtered = allGenericNavItems.filter(
+      item => !configuredGenericItemIds.has(item.id)
     );
 
-    const configuredRootItems = allConfiguredItemsFlat.filter(
-      item => item.parent_nav_item_id === null || item.parent_nav_item_id === undefined
-    );
+    const sorted = filtered.sort((a, b) => a.label.localeCompare(b.label));
 
-    const combinedItems = [...itemsNotYetConfigured, ...configuredRootItems];
-
-    const filtered = combinedItems.filter(item =>
-      item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase())
-    );
-      
-    return filtered.map(item => ({
-        ...item,
-        isConfiguredAsRoot: allConfiguredItemsFlat.some(configured => configured.id === item.id && (configured.parent_nav_item_id === null || configured.parent_nav_item_id === undefined)),
-      }));
+    const lowerCaseQuery = genericItemSearchQuery.toLowerCase();
+    return sorted.filter(item =>
+      item.label.toLowerCase().includes(lowerCaseQuery)
+    ).map(item => ({
+      ...item,
+      isConfiguredAsRoot: false, // These items are not configured at all, so this flag is always false
+      isNew: true, // Indicate that this is a new item to be configured for the role
+    }));
   }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
   const availableParentsOptions = useMemo(() => {
@@ -157,9 +155,6 @@ const AddExistingNavItemDialog = ({
         return;
       }
 
-      const selectedItemInfo = availableGenericItemsOptions.find(opt => opt.id === selectedGenericItemToAdd);
-      const isNewConfiguration = selectedItemInfo?.isNew; // Check if it's a truly new configuration
-
       let finalParentId: string | null = selectedParentForNewItem === 'none' ? null : selectedParentForNewItem;
 
       // If the selected parent is a new generic item (not yet configured for this role),
@@ -205,34 +200,15 @@ const AddExistingNavItemDialog = ({
         }
       }
 
-      if (isNewConfiguration) {
-        // Add a new configuration for the selected generic item
-        const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
-          nav_item_id: genericItem.id,
-          role: selectedRoleFilter,
-          parent_nav_item_id: finalParentId,
-          order_index: 9999, // Will be re-indexed by fetchAndStructureNavItems
-        };
-        await addRoleNavItemConfig(newConfig);
-        showSuccess(`'${genericItem.label}' ajouté au menu du rôle !`);
-      } else {
-        // Update existing configuration (re-parenting)
-        const existingConfig = allConfiguredItemsFlat.find(item => item.id === genericItem.id);
-        if (!existingConfig || !existingConfig.configId) {
-          showError("Configuration existante introuvable pour la mise à jour.");
-          setIsAdding(false);
-          return;
-        }
-        const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-          id: existingConfig.configId,
-          nav_item_id: genericItem.id,
-          role: selectedRoleFilter,
-          parent_nav_item_id: finalParentId,
-          order_index: 9999, // Will be re-indexed by fetchAndStructureNavItems
-        };
-        await updateRoleNavItemConfig(updatedConfig);
-        showSuccess(`'${genericItem.label}' déplacé dans le menu du rôle !`);
-      }
+      // Always add a new configuration for the selected generic item
+      const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
+        nav_item_id: genericItem.id,
+        role: selectedRoleFilter,
+        parent_nav_item_id: finalParentId,
+        order_index: 9999, // Will be re-indexed by fetchAndStructureNavItems
+      };
+      await addRoleNavItemConfig(newConfig);
+      showSuccess(`'${genericItem.label}' ajouté au menu du rôle !`);
 
       onItemAdded(); // Trigger refresh in parent
       onClose();
@@ -246,15 +222,11 @@ const AddExistingNavItemDialog = ({
 
   const isAddButtonDisabled = isAdding || !selectedGenericItemInfo || !selectedParentForNewItem;
 
-  const handleSelectGenericItem = (item: ({ isConfiguredAsRoot: boolean } & NavItem)) => {
+  const handleSelectGenericItem = (item: ({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem)) => {
     setSelectedGenericItemToAdd(item.id);
     setSelectedGenericItemInfo(item);
-    // Pre-select current parent if it's already configured
-    if (item.isConfiguredAsRoot && item.parent_nav_item_id) {
-      setSelectedParentForNewItem(item.parent_nav_item_id);
-    } else {
-      setSelectedParentForNewItem('none'); // Default to root if not configured or already root
-    }
+    // For newly added items, default parent to none (root)
+    setSelectedParentForNewItem('none');
   };
 
   const handleCancelSelection = () => {
@@ -293,7 +265,7 @@ const AddExistingNavItemDialog = ({
                   <div className="p-2 space-y-2">
                     {availableGenericItemsOptions.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
-                        Aucun élément disponible à ajouter ou à re-parenté.
+                        Aucun élément disponible à ajouter.
                       </p>
                     ) : (
                       availableGenericItemsOptions.map(item => {
@@ -306,7 +278,6 @@ const AddExistingNavItemDialog = ({
                                 <p className="font-medium">{item.label}</p>
                                 <p className="text-xs text-muted-foreground">
                                   {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
-                                  {item.isConfiguredAsRoot && <span className="ml-2 italic">(Actuellement racine)</span>}
                                 </p>
                               </div>
                             </div>
