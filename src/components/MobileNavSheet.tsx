@@ -53,10 +53,10 @@ interface MobileNavSheetProps {
   onOpenAboutModal: () => void;
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
-  unreadNotificationsCount: number; // New: Pass unreadNotificationsCount
+  // Removed unreadNotificationsCount: number;
 }
 
-const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount, unreadNotificationsCount }: MobileNavSheetProps) => {
+const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount }: MobileNavSheetProps) => { // Removed unreadNotificationsCount
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
@@ -196,15 +196,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     )}
                     <span className="sr-only">Messagerie</span>
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-notifications', label: 'Notifications', icon_name: 'BellRing', is_external: false, type: 'route', route: '/notifications', order_index: 101, badge: unreadNotificationsCount })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                    <BellRing className="h-5 w-5" />
-                    {unreadNotificationsCount > 0 && (
-                      <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {unreadNotificationsCount}
-                      </span>
-                    )}
-                    <span className="sr-only">Notifications</span>
-                  </Button>
+                  {/* Removed Notifications button */}
                   <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />

@@ -14,7 +14,7 @@ const DEFAULT_NAV_ITEMS_WITH_KEYS = [
   { key: 'nav-analytics', label: 'Analytiques', route: '/analytics?view=overview', icon_name: 'BarChart2', is_external: false, type: 'route' },
   { key: 'nav-all-notes', label: 'Toutes mes notes', route: '/all-notes', icon_name: 'NotebookText', is_external: false, type: 'route' },
   { key: 'nav-messages', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', is_external: false, type: 'route' },
-  { key: 'nav-notifications', label: 'Notifications', route: '/notifications', icon_name: 'BellRing', is_external: false, type: 'route' },
+  // Removed nav-notifications
   { key: 'nav-profile', label: 'Mon Profil', route: '/profile', icon_name: 'User', is_external: false, type: 'route' },
   { key: 'nav-settings', label: 'Paramètres', route: '/settings', icon_name: 'Settings', is_external: false, type: 'route' },
   { key: 'nav-admin-users', label: 'Gestion des Utilisateurs', route: '/admin-users', icon_name: 'UserRoundCog', is_external: false, type: 'route' },
@@ -53,7 +53,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
     { nav_item_key: 'nav-pedagogical-management', parent_nav_item_key: null, order_index: 8 },
     { nav_item_key: 'nav-analytics', parent_nav_item_key: null, order_index: 9 },
     { nav_item_key: 'nav-messages', parent_nav_item_key: null, order_index: 10 },
-    { nav_item_key: 'nav-notifications', parent_nav_item_key: null, order_index: 11 },
+    // Removed nav-notifications
     { nav_item_key: 'nav-profile', parent_nav_item_key: null, order_index: 12 },
     { nav_item_key: 'nav-settings', parent_nav_item_key: null, order_index: 13 },
     { nav_item_key: 'nav-admin-menu-management', parent_nav_item_key: null, order_index: 14 },
@@ -76,7 +76,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
     { nav_item_key: 'nav-pedagogical-management', parent_nav_item_key: null, order_index: 8 },
     { nav_item_key: 'nav-analytics', parent_nav_item_key: null, order_index: 9 },
     { nav_item_key: 'nav-messages', parent_nav_item_key: null, order_index: 10 },
-    { nav_item_key: 'nav-notifications', parent_nav_item_key: null, order_index: 11 },
+    // Removed nav-notifications
     { nav_item_key: 'nav-profile', parent_nav_item_key: null, order_index: 12 },
     { nav_item_key: 'nav-settings', parent_nav_item_key: null, order_index: 13 },
     { nav_item_key: 'nav-global-search', parent_nav_item_key: null, order_index: 14 },
@@ -95,7 +95,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
     { nav_item_key: 'nav-pedagogical-management', parent_nav_item_key: null, order_index: 8 },
     { nav_item_key: 'nav-analytics', parent_nav_item_key: null, order_index: 9 },
     { nav_item_key: 'nav-messages', parent_nav_item_key: null, order_index: 10 },
-    { nav_item_key: 'nav-notifications', parent_nav_item_key: null, order_index: 11 },
+    // Removed nav-notifications
     { nav_item_key: 'nav-profile', parent_nav_item_key: null, order_index: 12 },
     { nav_item_key: 'nav-settings', parent_nav_item_key: null, order_index: 13 },
     { nav_item_key: 'nav-global-search', parent_nav_item_key: null, order_index: 14 },
@@ -113,7 +113,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
     { nav_item_key: 'nav-pedagogical-management', parent_nav_item_key: 'cat-pedagogy', order_index: 2 },
     { nav_item_key: 'nav-analytics', parent_nav_item_key: null, order_index: 3 },
     { nav_item_key: 'nav-messages', parent_nav_item_key: null, order_index: 4 },
-    { nav_item_key: 'nav-notifications', parent_nav_item_key: null, order_index: 5 },
+    // Removed nav-notifications
     { nav_item_key: 'nav-profile', parent_nav_item_key: null, order_index: 6 },
     { nav_item_key: 'nav-settings', parent_nav_item_key: null, order_index: 7 },
     { nav_item_key: 'nav-global-search', parent_nav_item_key: null, order_index: 8 },
@@ -127,7 +127,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
     { nav_item_key: 'nav-students', parent_nav_item_key: 'cat-student-monitoring', order_index: 1 },
     { nav_item_key: 'nav-analytics', parent_nav_item_key: null, order_index: 2 },
     { nav_item_key: 'nav-messages', parent_nav_item_key: null, order_index: 3 },
-    { nav_item_key: 'nav-notifications', parent_nav_item_key: null, order_index: 4 },
+    // Removed nav-notifications
     { nav_item_key: 'nav-profile', parent_nav_item_key: null, order_index: 5 },
     { nav_item_key: 'nav-settings', parent_nav_item_key: null, order_index: 6 },
     { nav_item_key: 'nav-global-search', parent_nav_item_key: null, order_index: 7 },
@@ -140,7 +140,7 @@ const DEFAULT_ROLE_NAV_CONFIGS_WITH_KEYS = {
     { nav_item_key: 'nav-all-notes', parent_nav_item_key: null, order_index: 2 },
     { nav_item_key: 'nav-analytics', parent_nav_item_key: null, order_index: 3 },
     { nav_item_key: 'nav-messages', parent_nav_item_key: null, order_index: 4 },
-    { nav_item_key: 'nav-notifications', parent_nav_item_key: null, order_index: 5 },
+    // Removed nav-notifications
     { nav_item_key: 'nav-profile', parent_nav_item_key: null, order_index: 6 },
     { nav_item_key: 'nav-settings', parent_nav_item_key: null, order_index: 7 },
     { nav_item_key: 'nav-global-search', parent_nav_item_key: null, order_index: 8 },

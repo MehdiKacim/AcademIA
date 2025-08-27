@@ -25,7 +25,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import Messages from "./pages/Messages";
-import NotificationsPage from "./pages/NotificationsPage"; // New: Import NotificationsPage
+// Removed import for NotificationsPage
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
 import { RoleProvider, useRole } from "./contexts/RoleContext";
@@ -64,7 +64,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     "/pedagogical-management": PedagogicalManagementPage,
     "/admin-menu-management/generic-items": GenericNavItemsPage,
     "/admin-menu-management/role-configs": RoleNavConfigsPage,
-    "/notifications": NotificationsPage, // New: Add NotificationsPage to the map
+    // Removed NotificationsPage from the map
   };
 
   useEffect(() => {
@@ -91,7 +91,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
             toastOptions={{
               duration: 5000,
               classNames: {
-                toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none",
+                toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none backdrop-blur-lg bg-background/80", // Added backdrop-blur-lg bg-background/80
                 success: "bg-success text-success-foreground border-success",
                 error: "bg-destructive text-destructive-foreground border-destructive",
                 loading: "bg-primary text-primary-foreground border-primary",
@@ -111,11 +111,12 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/messages" element={<Messages />} />
+                  {/* Removed NotificationsPage route */}
                   {/* Dynamic routes */}
                   {dynamicRoutes.map(item => {
                     const Component = baseRouteComponentMap[item.route!];
                     // Only render if component exists and it's not a static route (already handled)
-                    if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages"].includes(item.route!)) {
+                    if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages"].includes(item.route!)) { // Removed "/notifications"
                       // console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
                       return (
                         <Route
