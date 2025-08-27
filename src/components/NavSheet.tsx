@@ -101,12 +101,14 @@ const NavSheet = ({
     if (!currentOpenState) {
       setDrawerNavStack([]);
       setSearchQuery('');
-    } else if (isDesktopImmersiveOpen && desktopImmersiveParent) {
-      setDrawerNavStack([desktopImmersiveParent]);
-      setSearchQuery('');
-    } else if (isDesktopImmersiveOpen && !desktopImmersiveParent) {
-      // If desktop immersive is open but no parent, close it
-      onCloseDesktopImmersive();
+    } else if (isDesktopImmersiveOpen) { // Only check isDesktopImmersiveOpen here
+      if (desktopImmersiveParent) { // Now check desktopImmersiveParent
+        setDrawerNavStack([desktopImmersiveParent]);
+        setSearchQuery('');
+      } else {
+        // If desktop immersive is open but no parent, close it
+        onCloseDesktopImmersive();
+      }
     }
   }, [currentOpenState, isDesktopImmersiveOpen, desktopImmersiveParent, onCloseDesktopImmersive]);
 
@@ -166,13 +168,20 @@ const NavSheet = ({
   const currentItemsToDisplay = React.useMemo(() => {
     let itemsToFilter: NavItem[] = [];
 
-    if (isDesktopImmersiveOpen && desktopImmersiveParent) {
-      // For desktop immersive, the initial stack is the desktopImmersiveParent
-      if (drawerNavStack.length === 1 && drawerNavStack[0].id === desktopImmersiveParent.id) {
-        itemsToFilter = desktopImmersiveParent.children || [];
+    if (isDesktopImmersiveOpen) {
+      if (!desktopImmersiveParent) {
+        console.error("CRITICAL ERROR: isDesktopImmersiveOpen is true but desktopImmersiveParent is null/undefined.");
+        currentOnClose();
+        return [];
+      }
+      const currentParentInStack = drawerNavStack[drawerNavStack.length - 1];
+      // If the stack is empty or the top of the stack is the initial desktopImmersiveParent,
+      // then we are at the first level of the immersive menu.
+      if (drawerNavStack.length === 0 || (drawerNavStack.length === 1 && currentParentInStack?.id === desktopImmersiveParent.id)) {
+        itemsToFilter = Array.isArray(desktopImmersiveParent.children) ? desktopImmersiveParent.children : [];
       } else {
-        const activeCategory = drawerNavStack[drawerNavStack.length - 1];
-        itemsToFilter = activeCategory.children || [];
+        // We are deeper in the stack
+        itemsToFilter = (currentParentInStack && Array.isArray(currentParentInStack.children)) ? currentParentInStack.children : [];
       }
     } else if (drawerNavStack.length === 0) {
       // For mobile, if stack is empty, show top-level items
@@ -193,10 +202,10 @@ const NavSheet = ({
     } else {
       // For mobile, show children of the active category
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
-      if (activeCategory.id === 'profile-category') {
+      if (activeCategory?.id === 'profile-category') {
         itemsToFilter = staticProfileActions;
       } else {
-        itemsToFilter = activeCategory.children || [];
+        itemsToFilter = (activeCategory && Array.isArray(activeCategory.children)) ? activeCategory.children : [];
       }
     }
 
@@ -205,7 +214,7 @@ const NavSheet = ({
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent]);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnClose]); // Added currentOnClose to dependencies
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
