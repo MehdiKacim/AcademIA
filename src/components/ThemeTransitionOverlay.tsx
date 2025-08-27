@@ -15,7 +15,7 @@ const ThemeTransitionOverlay = ({ isOpen, targetThemeName }: ThemeTransitionOver
       opacity: 1,
       x: 0,
       transition: {
-        duration: 0.6, // Durée de l'animation de chaque lettre
+        duration: 0.8, // Durée de l'animation de chaque lettre
         ease: "easeOut",
         staggerChildren: 0.08, // Délai entre chaque lettre
       },
@@ -38,13 +38,13 @@ const ThemeTransitionOverlay = ({ isOpen, targetThemeName }: ThemeTransitionOver
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }} // Durée de l'opacité de la superposition
+          transition={{ duration: 0.6, ease: "easeInOut" }} // Durée de l'opacité de la superposition
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.8, rotate: 0 }}
+            animate={{ opacity: 1, scale: 1, rotate: 360 }} // Rotation complète
+            exit={{ opacity: 0, scale: 0.8, rotate: 0 }}
+            transition={{ delay: 0.1, duration: 2.0, ease: "easeInOut" }} // Durée de l'animation du logo
             className="mb-8"
           >
             <Logo iconClassName="w-24 h-24" showText={false} /> {/* Ajout du logo */}
@@ -56,7 +56,7 @@ const ThemeTransitionOverlay = ({ isOpen, targetThemeName }: ThemeTransitionOver
             initial="hidden"
             animate="visible"
             exit="hidden" // Assure que le texte disparaît aussi
-            transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }} // Durée de l'animation du bloc de texte
+            transition={{ delay: 0.8, duration: 1.5, ease: "easeInOut" }} // Durée de l'animation du bloc de texte
           >
             {targetThemeName.split("").map((char, index) => (
               <motion.span key={index} variants={letterVariants}>
