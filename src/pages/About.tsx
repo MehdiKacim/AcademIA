@@ -1,16 +1,58 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Info, Code, Heart, Linkedin, Github } from "lucide-react";
+import { Info, Code, Heart, Linkedin, Github, ArrowLeft } from "lucide-react"; // Import ArrowLeft
 import packageJson from '../../package.json';
 import Logo from "@/components/Logo";
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion'; // Import motion
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const About = () => {
   const appVersion = packageJson.version;
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delayChildren: 0.1,
+        staggerChildren: 0.05,
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+  };
 
   return (
-    <>
-      <div className="text-center mb-8">
+    <motion.div
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative" // Added relative for button positioning
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+    >
+      {/* Back button */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 mt-4 z-10">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full bg-muted/20 hover:bg-muted/40">
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Retour</span>
+        </Button>
+      </div>
+
+      <motion.div variants={itemVariants} className="text-center mb-8 pt-12"> {/* Added pt-12 to make space for the back button */}
         <div className="mb-4 mx-auto w-fit">
           <Logo iconClassName="w-24 h-24" showText={false} />
         </div>
@@ -20,10 +62,10 @@ const About = () => {
         <p className="text-muted-foreground mt-2 text-center">
           Découvrez les détails techniques et la version d'AcademIA.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 gap-4 w-full"> {/* Changed to grid-cols-1 for all screen sizes */}
-        <Card className="shadow-md">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4 w-full">
+        <Card className="shadow-md rounded-android-tile">
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Info className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Détails d'AcademIA</CardTitle>
@@ -46,7 +88,7 @@ const About = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md rounded-android-tile">
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Code className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Développeur</CardTitle>
@@ -61,7 +103,7 @@ const About = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md rounded-android-tile">
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Heart className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Connectez-vous avec le développeur</CardTitle>
@@ -87,8 +129,8 @@ const About = () => {
             </a>
           </CardContent>
         </Card>
-      </div>
-    </>
+      </motion.div>
+    </motion.div>
   );
 };
 
