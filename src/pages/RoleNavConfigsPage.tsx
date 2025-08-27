@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
@@ -51,7 +51,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
-import { cn } from '@/lib/utils'; // Corrected: Added 'from' keyword
+import { cn } from '@/lib/utils';
 import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog';
 import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -378,7 +378,7 @@ const RoleNavConfigsPage = () => {
 
       setConfiguredItemsTree(finalRootItems);
     }
-  }, [selectedRoleFilter, getAncestorIds]); // Added getAncestorIds to dependencies
+  }, [selectedRoleFilter, getAncestorIds]);
 
   useEffect(() => {
     fetchAndStructureNavItems();
@@ -674,36 +674,31 @@ const RoleNavConfigsPage = () => {
                 <PlusCircle className="mr-2 h-4 w-4" /> Ajouter racine
               </Button>
             </CardHeader>
-            <ContextMenu>
-              <ContextMenuTrigger asChild>
-                <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-android-tile">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                    {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
-                    <DragOverlay>
-                      {activeDragItem ? (
-                        <SortableNavItem
-                          item={activeDragItem}
-                          level={0}
-                          onEditGenericItem={handleEditGenericItem}
-                          onEditRoleConfig={handleEditRoleConfig}
-                          onDelete={handleDeleteGenericNavItem}
-                          onManageChildren={handleManageChildren}
-                          onAssignParent={handleAssignParent}
-                          isDragging={true}
-                          isDraggableAndDeletable={true}
-                          selectedRoleFilter={selectedRoleFilter}
-                          isExpanded={false}
-                          onToggleExpand={() => {}}
-                        />
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
-                </CardContent>
-              </ContextMenuTrigger>
-              <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
-              </ContextMenuContent>
-            </Card>
-          </div>
+            {/* Removed ContextMenu wrapping CardContent */}
+            <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-android-tile">
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
+                <DragOverlay>
+                  {activeDragItem ? (
+                    <SortableNavItem
+                      item={activeDragItem}
+                      level={0}
+                      onEditGenericItem={handleEditGenericItem}
+                      onEditRoleConfig={handleEditRoleConfig}
+                      onDelete={handleDeleteGenericNavItem}
+                      onManageChildren={handleManageChildren}
+                      onAssignParent={handleAssignParent}
+                      isDragging={true}
+                      isDraggableAndDeletable={true}
+                      selectedRoleFilter={selectedRoleFilter}
+                      isExpanded={false}
+                      onToggleExpand={() => {}}
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -827,7 +822,7 @@ const RoleNavConfigsPage = () => {
           allConfiguredItemsFlat={allConfiguredItemsFlat}
           onChildrenUpdated={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
-          getAncestorIds={getAncestorIds} {/* Pass getAncestorIds */}
+          getAncestorIds={getAncestorIds}
         />
       )}
 
@@ -840,7 +835,7 @@ const RoleNavConfigsPage = () => {
           allConfiguredItemsFlat={allConfiguredItemsFlat}
           onItemAdded={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
-          getAncestorIds={getAncestorIds} {/* Pass getAncestorIds */}
+          getAncestorIds={getAncestorIds}
           iconMap={iconMap}
           defaultParentId={addDialogDefaultParentId}
         />
