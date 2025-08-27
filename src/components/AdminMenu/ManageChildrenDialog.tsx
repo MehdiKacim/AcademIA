@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, ChevronDown, Code
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, ChevronDown, Code, Check
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
@@ -41,7 +41,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
-import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
+// Removed: import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import {
   Card,
@@ -92,7 +92,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
     paddingLeft: effectivePaddingLeft,
   };
 
-  const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+  const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
 
   return (
     <ContextMenu>
@@ -143,9 +143,8 @@ interface ManageChildrenDialogProps {
 }
 
 const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated, getDescendantIds, getAncestorIds }: ManageChildrenDialogProps) => {
-  const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
-  const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+  const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
 
   const [isNewChildFormOpen, setIsNewChildFormOpen] = useState(false);
@@ -368,6 +367,13 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
     );
   };
 
+  const filteredAvailableChildren = availableChildrenForAdd.filter(item =>
+    item.label.toLowerCase().includes(genericItemSearchQuery.toLowerCase()) ||
+    (item.description && item.description.toLowerCase().includes(genericItemSearchQuery.toLowerCase())) ||
+    (item.icon_name && item.icon_name.toLowerCase().includes(genericItemSearchQuery.toLowerCase())) ||
+    (item.route && item.route.toLowerCase().includes(genericItemSearchQuery.toLowerCase()))
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile">
@@ -389,27 +395,45 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                     <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow flex-col gap-4">
-                    <div>
-                      <Label htmlFor="generic-item-selector">Rechercher un élément</Label>
-                      <SimpleItemSelector
-                        id="generic-item-selector"
-                        options={availableChildrenForAdd.map(item => ({
-                          id: item.id,
-                          label: item.label,
-                          icon_name: item.icon_name,
-                          description: item.description,
-                          isNew: !allConfiguredItemsFlat.some(configured => configured.id === item.id),
-                          typeLabel: getItemTypeLabel(item.type),
-                        }))}
-                        value={selectedGenericItemToAdd}
-                        onValueChange={setSelectedGenericItemToAdd}
-                        searchQuery={genericItemSearchQuery}
-                        onSearchQueryChange={setGenericItemSearchQuery}
-                        placeholder="Sélectionner un élément à ajouter"
-                        emptyMessage="Aucun élément disponible."
-                        iconMap={iconMap}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        placeholder="Rechercher un élément..."
+                        className="pl-10 rounded-android-tile"
+                        value={genericItemSearchQuery}
+                        onChange={(e) => setGenericItemSearchQuery(e.target.value)}
                       />
                     </div>
+                    <ScrollArea className="h-40 w-full rounded-md border">
+                      <div className="grid grid-cols-1 gap-2 p-2">
+                        {filteredAvailableChildren.length === 0 ? (
+                          <p className="text-muted-foreground text-center py-2">Aucun élément disponible.</p>
+                        ) : (
+                          filteredAvailableChildren.map(item => {
+                            const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
+                            const isSelected = selectedGenericItemToAdd === item.id;
+                            return (
+                              <Button
+                                key={item.id}
+                                variant="outline"
+                                className={cn(
+                                  "flex items-center justify-start gap-2 p-2 h-auto rounded-android-tile",
+                                  isSelected ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground"
+                                )}
+                                onClick={() => setSelectedGenericItemToAdd(item.id)}
+                              >
+                                <Check className={cn("h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
+                                <IconComponent className="h-4 w-4 text-primary" />
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">{item.label}</span>
+                                  <span className="text-xs text-muted-foreground italic">({getItemTypeLabel(item.type)})</span>
+                                </div>
+                              </Button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </ScrollArea>
                     <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                       <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
                     </Button>
