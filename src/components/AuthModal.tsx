@@ -33,20 +33,22 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
         <DrawerContent className="h-auto mt-24 rounded-t-lg flex flex-col backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile">
-          <DrawerHeader className="text-center relative">
-            <DrawerPrimitiveTitle className="text-2xl font-bold">Connexion</DrawerPrimitiveTitle>
-            <DrawerPrimitiveDescription>Entrez vos identifiants pour accéder à votre espace.</DrawerPrimitiveDescription>
-            <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="absolute right-4 top-4">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Fermer</span>
-              </Button>
-            </DrawerClose>
-          </DrawerHeader>
-          <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
-          <DrawerFooter>
-            {/* Footer content if needed, or just for spacing */}
-          </DrawerFooter>
+          <div className="flex flex-col h-full"> {/* Wrap content in a single div */}
+            <DrawerHeader className="text-center relative">
+              <DrawerPrimitiveTitle className="text-2xl font-bold">Connexion</DrawerPrimitiveTitle>
+              <DrawerPrimitiveDescription>Entrez vos identifiants pour accéder à votre espace.</DrawerPrimitiveDescription>
+              <DrawerClose asChild>
+                <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Fermer</span>
+                </Button>
+              </DrawerClose>
+            </DrawerHeader>
+            <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
+            <DrawerFooter>
+              {/* Footer content if needed, or just for spacing */}
+            </DrawerFooter>
+          </div>
         </DrawerContent>
       </Drawer>
     );
@@ -55,15 +57,17 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-md p-0 backdrop-blur-lg bg-background/80 overflow-hidden rounded-android-tile">
-        <DialogHeader className="text-center relative pb-2">
-          <DialogTitle className="text-2xl">Connexion</DialogTitle>
-          <DialogDescription>Entrez vos identifiants pour accéder à votre espace.</DialogDescription>
-          <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-4">
-            <X className="h-5 w-5" />
-            <span className="sr-only">Fermer</span>
-          </Button>
-        </DialogHeader>
-        <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
+        <div className="flex flex-col h-full"> {/* Wrap content in a single div */}
+          <DialogHeader className="text-center relative pb-2">
+            <DialogTitle className="text-2xl">Connexion</DialogTitle>
+            <DialogDescription>Entrez vos identifiants pour accéder à votre espace.</DialogDescription>
+            <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-4">
+              <X className="h-5 w-5" />
+              <span className="sr-only">Fermer</span>
+            </Button>
+          </DialogHeader>
+          <AuthMenu onClose={onClose} onLoginSuccess={onLoginSuccess} />
+        </div>
       </DialogContent>
     </Dialog>
   );
