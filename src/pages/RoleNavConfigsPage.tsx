@@ -240,7 +240,6 @@ const RoleNavConfigsPage = () => {
   const [allConfiguredItemsFlat, setAllConfiguredItemsFlat] = useState<NavItem[]>([]);
 
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>('all');
-  // Removed isRoleSelectDialogOpen
   const [roleSearchQuery, setRoleSearchQuery] = useState('');
 
   const [isEditConfigDialogOpen, setIsEditConfigDialogOpen] = useState(false);
@@ -262,11 +261,11 @@ const RoleNavConfigsPage = () => {
   const [activeDragItem, setActiveDragItem] = useState<NavItem | null>(null);
   const [activeDragConfig, setActiveDragConfig] = useState<RoleNavItemConfig | null>(null);
 
-  const findItemInTree = useCallback((items: NavItem[], targetId: string): NavItem | undefined => {
+  const findItemInTree = useCallback((items: NavItem[], targetConfigId: string): NavItem | undefined => {
     for (const item of items) {
-      if (item.configId === targetId || item.id === targetId) return item;
+      if (item.configId === targetConfigId || item.id === targetConfigId) return item;
       if (item.children) {
-        const foundChild = findItemInTree(item.children, targetId);
+        const foundChild = findItemInTree(item.children, targetConfigId);
         if (foundChild) return foundChild;
       }
     }
@@ -291,7 +290,6 @@ const RoleNavConfigsPage = () => {
     return descendants;
   }, []);
 
-  // New helper function to get all ancestor IDs of a given item (generic IDs)
   const getAncestorIds = useCallback((itemId: string, allItemsFlat: NavItem[]): Set<string> => {
     const ancestors = new Set<string>();
     let currentItem = allItemsFlat.find(item => item.id === itemId);
@@ -335,8 +333,6 @@ const RoleNavConfigsPage = () => {
         }
       });
       setAllConfiguredItemsFlat(allConfiguredItemsFlatList);
-      // console.log("[RoleNavConfigsPage] allConfiguredItemsFlatList after fetch:", allConfiguredItemsFlatList);
-
 
       const groupedByParent = new Map<string | null, NavItem[]>();
       allConfiguredItemsFlatList.forEach(item => {
@@ -399,7 +395,6 @@ const RoleNavConfigsPage = () => {
           showSuccess("Configuration de rôle supprimée !");
           await fetchAndStructureNavItems();
         } catch (error: any) {
-          // console.error("Error deleting role nav item config:", error);
           showError(`Erreur lors de la suppression de la configuration de rôle: ${error.message}`);
         }
       }
@@ -452,71 +447,189 @@ const RoleNavConfigsPage = () => {
       return;
     }
 
+    if (selectedRoleFilter === 'all') {
+      showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
+      setActiveDragItem(null);
+      setActiveDragConfig(null);
+      return;
+    }
+
     const activeConfigId = active.id as string;
     const overId = over.id as string;
 
+    // Helper to find the list an item belongs to and its index
+    const findListAndIndex = (items: NavItem[], targetConfigId: string, currentParentId: string | null = null): { parentId: string | null, index: number, list: NavItem[] } | null => {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].configId === targetConfigId) {
+          return { parentId: currentParentId, index: i, list: items };
+        }
+        if (items[i].children && items[i].children.length > 0) {
+          const found = findListAndIndex(items[i].children, targetConfigId, items[i].id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const activeItemInfo = findListAndIndex(configuredItemsTree, activeConfigId);
+    if (!activeItemInfo) {
+      showError("Élément déplacé introuvable dans la structure actuelle.");
+      setActiveDragItem(null);
+      setActiveDragConfig(null);
+      return;
+    }
+
+    const { parentId: oldParentId, index: oldIndex, list: oldList } = activeItemInfo;
+
+    // Determine the new parent and new index
+    let newParentId: string | null = null;
+    let newIndex: number = 0;
+    let destinationList: NavItem[] = [];
+
+    const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId);
+    const overIsRootContainer = overId === 'configured-container'; // Dropped on the root container
+    const overIsChildContainer = overId.startsWith('configured-container-children-of-'); // Dropped on a child container
+
+    if (overConfiguredItem) {
+      // Dropped on another item.
+      // The new parent is the parent of the item it was dropped on.
+      // The new index is the index of the item it was dropped on.
+      const overItemInfo = findListAndIndex(configuredItemsTree, overId);
+      if (!overItemInfo) {
+        showError("Cible de dépôt introuvable.");
+        setActiveDragItem(null);
+        setActiveDragConfig(null);
+        return;
+      }
+      newParentId = overItemInfo.parentId;
+      newIndex = overItemInfo.index;
+      destinationList = overItemInfo.list;
+
+      // Special handling for dropping on a category item itself
+      if (overConfiguredItem.type === 'category_or_action' && (overConfiguredItem.route === null || overConfiguredItem.route === undefined)) {
+        // If dropped directly on an expanded category, add as a child
+        if (expandedItems[overConfiguredItem.id]) {
+          newParentId = overConfiguredItem.id;
+          newIndex = overConfiguredItem.children?.length || 0; // Add to the end of its children
+          destinationList = overConfiguredItem.children || [];
+        } else {
+          // If dropped on a collapsed category, treat as dropping *after* it in its parent list
+          newParentId = overItemInfo.parentId;
+          newIndex = overItemInfo.index + 1;
+          destinationList = overItemInfo.list;
+        }
+      } else if (overConfiguredItem.type === 'route') {
+        // Cannot drop on a route item to make it a parent
+        showError("Vous ne pouvez pas déposer un élément sur une route.");
+        setActiveDragItem(null);
+        setActiveDragConfig(null);
+        return;
+      }
+
+    } else if (overIsRootContainer) {
+      newParentId = null;
+      newIndex = configuredItemsTree.length; // Add to the end of root items
+      destinationList = configuredItemsTree;
+    } else if (overIsChildContainer) {
+      newParentId = overId.replace('configured-container-children-of-', '');
+      const parentItem = allConfiguredItemsFlat.find(item => item.id === newParentId);
+      if (!parentItem || parentItem.type === 'route') {
+        showError("Vous ne pouvez pas déposer un élément sous une route ou une cible invalide.");
+        setActiveDragItem(null);
+        setActiveDragConfig(null);
+        return;
+      }
+      newIndex = parentItem.children?.length || 0; // Add to the end of its children
+      destinationList = parentItem.children || [];
+    } else {
+      showError("Cible de dépôt non valide.");
+      setActiveDragItem(null);
+      setActiveDragConfig(null);
+      return;
+    }
+
+    // Prevent dropping an item into itself or its own descendants
+    if (activeDragItem.id === newParentId) {
+      showError("Un élément ne peut pas être déplacé dans lui-même.");
+      setActiveDragItem(null);
+      setActiveDragConfig(null);
+      return;
+    }
+    const descendantsOfActiveItem = getDescendantIds(activeDragItem, allConfiguredItemsFlat);
+    if (newParentId && descendantsOfActiveItem.has(newParentId)) {
+      showError("Un élément ne peut pas être déplacé dans un de ses propres descendants.");
+      setActiveDragItem(null);
+      setActiveDragConfig(null);
+      return;
+    }
+
+    // Perform the move in the local state
+    let newTree = JSON.parse(JSON.stringify(configuredItemsTree)); // Deep copy to avoid direct state mutation
+
+    // 1. Remove from old position
+    const removeRecursive = (items: NavItem[], targetConfigId: string): NavItem[] => {
+      return items.filter(item => item.configId !== targetConfigId).map(item => {
+        if (item.children) {
+          return { ...item, children: removeRecursive(item.children, targetConfigId) };
+        }
+        return item;
+      });
+    };
+    newTree = removeRecursive(newTree, activeConfigId);
+
+    // 2. Add to new position
+    const addRecursive = (items: NavItem[], newItem: NavItem, targetParentId: string | null, targetIndex: number): NavItem[] => {
+      if (targetParentId === null) {
+        const updatedItems = [...items];
+        updatedItems.splice(targetIndex, 0, newItem);
+        return updatedItems;
+      }
+      return items.map(item => {
+        if (item.id === targetParentId) { // Match by generic ID for parent
+          const updatedChildren = [...(item.children || [])];
+          updatedChildren.splice(targetIndex, 0, newItem);
+          return { ...item, children: updatedChildren };
+        }
+        if (item.children) {
+          return { ...item, children: addRecursive(item.children, newItem, targetParentId, targetIndex) };
+        }
+        return item;
+      });
+    };
+
+    const movedItem = { ...activeDragItem, parent_nav_item_id: newParentId };
+    newTree = addRecursive(newTree, movedItem, newParentId, newIndex);
+
+    // 3. Re-index all affected lists and prepare for DB update
+    const itemsToUpdateInDb: RoleNavItemConfig[] = [];
+
+    const reindexAndCollect = (items: NavItem[], currentParentId: string | null = null) => {
+      items.forEach((item, index) => {
+        if (item.configId) {
+          itemsToUpdateInDb.push({
+            id: item.configId,
+            nav_item_id: item.id,
+            role: selectedRoleFilter as Profile['role'],
+            parent_nav_item_id: currentParentId,
+            order_index: index,
+          });
+        }
+        if (item.children && item.children.length > 0) {
+          reindexAndCollect(item.children, item.id);
+        }
+      });
+    };
+    reindexAndCollect(newTree, null);
+
+    // Perform batch update to DB
     try {
-      let newParentNavItemId: string | null = null;
-      let tempOrderIndex: number = 0; 
-
-      if (selectedRoleFilter === 'all') {
-        showError("Veuillez sélectionner un rôle spécifique pour configurer les menus.");
-        return;
+      for (const config of itemsToUpdateInDb) {
+        await updateRoleNavItemConfig(config);
       }
-
-      const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId);
-      const overIsRootContainer = overId === 'configured-container';
-      const overIsChildContainer = overId.startsWith('configured-container-children-of-');
-
-      if (overConfiguredItem) {
-        if (activeDragItem.id === overConfiguredItem.id) {
-          showError("Un élément ne peut pas être déplacé sur lui-même.");
-          return;
-        }
-        const descendantsOfActiveItem = getDescendantIds(activeDragItem, allConfiguredItemsFlat);
-        if (descendantsOfActiveItem.has(overConfiguredItem.id)) {
-          showError("Un élément ne peut pas être le parent d'un de ses propres descendants.");
-          return;
-        }
-        newParentNavItemId = overConfiguredItem.parent_nav_item_id || null;
-      } else if (overIsRootContainer) {
-        newParentNavItemId = null;
-      } else if (overIsChildContainer) {
-        newParentNavItemId = overId.replace('configured-container-children-of-', '');
-        const parentItem = allConfiguredItemsFlat.find(item => item.id === newParentNavItemId);
-
-        if (activeDragItem.id === newParentNavItemId) {
-          showError("Un élément ne peut pas être déplacé dans lui-même.");
-          return;
-        }
-        const descendantsOfActiveItem = getDescendantIds(activeDragItem, allConfiguredItemsFlat);
-        if (descendantsOfActiveItem.has(newParentNavItemId)) {
-          showError("Un élément ne peut pas être déplacé dans un de ses propres descendants.");
-          return;
-        }
-        if (parentItem && parentItem.type === 'route') {
-          showError("Vous ne pouvez pas placer un élément sous une route.");
-          return;
-        }
-      } else {
-        showError("Cible de dépôt non valide.");
-        return;
-      }
-
-      const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
-        id: activeDragConfig.id,
-        nav_item_id: activeDragConfig.nav_item_id,
-        role: activeDragConfig.role,
-        parent_nav_item_id: newParentNavItemId,
-        order_index: tempOrderIndex,
-      };
-      await updateRoleNavItemConfig(updatedConfig);
       showSuccess("Élément de navigation réorganisé/déplacé !");
-
-      await fetchAndStructureNavItems();
+      await fetchAndStructureNavItems(); // Re-fetch to ensure UI is consistent with DB
     } catch (error: any) {
-      // console.error("Error during drag and drop:", error);
-      showError(`Erreur lors du glisser-déposer: ${error.message}`);
+      showError(`Erreur lors de la mise à jour de la base de données: ${error.message}`);
     } finally {
       setActiveDragItem(null);
       setActiveDragConfig(null);
@@ -579,7 +692,6 @@ const RoleNavConfigsPage = () => {
         showSuccess(`Navigation par défaut réinitialisée pour le rôle '${selectedRoleFilter}' !`);
         await fetchAndStructureNavItems();
       } catch (error: any) {
-        // console.error("Error resetting role navigation defaults:", error);
         showError(`Erreur lors de la réinitialisation de la navigation: ${error.message}`);
       }
     }
@@ -728,8 +840,6 @@ const RoleNavConfigsPage = () => {
           </Card>
         </div>
       )}
-
-      {/* Removed Dialog/Drawer for role selection */}
 
       {currentConfigToEdit && currentItemToEdit && (
         <EditRoleConfigDialog
