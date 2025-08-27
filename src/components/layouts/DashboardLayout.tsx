@@ -437,7 +437,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
       <main
         className={cn(
-          "flex-grow p-4 sm:p-6 md:p-8 pt-16 md:pt-20 overflow-y-auto", // Adjusted padding-top
+          "flex-grow p-4 sm:p-6 md:p-8 pt-20 md:pt-24 overflow-y-auto", // Adjusted padding-top
           !isMobile && isDesktopOverlayOpen && "pt-[calc(68px+1rem+100px)]"
         )}
       >
