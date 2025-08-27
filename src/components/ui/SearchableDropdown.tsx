@@ -56,9 +56,15 @@ const SearchableDropdown = React.forwardRef<
     const selectedOption = options.find((option) => option.id === value);
 
     const handleSelect = (currentValue: string) => {
-      onValueChange(currentValue === value ? null : currentValue);
-      setOpen(false);
-      setSearchValue(""); // Clear search after selection
+      if (currentValue === value) {
+        // If the clicked item is already selected, just close the popover.
+        setOpen(false);
+      } else {
+        // Otherwise, select the new item.
+        onValueChange(currentValue);
+        setOpen(false);
+        setSearchValue(""); // Clear search after selection
+      }
     };
 
     return (
