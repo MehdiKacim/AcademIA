@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion'; // Import motion
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Button } from "@/components/ui/button"; // Import Button
 
 const About = () => {
   const appVersion = packageJson.version;
