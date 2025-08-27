@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence }f from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, ExternalLink } from "lucide-react";
 import { NavItem } from "@/lib/dataModels";
@@ -37,7 +37,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
           ref={null} // No need for ref here, it's a direct child of main
           className="fixed top-[68px] left-0 right-0 z-40 hidden md:flex flex-col h-48 p-4 border-b backdrop-blur-lg bg-background/80 shadow-lg overflow-hidden" // Removed py-3, added p-4, removed overflow-y-auto
         >
-          <div className="flex items-center justify-between border-b border-border pb-2 mb-4"> {/* Removed pb-4, mb-4, added pb-2 */}
+          <div className="flex items-center justify-between border-b border-border pb-2 mb-4">
             <div className="flex items-center gap-3">
               <parentIconComponent className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">{parentItem.label}</h2>
@@ -48,7 +48,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-hidden"> {/* Removed flex-grow, added overflow-hidden */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-hidden">
             {parentItem.children.map(item => {
               const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
               const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
