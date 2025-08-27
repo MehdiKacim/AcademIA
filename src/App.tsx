@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster } from "@/components/ui/sonner"; // Changed import name to Toaster
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -34,11 +34,17 @@ import { CourseChatProvider } from "./contexts/CourseChatContext";
 import AdminModal from "./components/AdminModal";
 import GenericNavItemsPage from "./pages/GenericNavItemsPage";
 import RoleNavConfigsPage from "./pages/RoleNavConfigsPage";
+import ThemeTransitionOverlay from "./components/ThemeTransitionOverlay"; // Import the new component
+import { useTheme } from "next-themes"; // Import useTheme from next-themes
 
 const queryClient = new QueryClient();
 
 const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isAdminModalOpen: boolean; setIsAdminModalOpen: (isOpen: boolean) => void }) => {
   const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
+  const { setTheme } = useTheme(); // Get setTheme from next-themes
+
+  const [isThemeTransitionActive, setIsThemeTransitionActive] = useState(false);
+  const [transitioningToThemeName, setTransitioningToThemeName] = useState('');
 
   const initialTheme = currentUserProfile?.theme || "dark";
 
@@ -73,6 +79,25 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     // console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
   }, [dynamicRoutes, currentUserProfile]);
 
+  const handleInitiateThemeChange = useCallback((newTheme: typeof initialTheme) => {
+    const themeDisplayNameMap: { [key: string]: string } = {
+      'light': 'Clair',
+      'dark': 'Sombre',
+      'dark-purple': 'Violet Sombre',
+      'system': 'Système',
+    };
+    const displayName = themeDisplayNameMap[newTheme] || newTheme;
+
+    setTransitioningToThemeName(displayName);
+    setIsThemeTransitionActive(true);
+    setTheme(newTheme); // Applique le thème immédiatement en arrière-plan
+
+    // Cache la superposition après la durée de l'animation
+    setTimeout(() => {
+      setIsThemeTransitionActive(false);
+    }, 800); // Doit correspondre à la durée de l'animation dans ThemeTransitionOverlay
+  }, [setTheme]);
+
   if (isLoadingUser) {
     // console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
     return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
@@ -103,7 +128,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
               <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} />} /> 
 
               <Route element={<ProtectedRoute />}>
-                <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} />}>
+                <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />}> {/* Pass the handler */}
                   <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
                   {/* Always include the Dashboard route */}
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -138,6 +163,12 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
             isOpen={isAdminModalOpen} 
             onClose={() => setIsAdminModalOpen(false)} 
           />
+          {isThemeTransitionActive && (
+            <ThemeTransitionOverlay
+              isOpen={isThemeTransitionActive}
+              targetThemeName={transitioningToThemeName}
+            />
+          )}
         </React.Fragment>
       </TooltipProvider>
     </ThemeProvider>

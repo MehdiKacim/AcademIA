@@ -53,10 +53,11 @@ interface MobileNavSheetProps {
   onOpenAboutModal: () => void;
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
+  onInitiateThemeChange: (newTheme: Profile['theme']) => void; // New prop
   // Removed unreadNotificationsCount: number;
 }
 
-const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount }: MobileNavSheetProps) => { // Removed unreadNotificationsCount
+const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount, onInitiateThemeChange }: MobileNavSheetProps) => { // Removed unreadNotificationsCount
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
@@ -206,7 +207,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                   </Button>
                 </>
               )}
-              <ThemeToggle />
+              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} /> {/* Pass the handler here */}
               <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                 <X className="h-5 w-5" aria-label="Fermer le menu" />
                 <span className="sr-only">Fermer</span>

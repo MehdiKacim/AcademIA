@@ -9,7 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Profile } from "@/lib/dataModels" // Import Profile type
 import { cn } from "@/lib/utils"; // Import cn for conditional styling
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  onInitiateThemeChange: (newTheme: Profile['theme']) => void;
+}
+
+export function ThemeToggle({ onInitiateThemeChange }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const { currentUserProfile, updateUserTheme } = useRole();
 
@@ -21,11 +25,11 @@ export function ThemeToggle() {
   }, [currentUserProfile?.theme, theme, setTheme]);
 
   const handleThemeChange = (newTheme: Profile['theme']) => {
-    setTheme(newTheme);
+    onInitiateThemeChange(newTheme); // Appelle la fonction passée en prop pour gérer l'animation
     if (currentUserProfile) {
-      updateUserTheme(newTheme); // Save to Supabase
+      updateUserTheme(newTheme); // Sauvegarde dans Supabase
     }
-    console.log("Theme changed to:", newTheme);
+    // console.log("Theme change initiated for:", newTheme);
   }
 
   return (

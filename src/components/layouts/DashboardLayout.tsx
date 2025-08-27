@@ -33,6 +33,7 @@ import AiAPersistentChat from "@/components/AiAPersistentChat"; // Import AiAPer
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
+  onInitiateThemeChange: (newTheme: string) => void; // New prop
 }
 
 // Map icon_name strings to Lucide React components
@@ -40,7 +41,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
 };
 
-const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
+const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
   const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole(); // Removed unreadNotificationsCount
   const { isChatOpen, openChat, closeChat } = useCourseChat(); // Updated useCourseChat
@@ -362,7 +363,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
               <LogIn className="h-5 w-5 mr-2" /> Connexion
             </Button>
           )}
-          <ThemeToggle />
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} /> {/* Pass the handler here */}
           <Button variant="ghost" size="icon" onClick={() => setIsAboutModalOpen(true)} className="hidden sm:flex">
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
@@ -473,6 +474,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           onOpenAboutModal={() => setIsAboutModalOpen(true)}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           unreadMessagesCount={unreadMessages}
+          onInitiateThemeChange={onInitiateThemeChange} // Pass the handler here
         />
       )}
       {currentUserProfile && <AiAPersistentChat />} {/* Render AiAPersistentChat */}
