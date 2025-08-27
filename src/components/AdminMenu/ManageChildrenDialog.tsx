@@ -233,7 +233,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
       onChildrenUpdated();
     } catch (error: any) {
-      console.error("Error during drag and drop in ManageChildrenDialog:", error);
+      // console.error("Error during drag and drop in ManageChildrenDialog:", error);
       showError(`Erreur lors du glisser-déposer: ${error.message}`);
     } finally {
       setActiveDragItem(null);
@@ -277,7 +277,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       }
       onChildrenUpdated();
     } catch (error: any) {
-      console.error("Error adding/moving generic item as child:", error);
+      // console.error("Error adding/moving generic item as child:", error);
       showError(`Erreur lors de l'opération: ${error.message}`);
     }
   };
@@ -328,7 +328,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         showError("Échec de la création du nouvel élément générique.");
       }
     } catch (error: any) {
-      console.error("Error creating and adding new generic child:", error);
+      // console.error("Error creating and adding new generic child:", error);
       showError(`Erreur lors de la création et de l'ajout du sous-élément: ${error.message}`);
     } finally {
       setIsAddingNewChild(false);
@@ -342,7 +342,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         showSuccess("Sous-élément retiré !");
         onChildrenUpdated();
       } catch (error: any) {
-      console.error("Error removing child item:", error);
+      // console.error("Error removing child item:", error);
         showError(`Erreur lors du retrait du sous-élément: ${error.message}`);
       }
     }

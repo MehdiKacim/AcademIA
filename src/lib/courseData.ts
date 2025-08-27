@@ -13,7 +13,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
   // 1. Get the student's current class enrollments for the current active school year
   const activeSchoolYear = await getActiveSchoolYear();
   if (!activeSchoolYear) {
-    console.warn("No active school year found, no courses accessible.");
+    // console.warn("No active school year found, no courses accessible.");
     return [];
   }
 
@@ -37,7 +37,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
     .in('id', classIds);
 
   if (classesError || !classesData || classesData.length === 0) {
-    console.error("Error fetching classes for student enrollments:", classesError);
+    // console.error("Error fetching classes for student enrollments:", classesError);
     return [];
   }
 
@@ -50,7 +50,7 @@ export const getAccessibleCourseIdsForStudent = async (studentProfileId: string)
     .in('id', curriculumIds);
 
   if (curriculaError || !curriculaData || curriculaData.length === 0) {
-    console.error("Error fetching curricula for classes:", curriculaError);
+    // console.error("Error fetching curricula for classes:", curriculaError);
     return [];
   }
 
@@ -85,7 +85,7 @@ export const loadCourses = async (userId?: string, userRole?: 'student' | 'profe
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error loading courses:", error);
+    // console.error("Error loading courses:", error);
     return [];
   }
   // Map snake_case from DB to camelCase for frontend if necessary, or adjust frontend to use snake_case
@@ -120,7 +120,7 @@ export const addCourseToStorage = async (newCourse: Course): Promise<Course | nu
     .select()
     .single();
   if (error) {
-    console.error("Error adding course:", error);
+    // console.error("Error adding course:", error);
     throw error;
   }
   return {
@@ -155,7 +155,7 @@ export const updateCourseInStorage = async (updatedCourse: Course): Promise<Cour
     .select()
     .single();
   if (error) {
-    console.error("Error updating course:", error);
+    // console.error("Error updating course:", error);
     throw error;
   }
   return {
@@ -178,7 +178,7 @@ export const deleteCourseFromStorage = async (courseId: string): Promise<void> =
     .delete()
     .eq('id', courseId);
   if (error) {
-    console.error("Error deleting course:", error);
+    // console.error("Error deleting course:", error);
     throw error;
   }
 };
@@ -189,7 +189,7 @@ export const getAllCoursesByCreatorId = async (creatorId: string): Promise<Cours
     .select('*, subjects(name)') // Select subject name
     .eq('creator_id', creatorId);
   if (error) {
-    console.error("Error fetching courses by creator ID:", error);
+    // console.error("Error fetching courses by creator ID:", error);
     return [];
   }
   return data.map((course: any) => ({
@@ -214,7 +214,7 @@ export const loadCurricula = async (): Promise<Curriculum[]> => {
     .from('curricula')
     .select('*');
   if (error) {
-    console.error("Error loading curricula:", error);
+    // console.error("Error loading curricula:", error);
     return [];
   }
   return data.map(curriculum => ({
@@ -237,7 +237,7 @@ export const addCurriculumToStorage = async (newCurriculum: Omit<Curriculum, 'id
     .select()
     .single();
   if (error) {
-    console.error("Error adding curriculum:", error);
+    // console.error("Error adding curriculum:", error);
     throw error;
   }
   return {
@@ -262,7 +262,7 @@ export const updateCurriculumInStorage = async (updatedCurriculum: Curriculum): 
     .select()
     .single();
   if (error) {
-    console.error("Error updating curriculum:", error);
+    // console.error("Error updating curriculum:", error);
     throw error;
   }
   return {
@@ -280,7 +280,7 @@ export const deleteCurriculumFromStorage = async (curriculumId: string): Promise
     .delete()
     .eq('id', curriculumId);
   if (error) {
-    console.error("Error deleting curriculum:", error);
+    // console.error("Error deleting curriculum:", error);
     throw error;
   }
 };
@@ -293,7 +293,7 @@ export const loadSubjects = async (): Promise<Subject[]> => { // Removed establi
   let query = supabase.from('subjects').select('*');
   const { data, error } = await query;
   if (error) {
-    console.error("Error loading subjects:", error);
+    // console.error("Error loading subjects:", error);
     return [];
   }
   return data;
@@ -306,7 +306,7 @@ export const addSubjectToStorage = async (newSubject: Omit<Subject, 'id' | 'crea
     .select()
     .single();
   if (error) {
-    console.error("Error adding subject:", error);
+    // console.error("Error adding subject:", error);
     throw error;
   }
   return data;
@@ -320,7 +320,7 @@ export const updateSubjectInStorage = async (updatedSubject: Subject): Promise<S
     .select()
     .single();
   if (error) {
-    console.error("Error updating subject:", error);
+    // console.error("Error updating subject:", error);
     throw error;
   }
   return data;
@@ -332,7 +332,7 @@ export const deleteSubjectFromStorage = async (subjectId: string): Promise<void>
     .delete()
     .eq('id', subjectId);
   if (error) {
-    console.error("Error deleting subject:", error);
+    // console.error("Error deleting subject:", error);
     throw error;
   }
 };
@@ -344,7 +344,7 @@ export const loadClasses = async (): Promise<Class[]> => {
     .from('classes')
     .select('*, school_years(name)'); // Join to get school year name
   if (error) {
-    console.error("Error loading classes:", error);
+    // console.error("Error loading classes:", error);
     return [];
   }
   return data.map((cls: any) => ({
@@ -370,7 +370,7 @@ export const addClassToStorage = async (newClass: Omit<Class, 'id' | 'created_at
     .select('*, school_years(name)')
     .single();
   if (error) {
-    console.error("Error adding class:", error);
+    // console.error("Error adding class:", error);
     throw error;
   }
   return {
@@ -398,7 +398,7 @@ export const updateClassInStorage = async (updatedClass: Class): Promise<Class |
     .select('*, school_years(name)')
     .single();
   if (error) {
-    console.error("Error updating class:", error);
+    // console.error("Error updating class:", error);
     throw error;
   }
   return {
@@ -418,7 +418,7 @@ export const deleteClassFromStorage = async (classId: string): Promise<void> => 
     .delete()
     .eq('id', classId);
   if (error) {
-    console.error("Error deleting class:", error);
+    // console.error("Error deleting class:", error);
     throw error;
   }
 };
@@ -431,7 +431,7 @@ export const loadClassSubjects = async (classId?: string): Promise<ClassSubject[
   }
   const { data, error } = await query;
   if (error) {
-    console.error("Error loading class subjects:", error);
+    // console.error("Error loading class subjects:", error);
     return [];
   }
   return data.map((cs: any) => ({
@@ -450,7 +450,7 @@ export const addClassSubjectToStorage = async (newClassSubject: Omit<ClassSubjec
     .select()
     .single();
   if (error) {
-    console.error("Error adding class subject:", error);
+    // console.error("Error adding class subject:", error);
     throw error;
   }
   return data;
@@ -462,7 +462,7 @@ export const deleteClassSubjectFromStorage = async (classSubjectId: string): Pro
     .delete()
     .eq('id', classSubjectId);
   if (error) {
-    console.error("Error deleting class subject:", error);
+    // console.error("Error deleting class subject:", error);
     throw error;
   }
 };
@@ -481,7 +481,7 @@ export const loadProfessorSubjectAssignments = async (professorId?: string, clas
   }
   const { data, error } = await query;
   if (error) {
-    console.error("Error loading professor subject assignments:", error);
+    // console.error("Error loading professor subject assignments:", error);
     return [];
   }
   return data.map((psa: any) => ({
@@ -504,7 +504,7 @@ export const addProfessorSubjectAssignmentToStorage = async (newAssignment: Omit
     .select()
     .single();
   if (error) {
-    console.error("Error adding professor subject assignment:", error);
+    // console.error("Error adding professor subject assignment:", error);
     throw error;
   }
   return data;
@@ -524,7 +524,7 @@ export const updateProfessorSubjectAssignmentInStorage = async (updatedAssignmen
     .select()
     .single();
   if (error) {
-    console.error("Error updating professor subject assignment:", error);
+    // console.error("Error updating professor subject assignment:", error);
     throw error;
   }
   return data;
@@ -536,7 +536,7 @@ export const deleteProfessorSubjectAssignmentFromStorage = async (assignmentId: 
     .delete()
     .eq('id', assignmentId);
   if (error) {
-    console.error("Error deleting professor subject assignment:", error);
+    // console.error("Error deleting professor subject assignment:", error);
     throw error;
   }
 };
@@ -549,7 +549,7 @@ export const loadSchoolYears = async (): Promise<SchoolYear[]> => {
     .select('*')
     .order('start_date', { ascending: false }); // Order by most recent first
   if (error) {
-    console.error("Error loading school years:", error);
+    // console.error("Error loading school years:", error);
     return [];
   }
   return data;
@@ -562,7 +562,7 @@ export const getActiveSchoolYear = async (): Promise<SchoolYear | null> => {
     .eq('is_active', true)
     .single();
   if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-    console.error("Error fetching active school year:", error);
+    // console.error("Error fetching active school year:", error);
     return null;
   }
   return data;
@@ -576,7 +576,7 @@ export const addSchoolYear = async (newSchoolYear: Omit<SchoolYear, 'id' | 'crea
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('is_active', true);
     if (deactivateError) {
-      console.error("Error deactivating previous active school year:", deactivateError);
+      // console.error("Error deactivating previous active school year:", deactivateError);
       throw deactivateError;
     }
   }
@@ -587,7 +587,7 @@ export const addSchoolYear = async (newSchoolYear: Omit<SchoolYear, 'id' | 'crea
     .select()
     .single();
   if (error) {
-    console.error("Error adding school year:", error);
+    // console.error("Error adding school year:", error);
     throw error;
   }
   return data;
@@ -602,7 +602,7 @@ export const updateSchoolYear = async (updatedSchoolYear: SchoolYear): Promise<S
       .neq('id', updatedSchoolYear.id) // Exclude the current one
       .eq('is_active', true);
     if (deactivateError) {
-      console.error("Error deactivating other active school years:", deactivateError);
+      // console.error("Error deactivating other active school years:", deactivateError);
       throw deactivateError;
     }
   }
@@ -620,7 +620,7 @@ export const updateSchoolYear = async (updatedSchoolYear: SchoolYear): Promise<S
     .select()
     .single();
   if (error) {
-    console.error("Error updating school year:", error);
+    // console.error("Error updating school year:", error);
     throw error;
   }
   return data;
@@ -632,7 +632,7 @@ export const deleteSchoolYear = async (schoolYearId: string): Promise<void> => {
     .delete()
     .eq('id', schoolYearId); // Corrected to delete only the specified ID
   if (error) {
-    console.error("Error deleting school year:", error);
+    // console.error("Error deleting school year:", error);
     throw error;
   }
 };
@@ -644,37 +644,37 @@ export const deleteSchoolYear = async (schoolYearId: string): Promise<void> => {
 // Reset functions for all data types (for development/testing)
 export const resetCourses = async () => {
   const { error } = await supabase.from('courses').delete();
-  if (error) console.error("Error resetting courses:", error);
+  if (error) {} // console.error("Error resetting courses:", error);
 };
 
 export const resetCurricula = async () => {
   const { error } = await supabase.from('curricula').delete();
-  if (error) console.error("Error resetting curricula:", error);
+  if (error) {} // console.error("Error resetting curricula:", error);
 };
 
 // Removed resetEstablishments
 
 export const resetClasses = async () => {
   const { error } = await supabase.from('classes').delete();
-  if (error) console.error("Error resetting classes:", error);
+  if (error) {} // console.error("Error resetting classes:", error);
 };
 
 export const resetSubjects = async () => {
   const { error } = await supabase.from('subjects').delete();
-  if (error) console.error("Error resetting subjects:", error);
+  if (error) {} // console.error("Error resetting subjects:", error);
 };
 
 export const resetClassSubjects = async () => {
   const { error } = await supabase.from('class_subjects').delete();
-  if (error) console.error("Error resetting class subjects:", error);
+  if (error) {} // console.error("Error resetting class subjects:", error);
 };
 
 export const resetProfessorSubjectAssignments = async () => {
   const { error } = await supabase.from('professor_subject_assignments').delete();
-  if (error) console.error("Error resetting professor subject assignments:", error);
+  if (error) {} // console.error("Error resetting professor subject assignments:", error);
 };
 
 export const resetSchoolYears = async () => {
   const { error } = await supabase.from('school_years').delete();
-  if (error) console.error("Error resetting school years:", error);
+  if (error) {} // console.error("Error resetting school years:", error);
 };

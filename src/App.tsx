@@ -67,18 +67,18 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
   };
 
   useEffect(() => {
-    console.log("[App.tsx] baseRouteComponentMap keys:", Object.keys(baseRouteComponentMap));
-    console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
-    console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
+    // console.log("[App.tsx] baseRouteComponentMap keys:", Object.keys(baseRouteComponentMap));
+    // console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
+    // console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
   }, [dynamicRoutes, currentUserProfile]);
 
   if (isLoadingUser) {
-    console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
+    // console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
     return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
   }
 
-  console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is false. Rendering BrowserRouter. Current dynamicRoutes:", dynamicRoutes.map(r => r.route));
-  console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile);
+  // console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is false. Rendering BrowserRouter. Current dynamicRoutes:", dynamicRoutes.map(r => r.route));
+  // console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile);
 
   return (
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
@@ -116,7 +116,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
                     const Component = baseRouteComponentMap[item.route!];
                     // Only render if component exists and it's not a static route (already handled)
                     if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages", "/notifications"].includes(item.route!)) {
-                      console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
+                      // console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
                       return (
                         <Route
                           key={item.id}

@@ -55,7 +55,7 @@ serve(async (req) => {
 
     switch (action) {
       case 'create':
-        console.log("[Edge Function] Create action received. Payload:", payload); // Add this log
+        // console.log("[Edge Function] Create action received. Payload:", payload); // Add this log
         const itemToCreate = { ...payload };
         // Removed delete itemToCreate.logical_id;
         ({ data, error } = await supabaseAdminClient
@@ -130,7 +130,7 @@ serve(async (req) => {
     }
 
     if (error) {
-      console.error(`Error performing action ${action}:`, error);
+      // console.error(`Error performing action ${action}:`, error);
       return new Response(JSON.stringify({ error: error.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -143,7 +143,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in manage-nav-items Edge Function:', error);
+    // console.error('Error in manage-nav-items Edge Function:', error);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

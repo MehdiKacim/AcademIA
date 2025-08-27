@@ -67,7 +67,7 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave }: EditSubjectDial
         showError("Échec de la mise à jour de la matière.");
       }
     } catch (error: any) {
-      console.error("Error saving subject:", error);
+      // console.error("Error saving subject:", error);
       showError(`Erreur lors de la sauvegarde de la matière: ${error.message}`);
     } finally {
       setIsLoading(false);

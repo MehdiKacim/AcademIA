@@ -22,7 +22,7 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      console.error(`GitHub API error: ${response.status} ${response.statusText}`);
+      // console.error(`GitHub API error: ${response.status} ${response.statusText}`);
       return new Response(JSON.stringify({ error: `Failed to fetch latest release from GitHub: ${response.statusText}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: response.status,
@@ -47,7 +47,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('Error in Edge Function:', error);
+    // console.error('Error in Edge Function:', error);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

@@ -84,7 +84,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
         const { data, error } = await supabase.rpc('global_search', { search_term: searchTerm });
 
         if (error) {
-          console.error("Error during global search:", error);
+          // console.error("Error during global search:", error);
           setSearchResults({
             profiles: [],
             courses: [],
@@ -111,7 +111,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
 
         setSearchResults({ profiles, courses, messages, events, documents });
       } catch (err) {
-        console.error("Unexpected error during global search:", err);
+        // console.error("Unexpected error during global search:", err);
       } finally {
         setIsLoading(false);
       }

@@ -70,7 +70,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
         showError("Échec de la mise à jour du cursus.");
       }
     } catch (error: any) {
-      console.error("Error saving curriculum:", error);
+      // console.error("Error saving curriculum:", error);
       showError(`Erreur lors de la sauvegarde du cursus: ${error.message}`);
     } finally {
       setIsLoading(false);

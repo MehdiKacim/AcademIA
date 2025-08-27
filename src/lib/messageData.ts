@@ -41,7 +41,7 @@ export const sendMessage = async (
     .single();
 
   if (messageError) {
-    console.error("[messageData] Error sending message:", messageError);
+    // console.error("[messageData] Error sending message:", messageError);
     throw messageError;
   }
 
@@ -57,7 +57,7 @@ export const sendMessage = async (
       });
 
     if (uploadError) {
-      console.error("[messageData] Error uploading file:", uploadError);
+      // console.error("[messageData] Error uploading file:", uploadError);
       // Attempt to delete the message if file upload fails
       await supabase.from('messages').delete().eq('id', messageId);
       throw uploadError;
@@ -79,7 +79,7 @@ export const sendMessage = async (
       .single();
 
     if (updateError) {
-      console.error("[messageData] Error updating message with file URL:", updateError);
+      // console.error("[messageData] Error updating message with file URL:", updateError);
       throw updateError;
     }
     return updatedMessageData;
@@ -95,7 +95,7 @@ export const sendMessage = async (
  * @returns Un tableau de messages.
  */
 export const getConversation = async (userId1: string, userId2: string): Promise<Message[]> => {
-  console.log(`[messageData] Fetching conversation between ${userId1} and ${userId2}`);
+  // console.log(`[messageData] Fetching conversation between ${userId1} and ${userId2}`);
   // First, implicitly unarchive the conversation when it's opened
   await unarchiveConversation(userId1, userId2);
 
@@ -106,10 +106,10 @@ export const getConversation = async (userId1: string, userId2: string): Promise
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error("[messageData] Error fetching conversation:", error);
+    // console.error("[messageData] Error fetching conversation:", error);
     throw error; // Re-throw to be caught by the calling component
   }
-  console.log(`[messageData] Fetched ${data.length} messages for conversation.`);
+  // console.log(`[messageData] Fetched ${data.length} messages for conversation.`);
   return data;
 };
 
@@ -119,7 +119,7 @@ export const getConversation = async (userId1: string, userId2: string): Promise
  * @returns Un tableau des derniers messages de chaque conversation non archivée.
  */
 export const getRecentConversations = async (userId: string): Promise<Message[]> => {
-  console.log(`[messageData] Fetching recent conversations for user ${userId}`);
+  // console.log(`[messageData] Fetching recent conversations for user ${userId}`);
   const { data, error } = await supabase
     .from('messages')
     .select('*')
@@ -128,7 +128,7 @@ export const getRecentConversations = async (userId: string): Promise<Message[]>
     .order('created_at', { ascending: false }); // Order by most recent first
 
   if (error) {
-    console.error("[messageData] Error fetching recent conversations:", error);
+    // console.error("[messageData] Error fetching recent conversations:", error);
     return [];
   }
 
@@ -141,7 +141,7 @@ export const getRecentConversations = async (userId: string): Promise<Message[]>
       conversationsMap.set(otherUserId, message);
     }
   }
-  console.log(`[messageData] Found ${conversationsMap.size} recent conversations.`);
+  // console.log(`[messageData] Found ${conversationsMap.size} recent conversations.`);
   return Array.from(conversationsMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 };
 
@@ -151,7 +151,7 @@ export const getRecentConversations = async (userId: string): Promise<Message[]>
  * @returns Un tableau des derniers messages de chaque conversation archivée.
  */
 export const getArchivedConversations = async (userId: string): Promise<Message[]> => {
-  console.log(`[messageData] Fetching archived conversations for user ${userId}`);
+  // console.log(`[messageData] Fetching archived conversations for user ${userId}`);
   const { data, error } = await supabase
     .from('messages')
     .select('*')
@@ -160,7 +160,7 @@ export const getArchivedConversations = async (userId: string): Promise<Message[
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("[messageData] Error fetching archived conversations:", error);
+    // console.error("[messageData] Error fetching archived conversations:", error);
     return [];
   }
 
@@ -172,7 +172,7 @@ export const getArchivedConversations = async (userId: string): Promise<Message[
       conversationsMap.set(otherUserId, message);
     }
   }
-  console.log(`[messageData] Found ${conversationsMap.size} archived conversations.`);
+  // console.log(`[messageData] Found ${conversationsMap.size} archived conversations.`);
   return Array.from(conversationsMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 };
 
@@ -182,17 +182,17 @@ export const getArchivedConversations = async (userId: string): Promise<Message[
  * @param userId2 L'ID du second utilisateur.
  */
 export const archiveConversation = async (userId1: string, userId2: string): Promise<void> => {
-  console.log(`[messageData] Archiving conversation between ${userId1} and ${userId2}`);
+  // console.log(`[messageData] Archiving conversation between ${userId1} and ${userId2}`);
   const { error } = await supabase
     .from('messages')
     .update({ is_archived: true })
     .or(`and(sender_id.eq.${userId1},receiver_id.eq.${userId2}),and(sender_id.eq.${userId2},receiver_id.eq.${userId1})`);
 
   if (error) {
-    console.error("[messageData] Error archiving conversation:", error);
+    // console.error("[messageData] Error archiving conversation:", error);
     throw error;
   }
-  console.log(`[messageData] Conversation between ${userId1} and ${userId2} marked as archived in DB.`);
+  // console.log(`[messageData] Conversation between ${userId1} and ${userId2} marked as archived in DB.`);
 };
 
 /**
@@ -201,17 +201,17 @@ export const archiveConversation = async (userId1: string, userId2: string): Pro
  * @param userId2 L'ID du second utilisateur.
  */
 export const unarchiveConversation = async (userId1: string, userId2: string): Promise<void> => {
-  console.log(`[messageData] Unarchiving conversation between ${userId1} and ${userId2}`);
+  // console.log(`[messageData] Unarchiving conversation between ${userId1} and ${userId2}`);
   const { error } = await supabase
     .from('messages')
     .update({ is_archived: false })
     .or(`and(sender_id.eq.${userId1},receiver_id.eq.${userId2}),and(sender_id.eq.${userId2},receiver_id.eq.${userId1})`);
 
   if (error) {
-    console.error("[messageData] Error unarchiving conversation:", error);
+    // console.error("[messageData] Error unarchiving conversation:", error);
     throw error;
   }
-  console.log(`[messageData] Conversation between ${userId1} and ${userId2} marked as unarchived in DB.`);
+  // console.log(`[messageData] Conversation between ${userId1} and ${userId2} marked as unarchived in DB.`);
 };
 
 /**
@@ -220,7 +220,7 @@ export const unarchiveConversation = async (userId1: string, userId2: string): P
  * @param userId L'ID de l'utilisateur qui marque les messages comme lus (doit être le destinataire).
  */
 export const markMessagesAsRead = async (messageIds: string[], userId: string): Promise<void> => {
-  console.log(`[messageData] Marking messages as read for user ${userId}:`, messageIds);
+  // console.log(`[messageData] Marking messages as read for user ${userId}:`, messageIds);
   const { error } = await supabase
     .from('messages')
     .update({ is_read: true })
@@ -228,10 +228,10 @@ export const markMessagesAsRead = async (messageIds: string[], userId: string): 
     .eq('receiver_id', userId); // Only the receiver can mark as read
 
   if (error) {
-    console.error("[messageData] Error marking messages as read:", error);
+    // console.error("[messageData] Error marking messages as read:", error);
     throw error;
   }
-  console.log(`[messageData] Messages marked as read for user ${userId}.`);
+  // console.log(`[messageData] Messages marked as read for user ${userId}.`);
 };
 
 /**
@@ -240,7 +240,7 @@ export const markMessagesAsRead = async (messageIds: string[], userId: string): 
  * @returns Le nombre de messages non lus.
  */
 export const getUnreadMessageCount = async (userId: string): Promise<number> => {
-  console.log(`[messageData] Fetching unread message count for user ${userId}`);
+  // console.log(`[messageData] Fetching unread message count for user ${userId}`);
   const { count, error } = await supabase
     .from('messages')
     .select('*', { count: 'exact' })
@@ -249,10 +249,10 @@ export const getUnreadMessageCount = async (userId: string): Promise<number> => 
     .eq('is_archived', false); // Only count unread, non-archived messages
 
   if (error) {
-    console.error("[messageData] Error fetching unread message count:", error);
+    // console.error("[messageData] Error fetching unread message count:", error);
     return 0;
   }
-  console.log(`[messageData] Unread message count for user ${userId}: ${count || 0}`);
+  // console.log(`[messageData] Unread message count for user ${userId}: ${count || 0}`);
   return count || 0;
 };
 
@@ -262,7 +262,7 @@ export const getUnreadMessageCount = async (userId: string): Promise<number> => 
  * @param userId L'ID de l'utilisateur qui supprime le message (doit être l'expéditeur).
  */
 export const deleteMessage = async (messageId: string, userId: string): Promise<void> => {
-  console.log(`[messageData] Deleting message ${messageId} by user ${userId}`);
+  // console.log(`[messageData] Deleting message ${messageId} by user ${userId}`);
   const { error } = await supabase
     .from('messages')
     .delete()
@@ -270,10 +270,10 @@ export const deleteMessage = async (messageId: string, userId: string): Promise<
     .eq('sender_id', userId); // Only sender can delete their own message
 
   if (error) {
-    console.error("[messageData] Error deleting message:", error);
+    // console.error("[messageData] Error deleting message:", error);
     throw error;
   }
-  console.log(`[messageData] Message ${messageId} deleted.`);
+  // console.log(`[messageData] Message ${messageId} deleted.`);
 };
 
 /**

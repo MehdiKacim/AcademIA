@@ -44,7 +44,7 @@ const ChangePasswordDialog = ({ isOpen, onClose }: ChangePasswordDialogProps) =>
       });
 
       if (error) {
-        console.error("Error changing password:", error);
+        // console.error("Error changing password:", error);
         showError(`Erreur lors du changement de mot de passe: ${error.message}`);
       } else {
         showSuccess("Mot de passe mis à jour avec succès !");
@@ -53,7 +53,7 @@ const ChangePasswordDialog = ({ isOpen, onClose }: ChangePasswordDialogProps) =>
         setConfirmNewPassword('');
       }
     } catch (error: any) {
-      console.error("Unexpected error changing password:", error);
+      // console.error("Unexpected error changing password:", error);
       showError(`Une erreur inattendue est survenue: ${error.message}`);
     } finally {
       setIsLoading(false);

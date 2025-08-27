@@ -8,10 +8,10 @@ import { NavItem, Profile, RoleNavItemConfig } from "./dataModels";
  * @returns Un tableau d'éléments de navigation de premier niveau avec leurs enfants.
  */
 export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessagesCount: number = 0): Promise<NavItem[]> => {
-  console.log(`[loadNavItems] Called with userRole: ${userRole}, unreadMessagesCount: ${unreadMessagesCount}`);
+  // console.log(`[loadNavItems] Called with userRole: ${userRole}, unreadMessagesCount: ${unreadMessagesCount}`);
 
   if (!userRole) {
-    console.log("[loadNavItems] No user role, returning empty array.");
+    // console.log("[loadNavItems] No user role, returning empty array.");
     return [];
   }
 
@@ -40,11 +40,11 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     // Removed the erroneous `query.get` line here.
 
   if (configsError) {
-    console.error(`[loadNavItems] Error loading role nav configs for ${userRole}:`, configsError);
+    // console.error(`[loadNavItems] Error loading role nav configs for ${userRole}:`, configsError);
     return [];
   }
 
-  console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, JSON.stringify(fetchedConfigs, null, 2));
+  // console.log(`[loadNavItems] Fetched configs for ${userRole} (count): ${fetchedConfigs.length}, data:`, JSON.stringify(fetchedConfigs, null, 2));
 
   // Create a flat list of all configured NavItem objects, keyed by their configId for easy lookup
   const configuredItemsMap = new Map<string, NavItem>(); // Key: configId (unique instance of a configured item)
@@ -68,18 +68,18 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
       };
       configuredItemsMap.set(navItem.configId!, navItem);
     } else {
-      console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
+      // console.warn(`[loadNavItems] Config with ID ${config.id} has no associated nav_item. Skipping.`);
     }
   });
 
-  console.log(`[loadNavItems] Populated configuredItemsMap (count): ${configuredItemsMap.size}`);
+  // console.log(`[loadNavItems] Populated configuredItemsMap (count): ${configuredItemsMap.size}`);
 
   const rootItems: NavItem[] = [];
 
   // Build the hierarchy
   // Iterate over the map values to ensure we process each configured item
   configuredItemsMap.forEach(item => {
-    console.log(`[loadNavItems] Processing item: ${item.label} (Generic ID: ${item.id}, ConfigID: ${item.configId}, ParentGenericID: ${item.parent_nav_item_id}, Type: ${item.type})`);
+    // console.log(`[loadNavItems] Processing item: ${item.label} (Generic ID: ${item.id}, ConfigID: ${item.configId}, ParentGenericID: ${item.parent_nav_item_id}, Type: ${item.type})`);
 
     if (item.parent_nav_item_id) {
       // Find the parent configured item. The parent_nav_item_id refers to the *generic ID* of the parent.
@@ -87,20 +87,20 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
       // And that parent must itself be a category.
       let parentConfiguredItem: NavItem | undefined;
       for (const configuredItem of configuredItemsMap.values()) {
-        if (configuredItem.id === item.parent_nav_item_id && configuredItem.type === 'category_or_action' && !configuredItem.route) {
+        if (configuredItem.id === item.parent_nav_item_id && configuredItem.type === 'category_or_action' && (configuredItem.route === null || configuredItem.route === undefined)) {
           parentConfiguredItem = configuredItem;
           break;
         }
       }
 
       if (parentConfiguredItem) {
-        console.log(`[loadNavItems] Found parent for ${item.label}: ${parentConfiguredItem.label} (ConfigID: ${parentConfiguredItem.configId}). Adding as child.`);
+        // console.log(`[loadNavItems] Found parent for ${item.label}: ${parentConfiguredItem.label} (ConfigID: ${parentConfiguredItem.configId}). Adding as child.`);
         parentConfiguredItem.children?.push(item);
       } else {
         // If a parent_nav_item_id is specified but no suitable parent configured item is found,
         // it means the parent is either not configured as a category for this role, or it's a dangling reference.
         // For now, we'll treat it as a root item.
-        console.warn(`[loadNavItems] No suitable parent configured item found for ${item.label} (ParentGenericID: ${item.parent_nav_item_id}). Adding to rootItems as fallback.`);
+        // console.warn(`[loadNavItems] No suitable parent configured item found for ${item.label} (ParentGenericID: ${item.parent_nav_item_id}). Adding to rootItems as fallback.`);
         rootItems.push(item);
       }
     } else {
@@ -116,7 +116,7 @@ export const loadNavItems = async (userRole: Profile['role'] | null, unreadMessa
     }
   });
 
-  console.log(`[loadNavItems] Final structured nav items for ${userRole} (root items count): ${rootItems.length}, items:`, JSON.stringify(rootItems, null, 2));
+  // console.log(`[loadNavItems] Final structured nav items for ${userRole} (root items count): ${rootItems.length}, items:`, JSON.stringify(rootItems, null, 2));
 
   // Apply badge for messages
   const applyMessageBadge = (items: NavItem[]) => {
@@ -144,7 +144,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
     .select('id, label, route, icon_name, description, is_external, type'); // Removed logical_id
 
   if (error) {
-    console.error("Error loading raw nav items:", error);
+    // console.error("Error loading raw nav items:", error);
     throw error; // Throw error to be caught by calling component
   }
   return data.map(item => ({
@@ -168,7 +168,7 @@ export const loadAllNavItemsRaw = async (): Promise<NavItem[]> => {
  * @returns L'élément de navigation ajouté.
  */
 export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'updated_at' | 'children' | 'badge' | 'configId' | 'parent_nav_item_id' | 'order_index' | 'is_global'>): Promise<NavItem | null> => {
-  console.log("[addNavItem] Sending payload to Edge Function:", newItem); // Add this log
+  // console.log("[addNavItem] Sending payload to Edge Function:", newItem); // Add this log
 
   // Check for existing item with same label or route (if route is not null)
   const { data: existingItems, error: fetchError } = await supabase
@@ -177,7 +177,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
     .or(`label.eq.${newItem.label},route.eq.${newItem.route}`);
 
   if (fetchError) {
-    console.error("Error checking for existing nav items:", fetchError);
+    // console.error("Error checking for existing nav items:", fetchError);
     throw new Error("Erreur lors de la vérification des éléments de navigation existants.");
   }
 
@@ -199,7 +199,7 @@ export const addNavItem = async (newItem: Omit<NavItem, 'id' | 'created_at' | 'u
   });
 
   if (error) {
-    console.error("Error adding nav item via Edge Function:", error);
+    // console.error("Error adding nav item via Edge Function:", error);
     throw error;
   }
   return data.data as NavItem;
@@ -216,7 +216,7 @@ export const updateNavItem = async (updatedItem: Omit<NavItem, 'created_at' | 'u
   });
 
   if (error) {
-    console.error("Error updating nav item via Edge Function:", error);
+    // console.error("Error updating nav item via Edge Function:", error);
     throw error;
   }
   return data.data as NavItem;
@@ -232,7 +232,7 @@ export const deleteNavItem = async (navItemId: string): Promise<void> => {
   });
 
   if (error) {
-    console.error("Error deleting nav item via Edge Function:", error);
+    // console.error("Error deleting nav item via Edge Function:", error);
     throw error;
   }
 };
@@ -252,7 +252,7 @@ export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promis
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching role nav item configs:", error);
+    // console.error("Error fetching role nav item configs:", error);
     throw error; // Throw error to be caught by calling component
   }
   return data as RoleNavItemConfig[];
@@ -264,13 +264,13 @@ export const getRoleNavItemConfigsByRole = async (role: Profile['role']): Promis
  * @returns La configuration ajoutée.
  */
 export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
-  console.log("[addRoleNavItemConfig] Adding new config:", newConfig); // Diagnostic log
+  // console.log("[addRoleNavItemConfig] Adding new config:", newConfig); // Diagnostic log
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'create_config', payload: newConfig }, // New action for config
   });
 
   if (error) {
-    console.error("Error adding role nav item config via Edge Function:", error);
+    // console.error("Error adding role nav item config via Edge Function:", error);
     throw error;
   }
   return data.data as RoleNavItemConfig;
@@ -282,13 +282,13 @@ export const addRoleNavItemConfig = async (newConfig: Omit<RoleNavItemConfig, 'i
  * @returns La configuration mise à jour.
  */
 export const updateRoleNavItemConfig = async (updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'>): Promise<RoleNavItemConfig | null> => {
-  console.log("[updateRoleNavItemConfig] Updating config:", updatedConfig); // Diagnostic log
+  // console.log("[updateRoleNavItemConfig] Updating config:", updatedConfig); // Diagnostic log
   const { data, error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'update_config', payload: updatedConfig }, // New action for config
   });
 
   if (error) {
-    console.error("Error updating role nav item config via Edge Function:", error);
+    // console.error("Error updating role nav item config via Edge Function:", error);
     throw error;
   }
   return data.data as RoleNavItemConfig;
@@ -304,7 +304,7 @@ export const deleteRoleNavItemConfig = async (configId: string): Promise<void> =
   });
 
   if (error) {
-    console.error("Error deleting role nav item config via Edge Function:", error);
+    // console.error("Error deleting role nav item config via Edge Function:", error);
     throw error;
   }
 };
@@ -317,7 +317,7 @@ export const resetNavItems = async (): Promise<void> => {
     body: { action: 'reset_nav_items' }, // New action for reset
   });
   if (error) {
-    console.error("Error resetting nav items via Edge Function:", error);
+    // console.error("Error resetting nav items via Edge Function:", error);
     throw error;
   }
 };
@@ -330,19 +330,19 @@ export const resetRoleNavConfigs = async (): Promise<void> => {
     body: { action: 'reset_role_nav_configs' }, // New action for reset
   });
   if (error) {
-    console.error("Error resetting nav items via Edge Function:", error);
+    // console.error("Error resetting nav items via Edge Function:", error);
     throw error;
   }
 };
 
 // New helper function to delete role_nav_configs for a specific role
 export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise<void> => { // Removed establishmentId
-  console.warn(`[resetRoleNavConfigsForRole] Deleting all role_nav_configs for role: ${role}`);
+  // console.warn(`[resetRoleNavConfigsForRole] Deleting all role_nav_configs for role: ${role}`);
   const { error } = await supabase.functions.invoke('manage-nav-items', {
     body: { action: 'reset_role_nav_configs_for_role', payload: { role } }, // Removed establishment_id
   });
   if (error) {
-    console.error(`Error resetting role nav configs for role ${role} via Edge Function:`, error);
+    // console.error(`Error resetting role nav configs for role ${role} via Edge Function:`, error);
     throw error;
   }
 };
@@ -351,11 +351,11 @@ export const resetRoleNavConfigsForRole = async (role: Profile['role']): Promise
  * Déclenche le bootstrap des éléments de navigation et des configurations de rôle par défaut.
  */
 export const bootstrapNavItems = async (): Promise<void> => {
-  console.log("[bootstrapNavItems] Invoking 'bootstrap-nav' Edge Function...");
+  // console.log("[bootstrapNavItems] Invoking 'bootstrap-nav' Edge Function...");
   const { data, error } = await supabase.functions.invoke('bootstrap-nav');
   if (error) {
-    console.error("Error bootstrapping nav items via Edge Function:", error);
+    // console.error("Error bootstrapping nav items via Edge Function:", error);
     throw error;
   }
-  console.log("[bootstrapNavItems] Bootstrap successful:", data);
+  // console.log("[bootstrapNavItems] Bootstrap successful:", data);
 };

@@ -132,7 +132,7 @@ serve(async (req) => {
     });
 
     if (signUpError) {
-      console.error("Error creating user with admin client:", signUpError);
+      // console.error("Error creating user with admin client:", signUpError);
       return new Response(JSON.stringify({ error: signUpError.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -144,7 +144,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('Error in create-user-with-role Edge Function:', error);
+    // console.error('Error in create-user-with-role Edge Function:', error);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

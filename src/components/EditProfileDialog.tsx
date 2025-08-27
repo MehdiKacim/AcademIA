@@ -102,7 +102,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
       if (email.trim() !== (await supabase.auth.getUser()).data.user?.email) {
         const { error: emailUpdateError } = await supabase.auth.updateUser({ email: email.trim() });
         if (emailUpdateError) {
-          console.error("Error updating user email:", emailUpdateError);
+          // console.error("Error updating user email:", emailUpdateError);
           showError(`Erreur lors de la mise à jour de l'email: ${emailUpdateError.message}`);
           return;
         }
@@ -116,7 +116,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
         showError("Échec de la mise à jour du profil.");
       }
     } catch (error: any) {
-      console.error("Error saving profile:", error);
+      // console.error("Error saving profile:", error);
       showError(`Erreur lors de la sauvegarde du profil: ${error.message}`);
     }
   };

@@ -3,7 +3,7 @@ export const loadData = <T>(key: string, defaultData: T[] = []): T[] => {
     const storedData = localStorage.getItem(key);
     return storedData ? JSON.parse(storedData) as T[] : defaultData as T[]; // Explicitly cast defaultData to T[]
   } catch (error) {
-    console.error(`Erreur lors du chargement des données pour la clé ${key} depuis le localStorage:`, error);
+    // console.error(`Erreur lors du chargement des données pour la clé ${key} depuis le localStorage:`, error);
     return defaultData as T[]; // Explicitly cast defaultData to T[]
   }
 };
@@ -12,7 +12,7 @@ export const saveData = <T>(key: string, data: T[]) => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
-    console.error(`Erreur lors de la sauvegarde des données pour la clé ${key} dans le localStorage:`, error);
+    // console.error(`Erreur lors de la sauvegarde des données pour la clé ${key} dans le localStorage:`, error);
   }
 };
 

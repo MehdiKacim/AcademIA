@@ -27,7 +27,7 @@ export const getProfileById = async (id: string): Promise<Profile | null> => {
     .single();
 
   if (error) {
-    console.error("Error fetching profile by ID:", error);
+    // console.error("Error fetching profile by ID:", error);
     return null;
   }
 
@@ -75,7 +75,7 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
     .maybeSingle();
 
   if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-    console.error("Error finding profile by username:", error);
+    // console.error("Error finding profile by username:", error);
     return null;
   }
   if (!data) return null;
@@ -100,7 +100,7 @@ export const findProfileByUsername = async (username: string): Promise<Profile |
  * @returns True si le nom d'utilisateur est pris, false sinon.
  */
 export const checkUsernameExists = async (username: string): Promise<boolean> => {
-  console.log(`[checkUsernameExists] Checking if username '${username}' exists...`);
+  // console.log(`[checkUsernameExists] Checking if username '${username}' exists...`);
   const { data, error } = await supabase
     .from('profiles')
     .select('id')
@@ -108,16 +108,16 @@ export const checkUsernameExists = async (username: string): Promise<boolean> =>
     .maybeSingle();
 
   if (error) {
-    console.error(`[checkUsernameExists] Error checking username availability for '${username}':`, error);
+    // console.error(`[checkUsernameExists] Error checking username availability for '${username}':`, error);
     if (error.code === 'PGRST116') {
-      console.log(`[checkUsernameExists] Username '${username}' does not exist (PGRST116).`);
+      // console.log(`[checkUsernameExists] Username '${username}' does not exist (PGRST116).`);
       return false; // No rows found, username is available
     }
-    console.log(`[checkUsernameExists] Returning true (assuming taken) due to unexpected error for username '${username}'.`);
+    // console.log(`[checkUsernameExists] Returning true (assuming taken) due to unexpected error for username '${username}'.`);
     return true; // Safer default: assume taken on unexpected error
   }
   
-  console.log(`[checkUsernameExists] Result for username '${username}': data =`, data);
+  // console.log(`[checkUsernameExists] Result for username '${username}': data =`, data);
   return !!data; // If data is not null, username exists
 };
 
@@ -146,7 +146,7 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
     .maybeSingle();
 
   if (error && error.code !== 'PGRST116') {
-    console.error("Error finding profile by email:", error);
+    // console.error("Error finding profile by email:", error);
     return null;
   }
   if (!data) return null;
@@ -171,7 +171,7 @@ export const findProfileByEmail = async (email: string): Promise<Profile | null>
  * @returns True si l'email est pris, false sinon.
  */
 export const checkEmailExists = async (email: string): Promise<boolean> => {
-  console.log(`[checkEmailExists] Checking if email '${email}' exists...`);
+  // console.log(`[checkEmailExists] Checking if email '${email}' exists...`);
   const { data, error } = await supabase
     .from('profiles')
     .select('id')
@@ -179,16 +179,16 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
     .maybeSingle();
 
   if (error) {
-    console.error(`[checkEmailExists] Error checking email availability for '${email}':`, error);
+    // console.error(`[checkEmailExists] Error checking email availability for '${email}':`, error);
     if (error.code === 'PGRST116') {
-      console.log(`[checkEmailExists] Email '${email}' does not exist (PGRST116).`);
+      // console.log(`[checkEmailExists] Email '${email}' does not exist (PGRST116).`);
       return false; // No rows found, email is available
     }
-    console.log(`[checkEmailExists] Returning true (assuming taken) due to unexpected error for email '${email}'.`);
+    // console.log(`[checkEmailExists] Returning true (assuming taken) due to unexpected error for email '${email}'.`);
     return true; // Safer default: assume taken on unexpected error
   }
 
-  console.log(`[checkEmailExists] Result for email '${email}': data =`, data);
+  // console.log(`[checkEmailExists] Result for email '${email}': data =`, data);
   return !!data; // If data is not null, email exists
 };
 
@@ -202,7 +202,7 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
       .eq('name', updatedProfile.role)
       .single();
     if (roleError) {
-      console.error("Error fetching role_id for update:", roleError);
+      // console.error("Error fetching role_id for update:", roleError);
       throw roleError;
     }
     role_id_to_update = roleData.id;
@@ -224,7 +224,7 @@ export const updateProfile = async (updatedProfile: Partial<Profile>): Promise<P
     .eq('id', updatedProfile.id!);
     // Removed .select().single() to avoid PGRST116 error if no row is returned by RLS or query
   if (error) {
-    console.error("Error updating profile:", error);
+    // console.error("Error updating profile:", error);
     throw error;
   }
   // Re-fetch the profile to ensure we have the latest data after the update
@@ -237,13 +237,13 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
     .delete()
     .eq('id', profileId);
   if (error) {
-    console.error("Error deleting profile:", error);
+    // console.error("Error deleting profile:", error);
     throw error;
   }
 };
 
 export const getAllProfiles = async (): Promise<Profile[]> => {
-  console.log("[getAllProfiles] Attempting to fetch all profiles...");
+  // console.log("[getAllProfiles] Attempting to fetch all profiles...");
   const { data, error } = await supabase
     .from('profiles')
     .select(`
@@ -260,10 +260,10 @@ export const getAllProfiles = async (): Promise<Profile[]> => {
       roles(name)
     `);
   if (error) {
-    console.error("[getAllProfiles] Error fetching all profiles:", error);
+    // console.error("[getAllProfiles] Error fetching all profiles:", error);
     return [];
   }
-  console.log(`[getAllProfiles] Successfully fetched ${data.length} profiles. Data:`, data);
+  // console.log(`[getAllProfiles] Successfully fetched ${data.length} profiles. Data:`, data);
   return data.map((p: any) => ({
     id: p.id,
     first_name: p.first_name,
@@ -300,7 +300,7 @@ export const getProfilesByRole = async (role: Profile['role']): Promise<Profile[
     .eq('roles.name', role); // Filter by role name
 
   if (error) {
-    console.error(`Error fetching profiles for role ${role}:`, error);
+    // console.error(`Error fetching profiles for role ${role}:`, error);
     return [];
   }
 
@@ -335,7 +335,7 @@ export const getStudentClassEnrollments = async (studentId: string): Promise<Stu
     .select('*, school_years(name)') // Join to get school year name
     .eq('student_id', studentId);
   if (error) {
-    console.error("Error fetching student class enrollments:", error);
+    // console.error("Error fetching student class enrollments:", error);
     return [];
   }
   return data.map((enrollment: any) => ({
@@ -358,7 +358,7 @@ export const getAllStudentClassEnrollments = async (): Promise<StudentClassEnrol
     .from('student_class_enrollments')
     .select('*, school_years(name)'); // Join to get school year name
   if (error) {
-    console.error("Error fetching all student class enrollments:", error);
+    // console.error("Error fetching all student class enrollments:", error);
     return [];
   }
   return data.map((enrollment: any) => ({
@@ -384,7 +384,7 @@ export const upsertStudentClassEnrollment = async (enrollment: Omit<StudentClass
     .select('*, school_years(name)')
     .single();
   if (error) {
-    console.error("Error upserting student class enrollment:", error);
+    // console.error("Error upserting student class enrollment:", error);
     throw error;
   }
   return {
@@ -408,7 +408,7 @@ export const deleteStudentClassEnrollment = async (enrollmentId: string): Promis
     .delete()
     .eq('id', enrollmentId);
   if (error) {
-    console.error("Error deleting student class enrollment:", error);
+    // console.error("Error deleting student class enrollment:", error);
     throw error;
   }
 };
@@ -423,7 +423,7 @@ export const getStudentCourseProgress = async (userId: string, courseId: string)
     .eq('course_id', courseId)
     .single();
   if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-    console.error("Error fetching student course progress:", error);
+    // console.error("Error fetching student course progress:", error);
     return null;
   }
   return data;
@@ -436,7 +436,7 @@ export const upsertStudentCourseProgress = async (progress: StudentCourseProgres
     .select()
     .single();
   if (error) {
-    console.error("Error upserting student course progress:", error);
+    // console.error("Error upserting student course progress:", error);
     throw error;
   }
   return data;
@@ -447,7 +447,7 @@ export const getAllStudentCourseProgress = async (): Promise<StudentCourseProgre
     .from('student_course_progress')
     .select('*');
   if (error) {
-    console.error("Error fetching all student course progress:", error);
+    // console.error("Error fetching all student course progress:", error);
     return [];
   }
   return data;
@@ -470,15 +470,15 @@ export const getUserEmail = (profile: Profile): string => {
 // Reset functions (for development/testing)
 export const resetProfiles = async () => {
   const { error } = await supabase.from('profiles').delete(); // Delete all except a dummy ID if needed
-  if (error) console.error("Error resetting profiles:", error);
+  if (error) {} // console.error("Error resetting profiles:", error);
 };
 
 export const resetStudentCourseProgress = async () => {
   const { error } = await supabase.from('student_course_progress').delete();
-  if (error) console.error("Error resetting student course progress:", error);
+  if (error) {} // console.error("Error resetting student course progress:", error);
 };
 
 export const resetStudentClassEnrollments = async () => {
   const { error } = await supabase.from('student_class_enrollments').delete();
-  if (error) console.error("Error resetting student class enrollments:", error);
+  if (error) {} // console.error("Error resetting student class enrollments:", error);
 };

@@ -97,7 +97,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
         showError("Échec de la mise à jour de la classe.");
       }
     } catch (error: any) {
-      console.error("Error saving class:", error);
+      // console.error("Error saving class:", error);
       showError(`Erreur lors de la sauvegarde de la classe: ${error.message}`);
     } finally {
       setIsLoading(false);

@@ -194,7 +194,7 @@ const AddExistingNavItemDialog = ({
             return;
           }
         } catch (error: any) {
-          console.error("Error adding new generic parent to role config:", error);
+          // console.error("Error adding new generic parent to role config:", error);
           showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
           setIsAdding(false);
           return;
@@ -227,7 +227,7 @@ const AddExistingNavItemDialog = ({
       onItemAdded();
       onClose();
     } catch (error: any) {
-      console.error("Error adding existing nav item to role menu:", error);
+      // console.error("Error adding existing nav item to role menu:", error);
       showError(`Erreur lors de l'ajout de l'élément au menu du rôle: ${error.message}`);
     } finally {
       setIsAdding(false);

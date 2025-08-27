@@ -1,5 +1,3 @@
-console.log("[BottomNavigationBar.tsx] Module loaded."); // Early log to confirm file loading
-
 import {
       Home,
       MessageSquare,
@@ -93,26 +91,26 @@ import {
       // useEffect(() => {
       //   if (currentUser) { // Only load dynamic nav items if user is authenticated
       //     const fetchNavItems = async () => {
-      //       console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
+      //       // console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
       //       const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
       //       setDynamicNavItems(loadedItems);
-      //       console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
+      //       // console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
       //     };
       //     fetchNavItems();
       //   } else {
       //     setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
-      //     console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
+      //     // console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
       //   }
       // }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
 
       const handleCategoryClick = useCallback((categoryItem: NavItem) => {
-        console.log("[BottomNavigationBar] handleCategoryClick: Pushing category to stack:", categoryItem.label);
+        // console.log("[BottomNavigationBar] handleCategoryClick: Pushing category to stack:", categoryItem.label);
         setDrawerNavStack(prevStack => [...prevStack, categoryItem]);
         setSearchQuery(''); // Clear search when entering a category
       }, []);
 
       const fixedBottomNavItems = React.useMemo<NavItem[]>(() => {
-        console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Input allNavItemsForDrawer:", allNavItemsForDrawer);
+        // console.log("[BottomNavigationBar] fixedBottomNavItems memo re-calculated. Input allNavItemsForDrawer:", allNavItemsForDrawer);
         if (!currentUser) {
           return [
             // Removed 'Accueil' entry as requested
@@ -126,7 +124,7 @@ import {
       // This memo now prepares the list of items to display in the drawer,
       // distinguishing between top-level direct links and categories.
       const currentDrawerItemsToDisplay = React.useMemo(() => {
-        console.log("[BottomNavigationBar] currentDrawerItemsToDisplay memo re-calculated. Input allNavItemsForDrawer:", allNavItemsForDrawer);
+        // console.log("[BottomNavigationBar] currentDrawerItemsToDisplay memo re-calculated. Input allNavItemsForDrawer:", allNavItemsForDrawer);
         const lowerCaseQuery = searchQuery.toLowerCase();
         let itemsToFilter: NavItem[] = [];
 
@@ -147,13 +145,13 @@ import {
           const activeCategory = drawerNavStack[drawerNavStack.length - 1];
           itemsToFilter = activeCategory.children || [];
         }
-        console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Items before filtering by search:", itemsToFilter);
+        // console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Items before filtering by search:", itemsToFilter);
 
         const filteredAndSorted = itemsToFilter.filter(item =>
           item.label.toLowerCase().includes(lowerCaseQuery) ||
           (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
         ).sort((a, b) => a.order_index - b.order_index); // Ensure items are sorted
-        console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Filtered and sorted result:", filteredAndSorted);
+        // console.log("[BottomNavigationBar] currentDrawerItemsToDisplay: Filtered and sorted result:", filteredAndSorted);
         return filteredAndSorted;
       }, [currentUser, allNavItemsForDrawer, drawerNavStack, searchQuery, onOpenAboutModal, onOpenAuthModal]);
 
@@ -198,7 +196,7 @@ import {
       };
 
       const handleBackInDrawer = () => {
-        console.log("[BottomNavigationBar] handleBackInDrawer: Popping from stack.");
+        // console.log("[BottomNavigationBar] handleBackInDrawer: Popping from stack.");
         setDrawerNavStack(prevStack => {
           const newStack = [...prevStack];
           newStack.pop(); // Remove the current category
@@ -357,8 +355,8 @@ import {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {currentDrawerItemsToDisplay.map((item) => {
                         const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                        const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
                         const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+                        const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
                         return (
                           <Button

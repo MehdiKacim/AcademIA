@@ -35,7 +35,7 @@ export const getNotes = async (userId: string, noteKey: string): Promise<string[
     .eq('note_key', noteKey)
     .order('created_at', { ascending: true }); // Order to maintain consistency
   if (error) {
-    console.error("Erreur lors de la récupération des notes de Supabase:", error);
+    // console.error("Erreur lors de la récupération des notes de Supabase:", error);
     return [];
   }
   return data.map(note => note.content);
@@ -55,7 +55,7 @@ export const addNote = async (userId: string, noteKey: string, content: string):
     .select('content')
     .single(); // Select the content of the newly inserted note
   if (error) {
-    console.error("Erreur lors de l'ajout de la note à Supabase:", error);
+    // console.error("Erreur lors de l'ajout de la note à Supabase:", error);
     throw error;
   }
   // Re-fetch all notes for the key to ensure the list is up-to-date
@@ -83,7 +83,7 @@ export const updateNote = async (userId: string, noteKey: string, index: number,
     .order('created_at', { ascending: true });
 
   if (fetchError) {
-    console.error("Erreur lors de la récupération des notes pour la mise à jour:", fetchError);
+    // console.error("Erreur lors de la récupération des notes pour la mise à jour:", fetchError);
     throw fetchError;
   }
 
@@ -95,11 +95,11 @@ export const updateNote = async (userId: string, noteKey: string, index: number,
       .eq('id', noteToUpdateId);
 
     if (updateError) {
-      console.error("Erreur lors de la mise à jour de la note dans Supabase:", updateError);
+      // console.error("Erreur lors de la mise à jour de la note dans Supabase:", updateError);
       throw updateError;
     }
   } else {
-    console.warn("Index de note invalide pour la mise à jour.");
+    // console.warn("Index de note invalide pour la mise à jour.");
   }
   return getNotes(userId, noteKey); // Re-fetch all notes to ensure consistency
 };
@@ -121,7 +121,7 @@ export const deleteNote = async (userId: string, noteKey: string, index: number)
     .order('created_at', { ascending: true });
 
   if (fetchError) {
-    console.error("Erreur lors de la récupération des notes pour la suppression:", fetchError);
+    // console.error("Erreur lors de la récupération des notes pour la suppression:", fetchError);
     throw fetchError;
   }
 
@@ -133,11 +133,11 @@ export const deleteNote = async (userId: string, noteKey: string, index: number)
       .eq('id', noteToDeleteId);
 
     if (deleteError) {
-      console.error("Erreur lors de la suppression de la note de Supabase:", deleteError);
+      // console.error("Erreur lors de la suppression de la note de Supabase:", deleteError);
       throw deleteError;
     }
   } else {
-    console.warn("Index de note invalide pour la suppression.");
+    // console.warn("Index de note invalide pour la suppression.");
   }
   return getNotes(userId, noteKey); // Re-fetch all notes to ensure consistency
 };
@@ -192,7 +192,7 @@ export const getAllNoteKeys = async (userId: string): Promise<string[]> => {
     .eq('user_id', userId) as any) // Cast to any to allow distinct
     .distinct('note_key'); 
   if (error) {
-    console.error("Erreur lors de la récupération de toutes les clés de note de Supabase:", error);
+    // console.error("Erreur lors de la récupération de toutes les clés de note de Supabase:", error);
     return [];
   }
   return data.map(row => row.note_key);
@@ -246,5 +246,5 @@ export const getAllNotesData = async (userId: string, courses: Course[]): Promis
 // Reset function for notes (for development/testing)
 export const resetNotes = async () => {
   const { error } = await supabase.from('notes').delete();
-  if (error) console.error("Error resetting notes:", error);
+  if (error) {} // console.error("Error resetting notes:", error);
 };

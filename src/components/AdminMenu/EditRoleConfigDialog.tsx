@@ -158,7 +158,7 @@ const EditRoleConfigDialog = ({
                   return;
               }
           } catch (error: any) {
-              console.error("Error adding new generic parent to role config:", error);
+              // console.error("Error adding new generic parent to role config:", error);
               showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
               setIsSavingEdit(false);
               return;
@@ -189,7 +189,7 @@ const EditRoleConfigDialog = ({
       onSave();
       onClose();
     } catch (error: any) {
-      console.error("Error updating role config:", error);
+      // console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
     } finally {
       setIsSavingEdit(false);

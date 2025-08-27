@@ -42,7 +42,7 @@ const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }
         onNoteAdded(); // Déclenche le rafraîchissement
         onClose();
       } catch (error: any) {
-        console.error("Error adding quick note:", error);
+        // console.error("Error adding quick note:", error);
         showError(`Erreur lors de l'ajout de la note: ${error.message}`);
       }
     } else {

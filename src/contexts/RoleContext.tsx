@@ -29,7 +29,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = useCallback(async (userId: string, userFromSession?: SupabaseUser) => {
     setIsLoadingUser(true);
-    console.log("[RoleContext] fetchUserProfile: Starting for userId:", userId);
+    // console.log("[RoleContext] fetchUserProfile: Starting for userId:", userId);
     
     let userToCheck: SupabaseUser | null = userFromSession || null;
     let sessionError: any = null;
@@ -43,9 +43,9 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     if (sessionError) {
       // Check if it's the expected "Auth session missing!" error
       if (sessionError.message === 'Auth session missing!') {
-        console.info("[RoleContext] Info: Auth session missing during profile fetch (expected for unauthenticated users).");
+        // console.info("[RoleContext] Info: Auth session missing during profile fetch (expected for unauthenticated users).");
       } else {
-        console.error("[RoleContext] Error fetching user session for confirmation check:", sessionError);
+        // console.error("[RoleContext] Error fetching user session for confirmation check:", sessionError);
       }
       setCurrentUserProfile(null);
       setNavItems([]);
@@ -55,24 +55,24 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (userToCheck && !userToCheck.email_confirmed_at) {
-      console.warn("[RoleContext] DIAGNOSTIC: User email is NOT confirmed:", userToCheck.email);
+      // console.warn("[RoleContext] DIAGNOSTIC: User email is NOT confirmed:", userToCheck.email);
       showError("DIAGNOSTIC: Votre email n'est pas confirmé. Veuillez vérifier vos paramètres Supabase (Email Confirm).");
     } else if (userToCheck) {
-      console.log("[RoleContext] DIAGNOSTIC: User email IS confirmed:", userToCheck.email);
-      console.log("[RoleContext] DIAGNOSTIC: User JWT role from user_metadata:", userToCheck.user_metadata.role); // <-- NOUVEAU LOG ICI
+      // console.log("[RoleContext] DIAGNOSTIC: User email IS confirmed:", userToCheck.email);
+      // console.log("[RoleContext] DIAGNOSTIC: User JWT role from user_metadata:", userToCheck.user_metadata.role); // <-- NOUVEAU LOG ICI
     }
 
     const profile = await getProfileById(userId); // Use the updated getProfileById
     
     if (profile) {
-      console.log("[RoleContext] fetchUserProfile: Profile fetched:", profile);
-      console.log("[RoleContext] fetchUserProfile: Profile role:", profile.role); // Log the role
+      // console.log("[RoleContext] fetchUserProfile: Profile fetched:", profile);
+      // console.log("[RoleContext] fetchUserProfile: Profile role:", profile.role); // Log the role
       setCurrentUserProfile(profile);
       // Now load nav items based on the fetched profile's role
       try {
         const loadedNavItems = await loadNavItems(profile.role, 0); // Removed establishment_id
         setNavItems(loadedNavItems);
-        console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
+        // console.log("[RoleContext] fetchUserProfile: Nav items loaded (count):", loadedNavItems.length, "items:", loadedNavItems);
 
         // Flatten the tree to get all routes for React Router
         const flattenAndFilterRoutes = (items: NavItem[]): NavItem[] => {
@@ -89,35 +89,35 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         };
         const flattenedRoutes = flattenAndFilterRoutes(loadedNavItems);
         setDynamicRoutes(flattenedRoutes);
-        console.log("[RoleContext] fetchUserProfile: Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes.map(r => r.route)); // <-- ADDED LOG HERE
+        // console.log("[RoleContext] fetchUserProfile: Flattened dynamic routes for React Router (count):", flattenedRoutes.length, "routes:", flattenedRoutes.map(r => r.route)); // <-- ADDED LOG HERE
       } catch (navError) {
-        console.error("[RoleContext] Error loading nav items:", navError);
+        // console.error("[RoleContext] Error loading nav items:", navError);
         showError("Erreur lors du chargement des menus de navigation.");
         setNavItems([]);
         setDynamicRoutes([]);
       }
 
     } else {
-      console.log("[RoleContext] fetchUserProfile: No profile found for userId:", userId);
+      // console.log("[RoleContext] fetchUserProfile: No profile found for userId:", userId);
       setCurrentUserProfile(null);
       setNavItems([]);
       setDynamicRoutes([]);
     }
-    console.log("[RoleContext] fetchUserProfile: Setting isLoadingUser to false. Final dynamicRoutes (map):", dynamicRoutes.map(r => r.route)); // Add this line
+    // console.log("[RoleContext] fetchUserProfile: Setting isLoadingUser to false. Final dynamicRoutes (map):", dynamicRoutes.map(r => r.route)); // Add this line
     setIsLoadingUser(false);
-    console.log("[RoleContext] fetchUserProfile: Finished for userId:", userId);
+    // console.log("[RoleContext] fetchUserProfile: Finished for userId:", userId);
   }, []); // No dependencies needed for useCallback as it's only called once or on auth state change
 
   useEffect(() => {
-    console.log("[RoleContext] onAuthStateChange: Setting up subscription.");
+    // console.log("[RoleContext] onAuthStateChange: Setting up subscription.");
     const { data: { subscription } = {} } = supabase.auth.onAuthStateChange(async (event, session) => { // Added default empty object to data
-      console.log("[RoleContext] Auth state changed:", event, "Session exists:", !!session);
+      // console.log("[RoleContext] Auth state changed:", event, "Session exists:", !!session);
       if (session) {
         // User is logged in
         fetchUserProfile(session.user.id, session.user); // Pass session.user
       } else {
         // User is logged out
-        console.log("[RoleContext] User logged out, clearing profile and nav items.");
+        // console.log("[RoleContext] User logged out, clearing profile and nav items.");
         setCurrentUserProfile(null);
         setNavItems([]); // Clear nav items
         setDynamicRoutes([]); // Clear dynamic routes
@@ -126,19 +126,19 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     });
 
     // Initial check for session
-    console.log("[RoleContext] Initial session check.");
+    // console.log("[RoleContext] Initial session check.");
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        console.log("[RoleContext] Initial session found, fetching user profile.");
+        // console.log("[RoleContext] Initial session found, fetching user profile.");
         fetchUserProfile(session.user.id, session.user); // Pass session.user
       } else {
-        console.log("[RoleContext] No initial session found, setting isLoadingUser to false.");
+        // console.log("[RoleContext] No initial session found, setting isLoadingUser to false.");
         setIsLoadingUser(false);
       }
     });
 
     return () => {
-      console.log("[RoleContext] Cleaning up auth state subscription.");
+      // console.log("[RoleContext] Cleaning up auth state subscription.");
       if (subscription) { // Check if subscription exists before unsubscribing
         subscription.unsubscribe();
       }
@@ -153,20 +153,20 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
           setCurrentUserProfile(updatedProfile);
         }
       } catch (error) {
-        console.error("Error updating user theme:", error);
+        // console.error("Error updating user theme:", error);
       }
     }
   };
 
   const handleSignOut = async () => {
     setIsLoadingUser(true); // Set loading state while signing out
-    console.log("[RoleContext] Signing out...");
+    // console.log("[RoleContext] Signing out...");
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error("Error signing out:", error);
+      // console.error("Error signing out:", error);
       showError(`Erreur lors de la déconnexion: ${error.message}`);
     } else {
-      console.log("[RoleContext] Signed out successfully.");
+      // console.log("[RoleContext] Signed out successfully.");
       setCurrentUserProfile(null); // Clear profile on successful sign out
       setNavItems([]); // Clear nav items
       setDynamicRoutes([]); // Clear dynamic routes

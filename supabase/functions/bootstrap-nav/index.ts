@@ -179,7 +179,7 @@ serve(async (req) => {
       .select('id, label'); // Select generated id and label for mapping
 
     if (navItemsError) {
-      console.error("Error inserting default nav_items:", navItemsError);
+      // console.error("Error inserting default nav_items:", navItemsError);
       return new Response(JSON.stringify({ error: navItemsError.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -199,7 +199,7 @@ serve(async (req) => {
       for (const config of configsForRole) {
         const originalNavItem = DEFAULT_NAV_ITEMS_WITH_KEYS.find(item => item.key === config.nav_item_key);
         if (!originalNavItem) {
-          console.warn(`Missing original nav item for key: ${config.nav_item_key} for role ${role}. Skipping config.`);
+          // console.warn(`Missing original nav item for key: ${config.nav_item_key} for role ${role}. Skipping config.`);
           continue;
         }
         const navItemId = navItemLabelToIdMap.get(originalNavItem.label);
@@ -210,12 +210,12 @@ serve(async (req) => {
           if (originalParentItem) {
             parentNavItemId = navItemLabelToIdMap.get(originalParentItem.label);
           } else {
-            console.warn(`Missing original parent nav item for key: ${config.parent_nav_item_key} for role ${role}. Parent will be null.`);
+            // console.warn(`Missing original parent nav item for key: ${config.parent_nav_item_key} for role ${role}. Parent will be null.`);
           }
         }
 
         if (!navItemId) {
-          console.warn(`Missing generated nav_item_id for label: ${originalNavItem.label} for role ${role}. Skipping config.`);
+          // console.warn(`Missing generated nav_item_id for label: ${originalNavItem.label} for role ${role}. Skipping config.`);
           continue;
         }
 
@@ -233,7 +233,7 @@ serve(async (req) => {
       .insert(allRoleConfigsToInsert);
 
     if (roleConfigsError) {
-      console.error("Error inserting default role_nav_configs:", roleConfigsError);
+      // console.error("Error inserting default role_nav_configs:", roleConfigsError);
       return new Response(JSON.stringify({ error: roleConfigsError.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -245,7 +245,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('Error in bootstrap-nav Edge Function:', error);
+    // console.error('Error in bootstrap-nav Edge Function:', error);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

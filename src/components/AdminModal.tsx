@@ -75,7 +75,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         showSuccess("Toutes les données ont été effacées ! L'application va se recharger.");
         window.location.reload();
       } catch (error: any) {
-        console.error("Error clearing all app data:", error);
+        // console.error("Error clearing all app data:", error);
         showError(`Erreur lors de l'effacement des données: ${error.message}`);
       }
     }
@@ -163,7 +163,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       });
 
       if (error) {
-        console.error("Error creating initial admin via Edge Function:", error);
+        // console.error("Error creating initial admin via Edge Function:", error);
         showError(`Erreur lors de la création de l'administrateur: ${error.message}`);
         return;
       }
@@ -183,7 +183,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
       setShowCreateAdminForm(false);
       onClose();
     } catch (error: any) {
-      console.error("Unexpected error creating initial admin:", error);
+      // console.error("Unexpected error creating initial admin:", error);
       showError(`Une erreur inattendue est survenue: ${error.message}`);
     } finally {
       setIsCreatingAdmin(false);
@@ -201,7 +201,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         }
         onClose();
       } catch (error: any) {
-        console.error("Error bootstrapping nav items:", error);
+        // console.error("Error bootstrapping nav items:", error);
         showError(`Erreur lors de l'initialisation des menus: ${error.message}`);
       }
     }
