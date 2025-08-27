@@ -25,8 +25,6 @@ import { clearAllAppData } from '@/lib/dataReset';
 import InputWithStatus from './InputWithStatus';
 import { checkUsernameExists, checkEmailExists } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Profile, ALL_ROLES } from '@/lib/dataModels';
-import { bootstrapNavItems } from '@/lib/navItems'; // Import bootstrapNavItems
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useRole } from '@/contexts/RoleContext';
 import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
@@ -209,7 +207,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
   };
 
   const renderContent = (Wrapper: typeof DialogContent | typeof DrawerContent, Header: typeof DialogHeader | typeof DrawerHeader, Title: typeof DialogTitle | typeof DrawerTitle, Description: typeof DialogDescription | typeof DrawerDescription) => (
-    <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+    <Wrapper className="w-full max-w-md p-6 backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
       <React.Fragment> {/* Added React.Fragment here */}
         <Header className="mb-4 text-center">
           <Title className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">

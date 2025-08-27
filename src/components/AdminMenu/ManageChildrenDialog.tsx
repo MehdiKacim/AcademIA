@@ -34,7 +34,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
-import { cn } from '@/lib/utils';
+import { cn } '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -378,7 +378,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile">
+      <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[1000] rounded-android-tile"> {/* Added z-[1000] */}
         <div className="flex flex-col h-full">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -472,14 +472,14 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               <SelectTrigger id="new-child-type" className="rounded-android-tile">
                                 <SelectValue placeholder="Sélectionner un type" />
                               </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
                                 <ScrollArea className="h-40">
-                                  {Object.keys(iconMap).sort().map(iconName => {
-                                    const IconComponent = iconMap[iconName];
+                                  {navItemTypes.map(type => {
                                     return (
-                                      <SelectItem key={iconName} value={iconName}>
+                                      <SelectItem key={type} value={type}>
                                         <div className="flex items-center gap-2">
-                                          <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
+                                          {/* Removed IconComponent here as it's not directly available for types */}
+                                          <span>{getItemTypeLabel(type)}</span>
                                         </div>
                                       </SelectItem>
                                     );
@@ -502,7 +502,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               <SelectTrigger id="new-child-icon" className="rounded-android-tile">
                                 <SelectValue placeholder="Sélectionner une icône" />
                               </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
                                 <ScrollArea className="h-40">
                                   {Object.keys(iconMap).sort().map(iconName => {
                                     const IconComponent = iconMap[iconName];

@@ -651,7 +651,7 @@ const ProfessorSubjectAssignmentPage = () => {
       {/* Edit Assignment Dialog */}
       {currentAssignmentToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Apply rounded-android-tile */}
             <div className="flex flex-col"> {/* Wrap children in a single div */}
               <DialogHeader>
                 <DialogTitle>Modifier l'affectation</DialogTitle>

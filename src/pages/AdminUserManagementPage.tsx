@@ -698,7 +698,7 @@ const AdminUserManagementPage = () => {
       {/* Edit User Dialog */}
       {userToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
             <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Modifier l'utilisateur</DialogTitle>

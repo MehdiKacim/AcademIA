@@ -213,7 +213,7 @@ const EditRoleConfigDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile">
+      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[1000] rounded-android-tile"> {/* Added z-[1000] */}
         <div className="flex flex-col h-full">
           <DialogHeader>
             <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>

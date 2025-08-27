@@ -379,7 +379,7 @@ const EstablishmentManagementPage = () => {
       {/* Edit Establishment Dialog */}
       {currentEstablishmentToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
             <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Modifier l'établissement</DialogTitle>
@@ -437,7 +437,7 @@ const EstablishmentManagementPage = () => {
       {/* Assign Director/Deputy Director Dialog */}
       {establishmentForAssignment && (
         <Dialog open={isAssignDirectorDialogOpen} onOpenChange={setIsAssignDirectorDialogOpen}>
-          <DialogContent className="sm:max-w-[500px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+          <DialogContent className="sm:max-w-[500px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
             <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Affecter Directeurs à "{establishmentForAssignment.name}"</DialogTitle>

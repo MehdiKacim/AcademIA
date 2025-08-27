@@ -14,9 +14,10 @@ import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establi
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
+  findProfileByUsername,
   updateProfile,
   deleteProfile,
-  getAllStudentClassEnrollments,
+  getAllStudentClassEnrollments, // Import getAllStudentClassEnrollments
   checkUsernameExists, // Import checkUsernameExists
   checkEmailExists, // Import checkEmailExists
 } from '@/lib/studentData';
@@ -26,9 +27,11 @@ import {
   loadClasses,
   loadCurricula,
   loadEstablishments, // Re-added loadEstablishments
+  loadSchoolYears,
   getEstablishmentName, // Import getEstablishmentName
   getCurriculumName, // Import getCurriculumName
   getClassName, // Import getClassName
+  getSchoolYearName, // Import getSchoolYearName
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -54,7 +57,8 @@ const StudentManagementPage = () => {
   const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
-  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
+  const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
 
   // States for new student creation form
   const [newStudentFirstName, setNewStudentFirstName] = useState('');
@@ -88,6 +92,7 @@ const StudentManagementPage = () => {
         setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
         setAllProfiles(await getAllProfiles());
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+        setSchoolYears(await loadSchoolYears());
       } catch (error: any) {
         console.error("Error fetching data for StudentManagementPage:", error);
         showError(`Erreur lors du chargement des données de gestion des élèves: ${error.message}`);
@@ -412,7 +417,7 @@ const StudentManagementPage = () => {
                 <div>
                   <Label htmlFor="new-user-role">Rôle</Label>
                   <Select value={'student'} onValueChange={() => {}}> {/* Fixed to 'student' for this page */}
-                    <SelectTrigger id="new-user-role" className="rounded-android-tile" disabled>
+                    <SelectTrigger id="new-user-role" className="rounded-android-tile">
                       <SelectValue placeholder="Élève" />
                     </SelectTrigger>
                     <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
@@ -455,7 +460,7 @@ const StudentManagementPage = () => {
                           {newStudentEnrollmentStartDate ? format(newStudentEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                         <Calendar
                           mode="single"
                           selected={newStudentEnrollmentStartDate}
@@ -481,7 +486,7 @@ const StudentManagementPage = () => {
                           {newStudentEnrollmentEndDate ? format(newStudentEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
+                      <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                           <Calendar
                             mode="single"
                             selected={newStudentEnrollmentEndDate}
@@ -516,8 +521,8 @@ const StudentManagementPage = () => {
               <Input
                 placeholder="Rechercher par nom, email ou @username..."
                 className="pl-10 rounded-android-tile"
-                value={studentSearchQuery}
-                onChange={(e) => setSearchStudentQuery(e.target.value)}
+                value={userListSearchQuery}
+                onChange={(e) => setUserListSearchQuery(e.target.value)}
               />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">

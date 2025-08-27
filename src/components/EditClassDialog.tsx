@@ -119,7 +119,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave, establishments,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
         <div className="flex flex-col"> {/* Wrap children in a single div */}
           <DialogHeader>
             <DialogTitle>Modifier la classe</DialogTitle>

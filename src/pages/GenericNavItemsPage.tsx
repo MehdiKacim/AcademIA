@@ -460,7 +460,7 @@ const GenericNavItemsPage = () => {
       {/* Edit Generic Nav Item Dialog */}
       {currentItemToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto backdrop-blur-lg bg-background/80 rounded-android-tile">
+          <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
             <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
               <DialogHeader>
                 <DialogTitle>Modifier l'élément de navigation générique</DialogTitle>
