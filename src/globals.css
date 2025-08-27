@@ -83,7 +83,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans transition-colors duration-500; /* Ajout de la transition ici */
     /* REMOVED: -webkit-user-select:none;-moz-user-select:none;user-select:none; */
   }
 
