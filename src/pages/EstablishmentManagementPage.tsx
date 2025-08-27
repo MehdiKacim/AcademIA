@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Building2, Search, UserPlus, UserRoundCog, XCircle, Check } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Building2, Search, UserPlus, UserRoundCog, XCircle, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Profile, Establishment, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
