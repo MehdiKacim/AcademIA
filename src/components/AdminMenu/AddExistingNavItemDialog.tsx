@@ -278,7 +278,7 @@ const AddExistingNavItemDialog = ({
                           <Card 
                             key={item.id} 
                             className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20"
-                            onClick={() => handleSelectGenericItem(item)} // Re-added onClick handler
+                            onClick={() => handleSelectGenericItem(item)} // Added onClick handler
                           >
                             <React.Fragment> {/* Added React.Fragment */}
                               <div className="flex items-center gap-3 select-none">
@@ -330,7 +330,7 @@ const AddExistingNavItemDialog = ({
                     placeholder="Sélectionner un parent..."
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
-                    disabled={defaultParentId === null} // Disable if defaultParentId is null
+                    // Removed disabled prop here to make it always clickable
                   />
                   {defaultParentId === null && (
                     <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
