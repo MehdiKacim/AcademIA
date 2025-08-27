@@ -67,8 +67,9 @@ const AddExistingNavItemDialog = ({
       setIsAdding(false);
       setGenericItemSearchQuery('');
       setParentSearchQuery('');
+      console.log("[AddExistingNavItemDialog] Dialog opened. Available generic items options:", availableGenericItemsOptions); // Diagnostic log
     }
-  }, [isOpen, defaultParentId]); // Add defaultParentId to dependencies
+  }, [isOpen, defaultParentId, availableGenericItemsOptions]); // Add availableGenericItemsOptions to dependencies
 
   const availableGenericItemsOptions = useMemo(() => {
     const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
@@ -330,7 +331,7 @@ const AddExistingNavItemDialog = ({
                     placeholder="Sélectionner un parent..."
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
-                    // Removed disabled prop here to make it always clickable
+                    disabled={false} // Explicitly set to false to ensure it's always clickable
                   />
                   {defaultParentId === null && (
                     <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
