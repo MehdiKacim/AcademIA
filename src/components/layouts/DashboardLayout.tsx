@@ -351,7 +351,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
           // Adjust padding-top based on whether the submenu is present
-          !isMobile && currentUserProfile && activeDesktopSubmenuParent ? "pt-[292px]" : "pt-20 md:pt-24" // 68px (header) + 224px (submenu) = 292px
+          !isMobile && currentUserProfile && activeDesktopSubmenuParent ? "pt-[288px]" : "pt-20 md:pt-24" // 64px (header) + 224px (submenu) = 288px
         )}
       >
         <AnimatePresence mode="wait">
