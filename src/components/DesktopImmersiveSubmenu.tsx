@@ -102,13 +102,14 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
                   )}
                   target={item.is_external ? "_blank" : undefined}
                 >
-                  <React.Fragment> {/* Wrap children in a Fragment */}
+                  {/* Wrapped children in a single div */}
+                  <div> 
                     <div className="icon-container rounded-lg mb-2">
                       <IconComponent className="h-6 w-6" />
                     </div>
                     <span className="title text-base font-medium line-clamp-2">{item.label}</span>
                     {item.description && (
-                      <span className="subtitle text-xs line-clamp-2">{item.description}</span> {/* text-xs is now correctly applied */}
+                      <span className="subtitle text-xs line-clamp-2">{item.description}</span>
                     )}
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
@@ -117,7 +118,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
                     )}
                     {isCategory && <ChevronDown className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />}
                     {item.is_external && !isCategory && <ExternalLink className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />}
-                  </React.Fragment>
+                  </div>
                 </Button>
               );
             })}
