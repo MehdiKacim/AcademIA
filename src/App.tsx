@@ -46,7 +46,8 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
   const [isThemeTransitionActive, setIsThemeTransitionActive] = useState(false);
   const [transitioningToThemeName, setTransitioningToThemeName] = useState('');
 
-  const initialTheme = currentUserProfile?.theme || "dark";
+  // Removed initialTheme as defaultTheme prop is removed from ThemeProvider
+  // const initialTheme = currentUserProfile?.theme || "dark";
 
   // Define a base map of route paths to components
   const baseRouteComponentMap: { [key: string]: React.ElementType } = {
@@ -79,7 +80,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     // console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
   }, [dynamicRoutes, currentUserProfile]);
 
-  const handleInitiateThemeChange = useCallback((newTheme: typeof initialTheme) => {
+  const handleInitiateThemeChange = useCallback((newTheme: string) => { // Changed newTheme type to string
     const themeDisplayNameMap: { [key: string]: string } = {
       'light': 'Clair',
       'dark': 'Sombre',
@@ -107,7 +108,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
   // console.log("[App.tsx] AuthenticatedAppRoutes: currentUserProfile:", currentUserProfile);
 
   return (
-    <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
+    <ThemeProvider storageKey="vite-ui-theme" attribute="data-theme"> {/* Removed defaultTheme prop */}
       <TooltipProvider>
         <React.Fragment> {/* Wrap multiple children in a Fragment */}
           <Toaster 
