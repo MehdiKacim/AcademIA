@@ -43,6 +43,13 @@ import { Switch } from '@/components/ui/switch'; // Import Switch
 import { Loader2 } from 'lucide-react'; // Import Loader2
 import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'; // Import ContextMenu
+import {
+  Card, // Import Card
+  CardContent, // Import CardContent
+  CardHeader, // Import CardHeader
+  CardTitle, // Import CardTitle
+  CardDescription, // Import CardDescription
+} from "@/components/ui/card"; // Import Card components
 
 // Map icon_name strings to Lucide React components (re-declare or import from a central place)
 const iconMap: { [key: string]: React.ElementType } = { // Changed ReactType to React.ElementType
