@@ -85,13 +85,13 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     <ThemeProvider defaultTheme={initialTheme} storageKey="vite-ui-theme" attribute="data-theme">
       <TooltipProvider>
         <React.Fragment> {/* Wrap multiple children in a Fragment */}
-          <Toaster // Changed from Sonner to Toaster
+          <Toaster 
             position="top-center" 
-            className="top-16 z-[9999]"
+            className="top-16 z-[9999] w-full inset-x-0" // Added w-full inset-x-0 here
             toastOptions={{
               duration: 5000,
               classNames: {
-                toast: "w-full max-w-full rounded-lg border border-border shadow-md backdrop-blur-lg bg-background/60", // Updated styling here
+                toast: "w-full max-w-full rounded-lg border border-border shadow-md backdrop-blur-lg bg-background/60", // Kept immersive styles for individual toasts
                 success: "bg-success text-success-foreground border-success",
                 error: "bg-destructive text-destructive-foreground border-destructive",
                 loading: "bg-primary text-primary-foreground border-primary",
