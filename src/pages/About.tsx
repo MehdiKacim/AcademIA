@@ -1,16 +1,16 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Info, Code, Heart, Linkedin, Github, ArrowLeft } from "lucide-react"; // Import ArrowLeft
+import { Info, Code, Heart, Linkedin, Github, ArrowLeft } from "lucide-react";
 import packageJson from '../../package.json';
 import Logo from "@/components/Logo";
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion'; // Import motion
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { Button } from "@/components/ui/button"; // Import Button
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
 
 const About = () => {
   const appVersion = packageJson.version;
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -18,15 +18,15 @@ const About = () => {
       opacity: 1,
       y: 0,
       transition: {
-        delayChildren: 0.1,
-        staggerChildren: 0.05,
+        delayChildren: 0.2, // Légèrement plus long
+        staggerChildren: 0.1, // Légèrement plus long
       },
     },
     exit: {
       opacity: 0,
       y: -20,
       transition: {
-        duration: 0.2,
+        duration: 0.4, // Plus long
       },
     },
   };
@@ -39,7 +39,7 @@ const About = () => {
 
   return (
     <motion.div
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative" // Added relative for button positioning
+      className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative" // max-w-md pour réduire la largeur
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -53,10 +53,15 @@ const About = () => {
         </Button>
       </div>
 
-      <motion.div variants={itemVariants} className="text-center mb-8 pt-12"> {/* Added pt-12 to make space for the back button */}
-        <div className="mb-4 mx-auto w-fit">
+      <motion.div variants={itemVariants} className="text-center mb-8 pt-12">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, rotate: 0 }}
+          animate={{ opacity: 1, scale: 1, rotate: 360 }} // Rotation complète
+          transition={{ delay: 0.1, duration: 2.0, ease: "easeInOut" }} // Durée de l'animation du logo
+          className="mb-4 mx-auto w-fit"
+        >
           <Logo iconClassName="w-24 h-24" showText={false} />
-        </div>
+        </motion.div>
         <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center">
           Informations sur l'Application
         </h2>
@@ -66,28 +71,7 @@ const About = () => {
       </motion.div>
 
       <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4 w-full">
-        <Card className="shadow-md rounded-android-tile">
-          <CardHeader className="flex flex-row items-center gap-3 pb-3">
-            <Info className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Détails d'AcademIA</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-center prose dark:prose-invert">
-            <p className="text-muted-foreground">
-              <span className="font-medium text-foreground">Nom de l'application :</span> AcademIA
-            </p>
-            <p className="text-muted-foreground">
-              <span className="font-medium text-foreground">Version :</span> {appVersion}
-            </p>
-            <p className="text-muted-foreground">
-              <span className="font-medium text-foreground">Mentions Légales :</span>
-              <br />
-              &copy; {new Date().getFullYear()} AcademIA. Tous droits réservés.
-              <br />
-              Les contenus et fonctionnalités de cette application sont la propriété exclusive d'AcademIA.
-              Toute reproduction ou distribution non autorisée est strictement interdite.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Section "Détails d'AcademIA" supprimée */}
 
         <Card className="shadow-md rounded-android-tile">
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
