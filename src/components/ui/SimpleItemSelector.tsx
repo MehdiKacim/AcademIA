@@ -70,7 +70,7 @@ const SimpleItemSelector = ({
     return (
       <CommandItem
         key={option.id}
-        value={option.label} // Use label for search value
+        value={option.id} // CHANGEMENT ICI : Utiliser l'ID pour la valeur du CommandItem
         onSelect={() => {
           onValueChange(option.id);
           setIsOpen(false);
