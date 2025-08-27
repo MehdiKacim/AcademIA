@@ -454,8 +454,8 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                 </Card>
 
                 {/* New section for creating a new generic item and adding it as a child */}
-                <Collapsible open={isNewChildFormOpen} onOpenChange={setIsNewChildFormOpen} className="lg:col-span-2">
-                  <Card className="rounded-android-tile">
+                <Card className="rounded-android-tile lg:col-span-2"> {/* Collapsible is now inside Card */}
+                  <Collapsible open={isNewChildFormOpen} onOpenChange={setIsNewChildFormOpen}>
                     <CardHeader>
                       <CollapsibleTrigger asChild>
                         <Button variant="ghost" className="w-full justify-between p-0">
@@ -465,81 +465,81 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           {isNewChildFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                         </Button>
                       </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="new-child-label">Libellé</Label>
-                              <Input id="new-child-label" value={newChildLabel} onChange={(e) => setNewChildLabel(e.target.value)} required />
-                            </div>
-                            <div>
-                              <Label htmlFor="new-child-type">Type d'élément</Label>
-                              <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
-                                setNewChildType(value);
-                                if (value === 'category_or_action') {
-                                  setNewChildIsExternal(false);
-                                }
-                              }}>
-                                <SelectTrigger id="new-child-type" className="rounded-android-tile">
-                                  <SelectValue placeholder="Sélectionner un type" />
-                                </SelectTrigger>
-                                <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
-                                  <ScrollArea className="h-40">
-                                    {Object.keys(iconMap).sort().map(iconName => {
-                                      const IconComponent = iconMap[iconName];
-                                      return (
-                                        <SelectItem key={iconName} value={iconName}>
-                                          <div className="flex items-center gap-2">
-                                            <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
-                                          </div>
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </ScrollArea>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
-                              <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} />
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category_or_action'} />
-                              <Label htmlFor="new-child-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
-                            </div>
-                            <div>
-                              <Label htmlFor="new-child-icon">Nom de l'icône (Lucide React)</Label>
-                              <Select value={newChildIconName} onValueChange={setNewChildIconName}>
-                                <SelectTrigger id="new-child-icon" className="rounded-android-tile">
-                                  <SelectValue placeholder="Sélectionner une icône" />
-                                </SelectTrigger>
-                                <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
-                                  <ScrollArea className="h-40">
-                                    {Object.keys(iconMap).sort().map(iconName => {
-                                      const IconComponent = iconMap[iconName];
-                                      return (
-                                        <SelectItem key={iconName} value={iconName}>
-                                          <div className="flex items-center gap-2">
-                                            <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
-                                          </div>
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </ScrollArea>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label htmlFor="new-child-description">Description (optionnel)</Label>
-                              <Textarea id="new-child-description" value={newChildDescription} onChange={(e) => setNewChildDescription(e.target.value)} />
-                            </div>
+                    </CardHeader>
+                    <CollapsibleContent>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="new-child-label">Libellé</Label>
+                            <Input id="new-child-label" value={newChildLabel} onChange={(e) => setNewChildLabel(e.target.value)} required />
                           </div>
-                          <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}>
-                            {isAddingNewChild ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et ajouter
-                          </Button>
-                        </CardContent>
-                      </CollapsibleContent>
-                    </Card>
+                          <div>
+                            <Label htmlFor="new-child-type">Type d'élément</Label>
+                            <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
+                              setNewChildType(value);
+                              if (value === 'category_or_action') {
+                                setNewChildIsExternal(false);
+                              }
+                            }}>
+                              <SelectTrigger id="new-child-type" className="rounded-android-tile">
+                                <SelectValue placeholder="Sélectionner un type" />
+                              </SelectTrigger>
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                                <ScrollArea className="h-40">
+                                  {Object.keys(iconMap).sort().map(iconName => {
+                                    const IconComponent = iconMap[iconName];
+                                    return (
+                                      <SelectItem key={iconName} value={iconName}>
+                                        <div className="flex items-center gap-2">
+                                          <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
+                                        </div>
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </ScrollArea>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
+                            <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category_or_action'} />
+                            <Label htmlFor="new-child-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
+                          </div>
+                          <div>
+                            <Label htmlFor="new-child-icon">Nom de l'icône (Lucide React)</Label>
+                            <Select value={newChildIconName} onValueChange={setNewChildIconName}>
+                              <SelectTrigger id="new-child-icon" className="rounded-android-tile">
+                                <SelectValue placeholder="Sélectionner une icône" />
+                              </SelectTrigger>
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                                <ScrollArea className="h-40">
+                                  {Object.keys(iconMap).sort().map(iconName => {
+                                    const IconComponent = iconMap[iconName];
+                                    return (
+                                      <SelectItem key={iconName} value={iconName}>
+                                        <div className="flex items-center gap-2">
+                                          <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
+                                        </div>
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </ScrollArea>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="new-child-description">Description (optionnel)</Label>
+                            <Textarea id="new-child-description" value={newChildDescription} onChange={(e) => setNewChildDescription(e.target.value)} />
+                          </div>
+                        </div>
+                        <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}>
+                          {isAddingNewChild ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et ajouter
+                        </Button>
+                      </CardContent>
+                    </CollapsibleContent>
                   </Collapsible>
                 </Card>
               </div>

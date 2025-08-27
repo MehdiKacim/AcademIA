@@ -243,7 +243,6 @@ const GenericNavItemsPage = () => {
                 {isNewItemFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </Button>
             </CollapsibleTrigger>
-            <CardDescription>Définissez les propriétés de base d'un élément de navigation.</CardDescription>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="space-y-4">
