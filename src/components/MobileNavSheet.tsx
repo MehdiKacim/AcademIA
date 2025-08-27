@@ -232,7 +232,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4" // Changed to grid-cols-2 for smallest screens
           >
             {currentItemsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
@@ -247,7 +247,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "android-tile flex-row items-center justify-start h-auto min-h-[60px] text-left w-full", // Changed to flex-row, items-center, min-h-[60px]
+                      "android-tile flex-row items-center justify-start h-auto min-h-[60px] text-left w-full", // Kept flex-row, items-center, min-h-[60px]
                       "rounded-android-tile hover:scale-[1.02] transition-transform", // Added hover effect
                       isLinkActive ? "active" : "",
                       "transition-all duration-200 ease-in-out"
