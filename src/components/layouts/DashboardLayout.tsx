@@ -32,6 +32,7 @@ import NavSheet from "@/components/NavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
+import SecondaryNavigationBar from "@/components/SecondaryNavigationBar"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -160,6 +161,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     };
   }, [currentUserProfile?.id]);
 
+  const headerNavItems = fullNavTreeWithActions;
+
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen, onInitiateThemeChange }), [setIsAdminModalOpen, onInitiateThemeChange]);
 
   const headerDoubleTapRef = useRef({ lastTap: 0 });
@@ -176,56 +179,20 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     }
   }, [isMobile, currentUserProfile]);
 
-  // Recursive function to render dropdown menu items
-  const renderDropdownItems = (items: NavItem[], level: number = 0) => {
-    return items.map(item => {
-      const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
-      const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-
-      if (item.children && item.children.length > 0) {
-        return (
-          <DropdownMenuSub key={item.id}>
-            <DropdownMenuSubTrigger className={cn(isLinkActive && "text-primary font-semibold")}>
-              <IconComponent className="mr-2 h-4 w-4" />
-              <span>{item.label}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="backdrop-blur-lg bg-background/80">
-              {renderDropdownItems(item.children, level + 1)}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        );
+  // This function will be passed to SecondaryNavigationBar to handle clicks
+  const handleSecondaryNavItemClick = useCallback((item: NavItem) => {
+    if (item.route) {
+      if (item.is_external) {
+        window.open(item.route, '_blank');
+      } else if (item.route.startsWith('#')) {
+        navigate(`/${item.route}`);
       } else {
-        return (
-          <DropdownMenuItem
-            key={item.id}
-            onClick={() => {
-              if (item.route) {
-                if (item.is_external) {
-                  window.open(item.route, '_blank');
-                } else if (item.route.startsWith('#')) {
-                  navigate(`/${item.route}`);
-                } else {
-                  navigate(item.route);
-                }
-              } else if (item.onClick) {
-                item.onClick();
-              }
-            }}
-            className={cn(isLinkActive && "text-primary font-semibold")}
-          >
-            <IconComponent className="mr-2 h-4 w-4" />
-            <span>{item.label}</span>
-            {item.badge !== undefined && item.badge > 0 && (
-              <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                {item.badge}
-              </span>
-            )}
-            {item.is_external && <ExternalLink className="ml-auto h-3 w-3" />}
-          </DropdownMenuItem>
-        );
+        navigate(item.route);
       }
-    });
-  };
+    } else if (item.onClick) {
+      item.onClick();
+    }
+  }, [navigate]);
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -238,88 +205,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       >
         <div className="flex items-center gap-4">
           <Logo />
-          {/* Top-level Navigation Items for Desktop */}
-          {!isMobile && currentUserProfile && (
-            <nav className="hidden md:flex items-center gap-4">
-              {fullNavTreeWithActions.filter(item => !item.parent_nav_item_id).map(item => {
-                const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
-                const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-
-                if (isCategory) {
-                  return (
-                    <DropdownMenu key={item.id}>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className={cn(
-                            "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                            isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                          )}
-                        >
-                          <IconComponent className="mr-2 h-4 w-4" />
-                          {item.label}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                            <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                              {item.badge}
-                            </span>
-                          )}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="backdrop-blur-lg bg-background/80">
-                        {renderDropdownItems(item.children || [])}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  );
-                } else if (item.onClick) {
-                  return (
-                    <Button
-                      key={item.id}
-                      variant="ghost"
-                      onClick={() => {
-                        item.onClick && item.onClick();
-                      }}
-                      className={cn(
-                        "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                        isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                      )}
-                    >
-                      <IconComponent className="mr-2 h-4 w-4" />
-                      {item.label}
-                      {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Button>
-                  );
-                } else { // item.type === 'route'
-                  return (
-                    <NavLink
-                      key={item.id}
-                      to={item.route!}
-                      className={({ isActive }) =>
-                        cn(
-                          "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                          isActive || isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                        )
-                      }
-                      target={item.is_external ? "_blank" : undefined}
-                    >
-                      <IconComponent className="mr-2 h-4 w-4" />
-                      {item.label}
-                      {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                        <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                          {item.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  );
-                }
-              })}
-            </nav>
-          )}
         </div>
         {/* Utility buttons for desktop (Search, AiA Chat, User Dropdown, Theme Toggle, About) */}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
@@ -388,10 +273,19 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         </div>
       </header>
 
+      {/* Secondary Navigation Bar for Desktop */}
+      {!isMobile && currentUserProfile && (
+        <SecondaryNavigationBar
+          navItems={headerNavItems.filter(item => !item.parent_nav_item_id)} // Pass only top-level items
+          onItemClick={handleSecondaryNavItemClick}
+        />
+      )}
+
       <main
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
-          "pt-20 md:pt-24" // Adjusted padding-top to only account for the main header
+          // Adjust padding-top based on whether the secondary nav bar is present
+          !isMobile && currentUserProfile ? "pt-[116px]" : "pt-20 md:pt-24" // 68px (header) + 48px (secondary nav) = 116px
         )}
       >
         <AnimatePresence mode="wait">
@@ -425,9 +319,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange}
           isMobile={isMobile}
-          isDesktopImmersiveOpen={false} // Not used for desktop immersive
-          onCloseDesktopImmersive={() => {}} // Not used
-          desktopImmersiveParent={null} // Not used
+          isDesktopImmersiveOpen={false} // No longer used for desktop immersive
+          onCloseDesktopImmersive={() => {}} // No longer used
+          desktopImmersiveParent={null} // No longer used
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
