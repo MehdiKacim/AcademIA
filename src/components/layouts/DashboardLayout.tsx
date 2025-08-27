@@ -32,7 +32,7 @@ import NavSheet from "@/components/NavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import SecondaryNavigationBar from "@/components/SecondaryNavigationBar"; // Import the SecondaryNavigationBar
+import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -59,7 +59,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
   // Refs for click outside logic
   const headerRef = useRef<HTMLElement>(null);
-  const submenuRef = useRef<HTMLElement>(null);
+  const submenuRef = useRef<HTMLElement>(null); // This ref is now for the DesktopImmersiveSubmenu
 
   // Helper function to inject onClick handlers for specific action items
   const injectActionHandlers = useCallback((items: NavItem[]): NavItem[] => {
@@ -215,7 +215,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     } else if (item.onClick) {
       item.onClick();
     }
-    // When an item in the secondary nav is clicked, close the secondary nav
+    // When an item in the submenu is clicked, close the submenu
     setActiveDesktopSubmenuParent(null); 
   }, [navigate]);
 
@@ -338,11 +338,12 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       </header>
 
       {/* Dynamic Submenu Bar for Desktop */}
-      {activeDesktopSubmenuParent && !isMobile && (
-        <SecondaryNavigationBar
+      {!isMobile && currentUserProfile && (
+        <DesktopImmersiveSubmenu
           ref={submenuRef} // Attach ref to submenu
-          navItems={activeDesktopSubmenuParent.children || []} // Pass children of the active parent
-          onItemClick={handleNavItemClick} // Use the unified handler
+          parentItem={activeDesktopSubmenuParent}
+          onClose={() => setActiveDesktopSubmenuParent(null)}
+          onItemClick={handleNavItemClick}
         />
       )}
 
