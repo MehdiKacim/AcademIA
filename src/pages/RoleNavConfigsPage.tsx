@@ -684,6 +684,9 @@ const RoleNavConfigsPage = () => {
                 <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
                 </ContextMenuItem>
+                <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true, null)}> {/* New option */}
+                  <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément racine existant
+                </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
           </Card>

@@ -28,6 +28,7 @@ interface AddExistingNavItemDialogProps {
   onItemAdded: () => void;
   getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
   iconMap: { [key: string]: React.ElementType };
+  defaultParentId?: string | null; // New prop for default parent
 }
 
 // Helper function to get item type label
@@ -48,10 +49,11 @@ const AddExistingNavItemDialog = ({
   onItemAdded,
   getDescendantIds,
   iconMap,
+  defaultParentId, // Destructure new prop
 }: AddExistingNavItemDialogProps) => {
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null); // Corrected initialization
   const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem) | null>(null); // Store full info, added isNew
-  const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(null);
+  const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(defaultParentId === null ? 'none' : defaultParentId || null); // Initialize with defaultParentId
   const [isAdding, setIsAdding] = useState(false);
   const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
   const [parentSearchQuery, setParentSearchQuery] = useState('');
@@ -61,12 +63,12 @@ const AddExistingNavItemDialog = ({
     if (isOpen) {
       setSelectedGenericItemToAdd(null);
       setSelectedGenericItemInfo(null);
-      setSelectedParentForNewItem(null);
+      setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null); // Reset with defaultParentId
       setIsAdding(false);
       setGenericItemSearchQuery('');
       setParentSearchQuery('');
     }
-  }, [isOpen]);
+  }, [isOpen, defaultParentId]); // Add defaultParentId to dependencies
 
   const availableGenericItemsOptions = useMemo(() => {
     const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
@@ -135,7 +137,7 @@ const AddExistingNavItemDialog = ({
     // Apply search filter
     const lowerCaseQuery = parentSearchQuery.toLowerCase();
     return [
-      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false },
+      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action' }, // Added typeLabel
       ...sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery))
     ];
   }, [allConfiguredItemsFlat, allGenericNavItems, parentSearchQuery]);
@@ -226,13 +228,15 @@ const AddExistingNavItemDialog = ({
     setSelectedGenericItemToAdd(item.id);
     setSelectedGenericItemInfo(item);
     // For newly added items, default parent to none (root)
-    setSelectedParentForNewItem('none');
+    if (defaultParentId === undefined) { // Only set if no defaultParentId was provided
+      setSelectedParentForNewItem('none');
+    }
   };
 
   const handleCancelSelection = () => {
     setSelectedGenericItemToAdd(null);
     setSelectedGenericItemInfo(null);
-    setSelectedParentForNewItem(null);
+    setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null); // Reset with defaultParentId
     setGenericItemSearchQuery('');
     setParentSearchQuery('');
   };
@@ -316,13 +320,6 @@ const AddExistingNavItemDialog = ({
 
                 <div>
                   <Label htmlFor="parent-search-input" className="mb-2 block">Rechercher un parent</Label>
-                  <Input
-                    id="parent-search-input"
-                    placeholder="Rechercher un parent..."
-                    value={parentSearchQuery}
-                    onChange={(e) => setParentSearchQuery(e.target.value)}
-                    className="mb-2 rounded-android-tile"
-                  />
                   <SearchableDropdown
                     value={selectedParentForNewItem}
                     onValueChange={setSelectedParentForNewItem}
@@ -331,7 +328,13 @@ const AddExistingNavItemDialog = ({
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
                     popoverContentClassName="z-[999] rounded-android-tile"
+                    disabled={defaultParentId === null} // Disable if defaultParentId is null
                   />
+                  {defaultParentId === null && (
+                    <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
+                      <Info className="h-4 w-4" /> Cet élément sera ajouté à la racine du menu.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
