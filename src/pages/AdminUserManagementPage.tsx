@@ -619,8 +619,8 @@ const AdminUserManagementPage = () => {
                 {isNewUserFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </Button>
             </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent className="space-y-4">
+          </CardHeader> {/* Close CardHeader here */}
+          <CollapsibleContent className="space-y-4 p-4"> {/* Apply padding directly to CollapsibleContent */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   placeholder="Prénom"
