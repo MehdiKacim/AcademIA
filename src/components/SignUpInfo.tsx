@@ -14,7 +14,7 @@ export const SignUpInfo: React.FC<SignUpInfoProps> = ({ onSwitchToLogin }) => {
       <CardTitle className="text-2xl font-bold">Création de compte</CardTitle>
       <CardDescription className="text-lg font-semibold text-primary">
         La création de compte est actuellement gérée par les administrateurs.
-      </Muted>
+      </CardDescription>
       <p className="text-muted-foreground">
         Veuillez contacter un administrateur pour obtenir un compte.
       </p>
