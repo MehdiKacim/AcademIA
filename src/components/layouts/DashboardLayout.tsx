@@ -43,7 +43,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
   const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole();
-  const { isChatOpen } = useCourseChat(); // Get isChatOpen from context
+  const { isChatOpen, openChat } = useCourseChat(); // Get openChat here
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -66,17 +66,14 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       } else if (newItem.id === 'nav-about') {
         newItem.onClick = () => setIsAboutModalOpen(true);
       } else if (newItem.id === 'nav-aia-chat') {
-        // The AiAPersistentChat component will manage its own open/minimize state
-        // We just need to ensure it's rendered and its internal state is handled.
-        // The openChat() from context is now primarily for external triggers.
-        newItem.onClick = () => { /* No direct action here, AiAPersistentChat handles its own visibility */ };
+        newItem.onClick = () => openChat(); // Call openChat directly
       }
       if (newItem.children && newItem.children.length > 0) {
         newItem.children = injectActionHandlers(newItem.children);
       }
       return newItem;
     });
-  }, []);
+  }, [openChat, setIsSearchOverlayOpen, setIsAboutModalOpen]); // Add dependencies
 
   const fullNavTreeWithActions = React.useMemo((): NavItem[] => {
     return injectActionHandlers(navItems);
@@ -228,9 +225,10 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
             {headerNavItems.map(item => {
               const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-              const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+              const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
+              const isActionItem = item.type === 'category_or_action' && !item.children; // Action items have no children
 
-              if (isCategory) {
+              if (isCategoryWithChildren) {
                 return (
                   <Button
                     key={item.id}
@@ -242,7 +240,29 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                     {item.label}
                   </Button>
                 );
-              } else {
+              } else if (isActionItem) {
+                return (
+                  <Button
+                    key={item.id}
+                    variant="ghost"
+                    onClick={(e) => {
+                      if (item.onClick) {
+                        e.preventDefault(); // Prevent any default button behavior if onClick is present
+                        item.onClick();
+                      }
+                    }}
+                    className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
+                    {item.label}
+                    {item.route === '/messages' && unreadMessages > 0 && ( // Only for messages
+                      <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                        {unreadMessages}
+                      </span>
+                    )}
+                  </Button>
+                );
+              } else { // This is for type 'route'
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                 return (
                   <NavLink
@@ -257,8 +277,8 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
                       )
                     }
                     onClick={(e) => {
-                      if (item.onClick) {
-                        e.preventDefault(); // Prevent default NavLink behavior if onClick is present
+                      if (item.onClick) { // Still allow onClick for NavLink if present (e.g. search)
+                        e.preventDefault();
                         item.onClick();
                       }
                     }}
