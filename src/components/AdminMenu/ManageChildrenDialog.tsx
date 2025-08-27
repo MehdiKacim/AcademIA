@@ -122,7 +122,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
           )}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
+      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile z-[9999]">
         <ContextMenuItem className="p-2" onClick={() => onRemove(item.configId!)}>
           <Trash2 className="mr-2 h-4 w-4" /> Retirer
         </ContextMenuItem>

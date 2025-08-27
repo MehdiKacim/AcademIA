@@ -131,7 +131,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishme
                   <SelectTrigger id="establishment" className="col-span-3 rounded-android-tile">
                     <SelectValue placeholder="Sélectionner un établissement" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
                     {establishmentsToDisplay.map(est => (
                       <SelectItem key={est.id} value={est.id}>

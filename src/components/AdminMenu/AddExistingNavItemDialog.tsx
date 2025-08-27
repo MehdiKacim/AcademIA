@@ -277,6 +277,7 @@ const AddExistingNavItemDialog = ({
                   placeholder="Rechercher un élément..."
                   emptyMessage="Aucun élément disponible à ajouter."
                   iconMap={iconMap}
+                  popoverContentClassName="z-[9999]" // Added z-index
                   // disabled={false} // Supprimé temporairement
                 />
               </div>
@@ -314,6 +315,7 @@ const AddExistingNavItemDialog = ({
                     placeholder="Sélectionner un parent..."
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
+                    popoverContentClassName="z-[9999]" // Added z-index
                     // disabled={false} // Supprimé temporairement
                   />
                   {selectedParentForNewItem === 'none' && (

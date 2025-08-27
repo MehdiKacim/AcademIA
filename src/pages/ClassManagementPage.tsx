@@ -259,7 +259,7 @@ const ClassManagementPage = () => {
     );
   }
 
-  const establishmentsToDisplay = establishments.filter(est => 
+  const establishmentsToDisplayForNewClass = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
   );
   const curriculaToDisplay = curricula; // Already filtered by useEffect
@@ -297,9 +297,9 @@ const ClassManagementPage = () => {
                     <SelectTrigger id="new-class-establishment" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                       {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                      {establishmentsToDisplay.map(est => (
+                      {establishmentsToDisplayForNewClass.map(est => (
                         <SelectItem key={est.id} value={est.id}>
                           {est.name}
                         </SelectItem>
@@ -313,7 +313,7 @@ const ClassManagementPage = () => {
                 <SelectTrigger id="new-class-curriculum" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner un cursus" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {curriculaToDisplay
                     .filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId)
                     .map(cur => (
@@ -328,7 +328,7 @@ const ClassManagementPage = () => {
                 <SelectTrigger id="new-class-school-year" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}
@@ -410,7 +410,7 @@ const ClassManagementPage = () => {
           onClose={() => setIsEditClassDialogOpen(false)}
           classToEdit={currentClassToEdit}
           onSave={handleSaveEditedClass}
-          establishments={establishmentsToDisplay} // Pass establishments
+          establishments={establishmentsToDisplayForNewClass} // Pass establishments
           curricula={curriculaToDisplay} // Pass curricula
           schoolYears={schoolYears} // Pass schoolYears
         />

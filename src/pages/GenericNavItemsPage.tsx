@@ -16,7 +16,7 @@ import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem } from "@/
 import { useRole } from '@/contexts/RoleContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea }
- from "@/components/ui/textarea";
+ import "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -267,7 +267,7 @@ const GenericNavItemsPage = () => {
                     <SelectTrigger id="new-item-type" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
                       <ScrollArea className="h-40">
                         {navItemTypes.map(type => (
                           <SelectItem key={type} value={type}>
@@ -292,7 +292,7 @@ const GenericNavItemsPage = () => {
                     <SelectTrigger id="new-item-icon" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner une icône" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
                       <ScrollArea className="h-40">
                         {Object.keys(iconMap).sort().map(iconName => {
                           const IconComponent = iconMap[iconName];
@@ -485,7 +485,7 @@ const GenericNavItemsPage = () => {
                     <SelectTrigger id="edit-item-type" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Apply rounded-android-tile */}
                       <ScrollArea className="h-40">
                         {navItemTypes.map(type => (
                           <SelectItem key={type} value={type}>
@@ -510,7 +510,7 @@ const GenericNavItemsPage = () => {
                     <SelectTrigger id="edit-item-icon" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
                       <SelectValue placeholder="Sélectionner une icône" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Apply rounded-android-tile */}
                       <ScrollArea className="h-40">
                         {Object.keys(iconMap).sort().map(iconName => {
                           const IconComponent = iconMap[iconName];

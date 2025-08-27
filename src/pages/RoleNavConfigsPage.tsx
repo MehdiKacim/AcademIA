@@ -215,7 +215,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           </div>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
+      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile z-[9999]">
         {isCategory && (
           <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
             <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments

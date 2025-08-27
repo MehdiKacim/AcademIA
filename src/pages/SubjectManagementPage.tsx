@@ -181,7 +181,7 @@ const SubjectManagementPage = () => {
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between p-0">
                 <CardTitle className="flex items-center gap-2">
-                  <BookText className="h-6 w-6 text-primary" /> Ajouter une matière
+                  <PlusCircle className="h-6 w-6 text-primary" /> Ajouter une matière
                 </CardTitle>
                 {isNewSubjectFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </Button>
@@ -206,7 +206,7 @@ const SubjectManagementPage = () => {
                       <SelectTrigger id="new-subject-establishment" className="rounded-android-tile">
                         <SelectValue placeholder="Sélectionner un établissement" />
                       </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80">
+                      <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                         {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
                         {establishmentsToDisplay.map(est => (
                           <SelectItem key={est.id} value={est.id}>
@@ -236,7 +236,7 @@ const SubjectManagementPage = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2 mt-4">
             {subjectsToDisplay.length === 0 ? (
-              <p className="text-muted-foreground">Aucune matière à afficher.</p>
+              <p className="text-muted-foreground text-center py-4">Aucune matière à afficher.</p>
             ) : (
               subjectsToDisplay.map(sub => (
                 <Card key={sub.id} className="p-3 flex items-center justify-between border rounded-android-tile bg-background">

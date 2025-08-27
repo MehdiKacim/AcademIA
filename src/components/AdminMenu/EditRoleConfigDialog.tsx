@@ -235,6 +235,7 @@ const EditRoleConfigDialog = ({
                   placeholder="Sélectionner un parent..."
                   emptyMessage="Aucun parent disponible."
                   iconMap={iconMap}
+                  popoverContentClassName="z-[9999]" // Added z-index
                   // disabled={false} // Supprimé temporairement
                 />
               </div>

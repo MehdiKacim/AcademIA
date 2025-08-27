@@ -441,7 +441,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-professor" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner un professeur" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
                       {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id)})`}
@@ -456,7 +456,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-subject" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner une matière" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
                       {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}
@@ -471,7 +471,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-class" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner une classe" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id)})`}
@@ -486,7 +486,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="new-school-year" className="rounded-android-tile">
                   <SelectValue placeholder="Sélectionner l'année scolaire" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}
@@ -500,7 +500,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="new-assignment-establishment" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner un établissement" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
                     {filteredEstablishments.map(est => (
                       <SelectItem key={est.id} value={est.id}>
@@ -544,7 +544,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="establishment-filter" className="rounded-android-tile">
                     <SelectValue placeholder="Tous les établissements" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     <SelectItem value="all">Tous les établissements</SelectItem>
                     {establishmentsToDisplayForFilter.map(est => (
                       <SelectItem key={est.id} value={est.id}>
@@ -561,7 +561,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="professor-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Tous les professeurs" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
                       {prof.first_name} {prof.last_name}
@@ -576,7 +576,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="subject-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les matières" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   <SelectItem value="all">Toutes les matières</SelectItem>
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
@@ -592,7 +592,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="class-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({getSchoolYearName(cls.school_year_id)})
@@ -607,7 +607,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectTrigger id="school-year-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYears.map(year => (
                     <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
@@ -665,7 +665,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-professor" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner un professeur" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {filteredProfessors.map(prof => (
                       <SelectItem key={prof.id} value={prof.id}>
                         {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id)})`}
@@ -680,7 +680,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-subject" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner une matière" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {filteredSubjects.map(sub => (
                       <SelectItem key={sub.id} value={sub.id}>
                         {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}
@@ -695,7 +695,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-class" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner une classe" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {filteredClasses.map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
                         {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id)})`}
@@ -710,7 +710,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectTrigger id="edit-school-year" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner l'année scolaire" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {schoolYears.map(year => (
                       <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                     ))}
@@ -724,7 +724,7 @@ const ProfessorSubjectAssignmentPage = () => {
                     <SelectTrigger id="edit-assignment-establishment" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                       {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
                       {filteredEstablishments.map(est => (
                         <SelectItem key={est.id} value={est.id}>

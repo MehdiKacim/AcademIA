@@ -409,7 +409,7 @@ const PedagogicalManagementPage = () => {
                   <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile">
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
                 <Command>
                   <CommandInput
                     placeholder="Rechercher par nom d'utilisateur..."
@@ -490,7 +490,7 @@ const PedagogicalManagementPage = () => {
                     <SelectTrigger id="class-to-assign" className="w-full rounded-android-tile">
                       <SelectValue placeholder="Sélectionner une classe" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-android-tile">
+                    <SelectContent className="z-[9999] rounded-android-tile">
                       {classesToDisplayForAssignment
                         .filter(cls => !enrollmentEstablishmentId || cls.establishment_id === enrollmentEstablishmentId)
                         .map(cls => (
@@ -509,7 +509,7 @@ const PedagogicalManagementPage = () => {
                       <SelectTrigger id="enrollment-school-year" className="w-full rounded-android-tile">
                         <SelectValue placeholder="Sélectionner l'année scolaire" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-android-tile">
+                      <SelectContent className="z-[9999] rounded-android-tile">
                         {schoolYearsOptions.map(year => (
                           <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                         ))}
@@ -523,7 +523,7 @@ const PedagogicalManagementPage = () => {
                         <SelectTrigger id="enrollment-establishment" className="w-full rounded-android-tile">
                           <SelectValue placeholder="Sélectionner un établissement" />
                         </SelectTrigger>
-                        <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                           {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
                           {establishmentsToDisplayForAssignment.map(est => (
                             <SelectItem key={est.id} value={est.id}>
@@ -575,7 +575,7 @@ const PedagogicalManagementPage = () => {
                   <SelectTrigger id="establishment-filter" className="rounded-android-tile">
                     <SelectValue placeholder="Tous les établissements" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     <SelectItem value="all">Tous les établissements</SelectItem>
                     {establishmentsToDisplayForFilter.map(est => (
                       <SelectItem key={est.id} value={est.id}>
@@ -602,7 +602,7 @@ const PedagogicalManagementPage = () => {
                 <SelectTrigger id="class-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les classes" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {classesToDisplayForFilter
                     .filter(cls => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cls.establishment_id === selectedEstablishmentFilter)
                     .map(cls => (
@@ -619,7 +619,7 @@ const PedagogicalManagementPage = () => {
                 <SelectTrigger id="school-year-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYearsOptions.map(year => (
                     <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>

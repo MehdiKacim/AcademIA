@@ -250,6 +250,7 @@ const CurriculumManagementPage = () => {
               placeholder="Ex: Cursus Scientifique"
               value={newCurriculumName}
               onChange={(e) => setNewCurriculumName(e.target.value)}
+              required
             />
             {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur'].includes(currentRole || ''))) && (
               <>
@@ -258,7 +259,7 @@ const CurriculumManagementPage = () => {
                   <SelectTrigger id="new-curriculum-establishment" className="rounded-android-tile">
                     <SelectValue placeholder="Sélectionner un établissement" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
                     {establishmentsToDisplay.map(est => (
                       <SelectItem key={est.id} value={est.id}>
