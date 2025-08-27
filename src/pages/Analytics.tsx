@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { loadCourses, loadCurricula, loadClasses, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
+import { loadCourses, loadCurricula, loadClasses, loadEstablishments, getCurriculumName, getEstablishmentName } from "@/lib/courseData"; // Import getCurriculumName, getEstablishmentName
 import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData";
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
@@ -66,8 +66,7 @@ const Analytics = () => {
     }
   }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id]);
 
-  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed local getCurriculumName and getEstablishmentName declarations. Now imported.
 
   const handleSendMessageToUser = (userId: string) => {
     navigate(`/messages?contactId=${userId}`);
@@ -152,7 +151,7 @@ const Analytics = () => {
                 <SelectTrigger id="establishment-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Tous les établissements" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                   <SelectItem value="all">Tous les établissements</SelectItem>
                   {establishments.filter(est => 
                     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
@@ -174,7 +173,7 @@ const Analytics = () => {
               <SelectTrigger id="select-curriculum" className="rounded-android-tile">
                 <SelectValue placeholder="Tous les cursus" />
               </SelectTrigger>
-              <SelectContent className="rounded-android-tile">
+              <SelectContent className="rounded-android-tile z-[9999]">
                 <SelectItem value="all">Tous les cursus</SelectItem>
                 {curricula
                   .filter(cur => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cur.establishment_id === selectedEstablishmentFilter)
@@ -192,7 +191,7 @@ const Analytics = () => {
               <SelectTrigger id="select-class" className="rounded-android-tile">
                 <SelectValue placeholder="Toutes les classes" />
               </SelectTrigger>
-              <SelectContent className="rounded-android-tile">
+              <SelectContent className="rounded-android-tile z-[9999]">
                 <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes
                   .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)

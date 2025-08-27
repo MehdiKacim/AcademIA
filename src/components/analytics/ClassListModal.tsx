@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Class, Curriculum, Establishment } from "@/lib/dataModels";
 import { Users, LayoutList, Building2 } from "lucide-react";
+import { getCurriculumName, getEstablishmentName } from '@/lib/courseData'; // Import getCurriculumName, getEstablishmentName
 
 interface ClassListModalProps {
   isOpen: boolean;
@@ -22,8 +23,7 @@ interface ClassListModalProps {
 }
 
 const ClassListModal = ({ isOpen, onClose, title, description, classes, curricula, establishments }: ClassListModalProps) => {
-  const getCurriculumName = (id: string) => curricula.find(c => c.id === id)?.name || 'N/A';
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed local getCurriculumName and getEstablishmentName declarations. Now imported.
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -49,11 +49,11 @@ const ClassListModal = ({ isOpen, onClose, title, description, classes, curricul
                       <div className="flex-grow">
                         <p className="font-medium">{cls.name}</p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <LayoutList className="h-3 w-3" /> {getCurriculumName(cls.curriculum_id)}
+                          <LayoutList className="h-3 w-3" /> {getCurriculumName(cls.curriculum_id, curricula)}
                         </p>
                         {cls.establishment_id && (
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Building2 className="h-3 w-3" /> {getEstablishmentName(cls.establishment_id)}
+                            <Building2 className="h-3 w-3" /> {getEstablishmentName(cls.establishment_id, establishments)}
                           </p>
                         )}
                         {cls.school_year_name && (

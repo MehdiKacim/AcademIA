@@ -20,7 +20,7 @@ import {
 } from 'recharts';
 import { Profile, Class, Curriculum, StudentCourseProgress, StudentClassEnrollment } from "@/lib/dataModels"; // Import StudentClassEnrollment
 import { getUserFullName, getAllStudentClassEnrollments } from "@/lib/studentData"; // Import getAllStudentClassEnrollments
-import { loadClasses, loadCurricula } from "@/lib/courseData"; // Import loadClasses, loadCurricula
+import { loadClasses, loadCurricula, getClassName, getCurriculumName, getEstablishmentName } from "@/lib/courseData"; // Import getClassName, getCurriculumName, getEstablishmentName
 import { Button } from "@/components/ui/button"; // Import Button
 import { Mail } from "lucide-react"; // Import Mail icon
 import { showError } from "@/utils/toast"; // Import showError
@@ -38,8 +38,7 @@ interface TutorAnalyticsSectionProps {
 }
 
 const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allClasses, allCurricula, view, selectedClassId, selectedCurriculumId, selectedEstablishmentId, onSendMessageToUser }: TutorAnalyticsSectionProps) => {
-  const getClassName = (id?: string) => allClasses.find(c => c.id === id)?.name || 'N/A';
-  const getCurriculumName = (id?: string) => allCurricula.find(c => c.id === id)?.name || 'N/A';
+  // Removed local getClassName, getCurriculumName, getEstablishmentName declarations. Now imported.
 
   // Filter students based on selected class or curriculum
   const filteredStudentProfiles = React.useMemo(() => {

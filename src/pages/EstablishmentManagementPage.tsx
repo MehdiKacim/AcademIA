@@ -17,6 +17,7 @@ import {
   addEstablishmentToStorage,
   updateEstablishmentInStorage,
   deleteEstablishmentFromStorage,
+  getEstablishmentName, // Import getEstablishmentName
 } from '@/lib/courseData'; // Will add these functions to courseData.ts
 import {
   getAllProfiles,

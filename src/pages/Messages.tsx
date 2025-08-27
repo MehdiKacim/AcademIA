@@ -15,7 +15,7 @@ import { getRecentConversations, getUnreadMessageCount, getArchivedConversations
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from '@/lib/utils';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { loadCurricula, loadClasses, loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+import { loadCurricula, loadClasses, loadEstablishments, getEstablishmentName, getCurriculumName, getClassName } from '@/lib/courseData'; // Import getEstablishmentName, getCurriculumName, getClassName
 
 // Helper to get the current school year
 const getCurrentSchoolYear = () => {
@@ -207,9 +207,7 @@ const Messages = () => {
     }
   };
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
-  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
-  const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
+  // Removed local getEstablishmentName, getCurriculumName, getClassName declarations. Now imported.
 
   const availableContactsForNewChat = useMemo(() => {
     if (!currentUserProfile) return [];
@@ -345,7 +343,7 @@ const Messages = () => {
                       <SelectTrigger id="select-establishment" className="rounded-android-tile">
                         <SelectValue placeholder="Tous les établissements" />
                       </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                         <SelectItem value="all">Tous les établissements</SelectItem>
                         {establishments.filter(est => 
                           currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
@@ -369,7 +367,7 @@ const Messages = () => {
                         <SelectTrigger id="select-curriculum" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <SelectValue placeholder="Tous les cursus" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+                        <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                           <SelectItem value="all">Tous les cursus</SelectItem>
                           {curricula
                             .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === 'all' || cur.establishment_id === selectedEstablishmentId)
@@ -387,7 +385,7 @@ const Messages = () => {
                         <SelectTrigger id="select-class" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                           <SelectValue placeholder="Toutes les classes" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+                        <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                           <SelectItem value="all">Toutes les classes</SelectItem>
                           {classes
                             .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
@@ -422,7 +420,7 @@ const Messages = () => {
                       <SelectTrigger id="new-chat-select-contact" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                         <SelectValue placeholder="Sélectionner un contact" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+                      <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                         {availableContactsForNewChat.map(profile => (
                           <SelectItem key={profile.id} value={profile.id}>
                             {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'} ({getEstablishmentName(profile.establishment_id)})
@@ -460,7 +458,7 @@ const Messages = () => {
                 <SelectTrigger id="new-chat-select-student" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <SelectValue placeholder="Sélectionner un contact" />
                 </SelectTrigger>
-                <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+                <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                   {availableContactsForNewChat.length === 0 ? (
                     <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
                   ) : (

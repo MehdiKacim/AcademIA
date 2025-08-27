@@ -29,6 +29,9 @@ import {
   deleteClassFromStorage,
   loadEstablishments, // Re-added loadEstablishments
   loadSchoolYears, // Import loadSchoolYears
+  getEstablishmentName, // Import getEstablishmentName
+  getCurriculumName, // Import getCurriculumName
+  getSchoolYearName, // Import getSchoolYearName
 } from '@/lib/courseData';
 
 // Shadcn UI components for autocomplete
@@ -94,10 +97,7 @@ const ClassManagementPage = () => {
     }
   }, [currentUserProfile, currentRole, establishments]);
 
-  // Helper functions to get names from IDs
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
-  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
-  const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
+  // Removed local getEstablishmentName, getCurriculumName, getSchoolYearName declarations. Now imported.
   
   // --- Class Management ---
   const handleAddClass = async () => {
@@ -368,14 +368,14 @@ const ClassManagementPage = () => {
                   <div className="flex-grow">
                     <p className="font-medium">{cls.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      Cursus: {getCurriculumName(cls.curriculum_id)}
+                      Cursus: {getCurriculumName(cls.curriculum_id, curricula)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Année scolaire: {getSchoolYearName(cls.school_year_id)}
+                      Année scolaire: {getSchoolYearName(cls.school_year_id, schoolYears)}
                     </p>
                     {cls.establishment_id && (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Building2 className="h-3 w-3" /> {getEstablishmentName(cls.establishment_id)}
+                        <Building2 className="h-3 w-3" /> {getEstablishmentName(cls.establishment_id, establishments)}
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">

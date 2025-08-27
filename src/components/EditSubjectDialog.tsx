@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
 import { Subject, Establishment } from "@/lib/dataModels"; // Import Establishment
-import { updateSubjectInStorage } from "@/lib/courseData"; // Removed loadEstablishments
+import { updateSubjectInStorage, getEstablishmentName } from "@/lib/courseData"; // Import getEstablishmentName
 import { useRole } from '@/contexts/RoleContext';
 
 interface EditSubjectDialogProps {

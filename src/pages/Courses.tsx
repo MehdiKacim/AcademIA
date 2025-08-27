@@ -8,7 +8,7 @@ import {
 import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { loadCourses, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
+import { loadCourses, loadEstablishments, getEstablishmentName } from "@/lib/courseData"; // Import getEstablishmentName
 import { BookOpen, Lock, CheckCircle, Search, Building2 } from "lucide-react"; // Import icons
 import { cn } from "@/lib/utils"; // Import cn
 import React, { useState, useMemo, useEffect } from "react"; // Import useState and useMemo
@@ -16,7 +16,7 @@ import { getAllStudentCourseProgress } from "@/lib/studentData"; // Import Supab
 import { Course, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Import types
 import { Progress } from "@/components/ui/progress"; // Import Progress
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-import { Label } from "@/components/ui/label"; // Import Label
+import { Label } from "@/components/ui/label";
 
 const Courses = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -50,7 +50,7 @@ const Courses = () => {
     }
   }, [currentRole, currentUserProfile?.establishment_id]);
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed local getEstablishmentName declaration. Now imported.
 
   const getCoursesForRole = useMemo(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
@@ -67,11 +67,12 @@ const Courses = () => {
       // A more complex join would be needed here (course -> curriculum -> establishment)
       // For now, we'll skip this filter for courses for admin, or assume courses are global.
       // If courses were linked to subjects, and subjects to establishments, we could filter that way.
-      // For simplicity, courses are currently considered global for admin view unless explicitly linked.
+      // For now, we'll assume courses are accessible if the user is in the same establishment.
+      // This will be handled by RLS on the `courses` table based on `subject_id` and `subjects.establishment_id`.
+      return filteredCourses; // RLS will handle the actual filtering
     } else if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
       // For non-admin roles, filter courses by their associated subject's establishment
       filteredCourses = filteredCourses.filter(course => {
-        const subject = establishments.find(est => est.id === currentUserProfile.establishment_id); // This is incorrect, should be subject.establishment_id
         // This logic needs to be refined based on how subjects are linked to courses and establishments.
         // For now, we'll assume courses are accessible if the user is in the same establishment.
         // This will be handled by RLS on the `courses` table based on `subject_id` and `subjects.establishment_id`.
@@ -268,7 +269,7 @@ const Courses = () => {
               <SelectTrigger id="establishment-filter" className="rounded-android-tile">
                 <SelectValue placeholder="Tous les établissements" />
               </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                 <SelectItem value="all">Tous les établissements</SelectItem>
                 {establishments.filter(est => 
                   currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id

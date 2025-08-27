@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses, loadEstablishments } from "@/lib/courseData"; // Re-added loadEstablishments
+import { loadCourses, loadEstablishments, getEstablishmentName } from "@/lib/courseData"; // Import getEstablishmentName
 import { getProfileById, updateProfile, getStudentCourseProgress, upsertStudentCourseProgress, getAllStudentCourseProgress, getUserFullName } from "@/lib/studentData";
 import type { Profile } from "@/lib/dataModels"; // Import Profile as type
 import { Course, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Re-added Establishment type
@@ -73,7 +73,7 @@ const Profile = () => {
     navigate(`/messages?contactId=${userId}`);
   };
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed local getEstablishmentName declaration. Now imported.
 
   if (isLoadingUser) {
     // console.log("[Profile Page] Displaying loading state."); // Removed log
@@ -143,7 +143,7 @@ const Profile = () => {
                   </CardDescription>
                   {currentUserProfile.establishment_id && (
                     <CardDescription className="flex items-center gap-2 text-muted-foreground">
-                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id, establishments)}
                     </CardDescription>
                   )}
                   {currentUserProfile.enrollment_start_date && currentUserProfile.enrollment_end_date && (
@@ -240,7 +240,7 @@ const Profile = () => {
                   </CardDescription>
                   {currentUserProfile.establishment_id && (
                     <CardDescription className="flex items-center gap-2 text-muted-foreground">
-                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id, establishments)}
                     </CardDescription>
                   )}
                 </div>
@@ -337,7 +337,7 @@ const Profile = () => {
                   </CardDescription>
                   {currentUserProfile.establishment_id && (
                     <CardDescription className="flex items-center gap-2 text-muted-foreground">
-                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id, establishments)}
                     </CardDescription>
                   )}
                 </div>
@@ -419,7 +419,7 @@ const Profile = () => {
                   </CardDescription>
                   {currentUserProfile.establishment_id && (
                     <CardDescription className="flex items-center gap-2 text-muted-foreground">
-                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id)}
+                      <Building2 className="h-4 w-4" /> {getEstablishmentName(currentUserProfile.establishment_id, establishments)}
                     </CardDescription>
                   )}
                 </div>

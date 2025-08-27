@@ -760,3 +760,24 @@ export const resetSchoolYears = async () => {
   const { error } = await supabase.from('school_years').delete();
   if (error) {} // console.error("Error resetting school years:", error);
 };
+
+// --- Utility functions to get names by ID ---
+export const getEstablishmentName = (id: string | undefined, establishments: Establishment[]): string => {
+  return establishments.find(e => e.id === id)?.name || 'N/A';
+};
+
+export const getCurriculumName = (id: string | undefined, curricula: Curriculum[]): string => {
+  return curricula.find(c => c.id === id)?.name || 'N/A';
+};
+
+export const getClassName = (id: string | undefined, classes: Class[]): string => {
+  return classes.find(c => c.id === id)?.name || 'N/A';
+};
+
+export const getSchoolYearName = (id: string | undefined, schoolYears: SchoolYear[]): string => {
+  return schoolYears.find(sy => sy.id === id)?.name || 'N/A';
+};
+
+export const getSubjectName = (id: string | undefined, subjects: Subject[]): string => {
+  return subjects.find(s => s.id === id)?.name || 'N/A';
+};

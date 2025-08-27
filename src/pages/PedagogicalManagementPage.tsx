@@ -25,6 +25,10 @@ import {
   loadCurricula,
   loadEstablishments, // Re-added loadEstablishments
   loadSchoolYears,
+  getEstablishmentName, // Import getEstablishmentName
+  getCurriculumName, // Import getCurriculumName
+  getClassName, // Import getClassName
+  getSchoolYearName, // Import getSchoolYearName
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -131,10 +135,7 @@ const PedagogicalManagementPage = () => {
     }
   }, [schoolYears, currentRole, currentUserProfile?.establishment_id]);
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
-  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
-  const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
-  const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
+  // Removed local getEstablishmentName, getCurriculumName, getClassName, getSchoolYearName declarations. Now imported.
   
   const handleRemoveStudentFromClass = async (enrollmentId: string) => {
     if (!currentUserProfile || !['professeur', 'tutor', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) {
@@ -275,7 +276,7 @@ const PedagogicalManagementPage = () => {
 
       if (savedEnrollment) {
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
-        showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign)} pour ${getSchoolYearName(enrollmentSchoolYearId)} (${getEstablishmentName(enrollmentEstablishmentId)}) !`); // Changed to schoolYearId and establishmentId
+        showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign, classes)} pour ${getSchoolYearName(enrollmentSchoolYearId, schoolYears)} (${getEstablishmentName(enrollmentEstablishmentId, establishments)}) !`); // Changed to schoolYearId and establishmentId
         handleClearClassAssignmentForm();
       } else {
         showError("Échec de l'inscription de l'élève à la classe.");
@@ -475,7 +476,7 @@ const PedagogicalManagementPage = () => {
                 <p className="text-sm text-muted-foreground">Nom d'utilisateur : @{selectedStudentForClassAssignment.username}</p>
                 {selectedStudentForClassAssignment.establishment_id && (
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Building2 className="h-3 w-3" /> {getEstablishmentName(selectedStudentForClassAssignment.establishment_id)}
+                    <Building2 className="h-3 w-3" /> {getEstablishmentName(selectedStudentForClassAssignment.establishment_id, establishments)}
                   </p>
                 )}
                 {selectedStudentForClassAssignment.enrollment_start_date && selectedStudentForClassAssignment.enrollment_end_date && (
@@ -495,7 +496,7 @@ const PedagogicalManagementPage = () => {
                         .filter(cls => !enrollmentEstablishmentId || cls.establishment_id === enrollmentEstablishmentId)
                         .map(cls => (
                           <SelectItem key={cls.id} value={cls.id}>
-                            {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
+                            {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -607,7 +608,7 @@ const PedagogicalManagementPage = () => {
                     .filter(cls => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cls.establishment_id === selectedEstablishmentFilter)
                     .map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)}
+                        {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -647,7 +648,7 @@ const PedagogicalManagementPage = () => {
                       <p className="text-sm text-muted-foreground">{profile.email}</p>
                       {profile.establishment_id && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Building2 className="h-3 w-3" /> {getEstablishmentName(profile.establishment_id)}
+                          <Building2 className="h-3 w-3" /> {getEstablishmentName(profile.establishment_id, establishments)}
                         </p>
                       )}
                       {profile.enrollment_start_date && profile.enrollment_end_date && (
@@ -657,7 +658,7 @@ const PedagogicalManagementPage = () => {
                       )}
                       {currentClass ? (
                         <p className="text-xs text-muted-foreground">
-                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id)}) - {getSchoolYearName(currentClass.school_year_id)}
+                          Classe: {currentClass.name} ({getCurriculumName(currentClass.curriculum_id, curricula)}) - {getSchoolYearName(currentClass.school_year_id, schoolYears)}
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground italic">Non affecté à une classe pour l'année scolaire en cours</p>

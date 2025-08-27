@@ -15,7 +15,7 @@ import { Profile } from "@/lib/dataModels"; // Removed Establishment import
 import { updateProfile } from "@/lib/studentData"; // Import updateProfile
 import { supabase } from "@/integrations/supabase/client"; // Import Supabase client
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-// Removed loadEstablishments
+import { loadEstablishments, getEstablishmentName } from '@/lib/courseData'; // Import loadEstablishments and getEstablishmentName
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
 import { CalendarDays } from 'lucide-react';
+import { Establishment } from '@/lib/dataModels'; // Import Establishment type
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -40,11 +41,11 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
   // Removed establishmentId state
   const [enrollmentStartDate, setEnrollmentStartDate] = useState<Date | undefined>(currentUserProfile.enrollment_start_date ? parseISO(currentUserProfile.enrollment_start_date) : undefined);
   const [enrollmentEndDate, setEnrollmentEndDate] = useState<Date | undefined>(currentUserProfile.enrollment_end_date ? parseISO(currentUserProfile.enrollment_end_date) : undefined);
-  // Removed establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
 
   useEffect(() => {
     const fetchEstablishments = async () => {
-      // Removed loadEstablishments
+      setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
     };
     fetchEstablishments();
   }, []);
@@ -199,7 +200,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                         {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                       <Calendar
                         mode="single"
                         selected={enrollmentStartDate}
@@ -227,7 +228,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                         {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                       <Calendar
                         mode="single"
                         selected={enrollmentEndDate}

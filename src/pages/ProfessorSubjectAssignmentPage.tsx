@@ -27,6 +27,11 @@ import {
   deleteProfessorSubjectAssignmentFromStorage,
   loadEstablishments, // Re-added loadEstablishments
   loadCurricula,
+  getEstablishmentName, // Import getEstablishmentName
+  getCurriculumName, // Import getCurriculumName
+  getClassName, // Import getClassName
+  getSchoolYearName, // Import getSchoolYearName
+  getSubjectName, // Import getSubjectName
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -122,11 +127,7 @@ const ProfessorSubjectAssignmentPage = () => {
   }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id, schoolYears]);
 
   const getProfessorName = (id?: string) => professors.find(p => p.id === id)?.first_name + ' ' + professors.find(p => p.id === id)?.last_name || 'N/A';
-  const getSubjectName = (id?: string) => subjects.find(s => s.id === id)?.name || 'N/A';
-  const getClassName = (id?: string) => classes.find(c => c.id === id)?.name || 'N/A';
-  const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
-  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
+  // Removed local getSubjectName, getClassName, getSchoolYearName, getEstablishmentName, getCurriculumName declarations. Now imported.
 
   // --- New Assignment Logic ---
   const handleAddAssignment = async () => {
@@ -377,10 +378,10 @@ const ProfessorSubjectAssignmentPage = () => {
       const lowerCaseQuery = assignmentSearchQuery.toLowerCase();
       filtered = filtered.filter(a =>
         getProfessorName(a.professor_id).toLowerCase().includes(lowerCaseQuery) ||
-        getSubjectName(a.subject_id).toLowerCase().includes(lowerCaseQuery) ||
-        getClassName(a.class_id).toLowerCase().includes(lowerCaseQuery) ||
-        getSchoolYearName(a.school_year_id).toLowerCase().includes(lowerCaseQuery) ||
-        getEstablishmentName(a.establishment_id).toLowerCase().includes(lowerCaseQuery)
+        getSubjectName(a.subject_id, subjects).toLowerCase().includes(lowerCaseQuery) ||
+        getClassName(a.class_id, classes).toLowerCase().includes(lowerCaseQuery) ||
+        getSchoolYearName(a.school_year_id, schoolYears).toLowerCase().includes(lowerCaseQuery) ||
+        getEstablishmentName(a.establishment_id, establishments).toLowerCase().includes(lowerCaseQuery)
       );
     }
     return filtered;
@@ -444,7 +445,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredProfessors.map(prof => (
                     <SelectItem key={prof.id} value={prof.id}>
-                      {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id)})`}
+                      {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id, establishments)})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -459,7 +460,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredSubjects.map(sub => (
                     <SelectItem key={sub.id} value={sub.id}>
-                      {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}
+                      {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id, establishments)})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -474,7 +475,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id)})`}
+                      {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id, establishments)})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -595,7 +596,7 @@ const ProfessorSubjectAssignmentPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   {filteredClasses.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getSchoolYearName(cls.school_year_id)})
+                      {cls.name} ({getSchoolYearName(cls.school_year_id, schoolYears)})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -624,11 +625,11 @@ const ProfessorSubjectAssignmentPage = () => {
                 <Card key={assignment.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <div className="flex-grow">
                     <p className="font-medium">
-                      <span className="text-primary">{getProfessorName(assignment.professor_id)}</span> enseigne <span className="text-primary">{getSubjectName(assignment.subject_id)}</span> à la classe <span className="text-primary">{getClassName(assignment.class_id)}</span> pour l'année <span className="text-primary">{getSchoolYearName(assignment.school_year_id)}</span>.
+                      <span className="text-primary">{getProfessorName(assignment.professor_id)}</span> enseigne <span className="text-primary">{getSubjectName(assignment.subject_id, subjects)}</span> à la classe <span className="text-primary">{getClassName(assignment.class_id, classes)}</span> pour l'année <span className="text-primary">{getSchoolYearName(assignment.school_year_id, schoolYears)}</span>.
                     </p>
                     {assignment.establishment_id && (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Building2 className="h-3 w-3" /> {getEstablishmentName(assignment.establishment_id)}
+                        <Building2 className="h-3 w-3" /> {getEstablishmentName(assignment.establishment_id, establishments)}
                       </p>
                     )}
                   </div>
@@ -668,7 +669,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {filteredProfessors.map(prof => (
                       <SelectItem key={prof.id} value={prof.id}>
-                        {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id)})`}
+                        {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id, establishments)})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -683,7 +684,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {filteredSubjects.map(sub => (
                       <SelectItem key={sub.id} value={sub.id}>
-                        {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}
+                        {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id, establishments)})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -698,7 +699,7 @@ const ProfessorSubjectAssignmentPage = () => {
                   <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     {filteredClasses.map(cls => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getSchoolYearName(cls.school_year_id)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id)})`}
+                        {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id, establishments)})`}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
 import { Class, Curriculum, SchoolYear, Establishment } from "@/lib/dataModels"; // Import Establishment
-import { updateClassInStorage, loadCurricula, loadSchoolYears } from "@/lib/courseData"; // Removed loadEstablishments, getEstablishmentAddress, import loadSchoolYears
+import { updateClassInStorage, loadCurricula, loadSchoolYears, getEstablishmentName, getCurriculumName, getSchoolYearName } from "@/lib/courseData"; // Import getEstablishmentName, getCurriculumName, getSchoolYearName
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface EditClassDialogProps {
@@ -43,9 +43,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave, establishments,
     }
   }, [isOpen, classToEdit]);
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
-  const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
-  const getSchoolYearName = (id?: string) => schoolYears.find(sy => sy.id === id)?.name || 'N/A';
+  // Removed local getEstablishmentName, getCurriculumName, getSchoolYearName declarations. Now imported.
 
   const handleSave = async () => {
     if (!currentUserProfile || !['professeur', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) {

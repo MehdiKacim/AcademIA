@@ -18,6 +18,7 @@ import {
   updateSubjectInStorage,
   deleteSubjectFromStorage,
   loadEstablishments, // Re-added loadEstablishments
+  getEstablishmentName, // Import getEstablishmentName
 } from '@/lib/courseData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
@@ -55,7 +56,7 @@ const SubjectManagementPage = () => {
     }
   }, [currentUserProfile, currentRole, establishments]);
 
-  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
+  // Removed local getEstablishmentName declaration. Now imported.
 
   const handleAddSubject = async () => {
     if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
@@ -240,7 +241,7 @@ const SubjectManagementPage = () => {
             ) : (
               subjectsToDisplay.map(sub => (
                 <Card key={sub.id} className="p-3 flex items-center justify-between border rounded-android-tile bg-background">
-                  <span>{sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}</span>
+                  <span>{sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id, establishments)})`}</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditSubject(sub)}>
                       <Edit className="h-4 w-4" />

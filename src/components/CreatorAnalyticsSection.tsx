@@ -21,6 +21,7 @@ import {
 import { Course, Profile, Class, Curriculum, StudentCourseProgress, StudentClassEnrollment } from '@/lib/dataModels'; // Import StudentClassEnrollment
 import { getAllStudentClassEnrollments } from '@/lib/studentData'; // Import getAllStudentClassEnrollments
 import { showError } from "@/utils/toast"; // Import showError
+import { getEstablishmentName } from '@/lib/courseData'; // Import getEstablishmentName
 
 interface CreatorAnalyticsSectionProps {
   view: string | null;
@@ -37,14 +38,16 @@ interface CreatorAnalyticsSectionProps {
 
 const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, selectedEstablishmentId, selectedCourseId, allCourses, allProfiles, allStudentCourseProgresses, allClasses, allCurricula }: CreatorAnalyticsSectionProps) => { // Added selectedEstablishmentId
 
+  // Removed local getEstablishmentName declaration. Now imported.
+
   // Filter courses based on selected curriculum, establishment, AND specific course ID
   const filteredCourses = React.useMemo(() => {
     let coursesToFilter = allCourses;
 
     if (selectedEstablishmentId) {
-      // Filter courses by establishment via their associated subjects
-      const subjectsInEstablishment = allCurricula.filter(c => c.establishment_id === selectedEstablishmentId);
-      const courseIdsInEstablishment = new Set(subjectsInEstablishment.flatMap(c => c.course_ids));
+      // Filter courses by establishment via their associated curricula
+      const curriculaInEstablishment = allCurricula.filter(c => c.establishment_id === selectedEstablishmentId);
+      const courseIdsInEstablishment = new Set(curriculaInEstablishment.flatMap(c => c.course_ids));
       coursesToFilter = coursesToFilter.filter(course => courseIdsInEstablishment.has(course.id));
     }
 
