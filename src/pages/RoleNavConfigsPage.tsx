@@ -335,7 +335,7 @@ const RoleNavConfigsPage = () => {
         }
       });
       setAllConfiguredItemsFlat(allConfiguredItemsFlatList);
-      console.log("[RoleNavConfigsPage] allConfiguredItemsFlatList after fetch:", allConfiguredItemsFlatList);
+      // console.log("[RoleNavConfigsPage] allConfiguredItemsFlatList after fetch:", allConfiguredItemsFlatList);
 
 
       const groupedByParent = new Map<string | null, NavItem[]>();
@@ -399,7 +399,7 @@ const RoleNavConfigsPage = () => {
           showSuccess("Configuration de rôle supprimée !");
           await fetchAndStructureNavItems();
         } catch (error: any) {
-          console.error("Error deleting role nav item config:", error);
+          // console.error("Error deleting role nav item config:", error);
           showError(`Erreur lors de la suppression de la configuration de rôle: ${error.message}`);
         }
       }
@@ -515,7 +515,7 @@ const RoleNavConfigsPage = () => {
 
       await fetchAndStructureNavItems();
     } catch (error: any) {
-      console.error("Error during drag and drop:", error);
+      // console.error("Error during drag and drop:", error);
       showError(`Erreur lors du glisser-déposer: ${error.message}`);
     } finally {
       setActiveDragItem(null);
@@ -579,7 +579,7 @@ const RoleNavConfigsPage = () => {
         showSuccess(`Navigation par défaut réinitialisée pour le rôle '${selectedRoleFilter}' !`);
         await fetchAndStructureNavItems();
       } catch (error: any) {
-        console.error("Error resetting role navigation defaults:", error);
+        // console.error("Error resetting role navigation defaults:", error);
         showError(`Erreur lors de la réinitialisation de la navigation: ${error.message}`);
       }
     }
