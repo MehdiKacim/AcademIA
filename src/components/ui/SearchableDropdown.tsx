@@ -56,6 +56,7 @@ const SearchableDropdown = React.forwardRef<
     const selectedOption = options.find((option) => option.id === value);
 
     const handleSelect = (currentValue: string) => {
+      console.log("SearchableDropdown: handleSelect called with", currentValue); // NEW LOG
       if (currentValue === value) {
         // If the clicked item is already selected, just close the popover.
         setOpen(false);
@@ -107,7 +108,10 @@ const SearchableDropdown = React.forwardRef<
                     <CommandItem
                       key={option.id}
                       value={option.label} // Search by label
-                      onSelect={() => handleSelect(option.id)}
+                      onSelect={() => {
+                        console.log("CommandItem: onSelect fired for", option.label, "ID:", option.id); // NEW LOG
+                        handleSelect(option.id);
+                      }}
                       className="pointer-events-auto" // Ensure it's clickable
                     >
                       <Check

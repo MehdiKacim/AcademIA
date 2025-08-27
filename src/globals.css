@@ -84,6 +84,7 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
+    /* REMOVED: -webkit-user-select:none;-moz-user-select:none;user-select:none; */
   }
 
   html, body {
