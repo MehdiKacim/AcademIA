@@ -340,7 +340,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       {/* Dynamic Submenu Bar for Desktop */}
       {!isMobile && currentUserProfile && (
         <DesktopImmersiveSubmenu
-          ref={submenuRef} // Attach ref to submenu
           parentItem={activeDesktopSubmenuParent}
           onClose={() => setActiveDesktopSubmenuParent(null)}
           onItemClick={handleNavItemClick}

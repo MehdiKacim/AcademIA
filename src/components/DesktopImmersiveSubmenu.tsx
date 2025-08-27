@@ -66,7 +66,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="fixed top-[64px] left-0 right-0 z-40 hidden md:flex flex-col h-56 px-4 py-3 backdrop-blur-lg bg-background/80 shadow-lg overflow-hidden"
         >
-          <div className="flex items-center justify-between pb-2 mb-4"> {/* Removed border-b border-border, changed pb-3 to pb-2 */}
+          <div className="flex items-center justify-between pb-2 mb-4">
             <div className="flex items-center gap-3">
               {showBackButton && (
                 <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
@@ -102,20 +102,22 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
                   )}
                   target={item.is_external ? "_blank" : undefined}
                 >
-                  <div className="icon-container rounded-lg mb-2">
-                    <IconComponent className="h-6 w-6" />
-                  </div>
-                  <span className="title text-base font-medium line-clamp-2">{item.label}</span>
-                  {item.description && (
-                    <span className="subtitle text-xs line-clamp-2">{item.description}</span> {/* Changed text-sm to text-xs */}
-                  )}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
-                      {item.badge}
-                    </span>
-                  )}
-                  {isCategory && <ChevronDown className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />} {/* Added chevron for categories */}
-                  {item.is_external && !isCategory && <ExternalLink className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />} {/* Only show external link icon if not a category */}
+                  <React.Fragment> {/* Wrap children in a Fragment */}
+                    <div className="icon-container rounded-lg mb-2">
+                      <IconComponent className="h-6 w-6" />
+                    </div>
+                    <span className="title text-base font-medium line-clamp-2">{item.label}</span>
+                    {item.description && (
+                      <span className="subtitle text-xs line-clamp-2">{item.description}</span>
+                    )}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
+                        {item.badge}
+                      </span>
+                    )}
+                    {isCategory && <ChevronDown className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />}
+                    {item.is_external && !isCategory && <ExternalLink className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />}
+                  </React.Fragment>
                 </Button>
               );
             })}
