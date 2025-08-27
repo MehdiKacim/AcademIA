@@ -48,18 +48,19 @@ interface MobileNavSheetProps {
   isOpen: boolean;
   onClose: () => void;
   navItems: NavItem[];
-  onOpenTopBarOverlay: (mode: 'search' | 'aia') => void; // Updated prop
+  onOpenGlobalSearch: () => void; // Updated prop
+  onOpenAiAChat: () => void; // New prop
   onOpenAboutModal: () => void;
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
 }
 
-const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenTopBarOverlay, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount }: MobileNavSheetProps) => {
+const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount }: MobileNavSheetProps) => {
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
-  const { openTopBarOverlay } = useCourseChat(); // Get openTopBarOverlay from context
+  const { openChat } = useCourseChat(); // Get openChat from context
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
 
@@ -92,15 +93,15 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenTopBarOverlay, onOpen
     } else if (item.onClick) {
       // Special handling for search and AiA chat actions
       if (item.id === 'nav-global-search') {
-        openTopBarOverlay('search');
+        onOpenGlobalSearch();
       } else if (item.id === 'nav-aia-chat') {
-        openTopBarOverlay('aia');
+        onOpenAiAChat();
       } else {
         item.onClick();
       }
       onClose();
     }
-  }, [navigate, onClose, openTopBarOverlay]);
+  }, [navigate, onClose, onOpenGlobalSearch, onOpenAiAChat]);
 
   const handleBack = useCallback(() => {
     setDrawerNavStack(prevStack => {

@@ -348,9 +348,9 @@ import {
                 )}
                 <div className="flex-grow overflow-y-auto p-4 space-y-4">
                   {currentDrawerItemsToDisplay.length === 0 && searchQuery.trim() !== '' ? (
-                    <p className="text-muted-foreground text-center py-4">Aucun élément trouvé pour "{searchQuery}".</p>
+                    <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément trouvé pour "{searchQuery}".</p>
                   ) : currentDrawerItemsToDisplay.length === 0 && searchQuery.trim() === '' ? (
-                    <p className="text-muted-foreground text-center py-4">Aucun élément de menu configuré pour ce rôle.</p>
+                    <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {currentDrawerItemsToDisplay.map((item) => {
@@ -361,19 +361,20 @@ import {
                         return (
                           <Button
                             key={item.id}
-                            variant="outline"
+                            variant="ghost"
                             className={cn(
-                              "flex flex-col items-center justify-center h-24 w-full text-center p-2",
-                              isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
+                              "android-tile flex-col items-start justify-start h-auto min-h-[80px] text-left w-full",
+                              "rounded-android-tile",
+                              isLinkActive ? "active" : "",
                               "transition-all duration-200 ease-in-out"
                             )}
                             onClick={() => handleDrawerItemClick(item)}
                           >
                             <React.Fragment> {/* Wrap children with Fragment */}
-                              <IconComponent className="h-6 w-6 mb-2" />
-                              <span className="text-xs font-medium line-clamp-2">{item.label}</span>
+                              <IconComponent className="h-6 w-6" />
+                              <span className="title text-base font-medium line-clamp-2">{item.label}</span>
                               {item.badge !== undefined && item.badge > 0 && (
-                                <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
                                   {item.badge}
                                 </span>
                               )}

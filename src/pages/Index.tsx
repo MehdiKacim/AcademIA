@@ -53,7 +53,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   };
 
   const { currentUserProfile, currentRole } = useRole();
-  const { openTopBarOverlay } = useCourseChat(); // Get openTopBarOverlay from context
+  const { openChat } = useCourseChat(); // Get openChat from context
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -292,7 +292,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               <BotMessageSquare className="w-24 h-24 text-primary" />
             </div>
             <div>
-              <Button size="lg" onClick={() => openTopBarOverlay('aia')}> {/* Updated call */}
+              <Button size="lg" onClick={() => openChat()}> {/* Updated call */}
                 Parler à AiA
               </Button>
             </div>

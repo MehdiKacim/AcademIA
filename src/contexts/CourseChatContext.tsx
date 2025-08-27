@@ -6,12 +6,11 @@ interface CourseChatContextType {
   currentModuleTitle: string | null;
   setCourseContext: (id: string | null, title: string | null) => void;
   setModuleContext: (title: string | null) => void;
-  isTopBarOverlayOpen: boolean; // Renamed from isChatOpen
-  openTopBarOverlay: (mode: 'search' | 'aia', initialMessage?: string) => void; // Renamed from openChat, added mode
-  closeTopBarOverlay: () => void; // Renamed from closeChat
+  isChatOpen: boolean; // Renamed back to isChatOpen
+  openChat: (initialMessage?: string) => void; // Renamed back to openChat
+  closeChat: () => void; // Renamed back to closeChat
   initialChatMessage: string | null;
   setInitialChatMessage: (message: string | null) => void;
-  activeOverlayTab: 'search' | 'aia'; // New: to control which tab is active
 }
 
 const CourseChatContext = createContext<CourseChatContextType | undefined>(undefined);
@@ -20,9 +19,8 @@ export const CourseChatProvider = ({ children }: { children: ReactNode }) => {
   const [currentCourseId, setCurrentCourseId] = useState<string | null>(null);
   const [currentCourseTitle, setCurrentCourseTitle] = useState<string | null>(null);
   const [currentModuleTitle, setCurrentModuleTitle] = useState<string | null>(null);
-  const [isTopBarOverlayOpen, setIsTopBarOverlayOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false); // Renamed back
   const [initialChatMessage, setInitialChatMessage] = useState<string | null>(null);
-  const [activeOverlayTab, setActiveOverlayTab] = useState<'search' | 'aia'>('search'); // Default to search
 
   const setCourseContext = (id: string | null, title: string | null) => {
     setCurrentCourseId(id);
@@ -36,18 +34,17 @@ export const CourseChatProvider = ({ children }: { children: ReactNode }) => {
     setCurrentModuleTitle(title);
   };
 
-  const openTopBarOverlay = (mode: 'search' | 'aia', message?: string) => {
-    setActiveOverlayTab(mode);
+  const openChat = (message?: string) => { // Renamed back
     if (message) {
       setInitialChatMessage(message);
     } else {
       setInitialChatMessage(null);
     }
-    setIsTopBarOverlayOpen(true);
+    setIsChatOpen(true);
   };
 
-  const closeTopBarOverlay = () => {
-    setIsTopBarOverlayOpen(false);
+  const closeChat = () => { // Renamed back
+    setIsChatOpen(false);
     setInitialChatMessage(null);
   };
 
@@ -58,12 +55,11 @@ export const CourseChatProvider = ({ children }: { children: ReactNode }) => {
       currentModuleTitle,
       setCourseContext,
       setModuleContext,
-      isTopBarOverlayOpen,
-      openTopBarOverlay,
-      closeTopBarOverlay,
+      isChatOpen,
+      openChat,
+      closeChat,
       initialChatMessage,
       setInitialChatMessage,
-      activeOverlayTab,
     }}>
       {children}
     </CourseChatContext.Provider>
