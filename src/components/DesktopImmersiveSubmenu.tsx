@@ -54,7 +54,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
   const currentChildrenToDisplay = currentDisplayItem.children || [];
   const showBackButton = currentSubmenuStack.length > 1;
 
-  const currentParentIconComponent = currentDisplayItem.icon_name ? (iconMap[currentDisplayItem.icon_name] || Info) : Info;
+  const CurrentParentIconComponent = currentDisplayItem.icon_name ? (iconMap[currentDisplayItem.icon_name] || Info) : Info;
 
   return (
     <AnimatePresence>
@@ -74,7 +74,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
                   <span className="sr-only">Retour</span>
                 </Button>
               )}
-              <currentParentIconComponent className="h-6 w-6 text-primary" />
+              <CurrentParentIconComponent className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">{currentDisplayItem.label}</h2>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
