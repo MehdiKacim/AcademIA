@@ -20,29 +20,19 @@ import {
 } from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import GlobalSearchOverlay from "@/components/GlobalSearchOverlay"; // Changed import name back
+import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem, Profile } from "@/lib/dataModels";
-// Removed AboutModal import
-import MobileNavSheet from "@/components/MobileNavSheet";
+import NavSheet from "@/components/NavSheet"; // Updated import name
 import { useSwipeable } from 'react-swipeable';
-import { motion, AnimatePresence } from 'framer-motion'; // Import motion and AnimatePresence
-import AiAPersistentChat from "@/components/AiAPersistentChat"; // Import AiAPersistentChat
-import {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuContent,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
-} from "@/components/ui/navigation-menu";
+import { motion, AnimatePresence } from 'framer-motion';
+import AiAPersistentChat from "@/components/AiAPersistentChat";
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
-  onInitiateThemeChange: (newTheme: string) => void; // New prop
+  onInitiateThemeChange: (newTheme: string) => void;
 }
 
 // Map icon_name strings to Lucide React components
@@ -50,107 +40,43 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
 };
 
-// ListItem component for NavigationMenuContent
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a"> & { icon?: React.ElementType; onClick?: () => void; target?: string }
->(({ className, title, children, icon: Icon, onClick, target, ...props }, ref) => {
-  const content = (
-    <div className="text-sm font-medium leading-none flex items-center gap-2">
-      {Icon && <Icon className="h-4 w-4 text-primary" />}
-      {title}
-    </div>
-  );
-
-  const description = children && (
-    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-      {children}
-    </p>
-  );
-
-  const commonClasses = cn(
-    "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-    className
-  );
-
-  if (onClick) {
-    return (
-      <li>
-        <Button
-          variant="ghost"
-          className={cn(commonClasses, "h-auto w-full justify-start text-left")}
-          onClick={onClick}
-          ref={ref as any} // Cast ref for Button
-          {...props}
-        >
-          {content}
-          {description}
-        </Button>
-      </li>
-    );
-  }
-
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={commonClasses}
-          target={target} // Pass target prop
-          {...props}
-        >
-          {content}
-          {description}
-        </a>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = "ListItem";
-
-
 const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
-  const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole(); // Removed unreadNotificationsCount
-  const { isChatOpen, openChat, closeChat } = useCourseChat(); // Updated useCourseChat
-  const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false); // New state for GlobalSearchOverlay
+  const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole();
+  const { isChatOpen, openChat, closeChat } = useCourseChat();
+  const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  // Removed isAuthModalOpen state
-  // Removed isAboutModalOpen state
   const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false);
+  const [isDesktopImmersiveNavOpen, setIsDesktopImmersiveNavOpen] = useState(false); // New state
+  const [desktopImmersiveNavParent, setDesktopImmersiveNavParent] = useState<NavItem | null>(null); // New state
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Removed desktopNavStack, isDesktopOverlayOpen, isDesktopMenuVisible states and their related logic
 
   // Helper function to inject onClick handlers for specific action items
   const injectActionHandlers = useCallback((items: NavItem[]): NavItem[] => {
     return items.map(item => {
       let newItem = { ...item };
       if (newItem.id === 'nav-global-search') {
-        newItem.onClick = () => setIsGlobalSearchOverlayOpen(true); // Open GlobalSearchOverlay
+        newItem.onClick = () => setIsGlobalSearchOverlayOpen(true);
       } else if (newItem.id === 'nav-aia-chat') {
-        newItem.onClick = () => openChat(); // Open AiA persistent chat
+        newItem.onClick = () => openChat();
       }
-      // For 'nav-about', it's now a route, so no onClick needed here.
       if (newItem.children && newItem.children.length > 0) {
         newItem.children = injectActionHandlers(newItem.children);
       }
       return newItem;
     });
-  }, [setIsGlobalSearchOverlayOpen, openChat]); // Add dependencies
+  }, [setIsGlobalSearchOverlayOpen, openChat]);
 
   const fullNavTreeWithActions = React.useMemo((): NavItem[] => {
-    // Pass unreadMessages to loadNavItems
     const updatedNavItems = navItems.map(item => {
       if (item.route === '/messages') {
         return { ...item, badge: unreadMessages };
       }
-      // Removed badge for notifications
       return item;
     });
     return injectActionHandlers(updatedNavItems);
-  }, [navItems, injectActionHandlers, unreadMessages]); // Removed unreadNotificationsCount from dependencies
+  }, [navItems, injectActionHandlers, unreadMessages]);
 
   useEffect(() => {
     if (currentUserProfile && navItems.length > 0) {
@@ -166,8 +92,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     navigate("/");
   };
 
-  // Removed handleAuthSuccess
-
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const isModifierPressed = event.ctrlKey || event.metaKey;
 
@@ -176,7 +100,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       setIsAdminModalOpen(true);
     } else if (currentUserProfile && isModifierPressed && event.key === 'f') {
       event.preventDefault();
-      setIsGlobalSearchOverlayOpen(true); // Open GlobalSearchOverlay
+      setIsGlobalSearchOverlayOpen(true);
     }
   }, [currentUserProfile, setIsAdminModalOpen, setIsGlobalSearchOverlayOpen]);
 
@@ -235,12 +159,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     };
   }, [currentUserProfile?.id]);
 
-  const headerNavItems = fullNavTreeWithActions; // Use the tree with injected actions
+  const headerNavItems = fullNavTreeWithActions;
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen, onInitiateThemeChange }), [setIsAdminModalOpen, onInitiateThemeChange]);
-
-  // Removed globalSwipeHandlers from the main div.
-  // The swipe-right-to-go-back gesture will now be handled by MobileNavSheet.
 
   const headerDoubleTapRef = useRef({ lastTap: 0 });
   const handleHeaderClick = useCallback(() => {
@@ -256,10 +177,15 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     }
   }, [isMobile, currentUserProfile]);
 
+  const handleOpenDesktopImmersiveNav = useCallback((item: NavItem) => {
+    setDesktopImmersiveNavParent(item);
+    setIsDesktopImmersiveNavOpen(true);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header
-        onClick={handleHeaderClick} // Add onClick for double-tap detection
+        onClick={handleHeaderClick}
         className={cn(
           "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
@@ -269,99 +195,76 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
-          <NavigationMenu> {/* Removed flex-grow */}
-            <NavigationMenuList className=""> {/* Removed justify-center */}
-                {headerNavItems.map(item => {
-                    const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                    const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
-                    const isActionItem = item.type === 'category_or_action' && !item.children;
+          <div className="flex-grow flex justify-center"> {/* This div will center the buttons */}
+            {headerNavItems.filter(item => !item.parent_nav_item_id).map(item => { // Filter for top-level items
+                const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
+                const isActionItem = item.type === 'category_or_action' && !item.children;
 
-                    if (isCategoryWithChildren) {
-                        return (
-                            <NavigationMenuItem key={item.id}>
-                                <NavigationMenuTrigger className="flex items-center gap-2">
-                                    <IconComponent className="h-4 w-4" />
-                                    {item.label}
-                                </NavigationMenuTrigger>
-                                <NavigationMenuContent className="p-4 bg-background/80 backdrop-blur-lg rounded-lg shadow-lg">
-                                    <ul className="grid w-[400px] gap-3 p-2 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                                        {item.children?.map(child => {
-                                            const ChildIconComponent = iconMap[child.icon_name || 'Info'] || Info;
-                                            return (
-                                                <ListItem
-                                                    key={child.id}
-                                                    title={child.label}
-                                                    href={child.route || '#'}
-                                                    onClick={child.onClick}
-                                                    icon={ChildIconComponent}
-                                                    target={child.is_external ? "_blank" : undefined}
-                                                >
-                                                    {child.description}
-                                                </ListItem>
-                                            );
-                                        })}
-                                    </ul>
-                                </NavigationMenuContent>
-                            </NavigationMenuItem>
-                        );
-                    } else if (isActionItem) {
-                        return (
-                            <NavigationMenuItem key={item.id}>
-                                <Button
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                        if (item.onClick) {
-                                            e.preventDefault();
-                                            item.onClick();
-                                        }
-                                    }}
-                                    className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
-                                >
-                                    <IconComponent className="mr-2 h-4 w-4" />
-                                    {item.label}
-                                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                                        <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                                            {item.badge}
-                                        </span>
-                                    )}
-                                </Button>
-                            </NavigationMenuItem>
-                        );
-                    } else { // item.type === 'route'
-                        const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                        return (
-                            <NavigationMenuItem key={item.id}>
-                                <NavigationMenuLink asChild>
-                                    <NavLink
-                                        to={item.route!}
-                                        className={cn(
-                                            "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
-                                            isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                                        )}
-                                        target={item.is_external ? "_blank" : undefined}
-                                    >
-                                        <IconComponent className="mr-2 h-4 w-4" />
-                                        {item.label}
-                                        {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                                            <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                                                {item.badge}
-                                            </span>
-                                        )}
-                                    </NavLink>
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                        );
-                    }
-                })}
-            </NavigationMenuList>
-            <NavigationMenuViewport className="absolute top-full flex justify-center w-full h-[var(--radix-navigation-menu-viewport-height)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-top-[48%] md:w-[var(--radix-navigation-menu-viewport-width)] lg:w-[var(--radix-navigation-menu-viewport-width)] bg-background/80 backdrop-blur-lg rounded-b-lg shadow-lg z-40" />
-        </NavigationMenu>
+                if (isCategoryWithChildren) {
+                    return (
+                        <Button
+                            key={item.id}
+                            variant="ghost"
+                            onClick={() => handleOpenDesktopImmersiveNav(item)} // New handler
+                            className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                        >
+                            <IconComponent className="mr-2 h-4 w-4" />
+                            {item.label}
+                        </Button>
+                    );
+                } else if (isActionItem) {
+                    return (
+                        <Button
+                            key={item.id}
+                            variant="ghost"
+                            onClick={(e) => {
+                                if (item.onClick) {
+                                    e.preventDefault();
+                                    item.onClick();
+                                }
+                            }}
+                            className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                        >
+                            <IconComponent className="mr-2 h-4 w-4" />
+                            {item.label}
+                            {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                                <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                    {item.badge}
+                                </span>
+                            )}
+                        </Button>
+                    );
+                } else { // item.type === 'route'
+                    const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+                    return (
+                        <NavLink
+                            key={item.id}
+                            to={item.route!}
+                            className={cn(
+                                "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
+                                isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
+                            )}
+                            target={item.is_external ? "_blank" : undefined}
+                        >
+                            <IconComponent className="mr-2 h-4 w-4" />
+                            {item.label}
+                            {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                                <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                    {item.badge}
+                                </span>
+                            )}
+                        </NavLink>
+                    );
+                }
+            })}
+          </div>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           {currentUserProfile && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)}> {/* Updated call */}
+                <Button variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)}>
                   <Search className="h-5 w-5" />
                   <span className="sr-only">Recherche globale</span>
                 </Button>
@@ -375,7 +278,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           {currentUserProfile && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={() => openChat()}> {/* New AiA button */}
+                <Button variant="outline" size="icon" onClick={() => openChat()}>
                   <BotMessageSquare className="h-5 w-5" />
                   <span className="sr-only">AiA Chat</span>
                 </Button>
@@ -411,33 +314,31 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             </DropdownMenu>
           )}
           {!currentUserProfile && (
-            <Button variant="outline" onClick={() => navigate('/auth')}> {/* Redirect to AuthPage */}
+            <Button variant="outline" onClick={() => navigate('/auth')}>
               <LogIn className="h-5 w-5 mr-2" /> Connexion
             </Button>
           )}
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} /> {/* Pass the handler here */}
-          <Button variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex"> {/* Navigate to /about */}
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+          <Button variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex">
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
           </Button>
         </div>
       </header>
 
-      {/* Removed Desktop Category Items Overlay */}
-
       <main
         className={cn(
-          "flex-grow p-4 sm:p-6 md:p-8 pt-20 md:pt-24 overflow-y-auto", // Adjusted padding-top
+          "flex-grow p-4 sm:p-6 md:p-8 pt-20 md:pt-24 overflow-y-auto",
         )}
       >
         <AnimatePresence mode="wait">
           <motion.div
-            key={location.pathname} // Key change triggers animation
+            key={location.pathname}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="h-full w-full" // Ensure it takes full space
+            className="h-full w-full"
           >
             <Outlet context={outletContextValue} />
           </motion.div>
@@ -445,28 +346,29 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
-        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')}> {/* Navigate to /about */}
+        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')}>
           À propos
         </Button>
       </footer>
       
       {currentUserProfile && (
-        <MobileNavSheet
+        <NavSheet
           isOpen={isMobileNavSheetOpen}
           onClose={() => setIsMobileNavSheetOpen(false)}
-          navItems={fullNavTreeWithActions} // Use the tree with injected actions
-          onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)} // Updated prop
-          onOpenAiAChat={() => openChat()} // New prop
-          // Removed onOpenAboutModal
-          onOpenAuthModal={() => navigate('/auth')} // Redirect to AuthPage
+          navItems={fullNavTreeWithActions}
+          onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
+          onOpenAiAChat={() => openChat()}
+          onOpenAuthModal={() => navigate('/auth')}
           unreadMessagesCount={unreadMessages}
-          onInitiateThemeChange={onInitiateThemeChange} // Pass the handler here
+          onInitiateThemeChange={onInitiateThemeChange}
+          isMobile={isMobile} // Pass isMobile prop
+          isDesktopImmersiveOpen={isDesktopImmersiveNavOpen} // New prop
+          onCloseDesktopImmersive={() => setIsDesktopImmersiveNavOpen(false)} // New prop
+          desktopImmersiveParent={desktopImmersiveNavParent} // New prop
         />
       )}
-      {currentUserProfile && <AiAPersistentChat />} {/* Render AiAPersistentChat */}
-      {currentUserProfile && <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />} {/* Render GlobalSearchOverlay */}
-      {/* Removed AuthModal */}
-      {/* Removed AboutModal */}
+      {currentUserProfile && <AiAPersistentChat />}
+      {currentUserProfile && <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing } from "lucide-react";
+import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -20,7 +20,7 @@ import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
-import { useCourseChat } from '@/contexts/CourseChatContext'; // Import useCourseChat
+import { useCourseChat } from '@/contexts/CourseChatContext';
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home,
@@ -42,47 +42,80 @@ const iconMap: { [key: string]: React.ElementType } = {
   ShieldCheck: ShieldCheck,
   Target: Target,
   BellRing: BellRing,
+  ChevronDown: ChevronDown,
 };
 
-interface MobileNavSheetProps {
-  isOpen: boolean;
-  onClose: () => void;
-  navItems: NavItem[];
-  onOpenGlobalSearch: () => void; // Updated prop
-  onOpenAiAChat: () => void; // New prop
-  // Removed onOpenAboutModal
+interface NavSheetProps {
+  isOpen: boolean; // For mobile sheet
+  onClose: () => void; // For mobile sheet
+  navItems: NavItem[]; // Full nav tree
+  onOpenGlobalSearch: () => void;
+  onOpenAiAChat: () => void;
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
-  onInitiateThemeChange: (newTheme: Profile['theme']) => void; // New prop
-  // Removed unreadNotificationsCount: number;
+  onInitiateThemeChange: (newTheme: Profile['theme']) => void;
+  isMobile: boolean; // To differentiate mobile vs desktop behavior
+  isDesktopImmersiveOpen: boolean; // For desktop immersive sheet
+  onCloseDesktopImmersive: () => void; // For desktop immersive sheet
+  desktopImmersiveParent: NavItem | null; // The parent item for desktop immersive
 }
 
-const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAuthModal, unreadMessagesCount, onInitiateThemeChange }: MobileNavSheetProps) => { // Removed unreadNotificationsCount
+const NavSheet = ({
+  isOpen,
+  onClose,
+  navItems,
+  onOpenGlobalSearch,
+  onOpenAiAChat,
+  onOpenAuthModal,
+  unreadMessagesCount,
+  onInitiateThemeChange,
+  isMobile,
+  isDesktopImmersiveOpen,
+  onCloseDesktopImmersive,
+  desktopImmersiveParent,
+}: NavSheetProps) => {
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
-  const { openChat } = useCourseChat(); // Get openChat from context
+  const { openChat } = useCourseChat();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const currentOpenState = isMobile ? isOpen : isDesktopImmersiveOpen;
+  const currentOnClose = isMobile ? onClose : onCloseDesktopImmersive;
 
   const swipeHandlers = useSwipeable({
-    onSwipedRight: onClose,
+    onSwipedRight: () => {
+      if (isMobile && isOpen) {
+        onClose();
+      }
+    },
     preventScrollOnSwipe: true,
     trackMouse: true,
   });
 
-  React.useEffect(() => {
-    if (!isOpen) {
+  // Reset stack when sheet closes or desktop immersive parent changes
+  useEffect(() => {
+    if (!currentOpenState) {
       setDrawerNavStack([]);
+      setSearchQuery('');
+    } else if (isDesktopImmersiveOpen && desktopImmersiveParent) {
+      setDrawerNavStack([desktopImmersiveParent]);
+      setSearchQuery('');
+    } else if (isDesktopImmersiveOpen && !desktopImmersiveParent) {
+      // If desktop immersive is open but no parent, close it
+      onCloseDesktopImmersive();
     }
-  }, [isOpen]);
+  }, [currentOpenState, isDesktopImmersiveOpen, desktopImmersiveParent, onCloseDesktopImmersive]);
 
   const handleItemClick = useCallback((item: NavItem) => {
     const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
     if (isCategory) {
       setDrawerNavStack(prevStack => [...prevStack, item]);
+      setSearchQuery(''); // Clear search when entering a category
     } else if (item.route) {
       if (item.is_external) {
         window.open(item.route, '_blank');
@@ -91,9 +124,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       } else {
         navigate(item.route);
       }
-      onClose();
+      currentOnClose(); // Close the sheet after navigation
     } else if (item.onClick) {
-      // Special handling for search and AiA chat actions
       if (item.id === 'nav-global-search') {
         onOpenGlobalSearch();
       } else if (item.id === 'nav-aia-chat') {
@@ -101,23 +133,29 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       } else {
         item.onClick();
       }
-      onClose();
+      currentOnClose(); // Close the sheet after action
     }
-  }, [navigate, onClose, onOpenGlobalSearch, onOpenAiAChat]);
+  }, [navigate, currentOnClose, onOpenGlobalSearch, onOpenAiAChat]);
 
   const handleBack = useCallback(() => {
-    setDrawerNavStack(prevStack => {
-      const newStack = [...prevStack];
-      newStack.pop();
-      return newStack;
-    });
-  }, []);
+    if (isDesktopImmersiveOpen && drawerNavStack.length === 1) {
+      // If in desktop immersive mode and at the first level of the stack, close the immersive sheet
+      onCloseDesktopImmersive();
+    } else {
+      setDrawerNavStack(prevStack => {
+        const newStack = [...prevStack];
+        newStack.pop();
+        return newStack;
+      });
+      setSearchQuery(''); // Clear search when going back
+    }
+  }, [isDesktopImmersiveOpen, drawerNavStack.length, onCloseDesktopImmersive]);
 
   const handleLogout = useCallback(async () => {
     await signOut();
-    onClose();
+    currentOnClose();
     navigate("/");
-  }, [signOut, onClose, navigate]);
+  }, [signOut, currentOnClose, navigate]);
 
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
@@ -125,16 +163,22 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
     { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 2 },
   ];
 
-  const staticTopLevelItems: NavItem[] = [];
-
   const currentItemsToDisplay = React.useMemo(() => {
     let itemsToFilter: NavItem[] = [];
 
-    if (drawerNavStack.length === 0) {
-      itemsToFilter = [...navItems.filter(item => 
+    if (isDesktopImmersiveOpen && desktopImmersiveParent) {
+      // For desktop immersive, the initial stack is the desktopImmersiveParent
+      if (drawerNavStack.length === 1 && drawerNavStack[0].id === desktopImmersiveParent.id) {
+        itemsToFilter = desktopImmersiveParent.children || [];
+      } else {
+        const activeCategory = drawerNavStack[drawerNavStack.length - 1];
+        itemsToFilter = activeCategory.children || [];
+      }
+    } else if (drawerNavStack.length === 0) {
+      // For mobile, if stack is empty, show top-level items
+      itemsToFilter = navItems.filter(item =>
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
-      ), ...staticTopLevelItems];
-
+      );
       if (currentUserProfile) {
         itemsToFilter.push({
           id: 'profile-category',
@@ -147,6 +191,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         });
       }
     } else {
+      // For mobile, show children of the active category
       const activeCategory = drawerNavStack[drawerNavStack.length - 1];
       if (activeCategory.id === 'profile-category') {
         itemsToFilter = staticProfileActions;
@@ -154,9 +199,13 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         itemsToFilter = activeCategory.children || [];
       }
     }
-    
-    return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, staticTopLevelItems]);
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return itemsToFilter.filter(item =>
+      item.label.toLowerCase().includes(lowerCaseQuery) ||
+      (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
+    ).sort((a, b) => a.order_index - b.order_index);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -165,10 +214,13 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={currentOpenState} onOpenChange={currentOnClose}>
       <SheetContent
-        side="top"
-        className="w-full h-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg"
+        side="top" // Always top for immersive feel
+        className={cn(
+          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg",
+          isMobile ? "h-full" : "h-[calc(100vh-68px)] top-[68px]" // Adjust height for desktop immersive
+        )}
         {...swipeHandlers}
       >
         <SheetHeader className="p-4 flex-shrink-0 border-b border-border">
@@ -180,7 +232,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                   <span className="sr-only">Retour</span>
                 </Button>
               ) : (
-                <div className="w-10 h-10"></div>
+                <div className="w-10 h-10"></div> // Placeholder for alignment
               )}
               <Logo iconClassName="h-8 w-8" textClassName="text-xl" />
             </div>
@@ -197,7 +249,6 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     )}
                     <span className="sr-only">Messagerie</span>
                   </Button>
-                  {/* Removed Notifications button */}
                   <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
@@ -207,32 +258,39 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                   </Button>
                 </>
               )}
-              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} /> {/* Pass the handler here */}
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+              <Button variant="ghost" size="icon" onClick={currentOnClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
                 <X className="h-5 w-5" aria-label="Fermer le menu" />
                 <span className="sr-only">Fermer</span>
               </Button>
             </div>
           </div>
-          <SheetTitle className="sr-only">Menu de navigation mobile</SheetTitle>
+          <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
           <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="flex-grow p-4">
-          {/* Menu Title (moved here) */}
           {drawerNavStack.length > 0 && (
             <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
               <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
               {currentDrawerTitle}
             </h2>
           )}
-          <motion.div 
+          <div className="p-4 border-b border-border">
+            <Input
+              placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <motion.div
             key={drawerNavStack.length}
             initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4" // Changed to grid-cols-2 for smallest screens
+            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4"
           >
             {currentItemsToDisplay.length === 0 ? (
               <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
@@ -247,24 +305,24 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "android-tile flex-row items-center justify-start h-auto min-h-[60px] text-left w-full", // Kept flex-row, items-center, min-h-[60px]
-                      "rounded-android-tile hover:scale-[1.02] transition-transform", // Added hover effect
+                      "android-tile flex-row items-center justify-start h-auto min-h-[60px] text-left w-full",
+                      "rounded-android-tile hover:scale-[1.02] transition-transform",
                       isLinkActive ? "active" : "",
                       "transition-all duration-200 ease-in-out"
                     )}
                     onClick={() => handleItemClick(item)}
                   >
-                    <div className="icon-container rounded-lg mr-3"> {/* Added mr-3 for spacing */}
+                    <div className="icon-container rounded-lg mr-3">
                       <IconComponent className="h-6 w-6" />
                     </div>
-                    <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span> {/* Added flex-grow */}
+                    <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
                         {item.badge}
                       </span>
                     )}
                     {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
-                    {isCategory && <ChevronUp className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />}
+                    {isCategory && <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />}
                   </Button>
                 );
               })
@@ -272,9 +330,8 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
           </motion.div>
         </ScrollArea>
 
-        {/* Footer with buttons and swipe indicator */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <div className="flex justify-end gap-2"> {/* Changed justify-between to justify-end */}
+          <div className="flex justify-end gap-2">
             {currentUserProfile ? (
               <Button variant="destructive" className="shadow-lg bg-destructive/80 hover:bg-destructive rounded-android-tile" onClick={handleLogout}>
                 <LogOut className="h-5 w-5 mr-2" /> Déconnexion
@@ -288,13 +345,15 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               <Info className="h-5 w-5 mr-2" /> À propos
             </Button>
           </div>
-          <div className="flex justify-center pt-2">
-            <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
-          </div>
+          {isMobile && (
+            <div className="flex justify-center pt-2">
+              <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
   );
 };
 
-export default MobileNavSheet;
+export default NavSheet;
