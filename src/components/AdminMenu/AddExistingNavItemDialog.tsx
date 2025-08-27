@@ -9,15 +9,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2, Home, Info, Search as SearchIcon, ArrowLeft, XCircle, Check } from "lucide-react"; // Import SearchIcon, ArrowLeft, XCircle, Check
+import { PlusCircle, Loader2, Home, Info, Search as SearchIcon, ArrowLeft, XCircle, Check } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { addRoleNavItemConfig, updateRoleNavItemConfig } from "@/lib/navItems";
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input'; // Import Input
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Import Card components
-import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AddExistingNavItemDialogProps {
   isOpen: boolean;
@@ -28,10 +28,9 @@ interface AddExistingNavItemDialogProps {
   onItemAdded: () => void;
   getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
   iconMap: { [key: string]: React.ElementType };
-  defaultParentId?: string | null; // New prop for default parent
+  defaultParentId?: string | null;
 }
 
-// Helper function to get item type label
 const getItemTypeLabel = (type: NavItem['type']) => {
   switch (type) {
     case 'route': return "Route";
@@ -49,28 +48,26 @@ const AddExistingNavItemDialog = ({
   onItemAdded,
   getDescendantIds,
   iconMap,
-  defaultParentId, // Destructure new prop
+  defaultParentId,
 }: AddExistingNavItemDialogProps) => {
-  const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null); // Corrected initialization
-  const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem) | null>(null); // Store full info, added isNew
-  const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(defaultParentId === null ? 'none' : defaultParentId || null); // Initialize with defaultParentId
+  const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
+  const [selectedGenericItemInfo, setSelectedGenericItemInfo] = useState<({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem) | null>(null);
+  const [selectedParentForNewItem, setSelectedParentForNewItem] = useState<string | null>(defaultParentId === null ? 'none' : defaultParentId || null);
   const [isAdding, setIsAdding] = useState(false);
   const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
   const [parentSearchQuery, setParentSearchQuery] = useState('');
 
-  // Reset states when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
       setSelectedGenericItemToAdd(null);
       setSelectedGenericItemInfo(null);
-      setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null); // Reset with defaultParentId
+      setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null);
       setIsAdding(false);
       setGenericItemSearchQuery('');
       setParentSearchQuery('');
-      // Log here, after states are reset and memoized options are available
       console.log("[AddExistingNavItemDialog] Dialog opened. Available generic items options:", availableGenericItemsOptions);
     }
-  }, [isOpen, defaultParentId]); // Removed availableGenericItemsOptions from dependencies
+  }, [isOpen, defaultParentId]);
 
   const availableGenericItemsOptions = useMemo(() => {
     const configuredGenericItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
@@ -86,15 +83,14 @@ const AddExistingNavItemDialog = ({
       item.label.toLowerCase().includes(lowerCaseQuery)
     ).map(item => ({
       ...item,
-      isConfiguredAsRoot: false, // These items are not configured at all, so this flag is always false
-      isNew: true, // Indicate that this is a new item to be configured for the role
+      isConfiguredAsRoot: false,
+      isNew: true,
     }));
   }, [allGenericNavItems, allConfiguredItemsFlat, genericItemSearchQuery]);
 
   const availableParentsOptions = useMemo(() => {
     const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean }[] = [];
 
-    // Add already configured categories that are valid parents
     allConfiguredItemsFlat.forEach(item => {
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
       if (isCategory) {
@@ -116,7 +112,6 @@ const AddExistingNavItemDialog = ({
       }
     });
 
-    // Add generic categories that are NOT YET configured for this role and are valid parents
     const configuredItemIds = new Set(allConfiguredItemsFlat.map(item => item.id));
     allGenericNavItems.forEach(item => {
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
@@ -136,10 +131,9 @@ const AddExistingNavItemDialog = ({
 
     const sortedParents = potentialParents.sort((a, b) => a.label.localeCompare(b.label));
     
-    // Apply search filter
     const lowerCaseQuery = parentSearchQuery.toLowerCase();
     return [
-      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action' }, // Added typeLabel
+      { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action' },
       ...sortedParents.filter(p => p.label.toLowerCase().includes(lowerCaseQuery))
     ];
   }, [allConfiguredItemsFlat, allGenericNavItems, parentSearchQuery]);
@@ -161,20 +155,18 @@ const AddExistingNavItemDialog = ({
 
       let finalParentId: string | null = selectedParentForNewItem === 'none' ? null : selectedParentForNewItem;
 
-      // If the selected parent is a new generic item (not yet configured for this role),
-      // we need to configure it first as a root item.
       const selectedParentInfo = availableParentsOptions.find(p => p.id === finalParentId);
       if (selectedParentInfo?.isNew) {
         try {
           const newParentConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
             nav_item_id: finalParentId!,
             role: selectedRoleFilter,
-            parent_nav_item_id: null, // Initially add as root
-            order_index: 9999, // Will be re-indexed later
+            parent_nav_item_id: null,
+            order_index: 9999,
           };
           const addedConfig = await addRoleNavItemConfig(newParentConfig);
           if (addedConfig) {
-            finalParentId = addedConfig.nav_item_id; // Use the generic ID of the newly configured parent
+            finalParentId = addedConfig.nav_item_id;
             showSuccess(`Catégorie '${selectedParentInfo.label}' ajoutée au menu du rôle.`);
           } else {
             showError(`Échec de l'ajout de la catégorie '${selectedParentInfo.label}' au menu du rôle.`);
@@ -189,7 +181,6 @@ const AddExistingNavItemDialog = ({
         }
       }
 
-      // Check for circular dependency if adding to an existing configured parent
       if (finalParentId && genericItem.id === finalParentId) {
         showError("Un élément ne peut pas être son propre parent.");
         setIsAdding(false);
@@ -204,17 +195,16 @@ const AddExistingNavItemDialog = ({
         }
       }
 
-      // Always add a new configuration for the selected generic item
       const newConfig: Omit<RoleNavItemConfig, 'id' | 'created_at' | 'updated_at'> = {
         nav_item_id: genericItem.id,
         role: selectedRoleFilter,
         parent_nav_item_id: finalParentId,
-        order_index: 9999, // Will be re-indexed by fetchAndStructureNavItems
+        order_index: 9999,
       };
       await addRoleNavItemConfig(newConfig);
       showSuccess(`'${genericItem.label}' ajouté au menu du rôle !`);
 
-      onItemAdded(); // Trigger refresh in parent
+      onItemAdded();
       onClose();
     } catch (error: any) {
       console.error("Error adding existing nav item to role menu:", error);
@@ -229,8 +219,7 @@ const AddExistingNavItemDialog = ({
   const handleSelectGenericItem = (item: ({ isConfiguredAsRoot: boolean; isNew: boolean } & NavItem)) => {
     setSelectedGenericItemToAdd(item.id);
     setSelectedGenericItemInfo(item);
-    // For newly added items, default parent to none (root)
-    if (defaultParentId === undefined) { // Only set if no defaultParentId was provided
+    if (defaultParentId === undefined) {
       setSelectedParentForNewItem('none');
     }
   };
@@ -238,7 +227,7 @@ const AddExistingNavItemDialog = ({
   const handleCancelSelection = () => {
     setSelectedGenericItemToAdd(null);
     setSelectedGenericItemInfo(null);
-    setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null); // Reset with defaultParentId
+    setSelectedParentForNewItem(defaultParentId === null ? 'none' : defaultParentId || null);
     setGenericItemSearchQuery('');
     setParentSearchQuery('');
   };
@@ -247,17 +236,16 @@ const AddExistingNavItemDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile"> {/* Apply responsive dimensions */}
-        <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile">
+        <div className="flex flex-col h-full">
           <DialogHeader>
             <DialogTitle>Ajouter un élément existant au menu</DialogTitle>
             <DialogDescription>
               Sélectionnez un élément générique et son parent pour l'ajouter au menu de ce rôle.
             </DialogDescription>
-          </DialogDescription>
-          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+          </DialogHeader>
+          <div className="grid gap-4 py-4 flex-grow">
             {!selectedGenericItemInfo ? (
-              // Step 1: Select Generic Item
               <div className="space-y-4">
                 <Label htmlFor="generic-item-search-input">1. Rechercher et sélectionner un élément générique</Label>
                 <Input
@@ -279,10 +267,10 @@ const AddExistingNavItemDialog = ({
                         return (
                           <Card 
                             key={item.id} 
-                            className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20 pointer-events-auto" // Added pointer-events-auto
-                            onClick={() => handleSelectGenericItem(item)} // Added onClick handler
+                            className="flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20 pointer-events-auto"
+                            onClick={() => handleSelectGenericItem(item)}
                           >
-                            <React.Fragment> {/* Added React.Fragment */}
+                            <React.Fragment>
                               <div className="flex items-center gap-3 select-none">
                                 <ItemIcon className="h-5 w-5 text-primary" />
                                 <div>
@@ -301,7 +289,6 @@ const AddExistingNavItemDialog = ({
                 </ScrollArea>
               </div>
             ) : (
-              // Step 2: Choose Parent for Selected Item
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>2. Choisir le parent pour l'élément sélectionné</Label>
@@ -332,8 +319,8 @@ const AddExistingNavItemDialog = ({
                     placeholder="Sélectionner un parent..."
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
-                    disabled={false} // Explicitly set to false to ensure it's always clickable
-                    popoverContentClassName="z-[9999]" // Ensure high z-index for this dropdown's content
+                    disabled={false}
+                    popoverContentClassName="z-[9999]"
                   />
                   {defaultParentId === null && (
                     <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
