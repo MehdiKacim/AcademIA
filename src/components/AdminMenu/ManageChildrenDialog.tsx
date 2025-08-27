@@ -96,17 +96,14 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
         <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Removed select-none and pointer-events-auto, added flex-wrap */}
           <div className="flex items-center gap-2 flex-grow select-none"> {/* Added select-none here */}
             {isDraggableAndDeletable && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
+              <div // Changed from Button to div
                 {...listeners}
                 {...attributes}
-                className="cursor-grab"
+                className="cursor-grab p-1 rounded-md hover:bg-muted/20" // Added styling for the handle
               >
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
                 <span className="sr-only">Déplacer l'élément</span>
-              </Button>
+              </div>
             )}
             <IconComponent className="h-4 w-4 text-primary" />
             <span className="font-medium text-sm">{item.label}</span>

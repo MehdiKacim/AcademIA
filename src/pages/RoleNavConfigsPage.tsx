@@ -162,17 +162,14 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             }
           }}>
             {isDraggableAndDeletable && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
+              <div // Changed from Button to div
                 {...listeners}
                 {...attributes}
-                className="cursor-grab"
+                className="cursor-grab p-1 rounded-md hover:bg-muted/20" // Added styling for the handle
               >
                 <GripVertical className="h-5 w-5" />
                 <span className="sr-only">Déplacer l'élément</span>
-              </Button>
+              </div>
             )}
             {hasChildren && (
               <Button
