@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X, Menu, ChevronDown } from "lucide-react";
+import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, GraduationCap, PenTool, Users, NotebookText, School, Search, ArrowLeft, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, MessageSquare, LogIn, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, X, Menu, ChevronDown, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
@@ -12,6 +12,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub, // Import for nested menus
+  DropdownMenuSubTrigger, // Import for nested menus
+  DropdownMenuSubContent, // Import for nested menus
 } from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
@@ -29,7 +32,6 @@ import NavSheet from "@/components/NavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import DesktopSubMenuOverlay from "@/components/DesktopSubMenuOverlay"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -38,7 +40,7 @@ interface DashboardLayoutProps {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, ExternalLink,
 };
 
 const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: DashboardLayoutProps) => {
@@ -48,8 +50,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false);
-  const [isDesktopSubMenuOpen, setIsDesktopSubMenuOpen] = useState(false); // New state for desktop sub-menu overlay
-  const [desktopSubMenuParent, setDesktopSubMenuParent] = useState<NavItem | null>(null); // New state for parent item
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -178,24 +178,56 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     }
   }, [isMobile, currentUserProfile]);
 
-  const handleDesktopNavItemClick = useCallback((item: NavItem) => {
-    if (item.children && item.children.length > 0) {
-      setDesktopSubMenuParent(item);
-      setIsDesktopSubMenuOpen(true);
-    } else if (item.route) {
-      if (item.is_external) {
-        window.open(item.route, '_blank');
-      } else if (item.route.startsWith('#')) {
-        navigate(`/${item.route}`);
+  // Recursive function to render dropdown menu items
+  const renderDropdownItems = (items: NavItem[], level: number = 0) => {
+    return items.map(item => {
+      const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
+      const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+
+      if (item.children && item.children.length > 0) {
+        return (
+          <DropdownMenuSub key={item.id}>
+            <DropdownMenuSubTrigger className={cn(isLinkActive && "text-primary font-semibold")}>
+              <IconComponent className="mr-2 h-4 w-4" />
+              <span>{item.label}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="backdrop-blur-lg bg-background/80">
+              {renderDropdownItems(item.children, level + 1)}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        );
       } else {
-        navigate(item.route);
+        return (
+          <DropdownMenuItem
+            key={item.id}
+            onClick={() => {
+              if (item.route) {
+                if (item.is_external) {
+                  window.open(item.route, '_blank');
+                } else if (item.route.startsWith('#')) {
+                  navigate(`/${item.route}`);
+                } else {
+                  navigate(item.route);
+                }
+              } else if (item.onClick) {
+                item.onClick();
+              }
+            }}
+            className={cn(isLinkActive && "text-primary font-semibold")}
+          >
+            <IconComponent className="mr-2 h-4 w-4" />
+            <span>{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                {item.badge}
+              </span>
+            )}
+            {item.is_external && <ExternalLink className="ml-auto h-3 w-3" />}
+          </DropdownMenuItem>
+        );
       }
-      setIsDesktopSubMenuOpen(false); // Close sub-menu if open
-    } else if (item.onClick) {
-      item.onClick();
-      setIsDesktopSubMenuOpen(false); // Close sub-menu if open
-    }
-  }, [navigate]);
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -210,9 +242,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
-          <nav className="flex-grow flex justify-center"> {/* This div will center the buttons */}
-            {headerNavItems.filter(item => !item.parent_nav_item_id).map(item => { // Filter for top-level items
-                const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+          <nav className="flex-grow flex justify-center">
+            {headerNavItems.filter(item => !item.parent_nav_item_id).map(item => {
+                const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
                 const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
 
                 const commonButtonClasses = cn(
@@ -222,15 +254,20 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
                 if (item.children && item.children.length > 0) {
                     return (
-                        <Button
-                            key={item.id}
-                            variant="ghost"
-                            onClick={() => handleDesktopNavItemClick(item)}
-                            className={commonButtonClasses}
-                        >
-                            <IconComponent className="mr-2 h-4 w-4" />
-                            {item.label}
-                        </Button>
+                        <DropdownMenu key={item.id}>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className={commonButtonClasses}
+                                >
+                                    <IconComponent className="mr-2 h-4 w-4" />
+                                    {item.label}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="backdrop-blur-lg bg-background/80">
+                                {renderDropdownItems(item.children)}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     );
                 } else if (item.onClick) {
                     return (
@@ -238,8 +275,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                             key={item.id}
                             variant="ghost"
                             onClick={(e) => {
-                                e.preventDefault(); // Prevent default form submission if button is inside a form
-                                handleDesktopNavItemClick(item);
+                                e.preventDefault();
+                                item.onClick!();
                             }}
                             className={commonButtonClasses}
                         >
@@ -259,7 +296,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                             to={item.route!}
                             className={commonButtonClasses}
                             target={item.is_external ? "_blank" : undefined}
-                            onClick={() => setIsDesktopSubMenuOpen(false)} // Close sub-menu if open
                         >
                             <IconComponent className="mr-2 h-4 w-4" />
                             {item.label}
@@ -375,23 +411,14 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           onOpenAuthModal={() => navigate('/auth')}
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange}
-          isMobile={isMobile} // Pass isMobile prop
-          isDesktopImmersiveOpen={isDesktopSubMenuOpen} // Use new state
-          onCloseDesktopImmersive={() => setIsDesktopSubMenuOpen(false)} // Use new state
-          desktopImmersiveParent={desktopSubMenuParent} // Use new state
+          isMobile={isMobile}
+          isDesktopImmersiveOpen={false} // No longer used for desktop immersive
+          onCloseDesktopImmersive={() => {}} // No longer used
+          desktopImmersiveParent={null} // No longer used
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />}
-      {currentUserProfile && (
-        <DesktopSubMenuOverlay
-          isOpen={isDesktopSubMenuOpen}
-          onClose={() => setIsDesktopSubMenuOpen(false)}
-          parentItem={desktopSubMenuParent}
-          iconMap={iconMap}
-          unreadMessagesCount={unreadMessages}
-        />
-      )}
     </div>
   );
 };
