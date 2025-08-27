@@ -86,11 +86,12 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
       <TooltipProvider>
         <React.Fragment> {/* Wrap multiple children in a Fragment */}
           <Toaster 
-            className="fixed top-16 left-0 right-0 z-[9999] flex flex-col items-center" // Positionnement explicite du conteneur
+            position="top-center" 
+            containerClassName="fixed top-16 left-0 right-0 z-[9999] flex flex-col" // Positionnement explicite du conteneur
             toastOptions={{
               duration: 5000,
               classNames: {
-                toast: "w-full max-w-full rounded-lg border border-border shadow-md backdrop-blur-lg bg-background/60", // Styles pour les toasts individuels
+                toast: "!w-full !max-w-full rounded-lg border border-border shadow-md backdrop-blur-lg bg-background/60", // Styles pour les toasts individuels
                 success: "bg-success text-success-foreground border-success",
                 error: "bg-destructive text-destructive-foreground border-destructive",
                 loading: "bg-primary text-primary-foreground border-primary",
