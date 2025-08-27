@@ -34,14 +34,14 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
-import { cn } from '@/lib/utils';
+import { cn } '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
-import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import the new component
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import {
   Card,
@@ -139,9 +139,10 @@ interface ManageChildrenDialogProps {
   allConfiguredItemsFlat: NavItem[];
   onChildrenUpdated: () => void;
   getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
+  getAncestorIds: (itemId: string, allItemsFlat: NavItem[]) => Set<string>; // New prop
 }
 
-const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated, getDescendantIds }: ManageChildrenDialogProps) => {
+const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated, getDescendantIds, getAncestorIds }: ManageChildrenDialogProps) => {
   const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
@@ -169,12 +170,14 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   useEffect(() => {
     if (isOpen && parentItem) {
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
-      const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat);
+      const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat); // Descendants of the parent in the *configured* tree
+      const ancestorsOfParent = getAncestorIds(parentItem.id, allGenericNavItems); // Ancestors of the parent in the *generic* tree
 
       const filteredAvailable = allGenericNavItems.filter(
-        item => item.id !== parentItem.id &&
-                !currentChildIds.has(item.id) &&
-                !descendantsOfParent.has(item.id)
+        item => item.id !== parentItem.id && // Cannot add parent to itself
+                !currentChildIds.has(item.id) && // Cannot add existing child
+                !descendantsOfParent.has(item.id) && // Cannot add a descendant of parent
+                !ancestorsOfParent.has(item.id) // Cannot add an ancestor of parent
       );
       
       setAvailableChildrenForAdd(filteredAvailable);
@@ -182,7 +185,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       setSelectedGenericItemToAdd(null);
       setGenericItemSearchQuery('');
     }
-  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds]);
+  }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds, getAncestorIds]);
 
   const handleDragStart = (event: any) => {
     const { active } = event;

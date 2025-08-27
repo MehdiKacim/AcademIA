@@ -32,7 +32,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import SearchableDropdown from '@/components/ui/SearchableDropdown';
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 import {
   DndContext,
   closestCenter,
@@ -51,7 +51,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
-import { cn } from '@/lib/utils';
+import { cn } '@/lib/utils';
 import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog';
 import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -284,6 +284,17 @@ const RoleNavConfigsPage = () => {
     return descendants;
   }, []);
 
+  // New helper function to get all ancestor IDs of a given item (generic IDs)
+  const getAncestorIds = useCallback((itemId: string, allItemsFlat: NavItem[]): Set<string> => {
+    const ancestors = new Set<string>();
+    let currentItem = allItemsFlat.find(item => item.id === itemId);
+    while (currentItem && currentItem.parent_nav_item_id) {
+      ancestors.add(currentItem.parent_nav_item_id);
+      currentItem = allItemsFlat.find(item => item.id === currentItem.parent_nav_item_id);
+    }
+    return ancestors;
+  }, []);
+
   const fetchAndStructureNavItems = useCallback(async () => {
     const genericItems = await loadAllNavItemsRaw();
     setAllGenericNavItems(genericItems);
@@ -367,7 +378,7 @@ const RoleNavConfigsPage = () => {
 
       setConfiguredItemsTree(finalRootItems);
     }
-  }, [selectedRoleFilter]);
+  }, [selectedRoleFilter, getAncestorIds]); // Added getAncestorIds to dependencies
 
   useEffect(() => {
     fetchAndStructureNavItems();
@@ -691,8 +702,8 @@ const RoleNavConfigsPage = () => {
               </ContextMenuTrigger>
               <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
               </ContextMenuContent>
-            </ContextMenu>
-          </Card>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -816,6 +827,7 @@ const RoleNavConfigsPage = () => {
           allConfiguredItemsFlat={allConfiguredItemsFlat}
           onChildrenUpdated={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
+          getAncestorIds={getAncestorIds} {/* Pass getAncestorIds */}
         />
       )}
 
@@ -828,6 +840,7 @@ const RoleNavConfigsPage = () => {
           allConfiguredItemsFlat={allConfiguredItemsFlat}
           onItemAdded={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
+          getAncestorIds={getAncestorIds} {/* Pass getAncestorIds */}
           iconMap={iconMap}
           defaultParentId={addDialogDefaultParentId}
         />

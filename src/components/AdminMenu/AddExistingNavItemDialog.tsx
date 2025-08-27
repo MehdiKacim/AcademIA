@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import the new component
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 
 interface AddExistingNavItemDialogProps {
   isOpen: boolean;
@@ -27,6 +27,7 @@ interface AddExistingNavItemDialogProps {
   allConfiguredItemsFlat: NavItem[];
   onItemAdded: () => void;
   getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
+  getAncestorIds: (itemId: string, allItemsFlat: NavItem[]) => Set<string>; // New prop
   iconMap: { [key: string]: React.ElementType };
   defaultParentId?: string | null;
 }
@@ -47,6 +48,7 @@ const AddExistingNavItemDialog = ({
   allConfiguredItemsFlat,
   onItemAdded,
   getDescendantIds,
+  getAncestorIds, // New prop
   iconMap,
   defaultParentId,
 }: AddExistingNavItemDialogProps) => {
@@ -96,9 +98,18 @@ const AddExistingNavItemDialog = ({
   const availableParentsOptions = useMemo(() => {
     const potentialParents: { id: string; label: string; level: number; icon_name?: string; typeLabel: string; isNew: boolean; description?: string }[] = [];
 
+    // Exclude the item being added itself from being a parent
+    const itemBeingAdded = allGenericNavItems.find(item => item.id === selectedGenericItemToAdd);
+    const descendantsOfItemBeingAdded = itemBeingAdded ? getDescendantIds(itemBeingAdded, allGenericNavItems) : new Set<string>();
+    const ancestorsOfItemBeingAdded = itemBeingAdded ? getAncestorIds(itemBeingAdded.id, allGenericNavItems) : new Set<string>();
+
     allConfiguredItemsFlat.forEach(item => {
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-      if (isCategory) {
+      const isNotSelf = item.id !== selectedGenericItemToAdd;
+      const isNotDescendant = !descendantsOfItemBeingAdded.has(item.id);
+      const isNotAncestor = !ancestorsOfItemBeingAdded.has(item.id);
+
+      if (isCategory && isNotSelf && isNotDescendant && isNotAncestor) {
         let level = 0;
         let currentParentId = item.parent_nav_item_id;
         while (currentParentId) {
@@ -122,8 +133,11 @@ const AddExistingNavItemDialog = ({
     allGenericNavItems.forEach(item => {
       const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
       const isNotConfiguredForRole = !configuredItemIds.has(item.id);
+      const isNotSelf = item.id !== selectedGenericItemToAdd;
+      const isNotDescendant = !descendantsOfItemBeingAdded.has(item.id);
+      const isNotAncestor = !ancestorsOfItemBeingAdded.has(item.id);
 
-      if (isCategory && isNotConfiguredForRole) {
+      if (isCategory && isNotConfiguredForRole && isNotSelf && isNotDescendant && isNotAncestor) {
         potentialParents.push({
           id: item.id,
           label: item.label,
@@ -142,7 +156,7 @@ const AddExistingNavItemDialog = ({
       { id: 'none', label: 'Aucun (élément racine)', icon_name: 'Home', level: 0, isNew: false, typeLabel: 'Catégorie/Action', description: "L'élément sera affiché au premier niveau du menu." },
       ...sortedParents
     ];
-  }, [allConfiguredItemsFlat, allGenericNavItems]);
+  }, [selectedGenericItemToAdd, allConfiguredItemsFlat, allGenericNavItems, getDescendantIds, getAncestorIds, parentSearchQuery]);
 
   const handleAddExistingItem = async () => {
     if (!selectedGenericItemInfo) {
