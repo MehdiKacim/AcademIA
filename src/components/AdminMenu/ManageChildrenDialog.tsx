@@ -439,21 +439,11 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                       placeholder="Sélectionner un élément à ajouter"
                       emptyMessage="Aucun élément disponible."
                       iconMap={iconMap}
-                      popoverContentClassName="z-[999] rounded-android-tile" // Increased z-index, apply rounded-android-tile
+                      popoverContentClassName="z-[9999]" // Ensure high z-index for this dropdown's content
                     />
                     <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
                       <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
                     </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="flex flex-col rounded-android-tile">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Sous-éléments actuels</CardTitle>
-                    <CardDescription>Réorganisez ou supprimez les sous-éléments.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow overflow-y-auto">
-                    {renderChildItemsList(currentChildren, 'current-children-container', true, handleRemoveChild)}
                   </CardContent>
                 </Card>
 
@@ -488,7 +478,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               <SelectTrigger id="new-child-type" className="rounded-android-tile">
                                 <SelectValue placeholder="Sélectionner un type" />
                               </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
                                 <ScrollArea className="h-40">
                                   {Object.keys(iconMap).sort().map(iconName => {
                                     const IconComponent = iconMap[iconName];
@@ -518,7 +508,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                               <SelectTrigger id="new-child-icon" className="rounded-android-tile">
                                 <SelectValue placeholder="Sélectionner une icône" />
                               </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
                                 <ScrollArea className="h-40">
                                   {Object.keys(iconMap).sort().map(iconName => {
                                     const IconComponent = iconMap[iconName];

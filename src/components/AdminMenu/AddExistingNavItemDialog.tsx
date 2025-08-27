@@ -254,7 +254,7 @@ const AddExistingNavItemDialog = ({
             <DialogDescription>
               Sélectionnez un élément générique et son parent pour l'ajouter au menu de ce rôle.
             </DialogDescription>
-          </DialogHeader>
+          </DialogDescription>
           <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
             {!selectedGenericItemInfo ? (
               // Step 1: Select Generic Item
@@ -333,6 +333,7 @@ const AddExistingNavItemDialog = ({
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
                     disabled={false} // Explicitly set to false to ensure it's always clickable
+                    popoverContentClassName="z-[9999]" // Ensure high z-index for this dropdown's content
                   />
                   {defaultParentId === null && (
                     <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">

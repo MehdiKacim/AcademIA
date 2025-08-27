@@ -810,6 +810,7 @@ const RoleNavConfigsPage = () => {
           onSave={fetchAndStructureNavItems} // Callback to refresh the list
           getDescendantIds={getDescendantIds}
           iconMap={iconMap}
+          popoverContentClassName="z-[9999]" // Ensure high z-index for this dropdown's content
         />
       )}
 

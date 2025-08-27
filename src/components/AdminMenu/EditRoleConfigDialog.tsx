@@ -30,6 +30,7 @@ interface EditRoleConfigDialogProps {
   onSave: () => void; // Callback to refresh parent list
   getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
   iconMap: { [key: string]: React.ElementType };
+  popoverContentClassName?: string; // New prop for popover content class
 }
 
 // Helper function to get item type label
@@ -52,6 +53,7 @@ const EditRoleConfigDialog = ({
   onSave,
   getDescendantIds,
   iconMap,
+  popoverContentClassName, // Destructure new prop
 }: EditRoleConfigDialogProps) => {
   const [selectedParentForEdit, setSelectedParentForEdit] = useState<string | null>(null);
   const [editConfigOrderIndex, setEditConfigOrderIndex] = useState(0);
