@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useRole } from "@/contexts/RoleContext";
 import { useCourseChat } from "@/contexts/CourseChatContext";
-import AiAPersistentChat from "@/components/AiAPersistentChat";
-import GlobalSearchOverlay from "@/components/GlobalSearchOverlay";
+import TopBarOverlay from "@/components/TopBarOverlay"; // Changed import name
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,8 +42,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
   const { currentUserProfile, isLoadingUser, currentRole, signOut, navItems } = useRole();
-  const { isChatOpen, openChat } = useCourseChat(); // Get openChat here
-  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const { isTopBarOverlayOpen, openTopBarOverlay, closeTopBarOverlay, activeOverlayTab } = useCourseChat(); // Updated useCourseChat
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -62,18 +60,18 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
     return items.map(item => {
       let newItem = { ...item };
       if (newItem.id === 'nav-global-search') {
-        newItem.onClick = () => setIsSearchOverlayOpen(true);
+        newItem.onClick = () => openTopBarOverlay('search'); // Open TopBarOverlay in search mode
       } else if (newItem.id === 'nav-about') {
         newItem.onClick = () => setIsAboutModalOpen(true);
       } else if (newItem.id === 'nav-aia-chat') {
-        newItem.onClick = () => openChat(); // Call openChat directly
+        newItem.onClick = () => openTopBarOverlay('aia'); // Open TopBarOverlay in AiA chat mode
       }
       if (newItem.children && newItem.children.length > 0) {
         newItem.children = injectActionHandlers(newItem.children);
       }
       return newItem;
     });
-  }, [openChat, setIsSearchOverlayOpen, setIsAboutModalOpen]); // Add dependencies
+  }, [openTopBarOverlay, setIsAboutModalOpen]); // Add dependencies
 
   const fullNavTreeWithActions = React.useMemo((): NavItem[] => {
     return injectActionHandlers(navItems);
@@ -105,9 +103,9 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
       setIsAdminModalOpen(true);
     } else if (currentUserProfile && isModifierPressed && event.key === 'f') {
       event.preventDefault();
-      setIsSearchOverlayOpen(true);
+      openTopBarOverlay('search'); // Open TopBarOverlay in search mode
     }
-  }, [currentUserProfile, setIsAdminModalOpen]);
+  }, [currentUserProfile, setIsAdminModalOpen, openTopBarOverlay]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -300,7 +298,7 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           {currentUserProfile && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={() => setIsSearchOverlayOpen(true)}>
+                <Button variant="outline" size="icon" onClick={() => openTopBarOverlay('search')}> {/* Updated call */}
                   <Search className="h-5 w-5" />
                   <span className="sr-only">Recherche globale</span>
                 </Button>
@@ -446,14 +444,14 @@ const DashboardLayout = ({ setIsAdminModalOpen }: DashboardLayoutProps) => {
           isOpen={isMobileNavSheetOpen}
           onClose={() => setIsMobileNavSheetOpen(false)}
           navItems={fullNavTreeWithActions} // Use the tree with injected actions
-          onOpenGlobalSearch={() => setIsSearchOverlayOpen(true)}
+          onOpenTopBarOverlay={openTopBarOverlay} // Updated prop
           onOpenAboutModal={() => setIsAboutModalOpen(true)}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           unreadMessagesCount={unreadMessages}
         />
       )}
-      {currentUserProfile && <AiAPersistentChat />}
-      {currentUserProfile && <GlobalSearchOverlay isOpen={isSearchOverlayOpen} onClose={() => setIsSearchOverlayOpen(false)} />}
+      {/* Removed AiAPersistentChat */}
+      {currentUserProfile && <TopBarOverlay isOpen={isTopBarOverlayOpen} onClose={closeTopBarOverlay} initialTab={activeOverlayTab} />} {/* Render TopBarOverlay */}
       {!currentUserProfile && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLoginSuccess={handleAuthSuccess} />}
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>

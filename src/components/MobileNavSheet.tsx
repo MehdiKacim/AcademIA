@@ -20,6 +20,7 @@ import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
+import { useCourseChat } from '@/contexts/CourseChatContext'; // Import useCourseChat
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home,
@@ -47,17 +48,18 @@ interface MobileNavSheetProps {
   isOpen: boolean;
   onClose: () => void;
   navItems: NavItem[];
-  onOpenGlobalSearch: () => void;
+  onOpenTopBarOverlay: (mode: 'search' | 'aia') => void; // Updated prop
   onOpenAboutModal: () => void;
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
 }
 
-const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount }: MobileNavSheetProps) => {
+const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenTopBarOverlay, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount }: MobileNavSheetProps) => {
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const { openTopBarOverlay } = useCourseChat(); // Get openTopBarOverlay from context
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
 
@@ -88,12 +90,17 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
       }
       onClose();
     } else if (item.onClick) {
-      item.onClick();
-      if (item.label !== "Recherche") { // Keep search drawer open if it's the search button
-        onClose();
+      // Special handling for search and AiA chat actions
+      if (item.id === 'nav-global-search') {
+        openTopBarOverlay('search');
+      } else if (item.id === 'nav-aia-chat') {
+        openTopBarOverlay('aia');
+      } else {
+        item.onClick();
       }
+      onClose();
     }
-  }, [navigate, onClose]);
+  }, [navigate, onClose, openTopBarOverlay]);
 
   const handleBack = useCallback(() => {
     setDrawerNavStack(prevStack => {
@@ -112,7 +119,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
-    { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_or_action', onClick: handleLogout, order_index: 2 },
+    { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 2 },
   ];
 
   const staticTopLevelItems: NavItem[] = [];
@@ -198,7 +205,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
               )}
               <ThemeToggle />
               <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" aria-label="Fermer le menu" />
                 <span className="sr-only">Fermer</span>
               </Button>
             </div>

@@ -33,7 +33,7 @@ import AboutModal from "@/components/AboutModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
-// import { loadNavItems } from "./lib/navItems"; // Removed dynamic import
+import { useCourseChat } from '@/contexts/CourseChatContext'; // Import useCourseChat
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -53,6 +53,7 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   };
 
   const { currentUserProfile, currentRole } = useRole();
+  const { openTopBarOverlay } = useCourseChat(); // Get openTopBarOverlay from context
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -66,15 +67,15 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   // useEffect(() => {
   //   if (currentUser) { // Only load dynamic nav items if user is authenticated
   //     const fetchNavItems = async () => {
-  //       console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
+  //       // console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
   //       const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
   //       setDynamicNavItems(loadedItems);
-  //       console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
+  //       // console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
   //     };
   //     fetchNavItems();
   //   } else {
   //     setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
-  //     console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
+  //     // console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
   //   }
   // }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
 
@@ -172,8 +173,8 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   // Static nav items for the header
   const staticHeaderNavItems: NavItem[] = [
     { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, type: 'route' },
-    { id: 'aia', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
-    { id: 'methodology', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
+    { id: 'aia-bot-link', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
+    { id: 'methodology-link', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -291,8 +292,8 @@ const Index = ({ setIsAdminModalOpen }: IndexProps) => {
               <BotMessageSquare className="w-24 h-24 text-primary" />
             </div>
             <div>
-              <Button size="lg" onClick={() => setIsAuthModalOpen(true)}>
-                Découvrir AiA
+              <Button size="lg" onClick={() => openTopBarOverlay('aia')}> {/* Updated call */}
+                Parler à AiA
               </Button>
             </div>
           </div>
