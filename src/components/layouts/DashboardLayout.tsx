@@ -24,12 +24,21 @@ import GlobalSearchOverlay from "@/components/GlobalSearchOverlay"; // Changed i
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
-import { NavItem } from "@/lib/dataModels";
+import { NavItem, Profile } from "@/lib/dataModels";
 // Removed AboutModal import
 import MobileNavSheet from "@/components/MobileNavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion'; // Import motion and AnimatePresence
 import AiAPersistentChat from "@/components/AiAPersistentChat"; // Import AiAPersistentChat
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuContent,
+  NavigationMenuTrigger,
+  NavigationMenuViewport,
+} from "@/components/ui/navigation-menu";
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -40,6 +49,65 @@ interface DashboardLayoutProps {
 const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck,
 };
+
+// ListItem component for NavigationMenuContent
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a"> & { icon?: React.ElementType; onClick?: () => void; target?: string }
+>(({ className, title, children, icon: Icon, onClick, target, ...props }, ref) => {
+  const content = (
+    <div className="text-sm font-medium leading-none flex items-center gap-2">
+      {Icon && <Icon className="h-4 w-4 text-primary" />}
+      {title}
+    </div>
+  );
+
+  const description = children && (
+    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+      {children}
+    </p>
+  );
+
+  const commonClasses = cn(
+    "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+    className
+  );
+
+  if (onClick) {
+    return (
+      <li>
+        <Button
+          variant="ghost"
+          className={cn(commonClasses, "h-auto w-full justify-start text-left")}
+          onClick={onClick}
+          ref={ref as any} // Cast ref for Button
+          {...props}
+        >
+          {content}
+          {description}
+        </Button>
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className={commonClasses}
+          target={target} // Pass target prop
+          {...props}
+        >
+          {content}
+          {description}
+        </a>
+      </NavigationMenuLink>
+    </li>
+  );
+});
+ListItem.displayName = "ListItem";
+
 
 const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: DashboardLayoutProps) => {
   const isMobile = useIsMobile();
@@ -53,10 +121,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [desktopNavStack, setDesktopNavStack] = useState<NavItem[]>([]);
-  const [isDesktopOverlayOpen, setIsDesktopOverlayOpen] = useState(false);
-
-  const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(true);
+  // Removed desktopNavStack, isDesktopOverlayOpen, isDesktopMenuVisible states and their related logic
 
   // Helper function to inject onClick handlers for specific action items
   const injectActionHandlers = useCallback((items: NavItem[]): NavItem[] => {
@@ -123,14 +188,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   }, [handleKeyDown]);
 
   useEffect(() => {
-    if (isMobile || !currentUserProfile) {
-      setIsDesktopMenuVisible(true);
-      return;
-    }
-    setIsDesktopMenuVisible(true);
-  }, [isMobile, currentUserProfile]);
-
-  useEffect(() => {
     let channel: any;
     const fetchAndSubscribeUnreadCount = async () => {
       if (currentUserProfile?.id) {
@@ -178,22 +235,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     };
   }, [currentUserProfile?.id]);
 
-  const handleDesktopCategoryClick = (categoryItem: NavItem) => {
-    setDesktopNavStack(prevStack => [...prevStack, categoryItem]);
-    setIsDesktopOverlayOpen(true);
-  };
-
-  const handleDesktopBackToCategories = () => {
-    setDesktopNavStack(prevStack => {
-      const newStack = [...prevStack];
-      newStack.pop();
-      if (newStack.length === 0) {
-        setIsDesktopOverlayOpen(false);
-      }
-      return newStack;
-    });
-  };
-
   const headerNavItems = fullNavTreeWithActions; // Use the tree with injected actions
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen, onInitiateThemeChange }), [setIsAdminModalOpen, onInitiateThemeChange]);
@@ -228,79 +269,98 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
-          <nav className="flex flex-grow justify-center items-center gap-2 sm:gap-4 flex-wrap">
-            {headerNavItems.map(item => {
-              const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-              const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
-              const isActionItem = item.type === 'category_or_action' && !item.children; // Action items have no children
+          <NavigationMenu className="flex-grow justify-center">
+            <NavigationMenuList>
+                {headerNavItems.map(item => {
+                    const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+                    const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
+                    const isActionItem = item.type === 'category_or_action' && !item.children;
 
-              if (isCategoryWithChildren) {
-                return (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    onClick={() => handleDesktopCategoryClick(item)}
-                    className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
-                  >
-                    {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
-                    {item.label}
-                  </Button>
-                );
-              } else if (isActionItem) {
-                return (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    onClick={(e) => {
-                      if (item.onClick) {
-                        e.preventDefault(); // Prevent any default button behavior if onClick is present
-                        item.onClick();
-                      }
-                    }}
-                    className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
-                  >
-                    {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
-                    {item.label}
-                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && ( // Only for messages
-                      <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Button>
-                );
-              } else { // This is for type 'route'
-                const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                return (
-                  <NavLink
-                    key={item.id}
-                    to={item.route!}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap",
-                        isActive || isLinkActive
-                          ? "text-primary font-semibold"
-                          : "text-muted-foreground hover:text-foreground"
-                      )
+                    if (isCategoryWithChildren) {
+                        return (
+                            <NavigationMenuItem key={item.id}>
+                                <NavigationMenuTrigger className="flex items-center gap-2">
+                                    <IconComponent className="h-4 w-4" />
+                                    {item.label}
+                                </NavigationMenuTrigger>
+                                <NavigationMenuContent className="p-4 bg-background/80 backdrop-blur-lg rounded-lg shadow-lg">
+                                    <ul className="grid w-[400px] gap-3 p-2 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                                        {item.children?.map(child => {
+                                            const ChildIconComponent = iconMap[child.icon_name || 'Info'] || Info;
+                                            return (
+                                                <ListItem
+                                                    key={child.id}
+                                                    title={child.label}
+                                                    href={child.route || '#'}
+                                                    onClick={child.onClick}
+                                                    icon={ChildIconComponent}
+                                                    target={child.is_external ? "_blank" : undefined}
+                                                >
+                                                    {child.description}
+                                                </ListItem>
+                                            );
+                                        })}
+                                    </ul>
+                                </NavigationMenuContent>
+                            </NavigationMenuItem>
+                        );
+                    } else if (isActionItem) {
+                        return (
+                            <NavigationMenuItem key={item.id}>
+                                <Button
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                        if (item.onClick) {
+                                            e.preventDefault();
+                                            item.onClick();
+                                        }
+                                    }}
+                                    className="flex items-center p-2 rounded-md text-sm font-medium whitespace-nowrap hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    <IconComponent className="mr-2 h-4 w-4" />
+                                    {item.label}
+                                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                                        <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                </Button>
+                            </NavigationMenuItem>
+                        );
+                    } else { // item.type === 'route'
+                        const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+                        return (
+                            <NavigationMenuItem key={item.id}>
+                                <NavigationMenuLink asChild>
+                                    <NavLink
+                                        to={item.route!}
+                                        className={cn(
+                                            "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
+                                            isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
+                                        )}
+                                        onClick={(e) => {
+                                            if (item.onClick) {
+                                                e.preventDefault();
+                                                item.onClick();
+                                            }
+                                        }}
+                                        target={item.is_external ? "_blank" : undefined}
+                                    >
+                                        <IconComponent className="mr-2 h-4 w-4" />
+                                        {item.label}
+                                        {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                                            <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </NavLink>
+                                </NavigationMenuLink>
+                            </NavigationMenuItem>
+                        );
                     }
-                    onClick={(e) => {
-                      if (item.onClick) { // Still allow onClick for NavLink if present (e.g. search)
-                        e.preventDefault();
-                        item.onClick();
-                      }
-                    }}
-                  >
-                    {React.createElement(IconComponent, { className: "mr-2 h-4 w-4" })}
-                    {item.label}
-                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
-                      </span>
-                    )}
-                  </NavLink>
-                );
-              }
-            })}
-          </nav>
+                })}
+            </NavigationMenuList>
+        </NavigationMenu>
         )}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           {currentUserProfile && (
@@ -368,77 +428,11 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         </div>
       </header>
 
-      {/* Desktop Category Items Overlay (Full-width drawer) */}
-      {!isMobile && isDesktopOverlayOpen && (
-        <div className="fixed top-[68px] left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8">
-          <div className="max-w-7xl mx-auto flex flex-col gap-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                {desktopNavStack.length > 1 && (
-                  <Button variant="ghost" size="icon" onClick={handleDesktopBackToCategories} className="mr-2">
-                    <ArrowLeft className="h-5 w-5" />
-                    <span className="sr-only">Retour</span>
-                  </Button>
-                )}
-                {desktopNavStack.length > 0 ? (
-                  <>
-                    {React.createElement(iconMap[desktopNavStack[desktopNavStack.length - 1].icon_name || 'Info'], { className: "h-6 w-6 text-primary" })}
-                    {desktopNavStack[desktopNavStack.length - 1].label}
-                  </>
-                ) : "Menu"}
-              </h2>
-              <Button variant="ghost" onClick={() => { setIsDesktopOverlayOpen(false); setDesktopNavStack([]); }}>
-                <X className="h-5 w-5 mr-2" /> Fermer
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {desktopNavStack.length > 0 && desktopNavStack[desktopNavStack.length - 1].children?.map((item) => {
-                const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                const isSubCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined) && item.children && item.children.length > 0;
-
-                return (
-                  <Button
-                    key={item.id}
-                    variant="outline"
-                    onClick={() => {
-                      if (isSubCategory) {
-                        handleDesktopCategoryClick(item);
-                      } else {
-                        setIsDesktopOverlayOpen(false);
-                        setDesktopNavStack([]);
-                        if (item.route) {
-                          navigate(item.route);
-                        } else if (item.onClick) {
-                          item.onClick();
-                        }
-                      }
-                    }}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-4 rounded-android-tile border text-center h-24", // Apply rounded-android-tile
-                      isLinkActive ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
-                      "transition-all duration-200 ease-in-out"
-                    )}
-                  >
-                    <IconComponent className="h-6 w-6 mb-2" />
-                    <span className="text-sm font-medium line-clamp-1">{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removed Desktop Category Items Overlay */}
 
       <main
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 pt-20 md:pt-24 overflow-y-auto", // Adjusted padding-top
-          !isMobile && isDesktopOverlayOpen && "pt-[calc(68px+1rem+100px)]"
         )}
       >
         <AnimatePresence mode="wait">
