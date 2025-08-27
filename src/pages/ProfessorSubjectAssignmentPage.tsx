@@ -16,7 +16,7 @@ import {
   getAllProfiles,
   getProfilesByRole,
 } from '@/lib/studentData';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } => "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   loadClasses,
   loadSubjects,
