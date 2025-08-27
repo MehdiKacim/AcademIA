@@ -230,6 +230,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
 
 const RoleNavConfigsPage = () => {
   const [isAddExistingItemDialogOpen, setIsAddExistingItemDialogOpen] = useState(false); // New state for the AddExistingNavItemDialog
+  const [addDialogDefaultParentId, setAddDialogDefaultParentId] = useState<string | null | undefined>(undefined); // New state for default parent ID
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const isMobile = useIsMobile(); // Use the hook
   const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]);
@@ -681,10 +682,10 @@ const RoleNavConfigsPage = () => {
                 </CardContent>
               </ContextMenuTrigger>
               <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
-                <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true)}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément existant
-                </ContextMenuItem>
-                <ContextMenuItem className="p-2" onClick={() => setIsAddExistingItemDialogOpen(true, null)}> {/* New option */}
+                <ContextMenuItem className="p-2" onClick={() => {
+                  setAddDialogDefaultParentId(null); // Set default parent to null for root
+                  setIsAddExistingItemDialogOpen(true);
+                }}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un élément racine existant
                 </ContextMenuItem>
               </ContextMenuContent>
@@ -829,6 +830,7 @@ const RoleNavConfigsPage = () => {
           onItemAdded={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
           iconMap={iconMap}
+          defaultParentId={addDialogDefaultParentId} // Pass the default parent ID
         />
       )}
     </div>
