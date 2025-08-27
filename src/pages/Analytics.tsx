@@ -7,17 +7,16 @@ import {
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { loadCourses, loadCurricula, loadClasses } from "@/lib/courseData"; // Removed loadEstablishments
+import { loadCourses, loadCurricula, loadClasses } from "@/lib/courseData";
 import { getAllProfiles, getAllStudentCourseProgress } from "@/lib/studentData";
 import CreatorAnalyticsSection from "@/components/CreatorAnalyticsSection";
 import StudentAnalyticsSection from "@/components/StudentAnalyticsSection";
 import TutorAnalyticsSection from "@/components/TutorAnalyticsSection";
-// Removed EstablishmentAdminAnalyticsSection
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Course, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels"; // Removed Establishment
-import { showError } from "@/utils/toast"; // Import showError
+import { Course, Curriculum, Class, Profile, StudentCourseProgress } from "@/lib/dataModels";
+import { showError } from "@/utils/toast";
 
 const Analytics = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -31,11 +30,9 @@ const Analytics = () => {
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  // Removed establishments state
 
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | undefined>(undefined);
   const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | undefined>(undefined);
-  // Removed selectedEstablishmentFilter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +42,6 @@ const Analytics = () => {
         setStudentCourseProgresses(await getAllStudentCourseProgress());
         setClasses(await loadClasses());
         setCurricula(await loadCurricula());
-        // Removed setEstablishments
       } catch (error: any) {
         console.error("Error fetching data for Analytics:", error);
         showError(`Erreur lors du chargement des données analytiques: ${error.message}`);
@@ -54,16 +50,11 @@ const Analytics = () => {
     fetchData();
   }, [currentUserProfile]);
 
-  // Reset filters when role changes or on initial load
   useEffect(() => {
     setSelectedClassFilter(undefined);
     setSelectedCurriculumFilter(undefined);
-    // Removed setSelectedEstablishmentFilter
+  }, [currentRole, currentUserProfile?.id]);
 
-    // For directors/deputy directors, default to their establishment and disable selection (now removed)
-  }, [currentRole, currentUserProfile?.id]); // Changed dependency from establishment_id to id
-
-  // Removed getEstablishmentName
   const getCurriculumName = (id?: string) => curricula.find(c => c.id === id)?.name || 'N/A';
 
   const handleSendMessageToUser = (userId: string) => {
@@ -114,9 +105,8 @@ const Analytics = () => {
         />
       );
     } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') {
-      // Removed establishment filter requirement for admin/director roles
       return (
-        <CreatorAnalyticsSection // Re-using CreatorAnalyticsSection for admin/director overview
+        <CreatorAnalyticsSection
           view={view}
           selectedClassId={selectedClassFilter}
           selectedCurriculumId={selectedCurriculumFilter}
@@ -132,18 +122,14 @@ const Analytics = () => {
     return null;
   };
 
-  // Removed currentEstablishmentName
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Analytiques
       </h1>
 
       {(currentRole === 'administrator' || currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director') && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {/* Removed Establishment Filter */}
-          {/* Always show curriculum and class filters for relevant roles */}
           <div>
             <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
             <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
@@ -153,7 +139,7 @@ const Analytics = () => {
               <SelectTrigger id="select-curriculum">
                 <SelectValue placeholder="Tous les cursus" />
               </SelectTrigger>
-              <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+              <SelectContent className="rounded-android-tile">
                 <SelectItem value="all">Tous les cursus</SelectItem>
                 {curricula
                   .map(cur => (
@@ -170,7 +156,7 @@ const Analytics = () => {
               <SelectTrigger id="select-class">
                 <SelectValue placeholder="Toutes les classes" />
               </SelectTrigger>
-              <SelectContent className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+              <SelectContent className="rounded-android-tile">
                 <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes
                   .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)
