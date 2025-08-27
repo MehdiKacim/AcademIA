@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, Search, Archive } from "lucide-react";
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
-import { Profile, Message, Curriculum, Class, StudentClassEnrollment } => '@/lib/dataModels'; // Removed Establishment import
+import { Profile, Message, Curriculum, Class, StudentClassEnrollment } from '@/lib/dataModels'; // Removed Establishment import
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, getAllStudentClassEnrollments } from '@/lib/studentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
