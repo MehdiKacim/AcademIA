@@ -269,8 +269,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
-          <NavigationMenu className="mx-auto"> {/* Removed flex-grow, added mx-auto */}
-            <NavigationMenuList className="justify-center"> {/* Ensure list itself is centered within the constrained menu */}
+          <NavigationMenu className="flex-grow"> {/* Added flex-grow back, removed mx-auto */}
+            <NavigationMenuList className="justify-center">
                 {headerNavItems.map(item => {
                     const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                     const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
