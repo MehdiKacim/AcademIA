@@ -270,105 +270,107 @@ const AddExistingNavItemDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile"> {/* Apply responsive dimensions */}
-        <DialogHeader>
-          <DialogTitle>Ajouter un élément existant au menu</DialogTitle>
-          <DialogDescription>
-            Sélectionnez un élément générique et son parent pour l'ajouter au menu de ce rôle.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {!selectedGenericItemInfo ? (
-            // Step 1: Select Generic Item
-            <div className="space-y-4">
-              <Label htmlFor="generic-item-search-input">1. Rechercher et sélectionner un élément générique</Label>
-              <Input
-                id="generic-item-search-input"
-                placeholder="Rechercher un élément..."
-                value={genericItemSearchQuery}
-                onChange={(e) => setGenericItemSearchQuery(e.target.value)}
-                className="mb-2 rounded-android-tile"
-              />
-              <ScrollArea className="h-64 w-full rounded-md border">
-                <div className="p-2 space-y-2">
-                  {availableGenericItemsOptions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Aucun élément disponible à ajouter ou à re-parenté.
-                    </p>
-                  ) : (
-                    availableGenericItemsOptions.map(item => {
-                      const ItemIcon = iconMap[item.icon_name || 'Info'] || Info;
-                      return (
-                        <Card key={item.id} className="flex items-center justify-between p-3 rounded-android-tile">
-                          <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
-                            <ItemIcon className="h-5 w-5 text-primary" />
-                            <div>
-                              <p className="font-medium">{item.label}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
-                                {item.isConfiguredAsRoot && <span className="ml-2 italic">(Actuellement racine)</span>}
-                              </p>
-                            </div>
-                          </div>
-                          <Button size="sm" onClick={() => handleSelectGenericItem(item)}>
-                            Sélectionner
-                          </Button>
-                        </Card>
-                      );
-                    })
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-          ) : (
-            // Step 2: Choose Parent for Selected Item
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>2. Choisir le parent pour l'élément sélectionné</Label>
-                <Button variant="ghost" size="sm" onClick={handleCancelSelection}>
-                  <ArrowLeft className="h-4 w-4 mr-2" /> Annuler la sélection
-                </Button>
-              </div>
-              <Card className="p-3 rounded-android-tile bg-muted/20">
-                <CardHeader className="p-0 pb-2">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <IconComponent className="h-5 w-5 text-primary" /> {selectedGenericItemInfo.label}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    {getItemTypeLabel(selectedGenericItemInfo.type)} {selectedGenericItemInfo.route && `(${selectedGenericItemInfo.route})`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0 text-sm text-muted-foreground">
-                  {selectedGenericItemInfo.description || "Aucune description."}
-                </CardContent>
-              </Card>
-
-              <div>
-                <Label htmlFor="parent-search-input" className="mb-2 block">Rechercher un parent</Label>
+        <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+          <DialogHeader>
+            <DialogTitle>Ajouter un élément existant au menu</DialogTitle>
+            <DialogDescription>
+              Sélectionnez un élément générique et son parent pour l'ajouter au menu de ce rôle.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+            {!selectedGenericItemInfo ? (
+              // Step 1: Select Generic Item
+              <div className="space-y-4">
+                <Label htmlFor="generic-item-search-input">1. Rechercher et sélectionner un élément générique</Label>
                 <Input
-                  id="parent-search-input"
-                  placeholder="Rechercher un parent..."
-                  value={parentSearchQuery}
-                  onChange={(e) => setParentSearchQuery(e.target.value)}
+                  id="generic-item-search-input"
+                  placeholder="Rechercher un élément..."
+                  value={genericItemSearchQuery}
+                  onChange={(e) => setGenericItemSearchQuery(e.target.value)}
                   className="mb-2 rounded-android-tile"
                 />
-                <SearchableDropdown
-                  value={selectedParentForNewItem}
-                  onValueChange={setSelectedParentForNewItem}
-                  options={availableParentsOptions}
-                  placeholder="Sélectionner un parent..."
-                  emptyMessage="Aucun parent trouvé."
-                  iconMap={iconMap}
-                  popoverContentClassName="z-[999] rounded-android-tile"
-                />
+                <ScrollArea className="h-64 w-full rounded-md border">
+                  <div className="p-2 space-y-2">
+                    {availableGenericItemsOptions.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        Aucun élément disponible à ajouter ou à re-parenté.
+                      </p>
+                    ) : (
+                      availableGenericItemsOptions.map(item => {
+                        const ItemIcon = iconMap[item.icon_name || 'Info'] || Info;
+                        return (
+                          <Card key={item.id} className="flex items-center justify-between p-3 rounded-android-tile">
+                            <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
+                              <ItemIcon className="h-5 w-5 text-primary" />
+                              <div>
+                                <p className="font-medium">{item.label}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {getItemTypeLabel(item.type)} {item.route && `(${item.route})`}
+                                  {item.isConfiguredAsRoot && <span className="ml-2 italic">(Actuellement racine)</span>}
+                                </p>
+                              </div>
+                            </div>
+                            <Button size="sm" onClick={() => handleSelectGenericItem(item)}>
+                              Sélectionner
+                            </Button>
+                          </Card>
+                        );
+                      })
+                    )}
+                  </div>
+                </ScrollArea>
               </div>
-            </div>
-          )}
+            ) : (
+              // Step 2: Choose Parent for Selected Item
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>2. Choisir le parent pour l'élément sélectionné</Label>
+                  <Button variant="ghost" size="sm" onClick={handleCancelSelection}>
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Annuler la sélection
+                  </Button>
+                </div>
+                <Card className="p-3 rounded-android-tile bg-muted/20">
+                  <CardHeader className="p-0 pb-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <IconComponent className="h-5 w-5 text-primary" /> {selectedGenericItemInfo.label}
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      {getItemTypeLabel(selectedGenericItemInfo.type)} {selectedGenericItemInfo.route && `(${selectedGenericItemInfo.route})`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0 text-sm text-muted-foreground">
+                    {selectedGenericItemInfo.description || "Aucune description."}
+                  </CardContent>
+                </Card>
+
+                <div>
+                  <Label htmlFor="parent-search-input" className="mb-2 block">Rechercher un parent</Label>
+                  <Input
+                    id="parent-search-input"
+                    placeholder="Rechercher un parent..."
+                    value={parentSearchQuery}
+                    onChange={(e) => setParentSearchQuery(e.target.value)}
+                    className="mb-2 rounded-android-tile"
+                  />
+                  <SearchableDropdown
+                    value={selectedParentForNewItem}
+                    onValueChange={setSelectedParentForNewItem}
+                    options={availableParentsOptions}
+                    placeholder="Sélectionner un parent..."
+                    emptyMessage="Aucun parent trouvé."
+                    iconMap={iconMap}
+                    popoverContentClassName="z-[999] rounded-android-tile"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAddExistingItem} disabled={isAddButtonDisabled}>
+              {isAdding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément
+            </Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handleAddExistingItem} disabled={isAddButtonDisabled}>
-            {isAdding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

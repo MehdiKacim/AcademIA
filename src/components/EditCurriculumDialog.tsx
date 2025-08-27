@@ -81,44 +81,46 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave }: EditCurri
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-        <DialogHeader>
-          <DialogTitle>Modifier le cursus</DialogTitle>
-          <DialogDescription>
-            Mettez à jour les informations du cursus.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Nom
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="col-span-3"
-              required
-            />
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+        <div className="flex flex-col"> {/* Wrap children in a single div */}
+          <DialogHeader>
+            <DialogTitle>Modifier le cursus</DialogTitle>
+            <DialogDescription>
+              Mettez à jour les informations du cursus.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Nom
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            {/* Removed Establishment Select */}
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          {/* Removed Establishment Select */}
+          <DialogFooter>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

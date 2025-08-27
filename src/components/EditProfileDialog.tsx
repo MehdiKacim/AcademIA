@@ -125,124 +125,126 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-        <DialogHeader>
-          <DialogTitle>Modifier le profil</DialogTitle>
-          <DialogDescription>
-            Mettez à jour les informations de votre profil. Cliquez sur enregistrer lorsque vous avez terminé.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="firstName" className="text-right">
-              Prénom
-            </Label>
-            <Input
-              id="firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="col-span-3"
-            />
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+        <div className="flex flex-col"> {/* Wrap children in a single div */}
+          <DialogHeader>
+            <DialogTitle>Modifier le profil</DialogTitle>
+            <DialogDescription>
+              Mettez à jour les informations de votre profil. Cliquez sur enregistrer lorsque vous avez terminé.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="firstName" className="text-right">
+                Prénom
+              </Label>
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="lastName" className="text-right">
+                Nom
+              </Label>
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="username" className="text-right">
+                Nom d'utilisateur
+              </Label>
+              <Input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            {currentRole === 'student' && (
+              <>
+                {/* Removed Establishment Select */}
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="enrollmentStartDate" className="text-right">
+                    Début inscription
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                          !enrollmentStartDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                      <Calendar
+                        mode="single"
+                        selected={enrollmentStartDate}
+                        onSelect={setEnrollmentStartDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="enrollmentEndDate" className="text-right">
+                    Fin inscription
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                          !enrollmentEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                      <Calendar
+                        mode="single"
+                        selected={enrollmentEndDate}
+                        onSelect={setEnrollmentEndDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </>
+            )}
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="lastName" className="text-right">
-              Nom
-            </Label>
-            <Input
-              id="lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="username" className="text-right">
-              Nom d'utilisateur
-            </Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="email" className="text-right">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          {currentRole === 'student' && (
-            <>
-              {/* Removed Establishment Select */}
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="enrollmentStartDate" className="text-right">
-                  Début inscription
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                        !enrollmentStartDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                    <Calendar
-                      mode="single"
-                      selected={enrollmentStartDate}
-                      onSelect={setEnrollmentStartDate}
-                      initialFocus
-                      locale={fr}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="enrollmentEndDate" className="text-right">
-                  Fin inscription
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                        !enrollmentEndDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                    <Calendar
-                      mode="single"
-                      selected={enrollmentEndDate}
-                      onSelect={setEnrollmentEndDate}
-                      initialFocus
-                      locale={fr}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </>
-          )}
+          <DialogFooter>
+            <Button onClick={handleSave}>Enregistrer les modifications</Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handleSave}>Enregistrer les modifications</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

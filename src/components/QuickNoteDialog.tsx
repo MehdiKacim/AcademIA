@@ -71,29 +71,31 @@ const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-        <DialogHeader>
-          <DialogTitle>Ajouter une note rapide</DialogTitle>
-          <DialogDescription>
-            Saisissez une note pour "{contextTitle}".
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <ReactQuill
-            theme="snow"
-            value={noteContent}
-            onChange={setNoteContent}
-            modules={quillModules}
-            formats={quillFormats}
-            className="h-auto min-h-[100px] max-h-[200px] overflow-y-auto mb-10" // Adjusted height
-            placeholder="Votre note ici..."
-          />
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+        <div className="flex flex-col"> {/* Wrap children in a single div */}
+          <DialogHeader>
+            <DialogTitle>Ajouter une note rapide</DialogTitle>
+            <DialogDescription>
+              Saisissez une note pour "{contextTitle}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <ReactQuill
+              theme="snow"
+              value={noteContent}
+              onChange={setNoteContent}
+              modules={quillModules}
+              formats={quillFormats}
+              className="h-auto min-h-[100px] max-h-[200px] overflow-y-auto mb-10" // Adjusted height
+              placeholder="Votre note ici..."
+            />
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAddNote} disabled={!noteContent.replace(/<[^>]*>/g, '').trim()}>
+              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la note
+            </Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handleAddNote} disabled={!noteContent.replace(/<[^>]*>/g, '').trim()}>
-            <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la note
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -42,6 +42,7 @@ import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { Switch } from '@/components/ui/switch'; // Import Switch
 import { Loader2 } from 'lucide-react'; // Import Loader2
 import SearchableDropdown from '@/components/ui/SearchableDropdown'; // Import the new component
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'; // Import ContextMenu
 
 // Map icon_name strings to Lucide React components (re-declare or import from a central place)
 const iconMap: { [key: string]: React.ElementType } = { // Changed ReactType to React.ElementType
@@ -392,172 +393,173 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile"> {/* Apply responsive dimensions */}
-        <DialogHeader className="mb-4">
-          <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-            Gérer les sous-éléments de "{parentItem.label}"
-          </DialogTitle>
-          <DialogDescription>
-            Ajoutez, supprimez et réorganisez les éléments enfants de cette catégorie.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex-grow overflow-y-auto pr-2">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-              <Card className="flex flex-col rounded-android-tile">
-                <CardHeader>
-                  <CardTitle className="text-lg">Ajouter un sous-élément existant</CardTitle>
-                  <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow flex flex-col gap-4">
-                  <div>
-                    <Label htmlFor="generic-item-search-input">Rechercher un élément</Label>
-                    <Input
-                      id="generic-item-search-input"
-                      placeholder="Rechercher un élément..."
-                      value={genericItemSearchQuery}
-                      onChange={(e) => setGenericItemSearchQuery(e.target.value)}
-                      className="mb-2 rounded-android-tile"
-                    />
-                  </div>
-                  <SearchableDropdown
-                    value={selectedGenericItemToAdd}
-                    onValueChange={setSelectedGenericItemToAdd}
-                    options={availableChildrenForAdd.map(item => ({
-                      id: item.id,
-                      label: item.label,
-                      icon_name: item.icon_name,
-                      level: 0,
-                      isNew: false,
-                    }))}
-                    placeholder="Sélectionner un élément à ajouter"
-                    emptyMessage="Aucun élément disponible."
-                    iconMap={iconMap}
-                    popoverContentClassName="z-[999] rounded-android-tile" // Increased z-index, apply rounded-android-tile
-                  />
-                  <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
-                    <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="flex flex-col rounded-android-tile">
-                <CardHeader>
-                  <CardTitle className="text-lg">Sous-éléments actuels</CardTitle>
-                  <CardDescription>Réorganisez ou supprimez les sous-éléments.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow overflow-y-auto">
-                  {renderChildItemsList(currentChildren, 'current-children-container', true, handleRemoveChild)}
-                </CardContent>
-              </Card>
-
-              {/* New section for creating a new generic item and adding it as a child */}
-              <Collapsible open={isNewChildFormOpen} onOpenChange={setIsNewChildFormOpen} className="lg:col-span-2">
-                <Card className="rounded-android-tile">
+      <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[100] rounded-android-tile">
+        <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+              Gérer les sous-éléments de "{parentItem.label}"
+            </DialogTitle>
+            <DialogDescription>
+              Ajoutez, supprimez et réorganisez les éléments enfants de cette catégorie.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-grow overflow-y-auto pr-2">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                <Card className="flex flex-col rounded-android-tile">
                   <CardHeader>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-between p-0">
-                        <CardTitle className="flex items-center gap-2">
-                          <PlusCircle className="h-6 w-6 text-primary" /> Créer un nouvel élément générique et l'ajouter
-                        </CardTitle>
-                        {isNewChildFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CardDescription>Créez un tout nouvel élément de navigation et ajoutez-le directement comme enfant de "{parentItem.label}".</CardDescription>
+                    <CardTitle className="text-lg">Ajouter un sous-élément existant</CardTitle>
+                    <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
                   </CardHeader>
-                  <CollapsibleContent>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="new-child-label">Libellé</Label>
-                          <Input id="new-child-label" value={newChildLabel} onChange={(e) => setNewChildLabel(e.target.value)} required />
-                        </div>
-                        <div>
-                          <Label htmlFor="new-child-type">Type d'élément</Label>
-                          <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
-                            setNewChildType(value);
-                            if (value === 'category_or_action') {
-                              setNewChildIsExternal(false);
-                            }
-                          }}>
-                            <SelectTrigger id="new-child-type" className="rounded-android-tile">
-                              <SelectValue placeholder="Sélectionner un type" />
-                            </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
-                              <ScrollArea className="h-40">
-                                {Object.keys(iconMap).sort().map(iconName => {
-                                  const IconComponent = iconMap[iconName];
-                                  return (
-                                    <SelectItem key={iconName} value={iconName}>
-                                      <div className="flex items-center gap-2">
-                                        <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
-                                      </div>
-                                    </SelectItem>
-                                  );
-                                })}
-                              </ScrollArea>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
-                          <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} />
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category_or_action'} />
-                          <Label htmlFor="new-child-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
-                        </div>
-                        <div>
-                          <Label htmlFor="new-child-icon">Nom de l'icône (Lucide React)</Label>
-                          <Select value={newChildIconName} onValueChange={setNewChildIconName}>
-                            <SelectTrigger id="new-child-icon" className="rounded-android-tile">
-                              <SelectValue placeholder="Sélectionner une icône" />
-                            </SelectTrigger>
-                            <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
-                              <ScrollArea className="h-40">
-                                {Object.keys(iconMap).sort().map(iconName => {
-                                  const IconComponent = iconMap[iconName];
-                                  return (
-                                    <SelectItem key={iconName} value={iconName}>
-                                      <div className="flex items-center gap-2">
-                                        <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
-                                      </div>
-                                    </SelectItem>
-                                  );
-                                })}
-                              </ScrollArea>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="new-child-description">Description (optionnel)</Label>
-                          <Textarea id="new-child-description" value={newChildDescription} onChange={(e) => setNewChildDescription(e.target.value)} />
-                        </div>
-                      </div>
-                      <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}>
-                        {isAddingNewChild ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et ajouter
-                      </Button>
-                    </CardContent>
-                  </CollapsibleContent>
+                  <CardContent className="flex-grow flex flex-col gap-4">
+                    <div>
+                      <Label htmlFor="generic-item-search-input">Rechercher un élément</Label>
+                      <Input
+                        id="generic-item-search-input"
+                        placeholder="Rechercher un élément..."
+                        value={genericItemSearchQuery}
+                        onChange={(e) => setGenericItemSearchQuery(e.target.value)}
+                        className="mb-2 rounded-android-tile"
+                      />
+                    </div>
+                    <SearchableDropdown
+                      value={selectedGenericItemToAdd}
+                      onValueChange={setSelectedGenericItemToAdd}
+                      options={availableChildrenForAdd.map(item => ({
+                        id: item.id,
+                        label: item.label,
+                        icon_name: item.icon_name,
+                        level: 0,
+                        isNew: false,
+                      }))}
+                      placeholder="Sélectionner un élément à ajouter"
+                      emptyMessage="Aucun élément disponible."
+                      iconMap={iconMap}
+                      popoverContentClassName="z-[999] rounded-android-tile" // Increased z-index, apply rounded-android-tile
+                    />
+                    <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
+                      <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
+                    </Button>
+                  </CardContent>
                 </Card>
-              </Collapsible>
-            </div>
-            <DragOverlay>
-              {activeDragItem ? (
-                <SortableChildItem
-                  item={activeDragItem}
-                  level={0}
-                  onRemove={() => {}}
-                  isDragging={true}
-                  isDraggableAndDeletable={true}
-                />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+
+                <Card className="flex flex-col rounded-android-tile">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Sous-éléments actuels</CardTitle>
+                    <CardDescription>Réorganisez ou supprimez les sous-éléments.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-grow overflow-y-auto">
+                    {renderChildItemsList(currentChildren, 'current-children-container', true, handleRemoveChild)}
+                  </CardContent>
+                </Card>
+
+                {/* New section for creating a new generic item and adding it as a child */}
+                <Collapsible open={isNewChildFormOpen} onOpenChange={setIsNewChildFormOpen} className="lg:col-span-2">
+                  <Card className="rounded-android-tile">
+                    <CardHeader>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between p-0">
+                          <CardTitle className="flex items-center gap-2">
+                            <PlusCircle className="h-6 w-6 text-primary" /> Créer un nouvel élément générique et l'ajouter
+                          </CardTitle>
+                          {isNewChildFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="new-child-label">Libellé</Label>
+                              <Input id="new-child-label" value={newChildLabel} onChange={(e) => setNewChildLabel(e.target.value)} required />
+                            </div>
+                            <div>
+                              <Label htmlFor="new-child-type">Type d'élément</Label>
+                              <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
+                                setNewChildType(value);
+                                if (value === 'category_or_action') {
+                                  setNewChildIsExternal(false);
+                                }
+                              }}>
+                                <SelectTrigger id="new-child-type" className="rounded-android-tile">
+                                  <SelectValue placeholder="Sélectionner un type" />
+                                </SelectTrigger>
+                                <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                                  <ScrollArea className="h-40">
+                                    {Object.keys(iconMap).sort().map(iconName => {
+                                      const IconComponent = iconMap[iconName];
+                                      return (
+                                        <SelectItem key={iconName} value={iconName}>
+                                          <div className="flex items-center gap-2">
+                                            <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
+                                          </div>
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </ScrollArea>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
+                              <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category_or_action'} />
+                              <Label htmlFor="new-child-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
+                            </div>
+                            <div>
+                              <Label htmlFor="new-child-icon">Nom de l'icône (Lucide React)</Label>
+                              <Select value={newChildIconName} onValueChange={setNewChildIconName}>
+                                <SelectTrigger id="new-child-icon" className="rounded-android-tile">
+                                  <SelectValue placeholder="Sélectionner une icône" />
+                                </SelectTrigger>
+                                <SelectContent className="backdrop-blur-lg bg-background/80 z-[999] rounded-android-tile"> {/* Increased z-index, apply rounded-android-tile */}
+                                  <ScrollArea className="h-40">
+                                    {Object.keys(iconMap).sort().map(iconName => {
+                                      const IconComponent = iconMap[iconName];
+                                      return (
+                                        <SelectItem key={iconName} value={iconName}>
+                                          <div className="flex items-center gap-2">
+                                            <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
+                                          </div>
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </ScrollArea>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label htmlFor="new-child-description">Description (optionnel)</Label>
+                              <Textarea id="new-child-description" value={newChildDescription} onChange={(e) => setNewChildDescription(e.target.value)} />
+                            </div>
+                          </div>
+                          <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}>
+                            {isAddingNewChild ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et ajouter
+                          </Button>
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                </Card>
+              </div>
+              <DragOverlay>
+                {activeDragItem ? (
+                  <SortableChildItem
+                    item={activeDragItem}
+                    level={0}
+                    onRemove={() => {}}
+                    isDragging={true}
+                    isDraggableAndDeletable={true}
+                  />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          </div>
+          <DialogFooter>
+            <Button onClick={onClose}>Fermer</Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={onClose}>Fermer</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

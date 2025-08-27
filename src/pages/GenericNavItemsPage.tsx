@@ -243,79 +243,77 @@ const GenericNavItemsPage = () => {
                 {isNewItemFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </Button>
             </CollapsibleTrigger>
-            <CardDescription>Créez un nouveau lien ou une catégorie disponible pour tous les rôles.</CardDescription>
-          </CardHeader>
-          <CollapsibleContent>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="new-item-label">Libellé</Label>
-                  <Input id="new-item-label" value={newItemLabel} onChange={(e) => setNewItemLabel(e.target.value)} required />
-                </div>
-                <div>
-                  <Label htmlFor="new-item-type">Type d'élément</Label>
-                  <Select value={newItemType} onValueChange={(value: NavItem['type']) => {
-                    setNewItemType(value);
-                    if (value === 'category_or_action') {
-                      setNewItemIsExternal(false);
-                    }
-                  }}>
-                    <SelectTrigger id="new-item-type" className="rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
-                      <ScrollArea className="h-40">
-                        {navItemTypes.map(type => (
-                          <SelectItem key={type} value={type}>
-                            {getItemTypeLabel(type)}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="new-item-route">Route (URL interne ou #hash)</Label>
-                  <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category_or_action' && (newItemRoute === null || newItemRoute === undefined)} />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} disabled={newItemType === 'category_or_action'} />
-                  <Label htmlFor="new-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
-                </div>
-                <div>
-                  <Label htmlFor="new-item-icon">Nom de l'icône (Lucide React)</Label>
-                  <Select value={newItemIconName} onValueChange={setNewItemIconName}>
-                    <SelectTrigger id="new-item-icon" className="rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner une icône" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
-                      <ScrollArea className="h-40">
-                        {Object.keys(iconMap).sort().map(iconName => {
-                          const IconComponent = iconMap[iconName];
-                          return (
-                            <SelectItem key={iconName} value={iconName}>
-                              <div className="flex items-center gap-2">
-                                <IconComponent className="h-4 w-4" /> {iconName}
-                              </div>
+            <CollapsibleContent>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="new-item-label">Libellé</Label>
+                    <Input id="new-item-label" value={newItemLabel} onChange={(e) => setNewItemLabel(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-item-type">Type d'élément</Label>
+                    <Select value={newItemType} onValueChange={(value: NavItem['type']) => {
+                      setNewItemType(value);
+                      if (value === 'category_or_action') {
+                        setNewItemIsExternal(false);
+                      }
+                    }}>
+                      <SelectTrigger id="new-item-type" className="rounded-android-tile">
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <ScrollArea className="h-40">
+                          {navItemTypes.map(type => (
+                            <SelectItem key={type} value={type}>
+                              {getItemTypeLabel(type)}
                             </SelectItem>
-                          );
-                        })}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                          ))}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="new-item-route">Route (URL interne ou #hash)</Label>
+                    <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category_or_action' && (newItemRoute === null || newItemRoute === undefined)} />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} disabled={newItemType === 'category_or_action'} />
+                    <Label htmlFor="new-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
+                  </div>
+                  <div>
+                    <Label htmlFor="new-item-icon">Nom de l'icône (Lucide React)</Label>
+                    <Select value={newItemIconName} onValueChange={setNewItemIconName}>
+                      <SelectTrigger id="new-item-icon" className="rounded-android-tile">
+                        <SelectValue placeholder="Sélectionner une icône" />
+                      </SelectTrigger>
+                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <ScrollArea className="h-40">
+                          {Object.keys(iconMap).sort().map(iconName => {
+                            const IconComponent = iconMap[iconName];
+                            return (
+                              <SelectItem key={iconName} value={iconName}>
+                                <div className="flex items-center gap-2">
+                                  <IconComponent className="h-4 w-4" /> {iconName}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="new-item-description">Description (optionnel)</Label>
+                    <Textarea id="new-item-description" value={newItemDescription} onChange={(e) => setNewItemDescription(e.target.value)} />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="new-item-description">Description (optionnel)</Label>
-                  <Textarea id="new-item-description" value={newItemDescription} onChange={(e) => setNewItemDescription(e.target.value)} />
-                </div>
-              </div>
-              <Button onClick={handleAddGenericNavItem} disabled={isAddingItem} className="mt-4">
-                {isAddingItem ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément générique
-              </Button>
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+                <Button onClick={handleAddGenericNavItem} disabled={isAddingItem} className="mt-4">
+                  {isAddingItem ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément générique
+                </Button>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
       <Card className="rounded-android-tile">
         <CardHeader>
@@ -457,80 +455,82 @@ const GenericNavItemsPage = () => {
       {/* Edit Generic Nav Item Dialog */}
       {currentItemToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply responsive dimensions */}
-            <DialogHeader>
-              <DialogTitle>Modifier l'élément de navigation générique</DialogTitle>
-              <DialogDescription>
-                Mettez à jour les détails de l'élément de navigation de base.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
-                <Label htmlFor="edit-item-label" className="sm:text-right">Libellé</Label>
-                <Input id="edit-item-label" value={editItemLabel} onChange={(e) => setEditItemLabel(e.target.value)} className="sm:col-span-3" required />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
-                <Label htmlFor="edit-item-type">Type d'élément</Label>
-                <Select value={editItemType} onValueChange={(value: NavItem['type']) => {
-                  setEditItemType(value);
-                  if (value === 'category_or_action') {
-                    setEditItemIsExternal(false);
-                  }
-                }}>
-                  <SelectTrigger id="edit-item-type" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
-                    <SelectValue placeholder="Sélectionner un type" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                    <ScrollArea className="h-40">
-                      {navItemTypes.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {getItemTypeLabel(type)}
-                        </SelectItem>
-                      ))}
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
-                <Label htmlFor="edit-item-route" className="sm:text-right">Route</Label>
-                <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="sm:col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="sm:col-span-3" disabled={editItemType === 'category_or_action'} />
-                <Label htmlFor="edit-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
-                <Label htmlFor="edit-item-icon">Icône</Label>
-                <Select value={editItemIconName} onValueChange={setEditItemIconName}>
-                  <SelectTrigger id="edit-item-icon" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
-                    <SelectValue placeholder="Sélectionner une icône" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                    <ScrollArea className="h-40">
-                      {Object.keys(iconMap).sort().map(iconName => {
-                        const IconComponent = iconMap[iconName];
-                        return (
-                          <SelectItem key={iconName} value={iconName}>
-                            <div className="flex items-center gap-2">
-                              <IconComponent className="h-4 w-4" /> {iconName}
-                            </div>
+          <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto backdrop-blur-lg bg-background/80 rounded-android-tile">
+            <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+              <DialogHeader>
+                <DialogTitle>Modifier l'élément de navigation générique</DialogTitle>
+                <DialogDescription>
+                  Mettez à jour les détails de l'élément de navigation de base.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                  <Label htmlFor="edit-item-label" className="sm:text-right">Libellé</Label>
+                  <Input id="edit-item-label" value={editItemLabel} onChange={(e) => setEditItemLabel(e.target.value)} className="sm:col-span-3" required />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                  <Label htmlFor="edit-item-type">Type d'élément</Label>
+                  <Select value={editItemType} onValueChange={(value: NavItem['type']) => {
+                    setEditItemType(value);
+                    if (value === 'category_or_action') {
+                      setEditItemIsExternal(false);
+                    }
+                  }}>
+                    <SelectTrigger id="edit-item-type" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
+                      <SelectValue placeholder="Sélectionner un type" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                      <ScrollArea className="h-40">
+                        {navItemTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {getItemTypeLabel(type)}
                           </SelectItem>
-                        );
-                      })}
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
+                        ))}
+                      </ScrollArea>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                  <Label htmlFor="edit-item-route" className="sm:text-right">Route</Label>
+                  <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="sm:col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="sm:col-span-3" disabled={editItemType === 'category_or_action'} />
+                  <Label htmlFor="edit-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                  <Label htmlFor="edit-item-icon">Icône</Label>
+                  <Select value={editItemIconName} onValueChange={setEditItemIconName}>
+                    <SelectTrigger id="edit-item-icon" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
+                      <SelectValue placeholder="Sélectionner une icône" />
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                      <ScrollArea className="h-40">
+                        {Object.keys(iconMap).sort().map(iconName => {
+                          const IconComponent = iconMap[iconName];
+                          return (
+                            <SelectItem key={iconName} value={iconName}>
+                              <div className="flex items-center gap-2">
+                                <IconComponent className="h-4 w-4" /> {iconName}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </ScrollArea>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                  <Label htmlFor="edit-item-description" className="sm:text-right">Description</Label>
+                  <Textarea id="edit-item-description" value={editItemDescription} onChange={(e) => setEditItemDescription(e.target.value)} className="sm:col-span-3" />
+                </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
-                <Label htmlFor="edit-item-description" className="sm:text-right">Description</Label>
-                <Textarea id="edit-item-description" value={editItemDescription} onChange={(e) => setEditItemDescription(e.target.value)} className="sm:col-span-3" />
-              </div>
+              <DialogFooter>
+                <Button onClick={handleSaveEditedGenericNavItem} disabled={isSavingEdit}>
+                  {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+                </Button>
+              </DialogFooter>
             </div>
-            <DialogFooter>
-              <Button onClick={handleSaveEditedGenericNavItem} disabled={isSavingEdit}>
-                {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

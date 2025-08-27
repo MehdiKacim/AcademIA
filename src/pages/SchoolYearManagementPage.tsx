@@ -353,92 +353,94 @@ const SchoolYearManagementPage = () => {
 
       {currentYearToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-            <DialogHeader>
-              <DialogTitle>Modifier l'année scolaire</DialogTitle>
-              <DialogDescription>
-                Mettez à jour les informations de l'année scolaire.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">
-                  Nom
-                </Label>
-                <Input
-                  id="edit-name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="col-span-3"
-                  required
-                />
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+            <div className="flex flex-col"> {/* Wrap children in a single div */}
+              <DialogHeader>
+                <DialogTitle>Modifier l'année scolaire</DialogTitle>
+                <DialogDescription>
+                  Mettez à jour les informations de l'année scolaire.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-name" className="text-right">
+                    Nom
+                  </Label>
+                  <Input
+                    id="edit-name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-start-date" className="text-sm font-medium mb-2 block">Date de début</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                          !editStartDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {editStartDate ? format(editStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                      <Calendar
+                        mode="single"
+                        selected={editStartDate}
+                        onSelect={setEditStartDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label htmlFor="edit-end-date" className="text-sm font-medium mb-2 block">Date de fin</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                          !editEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {editEndDate ? format(editEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                      <Calendar
+                        mode="single"
+                        selected={editEndDate}
+                        onSelect={setEditEndDate}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex items-center justify-between col-span-4">
+                  <Label htmlFor="edit-is-active">Année active</Label>
+                  <Switch
+                    id="edit-is-active"
+                    checked={editIsActive}
+                    onCheckedChange={setEditIsActive}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="edit-start-date" className="text-sm font-medium mb-2 block">Date de début</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                        !editStartDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {editStartDate ? format(editStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                    <Calendar
-                      mode="single"
-                      selected={editStartDate}
-                      onSelect={setEditStartDate}
-                      initialFocus
-                      locale={fr}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div>
-                <Label htmlFor="edit-end-date" className="text-sm font-medium mb-2 block">Date de fin</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
-                        !editEndDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {editEndDate ? format(editEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                    <Calendar
-                      mode="single"
-                      selected={editEndDate}
-                      onSelect={setEditEndDate}
-                      initialFocus
-                      locale={fr}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="flex items-center justify-between col-span-4">
-                <Label htmlFor="edit-is-active">Année active</Label>
-                <Switch
-                  id="edit-is-active"
-                  checked={editIsActive}
-                  onCheckedChange={setEditIsActive}
-                />
-              </div>
+              <DialogFooter>
+                <Button onClick={handleSaveEditedSchoolYear} disabled={isSavingEdit}>
+                  {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+                </Button>
+              </DialogFooter>
             </div>
-            <DialogFooter>
-              <Button onClick={handleSaveEditedSchoolYear} disabled={isSavingEdit}>
-                {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

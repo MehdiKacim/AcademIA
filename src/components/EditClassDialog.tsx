@@ -53,7 +53,7 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
   }, [isOpen, classToEdit]);
 
   const handleSave = async () => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
+    if (!currentUserProfile || !['professeur', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à modifier une classe.");
       return;
     }
@@ -109,63 +109,65 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave }: EditClassDial
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-        <DialogHeader>
-          <DialogTitle>Modifier la classe</DialogTitle>
-          <DialogDescription>
-            Mettez à jour les informations de la classe.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Nom
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="col-span-3"
-              required
-            />
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+        <div className="flex flex-col"> {/* Wrap children in a single div */}
+          <DialogHeader>
+            <DialogTitle>Modifier la classe</DialogTitle>
+            <DialogDescription>
+              Mettez à jour les informations de la classe.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Nom
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            {/* Removed Establishment Select */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="curriculum" className="text-right">
+                Cursus
+              </Label>
+              <Select value={curriculumId} onValueChange={setCurriculumId}>
+                <SelectTrigger id="curriculum" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  <SelectValue placeholder="Sélectionner un cursus" />
+                </SelectTrigger>
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  {curriculaToDisplay.map(cur => (
+                    <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="schoolYear" className="text-right">
+                Année scolaire
+              </Label>
+              <Select value={schoolYearId} onValueChange={setSchoolYearId}>
+                <SelectTrigger id="schoolYear" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  <SelectValue placeholder="Sélectionner l'année scolaire" />
+                </SelectTrigger>
+                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  {schoolYears.map(year => (
+                    <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          {/* Removed Establishment Select */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="curriculum" className="text-right">
-              Cursus
-            </Label>
-            <Select value={curriculumId} onValueChange={setCurriculumId}>
-              <SelectTrigger id="curriculum" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                <SelectValue placeholder="Sélectionner un cursus" />
-              </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                {curriculaToDisplay.map(cur => (
-                  <SelectItem key={cur.id} value={cur.id}>{cur.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="schoolYear" className="text-right">
-              Année scolaire
-            </Label>
-            <Select value={schoolYearId} onValueChange={setSchoolYearId}>
-              <SelectTrigger id="schoolYear" className="col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                <SelectValue placeholder="Sélectionner l'année scolaire" />
-              </SelectTrigger>
-              <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-                {schoolYears.map(year => (
-                  <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <DialogFooter>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

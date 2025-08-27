@@ -218,99 +218,101 @@ const EditRoleConfigDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile"> {/* Apply responsive dimensions */}
-        <DialogHeader>
-          <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
-          <DialogDescription>
-            Ajustez la position et le parent de cet élément dans le menu de ce rôle.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {isParentSelectionStep ? (
-            // Step 1: Select Parent
-            <div className="space-y-4">
-              <Label htmlFor="parent-search-input">1. Rechercher et sélectionner un parent</Label>
-              <Input
-                id="parent-search-input"
-                placeholder="Rechercher un parent..."
-                value={parentSearchQuery}
-                onChange={(e) => setParentSearchQuery(e.target.value)}
-                className="mb-2 rounded-android-tile"
-              />
-              <ScrollArea className="h-64 w-full rounded-md border">
-                <div className="p-2 space-y-2">
-                  {availableParentsOptions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Aucun parent disponible.
-                    </p>
-                  ) : (
-                    availableParentsOptions.map(item => {
-                      const ParentIcon = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
-                      const isSelected = selectedParentForEdit === item.id;
-                      return (
-                        <Card 
-                          key={item.id} 
-                          className={cn(
-                            "flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20",
-                            isSelected && "border-primary ring-2 ring-primary/50 bg-primary/5"
-                          )}
-                          onClick={() => handleSelectParent(item.id)}
-                        >
-                          <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
-                            <ParentIcon className="h-5 w-5 text-primary" />
-                            <div>
-                              <p className="font-medium">{item.label}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.typeLabel} {item.id !== 'none' && item.id !== currentItemToEdit.id && `(ID: ${item.id.substring(0, 8)}...)`}
-                                {item.isNew && <span className="ml-2 italic">(Nouvelle catégorie générique)</span>}
-                              </p>
+      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[100] rounded-android-tile">
+        <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+          <DialogHeader>
+            <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
+            <DialogDescription>
+              Ajustez la position et le parent de cet élément dans le menu de ce rôle.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+            {isParentSelectionStep ? (
+              // Step 1: Select Parent
+              <div className="space-y-4">
+                <Label htmlFor="parent-search-input">1. Rechercher et sélectionner un parent</Label>
+                <Input
+                  id="parent-search-input"
+                  placeholder="Rechercher un parent..."
+                  value={parentSearchQuery}
+                  onChange={(e) => setParentSearchQuery(e.target.value)}
+                  className="mb-2 rounded-android-tile"
+                />
+                <ScrollArea className="h-64 w-full rounded-md border">
+                  <div className="p-2 space-y-2">
+                    {availableParentsOptions.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        Aucun parent disponible.
+                      </p>
+                    ) : (
+                      availableParentsOptions.map(item => {
+                        const ParentIcon = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
+                        const isSelected = selectedParentForEdit === item.id;
+                        return (
+                          <Card 
+                            key={item.id} 
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-android-tile cursor-pointer hover:bg-muted/20",
+                              isSelected && "border-primary ring-2 ring-primary/50 bg-primary/5"
+                            )}
+                            onClick={() => handleSelectParent(item.id)}
+                          >
+                            <div className="flex items-center gap-3 select-none"> {/* Added select-none */}
+                              <ParentIcon className="h-5 w-5 text-primary" />
+                              <div>
+                                <p className="font-medium">{item.label}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.typeLabel} {item.id !== 'none' && item.id !== currentItemToEdit.id && `(ID: ${item.id.substring(0, 8)}...)`}
+                                  {item.isNew && <span className="ml-2 italic">(Nouvelle catégorie générique)</span>}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <Button size="sm" onClick={() => handleSelectParent(item.id)}>
-                            Sélectionner
-                          </Button>
-                        </Card>
-                      );
-                    })
-                  )}
+                            <Button size="sm" onClick={() => handleSelectParent(item.id)}>
+                              Sélectionner
+                            </Button>
+                          </Card>
+                        );
+                      })
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            ) : (
+              // Step 2: Confirm Parent and Set Order
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>2. Confirmer le parent et définir l'ordre</Label>
+                  <Button variant="ghost" size="sm" onClick={handleCancelParentSelection}>
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Changer de parent
+                  </Button>
                 </div>
-              </ScrollArea>
-            </div>
-          ) : (
-            // Step 2: Confirm Parent and Set Order
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>2. Confirmer le parent et définir l'ordre</Label>
-                <Button variant="ghost" size="sm" onClick={handleCancelParentSelection}>
-                  <ArrowLeft className="h-4 w-4 mr-2" /> Changer de parent
-                </Button>
-              </div>
-              <Card className="p-3 rounded-android-tile bg-muted/20">
-                <CardHeader className="p-0 pb-2">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <ItemIcon className="h-5 w-5 text-primary" /> {currentItemToEdit.label}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Parent sélectionné: {selectedParentForEdit === 'none' ? 'Aucun (élément racine)' : availableParentsOptions.find(p => p.id === selectedParentForEdit)?.label || 'Inconnu'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0 text-sm text-muted-foreground">
-                  {currentItemToEdit.description || "Aucune description."}
-                </CardContent>
-              </Card>
+                <Card className="p-3 rounded-android-tile bg-muted/20">
+                  <CardHeader className="p-0 pb-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <ItemIcon className="h-5 w-5 text-primary" /> {currentItemToEdit.label}
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      Parent sélectionné: {selectedParentForEdit === 'none' ? 'Aucun (élément racine)' : availableParentsOptions.find(p => p.id === selectedParentForEdit)?.label || 'Inconnu'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0 text-sm text-muted-foreground">
+                    {currentItemToEdit.description || "Aucune description."}
+                  </CardContent>
+                </Card>
 
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
-                <Label htmlFor="edit-config-order" className="sm:text-right">Ordre</Label>
-                <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="sm:col-span-3 rounded-android-tile" />
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                  <Label htmlFor="edit-config-order" className="sm:text-right">Ordre</Label>
+                  <Input id="edit-config-order" type="number" value={editConfigOrderIndex} onChange={(e) => setEditConfigOrderIndex(parseInt(e.target.value))} className="sm:col-span-3 rounded-android-tile" />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingEdit || isParentSelectionStep}>
+              {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+            </Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingEdit || isParentSelectionStep}>
-            {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

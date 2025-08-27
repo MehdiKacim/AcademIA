@@ -62,46 +62,48 @@ const ChangePasswordDialog = ({ isOpen, onClose }: ChangePasswordDialogProps) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-        <DialogHeader>
-          <DialogTitle>Changer le mot de passe</DialogTitle>
-          <DialogDescription>
-            Entrez votre nouveau mot de passe.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="newPassword" className="text-right">
-              Nouveau mot de passe
-            </Label>
-            <Input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="col-span-3"
-              required
-            />
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile">
+        <div className="flex flex-col"> {/* Wrap children in a single div */}
+          <DialogHeader>
+            <DialogTitle>Changer le mot de passe</DialogTitle>
+            <DialogDescription>
+              Entrez votre nouveau mot de passe.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="newPassword" className="text-right">
+                Nouveau mot de passe
+              </Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="confirmNewPassword" className="text-right">
+                Confirmer le mot de passe
+              </Label>
+              <Input
+                id="confirmNewPassword"
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="confirmNewPassword" className="text-right">
-              Confirmer le mot de passe
-            </Label>
-            <Input
-              id="confirmNewPassword"
-              type="password"
-              value={confirmNewPassword}
-              onChange={(e) => setConfirmNewPassword(e.target.value)}
-              className="col-span-3"
-              required
-            />
-          </div>
+          <DialogFooter>
+            <Button onClick={handlePasswordChange} disabled={isLoading}>
+              {isLoading ? "Mise à jour..." : "Changer le mot de passe"}
+            </Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button onClick={handlePasswordChange} disabled={isLoading}>
-            {isLoading ? "Mise à jour..." : "Changer le mot de passe"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
