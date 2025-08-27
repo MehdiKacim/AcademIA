@@ -248,7 +248,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                     variant="ghost"
                     className={cn(
                       "android-tile flex-col items-start justify-start h-auto min-h-[80px] text-left w-full",
-                      "rounded-android-tile",
+                      "rounded-android-tile hover:scale-[1.02] transition-transform", // Added hover effect
                       isLinkActive ? "active" : "",
                       "transition-all duration-200 ease-in-out"
                     )}

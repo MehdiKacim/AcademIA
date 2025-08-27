@@ -48,7 +48,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
           <React.Fragment key={module.title}>
             <Card
               className={cn(
-                "relative w-full p-6 text-center shadow-xl transition-all duration-300 ease-in-out rounded-android-tile", // Apply rounded-android-tile
+                "relative w-full p-6 text-center shadow-xl transition-all duration-300 ease-in-out rounded-android-tile hover:scale-[1.02] transition-transform", // Apply rounded-android-tile and hover effect
                 accessible ? "border-primary/50 bg-background hover:shadow-2xl" : "border-dashed border-muted-foreground/30 bg-muted/10 opacity-70 cursor-not-allowed",
                 isCompleted && "border-green-500 ring-2 ring-green-500/50"
               )}
@@ -84,7 +84,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
                 {/* Section pour l'affichage des sections du module */}
                 <div className="mt-6">
                   <h4 className="text-lg font-semibold mb-3 text-left">Sections du module:</h4>
-                  <div className="flex flex-row space-x-4 overflow-x-auto pb-4 scrollbar-hide md:flex-col md:space-y-4 md:space-x-0 md:overflow-x-visible md:pb-0 md:items-center">
+                  <div className="flex flex-row space-x-4 overflow-x-auto pb-4 scrollbar-hide md:flex-col md:space-y-4 md:space-x-0 md:overflow-x-visible md:items-center">
                     {module.sections.map((section, sectionIndex) => {
                       const sectionIsCompleted = studentCourseProgress?.modules_progress
                         .find(mp => mp.module_index === index)

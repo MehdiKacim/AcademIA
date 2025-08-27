@@ -157,7 +157,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             isCategory ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             isCategory && level === 0 && "border-l-4 border-primary/50",
-            "flex-wrap sm:flex-nowrap select-none"
+            "flex-wrap sm:flex-nowrap select-none hover:scale-[1.01] transition-transform" // Added hover effect
           )}
         >
           <div className="flex items-center gap-2 flex-grow cursor-pointer select-none" onClick={(e) => {
@@ -789,7 +789,7 @@ const RoleNavConfigsPage = () => {
                     key={role}
                     variant="outline"
                     className={cn(
-                      "flex flex-col items-center justify-center h-24 w-full text-center p-2 rounded-android-tile",
+                      "flex flex-col items-center justify-center h-24 w-full text-center p-2 rounded-android-tile hover:scale-[1.02] transition-transform", // Added hover effect
                       selectedRoleFilter === role ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground",
                       "transition-all duration-200 ease-in-out"
                     )}

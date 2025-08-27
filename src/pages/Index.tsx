@@ -315,7 +315,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
           >
             {methodology.map((item, index) => (
               <div key={index}>
-                <Card className="text-center">
+                <Card className="text-center hover:scale-[1.02] transition-transform"> {/* Added hover effect */}
                   <CardHeader>
                     <div className="flex justify-center mb-4">{item.icon}</div>
                     <CardTitle>{item.title}</CardTitle>

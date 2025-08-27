@@ -12,7 +12,7 @@ interface AdminStatCardProps {
 
 const AdminStatCard = ({ title, description, value, icon: Icon, onClick }: AdminStatCardProps) => {
   return (
-    <Card className={onClick ? "cursor-pointer hover:shadow-lg transition-shadow" : ""}>
+    <Card className={onClick ? "cursor-pointer hover:shadow-lg transition-shadow hover:scale-[1.02] transition-transform" : "hover:scale-[1.02] transition-transform"}>
       <CardHeader className="flex flex-row items-center gap-3 pb-3">
         {Icon && <Icon className="h-5 w-5 text-primary" />}
         <CardTitle className="text-lg">{title}</CardTitle>

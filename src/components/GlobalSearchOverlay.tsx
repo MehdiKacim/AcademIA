@@ -130,7 +130,7 @@ const GlobalSearchOverlay: React.FC<GlobalSearchOverlayProps> = ({ isOpen, onClo
             <Button
               key={item.id}
               variant="ghost"
-              className="w-full justify-start h-auto py-2 px-3 text-left rounded-android-tile"
+              className="w-full justify-start h-auto py-2 px-3 text-left rounded-android-tile hover:scale-[1.02] transition-transform"
               onClick={() => handleResultClick(getPath(item))}
             >
               {getLabel(item)}

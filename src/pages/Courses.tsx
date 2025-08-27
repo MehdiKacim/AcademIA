@@ -102,7 +102,7 @@ const Courses = () => {
                 <Card
                   key={course.id}
                   className={cn(
-                    "flex flex-col shadow-lg transition-all duration-300 ease-in-out rounded-android-tile", // Apply rounded-android-tile
+                    "flex flex-col shadow-lg transition-all duration-300 ease-in-out rounded-android-tile hover:scale-[1.02] transition-transform", // Apply rounded-android-tile and hover effect
                     course.isCompleted && "border-green-500 ring-2 ring-green-500/50"
                   )}
                 >
@@ -154,7 +154,7 @@ const Courses = () => {
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => (
-              <Card key={course.id} className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+              <Card key={course.id} className="rounded-android-tile hover:scale-[1.02] transition-transform"> {/* Apply rounded-android-tile and hover effect */}
                 <CardHeader>
                   <CardTitle>{course.title}</CardTitle>
                   <CardDescription>{course.description}</CardDescription>
@@ -190,7 +190,7 @@ const Courses = () => {
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((data: any, index: number) => (
-              <Card key={index} className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+              <Card key={index} className="rounded-android-tile hover:scale-[1.02] transition-transform"> {/* Apply rounded-android-tile and hover effect */}
                 <CardHeader>
                   <CardTitle>{data.courseTitle}</CardTitle>
                   <CardDescription>Élève: {data.studentName}</CardDescription>
