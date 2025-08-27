@@ -273,21 +273,18 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
         </ScrollArea>
 
         {/* Floating buttons for Logout and About */}
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end">
+        <div className="fixed bottom-4 right-4 z-50 flex flex-row gap-2 items-end"> {/* Changed flex-col to flex-row */}
           {currentUserProfile ? (
-            <Button variant="destructive" size="icon" className="rounded-full h-12 w-12 shadow-lg" onClick={handleLogout}>
-              <LogOut className="h-6 w-6" />
-              <span className="sr-only">Déconnexion</span>
+            <Button variant="destructive" className="shadow-lg bg-destructive/80 hover:bg-destructive rounded-android-tile" onClick={handleLogout}>
+              <LogOut className="h-5 w-5 mr-2" /> Déconnexion
             </Button>
           ) : (
-            <Button variant="default" size="icon" className="rounded-full h-12 w-12 shadow-lg" onClick={onOpenAuthModal}>
-              <User className="h-6 w-6" />
-              <span className="sr-only">Se connecter</span>
+            <Button variant="default" className="shadow-lg rounded-android-tile" onClick={onOpenAuthModal}>
+              <User className="h-5 w-5 mr-2" /> Se connecter
             </Button>
           )}
-          <Button variant="outline" size="icon" className="rounded-full h-12 w-12 shadow-lg bg-background/80 backdrop-blur-lg" onClick={() => navigate('/about')}>
-            <Info className="h-6 w-6" />
-            <span className="sr-only">À propos</span>
+          <Button variant="outline" className="shadow-lg bg-background/80 backdrop-blur-lg rounded-android-tile" onClick={() => navigate('/about')}>
+            <Info className="h-5 w-5 mr-2" /> À propos
           </Button>
         </div>
 
