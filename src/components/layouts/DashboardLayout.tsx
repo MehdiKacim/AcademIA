@@ -269,8 +269,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           <Logo />
         </div>
         {!isMobile && currentUserProfile && headerNavItems.length > 0 && (
-          <NavigationMenu className="flex-grow"> {/* Added flex-grow back, removed mx-auto */}
-            <NavigationMenuList className="justify-center">
+          <NavigationMenu className="flex-grow"> {/* Re-added flex-grow, removed mx-auto */}
+            <NavigationMenuList className=""> {/* Removed justify-center */}
                 {headerNavItems.map(item => {
                     const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
                     const isCategoryWithChildren = item.type === 'category_or_action' && item.children && item.children.length > 0;
@@ -331,21 +331,23 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                         const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
                         return (
                             <NavigationMenuItem key={item.id}>
-                                <NavigationMenuLink
-                                    href={item.route!}
-                                    className={cn(
-                                        "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
-                                        isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                                    )}
-                                    target={item.is_external ? "_blank" : undefined}
-                                >
-                                    <IconComponent className="mr-2 h-4 w-4" />
-                                    {item.label}
-                                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                                        <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                                            {item.badge}
-                                        </span>
-                                    )}
+                                <NavigationMenuLink asChild>
+                                    <NavLink
+                                        to={item.route!}
+                                        className={cn(
+                                            "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
+                                            isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
+                                        )}
+                                        target={item.is_external ? "_blank" : undefined}
+                                    >
+                                        <IconComponent className="mr-2 h-4 w-4" />
+                                        {item.label}
+                                        {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                                            <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </NavLink>
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
                         );
