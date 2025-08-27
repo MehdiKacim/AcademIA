@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { 
   PlusCircle, UserPlus, UserCheck, Check, XCircle, Mail, Search, Edit, Trash2, UserRoundCog, ChevronDown, ChevronUp, Building2, UserX, CalendarDays,
   Home, MessageSquare, User, LogOut, Settings, Info, BookOpen, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, 
-  ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BookText, UserCog, TrendingUp, BookMarked 
+  ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BookText, UserCog, TrendingUp, BookMarked,
+  Users // Ajout de l'icône Users
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext';
