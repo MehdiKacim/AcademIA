@@ -34,6 +34,7 @@ interface SimpleItemSelectorProps {
   emptyMessage: string;
   iconMap: { [key: string]: React.ElementType }; // Pass iconMap as prop
   popoverContentClassName?: string;
+  disabled?: boolean; // Nouvelle prop pour contrôler l'état désactivé
 }
 
 const SimpleItemSelector = ({
@@ -47,6 +48,7 @@ const SimpleItemSelector = ({
   emptyMessage,
   iconMap,
   popoverContentClassName,
+  disabled = false, // Valeur par défaut à false
 }: SimpleItemSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -70,7 +72,7 @@ const SimpleItemSelector = ({
     return (
       <CommandItem
         key={option.id}
-        value={option.id} // CHANGEMENT ICI : Utiliser l'ID pour la valeur du CommandItem
+        value={option.id}
         onSelect={() => {
           onValueChange(option.id);
           setIsOpen(false);
@@ -104,6 +106,7 @@ const SimpleItemSelector = ({
           aria-expanded={isOpen}
           className="w-full justify-between rounded-android-tile"
           id={id}
+          disabled={disabled} // Transmettre la prop disabled au bouton
         >
           {selectedOption ? (
             <div className="flex items-center gap-2">
