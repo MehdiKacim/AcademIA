@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { X, ArrowLeft, ExternalLink, ChevronDown, Info } from "lucide-react";
+import { X, ArrowLeft, ExternalLink, ChevronDown, Info, Search } from "lucide-react"; // Added Search import
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from 'react-router-dom';
