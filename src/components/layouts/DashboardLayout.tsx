@@ -32,6 +32,7 @@ import NavSheet from "@/components/NavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
+import SecondaryNavigationBar from "@/components/SecondaryNavigationBar"; // Import the SecondaryNavigationBar
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -53,7 +54,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const navigate = useNavigate();
   const location = useLocation();
 
-  // New state for desktop submenu
+  // State for desktop submenu
   const [activeDesktopSubmenuParent, setActiveDesktopSubmenuParent] = useState<NavItem | null>(null);
 
   // Refs for click outside logic
@@ -214,7 +215,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     } else if (item.onClick) {
       item.onClick();
     }
-    setActiveDesktopSubmenuParent(null); // Always close submenu on any navigation/action
+    // When an item in the secondary nav is clicked, close the secondary nav
+    setActiveDesktopSubmenuParent(null); 
   }, [navigate]);
 
   return (
@@ -243,6 +245,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                     variant="ghost"
                     onClick={() => {
                       if (isCategory) {
+                        // Toggle the active submenu parent
                         setActiveDesktopSubmenuParent(activeDesktopSubmenuParent?.id === item.id ? null : item);
                       } else {
                         handleNavItemClick(item); // Use the unified handler for direct links/actions
@@ -336,36 +339,11 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
       {/* Dynamic Submenu Bar for Desktop */}
       {activeDesktopSubmenuParent && !isMobile && (
-        <nav
+        <SecondaryNavigationBar
           ref={submenuRef} // Attach ref to submenu
-          className="fixed top-[68px] left-0 right-0 z-40 flex items-center justify-start h-12 px-4 border-b backdrop-blur-lg bg-background/80 shadow-sm overflow-x-auto whitespace-nowrap scrollbar-hide"
-        >
-          {activeDesktopSubmenuParent.children?.map(subItem => {
-            const IconComponent = subItem.icon_name ? (iconMap[subItem.icon_name] || Info) : Info;
-            const isLinkActive = subItem.route && (location.pathname + location.search).startsWith(subItem.route);
-
-            return (
-              <Button
-                key={subItem.id}
-                variant="ghost"
-                onClick={() => handleNavItemClick(subItem)} // Use the unified handler
-                className={cn(
-                  "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                  isLinkActive ? "text-primary font-semibold" : "text-muted-foreground"
-                )}
-              >
-                <IconComponent className="mr-2 h-4 w-4" />
-                {subItem.label}
-                {subItem.route === '/messages' && subItem.badge !== undefined && subItem.badge > 0 && (
-                  <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                    {subItem.badge}
-                  </span>
-                )}
-                {subItem.is_external && <ExternalLink className="ml-auto h-3 w-3" />}
-              </Button>
-            );
-          })}
-        </nav>
+          navItems={activeDesktopSubmenuParent.children || []} // Pass children of the active parent
+          onItemClick={handleNavItemClick} // Use the unified handler
+        />
       )}
 
       <main
