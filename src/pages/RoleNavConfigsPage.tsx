@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move // Added Move icon
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
@@ -66,7 +66,7 @@ import {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check: Check
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
 };
 
 // All possible roles for selection
@@ -102,6 +102,7 @@ interface SortableNavItemProps {
   onEditRoleConfig: (item: NavItem, config: RoleNavItemConfig) => void;
   onDelete: (navItemId: string, configId?: string) => void;
   onManageChildren: (parentItem: NavItem) => void;
+  onAssignParent: (item: NavItem, config: RoleNavItemConfig) => void; // New prop
   isDragging?: boolean;
   isDraggableAndDeletable: boolean;
   selectedRoleFilter: Profile['role'] | 'all';
@@ -109,7 +110,7 @@ interface SortableNavItemProps {
   onToggleExpand: (itemId: string) => void;
 }
 
-const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, level, onEditGenericItem, onEditRoleConfig, onDelete, onManageChildren, isDragging, isDraggableAndDeletable, selectedRoleFilter, isExpanded, onToggleExpand }, ref) => {
+const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>(({ item, level, onEditGenericItem, onEditRoleConfig, onDelete, onManageChildren, onAssignParent, isDragging, isDraggableAndDeletable, selectedRoleFilter, isExpanded, onToggleExpand }, ref) => {
   const {
     attributes,
     listeners,
@@ -140,6 +141,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
   } : undefined;
 
   const hasChildren = item.children && item.children.length > 0;
+  const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
   return (
     <ContextMenu>
@@ -150,8 +152,8 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           className={cn(
             "p-3 border rounded-android-tile flex items-center justify-between gap-2 mb-2", // Apply rounded-android-tile
             isDragging && "ring-2 ring-primary/50 shadow-xl",
-            item.type === 'category_or_action' && (item.route === null || item.route === undefined) ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
-            item.type === 'category_or_action' && (item.route === null || item.route === undefined) && level === 0 && "border-l-4 border-primary/50",
+            isCategory ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
+            isCategory && level === 0 && "border-l-4 border-primary/50",
             "flex-wrap sm:flex-nowrap select-none" // Added select-none here
           )}
         >
@@ -210,14 +212,18 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
           </div>
         </div>
       </ContextMenuTrigger>
-      {/* Only show "Gérer les sous-éléments" for true categories (type 'category_or_action' with no route) */}
-      {item.type === 'category_or_action' && (item.route === null || item.route === undefined) && (
-        <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
+      <ContextMenuContent className="w-auto p-1 pointer-events-auto rounded-android-tile">
+        {isCategory && (
           <ContextMenuItem className="p-2" onClick={() => onManageChildren(item)}>
             <LayoutList className="mr-2 h-4 w-4" /> Gérer les sous-éléments
           </ContextMenuItem>
-        </ContextMenuContent>
-      )}
+        )}
+        {config && ( // Only show if there's a config to edit
+          <ContextMenuItem className="p-2" onClick={() => onAssignParent(item, config)}>
+            <Move className="mr-2 h-4 w-4" /> Assigner un parent
+          </ContextMenuItem>
+        )}
+      </ContextMenuContent>
     </ContextMenu>
   );
 });
@@ -398,6 +404,12 @@ const RoleNavConfigsPage = () => {
     setIsEditConfigDialogOpen(true);
   };
 
+  const handleAssignParent = (item: NavItem, config: RoleNavItemConfig) => {
+    setCurrentItemToEdit(item);
+    setCurrentConfigToEdit(config);
+    setIsEditConfigDialogOpen(true); // Reuse the same dialog
+  };
+
   const handleDragStart = (event: any) => {
     const { active } = event;
     const configuredItem = allConfiguredItemsFlat.find(item => item.configId === active.id);
@@ -523,6 +535,7 @@ const RoleNavConfigsPage = () => {
                 onEditRoleConfig={handleEditRoleConfig}
                 onDelete={handleDeleteGenericNavItem}
                 onManageChildren={handleManageChildren}
+                onAssignParent={handleAssignParent} // Pass the new handler
                 isDragging={activeDragItem?.id === item.id || activeDragConfig?.id === item.configId}
                 isDraggableAndDeletable={true}
                 selectedRoleFilter={selectedRoleFilter}
@@ -655,6 +668,7 @@ const RoleNavConfigsPage = () => {
                           onEditRoleConfig={handleEditRoleConfig}
                           onDelete={handleDeleteGenericNavItem}
                           onManageChildren={handleManageChildren}
+                          onAssignParent={handleAssignParent} // Pass the new handler
                           isDragging={true}
                           isDraggableAndDeletable={true}
                           selectedRoleFilter={selectedRoleFilter}
