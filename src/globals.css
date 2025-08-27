@@ -150,7 +150,7 @@
 }
 
 .android-tile .subtitle {
-  font-size: 14px;
+  /* Removed font-size: 14px; */
   color: hsl(var(--muted-foreground)); /* Utilise la variable --muted-foreground */
   margin: 0;
 }
