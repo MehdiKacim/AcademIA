@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 interface ChangePasswordDialogProps {
   isOpen: boolean;
@@ -100,7 +101,7 @@ const ChangePasswordDialog = ({ isOpen, onClose }: ChangePasswordDialogProps) =>
           </div>
           <DialogFooter>
             <Button onClick={handlePasswordChange} disabled={isLoading}>
-              {isLoading ? "Mise à jour..." : "Changer le mot de passe"}
+              {isLoading ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Changer le mot de passe"}
             </Button>
           </DialogFooter>
         </div>

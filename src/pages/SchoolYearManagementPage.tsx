@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, CalendarDays, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, CalendarDays, CheckCircle, XCircle } from "lucide-react";
 import { SchoolYear } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -35,6 +35,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"; // Added Dialog imports
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 const SchoolYearManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -309,7 +310,7 @@ const SchoolYearManagementPage = () => {
               </Popover>
             </div>
             <Button onClick={handleAddSchoolYear} disabled={isCreatingYear || !newSchoolYearName.trim() || !newSchoolYearStartDate || !newSchoolYearEndDate}>
-              {isCreatingYear ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et Activer
+              {isCreatingYear ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et Activer
             </Button>
           </div>
         </CardContent>
@@ -437,7 +438,7 @@ const SchoolYearManagementPage = () => {
               </div>
               <DialogFooter>
                 <Button onClick={handleSaveEditedSchoolYear} disabled={isSavingEdit}>
-                  {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+                  {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
                 </Button>
               </DialogFooter>
             </div>

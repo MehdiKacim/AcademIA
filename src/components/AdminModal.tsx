@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { showSuccess, showError } from "@/utils/toast";
-import { Lock, Database, UserPlus, Eraser, Code, Loader2, ChevronDown, ChevronUp, UserRoundPlus, RefreshCw } from "lucide-react"; // Added RefreshCw icon
+import { Lock, Database, UserPlus, Eraser, Code, ChevronDown, ChevronUp, UserRoundPlus, RefreshCw } from "lucide-react"; // Added RefreshCw icon
 import { supabase } from "@/integrations/supabase/client";
 import DataModelModal from './DataModelModal';
 import { clearAllAppData } from '@/lib/dataReset';
@@ -29,6 +29,7 @@ import { Profile, ALL_ROLES } from '@/lib/dataModels';
 import { bootstrapNavItems } from '@/lib/navItems'; // Import bootstrapNavItems
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useRole } from '@/contexts/RoleContext';
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -289,7 +290,7 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                       onChange={(e) => setAdminPassword(e.target.value)}
                     />
                     <Button onClick={handleCreateInitialAdmin} className="w-full" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
-                      {isCreatingAdmin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
+                      {isCreatingAdmin ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
                     </Button>
                   </CollapsibleContent>
                 </Collapsible>

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
 import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear } from "@/lib/dataModels"; // Removed Establishment import
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -36,6 +36,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 // Helper to get the current school year
 const getCurrentSchoolYear = () => {
@@ -373,7 +374,7 @@ const PedagogicalManagementPage = () => {
                       if (isSearchingUserClass && studentSearchInputClass.trim() !== '') {
                         return (
                           <CommandEmpty className="py-2 text-center text-muted-foreground flex items-center justify-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" /> <span>Recherche...</span>
+                            <LoadingSpinner iconClassName="h-4 w-4" /> <span>Recherche...</span>
                           </CommandEmpty>
                         );
                       } else if (filteredStudentsForClassDropdown.length === 0 && studentSearchInputClass.trim() !== '') {
@@ -530,7 +531,7 @@ const PedagogicalManagementPage = () => {
                 <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                   <SelectItem value="all">Toutes les années</SelectItem>
                   {schoolYearsOptions.map(year => (
-                    <SelectItem key={year.id} value={year.id}>{year.label}</SelectItem>
+                    <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

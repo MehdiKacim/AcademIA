@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2, Home, Info, Search as SearchIcon, ArrowLeft, XCircle, Check, Code } from "lucide-react";
+import { PlusCircle, Home, Info, Search as SearchIcon, ArrowLeft, XCircle, Check, Code } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { addRoleNavItemConfig, updateRoleNavItemConfig } from "@/lib/navItems";
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 interface AddExistingNavItemDialogProps {
   isOpen: boolean;
@@ -326,7 +327,7 @@ const AddExistingNavItemDialog = ({
           </div>
           <DialogFooter>
             <Button onClick={handleAddExistingItem} disabled={isAddButtonDisabled}>
-              {isAdding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément
+              {isAdding ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément
             </Button>
           </DialogFooter>
         </div>

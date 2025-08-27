@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem } from "@/lib/navItems";
@@ -28,7 +28,8 @@ import {
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils'; // Import cn for conditional styling
+import { cn } '@/lib/utils'; // Import cn for conditional styling
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -262,7 +263,7 @@ const GenericNavItemsPage = () => {
                     <SelectTrigger id="new-item-type" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <ScrollArea className="h-40">
                         {navItemTypes.map(type => (
                           <SelectItem key={type} value={type}>
@@ -287,7 +288,7 @@ const GenericNavItemsPage = () => {
                     <SelectTrigger id="new-item-icon" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner une icône" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectContent className="backdrop-blur-lg bg-background/80">
                       <ScrollArea className="h-40">
                         {Object.keys(iconMap).sort().map(iconName => {
                           const IconComponent = iconMap[iconName];
@@ -309,7 +310,7 @@ const GenericNavItemsPage = () => {
                 </div>
               </div>
               <Button onClick={handleAddGenericNavItem} disabled={isAddingItem} className="mt-4">
-                {isAddingItem ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément générique
+                {isAddingItem ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément générique
               </Button>
             </CardContent>
           </CollapsibleContent>
@@ -528,7 +529,7 @@ const GenericNavItemsPage = () => {
               </div>
               <DialogFooter>
                 <Button onClick={handleSaveEditedGenericNavItem} disabled={isSavingEdit}>
-                  {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+                  {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
                 </Button>
               </DialogFooter>
             </div>

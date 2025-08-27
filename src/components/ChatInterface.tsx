@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, Download, XCircle, Loader2 } from "lucide-react";
+import { Send, Paperclip, Download, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/lib/dataModels";
 import { sendMessage, getConversation, markMessagesAsRead, getPublicFileUrl } from "@/lib/messageData"; // Changed getSignedFileUrl to getPublicFileUrl
@@ -10,6 +10,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from '@/lib/dataModels';
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 interface ChatInterfaceProps {
   contact: Profile; // The other user in the conversation
@@ -212,7 +213,7 @@ const ChatInterface = ({ contact, onMessageSent, initialCourseId, initialCourseT
             <span className="sr-only">Joindre un fichier</span>
           </Button>
           <Button onClick={handleSendMessage} disabled={isSending || (!inputContent.trim() && !attachedFile)}>
-            {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {isSending ? <LoadingSpinner iconClassName="h-5 w-5" /> : <Send className="h-5 w-5" />}
             <span className="sr-only">Envoyer</span>
           </Button>
         </div>

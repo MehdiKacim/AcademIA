@@ -46,6 +46,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from "@/lib/utils"; // Import cn for conditional styling
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 // Zod Schemas for validation
 const QuizOptionSchema = z.object({
@@ -454,6 +455,7 @@ const CreateCourse = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]); // New state for subjects
+  const [isSavingCourse, setIsSavingCourse] = useState(false); // New state for saving status
 
   const form = useForm<z.infer<typeof CourseSchema>>({
     resolver: zodResolver(CourseSchema),
@@ -559,6 +561,7 @@ const CreateCourse = () => {
       creator_id: currentUserProfile.id, // Use the actual user ID
     };
 
+    setIsSavingCourse(true); // Set saving state
     try {
       if (courseId) {
         await updateCourseInStorage(courseData);
@@ -571,6 +574,8 @@ const CreateCourse = () => {
     } catch (error: any) {
       console.error("Error saving course:", error);
       showError(`Erreur lors de la sauvegarde du cours: ${error.message}`);
+    } finally {
+      setIsSavingCourse(false); // Reset saving state
     }
   };
 
@@ -753,8 +758,8 @@ const CreateCourse = () => {
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full">
-          {courseId ? "Sauvegarder les modifications" : "Créer le cours"}
+        <Button type="submit" className="w-full" disabled={isSavingCourse}>
+          {isSavingCourse ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : (courseId ? "Sauvegarder les modifications" : "Créer le cours")}
         </Button>
       </form>
     </Form>

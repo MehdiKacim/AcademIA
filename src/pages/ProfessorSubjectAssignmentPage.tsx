@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, BookText, School, CalendarDays, UserRoundCog, Loader2, Check, Search, XCircle } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, BookText, School, CalendarDays, UserRoundCog, Check, Search, XCircle } from "lucide-react";
 import { Profile, Class, Subject, SchoolYear, ProfessorSubjectAssignment, Curriculum } from "@/lib/dataModels"; // Removed Establishment import
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -41,6 +41,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"; // Import Dialog components
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 const ProfessorSubjectAssignmentPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -426,7 +427,7 @@ const ProfessorSubjectAssignmentPage = () => {
             </div>
           </div>
           <Button onClick={handleAddAssignment} disabled={isAddingAssignment || !newAssignmentProfessorId || !newAssignmentSubjectId || !newAssignmentClassId || !newAssignmentSchoolYearId}>
-            {isAddingAssignment ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'affectation
+            {isAddingAssignment ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'affectation
           </Button>
         </CardContent>
       </Card>
@@ -543,13 +544,14 @@ const ProfessorSubjectAssignmentPage = () => {
       {currentAssignmentToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
-            <DialogHeader>
-              <DialogTitle>Modifier l'affectation</DialogTitle>
-              <DialogDescription>
-                Mettez à jour les détails de l'affectation.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="flex flex-col"> {/* Wrap children in a single div */}
+              <DialogHeader>
+                <DialogTitle>Modifier l'affectation</DialogTitle>
+                <DialogDescription>
+                  Mettez à jour les détails de l'affectation.
+                </DialogDescription>
+              </DialogHeader>
+            <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
               <div>
                 <Label htmlFor="edit-professor">Professeur</Label>
                 <Select value={editProfessorId} onValueChange={setEditProfessorId}>
@@ -610,8 +612,9 @@ const ProfessorSubjectAssignmentPage = () => {
               </div>
             </div>
             <Button onClick={handleSaveEditedAssignment} disabled={isSavingEdit || !editProfessorId || !editSubjectId || !editClassId || !editSchoolYearId}>
-              {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+              {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
             </Button>
+            </div>
           </DialogContent>
         </Dialog>
       )}

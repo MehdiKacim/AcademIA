@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Loader2, Home, Info, Search as SearchIcon, ArrowLeft, XCircle, Check, Code } from "lucide-react";
+import { PlusCircle, Home, Info, Search as SearchIcon, ArrowLeft, XCircle, Check, Code } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { addRoleNavItemConfig, updateRoleNavItemConfig } from "@/lib/navItems";
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import the new component
+import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 interface EditRoleConfigDialogProps {
   isOpen: boolean;
@@ -268,7 +269,7 @@ const EditRoleConfigDialog = ({
           </div>
           <DialogFooter>
             <Button onClick={handleSaveEditedRoleConfig} disabled={isSavingEdit || isParentSelectionStep}>
-              {isSavingEdit ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Enregistrer les modifications"}
+              {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
             </Button>
           </DialogFooter>
         </div>
