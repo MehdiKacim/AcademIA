@@ -231,45 +231,45 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       >
         <div className="flex items-center gap-4">
           <Logo />
-          {/* Top-level Navigation Items for Desktop */}
-          {!isMobile && currentUserProfile && (
-            <nav className="hidden md:flex items-center gap-4">
-              {fullNavTreeWithActions.filter(item => !item.parent_nav_item_id).map(item => {
-                const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
-                const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-
-                return (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    onClick={() => {
-                      if (isCategory) {
-                        // Toggle the active submenu parent
-                        setActiveDesktopSubmenuParent(activeDesktopSubmenuParent?.id === item.id ? null : item);
-                      } else {
-                        handleNavItemClick(item); // Use the unified handler for direct links/actions
-                      }
-                    }}
-                    className={cn(
-                      "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                      isLinkActive || (activeDesktopSubmenuParent?.id === item.id) ? "text-primary font-semibold" : "text-muted-foreground"
-                    )}
-                  >
-                    <IconComponent className="mr-2 h-4 w-4" />
-                    {item.label}
-                    {isCategory && <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
-                    {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Button>
-                );
-              })}
-            </nav>
-          )}
         </div>
+        {/* Top-level Navigation Items for Desktop */}
+        {!isMobile && currentUserProfile && (
+          <nav className="hidden md:flex items-center gap-4 mx-auto"> {/* Added mx-auto here */}
+            {fullNavTreeWithActions.filter(item => !item.parent_nav_item_id).map(item => {
+              const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
+              const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+              const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+
+              return (
+                <Button
+                  key={item.id}
+                  variant="ghost"
+                  onClick={() => {
+                    if (isCategory) {
+                      // Toggle the active submenu parent
+                      setActiveDesktopSubmenuParent(activeDesktopSubmenuParent?.id === item.id ? null : item);
+                    } else {
+                      handleNavItemClick(item); // Use the unified handler for direct links/actions
+                    }
+                  }}
+                  className={cn(
+                    "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                    isLinkActive || (activeDesktopSubmenuParent?.id === item.id) ? "text-primary font-semibold" : "text-muted-foreground"
+                  )}
+                >
+                  <IconComponent className="mr-2 h-4 w-4" />
+                  {item.label}
+                  {isCategory && <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
+                  {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
+                    <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                      {item.badge}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
+          </nav>
+        )}
         {/* Utility buttons for desktop (Search, AiA Chat, User Dropdown, Theme Toggle, About) */}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           {currentUserProfile && (
