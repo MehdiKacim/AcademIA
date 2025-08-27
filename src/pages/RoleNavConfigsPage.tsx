@@ -51,7 +51,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
-import { cn } '@/lib/utils';
+import { cn } from '@/lib/utils'; // Corrected: Added 'from' keyword
 import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog';
 import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -65,7 +65,7 @@ import {
 } from "@/components/ui/drawer";
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
 };
 
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
