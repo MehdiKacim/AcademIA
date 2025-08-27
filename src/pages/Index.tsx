@@ -29,7 +29,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
 // Removed AuthModal import
-import AboutModal from "@/components/AboutModal";
+// Removed AboutModal import
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
@@ -58,7 +58,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   // Removed isAuthModalOpen state
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  // Removed isAboutModalOpen state
   // Removed isMoreDrawerOpen state
   const logoTapCountRef = useRef(0);
   const location = useLocation();
@@ -235,7 +235,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-          <Button variant="ghost" size="icon" onClick={() => setIsAboutModalOpen(true)} className="hidden sm:flex">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex"> {/* Navigate to /about */}
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
           </Button>
@@ -332,14 +332,14 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
 
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
-        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => setIsAboutModalOpen(true)}>
+        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')}> {/* Navigate to /about */}
           À propos
         </Button>
       </footer>
 
       {/* Removed BottomNavigationBar */}
       {/* Removed AuthModal */}
-      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
+      {/* Removed AboutModal */}
     </div>
   );
 };

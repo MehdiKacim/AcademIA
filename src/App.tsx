@@ -25,6 +25,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import DataModelViewer from "./pages/DataModelViewer";
 import Messages from "./pages/Messages";
+import About from "./pages/About"; // Import About page
 // Removed import for NotificationsPage
 import { ThemeProvider } from "./components/theme-provider";
 import SplashScreen from "./components/SplashScreen";
@@ -61,6 +62,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     "/courses/:courseId": CourseDetail,
     "/courses/:courseId/modules/:moduleIndex": ModuleDetail,
     "/all-notes": AllNotes,
+    "/about": About, // Add About page to the map
     // Removed static routes from here
     "/data-model": DataModelViewer,
     "/admin-users": AdminUserManagementPage,
@@ -132,6 +134,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
               <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />} /> 
               <Route path="/auth" element={<AuthPage />} /> {/* New AuthPage route */}
               <Route path="/reset-password" element={<ResetPassword />} /> {/* New ResetPassword route */}
+              <Route path="/about" element={<About />} /> {/* New About page route */}
 
               <Route element={<ProtectedRoute />}>
                 <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />}> {/* Pass the handler */}
@@ -147,7 +150,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
                   {dynamicRoutes.map(item => {
                     const Component = baseRouteComponentMap[item.route!];
                     // Only render if component exists and it's not a static route (already handled)
-                    if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages"].includes(item.route!)) { // Removed "/notifications"
+                    if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages", "/about"].includes(item.route!)) { // Removed "/notifications", added "/about"
                       // console.log(`[App.tsx] Mapping dynamic route: ${item.route} to Component: ${Component.name}`);
                       return (
                         <Route

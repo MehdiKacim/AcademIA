@@ -25,7 +25,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getUnreadMessageCount } from "@/lib/messageData";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
-import AboutModal from "@/components/AboutModal";
+// Removed AboutModal import
 import MobileNavSheet from "@/components/MobileNavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion'; // Import motion and AnimatePresence
@@ -48,7 +48,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const [isGlobalSearchOverlayOpen, setIsGlobalSearchOverlayOpen] = useState(false); // New state for GlobalSearchOverlay
   const [unreadMessages, setUnreadMessages] = useState(0);
   // Removed isAuthModalOpen state
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  // Removed isAboutModalOpen state
   const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,17 +64,16 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       let newItem = { ...item };
       if (newItem.id === 'nav-global-search') {
         newItem.onClick = () => setIsGlobalSearchOverlayOpen(true); // Open GlobalSearchOverlay
-      } else if (newItem.id === 'nav-about') {
-        newItem.onClick = () => setIsAboutModalOpen(true);
       } else if (newItem.id === 'nav-aia-chat') {
         newItem.onClick = () => openChat(); // Open AiA persistent chat
       }
+      // For 'nav-about', it's now a route, so no onClick needed here.
       if (newItem.children && newItem.children.length > 0) {
         newItem.children = injectActionHandlers(newItem.children);
       }
       return newItem;
     });
-  }, [setIsGlobalSearchOverlayOpen, setIsAboutModalOpen, openChat]); // Add dependencies
+  }, [setIsGlobalSearchOverlayOpen, openChat]); // Add dependencies
 
   const fullNavTreeWithActions = React.useMemo((): NavItem[] => {
     // Pass unreadMessages to loadNavItems
@@ -362,7 +361,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             </Button>
           )}
           <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} /> {/* Pass the handler here */}
-          <Button variant="ghost" size="icon" onClick={() => setIsAboutModalOpen(true)} className="hidden sm:flex">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex"> {/* Navigate to /about */}
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
           </Button>
@@ -457,7 +456,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
-        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => setIsAboutModalOpen(true)}>
+        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')}> {/* Navigate to /about */}
           À propos
         </Button>
       </footer>
@@ -469,7 +468,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           navItems={fullNavTreeWithActions} // Use the tree with injected actions
           onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)} // Updated prop
           onOpenAiAChat={() => openChat()} // New prop
-          onOpenAboutModal={() => setIsAboutModalOpen(true)}
+          // Removed onOpenAboutModal
           onOpenAuthModal={() => navigate('/auth')} // Redirect to AuthPage
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange} // Pass the handler here
@@ -478,7 +477,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       {currentUserProfile && <AiAPersistentChat />} {/* Render AiAPersistentChat */}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />} {/* Render GlobalSearchOverlay */}
       {/* Removed AuthModal */}
-      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
+      {/* Removed AboutModal */}
     </div>
   );
 };

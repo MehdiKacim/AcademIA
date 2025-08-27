@@ -50,14 +50,14 @@ interface MobileNavSheetProps {
   navItems: NavItem[];
   onOpenGlobalSearch: () => void; // Updated prop
   onOpenAiAChat: () => void; // New prop
-  onOpenAboutModal: () => void;
+  // Removed onOpenAboutModal
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
   onInitiateThemeChange: (newTheme: Profile['theme']) => void; // New prop
   // Removed unreadNotificationsCount: number;
 }
 
-const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAboutModal, onOpenAuthModal, unreadMessagesCount, onInitiateThemeChange }: MobileNavSheetProps) => { // Removed unreadNotificationsCount
+const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenAiAChat, onOpenAuthModal, unreadMessagesCount, onInitiateThemeChange }: MobileNavSheetProps) => { // Removed unreadNotificationsCount
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
@@ -283,7 +283,7 @@ const MobileNavSheet = ({ isOpen, onClose, navItems, onOpenGlobalSearch, onOpenA
                 <User className="h-5 w-5" /> Se connecter
               </Button>
             )}
-            <Button variant="outline" className="android-footer-button flex-grow rounded-android-tile" onClick={onOpenAboutModal}>
+            <Button variant="outline" className="android-footer-button flex-grow rounded-android-tile" onClick={() => navigate('/about')}> {/* Navigate to /about */}
               <Info className="h-5 w-5" /> À propos
             </Button>
           </div>

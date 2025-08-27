@@ -30,7 +30,7 @@ const DEFAULT_NAV_ITEMS_WITH_KEYS = [
   { key: 'nav-admin-role-configs', label: 'Configurations par rôle', route: '/admin-menu-management/role-configs', icon_name: 'UserRoundCog', is_external: false, type: 'route' },
   { key: 'nav-data-model', label: 'Modèle de données', route: '/data-model', icon_name: 'Code', is_external: false, type: 'route' },
   { key: 'nav-global-search', label: 'Recherche', icon_name: 'Search', is_external: false, type: 'category_or_action' }, // Action to open search overlay
-  { key: 'nav-about', label: 'À propos', icon_name: 'Info', is_external: false, type: 'category_or_action' }, // Action to open about modal
+  { key: 'nav-about', label: 'À propos', route: '/about', icon_name: 'Info', is_external: false, type: 'route' }, // Changed to route
   { key: 'nav-aia-chat', label: 'AiA Chat', icon_name: 'BotMessageSquare', is_external: false, type: 'category_or_action' }, // Action to open AiA chat
 
   // Add categories as generic nav items
@@ -179,7 +179,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Forbidden: Only administrators can bootstrap navigation items.' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 403,
-        });
+      });
       }
     }
 

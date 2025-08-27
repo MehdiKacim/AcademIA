@@ -8,8 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
 import { clearAllAppData } from "@/lib/dataReset";
-import { Link, useOutletContext } from 'react-router-dom'; // Import useOutletContext
-import AboutModal from "@/components/AboutModal";
+import { Link, useOutletContext, useNavigate } from 'react-router-dom'; // Import useNavigate
+// Removed AboutModal import
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 import { Profile } from '@/lib/dataModels'; // Import Profile type
@@ -21,10 +21,11 @@ interface SettingsPageOutletContext {
 const Settings = () => {
   const { currentRole } = useRole(); // Get currentRole
   const { onInitiateThemeChange } = useOutletContext<SettingsPageOutletContext>(); // Get onInitiateThemeChange from context
+  const navigate = useNavigate(); // Initialize useNavigate
   const [language, setLanguage] = useState('fr');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [appNotifications, setAppNotifications] = useState(true);
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  // Removed isAboutModalOpen state
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
 
   const handleSavePreferences = () => {
@@ -149,7 +150,7 @@ const Settings = () => {
               </Button>
             </Link>
           )}
-          <Button variant="outline" onClick={() => setIsAboutModalOpen(true)} className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate('/about')} className="flex items-center gap-2"> {/* Navigate to /about */}
             <Info className="h-4 w-4" /> À propos
           </Button>
           <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2">
@@ -164,7 +165,7 @@ const Settings = () => {
         </Button>
       </div>
 
-      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
+      {/* Removed AboutModal */}
       <ChangePasswordDialog isOpen={isChangePasswordDialogOpen} onClose={() => setIsChangePasswordDialogOpen(false)} />
     </div>
   );
