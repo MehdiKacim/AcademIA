@@ -204,13 +204,13 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
 
   const handleSignOut = async () => {
     setIsLoadingUser(true); // Set loading state while signing out
-    // console.log("[RoleContext] Signing out...");
+    console.log("[RoleContext] Attempting to sign out..."); // Added log
     const { error } = await supabase.auth.signOut();
     if (error) {
-      // console.error("Error signing out:", error);
+      console.error("[RoleContext] Error signing out:", error); // Updated log
       showError(`Erreur lors de la déconnexion: ${error.message}`);
     } else {
-      // console.log("[RoleContext] Signed out successfully.");
+      console.log("[RoleContext] Signed out successfully."); // Updated log
       setCurrentUserProfile(null); // Clear profile on successful sign out
       setNavItems([]); // Clear nav items
       setDynamicRoutes([]); // Clear dynamic routes
