@@ -497,14 +497,14 @@ const AdminUserManagementPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {newUserRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')))) && (
+                {newUserRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
                   <div>
                     <Label htmlFor="new-user-establishment">Établissement</Label>
                     <Select value={newUserEstablishmentId || ""} onValueChange={(value) => setNewUserEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
                       <SelectTrigger id="new-user-establishment" className="rounded-android-tile">
                         <SelectValue placeholder="Sélectionner un établissement" />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    </SelectTrigger>
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
                         {currentRole === 'administrator' && <SelectItem value="none">Aucun (pour administrateur)</SelectItem>}
                         {establishmentsToDisplayForNewUser.map(est => (
                           <SelectItem key={est.id} value={est.id}>
@@ -800,7 +800,7 @@ const AdminUserManagementPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {editRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || '')))) && (
+                {editRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-establishment" className="text-right">
                       Établissement
