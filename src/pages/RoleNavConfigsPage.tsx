@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Link as LinkIcon, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move
 } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
@@ -113,7 +113,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
     setNodeRef,
     transform,
     transition,
-  } = useSortable({ id: item.configId || item.id, disabled: !isDraggableAndDeletable });
+  } = useSortable({ id: item.configId!, disabled: !isDraggableAndDeletable });
 
   const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`;
 
@@ -674,7 +674,6 @@ const RoleNavConfigsPage = () => {
                 <PlusCircle className="mr-2 h-4 w-4" /> Ajouter racine
               </Button>
             </CardHeader>
-            {/* Removed ContextMenu wrapping CardContent */}
             <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-android-tile">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 {renderNavItemsList(configuredItemsTree, 0, 'configured-container')}
