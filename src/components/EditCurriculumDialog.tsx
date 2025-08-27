@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast";
 import { Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
-import { updateCurriculumInStorage } from "@/lib/courseData"; // Removed loadEstablishments, getEstablishmentAddress
+import { updateCurriculumInStorage, getEstablishmentName } from "@/lib/courseData"; // Removed loadEstablishments, getEstablishmentAddress
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
 
 interface EditCurriculumDialogProps {

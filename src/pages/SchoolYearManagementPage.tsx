@@ -272,7 +272,7 @@ const SchoolYearManagementPage = () => {
                     {newSchoolYearStartDate ? format(newSchoolYearStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                   <Calendar
                     mode="single"
                     selected={newSchoolYearStartDate}
@@ -298,7 +298,7 @@ const SchoolYearManagementPage = () => {
                     {newSchoolYearEndDate ? format(newSchoolYearEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                   <Calendar
                     mode="single"
                     selected={newSchoolYearEndDate}
@@ -309,7 +309,7 @@ const SchoolYearManagementPage = () => {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button onClick={handleAddSchoolYear} disabled={isCreatingYear || !newSchoolYearName.trim() || !newSchoolYearStartDate || !newSchoolYearEndDate}>
+            <Button onClick={handleAddSchoolYear} disabled={!newSchoolYearName.trim() || !newSchoolYearStartDate || !newSchoolYearEndDate}>
               {isCreatingYear ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et Activer
             </Button>
           </div>
@@ -390,7 +390,7 @@ const SchoolYearManagementPage = () => {
                         {editStartDate ? format(editStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                       <Calendar
                         mode="single"
                         selected={editStartDate}
@@ -416,7 +416,7 @@ const SchoolYearManagementPage = () => {
                         {editEndDate ? format(editEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                       <Calendar
                         mode="single"
                         selected={editEndDate}

@@ -38,7 +38,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check } from "lucide-react";
-import { cn } from '@/lib/utils';
+import { cn } '@/lib/utils';
 import { useRole } from '@/contexts/RoleContext';
 import { useNavigate } from 'react-router-dom';
 import EditClassDialog from '@/components/EditClassDialog'; // Re-added EditClassDialog import

@@ -280,7 +280,7 @@ const CurriculumManagementPage = () => {
             ) : (
               curriculaToDisplay.map(cur => (
                 <div key={cur.id} className="flex items-center justify-between p-3 border rounded-android-tile bg-background">
-                  <span>{cur.name} ({cur.course_ids.length} cours, {classes.filter(cls => cls.curriculum_id === cur.id).length} classes) {cur.establishment_id && `(${getEstablishmentName(cur.establishment_id)})`}</span>
+                  <span>{cur.name} ({cur.course_ids.length} cours, {classes.filter(cls => cls.curriculum_id === cur.id).length} classes) {cur.establishment_id && `(${getEstablishmentName(cur.establishment_id, establishments)})`}</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleOpenManageCoursesModal(cur)}>
                       <BookOpen className="h-4 w-4 mr-1" /> Gérer Cours

@@ -487,7 +487,7 @@ const AdminUserManagementPage = () => {
                     <SelectTrigger id="new-user-role" className="rounded-android-tile">
                       <SelectValue placeholder="Sélectionner un rôle" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                       {rolesForNewUserCreation
                         .map(role => (
                           <SelectItem key={role} value={role}>
@@ -504,7 +504,7 @@ const AdminUserManagementPage = () => {
                       <SelectTrigger id="new-user-establishment" className="rounded-android-tile">
                         <SelectValue placeholder="Sélectionner un établissement" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                         {currentRole === 'administrator' && <SelectItem value="none">Aucun (pour administrateur)</SelectItem>}
                         {establishmentsToDisplayForNewUser.map(est => (
                           <SelectItem key={est.id} value={est.id}>
@@ -532,7 +532,7 @@ const AdminUserManagementPage = () => {
                             {newUserEnrollmentStartDate ? format(newUserEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                           <Calendar
                             mode="single"
                             selected={newUserEnrollmentStartDate}
@@ -558,7 +558,7 @@ const AdminUserManagementPage = () => {
                             {newUserEnrollmentEndDate ? format(newUserEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                             <Calendar
                               mode="single"
                               selected={newUserEnrollmentEndDate}
@@ -604,7 +604,7 @@ const AdminUserManagementPage = () => {
                 <SelectTrigger id="role-filter" className="rounded-android-tile">
                   <SelectValue placeholder="Tous les rôles" />
                 </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                   <SelectItem value="all">Tous les rôles</SelectItem>
                   {rolesForFilter
                     .map(role => (
@@ -622,7 +622,7 @@ const AdminUserManagementPage = () => {
                   <SelectTrigger id="establishment-filter" className="rounded-android-tile">
                     <SelectValue placeholder="Tous les établissements" />
                   </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
                     <SelectItem value="all">Tous les établissements</SelectItem>
                     {establishmentsToDisplayForFilter.map(est => (
                       <SelectItem key={est.id} value={est.id}>
@@ -654,7 +654,7 @@ const AdminUserManagementPage = () => {
                       <p className="text-xs text-muted-foreground">Rôle: {getRoleDisplayName(profile.role)}</p>
                       {profile.establishment_id && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Building2 className="h-3 w-3" /> {getEstablishmentName(profile.establishment_id)}
+                          <Building2 className="h-3 w-3" /> {getEstablishmentName(profile.establishment_id, establishments)}
                         </p>
                       )}
                       {profile.enrollment_start_date && profile.enrollment_end_date && (
@@ -784,7 +784,7 @@ const AdminUserManagementPage = () => {
                     <SelectTrigger id="edit-role" className="col-span-3 rounded-android-tile">
                       <SelectValue placeholder="Sélectionner un rôle" />
                     </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                       {ALL_ROLES
                         .filter(role => {
                           if (currentRole === 'administrator') return true;
@@ -809,7 +809,7 @@ const AdminUserManagementPage = () => {
                       <SelectTrigger id="edit-establishment" className="col-span-3 rounded-android-tile">
                         <SelectValue placeholder="Sélectionner un établissement" />
                       </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile">
+                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                         {currentRole === 'administrator' && <SelectItem value="none">Aucun (pour administrateur)</SelectItem>}
                         {establishmentsToDisplayForNewUser.map(est => (
                           <SelectItem key={est.id} value={est.id}>
@@ -837,7 +837,7 @@ const AdminUserManagementPage = () => {
                             {editEnrollmentStartDate ? format(editEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                           <Calendar
                             mode="single"
                             selected={editEnrollmentStartDate}
@@ -863,7 +863,7 @@ const AdminUserManagementPage = () => {
                             {editEnrollmentEndDate ? format(editEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile">
+                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                           <Calendar
                             mode="single"
                             selected={editEnrollmentEndDate}
