@@ -225,7 +225,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         ref={headerRef} // Attach ref to header
         onClick={handleHeaderClick}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm",
+          "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80", // Removed border-b
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
         )}
       >
