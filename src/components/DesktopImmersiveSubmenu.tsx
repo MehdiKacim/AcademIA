@@ -35,7 +35,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
           ref={null} // No need for ref here, it's a direct child of main
-          className="fixed top-[68px] left-0 right-0 z-40 hidden md:flex flex-col h-[calc(100vh-68px)] px-4 py-3 border-b backdrop-blur-lg bg-background/80 shadow-lg overflow-y-auto"
+          className="fixed top-[68px] left-0 right-0 z-40 hidden md:flex flex-col h-48 px-4 py-3 border-b backdrop-blur-lg bg-background/80 shadow-lg overflow-y-auto"
         >
           <div className="flex items-center justify-between pb-4 border-b border-border mb-4">
             <div className="flex items-center gap-3">
