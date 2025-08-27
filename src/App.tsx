@@ -91,7 +91,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
             toastOptions={{
               duration: 5000,
               classNames: {
-                toast: "w-full max-w-full rounded-none border-x-0 border-t-0 shadow-none backdrop-blur-lg bg-background/80", // Added backdrop-blur-lg bg-background/80
+                toast: "w-full max-w-full rounded-lg border border-border shadow-md backdrop-blur-lg bg-background/60", // Updated styling here
                 success: "bg-success text-success-foreground border-success",
                 error: "bg-destructive text-destructive-foreground border-destructive",
                 loading: "bg-primary text-primary-foreground border-primary",
