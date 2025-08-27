@@ -104,7 +104,18 @@ const AuthPage = () => {
         <Logo iconClassName="w-24 h-24" showText={false} />
       </motion.div>
 
-      <Card className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80">
+      <Card className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80 relative"> {/* Added relative positioning */}
+        {window.history.length > 1 && ( // Only show back button if there's history
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="absolute top-4 left-4 z-10 rounded-full bg-muted/20 hover:bg-muted/40"
+            aria-label="Retour"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        )}
         <CardHeader className="text-center mb-4">
           <CardTitle className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             {pageTitle}
