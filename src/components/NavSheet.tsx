@@ -272,43 +272,6 @@ const NavSheet = ({
             })
           )}
         </motion.div>
-
-        {/* Informations et Outils Section */}
-        <div className="mt-8 pt-4 border-t border-border/50 space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Informations et Outils</h3>
-
-          {/* Admin Access Button (Conditional) */}
-          {currentRole === 'administrator' && (
-            <motion.div variants={itemVariants}>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  // This prop is no longer passed to NavSheet, so we need to handle it here
-                  // For now, we'll just close the NavSheet. If AdminModal needs to be opened,
-                  // it should be handled by the parent (DashboardLayout or Index)
-                  onOpenChange(false); // Close nav sheet
-                }}
-                className="w-full justify-start rounded-android-tile"
-              >
-                <UserCog className="h-5 w-5 mr-2" /> Accès Admin
-              </Button>
-            </motion.div>
-          )}
-
-          {/* Suggested Menus */}
-          <motion.div variants={itemVariants} className="space-y-2">
-            <h4 className="text-base font-medium text-muted-foreground">Menus Suggérés</h4>
-            <Button variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { navigate('/courses'); onOpenChange(false); }}>
-              <BookOpen className="h-5 w-5 mr-2" /> Cours Populaires
-            </Button>
-            <Button variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { navigate('/dashboard'); onOpenChange(false); }}>
-              <LayoutDashboard className="h-5 w-5 mr-2" /> Mon Tableau de Bord
-            </Button>
-            <Button variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { onOpenAiAChat(); onOpenChange(false); }}>
-              <BotMessageSquare className="h-5 w-5 mr-2" /> Aide AiA Rapide
-            </Button>
-          </motion.div>
-        </div>
       </ScrollArea>
     </MobileDrawer>
   );
