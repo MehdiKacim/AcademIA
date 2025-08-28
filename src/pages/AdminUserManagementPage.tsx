@@ -10,9 +10,9 @@ import {
 import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
+import {
   PlusCircle, UserPlus, UserCheck, Check, XCircle, Mail, Search, Edit, Trash2, UserRoundCog, ChevronDown, ChevronUp, Building2, UserX, CalendarDays,
-  Home, MessageSquare, User, LogOut, Settings, Info, BookOpen, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, 
+  Home, MessageSquare, User, LogOut, Settings, Info, BookOpen, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness,
   ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, BookText, UserCog, TrendingUp, BookMarked,
   Users // Ajout de l'icône Users
 } from "lucide-react";
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
+import EditUserDialog from '@/components/EditUserDialog'; // Import the new dialog component
 
 // Map icon_name strings to Lucide React components (already present in RoleNavConfigsPage, but needed here)
 const iconMap: { [key: string]: React.ElementType } = {
@@ -103,27 +104,11 @@ const AdminUserManagementPage = () => {
   const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all');
 
   // States for editing user
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false); // Changed name to avoid conflict
   const [userToEdit, setUserToEdit] = useState<Profile | null>(null);
-  const [editFirstName, setEditFirstName] = useState('');
-  const [editLastName, setEditLastName] = useState('');
-  const [editUsername, setEditUsername] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [editRole, setEditRole] = useState<Profile['role']>('student');
-  const [editEstablishmentId, setEditEstablishmentId] = useState<string | null>(null);
-  const [editEnrollmentStartDate, setEditEnrollmentStartDate] = useState<Date | undefined>(undefined);
-  const [editEnrollmentEndDate, setEditEnrollmentEndDate] = useState<Date | undefined>(undefined);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
-
-  const [editUsernameAvailabilityStatus, setEditUsernameAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const [editEmailAvailabilityStatus, setEditEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const debounceTimeoutRefEditUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debounceTimeoutRefEditEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [newUserRoleSearchQuery, setNewUserRoleSearchQuery] = useState('');
   const [newUserEstablishmentSearchQuery, setNewUserEstablishmentSearchQuery] = useState('');
-  const [editRoleSearchQuery, setEditRoleSearchQuery] = useState('');
-  const [editEstablishmentSearchQuery, setEditEstablishmentSearchQuery] = useState('');
   const [filterRoleSearchQuery, setFilterRoleSearchQuery] = useState('');
   const [filterEstablishmentSearchQuery, setFilterEstablishmentSearchQuery] = useState('');
 
@@ -299,7 +284,7 @@ const AdminUserManagementPage = () => {
         showError(`Erreur lors de la création de l'utilisateur: ${error.message}`);
         return;
       }
-      
+
       showSuccess(`Utilisateur ${newUserFirstName} ${newUserLastName} (${finalNewUserRole}) créé avec succès !`);
 
       setNewUserFirstName('');
@@ -308,7 +293,7 @@ const AdminUserManagementPage = () => {
       setNewUserEmail('');
       setNewUserPassword('');
       setNewUserRole(
-        (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 
+        (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' :
         (currentRole === 'professeur' || currentRole === 'tutor') ? 'student' : 'director'
       );
       setNewUserEstablishmentId(currentUserProfile?.establishment_id || null);
@@ -339,7 +324,7 @@ const AdminUserManagementPage = () => {
           showError(`Erreur lors de la suppression du compte utilisateur: ${authError.message}`);
           return;
         }
-        
+
         setAllUsers(await getAllProfiles());
         showSuccess("Utilisateur et compte supprimés !");
       } catch (error: any) {
@@ -353,13 +338,22 @@ const AdminUserManagementPage = () => {
     navigate(`/messages?contactId=${profile.id}`);
   };
 
+  const handleEditUser = (profile: Profile) => {
+    setUserToEdit(profile);
+    setIsEditUserDialogOpen(true);
+  };
+
+  const handleSaveEditedUser = async (updatedProfile: Profile) => {
+    setAllUsers(await getAllProfiles()); // Refresh the list of all users
+  };
+
   const filteredUsersToDisplay = React.useMemo(() => {
     let users = allUsers;
 
     if (selectedRoleFilter !== 'all') {
       users = users.filter(p => p.role === selectedRoleFilter);
     }
-    
+
     if (selectedEstablishmentFilter !== 'all' && currentRole === 'administrator') {
       users = users.filter(p => p.establishment_id === selectedEstablishmentFilter || (p.role === 'administrator' && !p.establishment_id));
     } else if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
@@ -420,7 +414,7 @@ const AdminUserManagementPage = () => {
     return false;
   });
 
-  const establishmentsToDisplayForNewUser = establishments.filter(est => 
+  const establishmentsToDisplayForNewUser = establishments.filter(est =>
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
   ).map(est => ({
     id: est.id,
@@ -429,7 +423,7 @@ const AdminUserManagementPage = () => {
     description: est.address,
   }));
 
-  const establishmentsToDisplayForFilter = establishments.filter(est => 
+  const establishmentsToDisplayForFilter = establishments.filter(est =>
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
   ).map(est => ({
     id: est.id,
@@ -686,18 +680,7 @@ const AdminUserManagementPage = () => {
                       <MotionButton variant="outline" size="sm" onClick={() => handleSendMessageToUser(profile)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </MotionButton>
-                      <MotionButton variant="outline" size="sm" onClick={() => {
-                        setUserToEdit(profile);
-                        setEditFirstName(profile.first_name || '');
-                        setEditLastName(profile.last_name || '');
-                        setEditUsername(profile.username);
-                        setEditEmail(profile.email || '');
-                        setEditRole(profile.role);
-                        setEditEstablishmentId(profile.establishment_id || null);
-                        setEditEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
-                        setEditEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
-                        setIsEditDialogOpen(true);
-                      }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <MotionButton variant="outline" size="sm" onClick={() => handleEditUser(profile)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Edit className="h-4 w-4" />
                       </MotionButton>
                       {currentRole === 'administrator' && (
@@ -716,258 +699,22 @@ const AdminUserManagementPage = () => {
 
       {/* Edit User Dialog */}
       {userToEdit && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
-            <div className="flex flex-col">
-              <DialogHeader>
-                <DialogTitle>Modifier l'utilisateur</DialogTitle>
-                <DialogDescription>
-                  Mettez à jour les informations de l'utilisateur.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4 flex-grow">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-first-name" className="text-right">
-                    Prénom
-                  </Label>
-                  <Input
-                    id="edit-first-name"
-                    value={editFirstName}
-                    onChange={(e) => setEditFirstName(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-last-name" className="text-right">
-                    Nom
-                  </Label>
-                  <Input
-                    id="edit-last-name"
-                    value={editLastName}
-                    onChange={(e) => setEditLastName(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-username" className="text-right">
-                    Nom d'utilisateur
-                  </Label>
-                  <InputWithStatus
-                    id="edit-username"
-                    value={editUsername}
-                    onChange={(e) => {
-                      setEditUsername(e.target.value);
-                      if (debounceTimeoutRefEditUsername.current) clearTimeout(debounceTimeoutRefEditUsername.current);
-                      if (e.target.value.trim() === '') {
-                        setEditUsernameAvailabilityStatus('idle');
-                        return;
-                      }
-                      debounceTimeoutRefEditUsername.current = setTimeout(() => {
-                        validateUsername(e.target.value, userToEdit.id).then(isValid => setEditUsernameAvailabilityStatus(isValid ? 'available' : 'taken'));
-                      }, 500);
-                    }}
-                    status={editUsernameAvailabilityStatus}
-                    errorMessage={editUsernameAvailabilityStatus === 'taken' ? "Nom d'utilisateur déjà pris" : undefined}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-email" className="text-right">
-                    Email
-                  </Label>
-                  <InputWithStatus
-                    id="edit-email"
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => {
-                      setEditEmail(e.target.value);
-                      if (debounceTimeoutRefEditEmail.current) clearTimeout(debounceTimeoutRefEditEmail.current);
-                      if (e.target.value.trim() === '') {
-                        setEditEmailAvailabilityStatus('idle');
-                        return;
-                      }
-                      debounceTimeoutRefEditEmail.current = setTimeout(() => {
-                        validateEmail(e.target.value, userToEdit.id).then(isValid => setEditEmailAvailabilityStatus(isValid ? 'available' : 'taken'));
-                      }, 500);
-                    }}
-                    status={editEmailAvailabilityStatus}
-                    errorMessage={editEmailAvailabilityStatus === 'taken' ? "Email déjà enregistré" : undefined}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-role" className="text-right">
-                    Rôle
-                  </Label>
-                  <SimpleItemSelector
-                    id="edit-role"
-                    options={rolesOptionsForNewUser} // Reusing options for new user, as roles are the same
-                    value={editRole}
-                    onValueChange={(value) => setEditRole(value as Profile['role'])}
-                    searchQuery={editRoleSearchQuery}
-                    onSearchQueryChange={setEditRoleSearchQuery}
-                    placeholder="Sélectionner un rôle"
-                    emptyMessage="Aucun rôle trouvé."
-                    iconMap={iconMap}
-                    disabled={currentRole !== 'administrator'}
-                  />
-                </div>
-                {editRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="edit-establishment" className="text-right">
-                      Établissement
-                    </Label>
-                    <SimpleItemSelector
-                      id="edit-establishment"
-                      options={establishmentsToDisplayForNewUser}
-                      value={editEstablishmentId}
-                      onValueChange={(value) => setEditEstablishmentId(value)}
-                      searchQuery={editEstablishmentSearchQuery}
-                      onSearchQueryChange={setEditEstablishmentSearchQuery}
-                      placeholder="Sélectionner un établissement"
-                      emptyMessage="Aucun établissement trouvé."
-                      iconMap={iconMap}
-                      disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
-                    />
-                  </div>
-                )}
-                {editRole === 'student' && (
-                  <>
-                    <div>
-                      <Label htmlFor="edit-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <MotionButton
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal rounded-android-tile",
-                              !editEnrollmentStartDate && "text-muted-foreground"
-                            )}
-                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                          >
-                            <CalendarDays className="mr-2 h-4 w-4" />
-                            {editEnrollmentStartDate ? format(editEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                          </MotionButton>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
-                          <Calendar
-                            mode="single"
-                            selected={editEnrollmentStartDate}
-                            onSelect={setEditEnrollmentStartDate}
-                            initialFocus
-                            locale={fr}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <MotionButton
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal rounded-android-tile",
-                              !editEnrollmentEndDate && "text-muted-foreground"
-                            )}
-                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                          >
-                            <CalendarDays className="mr-2 h-4 w-4" />
-                            {editEnrollmentEndDate ? format(editEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                          </MotionButton>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
-                          <Calendar
-                            mode="single"
-                            selected={editEnrollmentEndDate}
-                            onSelect={setEditEnrollmentEndDate}
-                            initialFocus
-                            locale={fr}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </>
-                )}
-              </div>
-              <DialogFooter>
-                <MotionButton onClick={async () => {
-                  if (!userToEdit) return;
-                  if (!editFirstName.trim() || !editLastName.trim() || !editUsername.trim() || !editEmail.trim()) {
-                    showError("Tous les champs sont requis.");
-                    return;
-                  }
-                  if (editUsernameAvailabilityStatus === 'taken' || editEmailAvailabilityStatus === 'taken') {
-                    showError("Le nom d'utilisateur ou l'email est déjà pris.");
-                    return;
-                  }
-                  if (editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking') {
-                    showError("Veuillez attendre la vérification de la disponibilité du nom d'utilisateur et de l'email.");
-                    return;
-                  }
-                  if (editRole === 'student' && (!editEnrollmentStartDate || !editEnrollmentEndDate)) {
-                    showError("Les dates d'inscription sont requises pour les élèves.");
-                    return;
-                  }
-                  if (editEnrollmentStartDate && editEnrollmentEndDate && editEnrollmentStartDate >= editEnrollmentEndDate) {
-                    showError("La date de fin d'inscription doit être postérieure à la date de début.");
-                    return;
-                  }
-                  if (editRole !== 'administrator' && !editEstablishmentId) {
-                    showError("Un établissement est requis pour ce rôle.");
-                    return;
-                  }
-
-                  setIsSavingEdit(true);
-                  try {
-                    const updatedProfileData: Partial<Profile> = {
-                      id: userToEdit.id,
-                      first_name: editFirstName.trim(),
-                      last_name: editLastName.trim(),
-                      username: editUsername.trim(),
-                      email: editEmail.trim(),
-                      role: editRole,
-                      establishment_id: editEstablishmentId,
-                      enrollment_start_date: editEnrollmentStartDate ? editEnrollmentStartDate.toISOString().split('T')[0] : undefined,
-                      enrollment_end_date: editEnrollmentEndDate ? editEnrollmentEndDate.toISOString().split('T')[0] : undefined,
-                    };
-                    await updateProfile(updatedProfileData);
-
-                    const { data: { user: authUser } } = await supabase.auth.getUser();
-                    if (authUser && (editEmail.trim() !== authUser.email || editEstablishmentId !== userToEdit.establishment_id || editRole !== userToEdit.role)) {
-                      const { error: authUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, { 
-                        email: editEmail.trim(),
-                        user_metadata: {
-                          ...authUser.user_metadata,
-                          email: editEmail.trim(),
-                          establishment_id: editEstablishmentId,
-                          role: editRole,
-                        }
-                      });
-                      if (authUpdateError) {
-                        showError(`Erreur lors de la mise à jour de l'email/rôle/établissement d'authentification: ${authUpdateError.message}`);
-                        return;
-                      }
-                    }
-
-                    showSuccess("Utilisateur mis à jour avec succès !");
-                    await fetchUserProfile(userToEdit.id);
-                    setAllUsers(await getAllProfiles());
-                    setIsEditDialogOpen(false);
-                    setUserToEdit(null);
-                  } catch (error: any) {
-                    console.error("Error saving user edit:", error);
-                    showError(`Erreur lors de la sauvegarde des modifications: ${error.message}`);
-                  } finally {
-                    setIsSavingEdit(false);
-                  }
-                }} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || (editRole === 'student' && (!editEnrollmentStartDate || !editEnrollmentEndDate)) || (editRole !== 'administrator' && !editEstablishmentId)} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                  {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
-                </MotionButton>
-              </DialogFooter>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <EditUserDialog
+          isOpen={isEditUserDialogOpen}
+          onClose={() => {
+            setIsEditUserDialogOpen(false);
+            setUserToEdit(null);
+          }}
+          userToEdit={userToEdit}
+          onSave={handleSaveEditedUser}
+          allProfiles={allUsers}
+          establishments={establishments}
+          currentUserRole={currentRole!}
+          currentUserEstablishmentId={currentUserProfile?.establishment_id}
+          fetchUserProfile={fetchUserProfile}
+          checkUsernameExists={checkUsernameExists}
+          checkEmailExists={checkEmailExists}
+        />
       )}
     </div>
   );
