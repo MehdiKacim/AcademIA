@@ -36,6 +36,7 @@ import { NavItem } from "@/lib/dataModels";
 import { useCourseChat } from '@/contexts/CourseChatContext'; // Import useCourseChat
 import MobileBottomNavContent from "@/components/MobileBottomNavContent"; // Import the new component
 import NavSheet from "@/components/NavSheet"; // Import NavSheet for unauthenticated users
+import { motion } from 'framer-motion'; // Import motion for animations
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -186,6 +187,25 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     }, 1000);
   }, [setIsAdminModalOpen]);
 
+  // Variants for animated text
+  const textVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut" as const,
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const letterVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background overflow-x-hidden">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
@@ -251,6 +271,20 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
             <div className="flex justify-center mb-8">
               <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} />
             </div>
+            {/* NEW: Animated AcademIA text */}
+            <motion.h1
+              className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan mb-4"
+              variants={textVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {"AcademIA".split("").map((char, index) => (
+                <motion.span key={index} variants={letterVariants}>
+                  {char}
+                </motion.span>
+              ))}
+            </motion.h1>
+            {/* Existing h2 */}
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici
             </h2>
@@ -350,6 +384,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
               onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={false}
+              unreadMessagesCount={0} {/* Pass unread messages count */}
             />
           </div>
         </>

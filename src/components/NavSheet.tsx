@@ -258,6 +258,7 @@ const NavSheet = ({
             onOpenMobileNavSheet={() => onOpenChange(false)} // Clicking the central button closes the sheet
             onInitiateThemeChange={onInitiateThemeChange}
             isAuthenticated={!!currentUserProfile}
+            unreadMessagesCount={unreadMessagesCount} // Pass unread messages count
           />
           {isMobile && (
             <div className="flex justify-center pt-2">

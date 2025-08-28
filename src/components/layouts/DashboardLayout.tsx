@@ -401,6 +401,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={true}
+              unreadMessagesCount={unreadMessages} {/* Pass unread messages count */}
             />
           </div>
         </>
