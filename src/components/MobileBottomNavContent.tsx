@@ -40,8 +40,8 @@ const MobileBottomNavContent = ({
 
   const commonButtonClasses = "rounded-full h-12 w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-20 w-20 shadow-lg mt-[-50px] z-[997] overflow-hidden p-0", // Removed bg-background/80 from here
-    "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan" // Applied gradient to the button itself
+    "relative rounded-full h-20 w-20 shadow-lg mt-[-50px] z-[997] overflow-hidden p-0",
+    "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan"
   );
 
   const buttonPressAnimation = {
@@ -95,7 +95,7 @@ const MobileBottomNavContent = ({
             >
               <motion.div 
                 whileTap={buttonPressAnimation} 
-                className="flex items-center justify-center h-full w-full rounded-full bg-background/80 border-2 border-transparent" // Inner div for solid background and transparent border
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[calc(100%-4px)] w-[calc(100%-4px)] rounded-full bg-background/80 flex items-center justify-center" // Adjusted size and centering for border effect
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
@@ -177,7 +177,7 @@ const MobileBottomNavContent = ({
             >
               <motion.div 
                 whileTap={buttonPressAnimation} 
-                className="flex items-center justify-center h-full w-full rounded-full bg-background/80 border-2 border-transparent" // Inner div for solid background and transparent border
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[calc(100%-4px)] w-[calc(100%-4px)] rounded-full bg-background/80 flex items-center justify-center" // Adjusted size and centering for border effect
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
