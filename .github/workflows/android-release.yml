@@ -60,8 +60,9 @@ jobs:
         run: npx cap sync android
 
       # 8. Publication des mises à jour web via Capacitor Live Updates
+      # Utilise le canal de déploiement "Production"
       - name: Publish web updates
-        run: npx cap live-updates:publish --channel Production
+        run: npx cap live-updates:publish Production
         env:
           CAPACITOR_LIVE_UPDATES_APP_ID: ${{ secrets.CAPACITOR_LIVE_UPDATES_APP_ID }}
           CAPACITOR_LIVE_UPDATES_TOKEN: ${{ secrets.CAPACITOR_LIVE_UPDATES_TOKEN }}
