@@ -36,12 +36,24 @@ import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
-// Removed: import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import {
   Card,
@@ -157,7 +169,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const [newChildIsExternal, setNewChildIsExternal] = useState(false);
   const [newChildType, setNewChildType] = useState<NavItem['type']>('route');
   const [isAddingNewChild, setIsAddingNewChild] = useState(false);
-
+  const [isIconSelectOpen, setIsIconSelectOpen] = useState(false); // State for icon popover
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -185,6 +197,14 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       setCurrentChildren(parentItem.children || []);
       setSelectedGenericItemToAdd(null);
       setGenericItemSearchQuery('');
+      setNewChildLabel('');
+      setNewChildRoute('');
+      setNewChildIconName('');
+      setNewChildDescription('');
+      setNewChildIsExternal(false);
+      setNewChildType('route');
+      setIsAddingNewChild(false);
+      setIsIconSelectOpen(false);
     }
   }, [isOpen, parentItem, allGenericNavItems, allConfiguredItemsFlat, getDescendantIds, getAncestorIds]);
 
@@ -292,7 +312,9 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       showError("Une route est requise pour un élément de type 'Route'.");
       return;
     }
-    if (newChildType === 'category_or_action' && !newChildRoute.trim()) {
+    if (newChildType === 'category_or_action' && newChildRoute.trim()) {
+      showError("Une catégorie/action ne doit pas avoir de route.");
+      return;
     }
 
     setIsAddingNewChild(true);
@@ -463,34 +485,28 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           </div>
                           <div>
                             <Label htmlFor="new-child-type">Type d'élément</Label>
-                            <Select value={newChildType} onValueChange={(value: NavItem['type']) => {
-                              setNewChildType(value);
-                              if (value === 'category_or_action') {
-                                setNewChildIsExternal(false);
-                              }
-                            }}>
-                              <SelectTrigger id="new-child-type" className="rounded-android-tile">
-                                <SelectValue placeholder="Sélectionner un type" />
-                              </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
-                                <ScrollArea className="h-40">
-                                  {navItemTypes.map(type => {
-                                    return (
-                                      <SelectItem key={type} value={type}>
-                                        <div className="flex items-center gap-2">
-                                          {/* Removed IconComponent here as it's not directly available for types */}
-                                          <span>{getItemTypeLabel(type)}</span>
-                                        </div>
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </ScrollArea>
-                              </SelectContent>
-                            </Select>
+                            <RadioGroup
+                              value={newChildType}
+                              onValueChange={(value: NavItem['type']) => {
+                                setNewChildType(value);
+                                if (value === 'category_or_action') {
+                                  setNewChildIsExternal(false);
+                                  setNewChildRoute(''); // Clear route for categories/actions
+                                }
+                              }}
+                              className="flex space-x-4 mt-2"
+                            >
+                              {navItemTypes.map(type => (
+                                <div key={type} className="flex items-center space-x-2">
+                                  <RadioGroupItem value={type} id={`new-child-type-${type}`} />
+                                  <Label htmlFor={`new-child-type-${type}`}>{getItemTypeLabel(type)}</Label>
+                                </div>
+                              ))}
+                            </RadioGroup>
                           </div>
                           <div>
                             <Label htmlFor="new-child-route">Route (URL interne ou #hash)</Label>
-                            <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action' && (newChildRoute === null || newChildRoute === undefined)} />
+                            <Input id="new-child-route" value={newChildRoute} onChange={(e) => setNewChildRoute(e.target.value)} disabled={newChildType === 'category_or_action'} />
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch id="new-child-is-external" checked={newChildIsExternal} onCheckedChange={setNewChildIsExternal} disabled={newChildType === 'category_or_action'} />
@@ -498,25 +514,58 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                           </div>
                           <div>
                             <Label htmlFor="new-child-icon">Nom de l'icône (Lucide React)</Label>
-                            <Select value={newChildIconName} onValueChange={setNewChildIconName}>
-                              <SelectTrigger id="new-child-icon" className="rounded-android-tile">
-                                <SelectValue placeholder="Sélectionner une icône" />
-                              </SelectTrigger>
-                              <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
-                                <ScrollArea className="h-40">
-                                  {Object.keys(iconMap).sort().map(iconName => {
-                                    const IconComponent = iconMap[iconName];
-                                    return (
-                                      <SelectItem key={iconName} value={iconName}>
-                                        <div className="flex items-center gap-2">
-                                          <IconComponent className="h-4 w-4" /> <span>{iconName}</span>
-                                        </div>
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </ScrollArea>
-                              </SelectContent>
-                            </Select>
+                            <Popover open={isIconSelectOpen} onOpenChange={setIsIconSelectOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={isIconSelectOpen}
+                                  className="w-full justify-between rounded-android-tile"
+                                >
+                                  {newChildIconName ? (
+                                    <div className="flex items-center gap-2">
+                                      {React.createElement(iconMap[newChildIconName] || Info, { className: "h-4 w-4" })}
+                                      {newChildIconName}
+                                    </div>
+                                  ) : (
+                                    "Sélectionner une icône..."
+                                  )}
+                                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
+                                <Command>
+                                  <CommandInput placeholder="Rechercher une icône..." />
+                                  <CommandList>
+                                    <CommandEmpty>Aucune icône trouvée.</CommandEmpty>
+                                    <CommandGroup>
+                                      {Object.keys(iconMap).sort().map(iconName => {
+                                        const IconComponent = iconMap[iconName];
+                                        return (
+                                          <CommandItem
+                                            key={iconName}
+                                            value={iconName}
+                                            onSelect={() => {
+                                              setNewChildIconName(iconName);
+                                              setIsIconSelectOpen(false);
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                newChildIconName === iconName ? "opacity-100" : "opacity-0"
+                                              )}
+                                            />
+                                            <IconComponent className="mr-2 h-4 w-4" />
+                                            <span>{iconName}</span>
+                                          </CommandItem>
+                                        );
+                                      })}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                           <div>
                             <Label htmlFor="new-child-description">Description (optionnel)</Label>
