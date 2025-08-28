@@ -87,6 +87,20 @@ const getItemTypeLabel = (type: NavItem['type']) => {
   }
 };
 
+// Helper function to get display name for roles
+const getRoleDisplayName = (role: Profile['role'] | 'all') => {
+  switch (role) {
+    case 'student': return 'Élève';
+    case 'professeur': return 'Professeur';
+    case 'tutor': return 'Tuteur';
+    case 'director': return 'Directeur';
+    case 'deputy_director': return 'Directeur Adjoint';
+    case 'administrator': return 'Administrateur';
+    case 'all': return 'Tous les rôles';
+    default: return 'Rôle inconnu';
+  }
+};
+
 interface SortableNavItemProps {
   item: NavItem;
   level: number;
@@ -864,8 +878,8 @@ const RoleNavConfigsPage = () => {
                 </DragOverlay>
               </DndContext>
             </CardContent>
-          </MotionCard>
-        </div>
+          </CardHeader>
+        </MotionCard>
       )}
 
       {currentConfigToEdit && currentItemToEdit && (
