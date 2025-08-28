@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown } from "lucide-react";
+import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown, ArrowLeft, SunMoon } from "lucide-react"; // Added ArrowLeft, SunMoon
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -17,7 +17,7 @@ import packageJson from '../../package.json'; // Import package.json for version
 import { MadeWithDyad } from './made-with-dyad'; // Import MadeWithDyad
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown,
+  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown, ArrowLeft: ArrowLeft, SunMoon: SunMoon,
 };
 
 interface NavSheetProps {
@@ -87,6 +87,8 @@ const NavSheet = ({
         onOpenGlobalSearch();
       } else if (item.id === 'nav-aia-chat') {
         onOpenAiAChat();
+      } else if (item.id === 'theme-toggle-item' || item.id === 'profile-theme-toggle') {
+        // This is handled by the ThemeToggle component itself
       } else {
         item.onClick();
       }
@@ -111,7 +113,18 @@ const NavSheet = ({
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
-    { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 2 },
+    { id: 'profile-theme-toggle', label: 'Thème', icon_name: 'SunMoon', is_external: false, type: 'category_or_action', onClick: () => {}, order_index: 2 }, // Theme toggle item
+    { id: 'profile-about', label: 'À propos', icon_name: 'Info', is_external: false, type: 'route', route: '/about', order_index: 3 }, // About link
+    { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 4 },
+  ];
+
+  const staticAnonNavItems: NavItem[] = [
+    { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, type: 'route' },
+    { id: 'aia-bot-link', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
+    { id: 'methodology-link', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
+    { id: 'about-link', label: "À propos", icon_name: 'Info', route: '/about', is_external: false, order_index: 3, type: 'route' },
+    { id: 'theme-toggle-anon', label: "Thème", icon_name: 'SunMoon', is_external: false, type: 'category_or_action', onClick: () => {}, order_index: 4 }, // Theme toggle item
+    { id: 'login-link', label: "Connexion", icon_name: 'LogIn', route: '/auth', is_external: false, order_index: 5, type: 'route' },
   ];
 
   const currentItemsToDisplay = React.useMemo(() => {
@@ -133,6 +146,8 @@ const NavSheet = ({
           children: staticProfileActions,
           order_index: 999,
         });
+      } else {
+        itemsToFilter = staticAnonNavItems;
       }
     } else {
       // For mobile, show children of the active category
@@ -145,17 +160,11 @@ const NavSheet = ({
     }
 
     return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, unreadMessagesCount]);
-
-  const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
-  const currentDrawerIconName = drawerNavStack.length > 0
-    ? drawerNavStack[drawerNavStack.length - 1].icon_name
-    : 'Menu';
-  const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info;
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, staticAnonNavItems, unreadMessagesCount]);
 
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
-      {/* New Top Section (Empty Header Area) */}
+      {/* Simplified Header Section */}
       <div className="p-4 flex-shrink-0 flex items-center justify-between">
         {drawerNavStack.length > 0 ? (
           <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
@@ -220,6 +229,26 @@ const NavSheet = ({
               const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
               const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
+              if (item.id === 'profile-theme-toggle' || item.id === 'theme-toggle-anon') {
+                return (
+                  <motion.div key={item.id} variants={itemVariants}>
+                    <div
+                      className={cn(
+                        "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm",
+                        "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out",
+                        "text-foreground"
+                      )}
+                    >
+                      <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/30" : "bg-muted/20")}>
+                        <IconComponent className="h-6 w-6" />
+                      </div>
+                      <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
+                      <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className="rounded-full" />
+                    </div>
+                  </motion.div>
+                );
+              }
+
               return (
                 <motion.div key={item.id} variants={itemVariants}> {/* Wrap each button in motion.div */}
                   <Button
@@ -259,17 +288,12 @@ const NavSheet = ({
             })
           )}
         </motion.div>
-      </ScrollArea>
-      <div className="p-4 flex-shrink-0 border-t border-border flex flex-col items-center gap-2">
-        <div className="flex items-center gap-2">
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className="rounded-full" />
-          <Button variant="ghost" size="sm" onClick={() => navigate('/about')} className="text-muted-foreground hover:text-foreground">
-            <Info className="h-4 w-4 mr-2" /> À propos
-          </Button>
+        {/* Moved app version and MadeWithDyad to the bottom of scrollable area */}
+        <div className="p-4 flex-shrink-0 flex flex-col items-center gap-2 mt-auto">
+          <p className="text-xs text-muted-foreground">Version: {packageJson.version}</p>
+          <MadeWithDyad />
         </div>
-        <p className="text-xs text-muted-foreground">Version: {packageJson.version}</p>
-        <MadeWithDyad />
-      </div>
+      </ScrollArea>
     </MobileDrawer>
   );
 };

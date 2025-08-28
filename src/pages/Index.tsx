@@ -21,6 +21,7 @@ import {
   BotMessageSquare, // Added BotMessageSquare for AiA Bot
   UserCog, // Added UserCog for Admin access button
   Menu, // Added Menu icon for mobile navigation
+  SunMoon, // Added SunMoon for theme toggle
 } from "lucide-react"; // Import all necessary icons
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -45,7 +46,7 @@ interface IndexProps {
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, 
+  Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, SunMoon,
 };
 
 const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
@@ -157,7 +158,8 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     { id: 'aia-bot-link', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
     { id: 'methodology-link', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
     { id: 'about-link', label: "À propos", icon_name: 'Info', route: '/about', is_external: false, order_index: 3, type: 'route' },
-    { id: 'login-link', label: "Connexion", icon_name: 'LogIn', route: '/auth', is_external: false, order_index: 4, type: 'route' },
+    { id: 'theme-toggle-anon', label: "Thème", icon_name: 'SunMoon', is_external: false, type: 'category_or_action', onClick: () => {}, order_index: 4 }, // Theme toggle item
+    { id: 'login-link', label: "Connexion", icon_name: 'LogIn', route: '/auth', is_external: false, order_index: 5, type: 'route' },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -203,7 +205,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
 
   const letterVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
+    visible: { y: 0, opacity: 1 },
   };
 
   const toggleMobileNavSheet = useCallback(() => {
@@ -225,7 +227,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
           <Logo onLogoClick={handleLogoClick} />
         </div>
         <nav className="hidden md:flex items-center gap-4">
-          {staticNavItems.filter(item => item.id !== 'login-link').map((item) => { // Filter out login link for desktop header
+          {staticNavItems.filter(item => item.id !== 'login-link' && item.id !== 'theme-toggle-anon').map((item) => { // Filter out login link and theme toggle for desktop header
             const isActive = 
               (item.route === '/' && location.pathname === '/' && !location.hash) ||
               (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route);
@@ -247,7 +249,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+          {/* ThemeToggle removed from here */}
           <Button variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex"> {/* Navigate to /about */}
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>

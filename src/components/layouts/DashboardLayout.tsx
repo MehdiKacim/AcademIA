@@ -323,7 +323,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+                {/* ThemeToggle removed from here */}
               </div>
             </div>
           )
@@ -334,7 +334,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               <Logo />
             </div>
             <div className="flex items-center gap-2">
-              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+              {/* ThemeToggle removed from here */}
               <Button variant="outline" onClick={() => navigate('/auth')}>
                 <LogIn className="h-5 w-5 mr-2" /> Connexion
               </Button>
