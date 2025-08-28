@@ -229,7 +229,7 @@ const NavSheet = ({
               ) : (
                 <div className="w-10 h-10"></div>
               )}
-              <Logo iconClassName="h-8 w-8" textClassName="text-xl" />
+              {/* Removed Logo from here */}
             </div>
 
             {/* Placeholder for right side to maintain spacing */}
@@ -307,7 +307,7 @@ const NavSheet = ({
 
         {/* Moved elements from old SheetHeader here */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-around gap-2"> {/* Changed justify-between to justify-around */}
             {currentUserProfile ? (
               <>
                 <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
@@ -326,6 +326,8 @@ const NavSheet = ({
                   </Avatar>
                   <span className="sr-only">Mon Compte</span>
                 </Button>
+                {/* Added Logo here */}
+                <Logo iconClassName="h-8 w-8" showText={false} /> 
               </>
             ) : (
               <Button variant="default" className="shadow-lg rounded-android-tile flex-grow" onClick={onOpenAuthModal}>
