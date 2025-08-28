@@ -44,11 +44,11 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
           variants={overlayVariants}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          {/* Overlay to block interaction with background content */}
-          <motion.div
+          {/* Overlay to block interaction with background content - REMOVED for a less modal-like appearance */}
+          {/* <motion.div
             className={cn("absolute inset-0 bg-black/50 z-[997]", overlayClassName)} // Overlay, behind content (999) but above bottom nav (996)
             onClick={onClose} // Close drawer when clicking on overlay
-          />
+          /> */}
 
           {/* Drawer Content */}
           <motion.div
