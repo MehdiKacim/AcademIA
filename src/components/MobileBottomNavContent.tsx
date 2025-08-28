@@ -43,7 +43,7 @@ const MobileBottomNavContent = ({
   
   // Adjusted central logo button classes for responsiveness
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-20 w-20 sm:h-24 sm:w-24 shadow-lg z-[997] overflow-hidden p-0", 
+    "relative rounded-full h-16 w-16 sm:h-20 sm:w-20 shadow-lg z-[997] overflow-hidden p-0", 
     "bg-background/80"
   );
 
@@ -88,7 +88,7 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] sm:bottom-[-14px]"> {/* Adjusted bottom position for responsiveness */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] sm:bottom-[58px]"> {/* Adjusted bottom position */}
             <Button
               variant="ghost"
               size="icon"
@@ -104,11 +104,11 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size */}
+                  <Logo iconClassName="h-10 w-10" showText={false} />
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {unreadMessagesCount > 0 && (
-                  <span className="absolute top-[-8px] right-[-8px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-8 w-8 flex items-center justify-center"> {/* Changed h-6 w-6 to h-8 w-8 and adjusted top/right/translate */}
+                  <span className="absolute top-[-8px] right-[-8px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-8 w-8 flex items-center justify-center">
                     {unreadMessagesCount}
                   </span>
                 )}
@@ -117,7 +117,7 @@ const MobileBottomNavContent = ({
                   initial={{ opacity: 0, scaleX: 0.5 }}
                   animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary" // Small bar at the bottom
+                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary"
                 />
               </motion.div>
             </Button>
@@ -174,7 +174,7 @@ const MobileBottomNavContent = ({
           </Button>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] sm:bottom-[-14px]"> {/* Adjusted bottom position for responsiveness */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] sm:bottom-[58px]"> {/* Adjusted bottom position */}
             <Button
               variant="ghost"
               size="icon"
@@ -193,7 +193,7 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size */}
+                  <Logo iconClassName="h-10 w-10" showText={false} />
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {/* New content element: animated bar */}
@@ -201,7 +201,7 @@ const MobileBottomNavContent = ({
                   initial={{ opacity: 0, scaleX: 0.5 }}
                   animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary" // Small bar at the bottom
+                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary"
                 />
               </motion.div>
             </Button>
