@@ -273,11 +273,6 @@ const NavSheet = ({
           )}
         </motion.div>
       </ScrollArea>
-
-      <div className="flex-shrink-0 p-4 border-t border-border text-center text-xs text-muted-foreground">
-        <p>Version de l'application: {packageJson.version}</p>
-        <MadeWithDyad />
-      </div>
     </MobileDrawer>
   );
 };
