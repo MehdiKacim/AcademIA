@@ -207,6 +207,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
   };
 
   const toggleMobileNavSheet = useCallback(() => {
+    console.log("toggleMobileNavSheet called from Index!"); // Add this log
     setIsMobileNavSheetOpen(prev => !prev);
   }, []);
 

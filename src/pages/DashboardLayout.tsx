@@ -211,6 +211,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   }, [navigate]);
 
   const toggleMobileNavSheet = useCallback(() => {
+    console.log("toggleMobileNavSheet called from DashboardLayout!"); // Add this log
     setIsMobileNavSheetOpen(prev => !prev);
   }, []);
 
