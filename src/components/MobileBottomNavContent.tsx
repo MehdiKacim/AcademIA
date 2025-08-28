@@ -44,10 +44,7 @@ const MobileBottomNavContent = ({
   // Unified button classes for the 4 peripheral buttons
   const peripheralNavButtonClasses = "rounded-full h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
   
-  const buttonPressAnimation = {
-    scale: 0.95,
-    transition: { duration: 0.1, ease: "easeOut" },
-  };
+  // Removed buttonPressAnimation as per user request
 
   return (
     <div className="flex items-center justify-around w-full h-full relative px-2">
@@ -56,7 +53,7 @@ const MobileBottomNavContent = ({
           {/* Search Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={peripheralNavButtonClasses}>
+              <MotionButton variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={peripheralNavButtonClasses}>
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Recherche globale</span>
               </MotionButton>
@@ -69,7 +66,7 @@ const MobileBottomNavContent = ({
           {/* AiA Chat Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenAiAChat} className={peripheralNavButtonClasses}>
+              <MotionButton variant="ghost" size="icon" onClick={onOpenAiAChat} className={peripheralNavButtonClasses}>
                 <BotMessageSquare className="h-5 w-5" />
                 <span className="sr-only">AiA Chat</span>
               </MotionButton>
@@ -79,20 +76,15 @@ const MobileBottomNavContent = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Central Menu/Logo Button with position animation */}
-          <motion.div
-              className={cn(
-                  "relative rounded-full flex items-center justify-center",
-                  "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-                  "z-10", // Keep z-index
-                  "transition-all duration-300 ease-in-out" // Keep transition for other properties if needed
-              )}
-              initial={{ y: -34 }} // Initial lifted position
-              animate={{ y: isMobileNavSheetOpen ? 0 : -34 }} // Animate to 0 (flush) when open, back to -34 when closed
-              transition={{ duration: 0.3, ease: "easeOut" }}
-          >
+          {/* Central Menu/Logo Button */}
+          <div className={cn(
+              "relative rounded-full flex items-center justify-center",
+              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
+              "translate-y-[-34px] z-10", // Lifted position
+              "transition-all duration-300 ease-in-out", // For smooth ring transition
+              isMobileNavSheetOpen ? "ring-2 ring-primary" : "ring-0" // Conditional ring for active state
+          )}>
             <MotionButton
-                whileTap={buttonPressAnimation}
                 variant="ghost"
                 size="icon"
                 onClick={() => onToggleMobileNavSheet()}
@@ -103,9 +95,7 @@ const MobileBottomNavContent = ({
                     "flex items-center justify-center" // Ensure content is centered
                 )}
             >
-              <motion.div
-                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+              <motion.div // Removed rotation animation
                 className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
               >
                 <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size to fit button */}
@@ -117,12 +107,12 @@ const MobileBottomNavContent = ({
                 </span>
               )}
             </MotionButton>
-          </motion.div>
+          </div>
 
           {/* User Dropdown Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" className={peripheralNavButtonClasses}>
+              <MotionButton variant="ghost" size="icon" className={peripheralNavButtonClasses}>
                 <User className="h-5 w-5" />
                 <span className="sr-only">Menu utilisateur</span>
               </MotionButton>
@@ -146,7 +136,7 @@ const MobileBottomNavContent = ({
           {/* Messages Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={() => navigate('/messages')} className={peripheralNavButtonClasses}>
+              <MotionButton variant="ghost" size="icon" onClick={() => navigate('/messages')} className={peripheralNavButtonClasses}>
                 <MessageSquare className="h-5 w-5" />
                 <span className="sr-only">Messagerie</span>
               </MotionButton>
@@ -165,19 +155,14 @@ const MobileBottomNavContent = ({
           </MotionButton>
 
           {/* Central Menu/Logo Button for unauthenticated */}
-          <motion.div
-              className={cn(
-                  "relative rounded-full flex items-center justify-center",
-                  "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-                  "z-10", // Lift and z-index for the whole unit
-                  "transition-all duration-300 ease-in-out" // Keep transition for other properties if needed
-              )}
-              initial={{ y: -34 }} // Initial lifted position
-              animate={{ y: isMobileNavSheetOpen ? 0 : -34 }} // Animate to 0 (flush) when open, back to -34 when closed
-              transition={{ duration: 0.3, ease: "easeOut" }}
-          >
+          <div className={cn(
+              "relative rounded-full flex items-center justify-center",
+              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
+              "translate-y-[-34px] z-10", // Lifted position
+              "transition-all duration-300 ease-in-out", // For smooth ring transition
+              isMobileNavSheetOpen ? "ring-2 ring-primary" : "ring-0" // Conditional ring for active state
+          )}>
             <MotionButton
-                whileTap={buttonPressAnimation}
                 variant="ghost"
                 size="icon"
                 onClick={() => onToggleMobileNavSheet()}
@@ -188,16 +173,14 @@ const MobileBottomNavContent = ({
                     "flex items-center justify-center" // Ensure content is centered
                 )}
             >
-              <motion.div
-                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+              <motion.div // Removed rotation animation
                 className="flex items-center justify-center h-full w-full"
               >
                 <Logo iconClassName="h-10 w-10" showText={false} />
               </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
             </MotionButton>
-          </motion.div>
+          </div>
 
           {/* Right side: MessageSquare button */}
           <MotionButton variant="outline" onClick={() => navigate('/auth')} className={peripheralNavButtonClasses}>
