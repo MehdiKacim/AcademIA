@@ -168,7 +168,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed inset-x-0 top-[68px] z-[1001] bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8 h-[calc(100vh-68px)]"
+          className="fixed inset-x-0 top-[68px] z-[1001] bg-background/80 backdrop-blur-lg py-4 px-4 md:px-8 h-[calc(100vh-68px)]" // Removed border-b and shadow-lg
         >
           <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full">
             <div className="flex items-center gap-4 flex-shrink-0">
@@ -177,7 +177,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                 <Input
                   ref={inputRef}
                   placeholder="Rechercher dans tout AcademIA..."
-                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50 rounded-android-tile" // Apply rounded-android-tile
+                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50" // Changed rounded-android-tile to rounded-lg
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />

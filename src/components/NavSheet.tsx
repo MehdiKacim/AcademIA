@@ -1,24 +1,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import {
-  // Removed SheetHeader, SheetTitle, SheetDescription imports as they are no longer used directly
-} from "@/components/ui/sheet"; 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown } from "lucide-react";
+import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSwipeable } from 'react-swipeable';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
-import MobileBottomNavContent from './MobileBottomNavContent'; // Import MobileBottomNavContent
-import MobileDrawer from './MobileDrawer'; // Import the new custom drawer
+import MobileDrawer from './MobileDrawer'; // Import MobileDrawer
 import packageJson from '../../package.json'; // Import package.json for version
 import { MadeWithDyad } from './made-with-dyad'; // Import MadeWithDyad
 
@@ -28,7 +22,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 
 interface NavSheetProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void; // Renamed prop
+  onOpenChange: (open: boolean) => void;
   navItems: NavItem[]; // Full nav tree
   onOpenGlobalSearch: () => void;
   onOpenAiAChat: () => void;
@@ -50,7 +44,7 @@ const itemVariants = {
 
 const NavSheet = ({
   isOpen,
-  onOpenChange, // Renamed prop
+  onOpenChange,
   navItems,
   onOpenGlobalSearch,
   onOpenAiAChat,
@@ -66,8 +60,6 @@ const NavSheet = ({
   const { openChat } = useCourseChat();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
-
-  // No longer need swipeHandlers here, they are in MobileDrawer
 
   // Reset stack when sheet closes
   useEffect(() => {
@@ -141,7 +133,6 @@ const NavSheet = ({
           children: staticProfileActions,
           order_index: 999,
         });
-        // Removed "Messagerie" as a top-level item here, it's now in MobileBottomNavContent
       }
     } else {
       // For mobile, show children of the active category
@@ -164,25 +155,21 @@ const NavSheet = ({
 
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
-      <div className="p-4 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {drawerNavStack.length > 0 ? (
-              <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                <ArrowLeft className="h-5 w-5" />
-                <span className="sr-only">Retour</span>
-              </Button>
-            ) : (
-              <div className="h-10 w-10" /> 
-            )}
-            <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">{currentDrawerTitle}</h2>
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-            <X className="h-5 w-5" />
-            <span className="sr-only">Fermer le menu</span>
+      {/* New Top Section (Empty Header Area) */}
+      <div className="p-4 flex-shrink-0 flex items-center justify-between">
+        {drawerNavStack.length > 0 ? (
+          <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Retour</span>
           </Button>
-        </div>
+        ) : (
+          <div className="h-10 w-10" /> // Placeholder to maintain spacing
+        )}
+        <Logo iconClassName="h-10 w-10" showText={false} />
+        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+          <X className="h-5 w-5" />
+          <span className="sr-only">Fermer le menu</span>
+        </Button>
       </div>
 
       <ScrollArea className="flex-grow p-4">
@@ -273,6 +260,16 @@ const NavSheet = ({
           )}
         </motion.div>
       </ScrollArea>
+      <div className="p-4 flex-shrink-0 border-t border-border flex flex-col items-center gap-2">
+        <div className="flex items-center gap-2">
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className="rounded-full" />
+          <Button variant="ghost" size="sm" onClick={() => navigate('/about')} className="text-muted-foreground hover:text-foreground">
+            <Info className="h-4 w-4 mr-2" /> À propos
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">Version: {packageJson.version}</p>
+        <MadeWithDyad />
+      </div>
     </MobileDrawer>
   );
 };
