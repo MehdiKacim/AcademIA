@@ -378,7 +378,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       {currentUserProfile && (
         <NavSheet
           isOpen={isMobileNavSheetOpen}
-          onOpenChange={setIsMobileNavSheetOpen} {/* Changed to onOpenChange */}
+          onOpenChange={setIsMobileNavSheetOpen}
           navItems={fullNavTreeWithActions}
           onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
           onOpenAiAChat={() => openChat()}
