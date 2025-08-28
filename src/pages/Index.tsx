@@ -255,9 +255,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
 
       <main className={cn(
           "flex-grow flex flex-col items-center justify-center text-center px-4 overflow-y-auto overflow-x-hidden", // Added overflow-x-hidden here
-          isMobile
-            ? "pt-[calc(4px+12.5vh)] pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for header
-            : "pt-[calc(68px+env(safe-area-inset-top)+12.5vh)] pb-4" // Desktop: standard top padding, standard bottom padding
+          "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Fixed 68px padding from top for both mobile and desktop
         )}>
         <section
           id="accueil"

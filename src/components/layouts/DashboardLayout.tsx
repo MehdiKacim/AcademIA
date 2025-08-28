@@ -352,7 +352,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
           isMobile
-            ? "pt-4 pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for persistent footer
+            ? "pt-[calc(68px+env(safe-area-inset-top))] pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: 68px from top, bottom padding for persistent footer
             : (
                 currentUserProfile && activeDesktopSubmenuParent
                   ? "pt-[calc(68px+224px+env(safe-area-inset-top))] pb-4" // Desktop with submenu (68px header + 224px submenu), standard bottom padding
