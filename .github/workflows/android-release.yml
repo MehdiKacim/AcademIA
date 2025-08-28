@@ -1,7 +1,7 @@
 # Nom du workflow qui s'affiche sur GitHub Actions
 name: Android Build Debug AcademIA
 
-# Déclenche le workflow à chaque push sur la branche 'main'
+# Déclenche le workflow à chaque push sur la branche 'main '
 on:
   push:
     branches:
@@ -128,3 +128,4 @@ jobs:
             Commit: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
