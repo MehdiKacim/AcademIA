@@ -38,9 +38,12 @@ const MobileBottomNavContent = ({
     navigate("/");
   };
 
-  const commonButtonClasses = "rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-muted/20 hover:bg-muted/40";
+  // Adjusted common button classes for responsiveness
+  const commonButtonClasses = "rounded-full h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 bg-muted/20 hover:bg-muted/40";
+  
+  // Adjusted central logo button classes for responsiveness
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-16 w-16 shadow-lg z-[997] overflow-hidden p-0", // Removed mt-[-30px]
+    "relative rounded-full h-14 w-14 sm:h-16 sm:w-16 shadow-lg z-[997] overflow-hidden p-0", 
     "bg-background/80"
   );
 
@@ -85,7 +88,7 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]">
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[40px]"> {/* Adjusted bottom position */}
             <Button
               variant="ghost"
               size="icon"
@@ -105,7 +108,7 @@ const MobileBottomNavContent = ({
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {unreadMessagesCount > 0 && (
-                  <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center"> {/* Changed h-5 w-5 to h-6 w-6 */}
+                  <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
                     {unreadMessagesCount}
                   </span>
                 )}
@@ -171,7 +174,7 @@ const MobileBottomNavContent = ({
           </Button>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]">
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[40px]"> {/* Adjusted bottom position */}
             <Button
               variant="ghost"
               size="icon"
