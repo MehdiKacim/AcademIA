@@ -10,6 +10,7 @@ import { Course, Module, ModuleSection } from "@/lib/dataModels"; // Import inte
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
+import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
 
 interface SearchResult {
   type: 'note' | 'course' | 'module' | 'section';
@@ -170,66 +171,68 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="fixed inset-0 z-[995] bg-background/80 backdrop-blur-lg" // z-index ajusté à 995
         >
-          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full py-4 px-4 md:px-8">
-            <div className="flex items-center gap-4 flex-shrink-0 pt-4"> {/* Ajout de padding-top ici */}
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
-                <Input
-                  ref={inputRef}
-                  placeholder="Rechercher dans tout AcademIA..."
-                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          <div className="max-w-4xl mx-auto flex flex-col h-full px-4 md:px-8"> {/* Removed gap-4 and pt-16 */}
+            <ScrollArea className="flex-grow"> {/* Make the entire content scrollable */}
+              <div className="flex items-center gap-4 pt-4 pb-4"> {/* Search input row, now inside scroll area */}
+                <div className="relative flex-grow">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
+                  <Input
+                    ref={inputRef}
+                    placeholder="Rechercher dans tout AcademIA..."
+                    className="pl-12 h-14 text-lg rounded-android-tile shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50" // Changed rounded-lg to rounded-android-tile
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
+                  <X className="h-6 w-6" />
+                  <span className="sr-only">Fermer la recherche</span>
+                </Button>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
-                <X className="h-6 w-6" />
-                <span className="sr-only">Fermer la recherche</span>
-              </Button>
-            </div>
 
-            <div className="flex-grow overflow-y-auto pr-2">
-              {searchQuery.trim() && searchResults.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
-              ) : (
-                Object.keys(groupedResults).map(type => {
-                  const resultsOfType = groupedResults[type as keyof typeof groupedResults];
-                  if (resultsOfType.length === 0) return null;
+              <div className="flex-grow pr-2"> {/* This is the scrollable results area */}
+                {searchQuery.trim() && searchResults.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
+                ) : (
+                  Object.keys(groupedResults).map(type => {
+                    const resultsOfType = groupedResults[type as keyof typeof groupedResults];
+                    if (resultsOfType.length === 0) return null;
 
-                  const typeTitle = {
-                    note: "Notes",
-                    course: "Cours",
-                    module: "Modules",
-                    section: "Sections",
-                  }[type];
+                    const typeTitle = {
+                      note: "Notes",
+                      course: "Cours",
+                      module: "Modules",
+                      section: "Sections",
+                    }[type];
 
-                  return (
-                    <div key={type} className="space-y-3 mb-6">
-                      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
-                        {typeTitle}
-                      </h2>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        {resultsOfType.map(result => (
-                          <Link to={result.link} key={result.id} onClick={onClose}>
-                            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile">
-                              <CardHeader className="flex-row items-center gap-3 pb-2">
-                                <result.icon className="h-5 w-5 text-primary" />
-                                <CardTitle className="text-lg">{result.title}</CardTitle>
-                              </CardHeader>
-                              <CardContent className="flex-grow">
-                                <CardDescription className="text-sm line-clamp-3">
-                                  {result.description}
-                                </CardDescription>
-                              </CardContent>
-                            </Card>
-                          </Link>
-                        ))}
+                    return (
+                      <div key={type} className="space-y-3 mb-6">
+                        <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+                          {typeTitle}
+                        </h2>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {resultsOfType.map(result => (
+                            <Link to={result.link} key={result.id} onClick={onClose}>
+                              <Card className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile">
+                                <CardHeader className="flex-row items-center gap-3 pb-2">
+                                  <result.icon className="h-5 w-5 text-primary" />
+                                  <CardTitle className="text-lg">{result.title}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="flex-grow">
+                                  <CardDescription className="text-sm line-clamp-3">
+                                    {result.description}
+                                  </CardDescription>
+                                </CardContent>
+                              </Card>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })
+                )}
+              </div>
+            </ScrollArea>
           </div>
         </motion.div>
       )}
