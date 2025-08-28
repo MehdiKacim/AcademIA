@@ -93,7 +93,7 @@ const MobileBottomNavContent = ({
                 onClick={() => onToggleMobileNavSheet()}
                 className={cn(
                     "absolute inset-0 m-auto rounded-full", // Position inside wrapper
-                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Adjusted button size for a more visible border
+                    "h-18 w-18 sm:h-22 sm:w-22 md:h-26 md:w-26", // Adjusted button size for thinner border
                     "backdrop-blur-lg bg-background/80 text-foreground hover:bg-muted/40", // Blurred background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
@@ -173,7 +173,7 @@ const MobileBottomNavContent = ({
                 onClick={() => onToggleMobileNavSheet()}
                 className={cn(
                     "absolute inset-0 m-auto rounded-full", // Position inside wrapper
-                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Adjusted button size for a more visible border
+                    "h-18 w-18 sm:h-22 sm:w-22 md:h-26 md:w-26", // Adjusted button size for thinner border
                     "backdrop-blur-lg bg-background/80 text-foreground hover:bg-muted/40", // Blurred background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
