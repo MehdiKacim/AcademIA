@@ -5,7 +5,7 @@ import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, Che
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
-import { useNavigate, useLocation } => "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -294,10 +294,7 @@ const NavSheet = ({
             })
           )}
         </motion.div>
-        {/* Moved app version and MadeWithDyad to the bottom of scrollable area */}
-        <div className="p-4 flex-shrink-0 flex flex-col items-center gap-2 mt-auto">
-          {/* Removed dyadVersion: text */}
-        </div>
+        {/* Removed dyadVersion: text */}
       </ScrollArea>
     </MobileDrawer>
   );
