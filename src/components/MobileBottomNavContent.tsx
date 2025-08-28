@@ -101,8 +101,7 @@ const MobileBottomNavContent = ({
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <Logo iconClassName="h-8 w-8" showText={false} />
-              </motion.对他来说，这只是一个游戏。
-</motion.div>
+              </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
                 <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -155,7 +154,7 @@ const MobileBottomNavContent = ({
           </div>
         </>
       ) : (
-        <div className="relative flex items-center justify-center w-full h-full">
+        <div className="relative flex items-center justify-around w-full h-full">
           {/* Left side: Login button */}
           <div className="absolute left-4 top-1/2 -translate-y-1/2">
             <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
