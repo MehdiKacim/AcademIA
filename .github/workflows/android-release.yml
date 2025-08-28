@@ -43,7 +43,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      # 4. Installe toutes les dépendances, y compris les plugins Capacitor
+      # 4. Installe les dépendances npm (en utilisant pnpm)
       - name: Install npm dependencies
         run: npm install --frozen-lockfile
 
@@ -55,13 +55,13 @@ jobs:
       - name: Install Capacitor CLI
         run: npm install -g @capacitor/cli
 
-      # 7. Synchronise les fichiers web compilés et les plugins vers le projet Android
-      - name: Sync Capacitor web assets and plugins to Android
+      # 7. Synchronise les fichiers web compilés vers le projet Android
+      - name: Sync Capacitor web assets to Android
         run: npx cap sync android
 
       # 8. Publication des mises à jour web via Capacitor Live Updates
       - name: Publish web updates
-        run: npx cap live-updates:publish Production
+        run: ./node_modules/.bin/cap live-updates:publish Production
         env:
           CAPACITOR_LIVE_UPDATES_APP_ID: ${{ secrets.CAPACITOR_LIVE_UPDATES_APP_ID }}
           CAPACITOR_LIVE_UPDATES_TOKEN: ${{ secrets.CAPACITOR_LIVE_UPDATES_TOKEN }}
