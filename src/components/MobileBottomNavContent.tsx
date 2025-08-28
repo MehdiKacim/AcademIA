@@ -40,7 +40,7 @@ const MobileBottomNavContent = ({
 
   const commonButtonClasses = "rounded-full h-12 w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "rounded-full h-16 w-16 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80 mt-[-32px] z-10"
+    "rounded-full h-20 w-20 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80 mt-[-40px] z-10"
   );
 
   const buttonPressAnimation = {
@@ -88,7 +88,7 @@ const MobileBottomNavContent = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onToggleMobileNavSheet}
+              onClick={() => onToggleMobileNavSheet()}
               className={centralLogoButtonClasses}
               asChild
             >
@@ -97,7 +97,7 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-10 w-10" showText={false} />
+                  <Logo iconClassName="h-12 w-12" showText={false} />
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {unreadMessagesCount > 0 && (
@@ -176,7 +176,7 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-10 w-10" showText={false} />
+                  <Logo iconClassName="h-12 w-12" showText={false} />
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
               </motion.div>
