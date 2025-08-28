@@ -28,7 +28,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 
 interface NavSheetProps {
   isOpen: boolean;
-  onToggleMobileNavSheet: (open: boolean) => void; // Renamed prop
+  onOpenChange: (open: boolean) => void; // Renamed prop
   navItems: NavItem[]; // Full nav tree
   onOpenGlobalSearch: () => void;
   onOpenAiAChat: () => void;
@@ -40,7 +40,7 @@ interface NavSheetProps {
 
 const NavSheet = ({
   isOpen,
-  onToggleMobileNavSheet, // Renamed prop
+  onOpenChange, // Renamed prop
   navItems,
   onOpenGlobalSearch,
   onOpenAiAChat,
@@ -79,7 +79,7 @@ const NavSheet = ({
       } else {
         navigate(item.route);
       }
-      onToggleMobileNavSheet(false); // Close the sheet after navigation
+      onOpenChange(false); // Close the sheet after navigation
     } else if (item.onClick) {
       if (item.id === 'nav-global-search') {
         onOpenGlobalSearch();
@@ -88,9 +88,9 @@ const NavSheet = ({
       } else {
         item.onClick();
       }
-      onToggleMobileNavSheet(false); // Close the sheet after action
+      onOpenChange(false); // Close the sheet after action
     }
-  }, [navigate, onToggleMobileNavSheet, onOpenGlobalSearch, onOpenAiAChat]);
+  }, [navigate, onOpenChange, onOpenGlobalSearch, onOpenAiAChat]);
 
   const handleBack = useCallback(() => {
     setDrawerNavStack(prevStack => {
@@ -102,9 +102,9 @@ const NavSheet = ({
 
   const handleLogout = useCallback(async () => {
     await signOut();
-    onToggleMobileNavSheet(false);
+    onOpenChange(false);
     navigate("/");
-  }, [signOut, onToggleMobileNavSheet, navigate]);
+  }, [signOut, onOpenChange, navigate]);
 
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
@@ -154,7 +154,7 @@ const NavSheet = ({
   const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info;
 
   return (
-    <MobileDrawer isOpen={isOpen} onClose={() => onToggleMobileNavSheet(false)}>
+    <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
       <SheetHeader className="p-4 flex-shrink-0 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ const NavSheet = ({
               </h2>
             )}
           </div>
-          <Button variant="ghost" size="icon" onClick={() => onToggleMobileNavSheet(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
             <X className="h-5 w-5" />
             <span className="sr-only">Fermer le menu</span>
           </Button>

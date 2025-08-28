@@ -371,7 +371,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
         <>
           <NavSheet
             isOpen={isMobileNavSheetOpen}
-            onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
+            onOpenChange={toggleMobileNavSheet} // Use the new prop here
             navItems={staticNavItems} // Pass static nav items for unauthenticated users
             onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
             onOpenAiAChat={() => openChat()}

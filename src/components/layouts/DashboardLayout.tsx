@@ -210,6 +210,11 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     }
   }, [navigate]);
 
+  const toggleMobileNavSheet = useCallback(() => {
+    console.log("toggleMobileNavSheet called from DashboardLayout!"); // Add this log
+    setIsMobileNavSheetOpen(prev => !prev);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header
@@ -384,7 +389,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         <>
           <NavSheet
             isOpen={isMobileNavSheetOpen}
-            onOpenChange={setIsMobileNavSheetOpen}
+            onOpenChange={toggleMobileNavSheet} // Use the new prop here
             navItems={fullNavTreeWithActions}
             onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
             onOpenAiAChat={() => openChat()}
@@ -398,7 +403,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             <MobileBottomNavContent
               onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
               onOpenAiAChat={() => openChat()}
-              onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
+              onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={true}
               unreadMessagesCount={unreadMessages} // Pass unread messages count
