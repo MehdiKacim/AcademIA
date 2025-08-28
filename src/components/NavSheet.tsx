@@ -62,7 +62,7 @@ const NavSheet = ({
   const { openChat } = useCourseChat();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState(''); // Keep search query for filtering within the mobile menu
+  // Removed searchQuery state
 
   // Determine which state to use for opening/closing based on isMobile
   const currentOpenState = isMobile ? isOpen : isDesktopImmersiveOpen;
@@ -87,10 +87,10 @@ const NavSheet = ({
   useEffect(() => {
     if (!currentOpenState) {
       setDrawerNavStack([]);
-      setSearchQuery('');
+      // Removed setSearchQuery('');
     } else if (isDesktopImmersiveOpen && desktopImmersiveParent) {
       setDrawerNavStack([desktopImmersiveParent]);
-      setSearchQuery('');
+      // Removed setSearchQuery('');
     } else if (isDesktopImmersiveOpen && !desktopImmersiveParent) {
       // If desktop immersive is open but no parent, close it
       onCloseDesktopImmersive();
@@ -102,7 +102,7 @@ const NavSheet = ({
 
     if (isCategory) {
       setDrawerNavStack(prevStack => [...prevStack, item]);
-      setSearchQuery(''); // Clear search when entering a category
+      // Removed setSearchQuery(''); // Clear search when entering a category
     } else if (item.route) {
       if (item.is_external) {
         window.open(item.route, '_blank');
@@ -134,7 +134,7 @@ const NavSheet = ({
         newStack.pop();
         return newStack;
       });
-      setSearchQuery(''); // Clear search when going back
+      // Removed setSearchQuery(''); // Clear search when going back
     }
   }, [isDesktopImmersiveOpen, drawerNavStack.length, onCloseDesktopImmersive]);
 
@@ -197,12 +197,9 @@ const NavSheet = ({
       }
     }
 
-    const lowerCaseQuery = searchQuery.toLowerCase();
-    return itemsToFilter.filter(item =>
-      item.label.toLowerCase().includes(lowerCaseQuery) ||
-      (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
-    ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnOpenChange, unreadMessagesCount]);
+    // Removed lowerCaseQuery and filtering by searchQuery
+    return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnOpenChange, unreadMessagesCount]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -241,16 +238,7 @@ const NavSheet = ({
           <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
         </SheetHeader>
 
-        {currentUserProfile && (
-          <div className="p-4 border-b border-border flex-shrink-0">
-            <Input
-              placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-android-tile"
-            />
-          </div>
-        )}
+        {/* Removed search input block */}
 
         <ScrollArea className="flex-grow p-4">
           {drawerNavStack.length > 0 && (
@@ -267,9 +255,7 @@ const NavSheet = ({
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4"
           >
-            {currentItemsToDisplay.length === 0 && searchQuery.trim() !== '' ? (
-              <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément trouvé pour "{searchQuery}".</p>
-            ) : currentItemsToDisplay.length === 0 && searchQuery.trim() === '' ? (
+            {currentItemsToDisplay.length === 0 ? ( // Simplified condition
               <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
             ) : (
               currentItemsToDisplay.map((item) => {
