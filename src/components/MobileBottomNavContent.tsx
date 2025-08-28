@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Profile } from "@/lib/dataModels";
 import Logo from './Logo';
 import { motion } from 'framer-motion'; // Import motion
+import { cn } from '@/lib/utils'; // Import cn
 
 interface MobileBottomNavContentProps {
   onOpenGlobalSearch?: () => void;
@@ -38,10 +39,14 @@ const MobileBottomNavContent = ({
   };
 
   const commonButtonClasses = "rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40";
-  const centralLogoButtonClasses = "relative rounded-full h-14 w-14 shadow-lg -mt-10 border-2 border-primary ring-2 ring-primary/50 bg-background/80";
+  // Corrected positioning for the central logo button
+  const centralLogoButtonClasses = cn(
+    "relative rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80",
+    "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" // Centered and brought to front
+  );
 
   return (
-    <div className="flex items-center justify-around w-full h-[68px] px-4 py-3">
+    <div className="flex items-center justify-around w-full h-[68px] px-4 py-3 relative"> {/* Added relative to parent for absolute positioning */}
       {isAuthenticated ? (
         <>
           <Tooltip>
