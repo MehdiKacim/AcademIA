@@ -82,7 +82,7 @@ const MobileBottomNavContent = ({
           {/* Central Menu/Logo Button with gradient border effect */}
           <div className={cn(
               "relative rounded-full flex items-center justify-center",
-              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Slightly larger wrapper for the border effect
+              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
               "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan", // Gradient background for the border
               "translate-y-[-34px] z-10" // Lift and z-index for the whole unit
           )}>
@@ -93,8 +93,8 @@ const MobileBottomNavContent = ({
                 onClick={() => onToggleMobileNavSheet()}
                 className={cn(
                     "absolute inset-0 m-auto rounded-full", // Position inside wrapper
-                    "h-19 w-19 sm:h-23 sm:w-23 md:h-27 md:w-27", // Adjusted button size for thinner border
-                    "bg-card text-foreground hover:bg-muted/40", // Solid background for the button itself
+                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Adjusted button size for a more visible border
+                    "backdrop-blur-lg bg-background/80 text-foreground hover:bg-muted/40", // Blurred background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
             >
@@ -162,7 +162,7 @@ const MobileBottomNavContent = ({
           {/* Central Menu/Logo Button for unauthenticated */}
           <div className={cn(
               "relative rounded-full flex items-center justify-center",
-              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Slightly larger wrapper for the border effect
+              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
               "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan", // Gradient background for the border
               "translate-y-[-34px] z-10" // Lift and z-index for the whole unit
           )}>
@@ -173,8 +173,8 @@ const MobileBottomNavContent = ({
                 onClick={() => onToggleMobileNavSheet()}
                 className={cn(
                     "absolute inset-0 m-auto rounded-full", // Position inside wrapper
-                    "h-19 w-19 sm:h-23 sm:w-23 md:h-27 md:w-27", // Adjusted button size for thinner border
-                    "bg-card text-foreground hover:bg-muted/40", // Solid background for the button itself
+                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Adjusted button size for a more visible border
+                    "backdrop-blur-lg bg-background/80 text-foreground hover:bg-muted/40", // Blurred background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
             >
