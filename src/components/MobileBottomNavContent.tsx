@@ -77,7 +77,10 @@ const MobileBottomNavContent = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onToggleMobileNavSheet} // Use the new prop here
+            onClick={() => {
+              console.log("Central button clicked!");
+              onToggleMobileNavSheet();
+            }}
             className={centralLogoButtonClasses}
           >
             <motion.div // Wrap Logo with motion.div
@@ -126,7 +129,10 @@ const MobileBottomNavContent = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/auth')}
+            onClick={() => {
+              console.log("Central button clicked!");
+              navigate('/auth');
+            }}
             className={centralLogoButtonClasses}
           >
             <motion.div // Wrap Logo with motion.div
