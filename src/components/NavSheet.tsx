@@ -164,22 +164,23 @@ const NavSheet = ({
                 <span className="sr-only">Retour</span>
               </Button>
             ) : (
-              <div className="w-10 h-10"></div>
+              <Logo iconClassName="h-8 w-8" showText={false} /> // Show logo if at root
+            )}
+            {drawerNavStack.length > 0 && ( // Show title if not at root
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 ml-2"> {/* Added ml-2 for spacing */}
+                <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
+                {currentDrawerTitle}
+              </h2>
             )}
           </div>
-
-          {/* This div is for spacing, it's empty */}
-          <div className="w-10 h-10"></div> 
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+            <X className="h-5 w-5" />
+            <span className="sr-only">Fermer le menu</span>
+          </Button>
         </div>
       </SheetHeader>
 
         <ScrollArea className="flex-grow p-4">
-          {drawerNavStack.length > 0 && (
-            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
-              {currentDrawerTitle}
-            </h2>
-          )}
           <motion.div
             key={drawerNavStack.length}
             initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}

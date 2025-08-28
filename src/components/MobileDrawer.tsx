@@ -54,7 +54,7 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
           <motion.div
             className={cn(
               "fixed left-0 right-0 w-full bg-background rounded-t-lg shadow-lg flex flex-col overflow-hidden rounded-android-tile z-[999]", // z-index 999
-              "top-[68px] bottom-[68px] h-auto", // Définit le haut à 68px (sous l'en-tête) et le bas à 68px (au-dessus de la barre de navigation inférieure), et laisse la hauteur s'ajuster.
+              "top-0 bottom-[68px] h-auto", // Définit le haut à 0px (tout en haut de l'écran) et le bas à 68px (au-dessus de la barre de navigation inférieure), et laisse la hauteur s'ajuster.
               contentClassName
             )}
             variants={contentVariants}
