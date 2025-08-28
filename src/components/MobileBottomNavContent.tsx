@@ -40,7 +40,7 @@ const MobileBottomNavContent = ({
 
   const commonButtonClasses = "rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-16 w-16 shadow-lg mt-[-30px] z-[997] overflow-hidden p-0", // Adjusted size and margin-top for responsiveness
+    "relative rounded-full h-16 w-16 shadow-lg z-[997] overflow-hidden p-0", // Removed mt-[-30px]
     "bg-background/80"
   );
 
@@ -85,7 +85,7 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2">
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]"> {/* Added bottom-[36px] here */}
             <Button
               variant="ghost"
               size="icon"
@@ -171,7 +171,7 @@ const MobileBottomNavContent = ({
           </Button>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2">
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]"> {/* Added bottom-[36px] here */}
             <Button
               variant="ghost"
               size="icon"
