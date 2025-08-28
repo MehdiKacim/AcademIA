@@ -134,7 +134,8 @@ const MobileBottomNavContent = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {!isMobileNavSheetOpen && <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />}
+          {/* ThemeToggle is now always visible */}
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
         </>
       ) : (
         <div className="flex items-center justify-center w-full h-full">
@@ -161,7 +162,8 @@ const MobileBottomNavContent = ({
             </motion.div>
           </Button>
           <div className="absolute right-4">
-            {!isMobileNavSheetOpen && <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />}
+            {/* ThemeToggle is now always visible */}
+            <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
           </div>
         </div>
       )}
