@@ -51,13 +51,17 @@ jobs:
       - name: Build web app
         run: npm run build
 
-      # 6. Installe l'outil de ligne de commande Capacitor de façon globale
-      - name: Install Capacitor CLI
-        run: npm install -g @capacitor/cli
-
-      # 7. Synchronise les fichiers web compilés vers le projet Android
+      # 6. Synchronise les fichiers web compilés vers le projet Android
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
+
+      # 7. Publication des mises à jour web via Capacitor Live Updates
+      # NOTE: Remplacez l'ID et le token par les secrets de votre propre projet.
+      - name: Publish web updates
+        run: npx cap live-updates:publish --channel Production
+        env:
+          CAPACITOR_LIVE_UPDATES_APP_ID: ${{ secrets.CAPACITOR_LIVE_UPDATES_APP_ID }}
+          CAPACITOR_LIVE_UPDATES_TOKEN: ${{ secrets.CAPACITOR_LIVE_UPDATES_TOKEN }}
 
       # 8. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
@@ -99,7 +103,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21' # <-- La version de Java est maintenant 21
+          java-version: '21'
 
       # 12. Mise en cache des dépendances Gradle
       - name: Cache Gradle dependencies
