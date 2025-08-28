@@ -1,77 +1,56 @@
-# Nom du workflow qui s'affiche sur GitHub Actions
 name: Android Build Debug AcademIA
 
-# Déclenche le workflow à chaque push sur la branche 'main '
 on:
   push:
     branches:
       - main
-    # Empêche le workflow de se re-déclencher sur les commits automatiques
-    # du bot d'incrémentation de version.
     paths-ignore:
       - 'android/app/build.gradle'
 
-# Un seul job nommé 'build_android'
 jobs:
   build_android:
-    # Le job s'exécutera sur une machine virtuelle Ubuntu
     runs-on: ubuntu-latest
 
-    # Permissions requises pour le job
     permissions:
       contents: write
       pull-requests: write
 
-    # Les étapes du job
     steps:
-      # 1. Récupère le code du dépôt
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configure Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # 3. Installe les dépendances npm
       - name: Install npm dependencies
         run: npm install
 
-      # 4. Compile l'application web (front-end)
       - name: Build web app
         run: npm run build
 
-      # 5. Installe l'outil de ligne de commande Capacitor
       - name: Install Capacitor CLI
         run: npm install -g @capacitor/cli
 
-      # 6. Synchronise les fichiers web compilés vers le projet Android
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
 
-      # 7. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
         id: increment_version
         run: |
-          # Fichier à modifier
           GRADLE_FILE="android/app/build.gradle"
-          # Lit et incrémente le versionCode
           CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}')
           NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
-          # Lit et incrémente le versionName (patch)
           CURRENT_VERSION_NAME=$(grep "versionName" $GRADLE_FILE | cut -d\" -f2)
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION_NAME"
           NEW_VERSION_NAME="$major.$minor.$((patch + 1))"
-          # Remplace les versions dans le fichier
           sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" $GRADLE_FILE
           sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" $GRADLE_FILE
-          # Exporte les nouvelles versions pour les étapes suivantes
           echo "Nouvelle version: $NEW_VERSION_NAME ($NEW_VERSION_CODE)"
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # 8. Commit et push la modification de version
       - name: Commit version change
         run: |
           git config --local user.email "action@github.com"
@@ -80,22 +59,40 @@ jobs:
           git commit -m "chore: Auto. incrémentation de la version Android pour le build ${{ steps.increment_version.outputs.version_name }}"
           git push
 
-      # 9. Rend le script gradlew exécutable (étape corrigée, placée ici)
+      # Ajout automatique du gradle wrapper si absent
+      - name: Generate Gradle Wrapper if missing
+        run: |
+          if [ ! -f android/gradlew ]; then
+            echo "Gradle wrapper manquant, génération..."
+            cd android
+            gradle wrapper
+            cd ..
+          else
+            echo "Gradle wrapper déjà présent."
+          fi
+
+      - name: Commit Gradle Wrapper if generated
+        run: |
+          if [ -f android/gradlew ] && [ -n "$(git status --porcelain android/gradlew android/gradlew.bat android/gradle/wrapper)" ]; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add android/gradlew android/gradlew.bat android/gradle/wrapper
+            git commit -m "ci: Ajout automatique du gradle wrapper"
+            git push
+          fi
+
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # 10. Configure le JDK Java nécessaire pour la compilation Android
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      # 11. Compile l'APK en mode 'debug'
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug
 
-      # 12. Trouve et renomme l'APK compilé
       - name: Find and Rename APK file
         id: find_and_rename_apk
         run: |
@@ -106,14 +103,12 @@ jobs:
           echo "APK renommé en : $NEW_APK_NAME"
           echo "apk_path=android/app/build/outputs/apk/debug/$NEW_APK_NAME" >> $GITHUB_OUTPUT
 
-      # 13. Uploade l'APK renommé comme un artefact de build
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: ${{ steps.find_and_rename_apk.outputs.apk_path }}
 
-      # 14. Crée une nouvelle release sur GitHub
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/heads/main')
