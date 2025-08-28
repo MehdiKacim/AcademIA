@@ -44,10 +44,6 @@ const MobileBottomNavContent = ({
   // Unified button classes for the 4 peripheral buttons
   const peripheralNavButtonClasses = "rounded-full h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
   
-  // Specific classes for the central menu button
-  // Reverted background color to bg-muted/20 and text to text-foreground
-  const centralMenuButtonClasses = "rounded-full h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 bg-muted/20 text-foreground hover:bg-muted/40 flex items-center justify-center translate-y-[-34px] z-10";
-
   const buttonPressAnimation = {
     scale: 0.95,
     transition: { duration: 0.1, ease: "easeOut" },
@@ -83,28 +79,40 @@ const MobileBottomNavContent = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Central Menu/Logo Button */}
-          <MotionButton
-            whileTap={buttonPressAnimation}
-            variant="ghost"
-            size="icon"
-            onClick={() => onToggleMobileNavSheet()}
-            className={cn(centralMenuButtonClasses, "relative")} // Keep relative for badge positioning
-          >
-            <motion.div
-              animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
+          {/* Central Menu/Logo Button with gradient border effect */}
+          <div className={cn(
+              "relative rounded-full flex items-center justify-center",
+              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Slightly larger wrapper for the border effect
+              "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan", // Gradient background for the border
+              "translate-y-[-34px] z-10" // Lift and z-index for the whole unit
+          )}>
+            <MotionButton
+                whileTap={buttonPressAnimation}
+                variant="ghost"
+                size="icon"
+                onClick={() => onToggleMobileNavSheet()}
+                className={cn(
+                    "absolute inset-0 m-auto rounded-full", // Position inside wrapper
+                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Actual button size, slightly smaller than wrapper
+                    "bg-card text-foreground hover:bg-muted/40", // Solid background for the button itself
+                    "flex items-center justify-center" // Ensure content is centered
+                )}
             >
-              <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size to fit button */}
-            </motion.div>
-            <span className="sr-only">Ouvrir le menu</span>
-            {unreadMessagesCount > 0 && (
-              <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-                {unreadMessagesCount}
-              </span>
-            )}
-          </MotionButton>
+              <motion.div
+                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
+              >
+                <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size to fit button */}
+              </motion.div>
+              <span className="sr-only">Ouvrir le menu</span>
+              {unreadMessagesCount > 0 && (
+                <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                  {unreadMessagesCount}
+                </span>
+              )}
+            </MotionButton>
+          </div>
 
           {/* User Dropdown Button */}
           <DropdownMenu>
@@ -152,22 +160,34 @@ const MobileBottomNavContent = ({
           </MotionButton>
 
           {/* Central Menu/Logo Button for unauthenticated */}
-          <MotionButton
-            whileTap={buttonPressAnimation}
-            variant="ghost"
-            size="icon"
-            onClick={() => onToggleMobileNavSheet()}
-            className={centralMenuButtonClasses}
-          >
-            <motion.div
-              animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="flex items-center justify-center h-full w-full"
+          <div className={cn(
+              "relative rounded-full flex items-center justify-center",
+              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Slightly larger wrapper for the border effect
+              "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan", // Gradient background for the border
+              "translate-y-[-34px] z-10" // Lift and z-index for the whole unit
+          )}>
+            <MotionButton
+                whileTap={buttonPressAnimation}
+                variant="ghost"
+                size="icon"
+                onClick={() => onToggleMobileNavSheet()}
+                className={cn(
+                    "absolute inset-0 m-auto rounded-full", // Position inside wrapper
+                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Actual button size, slightly smaller than wrapper
+                    "bg-card text-foreground hover:bg-muted/40", // Solid background for the button itself
+                    "flex items-center justify-center" // Ensure content is centered
+                )}
             >
-              <Logo iconClassName="h-10 w-10" showText={false} />
-            </motion.div>
-            <span className="sr-only">Ouvrir le menu</span>
-          </MotionButton>
+              <motion.div
+                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="flex items-center justify-center h-full w-full"
+              >
+                <Logo iconClassName="h-10 w-10" showText={false} />
+              </motion.div>
+              <span className="sr-only">Ouvrir le menu</span>
+            </MotionButton>
+          </div>
 
           {/* Right side: MessageSquare button */}
           <MotionButton variant="outline" onClick={() => navigate('/auth')} className={peripheralNavButtonClasses}>
