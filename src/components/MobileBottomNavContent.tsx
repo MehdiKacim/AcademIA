@@ -11,6 +11,9 @@ import Logo from './Logo';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+// Create a MotionButton component by wrapping the shadcn Button with framer-motion
+const MotionButton = motion(Button);
+
 interface MobileBottomNavContentProps {
   onOpenGlobalSearch?: () => void;
   onOpenAiAChat?: () => void;
@@ -53,12 +56,10 @@ const MobileBottomNavContent = ({
           {/* Search Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={navButtonClasses}>
-                  <Search className="h-5 w-5" />
-                  <span className="sr-only">Recherche globale</span>
-                </Button>
-              </motion.div>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={navButtonClasses}>
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Recherche globale</span>
+              </MotionButton>
             </TooltipTrigger>
             <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
               <p>Recherche (Ctrl + F)</p>
@@ -68,12 +69,10 @@ const MobileBottomNavContent = ({
           {/* AiA Chat Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className={navButtonClasses}>
-                  <BotMessageSquare className="h-5 w-5" />
-                  <span className="sr-only">AiA Chat</span>
-                </Button>
-              </motion.div>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenAiAChat} className={navButtonClasses}>
+                <BotMessageSquare className="h-5 w-5" />
+                <span className="sr-only">AiA Chat</span>
+              </MotionButton>
             </TooltipTrigger>
             <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
               <p>AiA Chat</p>
@@ -85,7 +84,7 @@ const MobileBottomNavContent = ({
             variant="ghost"
             size="icon"
             onClick={() => onToggleMobileNavSheet()}
-            className={cn(navButtonClasses, "relative")} // Added relative for badge positioning
+            className={cn(navButtonClasses, "relative")}
             asChild
           >
             <motion.div 
@@ -96,7 +95,7 @@ const MobileBottomNavContent = ({
                 animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                <Logo iconClassName="h-6 w-6" showText={false} /> {/* Adjusted logo size to fit button */}
+                <Logo iconClassName="h-6 w-6" showText={false} />
               </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
@@ -117,13 +116,11 @@ const MobileBottomNavContent = ({
           {/* User Dropdown Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" className={navButtonClasses}>
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Menu utilisateur</span>
-                </Button>
-              </motion.div>
-            </TooltipTrigger>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" className={navButtonClasses}>
+                <User className="h-5 w-5" />
+                <span className="sr-only">Menu utilisateur</span>
+              </MotionButton>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
               <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -143,12 +140,10 @@ const MobileBottomNavContent = ({
           {/* Messages Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={navButtonClasses}>
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="sr-only">Messagerie</span>
-                </Button>
-              </motion.div>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={() => navigate('/messages')} className={navButtonClasses}>
+                <MessageSquare className="h-5 w-5" />
+                <span className="sr-only">Messagerie</span>
+              </MotionButton>
             </TooltipTrigger>
             <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
               <p>Messagerie</p>
@@ -158,16 +153,19 @@ const MobileBottomNavContent = ({
       ) : (
         <div className="flex items-center justify-around w-full h-full px-2">
           {/* Left side: Login button */}
-          <Button variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
+          <MotionButton variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
             <LogIn className="h-5 w-5" />
             <span className="sr-only">Connexion</span>
-          </Button>
+          </MotionButton>
 
           {/* Central Menu/Logo Button for unauthenticated */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onToggleMobileNavSheet()}
+            onClick={() => {
+              console.log("Central button clicked!");
+              onToggleMobileNavSheet(); // Open NavSheet for unauthenticated users
+            }}
             className={navButtonClasses}
             asChild
           >
@@ -179,7 +177,7 @@ const MobileBottomNavContent = ({
                 animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                <Logo iconClassName="h-6 w-6" showText={false} /> {/* Adjusted logo size */}
+                <Logo iconClassName="h-6 w-6" showText={false} />
               </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
               {/* Animated bar */}
@@ -193,10 +191,10 @@ const MobileBottomNavContent = ({
           </Button>
 
           {/* Right side: MessageSquare button */}
-          <Button variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
+          <MotionButton variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
             <MessageSquare className="h-5 w-5" />
             <span className="sr-only">Messagerie</span>
-          </Button>
+          </MotionButton>
         </div>
       )}
     </div>
