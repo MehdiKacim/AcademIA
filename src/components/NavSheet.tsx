@@ -198,15 +198,15 @@ const NavSheet = ({
                     key={item.id}
                     variant="ghost"
                     className={cn(
-                      "android-tile flex-row items-center justify-start h-auto min-h-[60px] text-left w-full",
-                      "rounded-android-tile hover:scale-[1.02] transition-transform",
-                      isLinkActive ? "active" : "",
-                      "transition-all duration-200 ease-in-out"
+                      "flex flex-row items-center justify-start h-auto min-h-[52px] text-left w-full px-3 py-2 rounded-lg", // Adjusted min-height, padding, and rounded-lg
+                      "hover:bg-muted/20 transition-colors duration-200 ease-in-out", // Subtle hover
+                      isLinkActive ? "bg-primary/10 text-primary font-semibold" : "text-foreground", // Active state
+                      isCategory ? "bg-muted/10" : "" // Subtle background for categories
                     )}
                     onClick={() => handleItemClick(item)}
                   >
-                    <div className="icon-container rounded-lg mr-3">
-                      <IconComponent className="h-6 w-6" />
+                    <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/20" : "bg-muted/20")}> {/* Smaller rounded-md for icon container */}
+                      <IconComponent className="h-5 w-5" /> {/* Slightly smaller icon */}
                     </div>
                     <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
