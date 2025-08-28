@@ -41,6 +41,9 @@ const itemVariants = {
   visible: { y: 0, opacity: 1 },
 };
 
+// Create a MotionButton component by wrapping the shadcn Button with framer-motion
+const MotionButton = motion(Button);
+
 const NavSheet = ({
   isOpen,
   onOpenChange,
@@ -169,19 +172,19 @@ const NavSheet = ({
         >
           <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={isOpen} />
         </motion.div>
-        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+        <MotionButton variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
           <X className="h-5 w-5" />
           <span className="sr-only">Fermer le menu</span>
-        </Button>
+        </MotionButton>
       </div>
 
       {/* New: Back button section, outside the header */}
       {drawerNavStack.length > 0 && (
         <div className="px-4 mb-4 flex-shrink-0">
-          <Button variant="ghost" onClick={handleBack} className="w-full justify-start rounded-android-tile">
+          <MotionButton variant="ghost" onClick={handleBack} className="w-full justify-start rounded-android-tile" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span className="text-base font-medium">Retour</span>
-          </Button>
+          </MotionButton>
         </div>
       )}
 
@@ -202,9 +205,9 @@ const NavSheet = ({
               <p className="font-semibold text-lg">{currentUserProfile.first_name} {currentUserProfile.last_name}</p>
               <p className="text-sm text-muted-foreground">{currentUserProfile.email}</p>
             </div>
-            <Button variant="ghost" size="sm" className="flex-shrink-0">
+            <MotionButton variant="ghost" size="sm" className="flex-shrink-0" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
               <User className="h-4 w-4 mr-2" /> Voir le profil
-            </Button>
+            </MotionButton>
           </div>
         )}
         {currentUserProfile && (
@@ -235,7 +238,7 @@ const NavSheet = ({
 
               return (
                 <motion.div key={item.id} variants={itemVariants}> {/* Wrap each button in motion.div */}
-                  <Button
+                  <MotionButton
                     variant="ghost"
                     whileHover={{ scale: 1.02, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }} // Subtle lift and shadow on hover
                     whileTap={{ scale: 0.98 }} // Slight press effect on tap
@@ -266,12 +269,50 @@ const NavSheet = ({
                         <ChevronDown />
                       </motion.div>
                     )}
-                  </Button>
+                  </MotionButton>
                 </motion.div>
               );
             })
           )}
         </motion.div>
+
+        {/* Informations et Outils Section */}
+        <div className="mt-8 pt-4 border-t border-border/50 space-y-4">
+          <h3 className="text-lg font-semibold text-foreground">Informations et Outils</h3>
+
+          {/* Admin Access Button (Conditional) */}
+          {currentRole === 'administrator' && (
+            <motion.div variants={itemVariants}>
+              <MotionButton
+                variant="outline"
+                onClick={() => {
+                  // This prop is no longer passed to NavSheet, so we need to handle it here
+                  // For now, we'll just close the NavSheet. If AdminModal needs to be opened,
+                  // it should be handled by the parent (DashboardLayout or Index)
+                  onOpenChange(false); // Close nav sheet
+                }}
+                className="w-full justify-start rounded-android-tile"
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              >
+                <UserCog className="h-5 w-5 mr-2" /> Accès Admin
+              </MotionButton>
+            </motion.div>
+          )}
+
+          {/* Suggested Menus */}
+          <motion.div variants={itemVariants} className="space-y-2">
+            <h4 className="text-base font-medium text-muted-foreground">Menus Suggérés</h4>
+            <MotionButton variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { navigate('/courses'); onOpenChange(false); }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <BookOpen className="h-5 w-5 mr-2" /> Cours Populaires
+            </MotionButton>
+            <MotionButton variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { navigate('/dashboard'); onOpenChange(false); }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <LayoutDashboard className="h-5 w-5 mr-2" /> Mon Tableau de Bord
+            </MotionButton>
+            <MotionButton variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { onOpenAiAChat(); onOpenChange(false); }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <BotMessageSquare className="h-5 w-5 mr-2" /> Aide AiA Rapide
+            </MotionButton>
+          </motion.div>
+        </div>
       </ScrollArea>
     </MobileDrawer>
   );
