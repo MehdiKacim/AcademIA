@@ -236,7 +236,7 @@ const NavSheet = ({
 
             {/* Placeholder for right side to maintain spacing */}
             <div className="w-10 h-10"></div> 
-          </div>
+          </div >
           <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
           <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
         </SheetHeader>
@@ -307,41 +307,8 @@ const NavSheet = ({
           </motion.div>
         </ScrollArea>
 
-        {/* Bottom action bar */}
+        {/* Bottom action bar - Simplified */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <div className="flex items-center justify-around gap-2">
-            {currentUserProfile ? (
-              <>
-                {/* Search Button */}
-                <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                  <Search className="h-5 w-5" />
-                  <span className="sr-only">Recherche</span>
-                </Button>
-
-                {/* AiA Chat Button */}
-                <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                  <BotMessageSquare className="h-5 w-5" />
-                  <span className="sr-only">AiA Chat</span>
-                </Button>
-
-                {/* Logo */}
-                <Logo iconClassName="h-8 w-8" showText={false} />
-
-                {/* Logout Button */}
-                <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                  <LogOut className="h-5 w-5" />
-                  <span className="sr-only">Déconnexion</span>
-                </Button>
-
-                {/* Theme Toggle */}
-                <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-              </>
-            ) : (
-              <Button variant="default" className="shadow-lg rounded-android-tile flex-grow" onClick={onOpenAuthModal}>
-                <User className="h-5 w-5 mr-2" /> Se connecter
-              </Button>
-            )}
-          </div>
           {isMobile && (
             <div className="flex justify-center pt-2">
               <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
