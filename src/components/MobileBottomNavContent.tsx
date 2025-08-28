@@ -40,7 +40,8 @@ const MobileBottomNavContent = ({
 
   const commonButtonClasses = "rounded-full h-12 w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-20 w-20 shadow-lg bg-background/80 mt-[-50px] z-[997] overflow-hidden" // Adjusted mt-[-40px] to mt-[-50px]
+    "relative rounded-full h-20 w-20 shadow-lg mt-[-50px] z-[997] overflow-hidden p-0", // Removed bg-background/80 from here
+    "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan" // Applied gradient to the button itself
   );
 
   const buttonPressAnimation = {
@@ -92,8 +93,10 @@ const MobileBottomNavContent = ({
               className={centralLogoButtonClasses}
               asChild
             >
-              <motion.div whileTap={buttonPressAnimation} className="flex items-center justify-center h-full w-full">
-                {/* Removed the inner div that was simulating the top border */}
+              <motion.div 
+                whileTap={buttonPressAnimation} 
+                className="flex items-center justify-center h-full w-full rounded-full bg-background/80 border-2 border-transparent" // Inner div for solid background and transparent border
+              >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -172,8 +175,10 @@ const MobileBottomNavContent = ({
               className={centralLogoButtonClasses}
               asChild
             >
-              <motion.div whileTap={buttonPressAnimation} className="flex items-center justify-center h-full w-full">
-                {/* Removed the inner div that was simulating the top border */}
+              <motion.div 
+                whileTap={buttonPressAnimation} 
+                className="flex items-center justify-center h-full w-full rounded-full bg-background/80 border-2 border-transparent" // Inner div for solid background and transparent border
+              >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
