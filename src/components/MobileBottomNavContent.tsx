@@ -94,12 +94,10 @@ const MobileBottomNavContent = ({
                     "backdrop-blur-lg bg-background/80 text-foreground hover:bg-muted/40", // Blurred background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
+                animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
+                transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              <motion.div // Removed rotation animation
-                className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
-              >
-                <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
-              </motion.div>
+              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
                 <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
@@ -179,12 +177,10 @@ const MobileBottomNavContent = ({
                     "backdrop-blur-lg bg-background/80 text-foreground hover:bg-muted/40", // Blurred background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
+                animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
+                transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              <motion.div // Removed rotation animation
-                className="flex items-center justify-center h-full w-full"
-              >
-                <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
-              </motion.div>
+              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               <span className="sr-only">Ouvrir le menu</span>
             </MotionButton>
           </div>
