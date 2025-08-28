@@ -47,8 +47,8 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
           {/* Drawer Content */}
           <motion.div
             className={cn(
-              "fixed left-0 right-0 w-full bg-background rounded-t-lg shadow-lg flex flex-col overflow-hidden z-[997]", // Removed rounded-android-tile
-              "top-0 bottom-[68px]", // Définit le haut à 0px (tout en haut de l'écran) et le bas à 68px (au-dessus de la barre de navigation inférieure), et laisse la hauteur s'ajuster.
+              "fixed left-0 right-0 w-full bg-background rounded-t-3xl shadow-lg flex flex-col overflow-hidden z-[997]", // Changed rounded-t-lg to rounded-t-3xl
+              "top-[40px] bottom-[68px]", // Définit le haut à 40px (laissant un espace en haut) et le bas à 68px (au-dessus de la barre de navigation inférieure)
               "backdrop-blur-lg bg-background/80", // Added blur and transparency for immersive design
               contentClassName
             )}

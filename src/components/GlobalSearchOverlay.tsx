@@ -1,219 +1,239 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X, User, BookOpen, MessageSquare, GraduationCap, Calendar, FileText } from "lucide-react";
-import { useRole } from "@/contexts/RoleContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Profile, Course, Message, Event, Document } from "@/lib/dataModels";
-import { Link, useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Search, NotebookText, BookOpen, Layers, FileText, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getAllNotesData, AggregatedNote } from "@/lib/notes";
+import { loadCourses } from "@/lib/courseData";
+import { Course, Module, ModuleSection } from "@/lib/dataModels"; // Import interfaces from dataModels
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRole } from '@/contexts/RoleContext'; // Import useRole
+
+interface SearchResult {
+  type: 'note' | 'course' | 'module' | 'section';
+  id: string; // Unique ID for the item
+  title: string; // Display title
+  description: string; // Snippet or relevant text
+  link: string; // React Router link
+  icon: React.ElementType;
+}
 
 interface GlobalSearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const GlobalSearchOverlay: React.FC<GlobalSearchOverlayProps> = ({ isOpen, onClose }) => {
+const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
   const { currentUserProfile } = useRole();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<{
-    profiles: Profile[];
-    courses: Course[];
-    messages: Message[];
-    events: Event[];
-    documents: Document[];
-  }>({
-    profiles: [],
-    courses: [],
-    messages: [],
-    events: [],
-    documents: [],
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const isMobile = useIsMobile();
-  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Focus input when overlay opens
   useEffect(() => {
     if (isOpen) {
-      // Focus the input when the sheet opens
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+      inputRef.current?.focus();
     } else {
-      // Clear search term and results when the sheet closes
-      setSearchTerm("");
-      setSearchResults({
-        profiles: [],
-        courses: [],
-        messages: [],
-        events: [],
-        documents: [],
-      });
+      // Clear search when closing
+      setSearchQuery('');
+      setSearchResults([]);
     }
   }, [isOpen]);
 
+  // Debounced search effect
   useEffect(() => {
-    const performSearch = async () => {
-      if (searchTerm.length < 2) {
-        setSearchResults({
-          profiles: [],
-          courses: [],
-          messages: [],
-          events: [],
-          documents: [],
-        });
+    const handler = setTimeout(async () => { // Made async
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) {
+        setSearchResults([]);
         return;
       }
 
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase.rpc('global_search', { search_term: searchTerm });
+      const results: SearchResult[] = [];
 
-        if (error) {
-          setSearchResults({
-            profiles: [],
-            courses: [],
-            messages: [],
-            events: [],
-            documents: [],
+      // Load current courses for search context
+      const currentCourses = await loadCourses(); // Await loadCourses
+
+      // Search Notes
+      if (currentUserProfile) {
+        const allNotes = await getAllNotesData(currentUserProfile.id, currentCourses); // Pass userId and await
+        allNotes.forEach(noteGroup => {
+          if (noteGroup.context.toLowerCase().includes(query) ||
+              noteGroup.notes.some(note => note.toLowerCase().includes(query))) {
+            results.push({
+              type: 'note',
+              id: noteGroup.key,
+              title: `Note: ${noteGroup.context}`,
+              description: noteGroup.notes.join(' | ').substring(0, 150) + (noteGroup.notes.join(' | ').length > 150 ? '...' : ''),
+              link: `/all-notes?select=${noteGroup.key}`,
+              icon: NotebookText,
+            });
+          }
+        });
+      }
+
+      // Search Courses, Modules, and Sections
+      currentCourses.forEach(course => {
+        // Search Courses
+        if (course.title.toLowerCase().includes(query) ||
+            course.description.toLowerCase().includes(query) ||
+            course.skills_to_acquire.some(skill => skill.toLowerCase().includes(query))) {
+          results.push({
+            type: 'course',
+            id: course.id,
+            title: `Cours: ${course.title}`,
+            description: course.description.substring(0, 150) + (course.description.length > 150 ? '...' : ''),
+            link: `/courses/${course.id}`,
+            icon: BookOpen,
           });
-          return;
         }
 
-        const profiles: Profile[] = [];
-        const courses: Course[] = [];
-        const messages: Message[] = [];
-        const events: Event[] = [];
-        const documents: Document[] = [];
+        // Search Modules within courses
+        course.modules.forEach((module, moduleIndex) => {
+          if (module.title.toLowerCase().includes(query)) {
+            results.push({
+              type: 'module',
+              id: `${course.id}-${moduleIndex}`,
+              title: `Module: ${module.title} (Cours: ${course.title})`,
+              description: module.sections[0]?.content.substring(0, 150) + (module.sections[0]?.content.length > 150 ? '...' : ''),
+              link: `/courses/${course.id}/modules/${moduleIndex}`,
+              icon: Layers,
+            });
+          }
 
-        data.forEach((item: any) => {
-          if (item.type === 'profile') profiles.push(item.data);
-          else if (item.type === 'course') courses.push(item.data);
-          else if (item.type === 'message') messages.push(item.data);
-          else if (item.type === 'event') events.push(item.data);
-          else if (item.type === 'document') documents.push(item.data);
+          // Search Sections within modules
+          module.sections.forEach((section, sectionIndex) => {
+            if (section.title.toLowerCase().includes(query) ||
+                section.content.toLowerCase().includes(query)) {
+              results.push({
+                type: 'section',
+                id: `${course.id}-${moduleIndex}-${sectionIndex}`,
+                title: `Section: ${section.title} (Module: ${module.title}, Cours: ${course.title})`,
+                description: section.content.substring(0, 150) + (section.content.length > 150 ? '...' : ''),
+                link: `/courses/${course.id}/modules/${moduleIndex}#section-${sectionIndex}`,
+                icon: FileText,
+              });
+            }
+          });
         });
+      });
 
-        setSearchResults({ profiles, courses, messages, events, documents });
-      } catch (err) {
-        // console.error("Unexpected error during global search:", err);
-      } finally {
-        setIsLoading(false);
+      setSearchResults(results);
+    }, 300); // Debounce delay of 300ms
+
+    return () => {
+      clearTimeout(handler); // Cleanup on unmount or if searchQuery changes again
+    };
+  }, [searchQuery, currentUserProfile]); // Dependency array: re-run effect when searchQuery or currentUserProfile changes
+
+  // Effect for Escape key to close the overlay
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
       }
     };
 
-    const handler = setTimeout(() => {
-      performSearch();
-    }, 300); // Debounce search
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+    } else {
+      document.removeEventListener('keydown', handleEscape);
+    }
 
     return () => {
-      clearTimeout(handler);
+      document.removeEventListener('keydown', handleEscape);
     };
-  }, [searchTerm]);
+  }, [isOpen, onClose]);
 
-  const handleResultClick = (path: string) => {
-    onClose(); // Close the search sheet
-    navigate(path); // Navigate to the selected item
-  };
-
-  const renderSection = (title: string, items: any[], Icon: React.ElementType, getPath: (item: any) => string, getLabel: (item: any) => string) => {
-    if (items.length === 0) return null;
-    return (
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-primary">
-          <Icon className="h-5 w-5" /> {title}
-        </h3>
-        <div className="space-y-2">
-          {items.map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className="w-full justify-start h-auto py-2 px-3 text-left rounded-android-tile hover:scale-[1.02] transition-transform"
-              onClick={() => handleResultClick(getPath(item))}
-            >
-              {getLabel(item)}
-            </Button>
-          ))}
-        </div>
-      </div>
-    );
-  };
+  const groupedResults = useMemo(() => {
+    const groups: { [key: string]: SearchResult[] } = {
+      note: [],
+      course: [],
+      module: [],
+      section: [],
+    };
+    searchResults.forEach(result => {
+      groups[result.type].push(result);
+    });
+    return groups;
+  }, [searchResults]);
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="top" className="h-full flex flex-col">
-        <div className="flex items-center space-x-2 py-4 border-b">
-          <Input
-            ref={inputRef}
-            placeholder="Rechercher..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-grow"
-          />
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" aria-label="Fermer la recherche" />
-          </Button>
-        </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ y: '-100%' }}
+          animate={{ y: '0%' }}
+          exit={{ y: '-100%' }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="fixed inset-x-0 top-[68px] z-[1001] bg-background/80 backdrop-blur-lg border-b border-border shadow-lg py-4 px-4 md:px-8 h-[calc(100vh-68px)]"
+        >
+          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full">
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
+                <Input
+                  ref={inputRef}
+                  placeholder="Rechercher dans tout AcademIA..."
+                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50 rounded-android-tile" // Apply rounded-android-tile
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
+                <X className="h-6 w-6" />
+                <span className="sr-only">Fermer la recherche</span>
+              </Button>
+            </div>
 
-        <div className="flex-grow overflow-y-auto py-4">
-          {isLoading && searchTerm.length >= 2 ? (
-            <p className="text-center text-muted-foreground">Recherche en cours...</p>
-          ) : searchTerm.length < 2 && isOpen ? (
-            <p className="text-center text-muted-foreground">Commencez à taper pour rechercher...</p>
-          ) : (
-            <>
-              {searchResults.profiles.length === 0 &&
-              searchResults.courses.length === 0 &&
-              searchResults.messages.length === 0 &&
-              searchResults.events.length === 0 &&
-              searchResults.documents.length === 0 && searchTerm.length >= 2 ? (
-                <p className="text-center text-muted-foreground">Aucun résultat trouvé pour "{searchTerm}".</p>
+            <div className="flex-grow overflow-y-auto pr-2">
+              {searchQuery.trim() && searchResults.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
               ) : (
-                <>
-                  {renderSection(
-                    "Profils",
-                    searchResults.profiles,
-                    User,
-                    (p) => `/profile/${p.id}`,
-                    (p) => `${p.first_name} ${p.last_name} (@${p.username})`
-                  )}
-                  {renderSection(
-                    "Cours",
-                    searchResults.courses,
-                    BookOpen,
-                    (c) => `/courses/${c.id}`,
-                    (c) => c.title
-                  )}
-                  {renderSection(
-                    "Messages",
-                    searchResults.messages,
-                    MessageSquare,
-                    (m) => `/messages?contactId=${m.sender_id === currentUserProfile?.id ? m.receiver_id : m.sender_id}`,
-                    (m) => `Conversation avec ${m.sender_id === currentUserProfile?.id ? m.receiver_name : m.sender_name}: ${m.content.substring(0, 50)}...`
-                  )}
-                  {renderSection(
-                    "Événements",
-                    searchResults.events,
-                    Calendar,
-                    (e) => `/calendar?eventId=${e.id}`,
-                    (e) => `${e.title} (${new Date(e.start_time).toLocaleDateString()})`
-                  )}
-                  {renderSection(
-                    "Documents",
-                    searchResults.documents,
-                    FileText,
-                    (d) => `/documents?documentId=${d.id}`,
-                    (d) => d.title
-                  )}
-                </>
+                Object.keys(groupedResults).map(type => {
+                  const resultsOfType = groupedResults[type as keyof typeof groupedResults];
+                  if (resultsOfType.length === 0) return null;
+
+                  const typeTitle = {
+                    note: "Notes",
+                    course: "Cours",
+                    module: "Modules",
+                    section: "Sections",
+                  }[type];
+
+                  return (
+                    <div key={type} className="space-y-3 mb-6">
+                      <h2 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
+                        {typeTitle}
+                      </h2>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {resultsOfType.map(result => (
+                          <Link to={result.link} key={result.id} onClick={onClose}>
+                            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile"> {/* Apply rounded-android-tile */}
+                              <CardHeader className="flex-row items-center gap-3 pb-2">
+                                <result.icon className="h-5 w-5 text-primary" />
+                                <CardTitle className="text-lg">{result.title}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="flex-grow">
+                                <CardDescription className="text-sm line-clamp-3">
+                                  {result.description}
+                                </CardDescription>
+                              </CardContent>
+                            </Card>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
               )}
-            </>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
