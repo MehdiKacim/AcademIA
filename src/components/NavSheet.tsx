@@ -1,9 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet"; // Keep SheetHeader, etc. for styling
+  // Removed SheetHeader, SheetTitle, SheetDescription imports as they are no longer used directly
+} from "@/components/ui/sheet"; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -155,7 +153,7 @@ const NavSheet = ({
 
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
-      <SheetHeader className="p-4 flex-shrink-0">
+      <div className="p-4 flex-shrink-0"> {/* Replaced SheetHeader with div */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {drawerNavStack.length > 0 ? (
@@ -167,14 +165,14 @@ const NavSheet = ({
               <div className="h-10 w-10" /> 
             )}
             <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
-            <SheetTitle className="text-xl font-bold text-foreground">{currentDrawerTitle}</SheetTitle>
+            <h2 className="text-xl font-bold text-foreground">{currentDrawerTitle}</h2> {/* Replaced SheetTitle with h2 */}
           </div>
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
             <X className="h-5 w-5" />
             <span className="sr-only">Fermer le menu</span>
           </Button>
         </div>
-      </SheetHeader>
+      </div>
 
       <ScrollArea className="flex-grow p-4">
         {currentUserProfile && drawerNavStack.length === 0 && (
