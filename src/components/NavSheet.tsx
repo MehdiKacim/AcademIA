@@ -153,7 +153,7 @@ const NavSheet = ({
 
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
-      <div className="p-4 flex-shrink-0"> {/* Replaced SheetHeader with div */}
+      <div className="p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {drawerNavStack.length > 0 ? (
@@ -165,7 +165,7 @@ const NavSheet = ({
               <div className="h-10 w-10" /> 
             )}
             <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">{currentDrawerTitle}</h2> {/* Replaced SheetTitle with h2 */}
+            <h2 className="text-xl font-bold text-foreground">{currentDrawerTitle}</h2>
           </div>
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
             <X className="h-5 w-5" />
@@ -176,15 +176,24 @@ const NavSheet = ({
 
       <ScrollArea className="flex-grow p-4">
         {currentUserProfile && drawerNavStack.length === 0 && (
-          <div className="flex items-center gap-3 p-4 mb-4 bg-muted/15 rounded-lg shadow-sm">
+          <div 
+            className="flex items-center gap-3 p-4 mb-4 bg-muted/15 rounded-lg shadow-sm cursor-pointer hover:bg-muted/20 transition-colors duration-200 ease-in-out"
+            onClick={() => {
+              navigate("/profile");
+              onOpenChange(false);
+            }}
+          >
             <Avatar className="h-12 w-12">
               <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
               <AvatarFallback>{currentUserProfile.first_name[0]}{currentUserProfile.last_name[0]}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-grow">
               <p className="font-semibold text-lg">{currentUserProfile.first_name} {currentUserProfile.last_name}</p>
               <p className="text-sm text-muted-foreground">{currentUserProfile.email}</p>
             </div>
+            <Button variant="ghost" size="sm" className="flex-shrink-0">
+              <User className="h-4 w-4 mr-2" /> Voir le profil
+            </Button>
           </div>
         )}
         <motion.div
@@ -210,7 +219,7 @@ const NavSheet = ({
                   className={cn(
                     "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm", // Adjusted min-height, padding, and rounded-lg, added shadow-sm
                     "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out", // Subtle hover with shadow
-                    isLinkActive ? "bg-primary/20 text-primary font-semibold shadow-md" : "text-foreground", // Active state with stronger background and shadow
+                    isLinkActive ? "bg-primary/20 text-primary font-semibold shadow-md border-l-4 border-primary" : "text-foreground", // Active state with stronger background and shadow
                     isCategory ? "bg-muted/15" : "" // Subtle background for categories
                   )}
                   onClick={() => handleItemClick(item)}
@@ -225,7 +234,7 @@ const NavSheet = ({
                     </span>
                   )}
                   {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
-                  {isCategory && <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />}
+                  {isCategory && <ChevronDown className={cn("h-4 w-4 ml-auto text-muted-foreground transition-transform duration-200", drawerNavStack.some(d => d.id === item.id) ? "rotate-180" : "rotate-90")} />}
                 </Button>
               );
             })
