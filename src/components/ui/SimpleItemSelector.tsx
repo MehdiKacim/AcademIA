@@ -60,8 +60,7 @@ const SimpleItemSelector = ({
             className
           )}
           disabled={disabled}
-          whileHover={{ scale: 1.01 }} // Micro-interaction
-          whileTap={{ scale: 0.99 }} // Micro-interaction
+          // Removed whileHover and whileTap from here as they are not directly on the CommandItem
         >
           <div className="flex items-center gap-2 flex-grow overflow-hidden">
             {value && SelectedIconComponent && <SelectedIconComponent className="h-5 w-5 text-primary flex-shrink-0" />}
@@ -112,8 +111,10 @@ const SimpleItemSelector = ({
                     className={cn(
                       "flex items-center gap-2 p-3 cursor-pointer hover:bg-accent hover:text-accent-foreground",
                       isSelected ? "bg-accent text-accent-foreground font-semibold" : "text-foreground",
-                      "transition-colors duration-150 ease-in-out"
+                      "transition-colors duration-150 ease-in-out",
+                      "pointer-events-auto" // Explicitly ensure pointer events are enabled
                     )}
+                    tabIndex={0} // Ensure it's focusable for keyboard navigation and clicks
                   >
                     <Check
                       className={cn(
