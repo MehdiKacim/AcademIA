@@ -1,7 +1,7 @@
 # Nom du workflow qui s'affiche sur GitHub Actions
 name: Android Build Debug AcademIA
 
-# Déclenche le workflow à chaque push sur la branche 'main '
+# Déclenche le workflow à chaque push sur la branche 'main'
 on:
   push:
     branches:
@@ -57,19 +57,19 @@ jobs:
           # Fichier à modifier
           GRADLE_FILE="android/app/build.gradle"
           # Lit et incrémente le versionCode
-          CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}')
+          CURRENT_VERSION_CODE=$(grep "versionCode" "$GRADLE_FILE" | awk '{print $NF}')
           NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
           # Lit et incrémente le versionName (patch)
-          CURRENT_VERSION_NAME=$(grep "versionName" $GRADLE_FILE | cut -d\" -f2)
+          CURRENT_VERSION_NAME=$(grep "versionName" "$GRADLE_FILE" | cut -d\" -f2)
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION_NAME"
           NEW_VERSION_NAME="$major.$minor.$((patch + 1))"
           # Remplace les versions dans le fichier
-          sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" $GRADLE_FILE
-          sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" $GRADLE_FILE
+          sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" "$GRADLE_FILE"
+          sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" "$GRADLE_FILE"
           # Exporte les nouvelles versions pour les étapes suivantes
           echo "Nouvelle version: $NEW_VERSION_NAME ($NEW_VERSION_CODE)"
-          echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
-          echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$NEW_VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$NEW_VERSION_CODE" >> "$GITHUB_OUTPUT"
 
       # 8. Commit et push la modification de version
       - name: Commit version change
@@ -83,6 +83,15 @@ jobs:
       # 9. Rend le script gradlew exécutable
       - name: Make gradlew executable
         run: chmod +x android/gradlew
+
+      # NEW DIAGNOSTIC STEP: Vérifie l'existence et le contenu de gradlew
+      - name: Diagnose gradlew existence and content
+        run: |
+          echo "Listing contents of android/ directory:"
+          ls -la android/
+          echo "--- Content of android/gradlew ---"
+          cat android/gradlew
+          echo "----------------------------------"
 
       # 10. Configure le JDK Java nécessaire pour la compilation Android
       - name: Setup Java JDK
@@ -104,7 +113,7 @@ jobs:
           NEW_APK_NAME="academia-debug-v$VERSION_NAME.apk"
           mv "$APK_PATH" "android/app/build/outputs/apk/debug/$NEW_APK_NAME"
           echo "APK renommé en : $NEW_APK_NAME"
-          echo "apk_path=android/app/build/outputs/apk/debug/$NEW_APK_NAME" >> $GITHUB_OUTPUT
+          echo "apk_path=android/app/build/outputs/apk/debug/$NEW_APK_NAME" >> "$GITHUB_OUTPUT"
 
       # 13. Uploade l'APK renommé comme un artefact de build
       - name: Upload APK as artifact
@@ -128,4 +137,3 @@ jobs:
             Commit: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
