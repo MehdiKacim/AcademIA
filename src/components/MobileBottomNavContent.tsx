@@ -79,16 +79,18 @@ const MobileBottomNavContent = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Central Menu/Logo Button with gradient border effect */}
-          <div className={cn(
-              "relative rounded-full flex items-center justify-center",
-              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-              "translate-y-[-34px] z-10", // Lift and z-index for the whole unit
-              "transition-all duration-300 ease-in-out", // Transition for background/border changes
-              isMobileNavSheetOpen
-                ? "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan"
-                : "bg-transparent" // Make background transparent when inactive
-          )}>
+          {/* Central Menu/Logo Button with position animation */}
+          <motion.div
+              className={cn(
+                  "relative rounded-full flex items-center justify-center",
+                  "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
+                  "z-10", // Keep z-index
+                  "transition-all duration-300 ease-in-out" // Keep transition for other properties if needed
+              )}
+              initial={{ y: -34 }} // Initial lifted position
+              animate={{ y: isMobileNavSheetOpen ? 0 : -34 }} // Animate to 0 (flush) when open, back to -34 when closed
+              transition={{ duration: 0.3, ease: "easeOut" }}
+          >
             <MotionButton
                 whileTap={buttonPressAnimation}
                 variant="ghost"
@@ -115,7 +117,7 @@ const MobileBottomNavContent = ({
                 </span>
               )}
             </MotionButton>
-          </div>
+          </motion.div>
 
           {/* User Dropdown Button */}
           <DropdownMenu>
@@ -163,15 +165,17 @@ const MobileBottomNavContent = ({
           </MotionButton>
 
           {/* Central Menu/Logo Button for unauthenticated */}
-          <div className={cn(
-              "relative rounded-full flex items-center justify-center",
-              "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-              "translate-y-[-34px] z-10", // Lift and z-index for the whole unit
-              "transition-all duration-300 ease-in-out", // Add transition
-              isMobileNavSheetOpen
-                ? "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan"
-                : "bg-transparent" // Make background transparent when inactive
-          )}>
+          <motion.div
+              className={cn(
+                  "relative rounded-full flex items-center justify-center",
+                  "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
+                  "z-10", // Lift and z-index for the whole unit
+                  "transition-all duration-300 ease-in-out" // Keep transition for other properties if needed
+              )}
+              initial={{ y: -34 }} // Initial lifted position
+              animate={{ y: isMobileNavSheetOpen ? 0 : -34 }} // Animate to 0 (flush) when open, back to -34 when closed
+              transition={{ duration: 0.3, ease: "easeOut" }}
+          >
             <MotionButton
                 whileTap={buttonPressAnimation}
                 variant="ghost"
@@ -193,7 +197,7 @@ const MobileBottomNavContent = ({
               </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
             </MotionButton>
-          </div>
+          </motion.div>
 
           {/* Right side: MessageSquare button */}
           <MotionButton variant="outline" onClick={() => navigate('/auth')} className={peripheralNavButtonClasses}>
