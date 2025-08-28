@@ -85,7 +85,7 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]"> {/* Added bottom-[36px] here */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]">
             <Button
               variant="ghost"
               size="icon"
@@ -95,7 +95,7 @@ const MobileBottomNavContent = ({
             >
               <motion.div 
                 whileTap={buttonPressAnimation} 
-                className="relative flex items-center justify-center h-full w-full rounded-full" // Added relative for absolute positioning of new content
+                className="relative flex items-center justify-center h-full w-full rounded-full"
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
@@ -105,7 +105,7 @@ const MobileBottomNavContent = ({
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {unreadMessagesCount > 0 && (
-                  <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center"> {/* Changed h-5 w-5 to h-6 w-6 */}
                     {unreadMessagesCount}
                   </span>
                 )}
@@ -171,7 +171,7 @@ const MobileBottomNavContent = ({
           </Button>
 
           {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]"> {/* Added bottom-[36px] here */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[36px]">
             <Button
               variant="ghost"
               size="icon"
@@ -184,7 +184,7 @@ const MobileBottomNavContent = ({
             >
               <motion.div 
                 whileTap={buttonPressAnimation} 
-                className="relative flex items-center justify-center h-full w-full rounded-full" // Added relative for absolute positioning of new content
+                className="relative flex items-center justify-center h-full w-full rounded-full"
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
