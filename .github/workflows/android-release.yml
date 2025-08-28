@@ -43,7 +43,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      # 4. Installe les dépendances npm (en utilisant pnpm)
+      # 4. Installe toutes les dépendances, y compris les plugins Capacitor
       - name: Install npm dependencies
         run: npm install --frozen-lockfile
 
@@ -51,7 +51,7 @@ jobs:
       - name: Build web app
         run: npm run build
 
-      # 6. Installe l'outil de ligne de commande Capacitor
+      # 6. Installe l'outil de ligne de commande Capacitor de façon globale
       - name: Install Capacitor CLI
         run: npm install -g @capacitor/cli
 
@@ -61,7 +61,7 @@ jobs:
 
       # 8. Publication des mises à jour web via Capacitor Live Updates
       - name: Publish web updates
-        run: ./node_modules/.bin/cap live-updates:publish Production
+        run: npx cap live-updates:publish Production
         env:
           CAPACITOR_LIVE_UPDATES_APP_ID: ${{ secrets.CAPACITOR_LIVE_UPDATES_APP_ID }}
           CAPACITOR_LIVE_UPDATES_TOKEN: ${{ secrets.CAPACITOR_LIVE_UPDATES_TOKEN }}
