@@ -97,7 +97,7 @@ const MobileBottomNavContent = ({
                 animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
                 transition={{ duration: 1.5, ease: "easeInOut" }}
             >
-              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
+              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={true} /> {/* Pass disableInternalAnimation={true} */}
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
                 <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
@@ -180,7 +180,7 @@ const MobileBottomNavContent = ({
                 animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
                 transition={{ duration: 1.5, ease: "easeInOut" }}
             >
-              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
+              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={true} /> {/* Pass disableInternalAnimation={true} */}
               <span className="sr-only">Ouvrir le menu</span>
             </MotionButton>
           </div>
