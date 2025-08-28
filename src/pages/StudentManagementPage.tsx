@@ -9,32 +9,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2, LayoutList, Info, User } from "lucide-react"; // Ajout de Info et User
-import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establishment } from "@/lib/dataModels"; // Import Establishment
+import { 
+  PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2, LayoutList, Info, User, // Existing imports
+  PenTool, BriefcaseBusiness, UserRoundCog // Added missing icons for role mapping
+} from "lucide-react"; 
+import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establishment } from "@/lib/dataModels"; 
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
   findProfileByUsername,
   updateProfile,
   deleteProfile,
-  getAllStudentClassEnrollments, // Import getAllStudentClassEnrollments
-  checkUsernameExists, // Import checkUsernameExists
-  checkEmailExists, // Import checkEmailExists
+  getAllStudentClassEnrollments, 
+  checkUsernameExists, 
+  checkEmailExists, 
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   loadClasses,
   loadCurricula,
-  loadEstablishments, // Re-added loadEstablishments
+  loadEstablishments, 
   loadSchoolYears,
-  getEstablishmentName, // Import getEstablishmentName
-  getCurriculumName, // Import getCurriculumName
-  getClassName, // Import getClassName
-  getSchoolYearName, // Import getSchoolYearName
+  getEstablishmentName, 
+  getCurriculumName, 
+  getClassName, 
+  getSchoolYearName, 
 } from '@/lib/courseData';
 
-// Shadcn UI components for autocomplete
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check } from "lucide-react";
@@ -44,12 +46,22 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
-import InputWithStatus from '@/components/InputWithStatus'; // Import InputWithStatus
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; // Import Collapsible
-import { supabase } from '@/integrations/supabase/client'; // Import supabase
+import InputWithStatus from '@/components/InputWithStatus'; 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"; 
+import { supabase } from '@/integrations/supabase/client'; 
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Building2, LayoutList, CalendarDays, Users, Info, User
+  Building2, LayoutList, CalendarDays, Users, Info, User,
+  PlusCircle, Trash2, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, School, ChevronDown, ChevronUp, UserPlus,
+  PenTool, BriefcaseBusiness, UserRoundCog, // Added to iconMap
+
+  // Role-specific icons
+  student: GraduationCap,
+  professeur: PenTool,
+  tutor: Users,
+  director: BriefcaseBusiness,
+  deputy_director: BriefcaseBusiness,
+  administrator: UserRoundCog,
 };
 
 const getRoleDisplayName = (role: Profile['role'] | 'all') => {
@@ -72,19 +84,18 @@ const StudentManagementPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [classes, setClasses] = useState<Class[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]); 
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
-  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); 
   const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
 
-  // States for new student creation form
   const [newStudentFirstName, setNewStudentFirstName] = useState('');
   const [newStudentLastName, setNewStudentLastName] = useState('');
   const [newStudentUsername, setNewStudentUsername] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
-  const [newStudentEstablishmentId, setNewStudentEstablishmentId] = useState<string | null>(null); // Re-added newStudentEstablishmentId
+  const [newStudentEstablishmentId, setNewStudentEstablishmentId] = useState<string | null>(null); 
   const [newStudentEnrollmentStartDate, setNewStudentEnrollmentStartDate] = useState<Date | undefined>(undefined);
   const [newStudentEnrollmentEndDate, setNewStudentEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
@@ -95,11 +106,9 @@ const StudentManagementPage = () => {
   const debounceTimeoutRefUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimeoutRefEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // States for student list section
   const [studentSearchQuery, setSearchStudentQuery] = useState('');
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // Re-added selectedEstablishmentFilter
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); 
 
-  // Get classId from URL for initial filtering (now removed from student list)
   const classIdFromUrl = searchParams.get('classId');
 
   useEffect(() => {
@@ -107,7 +116,7 @@ const StudentManagementPage = () => {
       try {
         setClasses(await loadClasses());
         setCurricula(await loadCurricula());
-        setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
+        setEstablishments(await loadEstablishments()); 
         setAllProfiles(await getAllProfiles());
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
         setSchoolYears(await loadSchoolYears());
@@ -119,7 +128,6 @@ const StudentManagementPage = () => {
     fetchData();
   }, [currentUserProfile]);
 
-  // Set initial establishment filter based on user role
   useEffect(() => {
     if (currentRole === 'administrator') {
       setSelectedEstablishmentFilter('all');
@@ -133,7 +141,6 @@ const StudentManagementPage = () => {
     }
   }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id]);
 
-  // --- New Student Creation Logic ---
   const validateUsername = useCallback(async (username: string, currentUserId?: string) => {
     if (username.length < 3) {
       setUsernameAvailabilityStatus('idle');
@@ -218,7 +225,6 @@ const StudentManagementPage = () => {
       return;
     }
 
-    // Role-based creation restrictions and defaults
     if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'professeur' || currentRole === 'tutor') && newStudentEstablishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez créer des élèves que dans votre établissement.");
       return;
@@ -233,7 +239,7 @@ const StudentManagementPage = () => {
           first_name: newStudentFirstName.trim(),
           last_name: newStudentLastName.trim(),
           username: newStudentUsername.trim(),
-          role: 'student', // Fixed role for this page
+          role: 'student', 
           establishment_id: newStudentEstablishmentId,
           enrollment_start_date: newStudentEnrollmentStartDate.toISOString().split('T')[0],
           enrollment_end_date: newStudentEnrollmentEndDate.toISOString().split('T')[0],
@@ -257,7 +263,7 @@ const StudentManagementPage = () => {
       setNewStudentEnrollmentEndDate(undefined);
       setUsernameAvailabilityStatus('idle');
       setEmailAvailabilityStatus('idle');
-      setAllProfiles(await getAllProfiles()); // Refresh profiles
+      setAllProfiles(await getAllProfiles()); 
       setIsNewStudentFormOpen(false);
     } catch (error: any) {
       console.error("Unexpected error creating student:", error);
@@ -268,7 +274,7 @@ const StudentManagementPage = () => {
   };
 
   const handleDeleteStudent = async (studentProfileId: string) => {
-    if (!currentUserProfile || currentRole !== 'administrator') { // Only administrator can delete
+    if (!currentUserProfile || currentRole !== 'administrator') { 
       showError("Vous n'êtes pas autorisé à supprimer des élèves.");
       return;
     }
@@ -281,8 +287,6 @@ const StudentManagementPage = () => {
           return;
         }
         
-        // The profile and enrollments should be cascade deleted by DB foreign keys
-        // Re-fetch all data to update the UI
         setAllProfiles(await getAllProfiles());
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
         showSuccess("Élève et compte supprimés !");
@@ -300,12 +304,10 @@ const StudentManagementPage = () => {
   const filteredStudentsToDisplay = React.useMemo(() => {
     let students = allProfiles.filter(p => p.role === 'student');
 
-    // Filter by current user's establishment if not admin
     if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
       students = students.filter(s => s.establishment_id === currentUserProfile.establishment_id);
     }
     
-    // Apply establishment filter
     if (selectedEstablishmentFilter !== 'all' && currentRole === 'administrator') {
       students = students.filter(p => p.establishment_id === selectedEstablishmentFilter || (p.role === 'administrator' && !p.establishment_id));
     } else if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
@@ -405,7 +407,6 @@ const StudentManagementPage = () => {
         Gérez les profils des utilisateurs de la plateforme.
       </p>
 
-      {/* Section: Créer un nouvel utilisateur */}
       <Card className="rounded-android-tile">
         <Collapsible open={isNewStudentFormOpen} onOpenChange={setIsNewStudentFormOpen}>
           <CardHeader>
@@ -457,17 +458,16 @@ const StudentManagementPage = () => {
                   <SimpleItemSelector
                     id="new-user-role"
                     options={rolesOptionsForNewUser}
-                    value={'student'} // Fixed to student for this page
-                    onValueChange={() => {}} // No change allowed
-                    searchQuery={''} // No search for fixed role
-                    onSearchQueryChange={() => {}} // No search for fixed role
+                    value={'student'} 
+                    onValueChange={() => {}} 
+                    searchQuery={''} 
+                    onSearchQueryChange={() => {}} 
                     placeholder="Élève"
                     emptyMessage="Aucun rôle trouvé."
                     iconMap={iconMap}
-                    disabled={true} // Always disabled
+                    disabled={true} 
                   />
                 </div>
-                {/* Removed role-based establishment selection as it's fixed to student */}
                 {newStudentEstablishmentId && (
                   <div>
                     <Label htmlFor="new-user-establishment">Établissement</Label>
@@ -476,8 +476,8 @@ const StudentManagementPage = () => {
                       options={establishmentsToDisplayForNewUser}
                       value={newStudentEstablishmentId}
                       onValueChange={(value) => setNewStudentEstablishmentId(value)}
-                      searchQuery={''} // No search query for this simple selector
-                      onSearchQueryChange={() => {}} // No search query for this simple selector
+                      searchQuery={''} 
+                      onSearchQueryChange={() => {}} 
                       placeholder="Sélectionner un établissement"
                       emptyMessage="Aucun établissement trouvé."
                       iconMap={iconMap}
@@ -547,7 +547,6 @@ const StudentManagementPage = () => {
         </Collapsible>
       </Card>
 
-      {/* Section: Liste de tous les utilisateurs */}
       <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -566,7 +565,6 @@ const StudentManagementPage = () => {
                 onChange={(e) => setSearchStudentQuery(e.target.value)}
               />
             </div>
-            {/* Removed role filter as this page is specifically for students */}
             {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
               <div className="flex-shrink-0 sm:w-1/3">
                 <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
@@ -575,11 +573,12 @@ const StudentManagementPage = () => {
                   options={[{ id: 'all', label: 'Tous les établissements', icon_name: 'Building2' }, ...establishmentsToDisplayForFilter]}
                   value={selectedEstablishmentFilter}
                   onValueChange={(value) => setSelectedEstablishmentFilter(value)}
-                  searchQuery={''} // No search query for this simple selector
-                  onSearchQueryChange={() => {}} // No search query for this simple selector
+                  searchQuery={''} 
+                  onSearchQueryChange={() => {}} 
                   placeholder="Tous les établissements"
                   emptyMessage="Aucun établissement trouvé."
                   iconMap={iconMap}
+                  disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                 />
               </div>
             )}
@@ -617,7 +616,6 @@ const StudentManagementPage = () => {
                       <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
                         <Mail className="h-4 w-4 mr-1" /> Message
                       </Button>
-                      {/* Removed Edit button for students on this page, as it's handled in AdminUserManagementPage */}
                       {currentRole === 'administrator' && (
                         <Button variant="destructive" size="sm" onClick={() => handleDeleteStudent(profile.id)}>
                           <Trash2 className="h-4 w-4" />
@@ -631,8 +629,6 @@ const StudentManagementPage = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Removed Edit User Dialog as it's handled in AdminUserManagementPage */}
     </div>
   );
 };
