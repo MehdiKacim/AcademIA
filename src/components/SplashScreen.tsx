@@ -42,7 +42,7 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="mb-4"
       >
-        <Logo iconClassName="w-40 h-40" showText={false} />
+        <Logo iconClassName="w-40 h-40" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
       </motion.div>
       <motion.h1
         className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan"

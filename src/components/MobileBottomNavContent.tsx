@@ -98,7 +98,7 @@ const MobileBottomNavContent = ({
               <motion.div // Removed rotation animation
                 className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
               >
-                <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size to fit button */}
+                <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
@@ -183,7 +183,7 @@ const MobileBottomNavContent = ({
               <motion.div // Removed rotation animation
                 className="flex items-center justify-center h-full w-full"
               >
-                <Logo iconClassName="h-10 w-10" showText={false} />
+                <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
             </MotionButton>

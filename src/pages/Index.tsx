@@ -224,7 +224,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
         style={{ top: isMobile ? 'auto' : 'env(safe-area-inset-top)' }} // Adjust top/bottom based on mobile
       >
         <div className="flex items-center gap-4">
-          <Logo onLogoClick={handleLogoClick} />
+          <Logo onLogoClick={handleLogoClick} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
         </div>
         <nav className="hidden md:flex items-center gap-4">
           {staticNavItems.filter(item => item.id !== 'login-link' && item.id !== 'theme-toggle-anon').map((item) => { // Filter out login link and theme toggle for desktop header
@@ -274,7 +274,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
             <div className="flex justify-center mb-8">
-              <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} />
+              <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
             </div>
             {/* NEW: Animated AcademIA text */}
             <motion.h1
@@ -374,7 +374,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
           <NavSheet
             isOpen={isMobileNavSheetOpen}
             onOpenChange={toggleMobileNavSheet} // Use the new prop here
-            navItems={staticNavItems} // Pass static nav items for unauthenticated users
+            navItems={staticAnonNavItems} // Pass static nav items for unauthenticated users
             onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
             onOpenAiAChat={() => openChat()}
             onOpenAuthModal={() => navigate('/auth')}

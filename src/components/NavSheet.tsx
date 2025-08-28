@@ -5,7 +5,7 @@ import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, Che
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } => "react-router-dom";
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -179,7 +179,7 @@ const NavSheet = ({
           animate={{ rotate: isOpen ? 360 : 0 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
         >
-          <Logo iconClassName="h-10 w-10" showText={false} />
+          <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={isOpen} />
         </motion.div>
         <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
           <X className="h-5 w-5" />
@@ -296,7 +296,7 @@ const NavSheet = ({
         </motion.div>
         {/* Moved app version and MadeWithDyad to the bottom of scrollable area */}
         <div className="p-4 flex-shrink-0 flex flex-col items-center gap-2 mt-auto">
-          <p className="text-xs text-muted-foreground">dyadVersion:</p>
+          {/* Removed dyadVersion: text */}
         </div>
       </ScrollArea>
     </MobileDrawer>

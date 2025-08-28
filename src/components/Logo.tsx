@@ -1,16 +1,18 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion'; // Import motion
 
 interface LogoProps {
   iconClassName?: string;
   textClassName?: string;
   showText?: boolean;
   onLogoClick?: () => void; // New prop for click handler
+  disableInternalAnimation?: boolean; // New prop to disable internal SVG animations
 }
 
-const Logo = ({ iconClassName, textClassName, showText = true, onLogoClick = () => {} }: LogoProps) => { // Ajout d'une fonction vide par défaut
+const Logo = ({ iconClassName, textClassName, showText = true, onLogoClick = () => {}, disableInternalAnimation = false }: LogoProps) => {
   return (
-    <div className="flex items-center gap-2" onClick={onLogoClick}> {/* Attach onClick handler here */}
+    <div className="flex items-center gap-2" onClick={onLogoClick}>
       <div className={cn("w-8 h-8", iconClassName)}>
         <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
@@ -28,16 +30,20 @@ const Logo = ({ iconClassName, textClassName, showText = true, onLogoClick = () 
           {/* Nucleus */}
           <circle cx="50" cy="50" r="10" fill="url(#logoGradient)" />
 
-          {/* Electrons using SVG animation */}
-          <circle r="5" fill="url(#logoGradient)">
-            <animateMotion dur="4s" repeatCount="indefinite" path="M 50,30 A 45 20 30 1 1 49.9,30.1 Z" />
-          </circle>
-          <circle r="5" fill="url(#logoGradient)">
-             <animateMotion dur="5s" repeatCount="indefinite" path="M 50,70 A 45 20 -30 1 1 49.9,70.1 Z" />
-          </circle>
-          <circle r="5" fill="url(#logoGradient)">
-             <animateMotion dur="6s" repeatCount="indefinite" path="M 30,50 A 20 45 0 1 1 29.9,50.1 Z" />
-          </circle>
+          {/* Electrons using SVG animation, conditionally rendered */}
+          {!disableInternalAnimation && (
+            <>
+              <circle r="5" fill="url(#logoGradient)">
+                <animateMotion dur="4s" repeatCount="indefinite" path="M 50,30 A 45 20 30 1 1 49.9,30.1 Z" />
+              </circle>
+              <circle r="5" fill="url(#logoGradient)">
+                 <animateMotion dur="5s" repeatCount="indefinite" path="M 50,70 A 45 20 -30 1 1 49.9,70.1 Z" />
+              </circle>
+              <circle r="5" fill="url(#logoGradient)">
+                 <animateMotion dur="6s" repeatCount="indefinite" path="M 30,50 A 20 45 0 1 1 29.9,50.1 Z" />
+              </circle>
+            </>
+          )}
         </svg>
       </div>
       {showText && (
