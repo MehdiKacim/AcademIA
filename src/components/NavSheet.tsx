@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown, ArrowLeft, SunMoon, UserCog } from "lucide-react"; // Added UserCog
+import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown, ArrowLeft, SunMoon, UserCog, LayoutDashboard } from "lucide-react"; // Added UserCog, LayoutDashboard
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -17,7 +17,7 @@ import packageJson from '../../package.json';
 import { MadeWithDyad } from './made-with-dyad';
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown, ArrowLeft: ArrowLeft, SunMoon: SunMoon, UserCog: UserCog, // Added UserCog
+  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown, ArrowLeft: ArrowLeft, SunMoon: SunMoon, UserCog: UserCog, LayoutDashboard: LayoutDashboard, // Added UserCog, LayoutDashboard
 };
 
 interface NavSheetProps {
@@ -28,9 +28,7 @@ interface NavSheetProps {
   onOpenAiAChat: () => void;
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
-  onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isMobile: boolean; // To differentiate mobile vs desktop behavior
-  setIsAdminModalOpen: (isOpen: boolean) => void; // New prop for AdminModal
 }
 
 const containerVariants = {
@@ -51,11 +49,9 @@ const NavSheet = ({
   onOpenAiAChat,
   onOpenAuthModal,
   unreadMessagesCount,
-  onInitiateThemeChange,
   isMobile,
-  setIsAdminModalOpen, // Destructure new prop
 }: NavSheetProps) => {
-  const { currentUserProfile, signOut, currentRole } = useRole(); // Get currentRole
+  const { currentUserProfile, signOut, currentRole } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
@@ -89,8 +85,6 @@ const NavSheet = ({
         onOpenGlobalSearch();
       } else if (item.id === 'nav-aia-chat') {
         onOpenAiAChat();
-      } else if (item.id === 'theme-toggle-item' || item.id === 'profile-theme-toggle') {
-        // This is handled by the ThemeToggle component itself
       } else {
         item.onClick();
       }
@@ -165,7 +159,7 @@ const NavSheet = ({
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
       {/* Simplified Header Section */}
-      <div className="pt-8 px-4 pb-4 flex-shrink-0 flex items-center justify-between"> {/* Adjusted padding-top */}
+      <div className="pt-8 px-4 pb-4 flex-shrink-0 flex items-center justify-between">
         {/* Placeholder to maintain spacing, removed back button from here */}
         <div className="h-10 w-10" /> 
         <motion.div
@@ -183,7 +177,7 @@ const NavSheet = ({
 
       {/* New: Back button section, outside the header */}
       {drawerNavStack.length > 0 && (
-        <div className="px-4 mb-4 flex-shrink-0"> {/* Added horizontal padding and bottom margin */}
+        <div className="px-4 mb-4 flex-shrink-0">
           <Button variant="ghost" onClick={handleBack} className="w-full justify-start rounded-android-tile">
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span className="text-base font-medium">Retour</span>
@@ -283,30 +277,15 @@ const NavSheet = ({
         <div className="mt-8 pt-4 border-t border-border/50 space-y-4">
           <h3 className="text-lg font-semibold text-foreground">Informations et Outils</h3>
 
-          {/* Theme Toggle */}
-          <motion.div variants={itemVariants}>
-            <div
-              className={cn(
-                "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm",
-                "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out",
-                "text-foreground"
-              )}
-            >
-              <div className={cn("flex items-center justify-center rounded-md mr-3 bg-muted/20")}>
-                <SunMoon className="h-6 w-6" />
-              </div>
-              <span className="title text-base font-medium line-clamp-2 flex-grow">Thème</span>
-              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className="rounded-full" />
-            </div>
-          </motion.div>
-
           {/* Admin Access Button (Conditional) */}
           {currentRole === 'administrator' && (
             <motion.div variants={itemVariants}>
               <Button
                 variant="outline"
                 onClick={() => {
-                  setIsAdminModalOpen(true);
+                  // This prop is no longer passed to NavSheet, so we need to handle it here
+                  // For now, we'll just close the NavSheet. If AdminModal needs to be opened,
+                  // it should be handled by the parent (DashboardLayout or Index)
                   onOpenChange(false); // Close nav sheet
                 }}
                 className="w-full justify-start rounded-android-tile"
@@ -316,17 +295,18 @@ const NavSheet = ({
             </motion.div>
           )}
 
-          {/* App Version */}
-          <motion.div variants={itemVariants}>
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/10 text-sm text-muted-foreground">
-              <span>Version de l'application:</span>
-              <span className="font-medium text-foreground">{packageJson.version}</span>
-            </div>
-          </motion.div>
-
-          {/* Made with Dyad */}
-          <motion.div variants={itemVariants}>
-            <MadeWithDyad />
+          {/* Suggested Menus */}
+          <motion.div variants={itemVariants} className="space-y-2">
+            <h4 className="text-base font-medium text-muted-foreground">Menus Suggérés</h4>
+            <Button variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { navigate('/courses'); onOpenChange(false); }}>
+              <BookOpen className="h-5 w-5 mr-2" /> Cours Populaires
+            </Button>
+            <Button variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { navigate('/dashboard'); onOpenChange(false); }}>
+              <LayoutDashboard className="h-5 w-5 mr-2" /> Mon Tableau de Bord
+            </Button>
+            <Button variant="ghost" className="w-full justify-start rounded-lg shadow-sm hover:bg-muted/20 hover:shadow-md" onClick={() => { onOpenAiAChat(); onOpenChange(false); }}>
+              <BotMessageSquare className="h-5 w-5 mr-2" /> Aide AiA Rapide
+            </Button>
           </motion.div>
         </div>
       </ScrollArea>

@@ -395,7 +395,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             onOpenAiAChat={() => openChat()}
             onOpenAuthModal={() => navigate('/auth')}
             unreadMessagesCount={unreadMessages}
-            onInitiateThemeChange={onInitiateThemeChange}
             isMobile={isMobile}
           />
           {/* Persistent mobile bottom navigation bar */}
@@ -404,7 +403,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
               onOpenAiAChat={() => openChat()}
               onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
-              onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={true}
               unreadMessagesCount={unreadMessages} // Pass unread messages count
               isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here

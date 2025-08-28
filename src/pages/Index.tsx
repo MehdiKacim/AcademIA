@@ -41,7 +41,6 @@ import { motion } from 'framer-motion'; // Import motion for animations
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
-  onInitiateThemeChange: (newTheme: string) => void; // New prop
 }
 
 // Map icon_name strings to Lucide React components
@@ -49,7 +48,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, SunMoon,
 };
 
-const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
+const Index = ({ setIsAdminModalOpen }: IndexProps) => {
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -158,7 +157,6 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     { id: 'aia-bot-link', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
     { id: 'methodology-link', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
     { id: 'about-link', label: "À propos", icon_name: 'Info', route: '/about', is_external: false, order_index: 3, type: 'route' },
-    { id: 'theme-toggle-anon', label: "Thème", icon_name: 'SunMoon', is_external: false, type: 'category_or_action', onClick: () => {}, order_index: 4 }, // Theme toggle item
     { id: 'login-link', label: "Connexion", icon_name: 'LogIn', route: '/auth', is_external: false, order_index: 5, type: 'route' },
   ];
 
@@ -227,7 +225,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
           <Logo onLogoClick={handleLogoClick} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
         </div>
         <nav className="hidden md:flex items-center gap-4">
-          {staticNavItems.filter(item => item.id !== 'login-link' && item.id !== 'theme-toggle-anon').map((item) => { // Filter out login link and theme toggle for desktop header
+          {staticNavItems.filter(item => item.id !== 'login-link').map((item) => { // Filter out login link for desktop header
             const isActive = 
               (item.route === '/' && location.pathname === '/' && !location.hash) ||
               (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route);
@@ -379,7 +377,6 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
             onOpenAiAChat={() => openChat()}
             onOpenAuthModal={() => navigate('/auth')}
             unreadMessagesCount={0} // No unread messages for unauthenticated
-            onInitiateThemeChange={onInitiateThemeChange}
             isMobile={isMobile}
           />
           <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px] border-t-2 border-border">
@@ -387,7 +384,6 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
               onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
               onOpenAiAChat={() => openChat()}
               onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
-              onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={false}
               unreadMessagesCount={0} // Pass unread messages count
               isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here

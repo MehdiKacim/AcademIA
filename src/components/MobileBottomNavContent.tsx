@@ -18,7 +18,6 @@ interface MobileBottomNavContentProps {
   onOpenGlobalSearch?: () => void;
   onOpenAiAChat?: () => void;
   onToggleMobileNavSheet: () => void;
-  onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isAuthenticated: boolean;
   unreadMessagesCount?: number;
   isMobileNavSheetOpen: boolean; // New prop to control animation
@@ -28,7 +27,6 @@ const MobileBottomNavContent = ({
   onOpenGlobalSearch,
   onOpenAiAChat,
   onToggleMobileNavSheet,
-  onInitiateThemeChange,
   isAuthenticated,
   unreadMessagesCount = 0,
   isMobileNavSheetOpen,
