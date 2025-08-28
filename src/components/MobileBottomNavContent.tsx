@@ -93,7 +93,7 @@ const MobileBottomNavContent = ({
                 onClick={() => onToggleMobileNavSheet()}
                 className={cn(
                     "absolute inset-0 m-auto rounded-full", // Position inside wrapper
-                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Actual button size, slightly smaller than wrapper
+                    "h-19 w-19 sm:h-23 sm:w-23 md:h-27 md:w-27", // Adjusted button size for thinner border
                     "bg-card text-foreground hover:bg-muted/40", // Solid background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
@@ -173,7 +173,7 @@ const MobileBottomNavContent = ({
                 onClick={() => onToggleMobileNavSheet()}
                 className={cn(
                     "absolute inset-0 m-auto rounded-full", // Position inside wrapper
-                    "h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24", // Actual button size, slightly smaller than wrapper
+                    "h-19 w-19 sm:h-23 sm:w-23 md:h-27 md:w-27", // Adjusted button size for thinner border
                     "bg-card text-foreground hover:bg-muted/40", // Solid background for the button itself
                     "flex items-center justify-center" // Ensure content is centered
                 )}
