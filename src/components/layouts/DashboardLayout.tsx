@@ -231,112 +231,114 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         )}
         // Removed inline style for top, as it's now handled by conditional classes
       >
-        <div className="flex items-center gap-4">
-          <Logo />
-        </div>
-        {/* Top-level Navigation Items for Desktop */}
-        {!isMobile && currentUserProfile && (
-          <nav className="hidden md:flex items-center gap-4 mx-auto"> {/* Added mx-auto here */}
-            {fullNavTreeWithActions.filter(item => !item.parent_nav_item_id).map(item => {
-              const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
-              const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-              const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
-
-              return (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  onClick={() => {
-                    if (isCategory) {
-                      // Toggle the active submenu parent
-                      setActiveDesktopSubmenuParent(activeDesktopSubmenuParent?.id === item.id ? null : item);
-                    } else {
-                      handleNavItemClick(item); // Use the unified handler for direct links/actions
-                    }
-                  }}
-                  className={cn(
-                    "group inline-flex h-9 items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
-                    isLinkActive || (activeDesktopSubmenuParent?.id === item.id) ? "text-primary font-semibold" : "text-muted-foreground"
-                  )}
-                >
-                  <IconComponent className="mr-2 h-4 w-4" />
-                  {item.label}
-                  {isCategory && <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
-                  {item.route === '/messages' && item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                      {item.badge}
-                    </span>
-                  )}
+        {/* Header content based on authentication and mobile status */}
+        {currentUserProfile ? (
+          // Logged in user header
+          <>
+            {isMobile ? (
+              // Mobile header when logged in (bottom fixed)
+              <div className="flex items-center justify-between w-full">
+                <Button variant="ghost" size="icon" onClick={() => setIsMobileNavSheetOpen(true)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Ouvrir le menu</span>
                 </Button>
-              );
-            })}
-          </nav>
+                <Logo iconClassName="h-8 w-8" showText={false} />
+                <div className="flex items-center gap-2">
+                  <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+                        <User className="h-5 w-5" />
+                        <span className="sr-only">Menu utilisateur</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
+                      <DropdownMenuLabel>{currentUserProfile.first_name} {currentUserProfile.last_name}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate("/profile")}>
+                        <User className="mr-2 h-4 w-4" /> Mon Profil
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/settings")}>
+                        <Settings className="mr-2 h-4 w-4" /> Paramètres
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                      </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ) : (
+              // Desktop header when logged in (centered utility items)
+              <div className="flex items-center justify-center w-full gap-4">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)}>
+                      <Search className="h-5 w-5" />
+                      <span className="sr-only">Recherche globale</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+                    <p>Recherche (Ctrl + F)</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={() => openChat()}>
+                      <BotMessageSquare className="h-5 w-5" />
+                      <span className="sr-only">AiA Chat</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+                    <p>AiA Chat</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Logo iconClassName="h-8 w-8" showText={false} /> {/* Centered Logo Icon */}
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+                      <User className="h-5 w-5" />
+                      <span className="sr-only">Menu utilisateur</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
+                    <DropdownMenuLabel>{currentUserProfile.first_name} {currentUserProfile.last_name}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <User className="mr-2 h-4 w-4" /> Mon Profil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/settings")}>
+                      <Settings className="mr-2 h-4 w-4" /> Paramètres
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+              </div>
+            )}
+          </>
+        ) : (
+          // Not logged in user header (same as before for Index page)
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+              <Logo />
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+              <Button variant="outline" onClick={() => navigate('/auth')}>
+                <LogIn className="h-5 w-5 mr-2" /> Connexion
+              </Button>
+            </div>
+          </div>
         )}
-        {/* Utility buttons for desktop (Search, AiA Chat, User Dropdown, Theme Toggle, About) */}
-        <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-          {currentUserProfile && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)}>
-                  <Search className="h-5 w-5" />
-                  <span className="sr-only">Recherche globale</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-                <p>Recherche (Ctrl + F)</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          {currentUserProfile && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={() => openChat()}>
-                  <BotMessageSquare className="h-5 w-5" />
-                  <span className="sr-only">AiA Chat</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-                <p>AiA Chat</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          {currentUserProfile && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Menu utilisateur</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
-                <DropdownMenuLabel>{currentUserProfile.first_name} {currentUserProfile.last_name}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <User className="mr-2 h-4 w-4" /> Mon Profil
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  <Settings className="mr-2 h-4 w-4" /> Paramètres
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          {!currentUserProfile && (
-            <Button variant="outline" onClick={() => navigate('/auth')}>
-              <LogIn className="h-5 w-5 mr-2" /> Connexion
-            </Button>
-          )}
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-          <Button variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex">
-            <Info className="h-5 w-5" />
-            <span className="sr-only">À propos</span>
-          </Button>
-        </div>
       </header>
 
       {/* Dynamic Submenu Bar for Desktop */}
