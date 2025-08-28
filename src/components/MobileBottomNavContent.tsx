@@ -53,7 +53,7 @@ const MobileBottomNavContent = ({
       {isAuthenticated ? (
         <>
           {/* Left group of buttons */}
-          <div className="flex items-center gap-10">
+          <div className="flex items-center gap-16">
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.div whileTap={buttonPressAnimation}>
@@ -110,7 +110,7 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* Right group of buttons */}
-          <div className="flex items-center gap-10">
+          <div className="flex items-center gap-16">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <motion.div whileTap={buttonPressAnimation}>
