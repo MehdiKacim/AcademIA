@@ -134,12 +134,19 @@ const MobileBottomNavContent = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className={commonButtonClasses} />
         </>
       ) : (
-        <div className="flex items-center justify-around w-full h-full"> {/* Changed to justify-around */}
-          <div className="w-10 h-10" /> {/* Placeholder for left button, adjusted size */}
+        <div className="relative flex items-center justify-center w-full h-full">
+          {/* Left side: Login button */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2">
+            <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
+              <LogIn className="h-5 w-5" />
+              <span className="sr-only">Connexion</span>
+            </Button>
+          </div>
 
+          {/* Center: Main button */}
           <Button
             variant="ghost"
             size="icon"
@@ -160,8 +167,10 @@ const MobileBottomNavContent = ({
               <span className="sr-only">Connexion</span>
             </motion.div>
           </Button>
-          <div className="w-10 h-10 flex items-center justify-center"> {/* Wrapper for ThemeToggle, adjusted size */}
-            <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+
+          {/* Right side: ThemeToggle */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className={commonButtonClasses} />
           </div>
         </div>
       )}

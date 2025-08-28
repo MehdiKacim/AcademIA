@@ -11,9 +11,10 @@ import { cn } from "@/lib/utils"; // Import cn for conditional styling
 
 interface ThemeToggleProps {
   onInitiateThemeChange: (newTheme: Profile['theme']) => void;
+  className?: string; // Add className prop
 }
 
-export function ThemeToggle({ onInitiateThemeChange }: ThemeToggleProps) {
+export function ThemeToggle({ onInitiateThemeChange, className }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const { currentUserProfile, updateUserTheme } = useRole();
 
@@ -37,7 +38,8 @@ export function ThemeToggle({ onInitiateThemeChange }: ThemeToggleProps) {
       <SelectTrigger className={cn(
         "w-fit px-3 py-2 rounded-full", // Make it fit content and rounded
         "border-none bg-muted/50 hover:bg-muted/80", // Android-like background
-        "text-muted-foreground hover:text-foreground" // Text color
+        "text-muted-foreground hover:text-foreground", // Text color
+        className // Apply passed className here
       )}>
         <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
