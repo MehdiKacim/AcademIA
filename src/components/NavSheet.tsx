@@ -21,8 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
-import MobileBottomNavContent from './MobileBottomNavContent'; // Import the new component
-import NavSheetFooterActions from './NavSheetFooterActions'; // Import the new component
+import MobileBottomNavContent from './MobileBottomNavContent'; // Import MobileBottomNavContent
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown,
@@ -251,12 +250,12 @@ const NavSheet = ({
           </motion.div>
         </ScrollArea>
 
-        {/* Bottom action bar - Now using NavSheetFooterActions */}
+        {/* Bottom action bar - Now using MobileBottomNavContent */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <NavSheetFooterActions
+          <MobileBottomNavContent
             onOpenGlobalSearch={onOpenGlobalSearch}
             onOpenAiAChat={onOpenAiAChat}
-            onOpenAuthModal={onOpenAuthModal}
+            onOpenMobileNavSheet={() => onOpenChange(false)} // Clicking the central button closes the sheet
             onInitiateThemeChange={onInitiateThemeChange}
             isAuthenticated={!!currentUserProfile}
           />
