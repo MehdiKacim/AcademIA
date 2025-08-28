@@ -155,7 +155,7 @@ const NavSheet = ({
 
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
-      <SheetHeader className="p-4 flex-shrink-0 border-b border-border">
+      <SheetHeader className="p-4 flex-shrink-0"> {/* Removed border-b border-border */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {drawerNavStack.length > 0 ? (
@@ -164,14 +164,10 @@ const NavSheet = ({
                 <span className="sr-only">Retour</span>
               </Button>
             ) : (
-              <Logo iconClassName="h-8 w-8" showText={false} /> // Show logo if at root
+              // If at root, show a placeholder or nothing, as the main logo is in the bottom nav
+              <div className="h-10 w-10" /> 
             )}
-            {drawerNavStack.length > 0 && ( // Show title if not at root
-              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 ml-2"> {/* Added ml-2 for spacing */}
-                <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
-                {currentDrawerTitle}
-              </h2>
-            )}
+            {/* Removed title display from header */}
           </div>
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
             <X className="h-5 w-5" />
