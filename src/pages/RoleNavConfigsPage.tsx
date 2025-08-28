@@ -835,7 +835,7 @@ const RoleNavConfigsPage = () => {
       {selectedRoleFilter !== 'all' && (
         <div className="grid grid-cols-1 gap-8">
           <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <LayoutList className="h-6 w-6 text-primary" /> Structure de Navigation pour {getRoleDisplayName(selectedRoleFilter)}
@@ -878,8 +878,8 @@ const RoleNavConfigsPage = () => {
                 </DragOverlay>
               </DndContext>
             </CardContent>
-          </CardHeader>
-        </MotionCard>
+          </MotionCard>
+        </div>
       )}
 
       {currentConfigToEdit && currentItemToEdit && (
