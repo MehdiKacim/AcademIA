@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown, ArrowLeft, SunMoon } from "lucide-react";
+import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown, ArrowLeft, SunMoon, UserCog } from "lucide-react"; // Added UserCog
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -17,7 +17,7 @@ import packageJson from '../../package.json';
 import { MadeWithDyad } from './made-with-dyad';
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown, ArrowLeft: ArrowLeft, SunMoon: SunMoon,
+  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown, ArrowLeft: ArrowLeft, SunMoon: SunMoon, UserCog: UserCog, // Added UserCog
 };
 
 interface NavSheetProps {
@@ -30,6 +30,7 @@ interface NavSheetProps {
   unreadMessagesCount: number;
   onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isMobile: boolean; // To differentiate mobile vs desktop behavior
+  setIsAdminModalOpen: (isOpen: boolean) => void; // New prop for AdminModal
 }
 
 const containerVariants = {
@@ -52,8 +53,9 @@ const NavSheet = ({
   unreadMessagesCount,
   onInitiateThemeChange,
   isMobile,
+  setIsAdminModalOpen, // Destructure new prop
 }: NavSheetProps) => {
-  const { currentUserProfile, signOut } = useRole();
+  const { currentUserProfile, signOut, currentRole } = useRole(); // Get currentRole
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
@@ -113,7 +115,6 @@ const NavSheet = ({
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
-    { id: 'profile-theme-toggle', label: 'Thème', icon_name: 'SunMoon', is_external: false, type: 'category_or_action', onClick: () => {}, order_index: 2 }, // Theme toggle item
     { id: 'profile-about', label: 'À propos', icon_name: 'Info', route: '/about', is_external: false, type: 'route', order_index: 3 }, // About link
     { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 4 },
   ];
@@ -123,7 +124,6 @@ const NavSheet = ({
     { id: 'aia-bot-link', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
     { id: 'methodology-link', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
     { id: 'about-link', label: "À propos", icon_name: 'Info', route: '/about', is_external: false, order_index: 3, type: 'route' },
-    { id: 'theme-toggle-anon', label: "Thème", icon_name: 'SunMoon', is_external: false, type: 'category_or_action', onClick: () => {}, order_index: 4 }, // Theme toggle item
     { id: 'login-link', label: "Connexion", icon_name: 'LogIn', route: '/auth', is_external: false, order_index: 5, type: 'route' },
   ];
 
@@ -239,26 +239,6 @@ const NavSheet = ({
               const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
               const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
-              if (item.id === 'profile-theme-toggle' || item.id === 'theme-toggle-anon') {
-                return (
-                  <motion.div key={item.id} variants={itemVariants}>
-                    <div
-                      className={cn(
-                        "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm",
-                        "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out",
-                        "text-foreground"
-                      )}
-                    >
-                      <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/30" : "bg-muted/20")}>
-                        <IconComponent className="h-6 w-6" />
-                      </div>
-                      <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
-                      <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className="rounded-full" />
-                    </div>
-                  </motion.div>
-                );
-              }
-
               return (
                 <motion.div key={item.id} variants={itemVariants}> {/* Wrap each button in motion.div */}
                   <Button
@@ -298,7 +278,57 @@ const NavSheet = ({
             })
           )}
         </motion.div>
-        {/* Removed dyadVersion: text */}
+
+        {/* Informations et Outils Section */}
+        <div className="mt-8 pt-4 border-t border-border/50 space-y-4">
+          <h3 className="text-lg font-semibold text-foreground">Informations et Outils</h3>
+
+          {/* Theme Toggle */}
+          <motion.div variants={itemVariants}>
+            <div
+              className={cn(
+                "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm",
+                "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out",
+                "text-foreground"
+              )}
+            >
+              <div className={cn("flex items-center justify-center rounded-md mr-3 bg-muted/20")}>
+                <SunMoon className="h-6 w-6" />
+              </div>
+              <span className="title text-base font-medium line-clamp-2 flex-grow">Thème</span>
+              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className="rounded-full" />
+            </div>
+          </motion.div>
+
+          {/* Admin Access Button (Conditional) */}
+          {currentRole === 'administrator' && (
+            <motion.div variants={itemVariants}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAdminModalOpen(true);
+                  onOpenChange(false); // Close nav sheet
+                }}
+                className="w-full justify-start rounded-android-tile"
+              >
+                <UserCog className="h-5 w-5 mr-2" /> Accès Admin
+              </Button>
+            </motion.div>
+          )}
+
+          {/* App Version */}
+          <motion.div variants={itemVariants}>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/10 text-sm text-muted-foreground">
+              <span>Version de l'application:</span>
+              <span className="font-medium text-foreground">{packageJson.version}</span>
+            </div>
+          </motion.div>
+
+          {/* Made with Dyad */}
+          <motion.div variants={itemVariants}>
+            <MadeWithDyad />
+          </motion.div>
+        </div>
       </ScrollArea>
     </MobileDrawer>
   );
