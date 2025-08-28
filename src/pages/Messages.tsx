@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from '@/lib/utils';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { loadCurricula, loadClasses, loadEstablishments, getEstablishmentName, getCurriculumName, getClassName } from '@/lib/courseData'; // Import getEstablishmentName, getCurriculumName, getClassName
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import SimpleItemSelector
+import LoadingSpinner from '@/components/LoadingSpinner'; // Import LoadingSpinner
 
 // Helper to get the current school year
 const getCurrentSchoolYear = () => {
@@ -26,6 +28,10 @@ const getCurrentSchoolYear = () => {
   } else { // January to August
     return `${currentYear - 1}-${currentYear}`;
   }
+};
+
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, LayoutList, Users, MessageSquare, Info, Search
 };
 
 const Messages = () => {
@@ -53,6 +59,12 @@ const Messages = () => {
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [searchStudentQuery, setSearchStudentQuery] = useState('');
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+
+  const [newChatEstablishmentSearchQuery, setNewChatEstablishmentSearchQuery] = useState('');
+  const [newChatCurriculumSearchQuery, setNewChatCurriculumSearchQuery] = useState('');
+  const [newChatClassSearchQuery, setNewChatClassSearchQuery] = useState('');
+  const [newChatContactSearchQuery, setNewChatContactSearchQuery] = useState('');
+
 
   const currentUserId = currentUserProfile?.id;
   const currentSchoolYear = getCurrentSchoolYear();
@@ -207,8 +219,6 @@ const Messages = () => {
     }
   };
 
-  // Removed local getEstablishmentName, getCurriculumName, getClassName declarations. Now imported.
-
   const availableContactsForNewChat = useMemo(() => {
     if (!currentUserProfile) return [];
 
@@ -285,6 +295,34 @@ const Messages = () => {
     return uniqueContacts.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
   }, [allProfiles, currentUserProfile, currentRole, curricula, classes, allStudentClassEnrollments, searchStudentQuery, currentSchoolYear, selectedEstablishmentId]);
 
+  const establishmentsOptions = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
+
+  const curriculaOptions = curricula.filter(cur => 
+    !selectedEstablishmentId || selectedEstablishmentId === 'all' || cur.establishment_id === selectedEstablishmentId
+  ).map(cur => ({
+    id: cur.id,
+    label: cur.name,
+    icon_name: 'LayoutList',
+    description: cur.description,
+  }));
+
+  const classesOptions = classes.filter(cls => 
+    (!selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId) &&
+    (!selectedEstablishmentId || selectedEstablishmentId === 'all' || cls.establishment_id === selectedEstablishmentId)
+  ).map(cls => ({
+    id: cls.id,
+    label: cls.name,
+    icon_name: 'Users',
+    description: `${getCurriculumName(cls.curriculum_id, curricula)} - ${getClassName(cls.school_year_id)} (${getEstablishmentName(cls.establishment_id)})`,
+  }));
+
 
   if (isLoadingUser || isLoadingProfiles) {
     return (
@@ -335,68 +373,55 @@ const Messages = () => {
                 {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
                   <div>
                     <Label htmlFor="select-establishment">Filtrer par Établissement</Label>
-                    <Select value={selectedEstablishmentId} onValueChange={(value: string | 'all') => {
-                      setSelectedEstablishmentId(value);
-                      setSelectedCurriculumId("");
-                      setSelectedClassId("");
-                    }}>
-                      <SelectTrigger id="select-establishment" className="rounded-android-tile">
-                        <SelectValue placeholder="Tous les établissements" />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
-                        <SelectItem value="all">Tous les établissements</SelectItem>
-                        {establishments.filter(est => 
-                          currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-                        ).map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SimpleItemSelector
+                      id="select-establishment"
+                      options={[{ id: 'all', label: 'Tous les établissements', icon_name: 'Building2' }, ...establishmentsOptions]}
+                      value={selectedEstablishmentId}
+                      onValueChange={(value) => {
+                        setSelectedEstablishmentId(value);
+                        setSelectedCurriculumId("");
+                        setSelectedClassId("");
+                      }}
+                      searchQuery={newChatEstablishmentSearchQuery}
+                      onSearchQueryChange={setNewChatEstablishmentSearchQuery}
+                      placeholder="Tous les établissements"
+                      emptyMessage="Aucun établissement trouvé."
+                      iconMap={iconMap}
+                    />
                   </div>
                 )}
                 {(currentRole === 'professeur' || currentRole === 'tutor' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && (
                   <>
                     <div>
                       <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
-                      <Select value={selectedCurriculumId} onValueChange={(value) => {
-                        setSelectedCurriculumId(value === "all" ? "" : value);
-                        setSelectedClassId("");
-                      }}>
-                        <SelectTrigger id="select-curriculum" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
-                          <SelectValue placeholder="Tous les cursus" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
-                          <SelectItem value="all">Tous les cursus</SelectItem>
-                          {curricula
-                            .filter(cur => !selectedEstablishmentId || selectedEstablishmentId === 'all' || cur.establishment_id === selectedEstablishmentId)
-                            .map(cur => (
-                              <SelectItem key={cur.id} value={cur.id}>
-                                {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                      <SimpleItemSelector
+                        id="select-curriculum"
+                        options={[{ id: 'all', label: 'Tous les cursus', icon_name: 'LayoutList' }, ...curriculaOptions]}
+                        value={selectedCurriculumId}
+                        onValueChange={(value) => {
+                          setSelectedCurriculumId(value === "all" ? "" : value);
+                          setSelectedClassId("");
+                        }}
+                        searchQuery={newChatCurriculumSearchQuery}
+                        onSearchQueryChange={setNewChatCurriculumSearchQuery}
+                        placeholder="Tous les cursus"
+                        emptyMessage="Aucun cursus trouvé."
+                        iconMap={iconMap}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="select-class">Filtrer par Classe</Label>
-                      <Select value={selectedClassId} onValueChange={(value) => setSelectedClassId(value === "all" ? "" : value)}>
-                        <SelectTrigger id="select-class" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
-                          <SelectValue placeholder="Toutes les classes" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
-                          <SelectItem value="all">Toutes les classes</SelectItem>
-                          {classes
-                            .filter(cls => !selectedCurriculumId || selectedCurriculumId === '' || cls.curriculum_id === selectedCurriculumId)
-                            .filter(cls => !selectedEstablishmentId || selectedEstablishmentId === 'all' || cls.establishment_id === selectedEstablishmentId)
-                            .map(cls => (
-                              <SelectItem key={cls.id} value={cls.id}>
-                                {cls.name} ({getCurriculumName(cls.curriculum_id)}) - {getClassName(cls.school_year_id)} ({getEstablishmentName(cls.establishment_id)})
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                      <SimpleItemSelector
+                        id="select-class"
+                        options={[{ id: 'all', label: 'Toutes les classes', icon_name: 'Users' }, ...classesOptions]}
+                        value={selectedClassId}
+                        onValueChange={(value) => setSelectedClassId(value === "all" ? "" : value)}
+                        searchQuery={newChatClassSearchQuery}
+                        onSearchQueryChange={setNewChatClassSearchQuery}
+                        placeholder="Toutes les classes"
+                        emptyMessage="Aucune classe trouvée."
+                        iconMap={iconMap}
+                      />
                     </div>
                   </>
                 )}
@@ -412,22 +437,26 @@ const Messages = () => {
                 {availableContactsForNewChat.length > 0 && (
                   <div>
                     <Label htmlFor="new-chat-select-contact">Sélectionner un contact</Label>
-                    <Select onValueChange={(value) => {
-                      const contact = allProfiles.find(p => p.id === value);
-                      if (contact) handleSelectContact(contact);
-                      else showError("Contact non trouvé.");
-                    }}>
-                      <SelectTrigger id="new-chat-select-contact" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
-                        <SelectValue placeholder="Sélectionner un contact" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
-                        {availableContactsForNewChat.map(profile => (
-                          <SelectItem key={profile.id} value={profile.id}>
-                            {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'} ({getEstablishmentName(profile.establishment_id)})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SimpleItemSelector
+                      id="new-chat-select-contact"
+                      options={availableContactsForNewChat.map(profile => ({
+                        id: profile.id,
+                        label: `${profile.first_name} ${profile.last_name} (@${profile.username})`,
+                        icon_name: 'User',
+                        description: `${profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'} (${getEstablishmentName(profile.establishment_id, establishments)})`,
+                      }))}
+                      value={selectedContact?.id || null}
+                      onValueChange={(value) => {
+                        const contact = allProfiles.find(p => p.id === value);
+                        if (contact) handleSelectContact(contact);
+                        else showError("Contact non trouvé.");
+                      }}
+                      searchQuery={newChatContactSearchQuery}
+                      onSearchQueryChange={setNewChatContactSearchQuery}
+                      placeholder="Sélectionner un contact"
+                      emptyMessage="Aucun contact trouvé."
+                      iconMap={iconMap}
+                    />
                   </div>
                 )}
                 {searchStudentQuery.trim() !== '' && availableContactsForNewChat.length === 0 && (
@@ -450,26 +479,26 @@ const Messages = () => {
                   />
                 </div>
               <Label htmlFor="new-chat-select-student">Sélectionner un contact</Label>
-              <Select onValueChange={(value) => {
-                const contact = allProfiles.find(p => p.id === value);
-                if (contact) handleSelectContact(contact);
-                else showError("Contact non trouvé.");
-              }}>
-                <SelectTrigger id="new-chat-select-student" className="rounded-android-tile"> {/* Apply rounded-android-tile */}
-                  <SelectValue placeholder="Sélectionner un contact" />
-                </SelectTrigger>
-                <SelectContent className="rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
-                  {availableContactsForNewChat.length === 0 ? (
-                    <SelectItem value="no-contacts" disabled>Aucun nouveau contact disponible</SelectItem>
-                  ) : (
-                    availableContactsForNewChat.map(profile => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.first_name} {profile.last_name} (@{profile.username}) - {profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'} ({getEstablishmentName(profile.establishment_id)})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="new-chat-select-student"
+                options={availableContactsForNewChat.map(profile => ({
+                  id: profile.id,
+                  label: `${profile.first_name} ${profile.last_name} (@${profile.username})`,
+                  icon_name: 'User',
+                  description: `${profile.role === 'professeur' ? 'Professeur' : profile.role === 'student' ? 'Élève' : profile.role === 'tutor' ? 'Tuteur' : profile.role === 'director' ? 'Directeur' : profile.role === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'} (${getEstablishmentName(profile.establishment_id, establishments)})`,
+                }))}
+                value={selectedContact?.id || null}
+                onValueChange={(value) => {
+                  const contact = allProfiles.find(p => p.id === value);
+                  if (contact) handleSelectContact(contact);
+                  else showError("Contact non trouvé.");
+                }}
+                searchQuery={newChatContactSearchQuery}
+                onSearchQueryChange={setNewChatContactSearchQuery}
+                placeholder="Sélectionner un contact"
+                emptyMessage="Aucun contact trouvé."
+                iconMap={iconMap}
+              />
               {searchStudentQuery.trim() !== '' && availableContactsForNewChat.length === 0 && (
                   <p className="text-muted-foreground text-sm text-center">Aucun contact trouvé avec ces critères.</p>
                 )}

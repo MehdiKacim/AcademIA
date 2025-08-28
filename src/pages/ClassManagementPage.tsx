@@ -42,6 +42,12 @@ import { cn } from '@/lib/utils';
 import { useRole } from '@/contexts/RoleContext';
 import { useNavigate } from 'react-router-dom';
 import EditClassDialog from '@/components/EditClassDialog'; // Re-added EditClassDialog import
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import SimpleItemSelector
+import LoadingSpinner from '@/components/LoadingSpinner'; // Import LoadingSpinner
+
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, LayoutList, CalendarDays, Users, Info
+};
 
 const ClassManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -67,6 +73,11 @@ const ClassManagementPage = () => {
   const [currentClassToEdit, setCurrentClassToEdit] = useState<Class | null>(null);
 
   const [classSearchQuery, setClassSearchQuery] = useState('');
+
+  const [newClassEstablishmentSearchQuery, setNewClassEstablishmentSearchQuery] = useState('');
+  const [newClassCurriculumSearchQuery, setNewClassCurriculumSearchQuery] = useState('');
+  const [newClassSchoolYearSearchQuery, setNewClassSchoolYearSearchQuery] = useState('');
+
 
   // Load initial data
   useEffect(() => {
@@ -97,8 +108,6 @@ const ClassManagementPage = () => {
     }
   }, [currentUserProfile, currentRole, establishments]);
 
-  // Removed local getEstablishmentName, getCurriculumName, getSchoolYearName declarations. Now imported.
-  
   // --- Class Management ---
   const handleAddClass = async () => {
     if (!currentUserProfile || !['professeur', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) { // Only professeur, director, deputy_director, administrator can add
@@ -261,8 +270,28 @@ const ClassManagementPage = () => {
 
   const establishmentsToDisplayForNewClass = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
-  const curriculaToDisplay = curricula; // Already filtered by useEffect
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
+
+  const curriculaToDisplay = curricula.filter(cur => 
+    !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId
+  ).map(cur => ({
+    id: cur.id,
+    label: cur.name,
+    icon_name: 'LayoutList',
+    description: cur.description,
+  }));
+
+  const schoolYearsToDisplay = schoolYears.map(year => ({
+    id: year.id,
+    label: year.name,
+    icon_name: 'CalendarDays',
+    description: `${format(parseISO(year.start_date), 'dd/MM/yyyy', { locale: fr })} - ${format(parseISO(year.end_date), 'dd/MM/yyyy', { locale: fr })}`,
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
@@ -293,47 +322,44 @@ const ClassManagementPage = () => {
               {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur'].includes(currentRole || ''))) && (
                 <>
                   <Label htmlFor="new-class-establishment">Établissement</Label>
-                  <Select value={newClassEstablishmentId || ""} onValueChange={(value) => setNewClassEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                    <SelectTrigger id="new-class-establishment" className="rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner un établissement" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                      {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                      {establishmentsToDisplayForNewClass.map(est => (
-                        <SelectItem key={est.id} value={est.id}>
-                          {est.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleItemSelector
+                    id="new-class-establishment"
+                    options={establishmentsToDisplayForNewClass}
+                    value={newClassEstablishmentId}
+                    onValueChange={(value) => setNewClassEstablishmentId(value)}
+                    searchQuery={newClassEstablishmentSearchQuery}
+                    onSearchQueryChange={setNewClassEstablishmentSearchQuery}
+                    placeholder="Sélectionner un établissement"
+                    emptyMessage="Aucun établissement trouvé."
+                    iconMap={iconMap}
+                    disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                  />
                 </>
               )}
               <Label htmlFor="new-class-curriculum">Cursus</Label>
-              <Select value={newClassCurriculumId} onValueChange={setNewClassCurriculumId}>
-                <SelectTrigger id="new-class-curriculum" className="rounded-android-tile">
-                  <SelectValue placeholder="Sélectionner un cursus" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {curriculaToDisplay
-                    .filter(cur => !newClassEstablishmentId || cur.establishment_id === newClassEstablishmentId)
-                    .map(cur => (
-                      <SelectItem key={cur.id} value={cur.id}>
-                        {cur.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="new-class-curriculum"
+                options={curriculaToDisplay}
+                value={newClassCurriculumId}
+                onValueChange={setNewClassCurriculumId}
+                searchQuery={newClassCurriculumSearchQuery}
+                onSearchQueryChange={setNewClassCurriculumSearchQuery}
+                placeholder="Sélectionner un cursus"
+                emptyMessage="Aucun cursus trouvé."
+                iconMap={iconMap}
+              />
               <Label htmlFor="new-class-school-year">Année scolaire</Label>
-              <Select value={newClassSchoolYearId} onValueChange={setNewClassSchoolYearId}>
-                <SelectTrigger id="new-class-school-year" className="rounded-android-tile">
-                  <SelectValue placeholder="Sélectionner l'année scolaire" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {schoolYears.map(year => (
-                    <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="new-class-school-year"
+                options={schoolYearsToDisplay}
+                value={newClassSchoolYearId}
+                onValueChange={setNewClassSchoolYearId}
+                searchQuery={newClassSchoolYearSearchQuery}
+                onSearchQueryChange={setNewClassSchoolYearSearchQuery}
+                placeholder="Sélectionner l'année scolaire"
+                emptyMessage="Aucune année scolaire trouvée."
+                iconMap={iconMap}
+              />
               <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassSchoolYearId || (!newClassEstablishmentId && currentRole !== 'administrator')}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
               </Button>
@@ -412,7 +438,7 @@ const ClassManagementPage = () => {
           onSave={handleSaveEditedClass}
           establishments={establishmentsToDisplayForNewClass} // Pass establishments
           curricula={curriculaToDisplay} // Pass curricula
-          schoolYears={schoolYears} // Pass schoolYears
+          schoolYears={schoolYearsToDisplay} // Pass schoolYears
         />
       )}
     </div>

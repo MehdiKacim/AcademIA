@@ -17,6 +17,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Course, Curriculum, Class, Profile, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Import Establishment
 import { showError } from "@/utils/toast";
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector'; // Import SimpleItemSelector
+import { Building2, LayoutList, Users, CalendarDays, Info } from 'lucide-react'; // Import icons
+
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, LayoutList, Users, CalendarDays, Info
+};
 
 const Analytics = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -32,9 +38,14 @@ const Analytics = () => {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
 
-  const [selectedClassFilter, setSelectedClassFilter] = useState<string | undefined>(undefined);
-  const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | undefined>(undefined);
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
+  const [selectedCurriculumFilter, setSelectedCurriculumFilter] = useState<string | null>(null);
   const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // New state for establishment filter
+
+  const [filterEstablishmentSearchQuery, setFilterEstablishmentSearchQuery] = useState('');
+  const [filterCurriculumSearchQuery, setFilterCurriculumSearchQuery] = useState('');
+  const [filterClassSearchQuery, setFilterClassSearchQuery] = useState('');
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,8 +65,8 @@ const Analytics = () => {
   }, [currentUserProfile]);
 
   useEffect(() => {
-    setSelectedClassFilter(undefined);
-    setSelectedCurriculumFilter(undefined);
+    setSelectedClassFilter(null);
+    setSelectedCurriculumFilter(null);
     // Set default establishment filter based on user role
     if (currentRole === 'administrator') {
       setSelectedEstablishmentFilter('all');
@@ -65,8 +76,6 @@ const Analytics = () => {
       setSelectedEstablishmentFilter('all');
     }
   }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id]);
-
-  // Removed local getCurriculumName and getEstablishmentName declarations. Now imported.
 
   const handleSendMessageToUser = (userId: string) => {
     navigate(`/messages?contactId=${userId}`);
@@ -92,10 +101,10 @@ const Analytics = () => {
       return (
         <CreatorAnalyticsSection
           view={view}
-          selectedClassId={selectedClassFilter}
-          selectedCurriculumId={selectedCurriculumFilter}
+          selectedClassId={selectedClassFilter || undefined}
+          selectedCurriculumId={selectedCurriculumFilter || undefined}
           selectedEstablishmentId={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter} // Pass establishment filter
-          selectedCourseId={courseIdFromUrl}
+          selectedCourseId={courseIdFromUrl || undefined}
           allCourses={courses}
           allProfiles={allProfiles}
           allStudentCourseProgresses={studentCourseProgresses}
@@ -111,8 +120,8 @@ const Analytics = () => {
           allClasses={classes}
           allCurricula={curricula}
           view={view}
-          selectedClassId={selectedClassFilter}
-          selectedCurriculumId={selectedCurriculumFilter}
+          selectedClassId={selectedClassFilter || undefined}
+          selectedCurriculumId={selectedCurriculumFilter || undefined}
           selectedEstablishmentId={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter} // Pass establishment filter
           onSendMessageToUser={handleSendMessageToUser}
         />
@@ -121,10 +130,10 @@ const Analytics = () => {
       return (
         <CreatorAnalyticsSection
           view={view}
-          selectedClassId={selectedClassFilter}
-          selectedCurriculumId={selectedCurriculumFilter}
+          selectedClassId={selectedClassFilter || undefined}
+          selectedCurriculumId={selectedCurriculumFilter || undefined}
           selectedEstablishmentId={selectedEstablishmentFilter === 'all' ? undefined : selectedEstablishmentFilter} // Pass establishment filter
-          selectedCourseId={courseIdFromUrl}
+          selectedCourseId={courseIdFromUrl || undefined}
           allCourses={courses}
           allProfiles={allProfiles}
           allStudentCourseProgresses={studentCourseProgresses}
@@ -135,6 +144,34 @@ const Analytics = () => {
     }
     return null;
   };
+
+  const establishmentsOptions = establishments.filter(est => 
+    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
+
+  const curriculaOptions = curricula.filter(cur => 
+    !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cur.establishment_id === selectedEstablishmentFilter
+  ).map(cur => ({
+    id: cur.id,
+    label: cur.name,
+    icon_name: 'LayoutList',
+    description: cur.description,
+  }));
+
+  const classesOptions = classes.filter(cls => 
+    (!selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter) &&
+    (!selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cls.establishment_id === selectedEstablishmentFilter)
+  ).map(cls => ({
+    id: cls.id,
+    label: cls.name,
+    icon_name: 'Users',
+    description: `${getCurriculumName(cls.curriculum_id, curricula)} (${getEstablishmentName(cls.establishment_id, establishments)})`,
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -147,62 +184,49 @@ const Analytics = () => {
           {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
             <div>
               <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
-              <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
-                <SelectTrigger id="establishment-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Tous les établissements" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
-                  <SelectItem value="all">Tous les établissements</SelectItem>
-                  {establishments.filter(est => 
-                    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-                  ).map(est => (
-                    <SelectItem key={est.id} value={est.id}>
-                      {est.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="establishment-filter"
+                options={[{ id: 'all', label: 'Tous les établissements', icon_name: 'Building2' }, ...establishmentsOptions]}
+                value={selectedEstablishmentFilter}
+                onValueChange={(value) => setSelectedEstablishmentFilter(value)}
+                searchQuery={filterEstablishmentSearchQuery}
+                onSearchQueryChange={setFilterEstablishmentSearchQuery}
+                placeholder="Tous les établissements"
+                emptyMessage="Aucun établissement trouvé."
+                iconMap={iconMap}
+              />
             </div>
           )}
           <div>
             <Label htmlFor="select-curriculum">Filtrer par Cursus</Label>
-            <Select value={selectedCurriculumFilter || "all"} onValueChange={(value) => {
-              setSelectedCurriculumFilter(value === "all" ? undefined : value);
-              setSelectedClassFilter(undefined);
-            }}>
-              <SelectTrigger id="select-curriculum" className="rounded-android-tile">
-                <SelectValue placeholder="Tous les cursus" />
-              </SelectTrigger>
-              <SelectContent className="rounded-android-tile z-[9999]">
-                <SelectItem value="all">Tous les cursus</SelectItem>
-                {curricula
-                  .filter(cur => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cur.establishment_id === selectedEstablishmentFilter)
-                  .map(cur => (
-                    <SelectItem key={cur.id} value={cur.id}>
-                      {cur.name} ({getEstablishmentName(cur.establishment_id)})
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <SimpleItemSelector
+              id="select-curriculum"
+              options={[{ id: 'all', label: 'Tous les cursus', icon_name: 'LayoutList' }, ...curriculaOptions]}
+              value={selectedCurriculumFilter}
+              onValueChange={(value) => {
+                setSelectedCurriculumFilter(value === "all" ? null : value);
+                setSelectedClassFilter(null);
+              }}
+              searchQuery={filterCurriculumSearchQuery}
+              onSearchQueryChange={setFilterCurriculumSearchQuery}
+              placeholder="Tous les cursus"
+              emptyMessage="Aucun cursus trouvé."
+              iconMap={iconMap}
+            />
           </div>
           <div>
             <Label htmlFor="select-class">Filtrer par Classe</Label>
-            <Select value={selectedClassFilter || "all"} onValueChange={setSelectedClassFilter}>
-              <SelectTrigger id="select-class" className="rounded-android-tile">
-                <SelectValue placeholder="Toutes les classes" />
-              </SelectTrigger>
-              <SelectContent className="rounded-android-tile z-[9999]">
-                <SelectItem value="all">Toutes les classes</SelectItem>
-                {classes
-                  .filter(cls => !selectedCurriculumFilter || selectedCurriculumFilter === 'all' || cls.curriculum_id === selectedCurriculumFilter)
-                  .filter(cls => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cls.establishment_id === selectedEstablishmentFilter)
-                  .map(cls => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getCurriculumName(cls.curriculum_id)}) ({getEstablishmentName(cls.establishment_id)})
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <SimpleItemSelector
+              id="select-class"
+              options={[{ id: 'all', label: 'Toutes les classes', icon_name: 'Users' }, ...classesOptions]}
+              value={selectedClassFilter}
+              onValueChange={(value) => setSelectedClassFilter(value === "all" ? null : value)}
+              searchQuery={filterClassSearchQuery}
+              onSearchQueryChange={setFilterClassSearchQuery}
+              placeholder="Toutes les classes"
+              emptyMessage="Aucune classe trouvée."
+              iconMap={iconMap}
+            />
           </div>
         </div>
       )}
