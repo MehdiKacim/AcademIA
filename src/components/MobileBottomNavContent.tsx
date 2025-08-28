@@ -41,7 +41,8 @@ const MobileBottomNavContent = ({
   const commonButtonClasses = "rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40";
   // Corrected positioning for the central logo button
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80"
+    "relative rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80",
+    "absolute left-1/2 -translate-x-1/2 top-[-28px] z-10" // Adjusted positioning: 56px height, so -28px from top aligns its center with the parent's top edge.
   );
 
   return (
