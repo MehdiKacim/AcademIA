@@ -165,15 +165,9 @@ const NavSheet = ({
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
       {/* Simplified Header Section */}
-      <div className="p-4 flex-shrink-0 flex items-center justify-between">
-        {drawerNavStack.length > 0 ? (
-          <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Retour</span>
-          </Button>
-        ) : (
-          <div className="h-10 w-10" /> // Placeholder to maintain spacing
-        )}
+      <div className="pt-8 px-4 pb-4 flex-shrink-0 flex items-center justify-between"> {/* Adjusted padding-top */}
+        {/* Placeholder to maintain spacing, removed back button from here */}
+        <div className="h-10 w-10" /> 
         <motion.div
           initial={{ rotate: 0 }}
           animate={{ rotate: isOpen ? 360 : 0 }}
@@ -186,6 +180,16 @@ const NavSheet = ({
           <span className="sr-only">Fermer le menu</span>
         </Button>
       </div>
+
+      {/* New: Back button section, outside the header */}
+      {drawerNavStack.length > 0 && (
+        <div className="px-4 mb-4 flex-shrink-0"> {/* Added horizontal padding and bottom margin */}
+          <Button variant="ghost" onClick={handleBack} className="w-full justify-start rounded-android-tile">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span className="text-base font-medium">Retour</span>
+          </Button>
+        </div>
+      )}
 
       <ScrollArea className="flex-grow p-4">
         {currentUserProfile && drawerNavStack.length === 0 && (
