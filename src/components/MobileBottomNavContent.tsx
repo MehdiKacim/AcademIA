@@ -41,7 +41,7 @@ const MobileBottomNavContent = ({
   const commonButtonClasses = "rounded-full h-12 w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
     "relative rounded-full h-20 w-20 shadow-lg mt-[-50px] z-[997] overflow-hidden p-0",
-    "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan"
+    "bg-background/80" // Re-added original background
   );
 
   const buttonPressAnimation = {
@@ -93,9 +93,9 @@ const MobileBottomNavContent = ({
               className={centralLogoButtonClasses}
               asChild
             >
-              <motion.div 
+              <motion.div // Reverted to original structure
                 whileTap={buttonPressAnimation} 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[calc(100%-4px)] w-[calc(100%-4px)] rounded-full bg-background/80 flex items-center justify-center" // Adjusted size and centering for border effect
+                className="flex items-center justify-center h-full w-full rounded-full"
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
@@ -175,9 +175,9 @@ const MobileBottomNavContent = ({
               className={centralLogoButtonClasses}
               asChild
             >
-              <motion.div 
+              <motion.div // Reverted to original structure
                 whileTap={buttonPressAnimation} 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[calc(100%-4px)] w-[calc(100%-4px)] rounded-full bg-background/80 flex items-center justify-center" // Adjusted size and centering for border effect
+                className="flex items-center justify-center h-full w-full rounded-full"
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
