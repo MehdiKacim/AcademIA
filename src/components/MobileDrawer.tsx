@@ -37,7 +37,7 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className={cn("fixed inset-0 z-[40] flex flex-col", className)} // Z-index réduit à 40
+          className={cn("fixed inset-0 z-[997] flex flex-col", className)} // Z-index ajusté à 997 (au-dessus de la barre de navigation inférieure)
           initial="hidden"
           animate="visible"
           exit="hidden"
@@ -53,7 +53,7 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
           {/* Drawer Content */}
           <motion.div
             className={cn(
-              "fixed left-0 right-0 w-full bg-background rounded-t-lg shadow-lg flex flex-col overflow-hidden rounded-android-tile z-[45]", // Z-index réduit à 45
+              "fixed left-0 right-0 w-full bg-background rounded-t-lg shadow-lg flex flex-col overflow-hidden rounded-android-tile z-[998]", // Z-index ajusté à 998 (au-dessus de l'overlay du tiroir)
               "top-0 bottom-[68px] h-auto", // Définit le haut à 0px (tout en haut de l'écran) et le bas à 68px (au-dessus de la barre de navigation inférieure), et laisse la hauteur s'ajuster.
               contentClassName
             )}

@@ -17,7 +17,7 @@ interface DesktopImmersiveSubmenuProps {
   onItemClick: (item: NavItem) => void; // Function to handle final navigation/action and close the submenu
 }
 
-const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopImmersiveSubmenuProps) => {
+const DesktopImmersiveSubmenu = React.forwardRef<HTMLElement, DesktopImmersiveSubmenuProps>(({ parentItem, onClose, onItemClick }, ref) => {
   const location = useLocation();
   const [currentSubmenuStack, setCurrentSubmenuStack] = useState<NavItem[]>([]); // Stack for nested navigation
 
@@ -60,6 +60,7 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
     <AnimatePresence>
       {parentItem && ( // Only render if there's an initial parentItem
         <motion.nav
+          ref={ref} // Attach ref here
           initial={{ y: '-100%' }}
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
@@ -127,6 +128,6 @@ const DesktopImmersiveSubmenu = ({ parentItem, onClose, onItemClick }: DesktopIm
       )}
     </AnimatePresence>
   );
-};
+});
 
 export default DesktopImmersiveSubmenu;
