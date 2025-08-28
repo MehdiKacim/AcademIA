@@ -33,7 +33,6 @@ import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu";
-import MobileBottomNavContent from "@/components/MobileBottomNavContent"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -395,12 +394,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           />
           {/* Persistent mobile bottom navigation bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
-            <MobileBottomNavContent
-              onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
-              onOpenAiAChat={() => openChat()}
-              onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
-              onInitiateThemeChange={onInitiateThemeChange}
-            />
+            {/* This div previously contained MobileBottomNavContent, now it's empty as per revert */}
+            {/* The content will be handled by NavSheet directly when open */}
           </div>
         </>
       )}
