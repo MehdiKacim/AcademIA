@@ -43,8 +43,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      # 4. Installe les dépendances npm (en utilisant pnpm)
-      - name: Install npm dependencies (using pnpm)
+      # 4. Installe toutes les dépendances, y compris les plugins Capacitor
+      - name: Install npm dependencies
         run: npm install --frozen-lockfile
 
       # 5. Compile l'application web (front-end)
@@ -55,12 +55,11 @@ jobs:
       - name: Install Capacitor CLI
         run: npm install -g @capacitor/cli
 
-      # 7. Synchronise les fichiers web compilés vers le projet Android
-      - name: Sync Capacitor web assets to Android
+      # 7. Synchronise les fichiers web compilés et les plugins vers le projet Android
+      - name: Sync Capacitor web assets and plugins to Android
         run: npx cap sync android
 
       # 8. Publication des mises à jour web via Capacitor Live Updates
-      # Utilise le canal de déploiement "Production"
       - name: Publish web updates
         run: npx cap live-updates:publish Production
         env:
@@ -94,7 +93,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add android/app/build.gradle
-          git add capacitor.hash # <-- Ajoute le hash de la mise à jour web
+          git add capacitor.hash # Ajoute le hash de la mise à jour web
           git commit -m "chore: Auto. incrémentation de la version Android et publication de mise à jour web"
           git push
 
