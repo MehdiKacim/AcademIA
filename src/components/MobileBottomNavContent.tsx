@@ -8,6 +8,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { useNavigate } from "react-router-dom";
 import { Profile } from "@/lib/dataModels";
 import Logo from './Logo';
+import { motion } from 'framer-motion'; // Import motion
 
 interface MobileBottomNavContentProps {
   onOpenGlobalSearch?: () => void;
@@ -15,7 +16,8 @@ interface MobileBottomNavContentProps {
   onOpenMobileNavSheet: () => void;
   onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isAuthenticated: boolean;
-  unreadMessagesCount?: number; // Make optional for unauthenticated case
+  unreadMessagesCount?: number;
+  isMobileNavSheetOpen: boolean; // New prop to control animation
 }
 
 const MobileBottomNavContent = ({
@@ -24,7 +26,8 @@ const MobileBottomNavContent = ({
   onOpenMobileNavSheet,
   onInitiateThemeChange,
   isAuthenticated,
-  unreadMessagesCount = 0, // Default to 0 if not provided
+  unreadMessagesCount = 0,
+  isMobileNavSheetOpen, // Destructure new prop
 }: MobileBottomNavContentProps) => {
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
@@ -72,7 +75,12 @@ const MobileBottomNavContent = ({
             onClick={onOpenMobileNavSheet}
             className={centralLogoButtonClasses}
           >
-            <Logo iconClassName="h-8 w-8" showText={false} />
+            <motion.div // Wrap Logo with motion.div
+              animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }} // Animate rotation
+              transition={{ duration: 0.3, ease: "easeInOut" }} // Smooth transition
+            >
+              <Logo iconClassName="h-8 w-8" showText={false} />
+            </motion.div>
             <span className="sr-only">Ouvrir le menu</span>
             {unreadMessagesCount > 0 && (
               <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -108,7 +116,7 @@ const MobileBottomNavContent = ({
         </>
       ) : (
         // Unauthenticated layout: only central logo (navigates to auth) and theme toggle
-        <div className="flex items-center justify-center w-full h-full"> {/* Use justify-center for centering */}
+        <div className="flex items-center justify-center w-full h-full">
           {/* Central Logo Button - Unauthenticated */}
           <Button
             variant="ghost"
@@ -116,10 +124,15 @@ const MobileBottomNavContent = ({
             onClick={() => navigate('/auth')}
             className={centralLogoButtonClasses}
           >
-            <Logo iconClassName="h-8 w-8" showText={false} />
+            <motion.div // Wrap Logo with motion.div
+              animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }} // Animate rotation
+              transition={{ duration: 0.3, ease: "easeInOut" }} // Smooth transition
+            >
+              <Logo iconClassName="h-8 w-8" showText={false} />
+            </motion.div>
             <span className="sr-only">Connexion</span>
           </Button>
-          <div className="absolute right-4"> {/* Position theme toggle absolutely to the right */}
+          <div className="absolute right-4">
             <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
           </div>
         </div>

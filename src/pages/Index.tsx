@@ -383,6 +383,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={false}
               unreadMessagesCount={0} // Pass unread messages count
+              isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here
             />
           </div>
         </>

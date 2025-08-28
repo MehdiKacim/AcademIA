@@ -350,7 +350,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
       <main
         className={cn(
-          "flex-grow px-4 sm:px-6 md:px-8 overflow-y-auto", // Changed p- to px-
+          "flex-grow px-4 sm:px-6 md:px-8 overflow-y-auto",
           isMobile
             ? "pt-[calc(68px+env(safe-area-inset-top))] pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: 68px from top, bottom padding for persistent footer
             : (
@@ -402,6 +402,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={true}
               unreadMessagesCount={unreadMessages} // Pass unread messages count
+              isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here
             />
           </div>
         </>
