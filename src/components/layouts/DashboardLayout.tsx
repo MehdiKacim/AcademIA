@@ -33,6 +33,7 @@ import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu";
+import MobileBottomNavContent from "@/components/MobileBottomNavContent"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -215,20 +216,64 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         ref={headerRef} // Attach ref to header
         className={cn(
           "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]", // Added h-[68px]
-          isMobile ? "bottom-0" : "top-0", // Conditional positioning
-          !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
+          !isMobile && currentUserProfile && "opacity-100 pointer-events-auto" // Only show desktop header if not mobile and logged in
         )}
       >
         {/* Header content based on authentication and mobile status */}
         {currentUserProfile ? (
-          // Logged in user header
-          <>
-            {isMobile ? (
-              // Mobile header when logged in (bottom fixed)
-              <div className="flex items-center justify-around w-full"> {/* Changed to justify-around for spacing */}
+          // Logged in user header (Desktop only)
+          !isMobile && (
+            <div className="flex items-center justify-between w-full gap-4">
+              <Logo iconClassName="h-8 w-8" showText={false} /> {/* Logo on the left */}
+
+              {/* Main Navigation Items in the center */}
+              <nav className="flex items-center gap-2">
+                {fullNavTreeWithActions.map(item => (
+                  <React.Fragment key={item.id}>
+                    {item.type === 'category_or_action' && item.children && item.children.length > 0 ? (
+                      // This is a category that should open the immersive submenu
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleNavItemClick(item)}
+                        className={cn(
+                          "flex items-center gap-1",
+                          activeDesktopSubmenuParent?.id === item.id ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
+                        {item.label}
+                        <ChevronDown className="ml-1 h-4 w-4" />
+                      </Button>
+                    ) : (
+                      // This is a direct route or an action without children
+                      <Button
+                        key={item.id}
+                        variant="ghost"
+                        onClick={() => handleNavItemClick(item)}
+                        className={cn(
+                          "flex items-center gap-1",
+                          (item.route && (location.pathname + location.search).startsWith(item.route)) ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
+                        {item.label}
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.is_external && <ExternalLink className="ml-auto h-4 w-4" />}
+                      </Button>
+                    )}
+                  </React.Fragment>
+                ))}
+              </nav>
+
+              {/* Utility Items on the right */}
+              <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                    <Button variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)}>
                       <Search className="h-5 w-5" />
                       <span className="sr-only">Recherche globale</span>
                     </Button>
@@ -240,7 +285,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => openChat()} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                    <Button variant="outline" size="icon" onClick={() => openChat()}>
                       <BotMessageSquare className="h-5 w-5" />
                       <span className="sr-only">AiA Chat</span>
                     </Button>
@@ -250,15 +295,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                   </TooltipContent>
                 </Tooltip>
 
-                {/* Logo - now opens NavSheet on click and has surrounding style */}
-                <Button variant="ghost" size="icon" onClick={() => setIsMobileNavSheetOpen(true)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40 flex items-center justify-center">
-                  <Logo iconClassName="h-8 w-8" showText={false} />
-                  <span className="sr-only">Ouvrir le menu</span>
-                </Button>
-
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40"> {/* Added bg-muted/20 hover:bg-muted/40 */}
+                    <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
                       <User className="h-5 w-5" />
                       <span className="sr-only">Menu utilisateur</span>
                     </Button>
@@ -281,108 +320,8 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
                 <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
               </div>
-            ) : (
-              // Desktop header when logged in (Logo, Main Nav, Utility Items)
-              <div className="flex items-center justify-between w-full gap-4">
-                <Logo iconClassName="h-8 w-8" showText={false} /> {/* Logo on the left */}
-
-                {/* Main Navigation Items in the center */}
-                <nav className="flex items-center gap-2">
-                  {fullNavTreeWithActions.map(item => (
-                    <React.Fragment key={item.id}>
-                      {item.type === 'category_or_action' && item.children && item.children.length > 0 ? (
-                        // This is a category that should open the immersive submenu
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleNavItemClick(item)}
-                          className={cn(
-                            "flex items-center gap-1",
-                            activeDesktopSubmenuParent?.id === item.id ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
-                          {item.label}
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        </Button>
-                      ) : (
-                        // This is a direct route or an action without children
-                        <Button
-                          key={item.id}
-                          variant="ghost"
-                          onClick={() => handleNavItemClick(item)}
-                          className={cn(
-                            "flex items-center gap-1",
-                            (item.route && (location.pathname + location.search).startsWith(item.route)) ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
-                          {item.label}
-                          {item.badge !== undefined && item.badge > 0 && (
-                            <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
-                              {item.badge}
-                            </span>
-                          )}
-                          {item.is_external && <ExternalLink className="ml-auto h-4 w-4" />}
-                        </Button>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </nav>
-
-                {/* Utility Items on the right */}
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)}>
-                        <Search className="h-5 w-5" />
-                        <span className="sr-only">Recherche globale</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-                      <p>Recherche (Ctrl + F)</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon" onClick={() => openChat()}>
-                        <BotMessageSquare className="h-5 w-5" />
-                        <span className="sr-only">AiA Chat</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-                      <p>AiA Chat</p>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
-                        <User className="h-5 w-5" />
-                        <span className="sr-only">Menu utilisateur</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
-                      <DropdownMenuLabel>{currentUserProfile.first_name} {currentUserProfile.last_name}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate("/profile")}>
-                        <User className="mr-2 h-4 w-4" /> Mon Profil
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/settings")}>
-                        <Settings className="mr-2 h-4 w-4" /> Paramètres
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-                </div>
-              </div>
-            )}
-          </>
+            </div>
+          )
         ) : (
           // Not logged in user header (same as before for Index page)
           <div className="flex items-center justify-between w-full">
@@ -413,7 +352,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
           isMobile
-            ? "pt-4 pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for header
+            ? "pt-4 pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for persistent footer
             : (
                 currentUserProfile && activeDesktopSubmenuParent
                   ? "pt-[calc(68px+224px+env(safe-area-inset-top))] pb-4" // Desktop with submenu (68px header + 224px submenu), standard bottom padding
@@ -442,17 +381,28 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       </footer>
       
       {currentUserProfile && isMobile && ( // Only render NavSheet if mobile
-        <NavSheet
-          isOpen={isMobileNavSheetOpen}
-          onOpenChange={setIsMobileNavSheetOpen}
-          navItems={fullNavTreeWithActions}
-          onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
-          onOpenAiAChat={() => openChat()}
-          onOpenAuthModal={() => navigate('/auth')}
-          unreadMessagesCount={unreadMessages}
-          onInitiateThemeChange={onInitiateThemeChange}
-          isMobile={isMobile}
-        />
+        <>
+          <NavSheet
+            isOpen={isMobileNavSheetOpen}
+            onOpenChange={setIsMobileNavSheetOpen}
+            navItems={fullNavTreeWithActions}
+            onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
+            onOpenAiAChat={() => openChat()}
+            onOpenAuthModal={() => navigate('/auth')}
+            unreadMessagesCount={unreadMessages}
+            onInitiateThemeChange={onInitiateThemeChange}
+            isMobile={isMobile}
+          />
+          {/* Persistent mobile bottom navigation bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
+            <MobileBottomNavContent
+              onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
+              onOpenAiAChat={() => openChat()}
+              onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
+              onInitiateThemeChange={onInitiateThemeChange}
+            />
+          </div>
+        </>
       )}
       {currentUserProfile && <AiAPersistentChat />}
       {currentUserProfile && <GlobalSearchOverlay isOpen={isGlobalSearchOverlayOpen} onClose={() => setIsGlobalSearchOverlayOpen(false)} />}
