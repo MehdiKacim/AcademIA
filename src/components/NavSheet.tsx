@@ -13,7 +13,7 @@ import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
-import { useNavigate, useLocation } => "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSwipeable } from 'react-swipeable';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
