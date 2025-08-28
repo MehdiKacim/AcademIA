@@ -137,7 +137,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               table: 'messages',
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
-            (payload) => {
+            async (payload) => { // Marked as async
               const newCount = await getUnreadMessageCount(currentUserProfile.id);
               setUnreadMessages(newCount);
             }
@@ -150,7 +150,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               table: 'messages',
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
-            (payload) => {
+            async (payload) => { // Marked as async
               const newCount = await getUnreadMessageCount(currentUserProfile.id);
               setUnreadMessages(newCount);
             }
