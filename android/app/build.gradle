@@ -7,7 +7,7 @@ android {
         applicationId "com.academia.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 
+        versionCode 1 // Set a default versionCode
         versionName "1.0.45"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -25,6 +25,8 @@ android {
 }
 
 repositories {
+    google()        // Ajouté
+    mavenCentral()  // Ajouté
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
