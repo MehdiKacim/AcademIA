@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown, ArrowLeft, SunMoon } from "lucide-react"; // Added ArrowLeft, SunMoon
+import { X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun, Moon, ChevronUp, ExternalLink, BotMessageSquare, SlidersHorizontal, MessageSquareQuote, ShieldCheck, Target, Home, MessageSquare, BellRing, ChevronDown, ArrowLeft, SunMoon } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
@@ -12,9 +12,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
-import MobileDrawer from './MobileDrawer'; // Import MobileDrawer
-import packageJson from '../../package.json'; // Import package.json for version
-import { MadeWithDyad } from './made-with-dyad'; // Import MadeWithDyad
+import MobileDrawer from './MobileDrawer';
+import packageJson from '../../package.json';
+import { MadeWithDyad } from './made-with-dyad';
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown, ArrowLeft: ArrowLeft, SunMoon: SunMoon,
@@ -174,7 +174,13 @@ const NavSheet = ({
         ) : (
           <div className="h-10 w-10" /> // Placeholder to maintain spacing
         )}
-        <Logo iconClassName="h-10 w-10" showText={false} />
+        <motion.div
+          initial={{ rotate: 0 }}
+          animate={{ rotate: isOpen ? 360 : 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
+          <Logo iconClassName="h-10 w-10" showText={false} />
+        </motion.div>
         <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
           <X className="h-5 w-5" />
           <span className="sr-only">Fermer le menu</span>
