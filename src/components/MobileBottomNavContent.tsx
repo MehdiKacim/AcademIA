@@ -40,7 +40,7 @@ const MobileBottomNavContent = ({
 
   const commonButtonClasses = "rounded-full h-12 w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "rounded-full h-20 w-20 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80 mt-[-40px] z-10"
+    "rounded-full h-20 w-20 shadow-lg border-2 border-border bg-background/80 mt-[-40px] z-10"
   );
 
   const buttonPressAnimation = {
