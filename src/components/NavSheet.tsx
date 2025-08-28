@@ -28,7 +28,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 
 interface NavSheetProps {
   isOpen: boolean; // For mobile sheet
-  onClose: () => void; // For mobile sheet
+  onOpenChange: (open: boolean) => void; // Changed from onClose
   navItems: NavItem[]; // Full nav tree
   onOpenGlobalSearch: () => void;
   onOpenAiAChat: () => void;
@@ -43,7 +43,7 @@ interface NavSheetProps {
 
 const NavSheet = ({
   isOpen,
-  onClose,
+  onOpenChange, // Changed from onClose
   navItems,
   onOpenGlobalSearch,
   onOpenAiAChat,
@@ -66,17 +66,17 @@ const NavSheet = ({
 
   // Determine which state to use for opening/closing based on isMobile
   const currentOpenState = isMobile ? isOpen : isDesktopImmersiveOpen;
-  const currentOnClose = isMobile ? onClose : onCloseDesktopImmersive;
+  const currentOnOpenChange = isMobile ? onOpenChange : onCloseDesktopImmersive; // Use onOpenChange for mobile, onCloseDesktopImmersive for desktop
 
   const swipeHandlers = useSwipeable({
     onSwipedUp: () => { // Swipe UP to OPEN (for bottom sheet)
       if (isMobile && !currentOpenState) { // If mobile and sheet is currently closed
-        currentOnClose(); // Call onClose, which will set isOpen to true
+        currentOnOpenChange(true); // Call onOpenChange to open it
       }
     },
     onSwipedDown: () => { // Swipe DOWN to CLOSE (for bottom sheet)
       if (isMobile && currentOpenState) { // If mobile and sheet is currently open
-        currentOnClose(); // Call onClose, which will set isOpen to false
+        currentOnOpenChange(false); // Call onOpenChange to close it
       }
     },
     preventScrollOnSwipe: true,
@@ -111,7 +111,7 @@ const NavSheet = ({
       } else {
         navigate(item.route);
       }
-      currentOnClose(); // Close the sheet after navigation
+      currentOnOpenChange(false); // Close the sheet after navigation
     } else if (item.onClick) {
       if (item.id === 'nav-global-search') {
         onOpenGlobalSearch();
@@ -120,9 +120,9 @@ const NavSheet = ({
       } else {
         item.onClick();
       }
-      currentOnClose(); // Close the sheet after action
+      currentOnOpenChange(false); // Close the sheet after action
     }
-  }, [navigate, currentOnClose, onOpenGlobalSearch, onOpenAiAChat]);
+  }, [navigate, currentOnOpenChange, onOpenGlobalSearch, onOpenAiAChat]);
 
   const handleBack = useCallback(() => {
     if (isDesktopImmersiveOpen && drawerNavStack.length === 1) {
@@ -140,9 +140,9 @@ const NavSheet = ({
 
   const handleLogout = useCallback(async () => {
     await signOut();
-    currentOnClose();
+    currentOnOpenChange(false);
     navigate("/");
-  }, [signOut, currentOnClose, navigate]);
+  }, [signOut, currentOnOpenChange, navigate]);
 
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
@@ -156,7 +156,7 @@ const NavSheet = ({
     if (isDesktopImmersiveOpen) {
       if (!desktopImmersiveParent) {
         console.error("CRITICAL ERROR: isDesktopImmersiveOpen is true but desktopImmersiveParent is null/undefined.");
-        currentOnClose();
+        currentOnOpenChange(false);
         return [];
       }
       const currentParentInStack = drawerNavStack[drawerNavStack.length - 1];
@@ -199,7 +199,7 @@ const NavSheet = ({
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnClose]);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnOpenChange]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -208,7 +208,7 @@ const NavSheet = ({
   const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info;
 
   return (
-    <Sheet open={currentOpenState} onOpenChange={currentOnClose}>
+    <Sheet open={currentOpenState} onOpenChange={currentOnOpenChange}>
       <SheetContent
         side="bottom" // Changed to bottom
         className={cn(
@@ -333,7 +333,7 @@ const NavSheet = ({
               </Button>
             )}
             <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-            <Button variant="ghost" size="icon" onClick={currentOnClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+            <Button variant="ghost" size="icon" onClick={() => currentOnOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
               <X className="h-5 w-5" aria-label="Fermer le menu" />
               <span className="sr-only">Fermer</span>
             </Button>
