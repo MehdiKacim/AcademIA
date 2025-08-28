@@ -1,134 +1,143 @@
 import React, { useState, useMemo } from 'react';
-import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check, ChevronDown, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Check, ChevronDown, XCircle, Info, Search as SearchIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface SimpleItemSelectorOption {
-  id: string;
-  label: string;
-  icon_name?: string;
-  description?: string;
-  level?: number; // For hierarchical display
-  typeLabel?: string; // For displaying item type
-  isNew?: boolean; // To indicate if it's a new generic item not yet configured for the role
-}
 
 interface SimpleItemSelectorProps {
   id: string;
-  options: SimpleItemSelectorOption[];
-  value: string | null;
+  options: { id: string; label: string; icon_name?: string; description?: string; isNew?: boolean; level?: number; typeLabel?: string }[];
+  value: string | null | undefined;
   onValueChange: (value: string | null) => void;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   placeholder?: string;
   emptyMessage?: string;
-  iconMap: { [key: string]: React.ElementType };
+  iconMap?: { [key: string]: React.ElementType };
   disabled?: boolean;
+  className?: string;
+  popoverContentClassName?: string;
 }
 
-const SimpleItemSelector = React.forwardRef<HTMLButtonElement, SimpleItemSelectorProps>(
-  ({
-    id,
-    options,
-    value,
-    onValueChange,
-    searchQuery,
-    onSearchQueryChange,
-    placeholder = "Sélectionner un élément...",
-    emptyMessage = "Aucun élément trouvé.",
-    iconMap,
-    disabled = false,
-  }, ref) => {
-    const [open, setOpen] = useState(false);
+const SimpleItemSelector = ({
+  id,
+  options,
+  value,
+  onValueChange,
+  searchQuery,
+  onSearchQueryChange,
+  placeholder = "Sélectionner un élément...",
+  emptyMessage = "Aucun élément trouvé.",
+  iconMap = {},
+  disabled = false,
+  className,
+  popoverContentClassName,
+}: SimpleItemSelectorProps) => {
+  const [open, setOpen] = useState(false);
 
-    const selectedOption = useMemo(
-      () => options.find((option) => option.id === value),
-      [options, value]
-    );
+  const selectedOption = useMemo(() => options.find((option) => option.id === value), [options, value]);
+  const SelectedIconComponent = selectedOption?.icon_name ? (iconMap[selectedOption.icon_name] || Info) : Info;
 
-    const filteredOptions = useMemo(() => {
-      if (!searchQuery) return options;
-      const lowerCaseQuery = searchQuery.toLowerCase();
-      return options.filter(option =>
-        option.label.toLowerCase().includes(lowerCaseQuery) ||
-        option.description?.toLowerCase().includes(lowerCaseQuery) ||
-        option.typeLabel?.toLowerCase().includes(lowerCaseQuery)
-      );
-    }, [options, searchQuery]);
+  const handleClearSelection = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the popover
+    onValueChange(null);
+    setOpen(false);
+    onSearchQueryChange('');
+  };
 
-    const handleSelect = (currentValue: string) => {
-      onValueChange(currentValue === value ? null : currentValue);
-      setOpen(false);
-      onSearchQueryChange(''); // Clear search query on select
-    };
-
-    return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between rounded-android-tile"
-            disabled={disabled}
-            ref={ref}
-          >
-            {selectedOption ? (
-              <div className="flex items-center gap-2">
-                {selectedOption.icon_name && React.createElement(iconMap[selectedOption.icon_name] || Info, { className: "h-4 w-4" })}
-                {selectedOption.label}
-              </div>
-            ) : (
-              placeholder
-            )}
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className={cn("w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]")}>
-          <Command>
-            <CommandInput
-              placeholder="Rechercher..."
-              value={searchQuery}
-              onValueChange={onSearchQueryChange}
-            />
-            <CommandList>
-              <CommandEmpty>{emptyMessage}</CommandEmpty>
-              <CommandGroup>
-                {filteredOptions.map((option) => {
-                  const IconComponent = option.icon_name ? (iconMap[option.icon_name] || Info) : Info;
-                  return (
-                    <CommandItem
-                      key={option.id}
-                      value={option.label} // Use label for command search
-                      onSelect={() => handleSelect(option.id)}
-                      className="flex items-center gap-2"
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === option.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {option.icon_name && <IconComponent className="h-4 w-4" />}
-                      <span className={cn(option.level && option.level > 0 ? `ml-${option.level * 4}` : '')}>
-                        {option.label}
-                      </span>
-                      {option.typeLabel && <span className="text-xs text-muted-foreground ml-auto">({option.typeLabel})</span>}
-                      {option.isNew && <span className="text-xs text-primary ml-1">(Nouveau)</span>}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    );
-  }
-);
-
-SimpleItemSelector.displayName = "SimpleItemSelector";
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "w-full justify-between rounded-android-tile h-10 px-3 py-2 text-base",
+            "transition-all duration-200 ease-in-out",
+            value ? "text-foreground" : "text-muted-foreground",
+            className
+          )}
+          disabled={disabled}
+          whileHover={{ scale: 1.01 }} // Micro-interaction
+          whileTap={{ scale: 0.99 }} // Micro-interaction
+        >
+          <div className="flex items-center gap-2 flex-grow overflow-hidden">
+            {value && SelectedIconComponent && <SelectedIconComponent className="h-5 w-5 text-primary flex-shrink-0" />}
+            <span className="truncate">
+              {value ? selectedOption?.label : placeholder}
+            </span>
+          </div>
+          {value && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearSelection}
+              className="h-6 w-6 p-0 ml-2 flex-shrink-0 text-muted-foreground hover:text-destructive"
+              aria-label="Effacer la sélection"
+            >
+              <XCircle className="h-4 w-4" />
+            </Button>
+          )}
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className={cn(
+        "w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999] backdrop-blur-lg bg-background/80",
+        popoverContentClassName
+      )}>
+        <Command className="rounded-android-tile">
+          <CommandInput
+            placeholder="Rechercher..."
+            value={searchQuery}
+            onValueChange={onSearchQueryChange}
+            className="h-12 text-base px-4 rounded-t-android-tile border-b border-border focus:ring-0 focus:ring-offset-0"
+          />
+          <CommandList className="max-h-60 overflow-y-auto">
+            <CommandEmpty className="py-4 text-center text-muted-foreground">{emptyMessage}</CommandEmpty>
+            <CommandGroup>
+              {options.map((option) => {
+                const OptionIcon = option.icon_name ? (iconMap[option.icon_name] || Info) : Info;
+                const isSelected = value === option.id;
+                return (
+                  <CommandItem
+                    key={option.id}
+                    value={option.label}
+                    onSelect={() => {
+                      onValueChange(option.id === value ? null : option.id);
+                      setOpen(false);
+                      onSearchQueryChange(''); // Clear search after selection
+                    }}
+                    className={cn(
+                      "flex items-center gap-2 p-3 cursor-pointer hover:bg-accent hover:text-accent-foreground",
+                      isSelected ? "bg-accent text-accent-foreground font-semibold" : "text-foreground",
+                      "transition-colors duration-150 ease-in-out"
+                    )}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        isSelected ? "opacity-100 text-primary" : "opacity-0"
+                      )}
+                    />
+                    <OptionIcon className="h-5 w-5 text-primary" />
+                    <div className="flex flex-col items-start flex-grow">
+                      <span className="font-medium">{option.label}</span>
+                      {option.description && <span className="text-xs text-muted-foreground">{option.description}</span>}
+                    </div>
+                    {option.isNew && (
+                      <span className="ml-auto text-xs text-primary-foreground bg-primary rounded-full px-2 py-0.5">Nouveau</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 export default SimpleItemSelector;
