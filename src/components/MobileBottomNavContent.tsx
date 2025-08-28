@@ -42,7 +42,8 @@ const MobileBottomNavContent = ({
   };
 
   // Unified button classes for all 5 buttons in the bottom navigation
-  const navButtonClasses = "rounded-full h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
+  // Increased size: h-14 w-14 (base), sm:h-16 sm:w-16, md:h-20 md:w-20
+  const navButtonClasses = "rounded-full h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
   
   const buttonPressAnimation = {
     scale: 0.95,
@@ -92,7 +93,7 @@ const MobileBottomNavContent = ({
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
             >
-              <Logo iconClassName="h-6 w-6" showText={false} /> {/* Adjusted logo size to fit button */}
+              <Logo iconClassName="h-8 w-8" showText={false} /> {/* Adjusted logo size to fit button */}
             </motion.div>
             <span className="sr-only">Ouvrir le menu</span>
             {unreadMessagesCount > 0 && (
@@ -160,7 +161,7 @@ const MobileBottomNavContent = ({
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex items-center justify-center h-full w-full"
             >
-              <Logo iconClassName="h-6 w-6" showText={false} />
+              <Logo iconClassName="h-8 w-8" showText={false} />
             </motion.div>
             <span className="sr-only">Ouvrir le menu</span>
           </MotionButton>
