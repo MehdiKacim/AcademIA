@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, Search, Archive, Building2, LayoutList, Users } from "lucide-react";
+import { ArrowLeft, MessageSquare, Search, Archive, Building2, LayoutList, Users, Info } from "lucide-react"; // Import Info
 import MessageList from "@/components/MessageList";
 import ChatInterface from "@/components/ChatInterface";
 import { Profile, Message, Curriculum, Class, StudentClassEnrollment, Establishment } from '@/lib/dataModels';
