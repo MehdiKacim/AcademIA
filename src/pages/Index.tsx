@@ -207,7 +207,12 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     <div className="flex flex-col min-h-screen bg-background overflow-x-hidden">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
 
-      <header className="fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm" style={{ top: 'env(safe-area-inset-top)' }}>
+      <header className={cn(
+          "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm h-[68px]",
+          isMobile ? "bottom-0" : "top-0"
+        )}
+        style={{ top: isMobile ? 'auto' : 'env(safe-area-inset-top)' }} // Adjust top/bottom based on mobile
+      >
         <div className="flex items-center gap-4">
           <Logo onLogoClick={handleLogoClick} />
         </div>
@@ -245,7 +250,12 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
         </div>
       </header>
 
-      <main className={cn("flex-grow flex flex-col items-center justify-center text-center pt-24 md:pt-32")}>
+      <main className={cn(
+          "flex-grow flex flex-col items-center justify-center text-center px-4 overflow-y-auto",
+          isMobile
+            ? "pt-4 pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for header
+            : "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Desktop: standard top padding, standard bottom padding
+        )}>
         <section
           id="accueil"
           ref={sectionRefs.accueil}
