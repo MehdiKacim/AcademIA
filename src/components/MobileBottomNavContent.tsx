@@ -67,7 +67,7 @@ const MobileBottomNavContent = ({
         variant="ghost"
         size="icon"
         onClick={onOpenMobileNavSheet}
-        className="rounded-full h-14 w-14 shadow-lg -mt-7 border-2 border-primary ring-2 ring-primary/50"
+        className="rounded-full h-14 w-14 shadow-lg -mt-10 border-2 border-primary ring-2 ring-primary/50"
       >
         <Logo iconClassName="h-8 w-8" showText={false} />
         <span className="sr-only">Ouvrir le menu</span>
