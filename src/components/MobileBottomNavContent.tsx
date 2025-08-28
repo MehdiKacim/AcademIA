@@ -63,7 +63,7 @@ const MobileBottomNavContent = ({
       )}
 
       {/* Central Logo Button */}
-      <Button variant="ghost" size="icon" onClick={onOpenMobileNavSheet} className="rounded-full h-14 w-14 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg -mt-4">
+      <Button variant="ghost" size="icon" onClick={onOpenMobileNavSheet} className="rounded-full h-14 w-14 shadow-lg -mt-4">
         <Logo iconClassName="h-8 w-8" showText={false} />
         <span className="sr-only">Ouvrir le menu</span>
       </Button>
