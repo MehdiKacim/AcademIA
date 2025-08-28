@@ -41,10 +41,12 @@ const MobileBottomNavContent = ({
     navigate("/");
   };
 
-  // Unified button classes for all 5 buttons in the bottom navigation
-  // Increased size: h-14 w-14 (base), sm:h-16 sm:w-16, md:h-20 md:w-20
-  const navButtonClasses = "rounded-full h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
+  // Unified button classes for the 4 peripheral buttons
+  const peripheralNavButtonClasses = "rounded-full h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
   
+  // Specific classes for the central menu button
+  const centralMenuButtonClasses = "rounded-full h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center";
+
   const buttonPressAnimation = {
     scale: 0.95,
     transition: { duration: 0.1, ease: "easeOut" },
@@ -57,7 +59,7 @@ const MobileBottomNavContent = ({
           {/* Search Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={navButtonClasses}>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={peripheralNavButtonClasses}>
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Recherche globale</span>
               </MotionButton>
@@ -70,7 +72,7 @@ const MobileBottomNavContent = ({
           {/* AiA Chat Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenAiAChat} className={navButtonClasses}>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={onOpenAiAChat} className={peripheralNavButtonClasses}>
                 <BotMessageSquare className="h-5 w-5" />
                 <span className="sr-only">AiA Chat</span>
               </MotionButton>
@@ -86,14 +88,14 @@ const MobileBottomNavContent = ({
             variant="ghost"
             size="icon"
             onClick={() => onToggleMobileNavSheet()}
-            className={cn(navButtonClasses, "relative")} // Keep relative for badge positioning
+            className={cn(centralMenuButtonClasses, "relative")} // Keep relative for badge positioning
           >
             <motion.div
               animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
             >
-              <Logo iconClassName="h-8 w-8" showText={false} /> {/* Adjusted logo size to fit button */}
+              <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size to fit button */}
             </motion.div>
             <span className="sr-only">Ouvrir le menu</span>
             {unreadMessagesCount > 0 && (
@@ -106,7 +108,7 @@ const MobileBottomNavContent = ({
           {/* User Dropdown Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" className={navButtonClasses}>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" className={peripheralNavButtonClasses}>
                 <User className="h-5 w-5" />
                 <span className="sr-only">Menu utilisateur</span>
               </MotionButton>
@@ -130,7 +132,7 @@ const MobileBottomNavContent = ({
           {/* Messages Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={() => navigate('/messages')} className={navButtonClasses}>
+              <MotionButton whileTap={buttonPressAnimation} variant="ghost" size="icon" onClick={() => navigate('/messages')} className={peripheralNavButtonClasses}>
                 <MessageSquare className="h-5 w-5" />
                 <span className="sr-only">Messagerie</span>
               </MotionButton>
@@ -143,7 +145,7 @@ const MobileBottomNavContent = ({
       ) : (
         <div className="flex items-center justify-around w-full h-full px-2">
           {/* Left side: Login button */}
-          <MotionButton variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
+          <MotionButton variant="outline" onClick={() => navigate('/auth')} className={peripheralNavButtonClasses}>
             <LogIn className="h-5 w-5" />
             <span className="sr-only">Connexion</span>
           </MotionButton>
@@ -154,20 +156,20 @@ const MobileBottomNavContent = ({
             variant="ghost"
             size="icon"
             onClick={() => onToggleMobileNavSheet()}
-            className={navButtonClasses}
+            className={centralMenuButtonClasses}
           >
             <motion.div
               animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex items-center justify-center h-full w-full"
             >
-              <Logo iconClassName="h-8 w-8" showText={false} />
+              <Logo iconClassName="h-10 w-10" showText={false} />
             </motion.div>
             <span className="sr-only">Ouvrir le menu</span>
           </MotionButton>
 
           {/* Right side: MessageSquare button */}
-          <MotionButton variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
+          <MotionButton variant="outline" onClick={() => navigate('/auth')} className={peripheralNavButtonClasses}>
             <MessageSquare className="h-5 w-5" />
             <span className="sr-only">Messagerie</span>
           </MotionButton>
