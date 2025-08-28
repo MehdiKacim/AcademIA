@@ -95,7 +95,7 @@ const MobileBottomNavContent = ({
                     "flex items-center justify-center" // Ensure content is centered
                 )}
                 animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
             >
               <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               <span className="sr-only">Ouvrir le menu</span>
@@ -121,7 +121,7 @@ const MobileBottomNavContent = ({
               <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
                 <p>Menu utilisateur</p>
               </TooltipContent>
-            </Tooltip>
+            </DropdownMenu>
             <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
               <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -178,7 +178,7 @@ const MobileBottomNavContent = ({
                     "flex items-center justify-center" // Ensure content is centered
                 )}
                 animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
             >
               <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               <span className="sr-only">Ouvrir le menu</span>
