@@ -69,16 +69,14 @@ const NavSheet = ({
   const currentOnClose = isMobile ? onClose : onCloseDesktopImmersive;
 
   const swipeHandlers = useSwipeable({
-    onSwipedUp: () => { // Changed to onSwipedUp to open from bottom
-      if (isMobile && !currentOpenState) {
-        setIsMobileNavSheetOpen(true); // Assuming setIsMobileNavSheetOpen is passed or managed by parent
-      } else if (isMobile && currentOpenState) {
-        // If already open, ignore swipe up
+    onSwipedUp: () => { // Swipe UP to OPEN (for bottom sheet)
+      if (isMobile && !currentOpenState) { // If mobile and sheet is currently closed
+        currentOnClose(); // Call onClose, which will set isOpen to true
       }
     },
-    onSwipedDown: () => { // Changed to onSwipedDown to close to bottom
-      if (isMobile && currentOpenState) {
-        currentOnClose();
+    onSwipedDown: () => { // Swipe DOWN to CLOSE (for bottom sheet)
+      if (isMobile && currentOpenState) { // If mobile and sheet is currently open
+        currentOnClose(); // Call onClose, which will set isOpen to false
       }
     },
     preventScrollOnSwipe: true,
