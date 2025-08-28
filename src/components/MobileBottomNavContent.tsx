@@ -95,7 +95,7 @@ const MobileBottomNavContent = ({
             >
               <motion.div 
                 whileTap={buttonPressAnimation} 
-                className="flex items-center justify-center h-full w-full rounded-full"
+                className="relative flex items-center justify-center h-full w-full rounded-full" // Added relative for absolute positioning of new content
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
@@ -109,6 +109,13 @@ const MobileBottomNavContent = ({
                     {unreadMessagesCount}
                   </span>
                 )}
+                {/* New content element: animated bar */}
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0.5 }}
+                  animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary" // Small bar at the bottom
+                />
               </motion.div>
             </Button>
           </div>
@@ -177,7 +184,7 @@ const MobileBottomNavContent = ({
             >
               <motion.div 
                 whileTap={buttonPressAnimation} 
-                className="flex items-center justify-center h-full w-full rounded-full"
+                className="relative flex items-center justify-center h-full w-full rounded-full" // Added relative for absolute positioning of new content
               >
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
@@ -186,6 +193,13 @@ const MobileBottomNavContent = ({
                   <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size */}
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
+                {/* New content element: animated bar */}
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0.5 }}
+                  animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary" // Small bar at the bottom
+                />
               </motion.div>
             </Button>
           </div>
