@@ -227,7 +227,7 @@ const NavSheet = ({
                   <span className="sr-only">Retour</span>
                 </Button>
               ) : (
-                <div className="w-10 h-10"></div> {/* Placeholder for alignment */}
+                <div className="w-10 h-10"></div>
               )}
               <Logo iconClassName="h-8 w-8" textClassName="text-xl" />
             </div>
