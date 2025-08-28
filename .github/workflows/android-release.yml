@@ -40,17 +40,13 @@ jobs:
         id: increment_version
         run: |
           GRADLE_FILE="android/app/build.gradle"
-          # Utilise 'tr -d' pour enlever les espaces et s'assurer de la bonne lecture du numéro de version
           CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}' | tr -d ' ')
           NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
           CURRENT_VERSION_NAME=$(grep "versionName" $GRADLE_FILE | cut -d\" -f2)
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION_NAME"
           NEW_VERSION_NAME="$major.$minor.$((patch + 1))"
-          
-          # Utilise une variable pour le délimiteur 'sed' pour éviter les conflits avec des caractères spéciaux
           sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" $GRADLE_FILE
           sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" $GRADLE_FILE
-          
           echo "Nouvelle version: $NEW_VERSION_NAME ($NEW_VERSION_CODE)"
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
@@ -66,7 +62,7 @@ jobs:
       - name: Generate Gradle Wrapper if missing
         run: |
           if [ ! -f android/gradlew ]; then
-            echo "Gradle wrapper manquant, génération..."
+            echo "Gradle wrapper manquant, génération…"
             cd android && gradle wrapper
             cd ..
           else
@@ -75,7 +71,6 @@ jobs:
 
       - name: Commit Gradle Wrapper if generated
         run: |
-          # La vérification de 'git status' est plus fiable pour voir si des fichiers ont été ajoutés
           if git status --porcelain android/gradlew android/gradlew.bat android/gradle/wrapper | grep -q '^??'; then
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
@@ -83,7 +78,9 @@ jobs:
             git commit -m "ci: Ajout automatique du gradle wrapper"
             git push
           fi
-
+      
+      # CETTE ÉTAPE EST CRUCIALE ! Elle rend le script `gradlew` exécutable.
+      # L'erreur "cannot execute: required file not found" est souvent causée par un manque de permissions d'exécution.
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
