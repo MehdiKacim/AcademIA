@@ -225,10 +225,11 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         ref={headerRef} // Attach ref to header
         onClick={handleHeaderClick}
         className={cn(
-          "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80", // Removed top-0
+          "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]", // Added h-[68px]
+          isMobile ? "bottom-0" : "top-0", // Conditional positioning
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
         )}
-        style={{ top: 'env(safe-area-inset-top)' }} // Added inline style for top
+        // Removed inline style for top, as it's now handled by conditional classes
       >
         <div className="flex items-center gap-4">
           <Logo />
@@ -350,9 +351,13 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       <main
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
-          // Adjust padding-top based on whether the submenu is present
-          !isMobile && currentUserProfile && activeDesktopSubmenuParent ? "pt-[calc(68px+224px+env(safe-area-inset-top))]" : "pt-[calc(68px+env(safe-area-inset-top))]",
-          "pb-[env(safe-area-inset-bottom)]" // Add padding-bottom for safe area
+          isMobile
+            ? "pt-4 pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for header
+            : (
+                currentUserProfile && activeDesktopSubmenuParent
+                  ? "pt-[calc(68px+224px+env(safe-area-inset-top))] pb-4" // Desktop with submenu, standard bottom padding
+                  : "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Desktop without submenu, standard bottom padding
+              )
         )}
       >
         <AnimatePresence mode="wait">
