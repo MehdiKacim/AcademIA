@@ -1,11 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  Sheet,
-  SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from "@/components/ui/sheet";
+} from "@/components/ui/sheet"; // Keep SheetHeader, etc. for styling
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import MobileBottomNavContent from './MobileBottomNavContent'; // Import MobileBottomNavContent
+import MobileDrawer from './MobileDrawer'; // Import the new custom drawer
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown,
@@ -58,20 +57,7 @@ const NavSheet = ({
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
 
-  const swipeHandlers = useSwipeable({
-    onSwipedUp: () => { // Swipe UP to OPEN (for bottom sheet)
-      if (isMobile && !isOpen) { // If mobile and sheet is currently closed
-        onOpenChange(true); // Call onOpenChange to open it
-      }
-    },
-    onSwipedDown: () => { // Swipe DOWN to CLOSE (for bottom sheet)
-      if (isMobile && isOpen) { // If mobile and sheet is currently open
-        onOpenChange(false); // Call onOpenChange to close it
-      }
-    },
-    preventScrollOnSwipe: true,
-    trackMouse: true,
-  });
+  // No longer need swipeHandlers here, they are in MobileDrawer
 
   // Reset stack when sheet closes
   useEffect(() => {
@@ -168,33 +154,22 @@ const NavSheet = ({
   const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className={cn(
-          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-[997]", // Z-index ajusté à 997
-          "h-[calc(100vh-68px)] bottom-0" // Hauteur et position pour s'ouvrir au-dessus de la barre inférieure
-        )}
-        {...swipeHandlers}
-      >
-        <SheetHeader className="p-4 flex-shrink-0 border-b border-border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {drawerNavStack.length > 0 ? (
-                <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                  <ArrowLeft className="h-5 w-5" />
-                  <span className="sr-only">Retour</span>
-                </Button>
-              ) : (
-                <div className="w-10 h-10"></div>
-              )}
-            </div>
+    <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
+      <SheetHeader className="p-4 flex-shrink-0 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {drawerNavStack.length > 0 ? (
+              <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                <ArrowLeft className="h-5 w-5" />
+                <span className="sr-only">Retour</span>
+              </Button>
+            ) : (
+              <div className="w-10 h-10"></div>
+            )}
+          </div>
 
-            {/* Placeholder for right side to maintain spacing */}
-            <div className="w-10 h-10"></div> 
-          </div >
-          <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
-          <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
+          {/* Placeholder for right side to maintain spacing */}
+          <div className="w-10 h-10"></div> 
         </SheetHeader>
 
         <ScrollArea className="flex-grow p-4">
@@ -258,8 +233,7 @@ const NavSheet = ({
             </div>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+    </MobileDrawer>
   );
 };
 
