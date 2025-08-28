@@ -45,7 +45,8 @@ const MobileBottomNavContent = ({
   const peripheralNavButtonClasses = "rounded-full h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
   
   // Specific classes for the central menu button
-  const centralMenuButtonClasses = "rounded-full h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center";
+  // Reverted background color to bg-muted/20 and text to text-foreground
+  const centralMenuButtonClasses = "rounded-full h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 bg-muted/20 text-foreground hover:bg-muted/40 flex items-center justify-center";
 
   const buttonPressAnimation = {
     scale: 0.95,
@@ -112,7 +113,7 @@ const MobileBottomNavContent = ({
                 <User className="h-5 w-5" />
                 <span className="sr-only">Menu utilisateur</span>
               </MotionButton>
-            </DropdownMenuTrigger>
+            </TooltipTrigger>
             <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
               <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
