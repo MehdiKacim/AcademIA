@@ -173,7 +173,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
         >
           <div className="max-w-4xl mx-auto flex flex-col h-full px-4 md:px-8"> {/* Removed gap-4 and pt-16 */}
             <ScrollArea className="flex-grow"> {/* Make the entire content scrollable */}
-              <div className="flex items-center gap-4 pt-4 pb-4"> {/* Search input row, now inside scroll area */}
+              <div className="flex items-center gap-4 pt-16 pb-4"> {/* Increased padding-top here */}
                 <div className="relative flex-grow">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
                   <Input
