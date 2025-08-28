@@ -172,8 +172,8 @@ const NavSheet = ({
       <SheetContent
         side="bottom"
         className={cn(
-          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-[995]", // Adjusted z-index
-          "h-[calc(100vh-68px)] bottom-0" // Adjusted height and position
+          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-[997]", // Z-index ajusté à 997
+          "h-[calc(100vh-68px)] bottom-0" // Hauteur et position pour s'ouvrir au-dessus de la barre inférieure
         )}
         {...swipeHandlers}
       >
