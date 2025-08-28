@@ -83,10 +83,11 @@ const MobileBottomNavContent = ({
           <div className={cn(
               "relative rounded-full flex items-center justify-center",
               "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-              "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan", // Gradient background for the border
               "translate-y-[-34px] z-10", // Lift and z-index for the whole unit
-              "transition-opacity duration-300 ease-in-out", // Add transition
-              isMobileNavSheetOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none" // Conditional opacity and pointer events
+              "transition-all duration-300 ease-in-out", // Transition for background/border changes
+              isMobileNavSheetOpen
+                ? "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan"
+                : "bg-transparent" // Make background transparent when inactive
           )}>
             <MotionButton
                 whileTap={buttonPressAnimation}
@@ -165,10 +166,11 @@ const MobileBottomNavContent = ({
           <div className={cn(
               "relative rounded-full flex items-center justify-center",
               "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-              "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan", // Gradient background for the border
               "translate-y-[-34px] z-10", // Lift and z-index for the whole unit
-              "transition-opacity duration-300 ease-in-out", // Add transition
-              isMobileNavSheetOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none" // Conditional opacity and pointer events
+              "transition-all duration-300 ease-in-out", // Add transition
+              isMobileNavSheetOpen
+                ? "bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan"
+                : "bg-transparent" // Make background transparent when inactive
           )}>
             <MotionButton
                 whileTap={buttonPressAnimation}
