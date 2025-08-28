@@ -109,6 +109,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      # NOUVEAU: Installe l'Android SDK 33 nécessaire
+      - name: Install Android SDK 33
+        run: |
+          yes | sdkmanager "platforms;android-33"
+
       # 13. Compile l'APK en mode 'debug'
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug
