@@ -108,7 +108,7 @@ const MobileBottomNavContent = ({
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {unreadMessagesCount > 0 && (
-                  <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                  <span className="absolute top-[-8px] right-[-8px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-8 w-8 flex items-center justify-center"> {/* Changed h-6 w-6 to h-8 w-8 and adjusted top/right/translate */}
                     {unreadMessagesCount}
                   </span>
                 )}
