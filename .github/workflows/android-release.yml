@@ -40,13 +40,17 @@ jobs:
         id: increment_version
         run: |
           GRADLE_FILE="android/app/build.gradle"
-          CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}')
+          # Utilise 'tr -d' pour enlever les espaces et s'assurer de la bonne lecture du numéro de version
+          CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}' | tr -d ' ')
           NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
           CURRENT_VERSION_NAME=$(grep "versionName" $GRADLE_FILE | cut -d\" -f2)
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION_NAME"
           NEW_VERSION_NAME="$major.$minor.$((patch + 1))"
+          
+          # Utilise une variable pour le délimiteur 'sed' pour éviter les conflits avec des caractères spéciaux
           sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" $GRADLE_FILE
           sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" $GRADLE_FILE
+          
           echo "Nouvelle version: $NEW_VERSION_NAME ($NEW_VERSION_CODE)"
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
@@ -59,22 +63,20 @@ jobs:
           git commit -m "chore: Auto. incrémentation de la version Android pour le build ${{ steps.increment_version.outputs.version_name }}"
           git push
 
-      # Génère le gradle wrapper s'il manque
       - name: Generate Gradle Wrapper if missing
         run: |
           if [ ! -f android/gradlew ]; then
-            echo "Gradle wrapper manquant, génération…"
-            cd android
-            gradle wrapper
+            echo "Gradle wrapper manquant, génération..."
+            cd android && gradle wrapper
             cd ..
           else
             echo "Gradle wrapper déjà présent."
           fi
 
-      # Commit le gradle wrapper s'il vient d'être généré
       - name: Commit Gradle Wrapper if generated
         run: |
-          if [ -f android/gradlew ] && [ -n "$(git status --porcelain android/gradlew android/gradlew.bat android/gradle/wrapper)" ]; then
+          # La vérification de 'git status' est plus fiable pour voir si des fichiers ont été ajoutés
+          if git status --porcelain android/gradlew android/gradlew.bat android/gradle/wrapper | grep -q '^??'; then
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
             git add android/gradlew android/gradlew.bat android/gradle/wrapper
@@ -98,8 +100,14 @@ jobs:
         id: find_and_rename_apk
         run: |
           APK_PATH=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "Aucun fichier APK trouvé. Le build a peut-être échoué."
+            exit 1
+          fi
+          
           VERSION_NAME=${{ steps.increment_version.outputs.version_name }}
           NEW_APK_NAME="academia-debug-v$VERSION_NAME.apk"
+          
           mv "$APK_PATH" "android/app/build/outputs/apk/debug/$NEW_APK_NAME"
           echo "APK renommé en : $NEW_APK_NAME"
           echo "apk_path=android/app/build/outputs/apk/debug/$NEW_APK_NAME" >> $GITHUB_OUTPUT
