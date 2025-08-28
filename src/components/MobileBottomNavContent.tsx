@@ -134,12 +134,11 @@ const MobileBottomNavContent = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* ThemeToggle is now always visible */}
           <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
         </>
       ) : (
-        <div className="flex items-center justify-center w-full h-full">
-          <div className="w-14 h-14" />
+        <div className="flex items-center justify-around w-full h-full"> {/* Changed to justify-around */}
+          <div className="w-10 h-10" /> {/* Placeholder for left button, adjusted size */}
 
           <Button
             variant="ghost"
@@ -161,8 +160,7 @@ const MobileBottomNavContent = ({
               <span className="sr-only">Connexion</span>
             </motion.div>
           </Button>
-          <div className="absolute right-4">
-            {/* ThemeToggle is now always visible */}
+          <div className="w-10 h-10 flex items-center justify-center"> {/* Wrapper for ThemeToggle, adjusted size */}
             <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
           </div>
         </div>
