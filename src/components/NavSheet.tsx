@@ -241,13 +241,7 @@ const NavSheet = ({
         </motion.div>
       </ScrollArea>
 
-      {/* New Footer for NavSheet */}
-      <div className="p-4 border-t border-border flex-shrink-0 flex items-center justify-between">
-        <Button variant="ghost" onClick={() => { navigate('/about'); onOpenChange(false); }} className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-          <Info className="h-5 w-5" /> À propos
-        </Button>
-        <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-      </div>
+      {/* Removed Footer for NavSheet */}
     </MobileDrawer>
   );
 };
