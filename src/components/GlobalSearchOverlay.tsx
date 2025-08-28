@@ -168,16 +168,16 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed inset-0 z-[1001] bg-background/80 backdrop-blur-lg" // Changed top, added bottom, removed height and padding
+          className="fixed inset-0 z-[995] bg-background/80 backdrop-blur-lg" // z-index ajusté à 995
         >
-          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full pt-16 px-4 md:px-8"> {/* Added padding here */}
-            <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full py-4 px-4 md:px-8">
+            <div className="flex items-center gap-4 flex-shrink-0 pt-4"> {/* Ajout de padding-top ici */}
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
                 <Input
                   ref={inputRef}
                   placeholder="Rechercher dans tout AcademIA..."
-                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50" // Changed rounded-android-tile to rounded-lg
+                  className="pl-12 h-14 text-lg rounded-lg shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -211,7 +211,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                       <div className="grid gap-3 md:grid-cols-2">
                         {resultsOfType.map(result => (
                           <Link to={result.link} key={result.id} onClick={onClose}>
-                            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile"> {/* Apply rounded-android-tile */}
+                            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile">
                               <CardHeader className="flex-row items-center gap-3 pb-2">
                                 <result.icon className="h-5 w-5 text-primary" />
                                 <CardTitle className="text-lg">{result.title}</CardTitle>
