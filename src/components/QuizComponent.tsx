@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle, ArrowRight, RefreshCw } from "lucide-react";
@@ -75,7 +75,7 @@ const QuizComponent = ({ questions, passingScore, onQuizComplete }: QuizComponen
 
   if (quizCompleted) {
     return (
-      <Card className="p-6 text-center">
+      <MotionCard className="p-6 text-center rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardTitle className={cn(
           "text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan",
           quizPassed ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
@@ -87,15 +87,15 @@ const QuizComponent = ({ questions, passingScore, onQuizComplete }: QuizComponen
           <br />
           Score requis pour réussir : {passingScore}%
         </CardDescription>
-        <Button onClick={handleRestartQuiz}>
+        <MotionButton onClick={handleRestartQuiz} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           <RefreshCw className="h-4 w-4 mr-2" /> Recommencer le Quiz
-        </Button>
-      </Card>
+        </MotionButton>
+      </MotionCard>
     );
   }
 
   return (
-    <Card className="p-6">
+    <MotionCard className="p-6 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
       <CardHeader className="mb-4">
         <CardTitle className="text-2xl">Question {currentQuestionIndex + 1} / {questions.length}</CardTitle>
         <CardDescription className="text-lg font-medium">{currentQuestion.question}</CardDescription>
@@ -129,18 +129,18 @@ const QuizComponent = ({ questions, passingScore, onQuizComplete }: QuizComponen
 
         <div className="flex justify-end gap-2 mt-6">
           {!showResult ? (
-            <Button onClick={handleSubmitAnswer} disabled={selectedOption === null}>
+            <MotionButton onClick={handleSubmitAnswer} disabled={selectedOption === null} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               Soumettre la réponse
-            </Button>
+            </MotionButton>
           ) : (
-            <Button onClick={handleNextQuestion}>
+            <MotionButton onClick={handleNextQuestion} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {currentQuestionIndex < questions.length - 1 ? "Question Suivante" : "Voir les Résultats"}
               <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
+            </MotionButton>
           )}
         </div>
       </CardContent>
-    </Card>
+    </MotionCard>
   );
 };
 

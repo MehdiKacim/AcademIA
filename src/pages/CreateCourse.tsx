@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -149,37 +150,41 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
   });
 
   return (
-    <Card
+    <MotionCard
       ref={setNodeRef}
       style={style}
       className={cn(
         "p-4 border-l-4 border-primary/50 space-y-4 relative rounded-android-tile", // Apply rounded-android-tile
         isDragging ? "ring-2 ring-primary/50 shadow-xl" : ""
       )}
+      whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}
+      whileTap={{ scale: 0.99 }}
     >
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Module {moduleIndex + 1}</h3>
         <div className="flex items-center gap-2">
-          <Button
+          <MotionButton
             type="button"
             variant="ghost"
             size="icon"
             {...listeners}
             {...attributes}
             className="cursor-grab"
+            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
           >
             <GripVertical className="h-5 w-5" />
             <span className="sr-only">Déplacer le module</span>
-          </Button>
-          <Button
+          </MotionButton>
+          <MotionButton
             type="button"
             variant="destructive"
             size="sm"
             onClick={() => removeModule(moduleIndex)}
             disabled={moduleFieldsLength === 1}
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           >
             <MinusCircle className="h-4 w-4 mr-2" /> Supprimer le module
-          </Button>
+          </MotionButton>
         </div>
       </div>
       <FormField
@@ -199,10 +204,10 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
       <div className="space-y-4 pl-4 border-l border-muted-foreground/50">
         <h4 className="text-md font-semibold">Sections du module</h4>
         {sectionFields.map((section, sectionIndex) => (
-          <Card key={section.id} className="p-3 bg-muted/20 space-y-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard key={section.id} className="p-3 bg-muted/20 space-y-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}> {/* Apply rounded-android-tile */}
             <div className="flex justify-between items-center">
               <h5 className="text-base font-medium">Section {sectionIndex + 1}</h5>
-              <Button
+              <MotionButton
                 type="button"
                 variant="destructive"
                 size="sm"
@@ -215,9 +220,10 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                   removeSection(sectionIndex); // Correct way to remove section
                 }}
                 disabled={sectionFields.length === 1}
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               >
                 <MinusCircle className="h-4 w-4" />
-              </Button>
+              </MotionButton>
             </div>
             <FormField
               control={form.control}
@@ -301,10 +307,10 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                 <div className="space-y-3 mt-4 p-3 border rounded-md bg-background rounded-android-tile"> {/* Apply rounded-android-tile */}
                   <h6 className="text-sm font-semibold">Questions du Quiz</h6>
                   {form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions`)?.map((question, questionIndex) => (
-                    <Card key={questionIndex} className="p-3 bg-muted/10 space-y-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                    <MotionCard key={questionIndex} className="p-3 bg-muted/10 space-y-2 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}> {/* Apply rounded-android-tile */}
                       <div className="flex justify-between items-center">
                         <h6 className="text-sm font-medium">Question {questionIndex + 1}</h6>
-                        <Button
+                        <MotionButton
                           type="button"
                           variant="destructive"
                           size="sm"
@@ -315,9 +321,10 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                               form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                             }
                           }}
+                          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                         >
                           <MinusCircle className="h-3 w-3" />
-                        </Button>
+                        </MotionButton>
                       </div>
                       <FormField
                         control={form.control}
@@ -366,7 +373,7 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                                 </FormItem>
                               )}
                             />
-                            <Button
+                            <MotionButton
                               type="button"
                               variant="ghost"
                               size="icon"
@@ -378,12 +385,13 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                                 }
                               }}
                               disabled={form.watch(`modules.${moduleIndex}.sections.${sectionIndex}.questions.${questionIndex}.options`)?.length === 2}
+                              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                             >
                               <MinusCircle className="h-3 w-3" />
-                            </Button>
+                            </MotionButton>
                           </div>
                         ))}
-                        <Button
+                        <MotionButton
                           type="button"
                           variant="outline"
                           size="sm"
@@ -395,13 +403,14 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                               form.setValue(`modules.${moduleIndex}.sections.${sectionIndex}.questions`, currentQuestions);
                             }
                           }}
+                          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                         >
                           <PlusCircle className="h-3 w-3 mr-1" /> Ajouter une option
-                        </Button>
+                        </MotionButton>
                       </div>
-                    </Card>
+                    </MotionCard>
                   ))}
-                  <Button
+                  <MotionButton
                     type="button"
                     variant="outline"
                     size="sm"
@@ -413,9 +422,10 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                         form.setValue(`modules.${moduleIndex}.sections`, currentSections);
                       }
                     }}
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   >
                     <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une question
-                  </Button>
+                  </MotionButton>
                 </div>
               </>
             )}
@@ -434,18 +444,19 @@ const SortableModule = ({ id, moduleIndex, form, removeModule, moduleFieldsLengt
                 )}
               />
             )}
-          </Card>
+          </MotionCard>
         ))}
-        <Button
+        <MotionButton
           type="button"
           variant="outline"
           size="sm"
           onClick={() => appendSection({ title: "", content: "Contenu de la nouvelle section.", type: "text", url: "", isCompleted: false })}
+          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
         >
           <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une section
-        </Button>
+        </MotionButton>
       </div>
-    </Card>
+    </MotionCard>
   );
 };
 
@@ -618,7 +629,7 @@ const CreateCourse = () => {
           {courseId ? "Modifier le cours" : "Créer un nouveau cours"}
         </h1>
         
-        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+        <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
           <CardHeader>
             <CardTitle>Informations Générales du Cours</CardTitle>
             <CardDescription>Remplissez les détails de base de votre cours.</CardDescription>
@@ -725,9 +736,9 @@ const CreateCourse = () => {
               )}
             />
           </CardContent>
-        </Card>
+        </MotionCard>
 
-        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+        <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
           <CardHeader>
             <CardTitle>Modules du Cours</CardTitle>
             <CardDescription>Définissez la structure de vos modules et sections. Utilisez la poignée pour réorganiser les modules.</CardDescription>
@@ -754,19 +765,20 @@ const CreateCourse = () => {
                 ))}
               </SortableContext>
             </DndContext>
-            <Button
+            <MotionButton
               type="button"
               variant="outline"
               onClick={() => appendModule({ title: "", sections: [{ title: "", content: "Contenu de la nouvelle section.", type: "text", url: "", isCompleted: false }], isCompleted: false, level: 0 })}
+              whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
             >
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter un module
-            </Button>
+            </MotionButton>
           </CardContent>
-        </Card>
+        </MotionCard>
 
-        <Button type="submit" className="w-full" disabled={isSavingCourse}>
+        <MotionButton type="submit" className="w-full" disabled={isSavingCourse} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           {isSavingCourse ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : (courseId ? "Sauvegarder les modifications" : "Créer le cours")}
-        </Button>
+        </MotionButton>
       </form>
     </Form>
   );

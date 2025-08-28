@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Lock, CheckCircle, ArrowDown, BookOpen, FileText, Video, HelpCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Course, Module } from "@/lib/dataModels"; // Import interfaces from dataModels
@@ -46,12 +46,14 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
 
         return (
           <React.Fragment key={module.title}>
-            <Card
+            <MotionCard
               className={cn(
                 "relative w-full p-6 text-center shadow-xl transition-all duration-300 ease-in-out rounded-android-tile hover:scale-[1.02] transition-transform", // Apply rounded-android-tile and hover effect
                 accessible ? "border-primary/50 bg-background hover:shadow-2xl" : "border-dashed border-muted-foreground/30 bg-muted/10 opacity-70 cursor-not-allowed",
                 isCompleted && "border-green-500 ring-2 ring-green-500/50"
               )}
+              whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}
+              whileTap={{ scale: 0.98 }}
             >
               {course.image_url && (
                 <img
@@ -76,9 +78,9 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
               <CardContent className="p-0">
                 <p className="text-sm text-muted-foreground mb-4">Progression: {progress}%</p>
                 <Link to={`/courses/${course.id}/modules/${index}`}>
-                  <Button className="w-full">
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                     {accessible ? (isCompleted ? "Revoir le module" : "Commencer le module") : "Verrouillé"}
-                  </Button>
+                  </MotionButton>
                 </Link>
 
                 {/* Section pour l'affichage des sections du module */}
@@ -124,7 +126,7 @@ const CourseModuleList = ({ course, studentCourseProgress }: CourseModuleListPro
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </MotionCard>
             {/* Flèche entre les modules, visible uniquement sur mobile (quand la grille est une seule colonne) */}
             {index < course.modules.length - 1 && (
               <div className="md:hidden relative w-full flex justify-center py-4">

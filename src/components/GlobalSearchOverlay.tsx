@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
 import { Search, NotebookText, BookOpen, Layers, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes";
@@ -184,10 +184,10 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
+                <MotionButton variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                   <X className="h-6 w-6" />
                   <span className="sr-only">Fermer la recherche</span>
-                </Button>
+                </MotionButton>
               </div>
 
               <div className="flex-grow pr-2">
@@ -213,7 +213,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                         <div className="grid gap-3 md:grid-cols-2">
                           {resultsOfType.map(result => (
                             <Link to={result.link} key={result.id} onClick={onClose}>
-                              <Card className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile">
+                              <MotionCard className="h-full flex flex-col hover:shadow-lg transition-shadow rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
                                 <CardHeader className="flex-row items-center gap-3 pb-2">
                                   <result.icon className="h-5 w-5 text-primary" />
                                   <CardTitle className="text-lg">{result.title}</CardTitle>
@@ -223,7 +223,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                                     {result.description}
                                   </CardDescription>
                                 </CardContent>
-                              </Card>
+                              </MotionCard>
                             </Link>
                           ))}
                         </div>

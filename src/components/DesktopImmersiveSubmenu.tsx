@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { X, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, ExternalLink, ArrowLeft, ChevronDown } from "lucide-react"; // Added ArrowLeft, ChevronDown
 import { NavItem } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
@@ -70,18 +70,18 @@ const DesktopImmersiveSubmenu = React.forwardRef<HTMLElement, DesktopImmersiveSu
           <div className="flex items-center justify-between pb-2 mb-4">
             <div className="flex items-center gap-3">
               {showBackButton && (
-                <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                <MotionButton variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                   <ArrowLeft className="h-5 w-5" />
                   <span className="sr-only">Retour</span>
-                </Button>
+                </MotionButton>
               )}
               <CurrentParentIconComponent className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-semibold text-foreground">{currentDisplayItem.label}</h2>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <MotionButton variant="ghost" size="icon" onClick={onClose} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
               <X className="h-5 w-5" />
               <span className="sr-only">Fermer le sous-menu</span>
-            </Button>
+            </MotionButton>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-hidden">
@@ -91,7 +91,7 @@ const DesktopImmersiveSubmenu = React.forwardRef<HTMLElement, DesktopImmersiveSu
               const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
               return (
-                <Button
+                <MotionButton
                   key={item.id}
                   variant="ghost"
                   onClick={() => handleInternalItemClick(item)}
@@ -102,6 +102,8 @@ const DesktopImmersiveSubmenu = React.forwardRef<HTMLElement, DesktopImmersiveSu
                     "transition-all duration-200 ease-in-out"
                   )}
                   target={item.is_external ? "_blank" : undefined}
+                  whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {/* Wrapped children in a single div */}
                   <div> 
@@ -120,7 +122,7 @@ const DesktopImmersiveSubmenu = React.forwardRef<HTMLElement, DesktopImmersiveSu
                     {isCategory && <ChevronDown className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />}
                     {item.is_external && !isCategory && <ExternalLink className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground" />}
                   </div>
-                </Button>
+                </MotionButton>
               );
             })}
           </div>

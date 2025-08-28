@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, Send, X, User as UserIcon, ChevronDown, ChevronUp } from "lucide-react";
@@ -124,14 +124,14 @@ const AiAPersistentChat = () => {
               <h3 className="text-lg font-semibold">AiA Chat</h3>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={handleToggleCollapse} className="h-8 w-8">
+              <MotionButton variant="ghost" size="icon" onClick={handleToggleCollapse} className="h-8 w-8" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 <span className="sr-only">{isCollapsed ? 'Déplier' : 'Replier'}</span>
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleCloseChat} className="h-8 w-8">
+              </MotionButton>
+              <MotionButton variant="ghost" size="icon" onClick={handleCloseChat} className="h-8 w-8" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <X className="h-4 w-4" aria-label="Fermer le chat AiA" />
                 <span className="sr-only">Fermer</span>
-              </Button>
+              </MotionButton>
             </div>
           </div>
 
@@ -148,24 +148,26 @@ const AiAPersistentChat = () => {
                 {(currentCourseTitle || currentModuleTitle) && (
                   <div className="flex gap-2 flex-wrap pb-3 shrink-0">
                     {currentCourseTitle && (
-                      <Button
+                      <MotionButton
                         variant="outline"
                         size="sm"
                         onClick={() => setAiaInput(prev => prev + ` @${currentCourseTitle}`)}
                         className="whitespace-nowrap text-xs rounded-android-tile"
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       >
                         @{currentCourseTitle.length > 10 ? currentCourseTitle.substring(0, 10) + '...' : currentCourseTitle}
-                      </Button>
+                      </MotionButton>
                     )}
                     {currentModuleTitle && (
-                      <Button
+                      <MotionButton
                         variant="outline"
                         size="sm"
                         onClick={() => setAiaInput(prev => prev + ` @${currentModuleTitle}`)}
                         className="whitespace-nowrap text-xs rounded-android-tile"
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       >
                         @{currentModuleTitle.length > 10 ? currentModuleTitle.substring(0, 10) + '...' : currentModuleTitle}
-                      </Button>
+                      </MotionButton>
                     )}
                   </div>
                 )}
@@ -215,10 +217,10 @@ const AiAPersistentChat = () => {
                     onKeyPress={handleAiaKeyPress}
                     className="flex-grow rounded-android-tile"
                   />
-                  <Button onClick={handleSendAiaMessage} disabled={!aiaInput.trim()} className="rounded-android-tile">
+                  <MotionButton onClick={handleSendAiaMessage} disabled={!aiaInput.trim()} className="rounded-android-tile" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Send className="h-5 w-5" />
                     <span className="sr-only">Envoyer</span>
-                  </Button>
+                  </MotionButton>
                 </div>
               </div>
             </motion.div>

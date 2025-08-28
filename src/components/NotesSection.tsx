@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Edit, Trash2, Save, XCircle } from "lucide-react";
 import { getNotes, addNote, updateNote, deleteNote } from "@/lib/notes"; // Import Supabase-based notes functions
@@ -150,27 +150,27 @@ const NotesSection = ({ noteKey, title, userId, refreshKey }: NotesSectionProps)
                 <div className="flex gap-1 ml-2 flex-shrink-0">
                   {editingIndex === index ? (
                     <>
-                      <Button variant="ghost" size="icon" onClick={() => handleSaveEdit(index)}>
+                      <MotionButton variant="ghost" size="icon" onClick={() => handleSaveEdit(index)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                         <Save className="h-4 w-4 text-green-500" />
                         <span className="sr-only">Sauvegarder</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
+                      </MotionButton>
+                      <MotionButton variant="ghost" size="icon" onClick={handleCancelEdit} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                         <XCircle className="h-4 w-4 text-red-500" />
                         <span className="sr-only">Annuler</span>
-                      </Button>
+                      </MotionButton>
                     </>
                   ) : (
                     <>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditClick(index, note)}>
+                      <MotionButton variant="ghost" size="icon" onClick={() => handleEditClick(index, note)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                         <Edit className="h-4 w-4 text-blue-500" />
                         <span className="sr-only">Éditer</span>
-                      </Button>
+                      </MotionButton>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <MotionButton variant="ghost" size="icon" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                             <Trash2 className="h-4 w-4 text-red-500" />
                             <span className="sr-only">Supprimer</span>
-                          </Button>
+                          </MotionButton>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
@@ -203,9 +203,9 @@ const NotesSection = ({ noteKey, title, userId, refreshKey }: NotesSectionProps)
           className="h-auto min-h-[100px] max-h-[200px] overflow-y-auto mb-10" // Adjusted height
           placeholder="Écrivez votre nouvelle note ici..."
         />
-        <Button onClick={handleAddNote} disabled={!newNote.replace(/<[^>]*>/g, '').trim()} size="sm">
+        <MotionButton onClick={handleAddNote} disabled={!newNote.replace(/<[^>]*>/g, '').trim()} size="sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           <PlusCircle className="h-4 w-4 mr-2" /> Ajouter une note
-        </Button>
+        </MotionButton>
       </div>
     </div>
   );
