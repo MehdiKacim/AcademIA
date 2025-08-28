@@ -114,7 +114,7 @@ const NavSheet = ({
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
     { id: 'profile-theme-toggle', label: 'Thème', icon_name: 'SunMoon', is_external: false, type: 'category_or_action', onClick: () => {}, order_index: 2 }, // Theme toggle item
-    { id: 'profile-about', label: 'À propos', icon_name: 'Info', is_external: false, type: 'route', route: '/about', order_index: 3 }, // About link
+    { id: 'profile-about', label: 'À propos', icon_name: 'Info', route: '/about', is_external: false, type: 'route', order_index: 3 }, // About link
     { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 4 },
   ];
 
@@ -290,8 +290,7 @@ const NavSheet = ({
         </motion.div>
         {/* Moved app version and MadeWithDyad to the bottom of scrollable area */}
         <div className="p-4 flex-shrink-0 flex flex-col items-center gap-2 mt-auto">
-          <p className="text-xs text-muted-foreground">Version: {packageJson.version}</p>
-          <MadeWithDyad />
+          <p className="text-xs text-muted-foreground">dyadVersion:</p>
         </div>
       </ScrollArea>
     </MobileDrawer>
