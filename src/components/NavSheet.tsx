@@ -174,6 +174,7 @@ const NavSheet = ({
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
       );
       if (currentUserProfile) {
+        // Add "Mon Compte" as a category in the main list
         itemsToFilter.push({
           id: 'profile-category',
           label: 'Mon Compte',
@@ -183,6 +184,8 @@ const NavSheet = ({
           children: staticProfileActions,
           order_index: 999,
         });
+        // Add "Messagerie" as a top-level item
+        itemsToFilter.push({ id: 'nav-messages', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', is_external: false, type: 'route', order_index: 100, badge: unreadMessagesCount });
       }
     } else {
       // For mobile, show children of the active category
@@ -199,7 +202,7 @@ const NavSheet = ({
       item.label.toLowerCase().includes(lowerCaseQuery) ||
       (item.description && item.description.toLowerCase().includes(lowerCaseQuery))
     ).sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnOpenChange]);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, searchQuery, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnOpenChange, unreadMessagesCount]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -229,7 +232,6 @@ const NavSheet = ({
               ) : (
                 <div className="w-10 h-10"></div>
               )}
-              {/* Removed Logo from here */}
             </div>
 
             {/* Placeholder for right side to maintain spacing */}
@@ -305,40 +307,40 @@ const NavSheet = ({
           </motion.div>
         </ScrollArea>
 
-        {/* Moved elements from old SheetHeader here */}
+        {/* Bottom action bar */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <div className="flex items-center justify-around gap-2"> {/* Changed justify-between to justify-around */}
+          <div className="flex items-center justify-around gap-2">
             {currentUserProfile ? (
               <>
-                <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                  <MessageSquare className="h-5 w-5" />
-                  {unreadMessagesCount > 0 && (
-                    <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                      {unreadMessagesCount}
-                    </span>
-                  )}
-                  <span className="sr-only">Messagerie</span>
+                {/* Search Button */}
+                <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                  <Search className="h-5 w-5" />
+                  <span className="sr-only">Recherche</span>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
-                    <AvatarFallback>{currentUserProfile.first_name[0]}{currentUserProfile.last_name[0]}</AvatarFallback>
-                  </Avatar>
-                  <span className="sr-only">Mon Compte</span>
+
+                {/* AiA Chat Button */}
+                <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                  <BotMessageSquare className="h-5 w-5" />
+                  <span className="sr-only">AiA Chat</span>
                 </Button>
-                {/* Added Logo here */}
-                <Logo iconClassName="h-8 w-8" showText={false} /> 
+
+                {/* Logo */}
+                <Logo iconClassName="h-8 w-8" showText={false} />
+
+                {/* Logout Button */}
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                  <LogOut className="h-5 w-5" />
+                  <span className="sr-only">Déconnexion</span>
+                </Button>
+
+                {/* Theme Toggle */}
+                <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
               </>
             ) : (
               <Button variant="default" className="shadow-lg rounded-android-tile flex-grow" onClick={onOpenAuthModal}>
                 <User className="h-5 w-5 mr-2" /> Se connecter
               </Button>
             )}
-            <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-            <Button variant="ghost" size="icon" onClick={() => currentOnOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-              <X className="h-5 w-5" aria-label="Fermer le menu" />
-              <span className="sr-only">Fermer</span>
-            </Button>
           </div>
           {isMobile && (
             <div className="flex justify-center pt-2">
