@@ -1,0 +1,14 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  {/* Orbits - Using a static blue color for consistency */}
+  <ellipse cx="50" cy="50" rx="45" ry="20" stroke="#1A66CC" stroke-opacity="0.3" stroke-width="3" transform="rotate(30 50 50)" />
+  <ellipse cx="50" cy="50" rx="45" ry="20" stroke="#1A66CC" stroke-opacity="0.3" stroke-width="3" transform="rotate(-30 50 50)" />
+  <ellipse cx="50" cy="50" rx="20" ry="45" stroke="#1A66CC" stroke-opacity="0.3" stroke-width="3" />
+
+  {/* Nucleus - Using a static blue color */}
+  <circle cx="50" cy="50" r="10" fill="#1A66CC" />
+
+  {/* Electrons (static positions) - Using a static blue color */}
+  <circle cx="50" cy="30" r="5" fill="#1A66CC" />
+  <circle cx="50" cy="70" r="5" fill="#1A66CC" />
+  <circle cx="30" cy="50" r="5" fill="#1A66CC" />
+</svg>
