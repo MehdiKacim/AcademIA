@@ -35,7 +35,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
   // Focus input when overlay opens
   useEffect(() => {
     if (isOpen) {
-      inputRef.current?.focus();
+      // Removed: inputRef.current?.focus(); // Désactivé la pré-sélection de l'input
     } else {
       // Clear search when closing
       setSearchQuery('');
@@ -171,15 +171,15 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="fixed inset-0 z-[995] bg-background/80 backdrop-blur-lg" // z-index ajusté à 995
         >
-          <div className="max-w-4xl mx-auto flex flex-col h-full px-4 md:px-8"> {/* Removed gap-4 and pt-16 */}
-            <ScrollArea className="flex-grow"> {/* Make the entire content scrollable */}
-              <div className="flex items-center gap-4 pt-16 pb-4"> {/* Increased padding-top here */}
+          <div className="max-w-4xl mx-auto flex flex-col h-full px-4 md:px-8">
+            <ScrollArea className="flex-grow">
+              <div className="flex items-center gap-4 pt-16 pb-4">
                 <div className="relative flex-grow">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
                   <Input
                     ref={inputRef}
                     placeholder="Rechercher dans tout AcademIA..."
-                    className="pl-12 h-14 text-lg rounded-android-tile shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50" // Changed rounded-lg to rounded-android-tile
+                    className="pl-12 h-14 text-lg rounded-android-tile shadow-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border-none bg-muted/50 mx-2" // Ajout de mx-2
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -190,7 +190,7 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
                 </Button>
               </div>
 
-              <div className="flex-grow pr-2"> {/* This is the scrollable results area */}
+              <div className="flex-grow pr-2">
                 {searchQuery.trim() && searchResults.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">Aucun résultat trouvé pour "{searchQuery}".</p>
                 ) : (
