@@ -121,7 +121,7 @@ const MobileBottomNavContent = ({
               <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
                 <p>Menu utilisateur</p>
               </TooltipContent>
-            </DropdownMenu>
+            </Tooltip>
             <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
               <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
