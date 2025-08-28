@@ -1,12 +1,12 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
 import { Info, Code, Heart, Linkedin, Github, ArrowLeft } from "lucide-react";
 import packageJson from '../../package.json';
 import Logo from "@/components/Logo";
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 
 const About = () => {
   const appVersion = packageJson.version;
@@ -47,10 +47,10 @@ const About = () => {
     >
       {/* Back button */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 mt-4 z-10">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full bg-muted/20 hover:bg-muted/40">
+        <MotionButton variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full bg-muted/20 hover:bg-muted/40" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
           <ArrowLeft className="h-5 w-5" />
           <span className="sr-only">Retour</span>
-        </Button>
+        </MotionButton>
       </div>
 
       <motion.div variants={itemVariants} className="text-center mb-8 pt-12">
@@ -73,7 +73,7 @@ const About = () => {
       <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4 w-full">
         {/* Section "Détails d'AcademIA" supprimée */}
 
-        <Card className="shadow-md rounded-android-tile">
+        <MotionCard className="shadow-md rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Code className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Développeur</CardTitle>
@@ -86,34 +86,46 @@ const About = () => {
               Developed with love for you, for all ❤️
             </p>
           </CardContent>
-        </Card>
+        </MotionCard>
 
-        <Card className="shadow-md rounded-android-tile">
+        <MotionCard className="shadow-md rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
           <CardHeader className="flex flex-row items-center gap-3 pb-3">
             <Heart className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Connectez-vous avec le développeur</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-4 pt-2 justify-center">
-            <a
-              href="https://www.linkedin.com/in/mehdi-kacim-333304142?originalSubdomain=fr"
-              target="_blank"
-              rel="noopener noreferrer"
+            <MotionButton
+              asChild
+              variant="link"
               className="flex items-center gap-2 text-blue-500 hover:text-blue-700 transition-colors text-sm"
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             >
-              <Linkedin className="h-5 w-5" />
-              LinkedIn
-            </a>
-            <a
-              href="https://github.com/MehdiKacim"
-              target="_blank"
-              rel="noopener noreferrer"
+              <a
+                href="https://www.linkedin.com/in/mehdi-kacim-333304142?originalSubdomain=fr"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Linkedin className="h-5 w-5" />
+                LinkedIn
+              </a>
+            </MotionButton>
+            <MotionButton
+              asChild
+              variant="link"
               className="flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-sm"
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             >
-              <Github className="h-5 w-5" />
-              GitHub
-            </a>
+              <a
+                href="https://github.com/MehdiKacim"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Github className="h-5 w-5" />
+                GitHub
+              </a>
+            </MotionButton>
           </CardContent>
-        </Card>
+        </MotionCard>
       </motion.div>
     </motion.div>
   );

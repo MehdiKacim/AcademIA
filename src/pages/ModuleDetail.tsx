@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Bot, Send, ArrowLeft, ArrowRight, CheckCircle, PlusCircle, NotebookText, HelpCircle } from "lucide-react";
 import { useCourseChat } from "@/contexts/CourseChatContext";
 import { showSuccess, showError } from '@/utils/toast';
@@ -104,9 +104,9 @@ const ModuleDetail = () => {
         <p className="text-lg text-muted-foreground">
           Le module que vous recherchez n'existe pas.
         </p>
-        <Button onClick={() => navigate(`/courses/${courseId}`)} className="mt-4">
+        <MotionButton onClick={() => navigate(`/courses/${courseId}`)} className="mt-4" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           Retour au cours
-        </Button>
+        </MotionButton>
       </div>
     );
   }
@@ -125,9 +125,9 @@ const ModuleDetail = () => {
         <p className="text-lg text-muted-foreground">
           Veuillez compléter le module précédent pour accéder à celui-ci.
         </p>
-        <Button onClick={() => navigate(`/courses/${courseId}`)} className="mt-4">
+        <MotionButton onClick={() => navigate(`/courses/${courseId}`)} className="mt-4" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           Retour au cours
-        </Button>
+        </MotionButton>
       </div>
     );
   }
@@ -316,9 +316,9 @@ const ModuleDetail = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8"> {/* Added responsive padding and max-width */}
       <div className="flex items-center justify-between mb-6">
-        <Button variant="outline" onClick={() => navigate(`/courses/${courseId}`)}>
+        <MotionButton variant="outline" onClick={() => navigate(`/courses/${courseId}`)} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Retour au cours
-        </Button>
+        </MotionButton>
         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
           {course.title}
         </h1>
@@ -327,10 +327,10 @@ const ModuleDetail = () => {
 
       <ContextMenu onOpenChange={(open) => setHighlightedElementId(open ? `module-${course.id}-${currentModuleIndex}` : null)}>
         <ContextMenuTrigger asChild>
-          <Card className={cn(
+          <MotionCard className={cn(
             "relative rounded-android-tile", // Apply rounded-android-tile
             highlightedElementId === `module-${course.id}-${currentModuleIndex}` ? "bg-primary/10" : ""
-          )}>
+          )} whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{module.title}</span>
@@ -404,13 +404,14 @@ const ModuleDetail = () => {
                                 <p className="text-muted-foreground mt-2">{section.content}</p>
                               )}
                               {!isSectionCompleted && section.type !== 'quiz' && (
-                                <Button
+                                <MotionButton
                                   onClick={() => markSectionComplete(index)}
                                   className="mt-4"
                                   size="sm"
+                                  whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                                 >
                                   <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme lu
-                                </Button>
+                                </MotionButton>
                               )}
                               <p className="text-xs text-muted-foreground mt-2">Clic droit pour les options</p>
                             </>
@@ -446,31 +447,33 @@ const ModuleDetail = () => {
               })}
               <div className="flex flex-wrap gap-4 justify-between items-center mt-6">
                 <div className="flex gap-2">
-                  <Button
+                  <MotionButton
                     variant="outline"
                     onClick={() => navigate(`/courses/${courseId}/modules/${currentModuleIndex - 1}`)}
                     disabled={currentModuleIndex === 0}
+                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Précédent
-                  </Button>
-                  <Button
+                  </MotionButton>
+                  <MotionButton
                     variant="outline"
                     onClick={() => navigate(`/courses/${courseId}/modules/${currentModuleIndex + 1}`)}
                     disabled={currentModuleIndex === course.modules.length - 1 || !moduleProgress?.is_completed}
+                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                   >
                     Suivant <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+                  </MotionButton>
                 </div>
                 <div className="flex gap-2">
                   {!moduleProgress?.is_completed && (
-                    <Button onClick={handleMarkModuleComplete} disabled={!allSectionsInModuleCompleted}>
+                    <MotionButton onClick={handleMarkModuleComplete} disabled={!allSectionsInModuleCompleted} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                       <CheckCircle className="h-4 w-4 mr-2" /> Marquer comme terminé
-                    </Button>
+                    </MotionButton>
                   )}
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </MotionCard>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-auto p-1 rounded-android-tile"> {/* Apply rounded-android-tile */}
           {currentUserProfile && (
@@ -503,14 +506,15 @@ const ModuleDetail = () => {
           "fixed z-40 p-4",
           isMobile ? "bottom-20 left-4" : "bottom-4 left-4"
         )}>
-          <Button
+          <MotionButton
             size="lg"
             className="rounded-full h-14 w-14 shadow-lg animate-bounce-slow"
             onClick={() => handleOpenQuickNoteDialog(module.title)}
+            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
           >
             <PlusCircle className="h-7 w-7" />
             <span className="sr-only">Ajouter une note rapide pour le module</span>
-          </Button>
+          </MotionButton>
         </div>
       )}
 

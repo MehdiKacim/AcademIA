@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, BookText, School, ChevronDown, ChevronUp, Building2 } from "lucide-react";
@@ -178,15 +179,15 @@ const SubjectManagementPage = () => {
       </p>
 
       <Collapsible open={isNewSubjectFormOpen} onOpenChange={setIsNewSubjectFormOpen}>
-        <Card className="rounded-android-tile">
+        <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
           <CardHeader>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between p-0">
+              <MotionButton variant="ghost" className="w-full justify-between p-0" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <CardTitle className="flex items-center gap-2">
                   <PlusCircle className="h-6 w-6 text-primary" /> Ajouter une matière
                 </CardTitle>
                 {isNewSubjectFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-              </Button>
+              </MotionButton>
             </CollapsibleTrigger>
             <CardDescription>Créez une nouvelle matière.</CardDescription>
           </CardHeader>
@@ -218,16 +219,16 @@ const SubjectManagementPage = () => {
                     />
                   </>
                 )}
-                <Button onClick={handleAddSubject} disabled={!newSubjectName.trim() || (!newSubjectEstablishmentId && currentRole !== 'administrator')}>
+                <MotionButton onClick={handleAddSubject} disabled={!newSubjectName.trim() || (!newSubjectEstablishmentId && currentRole !== 'administrator')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la matière
-                </Button>
+                </MotionButton>
               </div>
             </CardContent>
           </CollapsibleContent>
-        </Card>
+        </MotionCard>
       </Collapsible>
 
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookText className="h-6 w-6 text-primary" /> Liste des Matières
@@ -240,22 +241,22 @@ const SubjectManagementPage = () => {
               <p className="text-muted-foreground text-center py-4">Aucune matière à afficher.</p>
             ) : (
               subjectsToDisplay.map(sub => (
-                <Card key={sub.id} className="p-3 flex items-center justify-between border rounded-android-tile bg-background">
-                  <span>{sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id, establishments)})`}</span>
+                <MotionCard key={sub.id} className="p-3 flex items-center justify-between border rounded-android-tile bg-background" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
+                  <span>{sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id)})`}</span>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEditSubject(sub)}>
+                    <MotionButton variant="outline" size="sm" onClick={() => handleEditSubject(sub)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteSubject(sub.id)}>
+                    </MotionButton>
+                    <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteSubject(sub.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </MotionButton>
                   </div>
-                </Card>
+                </MotionCard>
               ))
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {currentSubjectToEdit && (
         <EditSubjectDialog

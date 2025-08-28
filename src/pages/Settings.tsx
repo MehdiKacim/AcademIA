@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
 import { Settings as SettingsIcon, Globe, Bell, KeyRound, SunMoon, Eraser, Code, Info, LayoutList, Building2 } from "lucide-react"; // Import LayoutList icon
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { showSuccess } from "@/utils/toast";
 import { clearAllAppData } from "@/lib/dataReset";
 import { Link, useOutletContext, useNavigate } from 'react-router-dom'; // Import useNavigate
@@ -50,7 +50,7 @@ const Settings = () => {
         Gérez les préférences de votre compte et de l'application.
       </p>
 
-      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <SunMoon className="h-6 w-6 text-primary" />
@@ -64,9 +64,9 @@ const Settings = () => {
           <Label htmlFor="theme-toggle">Mode clair/sombre</Label>
           <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
         </CardContent>
-      </Card>
+      </MotionCard>
 
-      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-6 w-6 text-primary" />
@@ -92,9 +92,9 @@ const Settings = () => {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
-      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-6 w-6 text-primary" />
@@ -122,9 +122,9 @@ const Settings = () => {
             />
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
-      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="h-6 w-6 text-primary" />
@@ -135,41 +135,41 @@ const Settings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" onClick={() => setIsChangePasswordDialogOpen(true)} className="rounded-android-tile">
+          <MotionButton variant="outline" onClick={() => setIsChangePasswordDialogOpen(true)} className="rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
             Changer le mot de passe
-          </Button>
+          </MotionButton>
           <Link to="/data-model">
-            <Button variant="outline" className="flex items-center gap-2 rounded-android-tile">
+            <MotionButton variant="outline" className="flex items-center gap-2 rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <Code className="h-4 w-4" /> Voir le modèle de données
-            </Button>
+            </MotionButton>
           </Link>
           {currentRole === 'administrator' && ( // Only show for administrators
             <>
               <Link to="/establishments">
-                <Button variant="outline" className="flex items-center gap-2 rounded-android-tile">
+                <MotionButton variant="outline" className="flex items-center gap-2 rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   <Building2 className="h-4 w-4" /> Gérer les établissements
-                </Button>
+                </MotionButton>
               </Link>
               <Link to="/admin-menu-management">
-                <Button variant="outline" className="flex items-center gap-2 rounded-android-tile">
+                <MotionButton variant="outline" className="flex items-center gap-2 rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   <LayoutList className="h-4 w-4" /> Gérer les menus
-                </Button>
+                </MotionButton>
               </Link>
             </>
           )}
-          <Button variant="outline" onClick={() => navigate('/about')} className="flex items-center gap-2 rounded-android-tile"> {/* Navigate to /about */}
+          <MotionButton variant="outline" onClick={() => navigate('/about')} className="flex items-center gap-2 rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}> {/* Navigate to /about */}
             <Info className="h-4 w-4" /> À propos
-          </Button>
-          <Button variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2 rounded-android-tile">
+          </MotionButton>
+          <MotionButton variant="destructive" onClick={handleClearAllData} className="flex items-center gap-2 rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
             <Eraser className="h-4 w-4" /> Réinitialiser toutes les données
-          </Button>
+          </MotionButton>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       <div className="flex justify-end">
-        <Button onClick={handleSavePreferences} className="rounded-android-tile">
+        <MotionButton onClick={handleSavePreferences} className="rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           Enregistrer toutes les préférences
-        </Button>
+        </MotionButton>
       </div>
 
       {/* Removed AboutModal */}

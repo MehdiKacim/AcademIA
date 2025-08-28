@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { ArrowLeft, UserPlus, LockKeyhole, MailQuestion } from 'lucide-react';
 import Logo from "@/components/Logo";
 import { LoginForm } from "@/components/LoginForm";
@@ -59,9 +59,9 @@ const AuthPage = () => {
             <CardDescription className="text-muted-foreground">
               Un lien de réinitialisation de mot de passe a été envoyé à <span className="font-semibold text-foreground">{resetEmail}</span>. Veuillez vérifier votre boîte de réception (et vos spams).
             </CardDescription>
-            <Button type="button" className="w-full" onClick={() => setCurrentView('login')}>
+            <MotionButton type="button" className="w-full" onClick={() => setCurrentView('login')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <ArrowLeft className="h-4 w-4 mr-2" /> Retour à la connexion
-            </Button>
+            </MotionButton>
           </div>
         );
       default:
@@ -104,17 +104,18 @@ const AuthPage = () => {
         <Logo iconClassName="w-24 h-24" showText={false} />
       </motion.div>
 
-      <Card className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80 relative"> {/* Added relative positioning */}
+      <MotionCard className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80 relative" whileHover={{ scale: 1.01, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}> {/* Added relative positioning */}
         {window.history.length > 1 && ( // Only show back button if there's history
-          <Button
+          <MotionButton
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
             className="absolute top-4 left-4 z-10 rounded-full bg-muted/20 hover:bg-muted/40"
             aria-label="Retour"
+            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
           >
             <ArrowLeft className="h-5 w-5" />
-          </Button>
+          </MotionButton>
         )}
         <CardHeader className="text-center mb-4">
           <CardTitle className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -139,16 +140,16 @@ const AuthPage = () => {
           </AnimatePresence>
           {currentView === 'login' && (
             <div className="mt-6 text-center space-y-2">
-              <Button variant="link" className="w-full text-sm" onClick={() => setCurrentView('forgot-password')}>
+              <MotionButton variant="link" className="w-full text-sm" onClick={() => setCurrentView('forgot-password')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 Mot de passe oublié ?
-              </Button>
-              <Button variant="link" className="w-full text-sm" onClick={() => setCurrentView('signup-info')}>
+              </MotionButton>
+              <MotionButton variant="link" className="w-full text-sm" onClick={() => setCurrentView('signup-info')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 Pas encore de compte ?
-              </Button>
+              </MotionButton>
             </div>
           )}
         </CardContent>
-      </Card>
+      </MotionCard>
     </div>
   );
 };

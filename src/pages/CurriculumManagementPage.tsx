@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, BookOpen, LayoutList, School, Building2, Info } from "lucide-react";
@@ -238,7 +239,7 @@ const CurriculumManagementPage = () => {
         Créez et gérez des cursus scolaires.
       </p>
 
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LayoutList className="h-6 w-6 text-primary" /> Cursus Scolaires
@@ -272,39 +273,39 @@ const CurriculumManagementPage = () => {
                 />
               </>
             )}
-            <Button onClick={handleAddCurriculum} disabled={!newCurriculumName.trim() || (!newCurriculumEstablishmentId && currentRole !== 'administrator')}>
+            <MotionButton onClick={handleAddCurriculum} disabled={!newCurriculumName.trim() || (!newCurriculumEstablishmentId && currentRole !== 'administrator')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter Cursus
-            </Button>
+            </MotionButton>
           </div>
           <div className="space-y-2 mt-4">
             {curriculaToDisplay.length === 0 ? (
               <p className="text-muted-foreground">Aucun cursus à afficher.</p>
             ) : (
               curriculaToDisplay.map(cur => (
-                <div key={cur.id} className="flex items-center justify-between p-3 border rounded-android-tile bg-background">
-                  <span>{cur.name} ({cur.course_ids.length} cours, {classes.filter(cls => cls.curriculum_id === cur.id).length} classes) {cur.establishment_id && `(${getEstablishmentName(cur.establishment_id, establishments)})`}</span>
+                <MotionCard key={cur.id} className="p-3 flex items-center justify-between border rounded-android-tile bg-background" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
+                  <span>{cur.name} ({cur.course_ids.length} cours, {classes.filter(cls => cls.curriculum_id === cur.id).length} classes) {cur.establishment_id && `(${getEstablishmentName(cur.establishment_id)})`}</span>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleOpenManageCoursesModal(cur)}>
+                    <MotionButton variant="outline" size="sm" onClick={() => handleOpenManageCoursesModal(cur)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <BookOpen className="h-4 w-4 mr-1" /> Gérer Cours
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEditCurriculum(cur)}>
+                    </MotionButton>
+                    <MotionButton variant="outline" size="sm" onClick={() => handleEditCurriculum(cur)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteCurriculum(cur.id)}>
+                    </MotionButton>
+                    <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteCurriculum(cur.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </MotionButton>
                   </div>
-                </div>
+                </MotionCard>
               ))
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {/* Manage Curriculum Courses Modal */}
       {isManageCoursesModalOpen && selectedCurriculumForCourses && (
         <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl backdrop-blur-lg bg-background/80 rounded-android-tile">
+          <MotionCard className="w-full max-w-2xl backdrop-blur-lg bg-background/80 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
             <CardHeader>
               <CardTitle>Gérer les cours pour "{selectedCurriculumForCourses.name}"</CardTitle>
               <CardDescription>Sélectionnez les cours qui feront partie de ce cursus.</CardDescription>
@@ -336,11 +337,11 @@ const CurriculumManagementPage = () => {
                 )}
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsManageCoursesModalOpen(false)}>Annuler</Button>
-                <Button onClick={handleSaveCurriculumCourses}>Sauvegarder</Button>
+                <MotionButton variant="outline" onClick={() => setIsManageCoursesModalOpen(false)} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Annuler</MotionButton>
+                <MotionButton onClick={handleSaveCurriculumCourses} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Sauvegarder</MotionButton>
               </div>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       )}
 

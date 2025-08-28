@@ -1,4 +1,5 @@
 import * as React from "react"
+import { motion } from "framer-motion"; // Import motion
 
 import { cn } from "@/lib/utils"
 
@@ -9,7 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-card-lg border bg-card text-card-foreground shadow-card-shadow", // Applique le nouveau rayon de bordure et l'ombre
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
       className
     )}
     {...props}
@@ -36,7 +37,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "font-semibold leading-none tracking-tight", // Garde le font-semibold pour les titres
+      "text-2xl font-semibold leading-none tracking-tight",
       className
     )}
     {...props}
@@ -50,7 +51,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)} // Garde le text-sm et text-muted-foreground pour les descriptions
+    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ))
@@ -75,5 +76,8 @@ const CardFooter = React.forwardRef<
   />
 ))
 CardFooter.displayName = "CardFooter"
+
+// Create a MotionCard component by wrapping the shadcn Card with framer-motion
+export const MotionCard = motion(Card);
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }

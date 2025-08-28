@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, CalendarDays, CheckCircle, XCircle } from "lucide-react";
@@ -236,7 +237,7 @@ const SchoolYearManagementPage = () => {
         Créez et gérez les années scolaires de la plateforme. Une seule année scolaire peut être active à la fois.
       </p>
 
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PlusCircle className="h-6 w-6 text-primary" /> Créer une nouvelle année scolaire
@@ -244,9 +245,9 @@ const SchoolYearManagementPage = () => {
           <CardDescription>Ajoutez une nouvelle année scolaire et activez-la.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" onClick={handleGenerateNextYear} className="w-full">
+          <MotionButton variant="outline" onClick={handleGenerateNextYear} className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
             Générer la prochaine année scolaire
-          </Button>
+          </MotionButton>
           <div className="grid gap-2">
             <Label htmlFor="new-year-name">Nom de l'année scolaire</Label>
             <Input
@@ -260,16 +261,17 @@ const SchoolYearManagementPage = () => {
               <Label htmlFor="new-year-start-date" className="text-sm font-medium mb-2 block">Date de début</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
+                  <MotionButton
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal rounded-android-tile",
                       !newSchoolYearStartDate && "text-muted-foreground"
                     )}
+                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                   >
                     <CalendarDays className="mr-2 h-4 w-4" />
                     {newSchoolYearStartDate ? format(newSchoolYearStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                  </Button>
+                  </MotionButton>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                   <Calendar
@@ -286,16 +288,17 @@ const SchoolYearManagementPage = () => {
               <Label htmlFor="new-year-end-date" className="text-sm font-medium mb-2 block">Date de fin</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
+                  <MotionButton
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal rounded-android-tile",
                       !newSchoolYearEndDate && "text-muted-foreground"
                     )}
+                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                   >
                     <CalendarDays className="mr-2 h-4 w-4" />
                     {newSchoolYearEndDate ? format(newSchoolYearEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                  </Button>
+                  </MotionButton>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                   <Calendar
@@ -308,14 +311,14 @@ const SchoolYearManagementPage = () => {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button onClick={handleAddSchoolYear} disabled={!newSchoolYearName.trim() || !newSchoolYearStartDate || !newSchoolYearEndDate}>
+            <MotionButton onClick={handleAddSchoolYear} disabled={!newSchoolYearName.trim() || !newSchoolYearStartDate || !newSchoolYearEndDate} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isCreatingYear ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et Activer
-            </Button>
+            </MotionButton>
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6 text-primary" /> Liste des Années Scolaires
@@ -328,28 +331,28 @@ const SchoolYearManagementPage = () => {
               <p className="text-muted-foreground">Aucune année scolaire à afficher.</p>
             ) : (
               schoolYears.map((year) => (
-                <Card key={year.id} className={cn("p-3 border rounded-android-tile", year.is_active ? "border-green-500 ring-2 ring-green-500/50 bg-green-50/20" : "")}>
+                <MotionCard key={year.id} className={cn("p-3 border rounded-android-tile", year.is_active ? "border-green-500 ring-2 ring-green-500/50 bg-green-50/20" : "")} whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{year.name}</span>
                     <div className="flex gap-2">
                       {year.is_active && <Badge variant="default" className="bg-green-500 rounded-full">Active</Badge>}
-                      <Button variant="outline" size="sm" onClick={() => handleEditSchoolYear(year)}>
+                      <MotionButton variant="outline" size="sm" onClick={() => handleEditSchoolYear(year)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDeleteSchoolYear(year.id)}>
+                      </MotionButton>
+                      <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteSchoolYear(year.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </MotionButton>
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-muted-foreground">
                     Du {format(parseISO(year.start_date), 'dd/MM/yyyy', { locale: fr })} au {format(parseISO(year.end_date), 'dd/MM/yyyy', { locale: fr })}
                   </div>
-                </Card>
+                </MotionCard>
               ))
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {currentYearToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -378,16 +381,17 @@ const SchoolYearManagementPage = () => {
                   <Label htmlFor="edit-start-date" className="text-sm font-medium mb-2 block">Date de début</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
+                      <MotionButton
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal rounded-android-tile",
                           !editStartDate && "text-muted-foreground"
                         )}
+                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {editStartDate ? format(editStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
+                      </MotionButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                       <Calendar
@@ -404,16 +408,17 @@ const SchoolYearManagementPage = () => {
                   <Label htmlFor="edit-end-date" className="text-sm font-medium mb-2 block">Date de fin</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
+                      <MotionButton
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal rounded-android-tile",
                           !editEndDate && "text-muted-foreground"
                         )}
+                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {editEndDate ? format(editEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
+                      </MotionButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                       <Calendar
@@ -436,9 +441,9 @@ const SchoolYearManagementPage = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleSaveEditedSchoolYear} disabled={isSavingEdit}>
+                <MotionButton onClick={handleSaveEditedSchoolYear} disabled={isSavingEdit} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
-                </Button>
+                </MotionButton>
               </DialogFooter>
             </div>
           </DialogContent>

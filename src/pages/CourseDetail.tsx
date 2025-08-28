@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Bot, Send, Lock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseChat } from "@/contexts/CourseChatContext";
@@ -95,9 +95,9 @@ const CourseDetail = () => {
         <p className="text-lg text-muted-foreground">
           Le cours que vous recherchez n'existe pas.
         </p>
-        <Button onClick={() => navigate("/courses")} className="mt-4">
+        <MotionButton onClick={() => navigate("/courses")} className="mt-4" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           Retour à la liste des cours
-        </Button>
+        </MotionButton>
       </div>
     );
   }
@@ -111,9 +111,9 @@ const CourseDetail = () => {
         <p className="text-lg text-muted-foreground">
           Ce cours n'est pas accessible pour votre classe ou votre rôle.
         </p>
-        <Button onClick={() => navigate("/courses")} className="mt-4">
+        <MotionButton onClick={() => navigate("/courses")} className="mt-4" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
           Retour à la liste des cours
-        </Button>
+        </MotionButton>
       </div>
     );
   }
@@ -184,7 +184,7 @@ const CourseDetail = () => {
 
       <section>
         <h2 className="text-2xl font-semibold mb-4">Progression du cours</h2>
-        <Card className="mb-6 rounded-android-tile"> {/* Apply rounded-android-tile */}
+        <MotionCard className="mb-6 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Progress value={progressPercentage} className="w-full" />
@@ -194,7 +194,7 @@ const CourseDetail = () => {
               {completedModules} modules terminés sur {totalModules}
             </p>
           </CardContent>
-        </Card>
+        </MotionCard>
       </section>
 
       <section>
@@ -212,16 +212,16 @@ const CourseDetail = () => {
         <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
           <Bot className="h-6 w-6 text-primary" /> Demandez à AiA sur ce cours
         </h2>
-        <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+        <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
           <CardContent className="p-6 space-y-4">
             <p className="text-muted-foreground mb-4">
               Cliquez ci-dessous pour poser une question à AiA concernant ce cours.
             </p>
-            <Button onClick={handleAskAiaAboutCourse}>
+            <MotionButton onClick={handleAskAiaAboutCourse} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <Send className="h-5 w-5 mr-2" /> Poser une question à AiA sur ce cours
-            </Button>
+            </MotionButton>
           </CardContent>
-        </Card>
+        </MotionCard>
       </section>
     </div>
   );

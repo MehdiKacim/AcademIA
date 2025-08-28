@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
 import { NotebookText, Search, ArrowLeft } from "lucide-react";
 import { getAllNotesData, AggregatedNote } from "@/lib/notes"; // Import getAllNotesData
 import NotesSection from "@/components/NotesSection";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { useLocation } from "react-router-dom";
 import { loadCourses } from '@/lib/courseData'; // Import loadCourses
 import { useRole } from '@/contexts/RoleContext'; // Import useRole
@@ -125,12 +125,12 @@ const AllNotes = () => {
       </p>
 
       {allNotes.length === 0 ? (
-        <Card className="flex-grow flex items-center justify-center rounded-android-tile"> {/* Apply rounded-android-tile */}
+        <MotionCard className="flex-grow flex items-center justify-center rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
           <CardContent className="p-6 text-center text-muted-foreground">
             <NotebookText className="h-12 w-12 mx-auto mb-4 text-primary" />
             <p>Vous n'avez pas encore pris de notes. Commencez un cours pour en ajouter !</p>
           </CardContent>
-        </Card>
+        </MotionCard>
       ) : (
         <div className="flex flex-col flex-grow md:flex-row md:gap-4">
           {/* Left Panel (Notes List) */}
@@ -153,13 +153,15 @@ const AllNotes = () => {
               ) : (
                 <div className="grid gap-4">
                   {filteredNotes.map((noteGroup) => (
-                    <Card
+                    <MotionCard
                       key={noteGroup.key}
                       className={cn(
                         "cursor-pointer hover:shadow-md transition-shadow rounded-android-tile", // Apply rounded-android-tile
                         selectedNoteGroupKey === noteGroup.key ? "border-primary ring-2 ring-primary/50 bg-primary/5" : ""
                       )}
                       onClick={() => handleSelectNoteGroup(noteGroup.key)}
+                      whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}
+                      whileTap={{ scale: 0.99 }}
                     >
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -174,7 +176,7 @@ const AllNotes = () => {
                           {noteGroup.notes.length > 0 ? `Dernière note: "${noteGroup.notes[noteGroup.notes.length - 1].replace(/<[^>]*>/g, '').substring(0, 50)}..."` : "Aucune note."}
                         </p>
                       </CardContent>
-                    </Card>
+                    </MotionCard>
                   ))}
                 </div>
               )}
@@ -187,9 +189,9 @@ const AllNotes = () => {
             isMobile ? (selectedNoteGroupKey ? "flex-grow" : "hidden") : "w-full md:w-2/3 flex-grow"
           )}>
             {isMobile && selectedNoteGroupKey && (
-              <Button variant="outline" onClick={handleBackToList} className="mb-4 w-fit">
+              <MotionButton variant="outline" onClick={handleBackToList} className="mb-4 w-fit" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Retour à la liste
-              </Button>
+              </MotionButton>
             )}
             {selectedNoteGroup && currentUserProfile ? (
               <NotesSection

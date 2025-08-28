@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2, LayoutList, Info } from "lucide-react"; // Import LayoutList, Info
@@ -303,7 +304,7 @@ const ClassManagementPage = () => {
       </p>
 
       {(currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can add
-        <Card className="rounded-android-tile">
+        <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-6 w-6 text-primary" /> Ajouter une nouvelle classe
@@ -360,15 +361,15 @@ const ClassManagementPage = () => {
                 emptyMessage="Aucune année scolaire trouvée."
                 iconMap={iconMap}
               />
-              <Button onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassSchoolYearId || (!newClassEstablishmentId && currentRole !== 'administrator')}>
+              <MotionButton onClick={handleAddClass} disabled={!newClassName.trim() || !newClassCurriculumId || !newClassSchoolYearId || (!newClassEstablishmentId && currentRole !== 'administrator')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la classe
-              </Button>
+              </MotionButton>
             </div>
           </CardContent>
-        </Card>
+        </MotionCard>
       )}
           
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" /> Liste de toutes les classes
@@ -390,7 +391,7 @@ const ClassManagementPage = () => {
               <p className="text-muted-foreground text-center py-4">Aucune classe trouvée pour votre recherche.</p>
             ) : (
               filteredClasses.map((cls) => (
-                <Card key={cls.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                <MotionCard key={cls.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}> {/* Apply rounded-android-tile */}
                   <div className="flex-grow">
                     <p className="font-medium">{cls.name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -409,26 +410,26 @@ const ClassManagementPage = () => {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                    <Button variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)}>
+                    <MotionButton variant="outline" size="sm" onClick={() => handleViewStudentsInClass(cls.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Users className="h-4 w-4 mr-1" /> Voir les élèves
-                    </Button>
+                    </MotionButton>
                     {((currentUserProfile && cls.creator_ids.includes(currentUserProfile.id)) || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator') && ( // Only professeur, director, deputy_director, administrator can edit/delete
                       <>
-                        <Button variant="outline" size="sm" onClick={() => handleEditClass(cls)}>
+                        <MotionButton variant="outline" size="sm" onClick={() => handleEditClass(cls)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)}>
+                        </MotionButton>
+                        <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteClass(cls.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           <Trash2 className="h-4 w-4" /> Supprimer
-                        </Button>
+                        </MotionButton>
                       </>
                     )}
                   </div>
-                </Card>
+                </MotionCard>
               ))
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {currentClassToEdit && (
         <EditClassDialog

@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, Users, BookText, School, CalendarDays, UserRoundCog, Check, Search, XCircle, Building2, Info, PenTool } from "lucide-react";
@@ -461,7 +462,7 @@ const ProfessorSubjectAssignmentPage = () => {
       </p>
 
       {/* Section: Ajouter une nouvelle affectation */}
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PlusCircle className="h-6 w-6 text-primary" /> Ajouter une nouvelle affectation
@@ -544,14 +545,14 @@ const ProfessorSubjectAssignmentPage = () => {
               </div>
             )}
           </div>
-          <Button onClick={handleAddAssignment} disabled={isAddingAssignment || !newAssignmentProfessorId || !newAssignmentSubjectId || !newAssignmentClassId || !newAssignmentSchoolYearId || !newAssignmentEstablishmentId}>
+          <MotionButton onClick={handleAddAssignment} disabled={isAddingAssignment || !newAssignmentProfessorId || !newAssignmentSubjectId || !newAssignmentClassId || !newAssignmentSchoolYearId || !newAssignmentEstablishmentId} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
             {isAddingAssignment ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'affectation
-          </Button>
+          </MotionButton>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {/* Section: Liste des affectations */}
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserRoundCog className="h-6 w-6 text-primary" /> Liste des Affectations
@@ -647,7 +648,7 @@ const ProfessorSubjectAssignmentPage = () => {
               <p className="text-muted-foreground text-center py-4">Aucune affectation trouvée pour votre recherche ou vos filtres.</p>
             ) : (
               filteredAssignments.map((assignment) => (
-                <Card key={assignment.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile">
+                <MotionCard key={assignment.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
                   <div className="flex-grow">
                     <p className="font-medium">
                       <span className="text-primary">{getProfessorName(assignment.professor_id)}</span> enseigne <span className="text-primary">{getSubjectName(assignment.subject_id, subjects)}</span> à la classe <span className="text-primary">{getClassName(assignment.class_id, classes)}</span> pour l'année <span className="text-primary">{getSchoolYearName(assignment.school_year_id, schoolYears)}</span>.
@@ -659,19 +660,19 @@ const ProfessorSubjectAssignmentPage = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                    <Button variant="outline" size="sm" onClick={() => handleEditAssignment(assignment)}>
+                    <MotionButton variant="outline" size="sm" onClick={() => handleEditAssignment(assignment)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteAssignment(assignment.id)}>
+                    </MotionButton>
+                    <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteAssignment(assignment.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Trash2 className="h-4 w-4" /> Supprimer
-                    </Button>
+                    </MotionButton>
                   </div>
-                </Card>
+                </MotionCard>
               ))
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {/* Edit Assignment Dialog */}
       {currentAssignmentToEdit && (
@@ -759,9 +760,9 @@ const ProfessorSubjectAssignmentPage = () => {
                 </div>
               )}
             </div>
-            <Button onClick={handleSaveEditedAssignment} disabled={isSavingEdit || !editProfessorId || !editSubjectId || !editClassId || !editSchoolYearId || !editEstablishmentId}>
+            <MotionButton onClick={handleSaveEditedAssignment} disabled={isSavingEdit || !editProfessorId || !editSubjectId || !editClassId || !editSchoolYearId || !editEstablishmentId} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
-            </Button>
+            </MotionButton>
             </div>
           </DialogContent>
         </Dialog>

@@ -5,20 +5,23 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2, Info, LayoutList } from "lucide-react";
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2, LayoutList, Info } from "lucide-react";
 import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
-  getAllStudentClassEnrollments,
-  upsertStudentClassEnrollment,
-  deleteStudentClassEnrollment,
+  findProfileByUsername,
+  updateProfile,
+  deleteProfile,
+  getAllStudentClassEnrollments, // Import getAllStudentClassEnrollments
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   loadClasses,
   loadCurricula,
@@ -30,6 +33,7 @@ import {
   getSchoolYearName,
 } from '@/lib/courseData';
 
+// Shadcn UI components for autocomplete
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check } from "lucide-react";
@@ -407,7 +411,7 @@ const PedagogicalManagementPage = () => {
       </p>
 
       {/* Section: Affecter un élève à une classe */}
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" /> Affecter un élève à une classe
@@ -419,16 +423,17 @@ const PedagogicalManagementPage = () => {
             <Label htmlFor="select-student-for-class-assignment" className="text-base font-semibold mb-2 block">1. Sélectionner l'élève</Label>
             <Popover open={openStudentSelectClass} onOpenChange={setOpenStudentSelectClass}>
               <PopoverTrigger asChild>
-                <Button
+                <MotionButton
                   variant="outline"
                   role="combobox"
                   aria-expanded={openStudentSelectClass}
                   className="w-full justify-between rounded-android-tile"
                   id="select-student-for-class-assignment"
+                  whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                 >
                   {selectedStudentForClassAssignment ? `${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} (@${selectedStudentForClassAssignment.username})` : "Rechercher un élève..."}
                   <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
+                </MotionButton>
               </PopoverTrigger>
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
                 <Command>
@@ -458,7 +463,7 @@ const PedagogicalManagementPage = () => {
                         return (
                           <CommandGroup>
                             {filteredStudentsForClassDropdown.map((profile) => (
-                              <CommandItem
+                              <MotionCommandItem
                                 key={profile.id}
                                 value={profile.username}
                                 onSelect={() => {
@@ -466,6 +471,9 @@ const PedagogicalManagementPage = () => {
                                   setStudentSearchInputClass(profile.username || '');
                                   setOpenStudentSelectClass(false);
                                 }}
+                                whileHover={{ scale: 1.02, backgroundColor: "hsl(var(--accent))", color: "hsl(var(--accent-foreground))", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                                whileTap={{ scale: 0.98, backgroundColor: "hsl(var(--accent-foreground))", color: "hsl(var(--background))" }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
                               >
                                 <Check
                                   className={cn(
@@ -474,7 +482,7 @@ const PedagogicalManagementPage = () => {
                                   )}
                                 />
                                 <span>{profile.first_name} {profile.last_name} (@{profile.username})</span>
-                              </CommandItem>
+                              </MotionCommandItem>
                             ))}
                           </CommandGroup>
                         );
@@ -555,20 +563,20 @@ const PedagogicalManagementPage = () => {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentSchoolYearId || !enrollmentEstablishmentId}>
+                  <MotionButton onClick={handleAssignStudentToClass} disabled={!classToAssign || !enrollmentSchoolYearId || !enrollmentEstablishmentId} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                     <PlusCircle className="h-4 w-4 mr-2" /> Inscrire à cette classe
-                  </Button>
-                  <Button variant="outline" onClick={handleClearClassAssignmentForm}>
+                  </MotionButton>
+                  <MotionButton variant="outline" onClick={handleClearClassAssignmentForm} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                     <XCircle className="h-4 w-4 mr-2" /> Effacer le formulaire
-                  </Button>
+                  </MotionButton>
                 </div>
               </div>
             )}
           </CardContent>
-        </Card>
+        </MotionCard>
 
       {/* Section: Liste des élèves par classe */}
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-primary" /> Élèves par Classe
@@ -654,7 +662,7 @@ const PedagogicalManagementPage = () => {
                 const currentClass = currentEnrollment ? classes.find(c => c.id === currentEnrollment.class_id) : undefined;
 
                 return (
-                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile">
+                  <MotionCard key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
                     <div className="flex-grow">
                       <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
                       <p className="text-sm text-muted-foreground">{profile.email}</p>
@@ -678,21 +686,21 @@ const PedagogicalManagementPage = () => {
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                       {currentEnrollment && (currentRole === 'professeur' || currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'administrator' || currentRole === 'tutor') && (
-                        <Button variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(currentEnrollment.id)}>
+                        <MotionButton variant="outline" size="sm" onClick={() => handleRemoveStudentFromClass(currentEnrollment.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           <UserX className="h-4 w-4 mr-1" /> Retirer de la classe
-                        </Button>
+                        </MotionButton>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)}>
+                      <MotionButton variant="outline" size="sm" onClick={() => handleSendMessageToStudent(profile)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Mail className="h-4 w-4 mr-1" /> Message
-                      </Button>
+                      </MotionButton>
                     </div>
-                  </Card>
+                  </MotionCard>
                 );
               })
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
     </div>
   );
 };

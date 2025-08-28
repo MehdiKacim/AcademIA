@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
@@ -459,16 +460,16 @@ const AdminUserManagementPage = () => {
       </p>
 
       {/* Section: Créer un nouvel utilisateur */}
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <Collapsible open={isNewUserFormOpen} onOpenChange={setIsNewUserFormOpen}>
           <CardHeader>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between p-0">
+              <MotionButton variant="ghost" className="w-full justify-between p-0" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <CardTitle className="flex items-center gap-2">
                   <UserPlus className="h-6 w-6 text-primary" /> Créer un nouvel utilisateur
                 </CardTitle>
                 {isNewUserFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-              </Button>
+              </MotionButton>
             </CollapsibleTrigger>
             <CardDescription>Créez un nouveau compte utilisateur avec un rôle spécifique.</CardDescription>
           </CardHeader>
@@ -542,16 +543,17 @@ const AdminUserManagementPage = () => {
                       <Label htmlFor="new-user-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button
+                          <MotionButton
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal rounded-android-tile",
                               !newUserEnrollmentStartDate && "text-muted-foreground"
                             )}
+                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                           >
                             <CalendarDays className="mr-2 h-4 w-4" />
                             {newUserEnrollmentStartDate ? format(newUserEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                          </Button>
+                          </MotionButton>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                           <Calendar
@@ -568,16 +570,17 @@ const AdminUserManagementPage = () => {
                       <Label htmlFor="new-user-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button
+                          <MotionButton
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal rounded-android-tile",
                               !newUserEnrollmentEndDate && "text-muted-foreground"
                             )}
+                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                           >
                             <CalendarDays className="mr-2 h-4 w-4" />
                             {newUserEnrollmentEndDate ? format(newUserEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                          </Button>
+                          </MotionButton>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                             <Calendar
@@ -593,15 +596,15 @@ const AdminUserManagementPage = () => {
                   </>
                 )}
               </div>
-              <Button onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole === 'student' && (!newUserEnrollmentStartDate || !newUserEnrollmentEndDate)) || (newUserRole !== 'administrator' && !newUserEstablishmentId)}>
+              <MotionButton onClick={handleCreateUser} disabled={isCreatingUser || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking' || (newUserRole === 'student' && (!newUserEnrollmentStartDate || !newUserEnrollmentEndDate)) || (newUserRole !== 'administrator' && !newUserEstablishmentId)} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 {isCreatingUser ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer l'utilisateur
-              </Button>
+              </MotionButton>
           </CollapsibleContent>
         </Collapsible>
-      </Card>
+      </MotionCard>
 
       {/* Section: Liste de tous les utilisateurs */}
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" /> Liste des Utilisateurs
@@ -661,7 +664,7 @@ const AdminUserManagementPage = () => {
               filteredUsersToDisplay.map((profile) => {
                 const RoleIcon = iconMap[profile.role] || User;
                 return (
-                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile">
+                  <MotionCard key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
                     <div className="flex-grow">
                       <p className="font-medium flex items-center gap-2">
                         <RoleIcon className="h-4 w-4 text-primary" /> {profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span>
@@ -680,10 +683,10 @@ const AdminUserManagementPage = () => {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                      <Button variant="outline" size="sm" onClick={() => handleSendMessageToUser(profile)}>
+                      <MotionButton variant="outline" size="sm" onClick={() => handleSendMessageToUser(profile)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Mail className="h-4 w-4 mr-1" /> Message
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => {
+                      </MotionButton>
+                      <MotionButton variant="outline" size="sm" onClick={() => {
                         setUserToEdit(profile);
                         setEditFirstName(profile.first_name || '');
                         setEditLastName(profile.last_name || '');
@@ -694,22 +697,22 @@ const AdminUserManagementPage = () => {
                         setEditEnrollmentStartDate(profile.enrollment_start_date ? parseISO(profile.enrollment_start_date) : undefined);
                         setEditEnrollmentEndDate(profile.enrollment_end_date ? parseISO(profile.enrollment_end_date) : undefined);
                         setIsEditDialogOpen(true);
-                      }}>
+                      }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Edit className="h-4 w-4" />
-                      </Button>
+                      </MotionButton>
                       {currentRole === 'administrator' && (
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(profile.id)}>
+                        <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteUser(profile.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </MotionButton>
                       )}
                     </div>
-                  </Card>
+                  </MotionCard>
                 );
               })
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {/* Edit User Dialog */}
       {userToEdit && (
@@ -834,16 +837,17 @@ const AdminUserManagementPage = () => {
                       <Label htmlFor="edit-enrollment-start-date" className="text-sm font-medium mb-2 block">Date de début d'inscription</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button
+                          <MotionButton
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal rounded-android-tile",
                               !editEnrollmentStartDate && "text-muted-foreground"
                             )}
+                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                           >
                             <CalendarDays className="mr-2 h-4 w-4" />
                             {editEnrollmentStartDate ? format(editEnrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                          </Button>
+                          </MotionButton>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                           <Calendar
@@ -860,16 +864,17 @@ const AdminUserManagementPage = () => {
                       <Label htmlFor="edit-enrollment-end-date" className="text-sm font-medium mb-2 block">Date de fin d'inscription</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button
+                          <MotionButton
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal rounded-android-tile",
                               !editEnrollmentEndDate && "text-muted-foreground"
                             )}
+                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                           >
                             <CalendarDays className="mr-2 h-4 w-4" />
                             {editEnrollmentEndDate ? format(editEnrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                          </Button>
+                          </MotionButton>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                           <Calendar
@@ -886,7 +891,7 @@ const AdminUserManagementPage = () => {
                 )}
               </div>
               <DialogFooter>
-                <Button onClick={async () => {
+                <MotionButton onClick={async () => {
                   if (!userToEdit) return;
                   if (!editFirstName.trim() || !editLastName.trim() || !editUsername.trim() || !editEmail.trim()) {
                     showError("Tous les champs sont requis.");
@@ -956,9 +961,9 @@ const AdminUserManagementPage = () => {
                   } finally {
                     setIsSavingEdit(false);
                   }
-                }} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || (editRole === 'student' && (!editEnrollmentStartDate || !editEnrollmentEndDate)) || (editRole !== 'administrator' && !editEstablishmentId)}>
+                }} disabled={isSavingEdit || editUsernameAvailabilityStatus === 'checking' || editEmailAvailabilityStatus === 'checking' || (editRole === 'student' && (!editEnrollmentStartDate || !editEnrollmentEndDate)) || (editRole !== 'administrator' && !editEstablishmentId)} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
-                </Button>
+                </MotionButton>
               </DialogFooter>
             </div>
           </DialogContent>

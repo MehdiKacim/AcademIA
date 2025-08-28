@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Frown, Home, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import Logo from "@/components/Logo";
 
 const NotFound = () => {
@@ -71,12 +71,12 @@ const NotFound = () => {
       </motion.p>
 
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4">
-        <Button onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
+        <MotionButton onClick={() => navigate('/dashboard')} className="flex items-center gap-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Home className="h-5 w-5" /> Retour au Tableau de bord
-        </Button>
-        <Button variant="outline" onClick={() => navigate(-1)} className="flex items-center gap-2">
+        </MotionButton>
+        <MotionButton variant="outline" onClick={() => navigate(-1)} className="flex items-center gap-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <ArrowLeft className="h-5 w-5" /> Revenir en arrière
-        </Button>
+        </MotionButton>
       </motion.div>
     </motion.div>
   );

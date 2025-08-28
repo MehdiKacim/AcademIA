@@ -4,6 +4,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, XCircle, Info, Search as SearchIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion"; // Import motion
 
 interface SimpleItemSelectorProps {
   id: string;
@@ -19,6 +20,9 @@ interface SimpleItemSelectorProps {
   className?: string;
   popoverContentClassName?: string;
 }
+
+// Create a MotionCommandItem component by wrapping the shadcn CommandItem with framer-motion
+const MotionCommandItem = motion(CommandItem);
 
 const SimpleItemSelector = ({
   id,
@@ -53,10 +57,6 @@ const SimpleItemSelector = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          onClick={() => {
-            console.log(`[SimpleItemSelector] Popover Trigger clicked. Current open state: ${open}. Disabled: ${disabled}`);
-            setOpen(prev => !prev);
-          }}
           className={cn(
             "w-full justify-between rounded-android-tile h-10 px-3 py-2 text-base",
             "transition-all duration-200 ease-in-out",
@@ -88,7 +88,7 @@ const SimpleItemSelector = ({
       <PopoverContent className={cn(
         "w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999] backdrop-blur-lg bg-background/80",
         popoverContentClassName,
-        "pointer-events-auto" // Ensure the popover content itself allows pointer events
+        "pointer-events-auto"
       )}>
         <Command className="rounded-android-tile">
           <CommandInput
@@ -104,11 +104,10 @@ const SimpleItemSelector = ({
                 const OptionIcon = option.icon_name ? (iconMap[option.icon_name] || Info) : Info;
                 const isSelected = value === option.id;
                 return (
-                  <CommandItem
+                  <MotionCommandItem
                     key={option.id}
                     value={option.label}
                     onSelect={() => {
-                      console.log(`[SimpleItemSelector] Item selected: ${option.id}`); // Diagnostic log
                       onValueChange(option.id === value ? null : option.id);
                       setOpen(false);
                       onSearchQueryChange(''); // Clear search after selection
@@ -117,9 +116,12 @@ const SimpleItemSelector = ({
                       "flex items-center gap-2 p-3 hover:bg-accent hover:text-accent-foreground",
                       isSelected ? "bg-accent text-accent-foreground font-semibold" : "text-foreground",
                       "transition-colors duration-150 ease-in-out",
-                      "!pointer-events-auto !opacity-100 !cursor-pointer" // Forcer l'interactivité et la visibilité
+                      "!pointer-events-auto !opacity-100 !cursor-pointer"
                     )}
-                    tabIndex={0} // Ensure it's focusable for keyboard navigation and clicks
+                    tabIndex={0}
+                    whileHover={{ scale: 1.02, backgroundColor: "hsl(var(--accent))", color: "hsl(var(--accent-foreground))", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }} // Lift and shadow on hover
+                    whileTap={{ scale: 0.98, backgroundColor: "hsl(var(--accent-foreground))", color: "hsl(var(--background))" }} // Press effect on tap
+                    transition={{ duration: 0.15, ease: "easeOut" }}
                   >
                     <Check
                       className={cn(
@@ -135,7 +137,7 @@ const SimpleItemSelector = ({
                     {option.isNew && (
                       <span className="ml-auto text-xs text-primary-foreground bg-primary rounded-full px-2 py-0.5">Nouveau</span>
                     )}
-                  </CommandItem>
+                  </MotionCommandItem>
                 );
               })}
             </CommandGroup>

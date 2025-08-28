@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, Building2, Search, UserPlus, UserRoundCog, XCircle, Check, ChevronDown, ChevronUp, Info, BriefcaseBusiness, User } from "lucide-react";
@@ -294,15 +295,15 @@ const EstablishmentManagementPage = () => {
 
       {/* Section: Créer un nouvel établissement */}
       <Collapsible open={isNewEstablishmentFormOpen} onOpenChange={setIsNewEstablishmentFormOpen}>
-        <Card className="rounded-android-tile">
+        <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
           <CardHeader>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between p-0">
+              <MotionButton variant="ghost" className="w-full justify-between p-0" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <CardTitle className="flex items-center gap-2">
                   <PlusCircle className="h-6 w-6 text-primary" /> Créer un nouvel établissement
                 </CardTitle>
                 {isNewEstablishmentFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-              </Button>
+              </MotionButton>
             </CollapsibleTrigger>
             <CardDescription>Ajoutez un nouvel établissement à la plateforme.</CardDescription>
           </CardHeader>
@@ -326,15 +327,15 @@ const EstablishmentManagementPage = () => {
                 onChange={(e) => setNewEstablishmentContactEmail(e.target.value)}
               />
             </div>
-            <Button onClick={handleAddEstablishment} disabled={isCreatingEstablishment || !newEstablishmentName.trim()}>
+            <MotionButton onClick={handleAddEstablishment} disabled={isCreatingEstablishment || !newEstablishmentName.trim()} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isCreatingEstablishment ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'établissement
-            </Button>
+            </MotionButton>
           </CollapsibleContent>
-        </Card>
+        </MotionCard>
       </Collapsible>
 
       {/* Section: Liste des établissements */}
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-primary" /> Liste des Établissements
@@ -350,7 +351,7 @@ const EstablishmentManagementPage = () => {
                 const assignedDirector = directors.find(d => d.establishment_id === est.id);
                 const assignedDeputyDirector = deputyDirectors.find(dd => dd.establishment_id === est.id);
                 return (
-                  <Card key={est.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile">
+                  <MotionCard key={est.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
                     <div className="flex-grow">
                       <p className="font-medium">{est.name}</p>
                       {est.address && <p className="text-sm text-muted-foreground">{est.address}</p>}
@@ -363,23 +364,23 @@ const EstablishmentManagementPage = () => {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenAssignDirectorDialog(est)}>
+                      <MotionButton variant="outline" size="sm" onClick={() => handleOpenAssignDirectorDialog(est)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <UserPlus className="h-4 w-4 mr-1" /> Affecter Directeurs
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleEditEstablishment(est)}>
+                      </MotionButton>
+                      <MotionButton variant="outline" size="sm" onClick={() => handleEditEstablishment(est)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)}>
+                      </MotionButton>
+                      <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteEstablishment(est.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </MotionButton>
                     </div>
-                  </Card>
+                  </MotionCard>
                 );
               })
             )}
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {/* Edit Establishment Dialog */}
       {currentEstablishmentToEdit && (
@@ -430,9 +431,9 @@ const EstablishmentManagementPage = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleSaveEditedEstablishment} disabled={isSavingEdit}>
+                <MotionButton onClick={handleSaveEditedEstablishment} disabled={isSavingEdit} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
-                </Button>
+                </MotionButton>
               </DialogFooter>
             </div>
           </DialogContent>
@@ -484,15 +485,15 @@ const EstablishmentManagementPage = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={async () => {
+                <MotionButton onClick={async () => {
                   if (establishmentForAssignment) {
                     await handleAssignRoleToEstablishment(selectedDirectorId, 'director', establishmentForAssignment.id);
                     await handleAssignRoleToEstablishment(selectedDeputyDirectorId, 'deputy_director', establishmentForAssignment.id);
                     setIsAssignDirectorDialogOpen(false);
                   }
-                }} disabled={isAssigningRole}>
+                }} disabled={isAssigningRole} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   {isAssigningRole ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les affectations"}
-                </Button>
+                </MotionButton>
               </DialogFooter>
             </div>
           </DialogContent>
