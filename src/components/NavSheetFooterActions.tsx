@@ -1,29 +1,28 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Search, BotMessageSquare, User, Menu, LogOut, Settings, Info, LogIn } from "lucide-react";
+import { Search, BotMessageSquare, User, LogIn, Settings, LogOut } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate } from "react-router-dom";
 import { Profile } from "@/lib/dataModels";
-import Logo from './Logo'; // Import Logo
 
-interface MobileBottomNavContentProps {
-  onOpenGlobalSearch?: () => void; // Optional for unauthenticated
-  onOpenAiAChat?: () => void;     // Optional for unauthenticated
-  onOpenMobileNavSheet: () => void;
+interface NavSheetFooterActionsProps {
+  onOpenGlobalSearch: () => void;
+  onOpenAiAChat: () => void;
+  onOpenAuthModal: () => void;
   onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isAuthenticated: boolean;
 }
 
-const MobileBottomNavContent = ({
+const NavSheetFooterActions = ({
   onOpenGlobalSearch,
   onOpenAiAChat,
-  onOpenMobileNavSheet,
+  onOpenAuthModal,
   onInitiateThemeChange,
   isAuthenticated,
-}: MobileBottomNavContentProps) => {
+}: NavSheetFooterActionsProps) => {
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
 
@@ -34,7 +33,7 @@ const MobileBottomNavContent = ({
 
   return (
     <div className="flex items-center justify-around w-full h-[68px] px-4 py-3">
-      {isAuthenticated && onOpenGlobalSearch && (
+      {isAuthenticated && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
@@ -48,7 +47,7 @@ const MobileBottomNavContent = ({
         </Tooltip>
       )}
 
-      {isAuthenticated && onOpenAiAChat && (
+      {isAuthenticated && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
@@ -61,17 +60,6 @@ const MobileBottomNavContent = ({
           </TooltipContent>
         </Tooltip>
       )}
-
-      {/* Central Logo Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onOpenMobileNavSheet}
-        className="rounded-full h-14 w-14 shadow-lg -mt-10 border-2 border-primary ring-2 ring-primary/50 bg-background/80"
-      >
-        <Logo iconClassName="h-8 w-8" showText={false} />
-        <span className="sr-only">Ouvrir le menu</span>
-      </Button>
 
       {isAuthenticated && currentUserProfile ? (
         <DropdownMenu>
@@ -97,7 +85,7 @@ const MobileBottomNavContent = ({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button variant="ghost" size="icon" onClick={() => navigate('/auth')} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+        <Button variant="ghost" size="icon" onClick={onOpenAuthModal} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
           <LogIn className="h-5 w-5" />
           <span className="sr-only">Connexion</span>
         </Button>
@@ -108,4 +96,4 @@ const MobileBottomNavContent = ({
   );
 };
 
-export default MobileBottomNavContent;
+export default NavSheetFooterActions;

@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import MobileBottomNavContent from './MobileBottomNavContent'; // Import the new component
+import NavSheetFooterActions from './NavSheetFooterActions'; // Import the new component
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown,
@@ -250,8 +251,15 @@ const NavSheet = ({
           </motion.div>
         </ScrollArea>
 
-        {/* Bottom action bar - Simplified */}
+        {/* Bottom action bar - Now using NavSheetFooterActions */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
+          <NavSheetFooterActions
+            onOpenGlobalSearch={onOpenGlobalSearch}
+            onOpenAiAChat={onOpenAiAChat}
+            onOpenAuthModal={onOpenAuthModal}
+            onInitiateThemeChange={onInitiateThemeChange}
+            isAuthenticated={!!currentUserProfile}
+          />
           {isMobile && (
             <div className="flex justify-center pt-2">
               <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
