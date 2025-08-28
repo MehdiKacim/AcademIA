@@ -80,38 +80,27 @@ const MobileBottomNavContent = ({
           </Tooltip>
 
           {/* Central Menu/Logo Button */}
-          <Button
+          <MotionButton
+            whileTap={buttonPressAnimation}
             variant="ghost"
             size="icon"
             onClick={() => onToggleMobileNavSheet()}
-            className={cn(navButtonClasses, "relative")}
-            asChild
+            className={cn(navButtonClasses, "relative")} // Keep relative for badge positioning
           >
-            <motion.div 
-              whileTap={buttonPressAnimation} 
-              className="relative flex items-center justify-center h-full w-full rounded-full"
+            <motion.div
+              animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex items-center justify-center h-full w-full" // Ensure inner content fills button
             >
-              <motion.div
-                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <Logo iconClassName="h-6 w-6" showText={false} />
-              </motion.div>
-              <span className="sr-only">Ouvrir le menu</span>
-              {unreadMessagesCount > 0 && (
-                <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-                  {unreadMessagesCount}
-                </span>
-              )}
-              {/* Animated bar (optional, can be removed if not desired with new layout) */}
-              <motion.div
-                initial={{ opacity: 0, scaleX: 0.5 }}
-                animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="absolute bottom-1 h-1 w-1/2 rounded-full bg-primary" 
-              />
+              <Logo iconClassName="h-6 w-6" showText={false} /> {/* Adjusted logo size to fit button */}
             </motion.div>
-          </Button>
+            <span className="sr-only">Ouvrir le menu</span>
+            {unreadMessagesCount > 0 && (
+              <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                {unreadMessagesCount}
+              </span>
+            )}
+          </MotionButton>
 
           {/* User Dropdown Button */}
           <DropdownMenu>
@@ -159,36 +148,22 @@ const MobileBottomNavContent = ({
           </MotionButton>
 
           {/* Central Menu/Logo Button for unauthenticated */}
-          <Button
+          <MotionButton
+            whileTap={buttonPressAnimation}
             variant="ghost"
             size="icon"
-            onClick={() => {
-              console.log("Central button clicked!");
-              onToggleMobileNavSheet(); // Open NavSheet for unauthenticated users
-            }}
+            onClick={() => onToggleMobileNavSheet()}
             className={navButtonClasses}
-            asChild
           >
-            <motion.div 
-              whileTap={buttonPressAnimation} 
-              className="relative flex items-center justify-center h-full w-full rounded-full"
+            <motion.div
+              animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex items-center justify-center h-full w-full"
             >
-              <motion.div
-                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <Logo iconClassName="h-6 w-6" showText={false} />
-              </motion.div>
-              <span className="sr-only">Ouvrir le menu</span>
-              {/* Animated bar */}
-              <motion.div
-                initial={{ opacity: 0, scaleX: 0.5 }}
-                animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="absolute bottom-1 h-1 w-1/2 rounded-full bg-primary" 
-              />
+              <Logo iconClassName="h-6 w-6" showText={false} />
             </motion.div>
-          </Button>
+            <span className="sr-only">Ouvrir le menu</span>
+          </MotionButton>
 
           {/* Right side: MessageSquare button */}
           <MotionButton variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
