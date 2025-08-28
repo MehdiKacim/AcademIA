@@ -1,9 +1,9 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare } from "lucide-react";
+import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare, Menu } from "lucide-react"; // Added Menu icon
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "./theme-toggle"; // Still needed for desktop header, but not directly in this component's main layout
+import { ThemeToggle } from "./theme-toggle"; 
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate } from "react-router-dom";
 import { Profile } from "@/lib/dataModels";
@@ -39,176 +39,162 @@ const MobileBottomNavContent = ({
   };
 
   // Adjusted common button classes for responsiveness
-  const commonButtonClasses = "rounded-full h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 bg-muted/20 hover:bg-muted/40";
+  // All buttons will now share a similar size and styling
+  const navButtonClasses = "rounded-full h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
   
-  // Adjusted central logo button classes for responsiveness
-  const centralLogoButtonClasses = cn(
-    "relative rounded-full h-16 w-16 sm:h-20 sm:w-20 shadow-lg z-[997] overflow-hidden p-0", 
-    "bg-background/80"
-  );
-
   const buttonPressAnimation = {
     scale: 0.95,
     transition: { duration: 0.1, ease: "easeOut" },
   };
 
   return (
-    <div className="flex items-center justify-between w-full h-full relative px-4">
+    <div className="flex items-center justify-around w-full h-full relative px-2"> {/* Changed justify-between to justify-around */}
       {isAuthenticated ? (
         <>
-          {/* Left group of buttons */}
-          <div className="flex items-center gap-8 sm:gap-16"> {/* Made gap responsive */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div whileTap={buttonPressAnimation}>
-                  <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={commonButtonClasses}>
-                    <Search className="h-5 w-5" />
-                    <span className="sr-only">Recherche globale</span>
-                  </Button>
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-                <p>Recherche (Ctrl + F)</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div whileTap={buttonPressAnimation}>
-                  <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className={commonButtonClasses}>
-                    <BotMessageSquare className="h-5 w-5" />
-                    <span className="sr-only">AiA Chat</span>
-                  </Button>
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-                <p>AiA Chat</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] sm:bottom-[58px]"> {/* Adjusted bottom position */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onToggleMobileNavSheet()}
-              className={centralLogoButtonClasses}
-              asChild
-            >
-              <motion.div 
-                whileTap={buttonPressAnimation} 
-                className="relative flex items-center justify-center h-full w-full rounded-full"
-              >
-                <motion.div
-                  animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <Logo iconClassName="h-10 w-10" showText={false} />
-                </motion.div>
-                <span className="sr-only">Ouvrir le menu</span>
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute top-[-8px] right-[-8px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-8 w-8 flex items-center justify-center">
-                    {unreadMessagesCount}
-                  </span>
-                )}
-                {/* New content element: animated bar */}
-                <motion.div
-                  initial={{ opacity: 0, scaleX: 0.5 }}
-                  animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary"
-                />
+          {/* Search Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.div whileTap={buttonPressAnimation}>
+                <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={navButtonClasses}>
+                  <Search className="h-5 w-5" />
+                  <span className="sr-only">Recherche globale</span>
+                </Button>
               </motion.div>
-            </Button>
-          </div>
+            </TooltipTrigger>
+            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+              <p>Recherche (Ctrl + F)</p>
+            </TooltipContent>
+          </Tooltip>
 
-          {/* Right group of buttons */}
-          <div className="flex items-center gap-8 sm:gap-16"> {/* Made gap responsive */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <motion.div whileTap={buttonPressAnimation}>
-                  <Button variant="ghost" size="icon" className={commonButtonClasses}>
-                    <User className="h-5 w-5" />
-                    <span className="sr-only">Menu utilisateur</span>
-                  </Button>
-                </motion.div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
-                <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <User className="mr-2 h-4 w-4" /> Mon Profil
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  <Settings className="mr-2 h-4 w-4" /> Paramètres
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          {/* AiA Chat Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.div whileTap={buttonPressAnimation}>
+                <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className={navButtonClasses}>
+                  <BotMessageSquare className="h-5 w-5" />
+                  <span className="sr-only">AiA Chat</span>
+                </Button>
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+              <p>AiA Chat</p>
+            </TooltipContent>
+          </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div whileTap={buttonPressAnimation}>
-                  <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={commonButtonClasses}>
-                    <MessageSquare className="h-5 w-5" />
-                    <span className="sr-only">Messagerie</span>
-                  </Button>
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-                <p>Messagerie</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+          {/* Central Menu/Logo Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleMobileNavSheet()}
+            className={cn(navButtonClasses, "relative")} // Added relative for badge positioning
+            asChild
+          >
+            <motion.div 
+              whileTap={buttonPressAnimation} 
+              className="relative flex items-center justify-center h-full w-full rounded-full"
+            >
+              <motion.div
+                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Logo iconClassName="h-6 w-6" showText={false} /> {/* Adjusted logo size to fit button */}
+              </motion.div>
+              <span className="sr-only">Ouvrir le menu</span>
+              {unreadMessagesCount > 0 && (
+                <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center"> {/* Adjusted badge size and position */}
+                  {unreadMessagesCount}
+                </span>
+              )}
+              {/* Animated bar (optional, can be removed if not desired with new layout) */}
+              <motion.div
+                initial={{ opacity: 0, scaleX: 0.5 }}
+                animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="absolute bottom-1 h-1 w-1/2 rounded-full bg-primary" 
+              />
+            </motion.div>
+          </Button>
+
+          {/* User Dropdown Button */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <motion.div whileTap={buttonPressAnimation}>
+                <Button variant="ghost" size="icon" className={navButtonClasses}>
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Menu utilisateur</span>
+                </Button>
+              </motion.div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
+              <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" /> Mon Profil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <Settings className="mr-2 h-4 w-4" /> Paramètres
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Messages Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.div whileTap={buttonPressAnimation}>
+                <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={navButtonClasses}>
+                  <MessageSquare className="h-5 w-5" />
+                  <span className="sr-only">Messagerie</span>
+                </Button>
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+              <p>Messagerie</p>
+            </TooltipContent>
+          </Tooltip>
         </>
       ) : (
-        <div className="flex items-center justify-between w-full h-full px-4">
+        <div className="flex items-center justify-around w-full h-full px-2"> {/* Changed justify-between to justify-around */}
           {/* Left side: Login button */}
-          <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
+          <Button variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
             <LogIn className="h-5 w-5" />
             <span className="sr-only">Connexion</span>
           </Button>
 
-          {/* Central button */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-[60px] sm:bottom-[58px]"> {/* Adjusted bottom position */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                console.log("Central button clicked!");
-                onToggleMobileNavSheet(); // Open NavSheet for unauthenticated users
-              }}
-              className={centralLogoButtonClasses}
-              asChild
+          {/* Central Menu/Logo Button for unauthenticated */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleMobileNavSheet()}
+            className={navButtonClasses}
+            asChild
+          >
+            <motion.div 
+              whileTap={buttonPressAnimation} 
+              className="relative flex items-center justify-center h-full w-full rounded-full"
             >
-              <motion.div 
-                whileTap={buttonPressAnimation} 
-                className="relative flex items-center justify-center h-full w-full rounded-full"
+              <motion.div
+                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                <motion.div
-                  animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <Logo iconClassName="h-10 w-10" showText={false} />
-                </motion.div>
-                <span className="sr-only">Ouvrir le menu</span>
-                {/* New content element: animated bar */}
-                <motion.div
-                  initial={{ opacity: 0, scaleX: 0.5 }}
-                  animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="absolute bottom-2 h-1 w-1/2 rounded-full bg-primary"
-                />
+                <Logo iconClassName="h-6 w-6" showText={false} /> {/* Adjusted logo size */}
               </motion.div>
-            </Button>
-          </div>
+              <span className="sr-only">Ouvrir le menu</span>
+              {/* Animated bar */}
+              <motion.div
+                initial={{ opacity: 0, scaleX: 0.5 }}
+                animate={{ opacity: isMobileNavSheetOpen ? 1 : 0, scaleX: isMobileNavSheetOpen ? 1 : 0.5 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="absolute bottom-1 h-1 w-1/2 rounded-full bg-primary" 
+              />
+            </motion.div>
+          </Button>
 
           {/* Right side: MessageSquare button */}
-          <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
+          <Button variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
             <MessageSquare className="h-5 w-5" />
             <span className="sr-only">Messagerie</span>
           </Button>
