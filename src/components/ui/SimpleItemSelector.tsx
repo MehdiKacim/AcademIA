@@ -53,6 +53,10 @@ const SimpleItemSelector = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          onClick={() => {
+            console.log(`[SimpleItemSelector] Popover Trigger clicked. Current open state: ${open}. Disabled: ${disabled}`);
+            setOpen(prev => !prev);
+          }}
           className={cn(
             "w-full justify-between rounded-android-tile h-10 px-3 py-2 text-base",
             "transition-all duration-200 ease-in-out",
@@ -104,16 +108,16 @@ const SimpleItemSelector = ({
                     key={option.id}
                     value={option.label}
                     onSelect={() => {
-                      console.log("Item selected:", option.id); // Diagnostic log
+                      console.log(`[SimpleItemSelector] Item selected: ${option.id}`); // Diagnostic log
                       onValueChange(option.id === value ? null : option.id);
                       setOpen(false);
                       onSearchQueryChange(''); // Clear search after selection
                     }}
                     className={cn(
-                      "flex items-center gap-2 p-3 cursor-pointer hover:bg-accent hover:text-accent-foreground",
+                      "flex items-center gap-2 p-3 hover:bg-accent hover:text-accent-foreground",
                       isSelected ? "bg-accent text-accent-foreground font-semibold" : "text-foreground",
                       "transition-colors duration-150 ease-in-out",
-                      "pointer-events-auto" // Explicitly ensure pointer events are enabled
+                      "!pointer-events-auto !opacity-100 !cursor-pointer" // Forcer l'interactivité et la visibilité
                     )}
                     tabIndex={0} // Ensure it's focusable for keyboard navigation and clicks
                   >
