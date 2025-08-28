@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '20'
 
-      # 3. Mise en cache des dépendances pnpm
+      # 3. Mise en cache des dépendances npm (pnpm)
       - name: Cache pnpm modules
         uses: actions/cache@v4
         with:
@@ -60,8 +60,9 @@ jobs:
         run: npx cap sync android
 
       # 8. Publication des mises à jour web via Capacitor Live Updates
+      # NOTE: J'ai ajouté l'option --channel qui est requise.
       - name: Publish web updates
-        run: npx cap live-updates:publish Production
+        run: npx cap live-updates:publish --channel Production
         env:
           CAPACITOR_LIVE_UPDATES_APP_ID: ${{ secrets.CAPACITOR_LIVE_UPDATES_APP_ID }}
           CAPACITOR_LIVE_UPDATES_TOKEN: ${{ secrets.CAPACITOR_LIVE_UPDATES_TOKEN }}
