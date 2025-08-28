@@ -38,10 +38,10 @@ const MobileBottomNavContent = ({
     navigate("/");
   };
 
-  const commonButtonClasses = "rounded-full h-12 w-12 bg-muted/20 hover:bg-muted/40";
+  const commonButtonClasses = "rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-20 w-20 shadow-lg mt-[-50px] z-[997] overflow-hidden p-0",
-    "bg-background/80" // Re-added original background
+    "relative rounded-full h-16 w-16 shadow-lg mt-[-30px] z-[997] overflow-hidden p-0", // Adjusted size and margin-top for responsiveness
+    "bg-background/80"
   );
 
   const buttonPressAnimation = {
@@ -54,7 +54,7 @@ const MobileBottomNavContent = ({
       {isAuthenticated ? (
         <>
           {/* Left group of buttons */}
-          <div className="flex items-center gap-16">
+          <div className="flex items-center gap-8 sm:gap-16"> {/* Made gap responsive */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.div whileTap={buttonPressAnimation}>
@@ -93,7 +93,7 @@ const MobileBottomNavContent = ({
               className={centralLogoButtonClasses}
               asChild
             >
-              <motion.div // Reverted to original structure
+              <motion.div 
                 whileTap={buttonPressAnimation} 
                 className="flex items-center justify-center h-full w-full rounded-full"
               >
@@ -101,7 +101,7 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-12 w-12" showText={false} />
+                  <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size */}
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {unreadMessagesCount > 0 && (
@@ -114,7 +114,7 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* Right group of buttons */}
-          <div className="flex items-center gap-16">
+          <div className="flex items-center gap-8 sm:gap-16"> {/* Made gap responsive */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <motion.div whileTap={buttonPressAnimation}>
@@ -175,7 +175,7 @@ const MobileBottomNavContent = ({
               className={centralLogoButtonClasses}
               asChild
             >
-              <motion.div // Reverted to original structure
+              <motion.div 
                 whileTap={buttonPressAnimation} 
                 className="flex items-center justify-center h-full w-full rounded-full"
               >
@@ -183,7 +183,7 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-12 w-12" showText={false} />
+                  <Logo iconClassName="h-10 w-10" showText={false} /> {/* Adjusted logo size */}
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
               </motion.div>
