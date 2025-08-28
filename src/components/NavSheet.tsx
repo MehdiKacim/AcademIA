@@ -23,26 +23,7 @@ import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home: Home,
-  MessageSquare: MessageSquare,
-  Search: Search,
-  User: User,
-  LogOut: LogOut,
-  Settings: Settings,
-  Info: Info,
-  BookOpen: BookOpen,
-  Sun: Sun,
-  Moon: Moon,
-  ChevronUp: ChevronUp,
-  ExternalLink: ExternalLink,
-  Menu: Menu,
-  BotMessageSquare: BotMessageSquare,
-  SlidersHorizontal: SlidersHorizontal,
-  MessageSquareQuote: MessageSquareQuote,
-  ShieldCheck: ShieldCheck,
-  Target: Target,
-  BellRing: BellRing,
-  ChevronDown: ChevronDown,
+  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown,
 };
 
 interface NavSheetProps {
@@ -88,9 +69,14 @@ const NavSheet = ({
   const currentOnClose = isMobile ? onClose : onCloseDesktopImmersive;
 
   const swipeHandlers = useSwipeable({
-    onSwipedRight: () => {
-      if (isMobile && isOpen) {
-        onClose();
+    onSwipedDown: () => {
+      if (isMobile && !currentOpenState) { // If mobile and sheet is closed, swipe down to open
+        setIsMobileNavSheetOpen(true);
+      }
+    },
+    onSwipedUp: () => {
+      if (isMobile && currentOpenState) { // If mobile and sheet is open, swipe up to close
+        currentOnClose();
       }
     },
     preventScrollOnSwipe: true,
