@@ -40,7 +40,7 @@ const MobileBottomNavContent = ({
 
   const commonButtonClasses = "rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80 mt-[-28px] z-10"
+    "rounded-full h-16 w-16 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80 mt-[-32px] z-10"
   );
 
   const buttonPressAnimation = {
@@ -49,11 +49,11 @@ const MobileBottomNavContent = ({
   };
 
   return (
-    <div className="flex items-center justify-between w-full h-full relative">
+    <div className="flex items-center justify-between w-full h-full relative px-4"> {/* Added px-4 for padding */}
       {isAuthenticated ? (
         <>
           {/* Left group of buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4"> {/* Increased gap */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.div whileTap={buttonPressAnimation}>
@@ -97,7 +97,7 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-8 w-8" showText={false} />
+                  <Logo iconClassName="h-10 w-10" showText={false} /> {/* Increased logo icon size */}
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
                 {unreadMessagesCount > 0 && (
@@ -110,7 +110,7 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* Right group of buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4"> {/* Increased gap */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <motion.div whileTap={buttonPressAnimation}>
@@ -152,7 +152,7 @@ const MobileBottomNavContent = ({
           </div>
         </>
       ) : (
-        <div className="flex items-center justify-between w-full h-full">
+        <div className="flex items-center justify-between w-full h-full px-4"> {/* Added px-4 for padding */}
           {/* Left side: Login button */}
           <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
             <LogIn className="h-5 w-5" />
@@ -176,7 +176,7 @@ const MobileBottomNavContent = ({
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <Logo iconClassName="h-8 w-8" showText={false} />
+                  <Logo iconClassName="h-10 w-10" showText={false} /> {/* Increased logo icon size */}
                 </motion.div>
                 <span className="sr-only">Ouvrir le menu</span>
               </motion.div>
