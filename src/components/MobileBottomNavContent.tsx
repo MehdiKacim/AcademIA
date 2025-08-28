@@ -41,8 +41,7 @@ const MobileBottomNavContent = ({
   const commonButtonClasses = "rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40";
   // Corrected positioning for the central logo button
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80",
-    "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" // Centered and brought to front
+    "relative rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80"
   );
 
   return (
