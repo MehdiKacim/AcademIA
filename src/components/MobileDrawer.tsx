@@ -37,7 +37,7 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className={cn("fixed inset-0 z-[997] flex flex-col", className)} // Z-index ajusté à 997
+          className={cn("fixed inset-0 z-[995] flex flex-col", className)} // Z-index ajusté à 995
           initial="hidden"
           animate="visible"
           exit="hidden"
@@ -47,8 +47,8 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
           {/* Drawer Content */}
           <motion.div
             className={cn(
-              "fixed left-0 right-0 w-full bg-background rounded-t-3xl shadow-lg flex flex-col overflow-hidden z-[997]", // Changed rounded-t-lg to rounded-t-3xl
-              "top-[40px] bottom-[68px]", // Définit le haut à 40px (laissant un espace en haut) et le bas à 68px (au-dessus de la barre de navigation inférieure)
+              "fixed left-0 right-0 w-full bg-background rounded-t-3xl shadow-lg flex flex-col overflow-hidden z-[995]", // Changed rounded-t-lg to rounded-t-3xl, z-index ajusté à 995
+              "top-[68px] bottom-[68px]", // Définit le haut à 68px (sous l'en-tête) et le bas à 68px (au-dessus de la barre de navigation inférieure)
               "backdrop-blur-lg bg-background/80", // Added blur and transparency for immersive design
               contentClassName
             )}
