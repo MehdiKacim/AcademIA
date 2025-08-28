@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare, Menu } from "lucide-react"; // Added Menu icon
+import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle"; 
@@ -38,8 +38,7 @@ const MobileBottomNavContent = ({
     navigate("/");
   };
 
-  // Adjusted common button classes for responsiveness
-  // All buttons will now share a similar size and styling
+  // Unified button classes for all 5 buttons in the bottom navigation
   const navButtonClasses = "rounded-full h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 bg-muted/20 hover:bg-muted/40 flex items-center justify-center";
   
   const buttonPressAnimation = {
@@ -48,7 +47,7 @@ const MobileBottomNavContent = ({
   };
 
   return (
-    <div className="flex items-center justify-around w-full h-full relative px-2"> {/* Changed justify-between to justify-around */}
+    <div className="flex items-center justify-around w-full h-full relative px-2">
       {isAuthenticated ? (
         <>
           {/* Search Button */}
@@ -101,7 +100,7 @@ const MobileBottomNavContent = ({
               </motion.div>
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
-                <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center"> {/* Adjusted badge size and position */}
+                <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
                   {unreadMessagesCount}
                 </span>
               )}
@@ -124,7 +123,7 @@ const MobileBottomNavContent = ({
                   <span className="sr-only">Menu utilisateur</span>
                 </Button>
               </motion.div>
-            </DropdownMenuTrigger>
+            </TooltipTrigger>
             <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
               <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -157,7 +156,7 @@ const MobileBottomNavContent = ({
           </Tooltip>
         </>
       ) : (
-        <div className="flex items-center justify-around w-full h-full px-2"> {/* Changed justify-between to justify-around */}
+        <div className="flex items-center justify-around w-full h-full px-2">
           {/* Left side: Login button */}
           <Button variant="outline" onClick={() => navigate('/auth')} className={navButtonClasses}>
             <LogIn className="h-5 w-5" />
