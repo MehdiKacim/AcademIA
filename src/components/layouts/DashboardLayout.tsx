@@ -32,7 +32,7 @@ import NavSheet from "@/components/NavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu"; // Import the new component
+import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu";
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -137,7 +137,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               table: 'messages',
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
-            async (payload) => {
+            (payload) => {
               const newCount = await getUnreadMessageCount(currentUserProfile.id);
               setUnreadMessages(newCount);
             }
@@ -150,7 +150,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               table: 'messages',
               filter: `receiver_id=eq.${currentUserProfile.id}`
             },
-            async (payload) => {
+            (payload) => {
               const newCount = await getUnreadMessageCount(currentUserProfile.id);
               setUnreadMessages(newCount);
             }
@@ -225,9 +225,10 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         ref={headerRef} // Attach ref to header
         onClick={handleHeaderClick}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80", // Removed border-b
+          "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80", // Removed top-0
           !isMobile && currentUserProfile && "opacity-100 pointer-events-auto"
         )}
+        style={{ top: 'env(safe-area-inset-top)' }} // Added inline style for top
       >
         <div className="flex items-center gap-4">
           <Logo />
