@@ -1,9 +1,9 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare, Info } from "lucide-react"; // Added MessageSquare and Info
+import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "./theme-toggle";
+import { ThemeToggle } from "./theme-toggle"; // Still needed for desktop header, but not directly in this component's main layout
 import { useRole } from "@/contexts/RoleContext";
 import { useNavigate } from "react-router-dom";
 import { Profile } from "@/lib/dataModels";
@@ -53,36 +53,38 @@ const MobileBottomNavContent = ({
     <div className="flex items-center justify-around w-full h-[68px] px-4 py-3 relative">
       {isAuthenticated ? (
         <>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={commonButtonClasses}>
-                  <Search className="h-5 w-5" />
-                  <span className="sr-only">Recherche globale</span>
-                </Button>
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-              <p>Recherche (Ctrl + F)</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Left side buttons */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div whileTap={buttonPressAnimation}>
+                  <Button variant="ghost" size="icon" onClick={onOpenGlobalSearch} className={commonButtonClasses}>
+                    <Search className="h-5 w-5" />
+                    <span className="sr-only">Recherche globale</span>
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+                <p>Recherche (Ctrl + F)</p>
+              </TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className={commonButtonClasses}>
-                  <BotMessageSquare className="h-5 w-5" />
-                  <span className="sr-only">AiA Chat</span>
-                </Button>
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-              <p>AiA Chat</p>
-            </TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div whileTap={buttonPressAnimation}>
+                  <Button variant="ghost" size="icon" onClick={onOpenAiAChat} className={commonButtonClasses}>
+                    <BotMessageSquare className="h-5 w-5" />
+                    <span className="sr-only">AiA Chat</span>
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+                <p>AiA Chat</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
 
-          <div className="w-14 h-14" />
-
+          {/* Central button */}
           <Button
             variant="ghost"
             size="icon"
@@ -99,7 +101,8 @@ const MobileBottomNavContent = ({
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <Logo iconClassName="h-8 w-8" showText={false} />
-              </motion.div>
+              </motion.对他来说，这只是一个游戏。
+</motion.div>
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
                 <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -109,48 +112,50 @@ const MobileBottomNavContent = ({
             </motion.div>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" className={commonButtonClasses}>
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Menu utilisateur</span>
-                </Button>
-              </motion.div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
-              <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
-                <User className="mr-2 h-4 w-4" /> Mon Profil
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")}>
-                <Settings className="mr-2 h-4 w-4" /> Paramètres
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Right side buttons */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div whileTap={buttonPressAnimation}>
+                  <Button variant="ghost" size="icon" className={commonButtonClasses}>
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Menu utilisateur</span>
+                  </Button>
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
+                <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="mr-2 h-4 w-4" /> Mon Profil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" /> Paramètres
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* Replaced ThemeToggle with MessageSquare button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={commonButtonClasses}>
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="sr-only">Messagerie</span>
-                </Button>
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-              <p>Messagerie</p>
-            </TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div whileTap={buttonPressAnimation}>
+                  <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={commonButtonClasses}>
+                    <MessageSquare className="h-5 w-5" />
+                    <span className="sr-only">Messagerie</span>
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+                <p>Messagerie</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </>
       ) : (
-        <div className="relative flex items-center justify-around w-full h-full">
+        <div className="relative flex items-center justify-center w-full h-full">
           {/* Left side: Login button */}
           <div className="absolute left-4 top-1/2 -translate-y-1/2">
             <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
