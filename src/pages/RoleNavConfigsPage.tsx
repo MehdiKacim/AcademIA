@@ -67,7 +67,7 @@ import {
 import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
 
 const iconMap: { [key: string]: React.ElementType } = {
-  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move, Code,
+  Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, RefreshCw, ChevronDown, ChevronUp, Check, Move, Code,
   // Icons for roles
   student: GraduationCap,
   professeur: PenTool,
@@ -292,15 +292,19 @@ const RoleNavConfigsPage = () => {
   }, []);
 
   const fetchAndStructureNavItems = useCallback(async () => {
+    console.log("[RoleNavConfigsPage] fetchAndStructureNavItems: Starting...");
     const genericItems = await loadAllNavItemsRaw();
     setAllGenericNavItems(genericItems);
+    console.log("[RoleNavConfigsPage] fetchAndStructureNavItems: Loaded generic items:", genericItems.length);
 
     if (selectedRoleFilter === 'all') {
+      console.log("[RoleNavConfigsPage] fetchAndStructureNavItems: selectedRoleFilter is 'all', clearing configured items.");
       setConfiguredItemsTree([]);
       setAllConfiguredItemsFlat([]);
     } else {
       const role = selectedRoleFilter as Profile['role'];
       const roleConfigs = await getRoleNavItemConfigsByRole(role);
+      console.log(`[RoleNavConfigsPage] fetchAndStructureNavItems: Loaded ${roleConfigs.length} role configs for role '${role}'.`);
 
       const configuredMap = new Map<string, NavItem>();
       const allConfiguredItemsFlatList: NavItem[] = [];
@@ -321,9 +325,12 @@ const RoleNavConfigsPage = () => {
           };
           configuredMap.set(configuredItem.id, configuredItem);
           allConfiguredItemsFlatList.push(configuredItem);
+        } else {
+          console.warn(`[RoleNavConfigsPage] Configured item with nav_item_id ${config.nav_item_id} not found in generic items. Skipping.`);
         }
       });
       setAllConfiguredItemsFlat(allConfiguredItemsFlatList);
+      console.log(`[RoleNavConfigsPage] fetchAndStructureNavItems: All configured items (flat): ${allConfiguredItemsFlatList.length}`);
 
       const groupedByParent = new Map<string | null, NavItem[]>();
       allConfiguredItemsFlatList.forEach(item => {
@@ -333,6 +340,7 @@ const RoleNavConfigsPage = () => {
         }
         groupedByParent.get(parentId)?.push(item);
       });
+      console.log("[RoleNavConfigsPage] fetchAndStructureNavItems: Grouped by parent:", groupedByParent);
 
       const sortAndReindex = async (items: NavItem[], currentParentId: string | null) => {
         items.sort((a, b) => a.order_index - b.order_index);
@@ -340,6 +348,7 @@ const RoleNavConfigsPage = () => {
           const item = items[i];
           if (item.configId) { // Only update if it's a configured item
             if (item.order_index !== i || (item.parent_nav_item_id || null) !== currentParentId) {
+              console.log(`[RoleNavConfigsPage] Re-indexing/re-parenting item '${item.label}' (configId: ${item.configId}). Old order: ${item.order_index}, new order: ${i}. Old parent: ${item.parent_nav_item_id}, new parent: ${currentParentId}.`);
               const updatedConfig: Omit<RoleNavItemConfig, 'created_at' | 'updated_at'> = {
                 id: item.configId!,
                 nav_item_id: item.id,
@@ -356,11 +365,13 @@ const RoleNavConfigsPage = () => {
       };
 
       const rootItemsToProcess = groupedByParent.get(null) || [];
+      console.log("[RoleNavConfigsPage] fetchAndStructureNavItems: Root items to process (before sort/reindex):", rootItemsToProcess.length);
       await sortAndReindex(rootItemsToProcess, null);
       const finalRootItems: NavItem[] = [...rootItemsToProcess];
 
       const processChildren = async (parentItem: NavItem) => {
         const children = groupedByParent.get(parentItem.id) || [];
+        console.log(`[RoleNavConfigsPage] Processing children for parent '${parentItem.label}' (ID: ${parentItem.id}). Found ${children.length} children.`);
         await sortAndReindex(children, parentItem.id);
         parentItem.children = children;
         for (const child of children) {
@@ -373,7 +384,9 @@ const RoleNavConfigsPage = () => {
       }
 
       setConfiguredItemsTree(finalRootItems);
+      console.log("[RoleNavConfigsPage] fetchAndStructureNavItems: Final configured items tree:", JSON.stringify(finalRootItems, null, 2));
     }
+    console.log("[RoleNavConfigsPage] fetchAndStructureNavItems: Finished.");
   }, [selectedRoleFilter, getAncestorIds]);
 
   useEffect(() => {
