@@ -53,7 +53,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import {
   Card,
@@ -62,6 +62,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, LinkIcon, ExternalLink, Globe, BarChart2, ChevronDown, Code
@@ -92,7 +93,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
     setNodeRef,
     transform,
     transition,
-    isDragging: isSortableDragging, // Use a different name to avoid conflict
+    isDragging: isSortableDragging,
   } = useSortable({ id: item.configId!, disabled: !isDraggableAndDeletable });
 
   const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`;
@@ -100,7 +101,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isSortableDragging ? 100 : 'auto', // Use isSortableDragging here
+    zIndex: isSortableDragging ? 100 : 'auto',
     opacity: isSortableDragging ? 0.8 : 1,
     paddingLeft: effectivePaddingLeft,
   };
@@ -110,7 +111,7 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isSortableDragging && "ring-2 ring-primary/50 shadow-xl")}> {/* Use isSortableDragging here */}
+        <div ref={setNodeRef} style={style} className={cn("p-2 border rounded-android-tile bg-background flex items-center justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap select-none", isSortableDragging && "ring-2 ring-primary/50 shadow-xl")}>
           <div className="flex items-center gap-2 flex-grow select-none">
             {isDraggableAndDeletable && (
               <div
@@ -152,14 +153,14 @@ interface ManageChildrenDialogProps {
   allConfiguredItemsFlat: NavItem[];
   onChildrenUpdated: () => void;
   getDescendantIds: (item: NavItem, allItemsFlat: NavItem[]) => Set<string>;
-  getAncestorIds: (itemId: string, allItemsFlat: NavItem[]) => Set<string>; // New prop
+  getAncestorIds: (itemId: string, allItemsFlat: NavItem[]) => Set<string>;
 }
 
 const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter, allGenericNavItems, allConfiguredItemsFlat, onChildrenUpdated, getDescendantIds, getAncestorIds }: ManageChildrenDialogProps) => {
   const [selectedGenericItemToAdd, setSelectedGenericItemToAdd] = useState<string | null>(null);
   const [currentChildren, setCurrentChildren] = useState<NavItem[]>([]);
   const [genericItemSearchQuery, setGenericItemSearchQuery] = useState('');
-  const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]); // Déclaré ici
+  const [availableChildrenForAdd, setAvailableChildrenForAdd] = useState<NavItem[]>([]);
 
   const [isNewChildFormOpen, setIsNewChildFormOpen] = useState(false);
   const [newChildLabel, setNewChildLabel] = useState('');
@@ -169,7 +170,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   const [newChildIsExternal, setNewChildIsExternal] = useState(false);
   const [newChildType, setNewChildType] = useState<NavItem['type']>('route');
   const [isAddingNewChild, setIsAddingNewChild] = useState(false);
-  const [isIconSelectOpen, setIsIconSelectOpen] = useState(false); // State for icon popover
+  const [isIconSelectOpen, setIsIconSelectOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -183,14 +184,14 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
   useEffect(() => {
     if (isOpen && parentItem) {
       const currentChildIds = new Set(parentItem.children?.map(c => c.id) || []);
-      const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat); // Descendants of the parent in the *configured* tree
-      const ancestorsOfParent = getAncestorIds(parentItem.id, allGenericNavItems); // Ancestors of the parent in the *generic* tree
+      const descendantsOfParent = getDescendantIds(parentItem, allConfiguredItemsFlat);
+      const ancestorsOfParent = getAncestorIds(parentItem.id, allGenericNavItems);
 
       const filteredAvailable = allGenericNavItems.filter(
-        item => item.id !== parentItem.id && // Cannot add parent to itself
-                !currentChildIds.has(item.id) && // Cannot add existing child
-                !descendantsOfParent.has(item.id) && // Cannot add a descendant of parent
-                !ancestorsOfParent.has(item.id) // Cannot add an ancestor of parent
+        item => item.id !== parentItem.id &&
+                !currentChildIds.has(item.id) &&
+                !descendantsOfParent.has(item.id) &&
+                !ancestorsOfParent.has(item.id)
       );
       
       setAvailableChildrenForAdd(filteredAvailable);
@@ -254,7 +255,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
       onChildrenUpdated();
     } catch (error: any) {
-      // console.error("Error during drag and drop in ManageChildrenDialog:", error);
+      console.error("Error during drag and drop in ManageChildrenDialog:", error);
       showError(`Erreur lors du glisser-déposer: ${error.message}`);
     } finally {
       setActiveDragItem(null);
@@ -298,7 +299,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
       }
       onChildrenUpdated();
     } catch (error: any) {
-      // console.error("Error adding/moving generic item as child:", error);
+      console.error("Error adding/moving generic item as child:", error);
       showError(`Erreur lors de l'opération: ${error.message}`);
     }
   };
@@ -351,7 +352,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         showError("Échec de la création du nouvel élément générique.");
       }
     } catch (error: any) {
-      // console.error("Error creating and adding new generic child:", error);
+      console.error("Error creating and adding new generic child:", error);
       showError(`Erreur lors de la création et de l'ajout du sous-élément: ${error.message}`);
     } finally {
       setIsAddingNewChild(false);
@@ -365,7 +366,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
         showSuccess("Sous-élément retiré !");
         onChildrenUpdated();
       } catch (error: any) {
-      // console.error("Error removing child item:", error);
+      console.error("Error removing child item:", error);
         showError(`Erreur lors du retrait du sous-élément: ${error.message}`);
       }
     }
@@ -400,7 +401,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[1000] rounded-android-tile"> {/* Added z-[1000] */}
+      <DialogContent className="w-full h-svh sm:max-w-4xl sm:h-[90vh] flex flex-col p-6 backdrop-blur-lg bg-background/80 z-[1000] rounded-android-tile">
         <div className="flex flex-col h-full">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -491,7 +492,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                                 setNewChildType(value);
                                 if (value === 'category_or_action') {
                                   setNewChildIsExternal(false);
-                                  setNewChildRoute(''); // Clear route for categories/actions
+                                  setNewChildRoute('');
                                 }
                               }}
                               className="flex space-x-4 mt-2"

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Building2, Search, UserPlus, UserRoundCog, XCircle, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Building2, Search, UserPlus, UserRoundCog, XCircle, Check, ChevronDown, ChevronUp, Info, BriefcaseBusiness, User } from "lucide-react";
 import { Profile, Establishment, ALL_ROLES } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
@@ -17,8 +17,8 @@ import {
   addEstablishmentToStorage,
   updateEstablishmentInStorage,
   deleteEstablishmentFromStorage,
-  getEstablishmentName, // Import getEstablishmentName
-} from '@/lib/courseData'; // Will add these functions to courseData.ts
+  getEstablishmentName,
+} from '@/lib/courseData';
 import {
   getAllProfiles,
   getProfilesByRole,
@@ -38,6 +38,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from '@/lib/utils';
 import LoadingSpinner from "@/components/LoadingSpinner";
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
+
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, Info, BriefcaseBusiness, User
+};
 
 const EstablishmentManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser, fetchUserProfile } = useRole();
@@ -47,14 +52,12 @@ const EstablishmentManagementPage = () => {
   const [directors, setDirectors] = useState<Profile[]>([]);
   const [deputyDirectors, setDeputyDirectors] = useState<Profile[]>([]);
 
-  // States for new establishment form
   const [newEstablishmentName, setNewEstablishmentName] = useState('');
   const [newEstablishmentAddress, setNewEstablishmentAddress] = useState('');
   const [newEstablishmentContactEmail, setNewEstablishmentContactEmail] = useState('');
   const [isCreatingEstablishment, setIsCreatingEstablishment] = useState(false);
   const [isNewEstablishmentFormOpen, setIsNewEstablishmentFormOpen] = useState(false);
 
-  // States for editing establishment
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEstablishmentToEdit, setCurrentEstablishmentToEdit] = useState<Establishment | null>(null);
   const [editEstablishmentName, setEditEstablishmentName] = useState('');
@@ -62,7 +65,6 @@ const EstablishmentManagementPage = () => {
   const [editEstablishmentContactEmail, setEditEstablishmentContactEmail] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  // States for assigning director/deputy director
   const [isAssignDirectorDialogOpen, setIsAssignDirectorDialogOpen] = useState(false);
   const [establishmentForAssignment, setEstablishmentForAssignment] = useState<Establishment | null>(null);
   const [selectedDirectorId, setSelectedDirectorId] = useState<string | null>(null);
@@ -97,7 +99,6 @@ const EstablishmentManagementPage = () => {
     }
   };
 
-  // --- New Establishment Logic ---
   const handleAddEstablishment = async () => {
     if (!newEstablishmentName.trim()) {
       showError("Le nom de l'établissement est requis.");
@@ -118,7 +119,7 @@ const EstablishmentManagementPage = () => {
         setNewEstablishmentAddress('');
         setNewEstablishmentContactEmail('');
         setIsNewEstablishmentFormOpen(false);
-        fetchAllData(); // Refresh data
+        fetchAllData();
       } else {
         showError("Échec de l'ajout de l'établissement.");
       }
@@ -130,7 +131,6 @@ const EstablishmentManagementPage = () => {
     }
   };
 
-  // --- Edit Establishment Logic ---
   const handleEditEstablishment = (establishment: Establishment) => {
     setCurrentEstablishmentToEdit(establishment);
     setEditEstablishmentName(establishment.name);
@@ -159,7 +159,7 @@ const EstablishmentManagementPage = () => {
         showSuccess("Établissement mis à jour !");
         setIsEditDialogOpen(false);
         setCurrentEstablishmentToEdit(null);
-        fetchAllData(); // Refresh data
+        fetchAllData();
       } else {
         showError("Échec de la mise à jour de l'établissement.");
       }
@@ -171,13 +171,12 @@ const EstablishmentManagementPage = () => {
     }
   };
 
-  // --- Delete Establishment Logic ---
   const handleDeleteEstablishment = async (id: string) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cet établissement ? Tous les utilisateurs, cursus, classes, etc. liés à cet établissement seront également affectés (dé-liés ou supprimés). Cette action est irréversible.")) {
       try {
         await deleteEstablishmentFromStorage(id);
         showSuccess("Établissement supprimé !");
-        fetchAllData(); // Refresh data
+        fetchAllData();
       } catch (error: any) {
         console.error("Error deleting establishment:", error);
         showError(`Erreur lors de la suppression de l'établissement: ${error.message}`);
@@ -185,7 +184,6 @@ const EstablishmentManagementPage = () => {
     }
   };
 
-  // --- Assign Director/Deputy Director Logic ---
   const handleOpenAssignDirectorDialog = (establishment: Establishment) => {
     setEstablishmentForAssignment(establishment);
     const currentDirector = directors.find(d => d.establishment_id === establishment.id);
@@ -202,20 +200,16 @@ const EstablishmentManagementPage = () => {
 
     setIsAssigningRole(true);
     try {
-      // First, unassign any existing user of this role from this establishment
       const currentAssignedUser = allProfiles.find(p => p.role === role && p.establishment_id === establishmentId);
       if (currentAssignedUser && currentAssignedUser.id !== profileId) {
         await updateProfile({ id: currentAssignedUser.id, establishment_id: null });
-        // Also update user_metadata in auth.users
         await supabase.auth.admin.updateUserById(currentAssignedUser.id, { user_metadata: { establishment_id: null } });
       }
 
-      // Then, assign the new user (if one is selected)
       if (profileId) {
         const selectedProfile = allProfiles.find(p => p.id === profileId);
         if (selectedProfile && selectedProfile.role === role) {
           await updateProfile({ id: profileId, establishment_id: establishmentId });
-          // Update user_metadata in auth.users
           await supabase.auth.admin.updateUserById(profileId, { user_metadata: { establishment_id: establishmentId } });
           showSuccess(`${getRoleDisplayName(role)} affecté à l'établissement !`);
         } else {
@@ -225,8 +219,7 @@ const EstablishmentManagementPage = () => {
         showSuccess(`${getRoleDisplayName(role)} désaffecté de l'établissement.`);
       }
       
-      fetchAllData(); // Refresh all data
-      // Also refresh current user's profile if it was affected
+      fetchAllData();
       if (currentUserProfile?.id === profileId || currentUserProfile?.id === currentAssignedUser?.id) {
         await fetchUserProfile(currentUserProfile.id);
       }
@@ -251,6 +244,18 @@ const EstablishmentManagementPage = () => {
       p.last_name?.toLowerCase().includes(deputyDirectorSearchQuery.toLowerCase()) ||
       p.username?.toLowerCase().includes(deputyDirectorSearchQuery.toLowerCase())
     );
+
+  const directorOptions = [{ id: 'none', label: 'Désaffecter', icon_name: 'UserX' }, ...filteredDirectors.map(p => ({
+    id: p.id,
+    label: `${p.first_name} ${p.last_name} (@${p.username})`,
+    icon_name: 'User',
+  }))];
+
+  const deputyDirectorOptions = [{ id: 'none', label: 'Désaffecter', icon_name: 'UserX' }, ...filteredDeputyDirectors.map(p => ({
+    id: p.id,
+    label: `${p.first_name} ${p.last_name} (@${p.username})`,
+    icon_name: 'User',
+  }))];
 
   if (isLoadingUser) {
     return (
@@ -379,7 +384,7 @@ const EstablishmentManagementPage = () => {
       {/* Edit Establishment Dialog */}
       {currentEstablishmentToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
             <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Modifier l'établissement</DialogTitle>
@@ -437,7 +442,7 @@ const EstablishmentManagementPage = () => {
       {/* Assign Director/Deputy Director Dialog */}
       {establishmentForAssignment && (
         <Dialog open={isAssignDirectorDialogOpen} onOpenChange={setIsAssignDirectorDialogOpen}>
-          <DialogContent className="sm:max-w-[500px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
+          <DialogContent className="sm:max-w-[500px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
             <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Affecter Directeurs à "{establishmentForAssignment.name}"</DialogTitle>
@@ -449,121 +454,35 @@ const EstablishmentManagementPage = () => {
                 {/* Assign Director */}
                 <div>
                   <Label htmlFor="assign-director">Directeur</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={false} // Managed by Popover
-                        className="w-full justify-between rounded-android-tile"
-                        id="assign-director"
-                      >
-                        {selectedDirectorId ? allProfiles.find(p => p.id === selectedDirectorId)?.first_name + ' ' + allProfiles.find(p => p.id === selectedDirectorId)?.last_name : "Sélectionner un directeur..."}
-                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
-                      <Command>
-                        <CommandInput
-                          placeholder="Rechercher un directeur..."
-                          value={directorSearchQuery}
-                          onValueChange={setDirectorSearchQuery}
-                        />
-                        <CommandList>
-                          <CommandEmpty>Aucun directeur trouvé.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem
-                              value="none"
-                              onSelect={() => {
-                                setSelectedDirectorId(null);
-                                setDirectorSearchQuery('');
-                              }}
-                            >
-                              <XCircle className="mr-2 h-4 w-4" /> <span>Désaffecter</span>
-                            </CommandItem>
-                            {filteredDirectors.map((profile) => (
-                              <CommandItem
-                                key={profile.id}
-                                value={`${profile.first_name} ${profile.last_name}`}
-                                onSelect={() => {
-                                  setSelectedDirectorId(profile.id);
-                                  setDirectorSearchQuery(`${profile.first_name} ${profile.last_name}`);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedDirectorId === profile.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                <span>{profile.first_name} {profile.last_name} (@{profile.username})</span>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <SimpleItemSelector
+                    id="assign-director"
+                    options={directorOptions}
+                    value={selectedDirectorId}
+                    onValueChange={(value) => setSelectedDirectorId(value)}
+                    searchQuery={directorSearchQuery}
+                    onSearchQueryChange={setDirectorSearchQuery}
+                    placeholder="Sélectionner un directeur..."
+                    emptyMessage="Aucun directeur trouvé."
+                    iconMap={iconMap}
+                    popoverContentClassName="z-[9999]"
+                  />
                 </div>
 
                 {/* Assign Deputy Director */}
                 <div>
                   <Label htmlFor="assign-deputy-director">Directeur Adjoint</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={false} // Managed by Popover
-                        className="w-full justify-between rounded-android-tile"
-                        id="assign-deputy-director"
-                      >
-                        {selectedDeputyDirectorId ? allProfiles.find(p => p.id === selectedDeputyDirectorId)?.first_name + ' ' + allProfiles.find(p => p.id === selectedDeputyDirectorId)?.last_name : "Sélectionner un directeur adjoint..."}
-                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
-                      <Command>
-                        <CommandInput
-                          placeholder="Rechercher un directeur adjoint..."
-                          value={deputyDirectorSearchQuery}
-                          onValueChange={setDeputyDirectorSearchQuery}
-                        />
-                        <CommandList>
-                          <CommandEmpty>Aucun directeur adjoint trouvé.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem
-                              value="none"
-                              onSelect={() => {
-                                setSelectedDeputyDirectorId(null);
-                                setDeputyDirectorSearchQuery('');
-                              }}
-                            >
-                              <XCircle className="mr-2 h-4 w-4" /> <span>Désaffecter</span>
-                            </CommandItem>
-                            {filteredDeputyDirectors.map((profile) => (
-                              <CommandItem
-                                key={profile.id}
-                                value={`${profile.first_name} ${profile.last_name}`}
-                                onSelect={() => {
-                                  setSelectedDeputyDirectorId(profile.id);
-                                  setDeputyDirectorSearchQuery(`${profile.first_name} ${profile.last_name}`);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedDeputyDirectorId === profile.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                <span>{profile.first_name} {profile.last_name} (@{profile.username})</span>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <SimpleItemSelector
+                    id="assign-deputy-director"
+                    options={deputyDirectorOptions}
+                    value={selectedDeputyDirectorId}
+                    onValueChange={(value) => setSelectedDeputyDirectorId(value)}
+                    searchQuery={deputyDirectorSearchQuery}
+                    onSearchQueryChange={setDeputyDirectorSearchQuery}
+                    placeholder="Sélectionner un directeur adjoint..."
+                    emptyMessage="Aucun directeur adjoint trouvé."
+                    iconMap={iconMap}
+                    popoverContentClassName="z-[9999]"
+                  />
                 </div>
               </div>
               <DialogFooter>

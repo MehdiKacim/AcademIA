@@ -9,53 +9,55 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, BookOpen, LayoutList, School } from "lucide-react";
-import { Curriculum, Course, Class, Profile, Establishment } from "@/lib/dataModels"; // Removed Establishment import
+import { PlusCircle, Edit, Trash2, BookOpen, LayoutList, School, Building2, Info } from "lucide-react";
+import { Curriculum, Course, Class, Profile, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   loadCurricula,
   addCurriculumToStorage,
   deleteCurriculumFromStorage,
-  loadEstablishments, // Re-added loadEstablishments
+  loadEstablishments,
   loadCourses,
   updateCurriculumInStorage,
   loadClasses,
 } from '@/lib/courseData';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRole } from '@/contexts/RoleContext';
-import EditCurriculumDialog from '@/components/EditCurriculumDialog'; // Re-added EditCurriculumDialog import
+import EditCurriculumDialog from '@/components/EditCurriculumDialog';
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
+
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, Info
+};
 
 const CurriculumManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
 
-  // States for new curriculum form
   const [newCurriculumName, setNewCurriculumName] = useState('');
-  const [newCurriculumEstablishmentId, setNewCurriculumEstablishmentId] = useState<string | null>(null); // Re-added newCurriculumEstablishmentId
+  const [newCurriculumEstablishmentId, setNewCurriculumEstablishmentId] = useState<string | null>(null);
 
-  // States for manage courses modal
   const [isManageCoursesModalOpen, setIsManageCoursesModalOpen] = useState(false);
   const [selectedCurriculumForCourses, setSelectedCurriculumForCourses] = useState<Curriculum | null>(null);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
 
-  // States for edit dialog
   const [isEditCurriculumDialogOpen, setIsEditCurriculumDialogOpen] = useState(false);
   const [currentCurriculumToEdit, setCurrentCurriculumToEdit] = useState<Curriculum | null>(null);
 
+  const [newCurriculumEstablishmentSearchQuery, setNewCurriculumEstablishmentSearchQuery] = useState('');
+
   useEffect(() => {
     const fetchData = async () => {
-      setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
-      setCurricula(await loadCurricula(currentUserProfile?.establishment_id)); // Filter by user's establishment
-      setClasses(await loadClasses(currentUserProfile?.establishment_id)); // Filter by user's establishment
+      setEstablishments(await loadEstablishments());
+      setCurricula(await loadCurricula(currentUserProfile?.establishment_id));
+      setClasses(await loadClasses(currentUserProfile?.establishment_id));
       setAllCourses(await loadCourses());
     };
     fetchData();
   }, [currentUserProfile]);
 
-  // Set default establishment for new curriculum
   useEffect(() => {
     if (currentUserProfile?.establishment_id) {
       setNewCurriculumEstablishmentId(currentUserProfile.establishment_id);
@@ -68,7 +70,6 @@ const CurriculumManagementPage = () => {
 
   const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
-  // --- Curriculum Management Handlers ---
   const handleAddCurriculum = async () => {
     if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à ajouter un cursus.");
@@ -88,13 +89,13 @@ const CurriculumManagementPage = () => {
         id: '',
         name: newCurriculumName.trim(),
         description: undefined,
-        establishment_id: newCurriculumEstablishmentId || '', // Use selected establishment_id
+        establishment_id: newCurriculumEstablishmentId || '',
         course_ids: [],
       });
       if (newCur) {
-        setCurricula(await loadCurricula(currentUserProfile?.establishment_id)); // Refresh with filter
+        setCurricula(await loadCurricula(currentUserProfile?.establishment_id));
         setNewCurriculumName('');
-        setNewCurriculumEstablishmentId(currentUserProfile?.establishment_id || null); // Reset to default
+        setNewCurriculumEstablishmentId(currentUserProfile?.establishment_id || null);
         showSuccess("Cursus ajouté !");
       } else {
         showError("Échec de l'ajout du cursus.");
@@ -115,7 +116,6 @@ const CurriculumManagementPage = () => {
       showError("Cursus introuvable.");
       return;
     }
-    // Role-based establishment_id check
     if (currentRole !== 'administrator' && curriculumToDelete.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez supprimer que les cursus de votre établissement.");
       return;
@@ -123,7 +123,7 @@ const CurriculumManagementPage = () => {
 
     try {
       await deleteCurriculumFromStorage(id);
-      setCurricula(await loadCurricula(currentUserProfile?.establishment_id)); // Refresh with filter
+      setCurricula(await loadCurricula(currentUserProfile?.establishment_id));
       showSuccess("Cursus supprimé !");
     } catch (error: any) {
       console.error("Error deleting curriculum:", error);
@@ -136,7 +136,6 @@ const CurriculumManagementPage = () => {
       showError("Vous n'êtes pas autorisé à gérer les cours d'un cursus.");
       return;
     }
-    // Role-based establishment_id check
     if (currentRole !== 'administrator' && curriculum.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez gérer les cours que des cursus de votre établissement.");
       return;
@@ -153,7 +152,6 @@ const CurriculumManagementPage = () => {
       return;
     }
     if (selectedCurriculumForCourses) {
-      // Role-based establishment_id check
       if (currentRole !== 'administrator' && selectedCurriculumForCourses.establishment_id !== currentUserProfile.establishment_id) {
         showError("Vous ne pouvez sauvegarder les cours que des cursus de votre établissement.");
         return;
@@ -165,7 +163,7 @@ const CurriculumManagementPage = () => {
           course_ids: selectedCourseIds,
         };
         await updateCurriculumInStorage(updatedCurriculum);
-        setCurricula(await loadCurricula(currentUserProfile?.establishment_id)); // Refresh with filter
+        setCurricula(await loadCurricula(currentUserProfile?.establishment_id));
         showSuccess("Cours du cursus mis à jour !");
         setIsManageCoursesModalOpen(false);
         setSelectedCurriculumForCourses(null);
@@ -182,7 +180,6 @@ const CurriculumManagementPage = () => {
       showError("Vous n'êtes pas autorisé à modifier un cursus.");
       return;
     }
-    // Role-based establishment_id check
     if (currentRole !== 'administrator' && curriculum.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez modifier que les cursus de votre établissement.");
       return;
@@ -192,7 +189,7 @@ const CurriculumManagementPage = () => {
   };
 
   const handleSaveEditedCurriculum = async (updatedCurriculum: Curriculum) => {
-    setCurricula(await loadCurricula(currentUserProfile?.establishment_id)); // Refresh with filter
+    setCurricula(await loadCurricula(currentUserProfile?.establishment_id));
   };
 
   if (isLoadingUser) {
@@ -221,13 +218,19 @@ const CurriculumManagementPage = () => {
     );
   }
 
-  const establishmentsToDisplay = establishments.filter(est => 
+  const establishmentsOptions = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
-  const curriculaToDisplay = curricula; // Already filtered by useEffect
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
+
+  const curriculaToDisplay = curricula;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Cursus
       </h1>
@@ -255,19 +258,19 @@ const CurriculumManagementPage = () => {
             {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur'].includes(currentRole || ''))) && (
               <>
                 <Label htmlFor="new-curriculum-establishment">Établissement</Label>
-                <Select value={newCurriculumEstablishmentId || ""} onValueChange={(value) => setNewCurriculumEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                  <SelectTrigger id="new-curriculum-establishment" className="rounded-android-tile">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                    {establishmentsToDisplay.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="new-curriculum-establishment"
+                  options={establishmentsOptions}
+                  value={newCurriculumEstablishmentId}
+                  onValueChange={(value) => setNewCurriculumEstablishmentId(value)}
+                  searchQuery={newCurriculumEstablishmentSearchQuery}
+                  onSearchQueryChange={setNewCurriculumEstablishmentSearchQuery}
+                  placeholder="Sélectionner un établissement"
+                  emptyMessage="Aucun établissement trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                  disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                />
               </>
             )}
             <Button onClick={handleAddCurriculum} disabled={!newCurriculumName.trim() || (!newCurriculumEstablishmentId && currentRole !== 'administrator')}>
@@ -301,7 +304,7 @@ const CurriculumManagementPage = () => {
 
       {/* Manage Curriculum Courses Modal */}
       {isManageCoursesModalOpen && selectedCurriculumForCourses && (
-        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4"> {/* Added z-[1000] */}
+        <div className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4">
           <Card className="w-full max-w-2xl backdrop-blur-lg bg-background/80 rounded-android-tile">
             <CardHeader>
               <CardTitle>Gérer les cours pour "{selectedCurriculumForCourses.name}"</CardTitle>
@@ -348,7 +351,7 @@ const CurriculumManagementPage = () => {
           onClose={() => setIsEditCurriculumDialogOpen(false)}
           curriculum={currentCurriculumToEdit}
           onSave={handleSaveEditedCurriculum}
-          establishments={establishmentsToDisplay} // Pass establishments
+          establishments={establishmentsOptions.map(opt => ({ id: opt.id, name: opt.label, address: opt.description, contact_email: undefined }))}
         />
       )}
     </div>

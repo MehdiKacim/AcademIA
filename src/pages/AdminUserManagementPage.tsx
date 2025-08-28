@@ -18,14 +18,13 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import { useRole } from '@/contexts/RoleContext';
 import { getAllProfiles, checkUsernameExists, checkEmailExists, deleteProfile, updateProfile, getProfileById } from '@/lib/studentData';
-import { Profile, ALL_ROLES, Establishment } from '@/lib/dataModels'; // Import Establishment
-import { loadEstablishments } from '@/lib/courseData'; // Import loadEstablishments
+import { Profile, ALL_ROLES, Establishment } from '@/lib/dataModels';
+import { loadEstablishments } from '@/lib/courseData';
 import { supabase } from '@/integrations/supabase/client';
 import InputWithStatus from '@/components/InputWithStatus';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -40,10 +39,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 
 // Map icon_name strings to Lucide React components (already present in RoleNavConfigsPage, but needed here)
 const iconMap: { [key: string]: React.ElementType } = {
-  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, PlusSquare: PlusCircle, Users: Users, GraduationCap: GraduationCap, PenTool: PenTool, NotebookText: NotebookText, School: School, LayoutList: LayoutList, BriefcaseBusiness: BriefcaseBusiness, UserRoundCog: UserRoundCog, ClipboardCheck: ClipboardCheck, BotMessageSquare: BotMessageSquare, LayoutDashboard: LayoutDashboard, LineChart: LineChart, UsersRound: UsersRound, UserRoundSearch: UserRoundSearch, BellRing: BellRing, Building2: Building2, BookText: BookText, UserCog: UserCog, TrendingUp: TrendingUp, BookMarked: BookMarked, CalendarDays: CalendarDays, UserCheck: UserCheck,
+  Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, PlusCircle: PlusCircle, Users: Users, GraduationCap: GraduationCap, PenTool: PenTool, NotebookText: NotebookText, School: School, LayoutList: LayoutList, BriefcaseBusiness: BriefcaseBusiness, UserRoundCog: UserRoundCog, ClipboardCheck: ClipboardCheck, BotMessageSquare: BotMessageSquare, LayoutDashboard: LayoutDashboard, LineChart: LineChart, UsersRound: UsersRound, UserRoundSearch: UserRoundSearch, BellRing: BellRing, Building2: Building2, BookText: BookText, UserCog: UserCog, TrendingUp: TrendingUp, BookMarked: BookMarked, CalendarDays: CalendarDays, UserCheck: UserCheck,
   // Icons for roles (also defined in RoleNavConfigsPage, but needed here for consistency)
   student: GraduationCap,
   professeur: PenTool,
@@ -83,7 +83,7 @@ const AdminUserManagementPage = () => {
   const [newUserRole, setNewUserRole] = useState<Profile['role']>(
     (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'student'
   );
-  const [newUserEstablishmentId, setNewUserEstablishmentId] = useState<string | null>(null); // New: for establishment_id
+  const [newUserEstablishmentId, setNewUserEstablishmentId] = useState<string | null>(null);
   const [newUserEnrollmentStartDate, setNewUserEnrollmentStartDate] = useState<Date | undefined>(undefined);
   const [newUserEnrollmentEndDate, setNewUserEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
@@ -99,7 +99,7 @@ const AdminUserManagementPage = () => {
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<Profile['role'] | 'all'>(
     (currentRole === 'director' || currentRole === 'deputy_director') ? 'professeur' : 'all'
   );
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // New: for establishment filter
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all');
 
   // States for editing user
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -109,7 +109,7 @@ const AdminUserManagementPage = () => {
   const [editUsername, setEditUsername] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editRole, setEditRole] = useState<Profile['role']>('student');
-  const [editEstablishmentId, setEditEstablishmentId] = useState<string | null>(null); // New: for establishment_id
+  const [editEstablishmentId, setEditEstablishmentId] = useState<string | null>(null);
   const [editEnrollmentStartDate, setEditEnrollmentStartDate] = useState<Date | undefined>(undefined);
   const [editEnrollmentEndDate, setEditEnrollmentEndDate] = useState<Date | undefined>(undefined);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -118,6 +118,13 @@ const AdminUserManagementPage = () => {
   const [editEmailAvailabilityStatus, setEditEmailAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const debounceTimeoutRefEditUsername = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimeoutRefEditEmail = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [newUserRoleSearchQuery, setNewUserRoleSearchQuery] = useState('');
+  const [newUserEstablishmentSearchQuery, setNewUserEstablishmentSearchQuery] = useState('');
+  const [editRoleSearchQuery, setEditRoleSearchQuery] = useState('');
+  const [editEstablishmentSearchQuery, setEditEstablishmentSearchQuery] = useState('');
+  const [filterRoleSearchQuery, setFilterRoleSearchQuery] = useState('');
+  const [filterEstablishmentSearchQuery, setFilterEstablishmentSearchQuery] = useState('');
 
 
   useEffect(() => {
@@ -133,17 +140,17 @@ const AdminUserManagementPage = () => {
     if ((currentRole === 'director' || currentRole === 'deputy_director')) {
       setSelectedRoleFilter('professeur');
       setNewUserRole('professeur');
-      setNewUserEstablishmentId(currentUserProfile?.establishment_id || null); // Default to user's establishment
+      setNewUserEstablishmentId(currentUserProfile?.establishment_id || null);
       setSelectedEstablishmentFilter(currentUserProfile?.establishment_id || 'all');
     } else if (currentRole === 'administrator') {
       setSelectedRoleFilter('all');
       setNewUserRole('director');
-      setNewUserEstablishmentId(null); // Admin can create for any/no establishment
+      setNewUserEstablishmentId(null);
       setSelectedEstablishmentFilter('all');
     } else {
       setSelectedRoleFilter('student');
       setNewUserRole('student');
-      setNewUserEstablishmentId(currentUserProfile?.establishment_id || null); // Default to user's establishment
+      setNewUserEstablishmentId(currentUserProfile?.establishment_id || null);
       setSelectedEstablishmentFilter(currentUserProfile?.establishment_id || 'all');
     }
   }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id]);
@@ -234,33 +241,28 @@ const AdminUserManagementPage = () => {
     let finalNewUserEnrollmentStartDate = newUserEnrollmentStartDate;
     let finalNewUserEnrollmentEndDate = newUserEnrollmentEndDate;
 
-    // Role-based creation restrictions and defaults
     if (currentRole === 'director' || currentRole === 'deputy_director') {
       if (!['professeur', 'tutor', 'student'].includes(newUserRole)) {
         showError("Les directeurs ne peuvent créer que des professeurs, tuteurs ou des élèves.");
         return;
       }
-      // Force establishment_id to current user's establishment
       finalNewUserEstablishmentId = currentUserProfile.establishment_id || null;
     } else if (currentRole === 'professeur' || currentRole === 'tutor') {
       if (newUserRole !== 'student') {
         showError("Les professeurs et tuteurs ne peuvent créer que des élèves.");
         return;
       }
-      // Force establishment_id to current user's establishment
       finalNewUserEstablishmentId = currentUserProfile.establishment_id || null;
     } else if (currentRole === 'administrator') {
-      // Admin can create any role, and assign any establishment_id (or null)
       if (['director', 'deputy_director', 'professeur', 'tutor', 'student'].includes(newUserRole) && !finalNewUserEstablishmentId) {
         showError("Un établissement est requis pour les rôles de directeur, directeur adjoint, professeur, tuteur et élève.");
         return;
       }
       if (newUserRole === 'administrator') {
-        finalNewUserEstablishmentId = null; // Admins are not linked to establishments
+        finalNewUserEstablishmentId = null;
       }
     }
 
-    // Enrollment dates are only for students
     if (newUserRole !== 'student') {
       finalNewUserEnrollmentStartDate = undefined;
       finalNewUserEnrollmentEndDate = undefined;
@@ -419,11 +421,33 @@ const AdminUserManagementPage = () => {
 
   const establishmentsToDisplayForNewUser = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
 
   const establishmentsToDisplayForFilter = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
+
+  const rolesOptionsForNewUser = rolesForNewUserCreation.map(role => ({
+    id: role,
+    label: getRoleDisplayName(role),
+    icon_name: iconMap[role] ? role : 'User',
+  }));
+
+  const rolesOptionsForFilter = rolesForFilter.map(role => ({
+    id: role,
+    label: getRoleDisplayName(role),
+    icon_name: iconMap[role] ? role : 'User',
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -483,36 +507,35 @@ const AdminUserManagementPage = () => {
                 />
                 <div>
                   <Label htmlFor="new-user-role">Rôle</Label>
-                  <Select value={newUserRole} onValueChange={(value: Profile['role']) => setNewUserRole(value)}>
-                    <SelectTrigger id="new-user-role" className="rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner un rôle" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                      {rolesForNewUserCreation
-                        .map(role => (
-                          <SelectItem key={role} value={role}>
-                            {getRoleDisplayName(role)}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleItemSelector
+                    id="new-user-role"
+                    options={rolesOptionsForNewUser}
+                    value={newUserRole}
+                    onValueChange={(value) => setNewUserRole(value as Profile['role'])}
+                    searchQuery={newUserRoleSearchQuery}
+                    onSearchQueryChange={setNewUserRoleSearchQuery}
+                    placeholder="Sélectionner un rôle"
+                    emptyMessage="Aucun rôle trouvé."
+                    iconMap={iconMap}
+                    popoverContentClassName="z-[9999]"
+                  />
                 </div>
                 {newUserRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
                   <div>
                     <Label htmlFor="new-user-establishment">Établissement</Label>
-                    <Select value={newUserEstablishmentId || ""} onValueChange={(value) => setNewUserEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                      <SelectTrigger id="new-user-establishment" className="rounded-android-tile">
-                        <SelectValue placeholder="Sélectionner un établissement" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                        {currentRole === 'administrator' && <SelectItem value="none">Aucun (pour administrateur)</SelectItem>}
-                        {establishmentsToDisplayForNewUser.map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SimpleItemSelector
+                      id="new-user-establishment"
+                      options={establishmentsToDisplayForNewUser}
+                      value={newUserEstablishmentId}
+                      onValueChange={(value) => setNewUserEstablishmentId(value)}
+                      searchQuery={newUserEstablishmentSearchQuery}
+                      onSearchQueryChange={setNewUserEstablishmentSearchQuery}
+                      placeholder="Sélectionner un établissement"
+                      emptyMessage="Aucun établissement trouvé."
+                      iconMap={iconMap}
+                      popoverContentClassName="z-[9999]"
+                      disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                    />
                   </div>
                 )}
                 {newUserRole === 'student' && (
@@ -600,37 +623,34 @@ const AdminUserManagementPage = () => {
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="role-filter">Filtrer par Rôle</Label>
-              <Select value={selectedRoleFilter} onValueChange={(value: Profile['role'] | 'all') => setSelectedRoleFilter(value)}>
-                <SelectTrigger id="role-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Tous les rôles" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  <SelectItem value="all">Tous les rôles</SelectItem>
-                  {rolesForFilter
-                    .map(role => (
-                          <SelectItem key={role} value={role}>
-                            {getRoleDisplayName(role)}
-                          </SelectItem>
-                        ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="role-filter"
+                options={[{ id: 'all', label: 'Tous les rôles', icon_name: 'Users' }, ...rolesOptionsForFilter]}
+                value={selectedRoleFilter}
+                onValueChange={(value) => setSelectedRoleFilter(value as Profile['role'] | 'all')}
+                searchQuery={filterRoleSearchQuery}
+                onSearchQueryChange={setFilterRoleSearchQuery}
+                placeholder="Tous les rôles"
+                emptyMessage="Aucun rôle trouvé."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
               <div className="flex-shrink-0 sm:w-1/3">
                 <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
-                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
-                  <SelectTrigger id="establishment-filter" className="rounded-android-tile">
-                    <SelectValue placeholder="Tous les établissements" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    <SelectItem value="all">Tous les établissements</SelectItem>
-                    {establishmentsToDisplayForFilter.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="establishment-filter"
+                  options={[{ id: 'all', label: 'Tous les établissements', icon_name: 'Building2' }, ...establishmentsToDisplayForFilter]}
+                  value={selectedEstablishmentFilter}
+                  onValueChange={(value) => setSelectedEstablishmentFilter(value)}
+                  searchQuery={filterEstablishmentSearchQuery}
+                  onSearchQueryChange={setFilterEstablishmentSearchQuery}
+                  placeholder="Tous les établissements"
+                  emptyMessage="Aucun établissement trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                />
               </div>
             )}
           </div>
@@ -698,7 +718,7 @@ const AdminUserManagementPage = () => {
       {/* Edit User Dialog */}
       {userToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
             <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Modifier l'utilisateur</DialogTitle>
@@ -780,44 +800,38 @@ const AdminUserManagementPage = () => {
                   <Label htmlFor="edit-role" className="text-right">
                     Rôle
                   </Label>
-                  <Select value={editRole} onValueChange={(value: Profile['role']) => setEditRole(value)} disabled={currentRole !== 'administrator'}>
-                    <SelectTrigger id="edit-role" className="col-span-3 rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner un rôle" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
-                      {ALL_ROLES
-                        .filter(role => {
-                          if (currentRole === 'administrator') return true;
-                          if (currentRole === 'director' || currentRole === 'deputy_director') return ['professeur', 'tutor', 'student'].includes(role);
-                          if (currentRole === 'professeur' || currentRole === 'tutor') return role === 'student';
-                          return false;
-                        })
-                        .map(role => (
-                          <SelectItem key={role} value={role}>
-                            {getRoleDisplayName(role)}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleItemSelector
+                    id="edit-role"
+                    options={rolesOptionsForNewUser} // Reusing options for new user, as roles are the same
+                    value={editRole}
+                    onValueChange={(value) => setEditRole(value as Profile['role'])}
+                    searchQuery={editRoleSearchQuery}
+                    onSearchQueryChange={setEditRoleSearchQuery}
+                    placeholder="Sélectionner un rôle"
+                    emptyMessage="Aucun rôle trouvé."
+                    iconMap={iconMap}
+                    popoverContentClassName="z-[9999]"
+                    disabled={currentRole !== 'administrator'}
+                  />
                 </div>
                 {editRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="edit-establishment" className="text-right">
                       Établissement
                     </Label>
-                    <Select value={editEstablishmentId || ""} onValueChange={(value) => setEditEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                      <SelectTrigger id="edit-establishment" className="col-span-3 rounded-android-tile">
-                        <SelectValue placeholder="Sélectionner un établissement" />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
-                        {currentRole === 'administrator' && <SelectItem value="none">Aucun (pour administrateur)</SelectItem>}
-                        {establishmentsToDisplayForNewUser.map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SimpleItemSelector
+                      id="edit-establishment"
+                      options={establishmentsToDisplayForNewUser}
+                      value={editEstablishmentId}
+                      onValueChange={(value) => setEditEstablishmentId(value)}
+                      searchQuery={editEstablishmentSearchQuery}
+                      onSearchQueryChange={setEditEstablishmentSearchQuery}
+                      placeholder="Sélectionner un établissement"
+                      emptyMessage="Aucun établissement trouvé."
+                      iconMap={iconMap}
+                      popoverContentClassName="z-[9999]"
+                      disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                    />
                   </div>
                 )}
                 {editRole === 'student' && (
@@ -920,14 +934,13 @@ const AdminUserManagementPage = () => {
                     };
                     await updateProfile(updatedProfileData);
 
-                    // Update auth.users email and user_metadata if changed
                     const { data: { user: authUser } } = await supabase.auth.getUser();
                     if (authUser && (editEmail.trim() !== authUser.email || editEstablishmentId !== userToEdit.establishment_id || editRole !== userToEdit.role)) {
                       const { error: authUpdateError } = await supabase.auth.admin.updateUserById(userToEdit.id, { 
                         email: editEmail.trim(),
                         user_metadata: {
-                          ...authUser.user_metadata, // Keep existing metadata
-                          email: editEmail.trim(), // Ensure email is updated in metadata
+                          ...authUser.user_metadata,
+                          email: editEmail.trim(),
                           establishment_id: editEstablishmentId,
                           role: editRole,
                         }
@@ -939,8 +952,8 @@ const AdminUserManagementPage = () => {
                     }
 
                     showSuccess("Utilisateur mis à jour avec succès !");
-                    await fetchUserProfile(userToEdit.id); // Re-fetch current user's profile to update context
-                    setAllUsers(await getAllProfiles()); // Re-fetch all users for list
+                    await fetchUserProfile(userToEdit.id);
+                    setAllUsers(await getAllProfiles());
                     setIsEditDialogOpen(false);
                     setUserToEdit(null);
                   } catch (error: any) {

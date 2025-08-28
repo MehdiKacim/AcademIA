@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2 } from "lucide-react"; // Import Building2
-import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establishment } from "@/lib/dataModels"; // Import Establishment
+import { PlusCircle, Trash2, Users, GraduationCap, Mail, Search, UserCheck, UserX, Loader2, XCircle, CalendarDays, School, ChevronDown, ChevronUp, UserPlus, Building2, Info } from "lucide-react";
+import { Class, Profile, Curriculum, StudentClassEnrollment, SchoolYear, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
@@ -19,16 +19,15 @@ import {
   deleteStudentClassEnrollment,
 } from '@/lib/studentData';
 import { useCourseChat } from '@/contexts/CourseChatContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   loadClasses,
   loadCurricula,
-  loadEstablishments, // Re-added loadEstablishments
+  loadEstablishments,
   loadSchoolYears,
-  getEstablishmentName, // Import getEstablishmentName
-  getCurriculumName, // Import getCurriculumName
-  getClassName, // Import getClassName
-  getSchoolYearName, // Import getSchoolYearName
+  getEstablishmentName,
+  getCurriculumName,
+  getClassName,
+  getSchoolYearName,
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -40,15 +39,19 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+import LoadingSpinner from "@/components/LoadingSpinner";
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 
-// Helper to get the current school year
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, LayoutList, CalendarDays, Users, Info
+};
+
 const getCurrentSchoolYear = () => {
-  const currentMonth = new Date().getMonth(); // 0-indexed (0 = Jan, 8 = Sep, 11 = Dec)
+  const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  if (currentMonth >= 8) { // September to December
+  if (currentMonth >= 8) {
     return `${currentYear}-${currentYear + 1}`;
-  } else { // January to August
+  } else {
     return `${currentYear - 1}-${currentYear}`;
   }
 };
@@ -60,29 +63,34 @@ const PedagogicalManagementPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [classes, setClasses] = useState<Class[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
-  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]); // New state
+  const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
   const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
 
-  // States for assign student to class section
   const [studentSearchInputClass, setStudentSearchInputClass] = useState('');
   const [selectedStudentForClassAssignment, setSelectedStudentForClassAssignment] = useState<Profile | null>(null);
   const [classToAssign, setClassToAssign] = useState<string>("");
-  const [enrollmentSchoolYearId, setEnrollmentSchoolYearId] = useState<string>(""); // Changed to schoolYearId
-  const [enrollmentEstablishmentId, setEnrollmentEstablishmentId] = useState<string | null>(null); // New: for establishment_id
+  const [enrollmentSchoolYearId, setEnrollmentSchoolYearId] = useState<string>("");
+  const [enrollmentEstablishmentId, setEnrollmentEstablishmentId] = useState<string | null>(null);
   const [openStudentSelectClass, setOpenStudentSelectClass] = useState(false);
   const [isSearchingUserClass, setIsSearchingUserClass] = useState(false);
   const debounceTimeoutRefClass = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // States for student list section (within classes)
   const [studentSearchQuery, setSearchStudentQuery] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // Re-added selectedEstablishmentFilter
-  const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null); // Changed to schoolYearFilter
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all');
+  const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null);
 
-  // Get classId from URL for initial filtering
+  const [classToAssignSearchQuery, setClassToAssignSearchQuery] = useState('');
+  const [enrollmentSchoolYearSearchQuery, setEnrollmentSchoolYearSearchQuery] = useState('');
+  const [enrollmentEstablishmentSearchQuery, setEnrollmentEstablishmentSearchQuery] = useState('');
+  const [filterClassSearchQuery, setFilterClassSearchQuery] = useState('');
+  const [filterEstablishmentSearchQuery, setFilterEstablishmentSearchQuery] = useState('');
+  const [filterSchoolYearSearchQuery, setFilterSchoolYearSearchQuery] = useState('');
+
+
   const classIdFromUrl = searchParams.get('classId');
 
   useEffect(() => {
@@ -90,7 +98,7 @@ const PedagogicalManagementPage = () => {
       try {
         setClasses(await loadClasses());
         setCurricula(await loadCurricula());
-        setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
+        setEstablishments(await loadEstablishments());
         setAllProfiles(await getAllProfiles());
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
         setSchoolYears(await loadSchoolYears());
@@ -102,7 +110,6 @@ const PedagogicalManagementPage = () => {
     fetchData();
   }, [currentUserProfile]);
 
-  // Set initial class filter from URL
   useEffect(() => {
     if (classIdFromUrl) {
       setSelectedClassFilter(classIdFromUrl);
@@ -111,14 +118,12 @@ const PedagogicalManagementPage = () => {
     }
   }, [classIdFromUrl]);
 
-  // Set default school year and establishment for new enrollment and filter
   useEffect(() => {
     const activeYear = schoolYears.find(sy => sy.is_active);
     if (activeYear) {
       setEnrollmentSchoolYearId(activeYear.id);
       setSelectedSchoolYearFilter(activeYear.id);
     } else if (schoolYears.length > 0) {
-      // Fallback to the most recent year if no active one
       setEnrollmentSchoolYearId(schoolYears[0].id);
       setSelectedSchoolYearFilter(schoolYears[0].id);
     }
@@ -135,8 +140,6 @@ const PedagogicalManagementPage = () => {
     }
   }, [schoolYears, currentRole, currentUserProfile?.establishment_id]);
 
-  // Removed local getEstablishmentName, getCurriculumName, getClassName, getSchoolYearName declarations. Now imported.
-  
   const handleRemoveStudentFromClass = async (enrollmentId: string) => {
     if (!currentUserProfile || !['professeur', 'tutor', 'director', 'deputy_director', 'administrator'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à retirer des élèves des classes.");
@@ -154,17 +157,14 @@ const PedagogicalManagementPage = () => {
       return;
     }
 
-    // Permission check: Professeur can only remove from classes they manage.
     if (currentRole === 'professeur' && !classOfEnrollment.creator_ids.includes(currentUserProfile.id)) {
       showError("Vous ne pouvez retirer des élèves que des classes que vous gérez.");
       return;
     }
-    // Director/Deputy Director establishment_id check
     if ((currentRole === 'director' || currentRole === 'deputy_director') && enrollmentToDelete.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez retirer des élèves que des classes de votre établissement.");
       return;
     }
-    // Tutor establishment_id check
     if (currentRole === 'tutor' && enrollmentToDelete.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez retirer des élèves que des classes de votre établissement.");
       return;
@@ -172,7 +172,7 @@ const PedagogicalManagementPage = () => {
 
     try {
       await deleteStudentClassEnrollment(enrollmentId);
-      setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
+      setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
       showSuccess(`Élève retiré de la classe !`);
     } catch (error: any) {
       console.error("Error removing student from class:", error);
@@ -184,7 +184,6 @@ const PedagogicalManagementPage = () => {
     navigate(`/messages?contactId=${studentProfile.id}`);
   };
 
-  // Debounced search for student to assign to class
   useEffect(() => {
     if (debounceTimeoutRefClass.current) {
       clearTimeout(debounceTimeoutRefClass.current);
@@ -217,7 +216,7 @@ const PedagogicalManagementPage = () => {
       showError("Veuillez sélectionner une classe.");
       return;
     }
-    if (!enrollmentSchoolYearId) { // Changed to schoolYearId
+    if (!enrollmentSchoolYearId) {
       showError("Veuillez spécifier l'année scolaire.");
       return;
     }
@@ -229,7 +228,6 @@ const PedagogicalManagementPage = () => {
       showError("Seuls les profils d'élèves peuvent être affectés à une classe.");
       return;
     }
-    // Check establishment_id for student
     if (selectedStudentForClassAssignment.establishment_id !== enrollmentEstablishmentId) {
       showError("L'élève sélectionné n'appartient pas à l'établissement choisi.");
       return;
@@ -239,25 +237,22 @@ const PedagogicalManagementPage = () => {
       showError("Classe sélectionnée introuvable.");
       return;
     }
-    // Check class establishment_id
     if (selectedClass.establishment_id !== enrollmentEstablishmentId) {
       showError("La classe sélectionnée n'appartient pas à l'établissement choisi.");
       return;
     }
 
-    // Permission check: Professeur can only assign to classes they manage.
     if (currentRole === 'professeur' && !selectedClass.creator_ids.includes(currentUserProfile.id)) {
       showError("Vous ne pouvez affecter des élèves qu'aux classes que vous gérez.");
       return;
     }
-    // Director/Deputy Director establishment_id check
     if ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor') && enrollmentEstablishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez affecter des élèves qu'aux classes de votre établissement.");
       return;
     }
 
     const existingEnrollment = allStudentClassEnrollments.find(
-      e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.school_year_id === enrollmentSchoolYearId && e.establishment_id === enrollmentEstablishmentId // Changed to schoolYearId and establishmentId
+      e => e.student_id === selectedStudentForClassAssignment.id && e.class_id === classToAssign && e.school_year_id === enrollmentSchoolYearId && e.establishment_id === enrollmentEstablishmentId
     );
 
     if (existingEnrollment) {
@@ -269,14 +264,14 @@ const PedagogicalManagementPage = () => {
       const newEnrollment: Omit<StudentClassEnrollment, 'id' | 'created_at' | 'updated_at' | 'school_year_name'> = {
         student_id: selectedStudentForClassAssignment.id,
         class_id: classToAssign,
-        school_year_id: enrollmentSchoolYearId, // Changed to schoolYearId
+        school_year_id: enrollmentSchoolYearId,
         establishment_id: enrollmentEstablishmentId,
       };
       const savedEnrollment = await upsertStudentClassEnrollment(newEnrollment);
 
       if (savedEnrollment) {
-        setAllStudentClassEnrollments(await getAllStudentClassEnrollments()); // Refresh enrollments
-        showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign, classes)} pour ${getSchoolYearName(enrollmentSchoolYearId, schoolYears)} (${getEstablishmentName(enrollmentEstablishmentId, establishments)}) !`); // Changed to schoolYearId and establishmentId
+        setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
+        showSuccess(`Élève ${selectedStudentForClassAssignment.first_name} ${selectedStudentForClassAssignment.last_name} inscrit à la classe ${getClassName(classToAssign, classes)} pour ${getSchoolYearName(enrollmentSchoolYearId, schoolYears)} (${getEstablishmentName(enrollmentEstablishmentId, establishments)}) !`);
         handleClearClassAssignmentForm();
       } else {
         showError("Échec de l'inscription de l'élève à la classe.");
@@ -292,7 +287,7 @@ const PedagogicalManagementPage = () => {
     setSelectedStudentForClassAssignment(null);
     setClassToAssign("");
     const activeYear = schoolYears.find(sy => sy.is_active);
-    setEnrollmentSchoolYearId(activeYear ? activeYear.id : (schoolYears.length > 0 ? schoolYears[0].id : "")); // Reset to active or first year
+    setEnrollmentSchoolYearId(activeYear ? activeYear.id : (schoolYears.length > 0 ? schoolYears[0].id : ""));
     setEnrollmentEstablishmentId(currentUserProfile?.establishment_id || null);
     setOpenStudentSelectClass(false);
   };
@@ -311,7 +306,7 @@ const PedagogicalManagementPage = () => {
     if (!selectedClassFilter || !selectedSchoolYearFilter) return [];
 
     const enrollmentsInClassAndYear = allStudentClassEnrollments.filter(
-      e => e.class_id === selectedClassFilter && e.school_year_id === selectedSchoolYearFilter && (currentRole === 'administrator' || e.establishment_id === currentUserProfile?.establishment_id) // Changed to schoolYearId and added establishment filter
+      e => e.class_id === selectedClassFilter && e.school_year_id === selectedSchoolYearFilter && (currentRole === 'administrator' || e.establishment_id === currentUserProfile?.establishment_id)
     );
     const studentIdsInClassAndYear = new Set(enrollmentsInClassAndYear.map(e => e.student_id));
 
@@ -329,7 +324,12 @@ const PedagogicalManagementPage = () => {
     return students;
   }, [allProfiles, allStudentClassEnrollments, selectedClassFilter, selectedSchoolYearFilter, studentSearchQuery, currentRole, currentUserProfile?.establishment_id]);
 
-  const schoolYearsOptions = schoolYears.map(sy => ({ value: sy.id, label: sy.name }));
+  const schoolYearsOptions = schoolYears.map(sy => ({
+    id: sy.id,
+    label: sy.name,
+    icon_name: 'CalendarDays',
+    description: `${format(parseISO(sy.start_date), 'dd/MM/yyyy', { locale: fr })} - ${format(parseISO(sy.end_date), 'dd/MM/yyyy', { locale: fr })}`,
+  }));
 
   if (isLoadingUser) {
     return (
@@ -359,26 +359,46 @@ const PedagogicalManagementPage = () => {
 
   const classesToDisplayForAssignment = classes.filter(cls => 
     (currentRole === 'administrator') ||
-    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor') && cls.establishment_id === currentUserProfile.establishment_id) || // Tutors see all classes in their establishment
+    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor') && cls.establishment_id === currentUserProfile.establishment_id) ||
     (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id) && cls.establishment_id === currentUserProfile.establishment_id)
-  );
+  ).map(cls => ({
+    id: cls.id,
+    label: cls.name,
+    icon_name: 'Users',
+    description: `${getCurriculumName(cls.curriculum_id, curricula)} - ${getSchoolYearName(cls.school_year_id, schoolYears)} (${getEstablishmentName(cls.establishment_id, establishments)})`,
+  }));
 
   const classesToDisplayForFilter = classes.filter(cls => 
     (currentRole === 'administrator') ||
-    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor') && cls.establishment_id === currentUserProfile.establishment_id) || // Tutors see all classes in their establishment
+    ((currentRole === 'director' || currentRole === 'deputy_director' || currentRole === 'tutor') && cls.establishment_id === currentUserProfile.establishment_id) ||
     (currentRole === 'professeur' && cls.creator_ids.includes(currentUserProfile.id) && cls.establishment_id === currentUserProfile.establishment_id)
-  );
+  ).map(cls => ({
+    id: cls.id,
+    label: cls.name,
+    icon_name: 'Users',
+    description: `${getCurriculumName(cls.curriculum_id, curricula)} - ${getSchoolYearName(cls.school_year_id, schoolYears)} (${getEstablishmentName(cls.establishment_id, establishments)})`,
+  }));
 
   const establishmentsToDisplayForAssignment = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
 
   const establishmentsToDisplayForFilter = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion Pédagogique
       </h1>
@@ -487,52 +507,52 @@ const PedagogicalManagementPage = () => {
 
                 <div>
                   <Label htmlFor="class-to-assign" className="text-base font-semibold mb-2 block mt-4">2. Choisir la classe d'affectation</Label>
-                  <Select value={classToAssign} onValueChange={setClassToAssign}>
-                    <SelectTrigger id="class-to-assign" className="w-full rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner une classe" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[9999] rounded-android-tile">
-                      {classesToDisplayForAssignment
-                        .filter(cls => !enrollmentEstablishmentId || cls.establishment_id === enrollmentEstablishmentId)
-                        .map(cls => (
-                          <SelectItem key={cls.id} value={cls.id}>
-                            {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleItemSelector
+                    id="class-to-assign"
+                    options={classesToDisplayForAssignment}
+                    value={classToAssign}
+                    onValueChange={(value) => setClassToAssign(value)}
+                    searchQuery={classToAssignSearchQuery}
+                    onSearchQueryChange={setClassToAssignSearchQuery}
+                    placeholder="Sélectionner une classe"
+                    emptyMessage="Aucune classe trouvée."
+                    iconMap={iconMap}
+                    popoverContentClassName="z-[9999]"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="enrollment-school-year" className="text-base font-semibold mb-2 block mt-4">Année scolaire</Label>
-                    <Select value={enrollmentSchoolYearId} onValueChange={setEnrollmentSchoolYearId}>
-                      <SelectTrigger id="enrollment-school-year" className="w-full rounded-android-tile">
-                        <SelectValue placeholder="Sélectionner l'année scolaire" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[9999] rounded-android-tile">
-                        {schoolYearsOptions.map(year => (
-                          <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SimpleItemSelector
+                      id="enrollment-school-year"
+                      options={schoolYearsOptions}
+                      value={enrollmentSchoolYearId}
+                      onValueChange={(value) => setEnrollmentSchoolYearId(value)}
+                      searchQuery={enrollmentSchoolYearSearchQuery}
+                      onSearchQueryChange={setEnrollmentSchoolYearSearchQuery}
+                      placeholder="Sélectionner l'année scolaire"
+                      emptyMessage="Aucune année scolaire trouvée."
+                      iconMap={iconMap}
+                      popoverContentClassName="z-[9999]"
+                    />
                   </div>
                   {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
                     <div>
                       <Label htmlFor="enrollment-establishment" className="text-base font-semibold mb-2 block mt-4">Établissement</Label>
-                      <Select value={enrollmentEstablishmentId || ""} onValueChange={(value) => setEnrollmentEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                        <SelectTrigger id="enrollment-establishment" className="w-full rounded-android-tile">
-                          <SelectValue placeholder="Sélectionner un établissement" />
-                        </SelectTrigger>
-                        <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                          {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                          {establishmentsToDisplayForAssignment.map(est => (
-                            <SelectItem key={est.id} value={est.id}>
-                              {est.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SimpleItemSelector
+                        id="enrollment-establishment"
+                        options={establishmentsToDisplayForAssignment}
+                        value={enrollmentEstablishmentId}
+                        onValueChange={(value) => setEnrollmentEstablishmentId(value)}
+                        searchQuery={enrollmentEstablishmentSearchQuery}
+                        onSearchQueryChange={setEnrollmentEstablishmentSearchQuery}
+                        placeholder="Sélectionner un établissement"
+                        emptyMessage="Aucun établissement trouvé."
+                        iconMap={iconMap}
+                        popoverContentClassName="z-[9999]"
+                        disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                      />
                     </div>
                   )}
                 </div>
@@ -572,61 +592,59 @@ const PedagogicalManagementPage = () => {
             {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
               <div className="flex-shrink-0 sm:w-1/3">
                 <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
-                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
-                  <SelectTrigger id="establishment-filter" className="rounded-android-tile">
-                    <SelectValue placeholder="Tous les établissements" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    <SelectItem value="all">Tous les établissements</SelectItem>
-                    {establishmentsToDisplayForFilter.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="establishment-filter"
+                  options={[{ id: 'all', label: 'Tous les établissements', icon_name: 'Building2' }, ...establishmentsToDisplayForFilter]}
+                  value={selectedEstablishmentFilter}
+                  onValueChange={(value) => setSelectedEstablishmentFilter(value)}
+                  searchQuery={filterEstablishmentSearchQuery}
+                  onSearchQueryChange={setFilterEstablishmentSearchQuery}
+                  placeholder="Tous les établissements"
+                  emptyMessage="Aucun établissement trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                />
               </div>
             )}
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="class-filter">Filtrer par Classe</Label>
-              <Select value={selectedClassFilter || "all"} onValueChange={(value) => {
-                setSelectedClassFilter(value === "all" ? null : value);
-                setSearchParams(params => {
-                  if (value === "all") {
-                    params.delete('classId');
-                  } else {
-                    params.set('classId', value);
-                  }
-                  return params;
-                }, { replace: true });
-              }}>
-                <SelectTrigger id="class-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Toutes les classes" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {classesToDisplayForFilter
-                    .filter(cls => !selectedEstablishmentFilter || selectedEstablishmentFilter === 'all' || cls.establishment_id === selectedEstablishmentFilter)
-                    .map(cls => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="class-filter"
+                options={[{ id: 'all', label: 'Toutes les classes', icon_name: 'Users' }, ...classesToDisplayForFilter]}
+                value={selectedClassFilter}
+                onValueChange={(value) => {
+                  setSelectedClassFilter(value);
+                  setSearchParams(params => {
+                    if (value === "all") {
+                      params.delete('classId');
+                    } else {
+                      params.set('classId', value);
+                    }
+                    return params;
+                  }, { replace: true });
+                }}
+                searchQuery={filterClassSearchQuery}
+                onSearchQueryChange={setFilterClassSearchQuery}
+                placeholder="Toutes les classes"
+                emptyMessage="Aucune classe trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="school-year-filter">Filtrer par Année Scolaire</Label>
-              <Select value={selectedSchoolYearFilter || "all"} onValueChange={(value) => setSelectedSchoolYearFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="school-year-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Toutes les années" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  <SelectItem value="all">Toutes les années</SelectItem>
-                  {schoolYearsOptions.map(year => (
-                    <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="school-year-filter"
+                options={[{ id: 'all', label: 'Toutes les années', icon_name: 'CalendarDays' }, ...schoolYearsOptions]}
+                value={selectedSchoolYearFilter}
+                onValueChange={(value) => setSelectedSchoolYearFilter(value)}
+                searchQuery={filterSchoolYearSearchQuery}
+                onSearchQueryChange={setFilterSchoolYearSearchQuery}
+                placeholder="Toutes les années"
+                emptyMessage="Aucune année scolaire trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
           </div>
           <div className="space-y-2">
@@ -642,7 +660,7 @@ const PedagogicalManagementPage = () => {
                 const currentClass = currentEnrollment ? classes.find(c => c.id === currentEnrollment.class_id) : undefined;
 
                 return (
-                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  <Card key={profile.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile">
                     <div className="flex-grow">
                       <p className="font-medium">{profile.first_name} {profile.last_name} <span className="text-sm text-muted-foreground">(@{profile.username})</span></p>
                       <p className="text-sm text-muted-foreground">{profile.email}</p>

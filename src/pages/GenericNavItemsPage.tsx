@@ -9,14 +9,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe } from "lucide-react";
+import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Check } from "lucide-react";
 import { NavItem, Profile } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem } from "@/lib/navItems";
 import { useRole } from '@/contexts/RoleContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils'; // Import cn for conditional styling
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 // Map icon_name strings to Lucide React components
 const iconMap: { [key: string]: React.ElementType } = {
@@ -37,7 +39,6 @@ const iconMap: { [key: string]: React.ElementType } = {
 
 const navItemTypes: NavItem['type'][] = ['route', 'category_or_action'];
 
-// Helper function moved to top-level scope
 const getItemTypeLabel = (type: NavItem['type']) => {
   switch (type) {
     case 'route': return "Route";
@@ -50,9 +51,8 @@ const GenericNavItemsPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
   const [allGenericNavItems, setAllGenericNavItems] = useState<NavItem[]>([]);
   const [isNewItemFormOpen, setIsNewItemFormOpen] = useState(false);
-  const [searchFilter, setSearchFilter] = useState(''); // New state for search filter
+  const [searchFilter, setSearchFilter] = useState('');
 
-  // States for new generic item form
   const [newItemLabel, setNewItemLabel] = useState('');
   const [newItemRoute, setNewItemRoute] = useState('');
   const [newItemIconName, setNewItemIconName] = useState('');
@@ -60,8 +60,8 @@ const GenericNavItemsPage = () => {
   const [newItemIsExternal, setNewItemIsExternal] = useState(false);
   const [newItemType, setNewItemType] = useState<NavItem['type']>('route');
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [isNewItemIconSelectOpen, setIsNewItemIconSelectOpen] = useState(false);
 
-  // States for edit dialog (for generic nav item properties)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentItemToEdit, setCurrentItemToEdit] = useState<NavItem | null>(null);
   const [editItemLabel, setEditItemLabel] = useState('');
@@ -71,6 +71,7 @@ const GenericNavItemsPage = () => {
   const [editItemIsExternal, setEditItemIsExternal] = useState(false);
   const [editItemType, setEditItemType] = useState<NavItem['type']>('route');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isEditItemIconSelectOpen, setIsEditItemIconSelectOpen] = useState(false);
 
   const fetchGenericNavItems = useCallback(async () => {
     try {
@@ -95,6 +96,10 @@ const GenericNavItemsPage = () => {
       showError("Une route est requise pour un élément de type 'Route'.");
       return;
     }
+    if (newItemType === 'category_or_action' && newItemRoute.trim()) {
+      showError("Une catégorie/action ne doit pas avoir de route.");
+      return;
+    }
 
     setIsAddingItem(true);
     try {
@@ -110,7 +115,6 @@ const GenericNavItemsPage = () => {
       showSuccess("Élément de navigation générique ajouté !");
 
       await fetchGenericNavItems();
-      // Reset form
       setNewItemLabel('');
       setNewItemRoute('');
       setNewItemIconName('');
@@ -162,6 +166,10 @@ const GenericNavItemsPage = () => {
     }
     if (editItemType === 'route' && !editItemRoute.trim()) {
       showError("Une route est requise pour un élément de type 'Route'.");
+      return;
+    }
+    if (editItemType === 'category_or_action' && editItemRoute.trim()) {
+      showError("Une catégorie/action ne doit pas avoir de route.");
       return;
     }
 
@@ -228,7 +236,7 @@ const GenericNavItemsPage = () => {
   const categoriesAndActions = filteredGenericNavItems.filter(item => item.type === 'category_or_action').sort((a, b) => a.label.localeCompare(b.label));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Éléments de Navigation Génériques
       </h1>
@@ -257,29 +265,28 @@ const GenericNavItemsPage = () => {
                 </div>
                 <div>
                   <Label htmlFor="new-item-type">Type d'élément</Label>
-                  <Select value={newItemType} onValueChange={(value: NavItem['type']) => {
-                    setNewItemType(value);
-                    if (value === 'category_or_action') {
-                      setNewItemIsExternal(false);
-                    }
-                  }}>
-                    <SelectTrigger id="new-item-type" className="rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
-                      <ScrollArea className="h-40">
-                        {navItemTypes.map(type => (
-                          <SelectItem key={type} value={type}>
-                            {getItemTypeLabel(type)}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  <RadioGroup
+                    value={newItemType}
+                    onValueChange={(value: NavItem['type']) => {
+                      setNewItemType(value);
+                      if (value === 'category_or_action') {
+                        setNewItemIsExternal(false);
+                        setNewItemRoute('');
+                      }
+                    }}
+                    className="flex space-x-4 mt-2"
+                  >
+                    {navItemTypes.map(type => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <RadioGroupItem value={type} id={`new-item-type-${type}`} />
+                        <Label htmlFor={`new-item-type-${type}`}>{getItemTypeLabel(type)}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
                 <div>
                   <Label htmlFor="new-item-route">Route (URL interne ou #hash)</Label>
-                  <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category_or_action' && (newItemRoute === null || newItemRoute === undefined)} />
+                  <Input id="new-item-route" value={newItemRoute} onChange={(e) => setNewItemRoute(e.target.value)} disabled={newItemType === 'category_or_action'} />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="new-item-is-external" checked={newItemIsExternal} onCheckedChange={setNewItemIsExternal} disabled={newItemType === 'category_or_action'} />
@@ -287,25 +294,58 @@ const GenericNavItemsPage = () => {
                 </div>
                 <div>
                   <Label htmlFor="new-item-icon">Nom de l'icône (Lucide React)</Label>
-                  <Select value={newItemIconName} onValueChange={setNewItemIconName}>
-                    <SelectTrigger id="new-item-icon" className="rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner une icône" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999]">
-                      <ScrollArea className="h-40">
-                        {Object.keys(iconMap).sort().map(iconName => {
-                          const IconComponent = iconMap[iconName];
-                          return (
-                            <SelectItem key={iconName} value={iconName}>
-                              <div className="flex items-center gap-2">
-                                <IconComponent className="h-4 w-4" /> {iconName}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  <Popover open={isNewItemIconSelectOpen} onOpenChange={setIsNewItemIconSelectOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isNewItemIconSelectOpen}
+                        className="w-full justify-between rounded-android-tile"
+                      >
+                        {newItemIconName ? (
+                          <div className="flex items-center gap-2">
+                            {React.createElement(iconMap[newItemIconName] || Info, { className: "h-4 w-4" })}
+                            {newItemIconName}
+                          </div>
+                        ) : (
+                          "Sélectionner une icône..."
+                        )}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
+                      <Command>
+                        <CommandInput placeholder="Rechercher une icône..." />
+                        <CommandList>
+                          <CommandEmpty>Aucune icône trouvée.</CommandEmpty>
+                          <CommandGroup>
+                            {Object.keys(iconMap).sort().map(iconName => {
+                              const IconComponent = iconMap[iconName];
+                              return (
+                                <CommandItem
+                                  key={iconName}
+                                  value={iconName}
+                                  onSelect={() => {
+                                    setNewItemIconName(iconName);
+                                    setIsNewItemIconSelectOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      newItemIconName === iconName ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <IconComponent className="mr-2 h-4 w-4" />
+                                  <span>{iconName}</span>
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label htmlFor="new-item-description">Description (optionnel)</Label>
@@ -337,8 +377,7 @@ const GenericNavItemsPage = () => {
               onChange={(e) => setSearchFilter(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Added grid for side-by-side */}
-            {/* Categories/Actions Section (moved to first column) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Collapsible defaultOpen={true}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between p-0">
@@ -350,7 +389,7 @@ const GenericNavItemsPage = () => {
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
-                  <div className="overflow-x-auto"> {/* Added overflow-x-auto here */}
+                  <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
@@ -396,7 +435,6 @@ const GenericNavItemsPage = () => {
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Routes Section (moved to second column) */}
             <Collapsible defaultOpen={true}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between p-0">
@@ -408,7 +446,7 @@ const GenericNavItemsPage = () => {
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
-                  <div className="overflow-x-auto"> {/* Added overflow-x-auto here */}
+                  <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="sticky top-0 bg-background/80 backdrop-blur-lg border-b">
@@ -460,72 +498,104 @@ const GenericNavItemsPage = () => {
       {/* Edit Generic Nav Item Dialog */}
       {currentItemToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
-            <div className="flex flex-col h-full"> {/* Wrap children in a single div */}
+          <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
+            <div className="flex flex-col h-full">
               <DialogHeader>
                 <DialogTitle>Modifier l'élément de navigation générique</DialogTitle>
                 <DialogDescription>
                   Mettez à jour les détails de l'élément de navigation de base.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+              <div className="grid gap-4 py-4 flex-grow">
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-item-label" className="sm:text-right">Libellé</Label>
                   <Input id="edit-item-label" value={editItemLabel} onChange={(e) => setEditItemLabel(e.target.value)} className="sm:col-span-3" required />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-item-type">Type d'élément</Label>
-                  <Select value={editItemType} onValueChange={(value: NavItem['type']) => {
-                    setEditItemType(value);
-                    if (value === 'category_or_action') {
-                      setEditItemIsExternal(false);
-                    }
-                  }}>
-                    <SelectTrigger id="edit-item-type" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Apply rounded-android-tile */}
-                      <ScrollArea className="h-40">
-                        {navItemTypes.map(type => (
-                          <SelectItem key={type} value={type}>
-                            {getItemTypeLabel(type)}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  <RadioGroup
+                    value={editItemType}
+                    onValueChange={(value: NavItem['type']) => {
+                      setEditItemType(value);
+                      if (value === 'category_or_action') {
+                        setEditItemIsExternal(false);
+                        setEditItemRoute('');
+                      }
+                    }}
+                    className="sm:col-span-3 flex space-x-4 mt-2"
+                  >
+                    {navItemTypes.map(type => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <RadioGroupItem value={type} id={`edit-item-type-${type}`} />
+                        <Label htmlFor={`edit-item-type-${type}`}>{getItemTypeLabel(type)}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-item-route" className="sm:text-right">Route</Label>
-                  <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="sm:col-span-3" disabled={editItemType === 'category_or_action' && (editItemRoute === null || editItemRoute === undefined)} />
+                  <Input id="edit-item-route" value={editItemRoute} onChange={(e) => setEditItemRoute(e.target.value)} className="sm:col-span-3" disabled={editItemType === 'category_or_action'} />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="edit-item-is-external" checked={editItemIsExternal} onCheckedChange={setEditItemIsExternal} className="sm:col-span-3" disabled={editItemType === 'category_or_action'} />
                   <Label htmlFor="edit-item-is-external">Lien externe (ouvre dans un nouvel onglet)</Label>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-item-icon">Icône</Label>
-                  <Select value={editItemIconName} onValueChange={setEditItemIconName}>
-                    <SelectTrigger id="edit-item-icon" className="sm:col-span-3 rounded-android-tile"> {/* Adjusted grid for mobile */}
-                      <SelectValue placeholder="Sélectionner une icône" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile"> {/* Apply rounded-android-tile */}
-                      <ScrollArea className="h-40">
-                        {Object.keys(iconMap).sort().map(iconName => {
-                          const IconComponent = iconMap[iconName];
-                          return (
-                            <SelectItem key={iconName} value={iconName}>
-                              <div className="flex items-center gap-2">
-                                <IconComponent className="h-4 w-4" /> {iconName}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  <Popover open={isEditItemIconSelectOpen} onOpenChange={setIsEditItemIconSelectOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isEditItemIconSelectOpen}
+                        className="sm:col-span-3 w-full justify-between rounded-android-tile"
+                      >
+                        {editItemIconName ? (
+                          <div className="flex items-center gap-2">
+                            {React.createElement(iconMap[editItemIconName] || Info, { className: "h-4 w-4" })}
+                            {editItemIconName}
+                          </div>
+                        ) : (
+                          "Sélectionner une icône..."
+                        )}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
+                      <Command>
+                        <CommandInput placeholder="Rechercher une icône..." />
+                        <CommandList>
+                          <CommandEmpty>Aucune icône trouvée.</CommandEmpty>
+                          <CommandGroup>
+                            {Object.keys(iconMap).sort().map(iconName => {
+                              const IconComponent = iconMap[iconName];
+                              return (
+                                <CommandItem
+                                  key={iconName}
+                                  value={iconName}
+                                  onSelect={() => {
+                                    setEditItemIconName(iconName);
+                                    setIsEditItemIconSelectOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      editItemIconName === iconName ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <IconComponent className="mr-2 h-4 w-4" />
+                                  <span>{iconName}</span>
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4"> {/* Adjusted grid for mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-item-description" className="sm:text-right">Description</Label>
                   <Textarea id="edit-item-description" value={editItemDescription} onChange={(e) => setEditItemDescription(e.target.value)} className="sm:col-span-3" />
                 </div>

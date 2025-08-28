@@ -9,14 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Edit, Trash2, Users, BookText, School, CalendarDays, UserRoundCog, Check, Search, XCircle, Building2 } from "lucide-react"; // Import Building2
-import { Profile, Class, Subject, SchoolYear, ProfessorSubjectAssignment, Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
+import { PlusCircle, Edit, Trash2, Users, BookText, School, CalendarDays, UserRoundCog, Check, Search, XCircle, Building2, Info, PenTool } from "lucide-react";
+import { Profile, Class, Subject, SchoolYear, ProfessorSubjectAssignment, Curriculum, Establishment } from "@/lib/dataModels";
 import { showSuccess, showError } from "@/utils/toast";
 import {
   getAllProfiles,
   getProfilesByRole,
 } from '@/lib/studentData';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   loadClasses,
   loadSubjects,
@@ -25,13 +24,13 @@ import {
   addProfessorSubjectAssignmentToStorage,
   updateProfessorSubjectAssignmentInStorage,
   deleteProfessorSubjectAssignmentFromStorage,
-  loadEstablishments, // Re-added loadEstablishments
+  loadEstablishments,
   loadCurricula,
-  getEstablishmentName, // Import getEstablishmentName
-  getCurriculumName, // Import getCurriculumName
-  getClassName, // Import getClassName
-  getSchoolYearName, // Import getSchoolYearName
-  getSubjectName, // Import getSubjectName
+  getEstablishmentName,
+  getCurriculumName,
+  getClassName,
+  getSchoolYearName,
+  getSubjectName,
 } from '@/lib/courseData';
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -45,8 +44,13 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"; // Import Dialog components
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+} from "@/components/ui/dialog";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
+
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, BookText, CalendarDays, Users, Info, PenTool
+};
 
 const ProfessorSubjectAssignmentPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -55,35 +59,51 @@ const ProfessorSubjectAssignmentPage = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [schoolYears, setSchoolYears] = useState<SchoolYear[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // Re-added establishments state
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
   const [assignments, setAssignments] = useState<ProfessorSubjectAssignment[]>([]);
 
-  // States for new assignment form
   const [newAssignmentProfessorId, setNewAssignmentProfessorId] = useState<string>("");
   const [newAssignmentSubjectId, setNewAssignmentSubjectId] = useState<string>("");
   const [newAssignmentClassId, setNewAssignmentClassId] = useState<string>("");
   const [newAssignmentSchoolYearId, setNewAssignmentSchoolYearId] = useState<string>("");
-  const [newAssignmentEstablishmentId, setNewAssignmentEstablishmentId] = useState<string | null>(null); // New: for establishment_id
+  const [newAssignmentEstablishmentId, setNewAssignmentEstablishmentId] = useState<string | null>(null);
   const [isAddingAssignment, setIsAddingAssignment] = useState(false);
 
-  // States for editing assignment
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentAssignmentToEdit, setCurrentAssignmentToEdit] = useState<ProfessorSubjectAssignment | null>(null);
   const [editProfessorId, setEditProfessorId] = useState<string>("");
   const [editSubjectId, setEditSubjectId] = useState<string>("");
   const [editClassId, setEditClassId] = useState<string>("");
   const [editSchoolYearId, setEditSchoolYearId] = useState<string>("");
-  const [editEstablishmentId, setEditEstablishmentId] = useState<string | null>(null); // New: for establishment_id
+  const [editEstablishmentId, setEditEstablishmentId] = useState<string | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  // States for filtering assignments list
   const [assignmentSearchQuery, setAssignmentSearchQuery] = useState('');
   const [selectedProfessorFilter, setSelectedProfessorFilter] = useState<string | null>(null);
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string | null>(null);
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(null);
   const [selectedSchoolYearFilter, setSelectedSchoolYearFilter] = useState<string | null>(null);
-  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all'); // Re-added selectedEstablishmentFilter
+  const [selectedEstablishmentFilter, setSelectedEstablishmentFilter] = useState<string | 'all'>('all');
+
+  const [newAssignmentProfessorSearchQuery, setNewAssignmentProfessorSearchQuery] = useState('');
+  const [newAssignmentSubjectSearchQuery, setNewAssignmentSubjectSearchQuery] = useState('');
+  const [newAssignmentClassSearchQuery, setNewAssignmentClassSearchQuery] = useState('');
+  const [newAssignmentSchoolYearSearchQuery, setNewAssignmentSchoolYearSearchQuery] = useState('');
+  const [newAssignmentEstablishmentSearchQuery, setNewAssignmentEstablishmentSearchQuery] = useState('');
+
+  const [editProfessorSearchQuery, setEditProfessorSearchQuery] = useState('');
+  const [editSubjectSearchQuery, setEditSubjectSearchQuery] = useState('');
+  const [editClassSearchQuery, setEditClassSearchQuery] = useState('');
+  const [editSchoolYearSearchQuery, setEditSchoolYearSearchQuery] = useState('');
+  const [editEstablishmentSearchQuery, setEditEstablishmentSearchQuery] = useState('');
+
+  const [filterProfessorSearchQuery, setFilterProfessorSearchQuery] = useState('');
+  const [filterSubjectSearchQuery, setFilterSubjectSearchQuery] = useState('');
+  const [filterClassSearchQuery, setFilterClassSearchQuery] = useState('');
+  const [filterSchoolYearSearchQuery, setFilterSchoolYearSearchQuery] = useState('');
+  const [filterEstablishmentSearchQuery, setFilterEstablishmentSearchQuery] = useState('');
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +112,7 @@ const ProfessorSubjectAssignmentPage = () => {
         setSubjects(await loadSubjects());
         setClasses(await loadClasses());
         setSchoolYears(await loadSchoolYears());
-        setEstablishments(await loadEstablishments()); // Re-added loadEstablishments
+        setEstablishments(await loadEstablishments());
         setCurricula(await loadCurricula());
         setAssignments(await loadProfessorSubjectAssignments());
       } catch (error: any) {
@@ -103,7 +123,6 @@ const ProfessorSubjectAssignmentPage = () => {
     fetchData();
   }, [currentUserProfile]);
 
-  // Set default filters based on user role
   useEffect(() => {
     const activeYear = schoolYears.find(sy => sy.is_active);
     if (activeYear) {
@@ -127,9 +146,7 @@ const ProfessorSubjectAssignmentPage = () => {
   }, [currentRole, currentUserProfile?.id, currentUserProfile?.establishment_id, schoolYears]);
 
   const getProfessorName = (id?: string) => professors.find(p => p.id === id)?.first_name + ' ' + professors.find(p => p.id === id)?.last_name || 'N/A';
-  // Removed local getSubjectName, getClassName, getSchoolYearName, getEstablishmentName, getCurriculumName declarations. Now imported.
 
-  // --- New Assignment Logic ---
   const handleAddAssignment = async () => {
     if (!currentUserProfile || !['administrator', 'director', 'deputy_director'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à ajouter des affectations.");
@@ -149,23 +166,19 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
 
-    // Director/Deputy Director establishment_id checks
     if ((currentRole === 'director' || currentRole === 'deputy_director') && newAssignmentEstablishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez créer des affectations que dans votre établissement.");
       return;
     }
-    // Check if selected class and subject belong to the selected establishment
     if (selectedClass.establishment_id !== newAssignmentEstablishmentId || selectedSubject.establishment_id !== newAssignmentEstablishmentId) {
       showError("La classe ou la matière sélectionnée n'appartient pas à l'établissement choisi.");
       return;
     }
-    // Check if selected professor belongs to the selected establishment
     if (selectedProfessor.establishment_id !== newAssignmentEstablishmentId) {
       showError("Le professeur sélectionné n'appartient pas à l'établissement choisi.");
       return;
     }
 
-    // Check for existing assignment
     const existingAssignment = assignments.find(
       a => a.professor_id === newAssignmentProfessorId &&
            a.subject_id === newAssignmentSubjectId &&
@@ -208,14 +221,12 @@ const ProfessorSubjectAssignmentPage = () => {
     }
   };
 
-  // --- Edit Assignment Logic ---
   const handleEditAssignment = (assignment: ProfessorSubjectAssignment) => {
     if (!currentUserProfile || !['administrator', 'director', 'deputy_director'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à modifier cette affectation.");
       return;
     }
     const classOfAssignment = classes.find(cls => cls.id === assignment.class_id);
-    // Director/Deputy Director establishment_id check
     if ((currentRole === 'director' || currentRole === 'deputy_director') && assignment.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez modifier que les affectations de votre établissement.");
       return;
@@ -250,23 +261,19 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
 
-    // Director/Deputy Director establishment_id checks
     if ((currentRole === 'director' || currentRole === 'deputy_director') && editEstablishmentId !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez sauvegarder les affectations que dans votre établissement.");
       return;
     }
-    // Check if selected class and subject belong to the selected establishment
     if (selectedClass.establishment_id !== editEstablishmentId || selectedSubject.establishment_id !== editEstablishmentId) {
       showError("La classe ou la matière sélectionnée n'appartient pas à l'établissement choisi.");
       return;
     }
-    // Check if selected professor belongs to the selected establishment
     if (selectedProfessor.establishment_id !== editEstablishmentId) {
       showError("Le professeur sélectionné n'appartient pas à l'établissement choisi.");
       return;
     }
 
-    // Check for duplicate assignment (excluding the current one being edited)
     const existingAssignment = assignments.find(
       a => a.id !== currentAssignmentToEdit.id &&
            a.professor_id === editProfessorId &&
@@ -307,7 +314,6 @@ const ProfessorSubjectAssignmentPage = () => {
     }
   };
 
-  // --- Delete Assignment Logic ---
   const handleDeleteAssignment = async (id: string) => {
     if (!currentUserProfile || !['administrator', 'director', 'deputy_director'].includes(currentRole || '')) {
       showError("Vous n'êtes pas autorisé à supprimer cette affectation.");
@@ -319,7 +325,6 @@ const ProfessorSubjectAssignmentPage = () => {
       return;
     }
     const classOfAssignment = classes.find(cls => cls.id === assignmentToDelete.class_id);
-    // Director/Deputy Director establishment_id check
     if ((currentRole === 'director' || currentRole === 'deputy_director') && assignmentToDelete.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez supprimer que les affectations de votre établissement.");
       return;
@@ -337,7 +342,6 @@ const ProfessorSubjectAssignmentPage = () => {
     }
   };
 
-  // --- Filtering Logic for Display ---
   const filteredProfessors = professors.filter(p => 
     currentRole === 'administrator' || p.establishment_id === currentUserProfile?.establishment_id
   );
@@ -354,7 +358,6 @@ const ProfessorSubjectAssignmentPage = () => {
   const filteredAssignments = React.useMemo(() => {
     let filtered = assignments;
 
-    // Apply establishment filter
     if (selectedEstablishmentFilter !== 'all' && currentRole === 'administrator') {
       filtered = filtered.filter(assignment => assignment.establishment_id === selectedEstablishmentFilter);
     } else if (currentRole !== 'administrator' && currentUserProfile?.establishment_id) {
@@ -413,12 +416,43 @@ const ProfessorSubjectAssignmentPage = () => {
     );
   }
 
-  const establishmentsToDisplayForFilter = establishments.filter(est => 
-    currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
+  const professorOptions = filteredProfessors.map(prof => ({
+    id: prof.id,
+    label: `${prof.first_name} ${prof.last_name} (@${prof.username})`,
+    icon_name: 'PenTool',
+    description: getEstablishmentName(prof.establishment_id, establishments),
+  }));
+
+  const subjectOptions = filteredSubjects.map(sub => ({
+    id: sub.id,
+    label: sub.name,
+    icon_name: 'BookText',
+    description: getEstablishmentName(sub.establishment_id, establishments),
+  }));
+
+  const classOptions = filteredClasses.map(cls => ({
+    id: cls.id,
+    label: cls.name,
+    icon_name: 'Users',
+    description: `${getCurriculumName(cls.curriculum_id, curricula)} - ${getSchoolYearName(cls.school_year_id, schoolYears)} (${getEstablishmentName(cls.establishment_id, establishments)})`,
+  }));
+
+  const schoolYearOptions = schoolYears.map(year => ({
+    id: year.id,
+    label: year.name,
+    icon_name: 'CalendarDays',
+    description: `${year.start_date} - ${year.end_date}`,
+  }));
+
+  const establishmentOptions = filteredEstablishments.map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Affectations Professeurs-Matières
       </h1>
@@ -438,78 +472,80 @@ const ProfessorSubjectAssignmentPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="new-professor">Professeur</Label>
-              <Select value={newAssignmentProfessorId} onValueChange={setNewAssignmentProfessorId}>
-                <SelectTrigger id="new-professor" className="rounded-android-tile">
-                  <SelectValue placeholder="Sélectionner un professeur" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {filteredProfessors.map(prof => (
-                    <SelectItem key={prof.id} value={prof.id}>
-                      {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id, establishments)})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="new-professor"
+                options={professorOptions}
+                value={newAssignmentProfessorId}
+                onValueChange={setNewAssignmentProfessorId}
+                searchQuery={newAssignmentProfessorSearchQuery}
+                onSearchQueryChange={setNewAssignmentProfessorSearchQuery}
+                placeholder="Sélectionner un professeur"
+                emptyMessage="Aucun professeur trouvé."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             <div>
               <Label htmlFor="new-subject">Matière</Label>
-              <Select value={newAssignmentSubjectId} onValueChange={setNewAssignmentSubjectId}>
-                <SelectTrigger id="new-subject" className="rounded-android-tile">
-                  <SelectValue placeholder="Sélectionner une matière" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {filteredSubjects.map(sub => (
-                    <SelectItem key={sub.id} value={sub.id}>
-                      {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id, establishments)})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="new-subject"
+                options={subjectOptions}
+                value={newAssignmentSubjectId}
+                onValueChange={setNewAssignmentSubjectId}
+                searchQuery={newAssignmentSubjectSearchQuery}
+                onSearchQueryChange={setNewAssignmentSubjectSearchQuery}
+                placeholder="Sélectionner une matière"
+                emptyMessage="Aucune matière trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             <div>
               <Label htmlFor="new-class">Classe</Label>
-              <Select value={newAssignmentClassId} onValueChange={setNewAssignmentClassId}>
-                <SelectTrigger id="new-class" className="rounded-android-tile">
-                  <SelectValue placeholder="Sélectionner une classe" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {filteredClasses.map(cls => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id, establishments)})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="new-class"
+                options={classOptions}
+                value={newAssignmentClassId}
+                onValueChange={setNewAssignmentClassId}
+                searchQuery={newAssignmentClassSearchQuery}
+                onSearchQueryChange={setNewAssignmentClassSearchQuery}
+                placeholder="Sélectionner une classe"
+                emptyMessage="Aucune classe trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             <div>
               <Label htmlFor="new-school-year">Année scolaire</Label>
-              <Select value={newAssignmentSchoolYearId} onValueChange={setNewAssignmentSchoolYearId}>
-                <SelectTrigger id="new-school-year" className="rounded-android-tile">
-                  <SelectValue placeholder="Sélectionner l'année scolaire" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {schoolYears.map(year => (
-                    <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="new-school-year"
+                options={schoolYearOptions}
+                value={newAssignmentSchoolYearId}
+                onValueChange={setNewAssignmentSchoolYearId}
+                searchQuery={newAssignmentSchoolYearSearchQuery}
+                onSearchQueryChange={setNewAssignmentSchoolYearSearchQuery}
+                placeholder="Sélectionner l'année scolaire"
+                emptyMessage="Aucune année scolaire trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
               <div>
                 <Label htmlFor="new-assignment-establishment">Établissement</Label>
-                <Select value={newAssignmentEstablishmentId || ""} onValueChange={(value) => setNewAssignmentEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                  <SelectTrigger id="new-assignment-establishment" className="rounded-android-tile">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                    {filteredEstablishments.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="new-assignment-establishment"
+                  options={establishmentOptions}
+                  value={newAssignmentEstablishmentId}
+                  onValueChange={(value) => setNewAssignmentEstablishmentId(value)}
+                  searchQuery={newAssignmentEstablishmentSearchQuery}
+                  onSearchQueryChange={setNewAssignmentEstablishmentSearchQuery}
+                  placeholder="Sélectionner un établissement"
+                  emptyMessage="Aucun établissement trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                  disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                />
               </div>
             )}
           </div>
@@ -541,80 +577,79 @@ const ProfessorSubjectAssignmentPage = () => {
             {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
               <div className="flex-shrink-0 sm:w-1/3">
                 <Label htmlFor="establishment-filter">Filtrer par Établissement</Label>
-                <Select value={selectedEstablishmentFilter} onValueChange={(value: string | 'all') => setSelectedEstablishmentFilter(value)}>
-                  <SelectTrigger id="establishment-filter" className="rounded-android-tile">
-                    <SelectValue placeholder="Tous les établissements" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    <SelectItem value="all">Tous les établissements</SelectItem>
-                    {establishmentsToDisplayForFilter.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="establishment-filter"
+                  options={[{ id: 'all', label: 'Tous les établissements', icon_name: 'Building2' }, ...establishmentOptions]}
+                  value={selectedEstablishmentFilter}
+                  onValueChange={(value) => setSelectedEstablishmentFilter(value)}
+                  searchQuery={filterEstablishmentSearchQuery}
+                  onSearchQueryChange={setFilterEstablishmentSearchQuery}
+                  placeholder="Tous les établissements"
+                  emptyMessage="Aucun établissement trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                />
               </div>
             )}
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="professor-filter">Filtrer par Professeur</Label>
-              <Select value={selectedProfessorFilter || "all"} onValueChange={(value) => setSelectedProfessorFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="professor-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Tous les professeurs" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {filteredProfessors.map(prof => (
-                    <SelectItem key={prof.id} value={prof.id}>
-                      {prof.first_name} {prof.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="professor-filter"
+                options={[{ id: 'all', label: 'Tous les professeurs', icon_name: 'PenTool' }, ...professorOptions]}
+                value={selectedProfessorFilter}
+                onValueChange={(value) => setSelectedProfessorFilter(value)}
+                searchQuery={filterProfessorSearchQuery}
+                onSearchQueryChange={setFilterProfessorSearchQuery}
+                placeholder="Tous les professeurs"
+                emptyMessage="Aucun professeur trouvé."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="subject-filter">Filtrer par Matière</Label>
-              <Select value={selectedSubjectFilter || "all"} onValueChange={(value) => setSelectedSubjectFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="subject-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Toutes les matières" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  <SelectItem value="all">Toutes les matières</SelectItem>
-                  {filteredSubjects.map(sub => (
-                    <SelectItem key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="subject-filter"
+                options={[{ id: 'all', label: 'Toutes les matières', icon_name: 'BookText' }, ...subjectOptions]}
+                value={selectedSubjectFilter}
+                onValueChange={(value) => setSelectedSubjectFilter(value)}
+                searchQuery={filterSubjectSearchQuery}
+                onSearchQueryChange={setFilterSubjectSearchQuery}
+                placeholder="Toutes les matières"
+                emptyMessage="Aucune matière trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="class-filter">Filtrer par Classe</Label>
-              <Select value={selectedClassFilter || "all"} onValueChange={(value) => setSelectedClassFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="class-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Toutes les classes" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  {filteredClasses.map(cls => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({getSchoolYearName(cls.school_year_id, schoolYears)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="class-filter"
+                options={[{ id: 'all', label: 'Toutes les classes', icon_name: 'Users' }, ...classOptions]}
+                value={selectedClassFilter}
+                onValueChange={(value) => setSelectedClassFilter(value)}
+                searchQuery={filterClassSearchQuery}
+                onSearchQueryChange={setFilterClassSearchQuery}
+                placeholder="Toutes les classes"
+                emptyMessage="Aucune classe trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
               <Label htmlFor="school-year-filter">Filtrer par Année Scolaire</Label>
-              <Select value={selectedSchoolYearFilter || "all"} onValueChange={(value) => setSelectedSchoolYearFilter(value === "all" ? null : value)}>
-                <SelectTrigger id="school-year-filter" className="rounded-android-tile">
-                  <SelectValue placeholder="Toutes les années" />
-                </SelectTrigger>
-                <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                  <SelectItem value="all">Toutes les années</SelectItem>
-                  {schoolYears.map(year => (
-                    <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SimpleItemSelector
+                id="school-year-filter"
+                options={[{ id: 'all', label: 'Toutes les années', icon_name: 'CalendarDays' }, ...schoolYearOptions]}
+                value={selectedSchoolYearFilter}
+                onValueChange={(value) => setSelectedSchoolYearFilter(value)}
+                searchQuery={filterSchoolYearSearchQuery}
+                onSearchQueryChange={setFilterSchoolYearSearchQuery}
+                placeholder="Toutes les années"
+                emptyMessage="Aucune année scolaire trouvée."
+                iconMap={iconMap}
+                popoverContentClassName="z-[9999]"
+              />
             </div>
           </div>
           <div className="space-y-2">
@@ -622,7 +657,7 @@ const ProfessorSubjectAssignmentPage = () => {
               <p className="text-muted-foreground text-center py-4">Aucune affectation trouvée pour votre recherche ou vos filtres.</p>
             ) : (
               filteredAssignments.map((assignment) => (
-                <Card key={assignment.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                <Card key={assignment.id} className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 rounded-android-tile">
                   <div className="flex-grow">
                     <p className="font-medium">
                       <span className="text-primary">{getProfessorName(assignment.professor_id)}</span> enseigne <span className="text-primary">{getSubjectName(assignment.subject_id, subjects)}</span> à la classe <span className="text-primary">{getClassName(assignment.class_id, classes)}</span> pour l'année <span className="text-primary">{getSchoolYearName(assignment.school_year_id, schoolYears)}</span>.
@@ -651,89 +686,91 @@ const ProfessorSubjectAssignmentPage = () => {
       {/* Edit Assignment Dialog */}
       {currentAssignmentToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Apply rounded-android-tile */}
-            <div className="flex flex-col"> {/* Wrap children in a single div */}
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
+            <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Modifier l'affectation</DialogTitle>
                 <DialogDescription>
                   Mettez à jour les détails de l'affectation.
                 </DialogDescription>
               </DialogHeader>
-            <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+            <div className="grid gap-4 py-4 flex-grow">
               <div>
                 <Label htmlFor="edit-professor">Professeur</Label>
-                <Select value={editProfessorId} onValueChange={setEditProfessorId}>
-                  <SelectTrigger id="edit-professor" className="rounded-android-tile">
-                    <SelectValue placeholder="Sélectionner un professeur" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    {filteredProfessors.map(prof => (
-                      <SelectItem key={prof.id} value={prof.id}>
-                        {prof.first_name} {prof.last_name} (@{prof.username}) {prof.establishment_id && `(${getEstablishmentName(prof.establishment_id, establishments)})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="edit-professor"
+                  options={professorOptions}
+                  value={editProfessorId}
+                  onValueChange={setEditProfessorId}
+                  searchQuery={editProfessorSearchQuery}
+                  onSearchQueryChange={setEditProfessorSearchQuery}
+                  placeholder="Sélectionner un professeur"
+                  emptyMessage="Aucun professeur trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                />
               </div>
               <div>
                 <Label htmlFor="edit-subject">Matière</Label>
-                <Select value={editSubjectId} onValueChange={setEditSubjectId}>
-                  <SelectTrigger id="edit-subject" className="rounded-android-tile">
-                    <SelectValue placeholder="Sélectionner une matière" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    {filteredSubjects.map(sub => (
-                      <SelectItem key={sub.id} value={sub.id}>
-                        {sub.name} {sub.establishment_id && `(${getEstablishmentName(sub.establishment_id, establishments)})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="edit-subject"
+                  options={subjectOptions}
+                  value={editSubjectId}
+                  onValueChange={setEditSubjectId}
+                  searchQuery={editSubjectSearchQuery}
+                  onSearchQueryChange={setEditSubjectSearchQuery}
+                  placeholder="Sélectionner une matière"
+                  emptyMessage="Aucune matière trouvée."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                />
               </div>
               <div>
                 <Label htmlFor="edit-class">Classe</Label>
-                <Select value={editClassId} onValueChange={setEditClassId}>
-                  <SelectTrigger id="edit-class" className="rounded-android-tile">
-                    <SelectValue placeholder="Sélectionner une classe" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    {filteredClasses.map(cls => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({getCurriculumName(cls.curriculum_id, curricula)}) - {getSchoolYearName(cls.school_year_id, schoolYears)} {cls.establishment_id && `(${getEstablishmentName(cls.establishment_id, establishments)})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="edit-class"
+                  options={classOptions}
+                  value={editClassId}
+                  onValueChange={setEditClassId}
+                  searchQuery={editClassSearchQuery}
+                  onSearchQueryChange={setEditClassSearchQuery}
+                  placeholder="Sélectionner une classe"
+                  emptyMessage="Aucune classe trouvée."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                />
               </div>
               <div>
                 <Label htmlFor="edit-school-year">Année scolaire</Label>
-                <Select value={editSchoolYearId} onValueChange={setEditSchoolYearId}>
-                  <SelectTrigger id="edit-school-year" className="rounded-android-tile">
-                    <SelectValue placeholder="Sélectionner l'année scolaire" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    {schoolYears.map(year => (
-                      <SelectItem key={year.id} value={year.id}>{year.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="edit-school-year"
+                  options={schoolYearOptions}
+                  value={editSchoolYearId}
+                  onValueChange={setEditSchoolYearId}
+                  searchQuery={editSchoolYearSearchQuery}
+                  onSearchQueryChange={setEditSchoolYearSearchQuery}
+                  placeholder="Sélectionner l'année scolaire"
+                  emptyMessage="Aucune année scolaire trouvée."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                />
               </div>
               {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
                 <div>
                   <Label htmlFor="edit-assignment-establishment">Établissement</Label>
-                  <Select value={editEstablishmentId || ""} onValueChange={(value) => setEditEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                    <SelectTrigger id="edit-assignment-establishment" className="rounded-android-tile">
-                      <SelectValue placeholder="Sélectionner un établissement" />
-                    </SelectTrigger>
-                    <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                      {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                      {filteredEstablishments.map(est => (
-                        <SelectItem key={est.id} value={est.id}>
-                          {est.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleItemSelector
+                    id="edit-assignment-establishment"
+                    options={establishmentOptions}
+                    value={editEstablishmentId}
+                    onValueChange={(value) => setEditEstablishmentId(value)}
+                    searchQuery={editEstablishmentSearchQuery}
+                    onSearchQueryChange={setEditEstablishmentSearchQuery}
+                    placeholder="Sélectionner un établissement"
+                    emptyMessage="Aucun établissement trouvé."
+                    iconMap={iconMap}
+                    popoverContentClassName="z-[9999]"
+                    disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                  />
                 </div>
               )}
             </div>

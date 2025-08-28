@@ -1,5 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -7,34 +13,31 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronDown, Info, Search as SearchIcon } from "lucide-react";
+import { Check, ChevronDown, Search as SearchIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from '@/components/ui/scroll-area';
 
-interface SimpleItemSelectorOption {
+interface SimpleItemOption {
   id: string;
   label: string;
-  icon_name?: string;
+  icon_name?: string; // Lucide icon name
   description?: string;
-  isNew?: boolean; // To indicate if it's a generic item not yet configured for the role
-  typeLabel?: string; // For display purposes
-  level?: number; // For hierarchical display
+  level?: number; // For hierarchical display if needed
+  typeLabel?: string; // For display in description
+  isNew?: boolean; // To indicate if it's a new generic item not yet configured
 }
 
 interface SimpleItemSelectorProps {
   id: string;
-  options: SimpleItemSelectorOption[];
+  options: SimpleItemOption[];
   value: string | null;
   onValueChange: (value: string | null) => void;
+  placeholder?: string;
+  emptyMessage?: string;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
-  placeholder: string;
-  emptyMessage: string;
-  iconMap: { [key: string]: React.ElementType }; // Pass iconMap as prop
+  iconMap: { [key: string]: React.ElementType }; // Map for Lucide icons
   popoverContentClassName?: string;
-  // disabled?: boolean; // Supprimé temporairement
+  disabled?: boolean;
 }
 
 const SimpleItemSelector = ({
@@ -42,21 +45,20 @@ const SimpleItemSelector = ({
   options,
   value,
   onValueChange,
+  placeholder = "Sélectionner un élément...",
+  emptyMessage = "Aucun élément trouvé.",
   searchQuery,
   onSearchQueryChange,
-  placeholder,
-  emptyMessage,
   iconMap,
   popoverContentClassName,
-  // disabled = false, // Supprimé temporairement
+  disabled = false,
 }: SimpleItemSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedOption = useMemo(() => {
-    return options.find((option) => option.id === value);
-  }, [options, value]);
+  const selectedOption = useMemo(() => options.find(option => option.id === value), [options, value]);
 
   const filteredOptions = useMemo(() => {
+    if (!searchQuery) return options;
     const lowerCaseQuery = searchQuery.toLowerCase();
     return options.filter(option =>
       option.label.toLowerCase().includes(lowerCaseQuery) ||
@@ -65,37 +67,7 @@ const SimpleItemSelector = ({
     );
   }, [options, searchQuery]);
 
-  const renderOption = (option: SimpleItemSelectorOption) => {
-    const IconComponent = option.icon_name ? (iconMap[option.icon_name] || Info) : Info; // Fallback to Info icon
-    const paddingLeft = option.level ? `${option.level * 16}px` : '0px';
-
-    return (
-      <CommandItem
-        key={option.id}
-        value={option.id}
-        onSelect={() => {
-          onValueChange(option.id);
-          setIsOpen(false);
-          onSearchQueryChange(''); // Clear search after selection
-        }}
-        className="flex items-center gap-2 cursor-pointer"
-        style={{ paddingLeft }}
-      >
-        <Check
-          className={cn(
-            "mr-2 h-4 w-4",
-            value === option.id ? "opacity-100" : "opacity-0"
-          )}
-        />
-        <IconComponent className="h-4 w-4 text-primary" />
-        <div className="flex flex-col items-start">
-          <span className="font-medium">{option.label}</span>
-          {option.description && <span className="text-xs text-muted-foreground line-clamp-1">{option.description}</span>}
-          {option.isNew && <span className="text-xs text-blue-500"> (Nouvel élément générique)</span>}
-        </div>
-      </CommandItem>
-    );
-  };
+  const CurrentIconComponent = selectedOption?.icon_name ? (iconMap[selectedOption.icon_name] || Info) : Info;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -106,11 +78,11 @@ const SimpleItemSelector = ({
           aria-expanded={isOpen}
           className="w-full justify-between rounded-android-tile"
           id={id}
-          // disabled={disabled} // Supprimé temporairement
+          disabled={disabled}
         >
           {selectedOption ? (
             <div className="flex items-center gap-2">
-              {selectedOption.icon_name && React.createElement(iconMap[selectedOption.icon_name] || Info, { className: "h-4 w-4 text-primary" })}
+              {selectedOption.icon_name && <CurrentIconComponent className="h-4 w-4" />}
               {selectedOption.label}
             </div>
           ) : (
@@ -122,17 +94,40 @@ const SimpleItemSelector = ({
       <PopoverContent className={cn("w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile", popoverContentClassName)}>
         <Command>
           <CommandInput
-            placeholder={placeholder}
+            placeholder="Rechercher..."
             value={searchQuery}
             onValueChange={onSearchQueryChange}
           />
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>
-            <ScrollArea className="h-40">
-              <CommandGroup>
-                {filteredOptions.map(renderOption)}
-              </CommandGroup>
-            </ScrollArea>
+            <CommandGroup>
+              {filteredOptions.map((option) => {
+                const OptionIconComponent = option.icon_name ? (iconMap[option.icon_name] || Info) : Info;
+                return (
+                  <CommandItem
+                    key={option.id}
+                    value={option.label} // Use label for search matching
+                    onSelect={() => {
+                      onValueChange(option.id);
+                      setIsOpen(false);
+                      onSearchQueryChange(''); // Clear search after selection
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === option.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {option.icon_name && <OptionIconComponent className="mr-2 h-4 w-4" />}
+                    <div className="flex flex-col items-start">
+                      <span>{option.label}</span>
+                      {option.description && <span className="text-xs text-muted-foreground">{option.description}</span>}
+                    </div>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>

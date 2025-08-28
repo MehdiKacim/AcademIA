@@ -20,13 +20,13 @@ import {
   getActiveSchoolYear,
 } from '@/lib/courseData';
 import { useRole } from '@/contexts/RoleContext';
-import { format, parseISO, addYears, addDays } from 'date-fns'; // Added addDays
+import { format, parseISO, addYears, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge"; // Import Badge
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -34,8 +34,8 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"; // Added Dialog imports
-import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+} from "@/components/ui/dialog";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const SchoolYearManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -82,7 +82,7 @@ const SchoolYearManagementPage = () => {
         name: newSchoolYearName.trim(),
         start_date: newSchoolYearStartDate.toISOString().split('T')[0],
         end_date: newSchoolYearEndDate.toISOString().split('T')[0],
-        is_active: true, // New year is always active by default
+        is_active: true,
       };
       const addedYear = await addSchoolYear(newYear);
       if (addedYear) {
@@ -178,22 +178,21 @@ const SchoolYearManagementPage = () => {
       showError("Vous n'êtes pas autorisé à générer une année scolaire.");
       return;
     }
-    const latestYear = schoolYears.length > 0 ? schoolYears[0] : null; // Assuming sorted by start_date DESC
+    const latestYear = schoolYears.length > 0 ? schoolYears[0] : null;
     let nextStartDate: Date;
     let nextEndDate: Date;
     let nextName: string;
 
     if (latestYear) {
       const lastEndDate = parseISO(latestYear.end_date);
-      nextStartDate = addDays(lastEndDate, 1); // Start the day after the previous year ended
-      nextEndDate = addYears(nextStartDate, 1); // One year duration from the new start date
-      nextEndDate = addDays(nextEndDate, -1); // Adjust to end on July 31st (one day before the next August 1st)
+      nextStartDate = addDays(lastEndDate, 1);
+      nextEndDate = addYears(nextStartDate, 1);
+      nextEndDate = addDays(nextEndDate, -1);
       nextName = `${format(nextStartDate, 'yyyy')}-${format(nextEndDate, 'yyyy')}`;
     } else {
-      // If no years exist, start from August 1st of the current calendar year
       const currentCalendarYear = new Date().getFullYear();
-      nextStartDate = new Date(currentCalendarYear, 7, 1); // August is month 7 (0-indexed)
-      nextEndDate = new Date(currentCalendarYear + 1, 6, 31); // July is month 6 (0-indexed)
+      nextStartDate = new Date(currentCalendarYear, 7, 1);
+      nextEndDate = new Date(currentCalendarYear + 1, 6, 31);
       nextName = `${currentCalendarYear}-${currentCalendarYear + 1}`;
     }
 
@@ -229,7 +228,7 @@ const SchoolYearManagementPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"> {/* Added responsive padding and max-width */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
         Gestion des Années Scolaires
       </h1>
@@ -237,7 +236,7 @@ const SchoolYearManagementPage = () => {
         Créez et gérez les années scolaires de la plateforme. Une seule année scolaire peut être active à la fois.
       </p>
 
-      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PlusCircle className="h-6 w-6 text-primary" /> Créer une nouvelle année scolaire
@@ -264,7 +263,7 @@ const SchoolYearManagementPage = () => {
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                      "w-full justify-start text-left font-normal rounded-android-tile",
                       !newSchoolYearStartDate && "text-muted-foreground"
                     )}
                   >
@@ -272,7 +271,7 @@ const SchoolYearManagementPage = () => {
                     {newSchoolYearStartDate ? format(newSchoolYearStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
+                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                   <Calendar
                     mode="single"
                     selected={newSchoolYearStartDate}
@@ -290,7 +289,7 @@ const SchoolYearManagementPage = () => {
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                      "w-full justify-start text-left font-normal rounded-android-tile",
                       !newSchoolYearEndDate && "text-muted-foreground"
                     )}
                   >
@@ -298,7 +297,7 @@ const SchoolYearManagementPage = () => {
                     {newSchoolYearEndDate ? format(newSchoolYearEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
+                <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                   <Calendar
                     mode="single"
                     selected={newSchoolYearEndDate}
@@ -316,7 +315,7 @@ const SchoolYearManagementPage = () => {
         </CardContent>
       </Card>
 
-      <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+      <Card className="rounded-android-tile">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6 text-primary" /> Liste des Années Scolaires
@@ -354,15 +353,15 @@ const SchoolYearManagementPage = () => {
 
       {currentYearToEdit && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Apply rounded-android-tile */}
-            <div className="flex flex-col"> {/* Wrap children in a single div */}
+          <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
+            <div className="flex flex-col">
               <DialogHeader>
                 <DialogTitle>Modifier l'année scolaire</DialogTitle>
                 <DialogDescription>
                   Mettez à jour les informations de l'année scolaire.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+              <div className="grid gap-4 py-4 flex-grow">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-name" className="text-right">
                     Nom
@@ -382,7 +381,7 @@ const SchoolYearManagementPage = () => {
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                          "w-full justify-start text-left font-normal rounded-android-tile",
                           !editStartDate && "text-muted-foreground"
                         )}
                       >
@@ -390,7 +389,7 @@ const SchoolYearManagementPage = () => {
                         {editStartDate ? format(editStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                       <Calendar
                         mode="single"
                         selected={editStartDate}
@@ -408,7 +407,7 @@ const SchoolYearManagementPage = () => {
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
+                          "w-full justify-start text-left font-normal rounded-android-tile",
                           !editEndDate && "text-muted-foreground"
                         )}
                       >
@@ -416,7 +415,7 @@ const SchoolYearManagementPage = () => {
                         {editEndDate ? format(editEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
+                    <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]">
                       <Calendar
                         mode="single"
                         selected={editEndDate}

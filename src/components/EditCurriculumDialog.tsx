@@ -10,27 +10,34 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast";
-import { Curriculum, Establishment } from "@/lib/dataModels"; // Import Establishment
-import { updateCurriculumInStorage, getEstablishmentName } from "@/lib/courseData"; // Removed loadEstablishments, getEstablishmentAddress
-import { useRole } from '@/contexts/RoleContext'; // Import useRole
+import { Curriculum, Establishment } from "@/lib/dataModels";
+import { updateCurriculumInStorage, getEstablishmentName } from "@/lib/courseData";
+import { useRole } from '@/contexts/RoleContext';
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
+import { Building2, Info } from 'lucide-react';
 
 interface EditCurriculumDialogProps {
   isOpen: boolean;
   onClose: () => void;
   curriculum: Curriculum;
   onSave: (updatedCurriculum: Curriculum) => void;
-  establishments: Establishment[]; // New prop for establishments
+  establishments: Establishment[];
 }
 
+const iconMap: { [key: string]: React.ElementType } = {
+  Building2, Info
+};
+
 const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishments }: EditCurriculumDialogProps) => {
-  const { currentUserProfile, currentRole } = useRole(); // Get currentUserProfile and currentRole
+  const { currentUserProfile, currentRole } = useRole();
   const [name, setName] = useState(curriculum.name);
   const [description, setDescription] = useState(curriculum.description || '');
-  const [establishmentId, setEstablishmentId] = useState<string | null>(curriculum.establishment_id || null); // Re-added establishmentId state
+  const [establishmentId, setEstablishmentId] = useState<string | null>(curriculum.establishment_id || null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [establishmentSearchQuery, setEstablishmentSearchQuery] = useState('');
 
   useEffect(() => {
     if (isOpen && curriculum) {
@@ -41,7 +48,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishme
   }, [isOpen, curriculum]);
 
   const handleSave = async () => {
-    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) { // Only professeur, director, deputy_director, administrator can save
+    if (!currentUserProfile || (currentRole !== 'professeur' && currentRole !== 'director' && currentRole !== 'deputy_director' && currentRole !== 'administrator')) {
       showError("Vous n'êtes pas autorisé à modifier un cursus.");
       return;
     }
@@ -53,7 +60,6 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishme
       showError("L'établissement est requis pour le cursus.");
       return;
     }
-    // Role-based establishment_id check
     if (currentRole !== 'administrator' && curriculum.establishment_id !== currentUserProfile.establishment_id) {
       showError("Vous ne pouvez modifier que les cursus de votre établissement.");
       return;
@@ -65,7 +71,7 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishme
         ...curriculum,
         name: name.trim(),
         description: description.trim() || undefined,
-        establishment_id: establishmentId || '', // Use selected establishment_id
+        establishment_id: establishmentId || '',
       };
       const savedCurriculum = await updateCurriculumInStorage(updatedCurriculumData);
 
@@ -77,28 +83,33 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishme
         showError("Échec de la mise à jour du cursus.");
       }
     } catch (error: any) {
-      // console.error("Error saving curriculum:", error);
+      console.error("Error saving curriculum:", error);
       showError(`Erreur lors de la sauvegarde du cursus: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const establishmentsToDisplay = establishments.filter(est => 
+  const establishmentsOptions = establishments.filter(est => 
     currentRole === 'administrator' || est.id === currentUserProfile?.establishment_id
-  );
+  ).map(est => ({
+    id: est.id,
+    label: est.name,
+    icon_name: 'Building2',
+    description: est.address,
+  }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]"> {/* Added z-[1000] */}
-        <div className="flex flex-col"> {/* Wrap children in a single div */}
+      <DialogContent className="sm:max-w-[425px] backdrop-blur-lg bg-background/80 rounded-android-tile z-[1000]">
+        <div className="flex flex-col">
           <DialogHeader>
             <DialogTitle>Modifier le cursus</DialogTitle>
             <DialogDescription>
               Mettez à jour les informations du cursus.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4 flex-grow"> {/* Added flex-grow */}
+          <div className="grid gap-4 py-4 flex-grow">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
                 Nom
@@ -127,19 +138,19 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishme
                 <Label htmlFor="establishment" className="text-right">
                   Établissement
                 </Label>
-                <Select value={establishmentId || ""} onValueChange={(value) => setEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                  <SelectTrigger id="establishment" className="col-span-3 rounded-android-tile">
-                    <SelectValue placeholder="Sélectionner un établissement" />
-                  </SelectTrigger>
-                  <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                    {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                    {establishmentsToDisplay.map(est => (
-                      <SelectItem key={est.id} value={est.id}>
-                        {est.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SimpleItemSelector
+                  id="establishment"
+                  options={establishmentsOptions}
+                  value={establishmentId}
+                  onValueChange={(value) => setEstablishmentId(value)}
+                  searchQuery={establishmentSearchQuery}
+                  onSearchQueryChange={setEstablishmentSearchQuery}
+                  placeholder="Sélectionner un établissement"
+                  emptyMessage="Aucun établissement trouvé."
+                  iconMap={iconMap}
+                  popoverContentClassName="z-[9999]"
+                  disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                />
               </div>
             )}
           </div>
