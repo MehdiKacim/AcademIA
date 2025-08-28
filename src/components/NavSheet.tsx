@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
+import MobileBottomNavContent from './MobileBottomNavContent'; // Import the new component
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown,
@@ -171,9 +172,8 @@ const NavSheet = ({
       <SheetContent
         side="bottom"
         className={cn(
-          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-40",
-          "h-[calc(100vh-68px)]", // Always this height on mobile
-          "top-[68px]" // Position it below the top header
+          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-50", // Increased z-index to 50
+          "h-full inset-0" // Make it full screen
         )}
         {...swipeHandlers}
       >

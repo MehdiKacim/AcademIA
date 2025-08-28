@@ -34,6 +34,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
 import { useCourseChat } from '@/contexts/CourseChatContext'; // Import useCourseChat
+import MobileBottomNavContent from "@/components/MobileBottomNavContent"; // Import the new component
+import NavSheet from "@/components/NavSheet"; // Import NavSheet for unauthenticated users
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -57,28 +59,9 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
   const { openChat } = useCourseChat(); // Get openChat from context
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  // Removed isAuthModalOpen state
-  // Removed isAboutModalOpen state
-  // Removed isMoreDrawerOpen state
+  const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false); // State for mobile nav sheet
   const logoTapCountRef = useRef(0);
   const location = useLocation();
-
-  // Removed dynamic navItems state and useEffect for loading. It now comes from props.
-  // const [navItems, setNavItems] = useState<NavItem[]>([]); 
-  // useEffect(() => {
-  //   if (currentUser) { // Only load dynamic nav items if user is authenticated
-  //     const fetchNavItems = async () => {
-  //       // console.log("[BottomNavigationBar] fetchNavItems: Starting to load nav items for role:", currentRole, "establishment:", currentUserProfile?.establishment_id);
-  //       const loadedItems = await loadNavItems(currentRole, unreadMessages, currentUserProfile?.establishment_id);
-  //       setDynamicNavItems(loadedItems);
-  //       // console.log("[BottomNavigationBar] fetchNavItems: Loaded dynamicNavItems (raw from loadNavItems):", loadedItems);
-  //     };
-  //     fetchNavItems();
-  //   } else {
-  //     setDynamicNavItems([]); // Clear dynamic nav items if not authenticated
-  //     // console.log("[BottomNavigationBar] User not authenticated, dynamicNavItems cleared.");
-  //   }
-  // }, [currentRole, unreadMessages, currentUserProfile?.establishment_id, currentUser]);
 
   const { data: apkData, isLoading: isLoadingApk, isError: isApkError } = useQuery({
     queryKey: ['latestApkRelease'],
@@ -140,8 +123,6 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     }
   }, [location.hash, location.pathname]);
 
-  // Removed handleAuthSuccess
-
   const methodology = [
     {
       icon: <Target className="w-12 h-12 text-primary" />,
@@ -169,11 +150,13 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     },
   ];
 
-  // Static nav items for the header
-  const staticHeaderNavItems: NavItem[] = [
+  // Static nav items for the header (desktop) and mobile NavSheet (unauthenticated)
+  const staticNavItems: NavItem[] = [
     { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, type: 'route' },
     { id: 'aia-bot-link', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
     { id: 'methodology-link', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
+    { id: 'about-link', label: "À propos", icon_name: 'Info', route: '/about', is_external: false, order_index: 3, type: 'route' },
+    { id: 'login-link', label: "Connexion", icon_name: 'LogIn', route: '/auth', is_external: false, order_index: 4, type: 'route' },
   ];
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -209,7 +192,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
 
       <header className={cn(
           "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm h-[68px]",
-          isMobile ? "bottom-0" : "top-0"
+          isMobile ? "hidden" : "top-0" // Hide on mobile, show on desktop
         )}
         style={{ top: isMobile ? 'auto' : 'env(safe-area-inset-top)' }} // Adjust top/bottom based on mobile
       >
@@ -217,7 +200,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
           <Logo onLogoClick={handleLogoClick} />
         </div>
         <nav className="hidden md:flex items-center gap-4">
-          {staticHeaderNavItems.map((item) => {
+          {staticNavItems.filter(item => item.id !== 'login-link').map((item) => { // Filter out login link for desktop header
             const isActive = 
               (item.route === '/' && location.pathname === '/' && !location.hash) ||
               (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route);
@@ -347,9 +330,28 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
         </Button>
       </footer>
 
-      {/* Removed BottomNavigationBar */}
-      {/* Removed AuthModal */}
-      {/* Removed AboutModal */}
+      {isMobile && (
+        <>
+          <NavSheet
+            isOpen={isMobileNavSheetOpen}
+            onOpenChange={setIsMobileNavSheetOpen}
+            navItems={staticNavItems} // Pass static nav items for unauthenticated users
+            onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
+            onOpenAiAChat={() => openChat()}
+            onOpenAuthModal={() => navigate('/auth')}
+            unreadMessagesCount={0} // No unread messages for unauthenticated
+            onInitiateThemeChange={onInitiateThemeChange}
+            isMobile={isMobile}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
+            <MobileBottomNavContent
+              onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
+              onInitiateThemeChange={onInitiateThemeChange}
+              isAuthenticated={false}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -33,6 +33,7 @@ import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
 import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu";
+import MobileBottomNavContent from "@/components/MobileBottomNavContent"; // Import the new component
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -215,7 +216,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         ref={headerRef} // Attach ref to header
         className={cn(
           "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]", // Added h-[68px]
-          !isMobile && currentUserProfile && "opacity-100 pointer-events-auto" // Only show desktop header if not mobile and logged in
+          isMobile ? "hidden" : (currentUserProfile && "opacity-100 pointer-events-auto") // Hide on mobile, show on desktop if logged in
         )}
       >
         {/* Header content based on authentication and mobile status */}
@@ -394,8 +395,13 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           />
           {/* Persistent mobile bottom navigation bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
-            {/* This div previously contained MobileBottomNavContent, now it's empty as per revert */}
-            {/* The content will be handled by NavSheet directly when open */}
+            <MobileBottomNavContent
+              onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
+              onOpenAiAChat={() => openChat()}
+              onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
+              onInitiateThemeChange={onInitiateThemeChange}
+              isAuthenticated={true}
+            />
           </div>
         </>
       )}
