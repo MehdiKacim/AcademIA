@@ -389,7 +389,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         <>
           <NavSheet
             isOpen={isMobileNavSheetOpen}
-            onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
+            onOpenChange={toggleMobileNavSheet} // Use the new prop here
             navItems={fullNavTreeWithActions}
             onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
             onOpenAiAChat={() => openChat()}
@@ -399,7 +399,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             isMobile={isMobile}
           />
           {/* Persistent mobile bottom navigation bar */}
-          <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
+          <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px] border-t-2 border-border">
             <MobileBottomNavContent
               onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
               onOpenAiAChat={() => openChat()}

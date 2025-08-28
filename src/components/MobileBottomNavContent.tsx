@@ -40,7 +40,7 @@ const MobileBottomNavContent = ({
 
   const commonButtonClasses = "rounded-full h-12 w-12 bg-muted/20 hover:bg-muted/40";
   const centralLogoButtonClasses = cn(
-    "relative rounded-full h-20 w-20 shadow-lg bg-background/80 mt-[-34px] z-[997] overflow-hidden" // Removed border-2 border-border, adjusted z-index
+    "relative rounded-full h-20 w-20 shadow-lg bg-background/80 mt-[-34px] z-[997] overflow-hidden" // Removed border-2 border-border
   );
 
   const buttonPressAnimation = {
@@ -93,8 +93,7 @@ const MobileBottomNavContent = ({
               asChild
             >
               <motion.div whileTap={buttonPressAnimation} className="flex items-center justify-center h-full w-full">
-                {/* This div acts as the top border */}
-                <div className="absolute top-0 left-0 right-0 h-[34px] border-t-2 border-border rounded-t-full"></div>
+                {/* Removed the inner div that was simulating the top border */}
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -174,8 +173,7 @@ const MobileBottomNavContent = ({
               asChild
             >
               <motion.div whileTap={buttonPressAnimation} className="flex items-center justify-center h-full w-full">
-                {/* This div acts as the top border */}
-                <div className="absolute top-0 left-0 right-0 h-[34px] border-t-2 border-border rounded-t-full"></div>
+                {/* Removed the inner div that was simulating the top border */}
                 <motion.div
                   animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
