@@ -129,8 +129,7 @@ const NavSheet = ({
           children: staticProfileActions,
           order_index: 999,
         });
-        // Add "Messagerie" as a top-level item
-        itemsToFilter.push({ id: 'nav-messages', label: 'Messagerie', route: '/messages', icon_name: 'MessageSquare', is_external: false, type: 'route', order_index: 100, badge: unreadMessagesCount });
+        // Removed "Messagerie" as a top-level item here, it's now in MobileBottomNavContent
       }
     } else {
       // For mobile, show children of the active category
@@ -242,7 +241,13 @@ const NavSheet = ({
         </motion.div>
       </ScrollArea>
 
-      {/* Removed the entire footer div */}
+      {/* New Footer for NavSheet */}
+      <div className="p-4 border-t border-border flex-shrink-0 flex items-center justify-between">
+        <Button variant="ghost" onClick={() => { navigate('/about'); onOpenChange(false); }} className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+          <Info className="h-5 w-5" /> À propos
+        </Button>
+        <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+      </div>
     </MobileDrawer>
   );
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Search, BotMessageSquare, User, LogIn, Settings, LogOut } from "lucide-react";
+import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare, Info } from "lucide-react"; // Added MessageSquare and Info
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
@@ -134,10 +134,23 @@ const MobileBottomNavContent = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className={commonButtonClasses} />
+          {/* Replaced ThemeToggle with MessageSquare button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.div whileTap={buttonPressAnimation}>
+                <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={commonButtonClasses}>
+                  <MessageSquare className="h-5 w-5" />
+                  <span className="sr-only">Messagerie</span>
+                </Button>
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
+              <p>Messagerie</p>
+            </TooltipContent>
+          </Tooltip>
         </>
       ) : (
-        <div className="relative flex items-center justify-center w-full h-full">
+        <div className="relative flex items-center justify-around w-full h-full">
           {/* Left side: Login button */}
           <div className="absolute left-4 top-1/2 -translate-y-1/2">
             <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
@@ -168,9 +181,12 @@ const MobileBottomNavContent = ({
             </motion.div>
           </Button>
 
-          {/* Right side: ThemeToggle */}
+          {/* Right side: MessageSquare button */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className={commonButtonClasses} />
+            <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
+              <MessageSquare className="h-5 w-5" />
+              <span className="sr-only">Messagerie</span>
+            </Button>
           </div>
         </div>
       )}
