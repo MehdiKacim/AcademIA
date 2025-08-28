@@ -53,7 +53,8 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
           {/* Drawer Content */}
           <motion.div
             className={cn(
-              "fixed bottom-0 left-0 right-0 w-full h-[calc(100vh-68px)] bg-background rounded-t-lg shadow-lg flex flex-col overflow-hidden rounded-android-tile z-[999]", // Actual drawer content, highest z-index
+              "fixed left-0 right-0 w-full bg-background rounded-t-lg shadow-lg flex flex-col overflow-hidden rounded-android-tile z-[999]", // Actual drawer content, highest z-index
+              "bottom-[68px] h-[calc(100vh-136px)]", // Adjusted bottom and height to be above the 68px bottom nav and below the 68px top header
               contentClassName
             )}
             variants={contentVariants}
