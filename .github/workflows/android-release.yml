@@ -34,32 +34,23 @@ jobs:
         with:
           node-version: '20'
 
-      # 3. Mise en cache des dépendances npm (pnpm)
-      - name: Cache pnpm modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      # 4. Installe toutes les dépendances, y compris les plugins Capacitor
+      # 3. Installe les dépendances npm
       - name: Install npm dependencies
-        run: npm install --frozen-lockfile
+        run: npm install
 
-      # 5. Compile l'application web (front-end)
+      # 4. Compile l'application web (front-end)
       - name: Build web app
         run: npm run build
 
-      # 6. Installe l'outil de ligne de commande Capacitor de façon globale
+      # 5. Installe l'outil de ligne de commande Capacitor
       - name: Install Capacitor CLI
         run: npm install -g @capacitor/cli
 
-      # 7. Synchronise les fichiers web compilés vers le projet Android
+      # 6. Synchronise les fichiers web compilés vers le projet Android
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
 
-      # 8. Incrémente automatiquement le numéro de version et de build Android
+      # 7. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
         id: increment_version
         run: |
@@ -80,40 +71,31 @@ jobs:
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # 9. Commit et push les modifications de version
+      # 8. Commit et push la modification de version
       - name: Commit version change
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add android/app/build.gradle
-          git commit -m "chore: Auto. incrémentation de la version Android"
+          git commit -m "chore: Auto. incrémentation de la version Android pour le build ${{ steps.increment_version.outputs.version_name }}"
           git push
 
-      # 10. Rend le script gradlew exécutable
+      # 9. Rend le script gradlew exécutable
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # 11. Configure le JDK Java nécessaire pour la compilation Android
+      # 10. Configure le JDK Java nécessaire pour la compilation Android
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
 
-      # 12. Mise en cache des dépendances Gradle
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle', 'android/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      # 13. Compile l'APK en mode 'debug'
+      # 11. Compile l'APK en mode 'debug'
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug
 
-      # 14. Trouve et renomme l'APK compilé
+      # 12. Trouve et renomme l'APK compilé
       - name: Find and Rename APK file
         id: find_and_rename_apk
         run: |
@@ -124,14 +106,14 @@ jobs:
           echo "APK renommé en : $NEW_APK_NAME"
           echo "apk_path=android/app/build/outputs/apk/debug/$NEW_APK_NAME" >> $GITHUB_OUTPUT
 
-      # 15. Uploade l'APK renommé comme un artefact de build
+      # 13. Uploade l'APK renommé comme un artefact de build
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: ${{ steps.find_and_rename_apk.outputs.apk_path }}
 
-      # 16. Crée une nouvelle release sur GitHub
+      # 14. Crée une nouvelle release sur GitHub
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/heads/main')
