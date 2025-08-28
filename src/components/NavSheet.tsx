@@ -168,9 +168,10 @@ const NavSheet = ({
             )}
           </div>
 
-          {/* Placeholder for right side to maintain spacing */}
+          {/* This div is for spacing, it's empty */}
           <div className="w-10 h-10"></div> 
-        </SheetHeader>
+        </div>
+      </SheetHeader>
 
         <ScrollArea className="flex-grow p-4">
           {drawerNavStack.length > 0 && (
