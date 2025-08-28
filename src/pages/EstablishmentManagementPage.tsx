@@ -464,7 +464,6 @@ const EstablishmentManagementPage = () => {
                     placeholder="Sélectionner un directeur..."
                     emptyMessage="Aucun directeur trouvé."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[9999]"
                   />
                 </div>
 
@@ -481,7 +480,6 @@ const EstablishmentManagementPage = () => {
                     placeholder="Sélectionner un directeur adjoint..."
                     emptyMessage="Aucun directeur adjoint trouvé."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[9999]"
                   />
                 </div>
               </div>

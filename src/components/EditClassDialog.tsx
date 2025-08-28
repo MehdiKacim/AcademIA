@@ -177,7 +177,6 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave, establishments,
                   placeholder="Sélectionner un établissement"
                   emptyMessage="Aucun établissement trouvé."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                   disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                 />
               </div>
@@ -196,7 +195,6 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave, establishments,
                 placeholder="Sélectionner un cursus"
                 emptyMessage="Aucun cursus trouvé."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -213,7 +211,6 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave, establishments,
                 placeholder="Sélectionner l'année scolaire"
                 emptyMessage="Aucune année scolaire trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
           </div>

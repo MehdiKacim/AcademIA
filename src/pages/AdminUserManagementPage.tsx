@@ -517,7 +517,6 @@ const AdminUserManagementPage = () => {
                     placeholder="Sélectionner un rôle"
                     emptyMessage="Aucun rôle trouvé."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[9999]"
                   />
                 </div>
                 {newUserRole !== 'administrator' && (currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
@@ -533,7 +532,6 @@ const AdminUserManagementPage = () => {
                       placeholder="Sélectionner un établissement"
                       emptyMessage="Aucun établissement trouvé."
                       iconMap={iconMap}
-                      popoverContentClassName="z-[9999]"
                       disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                     />
                   </div>
@@ -633,7 +631,6 @@ const AdminUserManagementPage = () => {
                 placeholder="Tous les rôles"
                 emptyMessage="Aucun rôle trouvé."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director', 'professeur', 'tutor'].includes(currentRole || ''))) && (
@@ -649,7 +646,6 @@ const AdminUserManagementPage = () => {
                   placeholder="Tous les établissements"
                   emptyMessage="Aucun établissement trouvé."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                 />
               </div>
             )}
@@ -810,7 +806,6 @@ const AdminUserManagementPage = () => {
                     placeholder="Sélectionner un rôle"
                     emptyMessage="Aucun rôle trouvé."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[9999]"
                     disabled={currentRole !== 'administrator'}
                   />
                 </div>
@@ -829,7 +824,6 @@ const AdminUserManagementPage = () => {
                       placeholder="Sélectionner un établissement"
                       emptyMessage="Aucun établissement trouvé."
                       iconMap={iconMap}
-                      popoverContentClassName="z-[9999]"
                       disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                     />
                   </div>

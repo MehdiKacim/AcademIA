@@ -517,7 +517,6 @@ const PedagogicalManagementPage = () => {
                     placeholder="Sélectionner une classe"
                     emptyMessage="Aucune classe trouvée."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[9999]"
                   />
                 </div>
 
@@ -534,7 +533,6 @@ const PedagogicalManagementPage = () => {
                       placeholder="Sélectionner l'année scolaire"
                       emptyMessage="Aucune année scolaire trouvée."
                       iconMap={iconMap}
-                      popoverContentClassName="z-[9999]"
                     />
                   </div>
                   {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
@@ -550,7 +548,6 @@ const PedagogicalManagementPage = () => {
                         placeholder="Sélectionner un établissement"
                         emptyMessage="Aucun établissement trouvé."
                         iconMap={iconMap}
-                        popoverContentClassName="z-[9999]"
                         disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                       />
                     </div>
@@ -602,7 +599,6 @@ const PedagogicalManagementPage = () => {
                   placeholder="Tous les établissements"
                   emptyMessage="Aucun établissement trouvé."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                 />
               </div>
             )}
@@ -628,7 +624,6 @@ const PedagogicalManagementPage = () => {
                 placeholder="Toutes les classes"
                 emptyMessage="Aucune classe trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
@@ -643,7 +638,6 @@ const PedagogicalManagementPage = () => {
                 placeholder="Toutes les années"
                 emptyMessage="Aucune année scolaire trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
           </div>

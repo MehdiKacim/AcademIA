@@ -195,7 +195,7 @@ const AddExistingNavItemDialog = ({
             return;
           }
         } catch (error: any) {
-          // console.error("Error adding new generic parent to role config:", error);
+          console.error("Error adding new generic parent to role config:", error);
           showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
           setIsAdding(false);
           return;
@@ -228,7 +228,7 @@ const AddExistingNavItemDialog = ({
       onItemAdded();
       onClose();
     } catch (error: any) {
-      // console.error("Error adding existing nav item to role menu:", error);
+      console.error("Error adding existing nav item to role menu:", error);
       showError(`Erreur lors de l'ajout de l'élément au menu du rôle: ${error.message}`);
     } finally {
       setIsAdding(false);
@@ -255,7 +255,7 @@ const AddExistingNavItemDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[1000] rounded-android-tile"> {/* Added z-[1000] */}
+      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[1000] rounded-android-tile">
         <div className="flex flex-col h-full">
           <DialogHeader>
             <DialogTitle>Ajouter un élément existant au menu</DialogTitle>
@@ -277,8 +277,6 @@ const AddExistingNavItemDialog = ({
                   placeholder="Rechercher un élément..."
                   emptyMessage="Aucun élément disponible à ajouter."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]" // Added z-index
-                  // disabled={false} // Supprimé temporairement
                 />
               </div>
             ) : (
@@ -315,8 +313,6 @@ const AddExistingNavItemDialog = ({
                     placeholder="Sélectionner un parent..."
                     emptyMessage="Aucun parent trouvé."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[9999]" // Added z-index
-                    // disabled={false} // Supprimé temporairement
                   />
                   {selectedParentForNewItem === 'none' && (
                     <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">

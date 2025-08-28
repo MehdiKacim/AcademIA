@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRole } from '@/contexts/RoleContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import EditSubjectDialog from '@/components/EditSubjectDialog'; // Re-added EditSubjectDialog import
+import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 
 const SubjectManagementPage = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
@@ -56,7 +57,7 @@ const SubjectManagementPage = () => {
     }
   }, [currentUserProfile, currentRole, establishments]);
 
-  // Removed local getEstablishmentName declaration. Now imported.
+  const getEstablishmentName = (id?: string) => establishments.find(e => e.id === id)?.name || 'N/A';
 
   const handleAddSubject = async () => {
     if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
@@ -149,7 +150,7 @@ const SubjectManagementPage = () => {
     );
   }
 
-  if (!currentUserProfile || (currentRole !== 'administrator' && currentRole !== 'director' && currentRole !== 'deputy_director')) {
+  if (!currentUserProfile || !['administrator', 'director', 'deputy_director'].includes(currentRole || '')) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
@@ -203,19 +204,18 @@ const SubjectManagementPage = () => {
                 {(currentRole === 'administrator' || (currentUserProfile?.establishment_id && ['director', 'deputy_director'].includes(currentRole || ''))) && (
                   <>
                     <Label htmlFor="new-subject-establishment">Établissement</Label>
-                    <Select value={newSubjectEstablishmentId || ""} onValueChange={(value) => setNewSubjectEstablishmentId(value === "none" ? null : value)} disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}>
-                      <SelectTrigger id="new-subject-establishment" className="rounded-android-tile">
-                        <SelectValue placeholder="Sélectionner un établissement" />
-                      </SelectTrigger>
-                      <SelectContent className="backdrop-blur-lg bg-background/80 z-[9999] rounded-android-tile">
-                        {currentRole === 'administrator' && <SelectItem value="none">Aucun</SelectItem>}
-                        {establishmentsToDisplay.map(est => (
-                          <SelectItem key={est.id} value={est.id}>
-                            {est.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SimpleItemSelector
+                      id="new-subject-establishment"
+                      options={establishmentsToDisplay.map(est => ({ id: est.id, label: est.name, icon_name: 'Building2', description: est.address }))}
+                      value={newSubjectEstablishmentId}
+                      onValueChange={(value) => setNewSubjectEstablishmentId(value)}
+                      searchQuery={''} // No search query for this simple selector
+                      onSearchQueryChange={() => {}} // No search query for this simple selector
+                      placeholder="Sélectionner un établissement"
+                      emptyMessage="Aucun établissement trouvé."
+                      iconMap={iconMap}
+                      disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
+                    />
                   </>
                 )}
                 <Button onClick={handleAddSubject} disabled={!newSubjectName.trim() || (!newSubjectEstablishmentId && currentRole !== 'administrator')}>

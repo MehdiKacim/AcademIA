@@ -159,7 +159,7 @@ const EditRoleConfigDialog = ({
                   return;
               }
           } catch (error: any) {
-              // console.error("Error adding new generic parent to role config:", error);
+              console.error("Error adding new generic parent to role config:", error);
               showError(`Erreur lors de l'ajout de la nouvelle catégorie parente: ${error.message}`);
               setIsSavingEdit(false);
               return;
@@ -190,7 +190,7 @@ const EditRoleConfigDialog = ({
       onSave();
       onClose();
     } catch (error: any) {
-      // console.error("Error updating role config:", error);
+      console.error("Error updating role config:", error);
       showError(`Erreur lors de la mise à jour de la configuration de rôle: ${error.message}`);
     } finally {
       setIsSavingEdit(false);
@@ -213,7 +213,7 @@ const EditRoleConfigDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[1000] rounded-android-tile"> {/* Added z-[1000] */}
+      <DialogContent className="w-full h-svh sm:max-w-[600px] sm:h-auto bg-card z-[1000] rounded-android-tile">
         <div className="flex flex-col h-full">
           <DialogHeader>
             <DialogTitle>Modifier la configuration de "{currentItemToEdit.label}" pour {selectedRoleFilter}</DialogTitle>
@@ -235,8 +235,6 @@ const EditRoleConfigDialog = ({
                   placeholder="Sélectionner un parent..."
                   emptyMessage="Aucun parent disponible."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]" // Added z-index
-                  // disabled={false} // Supprimé temporairement
                 />
               </div>
             ) : (

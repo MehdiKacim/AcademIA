@@ -268,7 +268,6 @@ const CurriculumManagementPage = () => {
                   placeholder="Sélectionner un établissement"
                   emptyMessage="Aucun établissement trouvé."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                   disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                 />
               </>

@@ -86,19 +86,6 @@ const getItemTypeLabel = (type: NavItem['type']) => {
   }
 };
 
-const getRoleDisplayName = (role: Profile['role'] | 'all') => {
-  switch (role) {
-    case 'student': return 'Élève';
-    case 'professeur': return 'Professeur';
-    case 'tutor': return 'Tuteur';
-    case 'director': return 'Directeur';
-    case 'deputy_director': return 'Directeur Adjoint';
-    case 'administrator': return 'Administrateur';
-    case 'all': return 'Sélectionner un rôle...';
-    default: return 'Rôle inconnu';
-  }
-};
-
 interface SortableNavItemProps {
   item: NavItem;
   level: number;
@@ -121,6 +108,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
     setNodeRef,
     transform,
     transition,
+    isDragging: isSortableDragging,
   } = useSortable({ id: item.configId!, disabled: !isDraggableAndDeletable });
 
   const effectivePaddingLeft = `calc(${level * 10}px + ${level > 0 ? '0.5rem' : '0px'})`;
@@ -128,8 +116,8 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 100 : 'auto',
-    opacity: isDragging ? 0.8 : 1,
+    zIndex: isSortableDragging ? 100 : 'auto',
+    opacity: isSortableDragging ? 0.8 : 1,
     paddingLeft: effectivePaddingLeft,
   };
 
@@ -876,7 +864,6 @@ const RoleNavConfigsPage = () => {
           onSave={fetchAndStructureNavItems}
           getDescendantIds={getDescendantIds}
           iconMap={iconMap}
-          popoverContentClassName="z-[9999]"
         />
       )}
 

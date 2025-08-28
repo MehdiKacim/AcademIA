@@ -482,7 +482,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Sélectionner un professeur"
                 emptyMessage="Aucun professeur trouvé."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div>
@@ -497,7 +496,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Sélectionner une matière"
                 emptyMessage="Aucune matière trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div>
@@ -512,7 +510,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Sélectionner une classe"
                 emptyMessage="Aucune classe trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div>
@@ -527,7 +524,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Sélectionner l'année scolaire"
                 emptyMessage="Aucune année scolaire trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
@@ -543,7 +539,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   placeholder="Sélectionner un établissement"
                   emptyMessage="Aucun établissement trouvé."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                   disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                 />
               </div>
@@ -587,7 +582,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   placeholder="Tous les établissements"
                   emptyMessage="Aucun établissement trouvé."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                 />
               </div>
             )}
@@ -603,7 +597,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Tous les professeurs"
                 emptyMessage="Aucun professeur trouvé."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
@@ -618,7 +611,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Toutes les matières"
                 emptyMessage="Aucune matière trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
@@ -633,7 +625,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Toutes les classes"
                 emptyMessage="Aucune classe trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
             <div className="flex-shrink-0 sm:w-1/3">
@@ -648,7 +639,6 @@ const ProfessorSubjectAssignmentPage = () => {
                 placeholder="Toutes les années"
                 emptyMessage="Aucune année scolaire trouvée."
                 iconMap={iconMap}
-                popoverContentClassName="z-[9999]"
               />
             </div>
           </div>
@@ -707,7 +697,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   placeholder="Sélectionner un professeur"
                   emptyMessage="Aucun professeur trouvé."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                 />
               </div>
               <div>
@@ -722,7 +711,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   placeholder="Sélectionner une matière"
                   emptyMessage="Aucune matière trouvée."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                 />
               </div>
               <div>
@@ -737,7 +725,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   placeholder="Sélectionner une classe"
                   emptyMessage="Aucune classe trouvée."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                 />
               </div>
               <div>
@@ -752,7 +739,6 @@ const ProfessorSubjectAssignmentPage = () => {
                   placeholder="Sélectionner l'année scolaire"
                   emptyMessage="Aucune année scolaire trouvée."
                   iconMap={iconMap}
-                  popoverContentClassName="z-[9999]"
                 />
               </div>
               {(currentRole === 'administrator' || currentUserProfile?.establishment_id) && (
@@ -768,7 +754,6 @@ const ProfessorSubjectAssignmentPage = () => {
                     placeholder="Sélectionner un établissement"
                     emptyMessage="Aucun établissement trouvé."
                     iconMap={iconMap}
-                    popoverContentClassName="z-[9999]"
                     disabled={currentRole !== 'administrator' && !!currentUserProfile?.establishment_id}
                   />
                 </div>
