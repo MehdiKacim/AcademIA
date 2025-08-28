@@ -32,7 +32,7 @@ import NavSheet from "@/components/NavSheet";
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import AiAPersistentChat from "@/components/AiAPersistentChat";
-import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu"; // Keep import for now, will remove component usage
+import DesktopImmersiveSubmenu from "@/components/DesktopImmersiveSubmenu";
 
 interface DashboardLayoutProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
@@ -54,12 +54,12 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Removed state for desktop submenu as it's no longer used
-  // const [activeDesktopSubmenuParent, setActiveDesktopSubmenuParent] = useState<NavItem | null>(null);
+  // State for desktop submenu
+  const [activeDesktopSubmenuParent, setActiveDesktopSubmenuParent] = useState<NavItem | null>(null);
 
-  // Refs for click outside logic (only headerRef is needed now for desktop)
+  // Refs for click outside logic
   const headerRef = useRef<HTMLElement>(null);
-  // Removed submenuRef
+  const submenuRef = useRef<HTMLElement>(null); // This ref is now for the DesktopImmersiveSubmenu
 
   // Helper function to inject onClick handlers for specific action items
   const injectActionHandlers = useCallback((items: NavItem[]): NavItem[] => {
@@ -168,13 +168,33 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     };
   }, [currentUserProfile?.id]);
 
-  // Removed handleClickOutside logic as DesktopImmersiveSubmenu is removed
+  // Handle clicks outside the header/submenu to close the submenu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        activeDesktopSubmenuParent &&
+        headerRef.current && !headerRef.current.contains(event.target as Node) &&
+        submenuRef.current && !submenuRef.current.contains(event.target as Node)
+      ) {
+        setActiveDesktopSubmenuParent(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeDesktopSubmenuParent]);
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen, onInitiateThemeChange }), [setIsAdminModalOpen, onInitiateThemeChange]);
 
   // Handler for navigation items (both top-level direct links and submenu items)
   const handleNavItemClick = useCallback((item: NavItem) => {
-    if (item.route) {
+    const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+
+    if (isCategory && item.children && item.children.length > 0) {
+      setActiveDesktopSubmenuParent(item); // Open immersive submenu
+    } else if (item.route) {
       if (item.is_external) {
         window.open(item.route, '_blank');
       } else if (item.route.startsWith('#')) {
@@ -182,10 +202,11 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       } else {
         navigate(item.route);
       }
+      setActiveDesktopSubmenuParent(null); // Close submenu on direct navigation
     } else if (item.onClick) {
       item.onClick();
+      setActiveDesktopSubmenuParent(null); // Close submenu on action
     }
-    // No need to close submenu here as it's handled by DropdownMenu
   }, [navigate]);
 
   return (
@@ -270,30 +291,21 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                   {fullNavTreeWithActions.map(item => (
                     <React.Fragment key={item.id}>
                       {item.type === 'category_or_action' && item.children && item.children.length > 0 ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="flex items-center gap-1">
-                              {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
-                              {item.label}
-                              <ChevronDown className="ml-1 h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="backdrop-blur-lg bg-background/80">
-                            {item.children.map(child => (
-                              <DropdownMenuItem key={child.id} onClick={() => handleNavItemClick(child)}>
-                                {React.createElement(iconMap[child.icon_name || 'Info'] || Info, { className: "mr-2 h-4 w-4" })}
-                                {child.label}
-                                {child.badge !== undefined && child.badge > 0 && (
-                                  <span className="ml-auto bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
-                                    {child.badge}
-                                  </span>
-                                )}
-                                {child.is_external && <ExternalLink className="ml-auto h-4 w-4" />}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        // This is a category that should open the immersive submenu
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleNavItemClick(item)}
+                          className={cn(
+                            "flex items-center gap-1",
+                            activeDesktopSubmenuParent?.id === item.id ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
+                          {item.label}
+                          <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
                       ) : (
+                        // This is a direct route or an action without children
                         <Button
                           key={item.id}
                           variant="ghost"
@@ -387,21 +399,26 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         )}
       </header>
 
-      {/* Removed DesktopImmersiveSubmenu component */}
-      {/* {!isMobile && currentUserProfile && (
+      {/* Dynamic Submenu Bar for Desktop */}
+      {!isMobile && currentUserProfile && (
         <DesktopImmersiveSubmenu
+          ref={submenuRef} // Attach ref here
           parentItem={activeDesktopSubmenuParent}
           onClose={() => setActiveDesktopSubmenuParent(null)}
           onItemClick={handleNavItemClick}
         />
-      )} */}
+      )}
 
       <main
         className={cn(
           "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
           isMobile
             ? "pt-4 pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for header
-            : "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Desktop: standard top padding, standard bottom padding (no immersive submenu)
+            : (
+                currentUserProfile && activeDesktopSubmenuParent
+                  ? "pt-[calc(68px+224px+env(safe-area-inset-top))] pb-4" // Desktop with submenu (68px header + 224px submenu), standard bottom padding
+                  : "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Desktop without submenu, standard bottom padding
+              )
         )}
       >
         <AnimatePresence mode="wait">
@@ -435,9 +452,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange}
           isMobile={isMobile}
-          isDesktopImmersiveOpen={false} // No longer used for desktop immersive
-          onCloseDesktopImmersive={() => {}} // No longer used
-          desktopImmersiveParent={null} // No longer used
+          isDesktopImmersiveOpen={!!activeDesktopSubmenuParent} // Pass state of immersive submenu
+          onCloseDesktopImmersive={() => setActiveDesktopSubmenuParent(null)} // Pass close handler
+          desktopImmersiveParent={activeDesktopSubmenuParent} // Pass the active parent
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
