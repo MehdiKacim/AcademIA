@@ -69,13 +69,15 @@ const NavSheet = ({
   const currentOnClose = isMobile ? onClose : onCloseDesktopImmersive;
 
   const swipeHandlers = useSwipeable({
-    onSwipedDown: () => {
-      if (isMobile && !currentOpenState) { // If mobile and sheet is closed, swipe down to open
-        setIsMobileNavSheetOpen(true);
+    onSwipedUp: () => { // Changed to onSwipedUp to open from bottom
+      if (isMobile && !currentOpenState) {
+        setIsMobileNavSheetOpen(true); // Assuming setIsMobileNavSheetOpen is passed or managed by parent
+      } else if (isMobile && currentOpenState) {
+        // If already open, ignore swipe up
       }
     },
-    onSwipedUp: () => {
-      if (isMobile && currentOpenState) { // If mobile and sheet is open, swipe up to close
+    onSwipedDown: () => { // Changed to onSwipedDown to close to bottom
+      if (isMobile && currentOpenState) {
         currentOnClose();
       }
     },
@@ -210,10 +212,11 @@ const NavSheet = ({
   return (
     <Sheet open={currentOpenState} onOpenChange={currentOnClose}>
       <SheetContent
-        side="top" // Always top for immersive feel
+        side="bottom" // Changed to bottom
         className={cn(
-          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-b-lg",
-          isMobile ? "h-full" : "h-[calc(100vh-68px)] top-[68px]" // Adjust height for desktop immersive
+          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg", // Changed rounded-b-lg to rounded-t-lg
+          isMobile ? "h-full" : "h-[calc(100vh-68px)]", // Keep height logic
+          isMobile ? "bottom-0" : "top-[68px]" // Adjust position for mobile bottom sheet
         )}
         {...swipeHandlers}
       >
@@ -226,42 +229,28 @@ const NavSheet = ({
                   <span className="sr-only">Retour</span>
                 </Button>
               ) : (
-                <div className="w-10 h-10"></div> // Placeholder for alignment
+                <div className="w-10 h-10"></div> {/* Placeholder for alignment */}
               )}
               <Logo iconClassName="h-8 w-8" textClassName="text-xl" />
             </div>
 
-            <div className="flex items-center gap-2">
-              {currentUserProfile && (
-                <>
-                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                    <MessageSquare className="h-5 w-5" />
-                    {unreadMessagesCount > 0 && (
-                      <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
-                        {unreadMessagesCount}
-                      </span>
-                    )}
-                    <span className="sr-only">Messagerie</span>
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
-                      <AvatarFallback>{currentUserProfile.first_name[0]}{currentUserProfile.last_name[0]}</AvatarFallback>
-                    </Avatar>
-                    <span className="sr-only">Mon Compte</span>
-                  </Button>
-                </>
-              )}
-              <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
-              <Button variant="ghost" size="icon" onClick={currentOnClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                <X className="h-5 w-5" aria-label="Fermer le menu" />
-                <span className="sr-only">Fermer</span>
-              </Button>
-            </div>
+            {/* Placeholder for right side to maintain spacing */}
+            <div className="w-10 h-10"></div> 
           </div>
           <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
           <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
         </SheetHeader>
+
+        {currentUserProfile && (
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <Input
+              placeholder={drawerNavStack.length > 0 ? `Rechercher dans ${currentDrawerTitle}...` : "Rechercher une catégorie ou un élément..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-android-tile"
+            />
+          </div>
+        )}
 
         <ScrollArea className="flex-grow p-4">
           {drawerNavStack.length > 0 && (
@@ -270,7 +259,6 @@ const NavSheet = ({
               {currentDrawerTitle}
             </h2>
           )}
-          {/* Removed search input from mobile NavSheet */}
           <motion.div
             key={drawerNavStack.length}
             initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}
@@ -279,7 +267,9 @@ const NavSheet = ({
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4"
           >
-            {currentItemsToDisplay.length === 0 ? (
+            {currentItemsToDisplay.length === 0 && searchQuery.trim() !== '' ? (
+              <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément trouvé pour "{searchQuery}".</p>
+            ) : currentItemsToDisplay.length === 0 && searchQuery.trim() === '' ? (
               <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
             ) : (
               currentItemsToDisplay.map((item) => {
@@ -317,19 +307,37 @@ const NavSheet = ({
           </motion.div>
         </ScrollArea>
 
+        {/* Moved elements from old SheetHeader here */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center justify-between gap-2">
             {currentUserProfile ? (
-              <Button variant="destructive" className="shadow-lg bg-destructive/80 hover:bg-destructive rounded-android-tile" onClick={handleLogout}>
-                <LogOut className="h-5 w-5 mr-2" /> Déconnexion
-              </Button>
+              <>
+                <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'static-messages', label: 'Messagerie', icon_name: 'MessageSquare', is_external: false, type: 'route', route: '/messages', order_index: 100, badge: unreadMessagesCount })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                  <MessageSquare className="h-5 w-5" />
+                  {unreadMessagesCount > 0 && (
+                    <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 text-xs leading-none">
+                      {unreadMessagesCount}
+                    </span>
+                  )}
+                  <span className="sr-only">Messagerie</span>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => handleItemClick({ id: 'profile-category', label: 'Mon Compte', icon_name: 'User', is_external: false, type: 'category_or_action', children: staticProfileActions, order_index: 999 })} className="relative rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
+                    <AvatarFallback>{currentUserProfile.first_name[0]}{currentUserProfile.last_name[0]}</AvatarFallback>
+                  </Avatar>
+                  <span className="sr-only">Mon Compte</span>
+                </Button>
+              </>
             ) : (
-              <Button variant="default" className="shadow-lg rounded-android-tile" onClick={onOpenAuthModal}>
+              <Button variant="default" className="shadow-lg rounded-android-tile flex-grow" onClick={onOpenAuthModal}>
                 <User className="h-5 w-5 mr-2" /> Se connecter
               </Button>
             )}
-            <Button variant="outline" className="shadow-lg bg-background/80 backdrop-blur-lg rounded-android-tile" onClick={() => navigate('/about')}>
-              <Info className="h-5 w-5 mr-2" /> À propos
+            <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+            <Button variant="ghost" size="icon" onClick={currentOnClose} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
+              <X className="h-5 w-5" aria-label="Fermer le menu" />
+              <span className="sr-only">Fermer</span>
             </Button>
           </div>
           {isMobile && (
