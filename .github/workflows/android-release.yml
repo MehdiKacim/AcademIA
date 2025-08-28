@@ -59,13 +59,12 @@ jobs:
       - name: Sync Capacitor web assets to Android
         run: npx cap sync android
 
-      # 8. Publication des mises à jour web via Capacitor Live Updates
-      # NOTE: J'ai ajouté l'option --channel qui est requise.
-      - name: Publish web updates
-        run: npx cap live-updates:publish --channel Production
+      # 8. Publication des mises à jour web via Capawesome Cloud
+      # NOTE: Remplacez l'ID et le token par les secrets de Capawesome Cloud
+      - name: Publish web updates (Capawesome Cloud)
+        run: npx @capawesome/cli apps:bundles:create --appId ${{ secrets.CAPAWESOME_CLOUD_APP_ID }} --path dist --channel Production
         env:
-          CAPACITOR_LIVE_UPDATES_APP_ID: ${{ secrets.CAPACITOR_LIVE_UPDATES_APP_ID }}
-          CAPACITOR_LIVE_UPDATES_TOKEN: ${{ secrets.CAPACITOR_LIVE_UPDATES_TOKEN }}
+          CAPAWESOME_CLOUD_TOKEN: ${{ secrets.CAPAWESOME_CLOUD_TOKEN }}
 
       # 9. Incrémente automatiquement le numéro de version et de build Android
       - name: Increment Android Version with Shell Script
