@@ -46,7 +46,7 @@ const MobileBottomNavContent = ({
   
   // Specific classes for the central menu button
   // Reverted background color to bg-muted/20 and text to text-foreground
-  const centralMenuButtonClasses = "rounded-full h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 bg-muted/20 text-foreground hover:bg-muted/40 flex items-center justify-center";
+  const centralMenuButtonClasses = "rounded-full h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 bg-muted/20 text-foreground hover:bg-muted/40 flex items-center justify-center translate-y-[-34px] z-10";
 
   const buttonPressAnimation = {
     scale: 0.95,
