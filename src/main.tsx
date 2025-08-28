@@ -7,4 +7,5 @@ import { LiveUpdates } from "@capacitor/live-updates";
 // Lance la vérification et le téléchargement des mises à jour
 LiveUpdates.sync();
 
+
 createRoot(document.getElementById("root")!).render(<App />);
