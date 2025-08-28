@@ -109,11 +109,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # NOUVEAU: Installe l'Android SDK 33 nécessaire
-      - name: Install Android SDK 33
-        run: |
-          yes | sdkmanager "platforms;android-33"
-
+      # NOUVEAU: Utilise une action pour installer l'Android SDK
+      - name: Install Android SDK
+        uses: reactivecircus/android-build-tools@v1.4
+        with:
+          api-level: 33
+          
       # 13. Compile l'APK en mode 'debug'
       - name: Build Android Debug APK
         run: cd android && ./gradlew assembleDebug
