@@ -254,7 +254,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
       </header>
 
       <main className={cn(
-          "flex-grow flex flex-col items-center justify-center text-center px-4 overflow-y-auto",
+          "flex-grow flex flex-col items-center justify-center text-center px-4 overflow-y-auto overflow-x-hidden", // Added overflow-x-hidden here
           isMobile
             ? "pt-4 pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: standard top padding, bottom padding for header
             : "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Desktop: standard top padding, standard bottom padding
@@ -384,7 +384,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
               onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={false}
-              unreadMessagesCount={0} /* Pass unread messages count */
+              unreadMessagesCount={0} // Pass unread messages count
             />
           </div>
         </>
