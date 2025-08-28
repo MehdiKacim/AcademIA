@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
@@ -116,7 +117,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isSortableDragging ? 100 : 'auto',
+    zIndex: isSortableDragging ? 100 : 'auto', // Bring dragged item to front
     opacity: isSortableDragging ? 0.8 : 1,
     paddingLeft: effectivePaddingLeft,
   };
@@ -165,7 +166,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
               </div>
             )}
             {hasChildren && (
-              <Button
+              <MotionButton
                 type="button"
                 variant="ghost"
                 size="icon"
@@ -174,10 +175,11 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
                   onToggleExpand(item.id);
                 }}
                 className="h-5 w-5"
+                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
               >
                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 <span className="sr-only">{isExpanded ? 'Réduire' : 'Étendre'}</span>
-              </Button>
+              </MotionButton>
             )}
             <IconComponent className="h-5 w-5 text-primary" />
             <span className="font-medium">{item.label}</span>
@@ -187,18 +189,18 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             {item.is_global && <Globe className="h-4 w-4 text-muted-foreground ml-1" title="Configuration globale" />}
           </div>
           <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0">
-            <Button variant="outline" size="sm" onClick={() => onEditGenericItem(item)}>
+            <MotionButton variant="outline" size="sm" onClick={() => onEditGenericItem(item)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Edit className="h-4 w-4" />
-            </Button>
+            </MotionButton>
             {config && (
-              <Button variant="outline" size="sm" onClick={() => onEditRoleConfig(item, config)}>
+              <MotionButton variant="outline" size="sm" onClick={() => onEditRoleConfig(item, config)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <UserRoundCog className="h-4 w-4" />
-              </Button>
+              </MotionButton>
             )}
             {isDraggableAndDeletable && (
-              <Button variant="destructive" size="sm" onClick={() => onDelete(item.id, item.configId)}>
+              <MotionButton variant="destructive" size="sm" onClick={() => onDelete(item.id, item.configId)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Trash2 className="h-4 w-4" />
-              </Button>
+              </MotionButton>
             )}
           </div>
         </div>
@@ -429,6 +431,8 @@ const RoleNavConfigsPage = () => {
   const handleDragStart = (event: any) => {
     if (currentRole !== 'administrator') {
       showError("Vous n'êtes pas autorisé à réorganiser les éléments.");
+      setActiveDragItem(null);
+      setActiveDragConfig(null);
       return;
     }
     const { active } = event;
@@ -749,7 +753,7 @@ const RoleNavConfigsPage = () => {
         Sélectionnez un rôle pour voir et gérer les éléments de menu qui lui sont associés.
       </p>
 
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserRoundCog className="h-6 w-6 text-primary" /> Sélectionner un rôle
@@ -773,7 +777,7 @@ const RoleNavConfigsPage = () => {
               filteredRoles.map(role => {
                 const RoleIcon = iconMap[role as string] || User; // Get icon from map
                 return (
-                  <Button
+                  <MotionButton
                     key={role}
                     variant="outline"
                     className={cn(
@@ -782,26 +786,28 @@ const RoleNavConfigsPage = () => {
                       "transition-all duration-200 ease-in-out"
                     )}
                     onClick={() => handleSelectRole(role)}
+                    whileHover={{ scale: 1.02, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <RoleIcon className="h-6 w-6 mb-2" />
                     <span className="text-sm font-medium line-clamp-1">{getRoleDisplayName(role)}</span>
                     {selectedRoleFilter === role && <Check className="h-4 w-4 text-primary-foreground mt-1" />}
-                  </Button>
+                  </MotionButton>
                 );
               })
             )}
           </div>
           {selectedRoleFilter !== 'all' && (
-            <Button onClick={handleResetRoleNav} variant="outline" className="mt-4">
+            <MotionButton onClick={handleResetRoleNav} variant="outline" className="mt-4" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <RefreshCw className="h-4 w-4 mr-2" /> Réinitialiser la navigation pour ce rôle
-            </Button>
+            </MotionButton>
           )}
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {selectedRoleFilter !== 'all' && (
         <div className="grid grid-cols-1 gap-8">
-          <Card className="rounded-android-tile">
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -809,7 +815,7 @@ const RoleNavConfigsPage = () => {
                 </CardTitle>
                 <CardDescription>Réorganisez les éléments par glisser-déposer. Utilisez le menu contextuel (clic droit) pour gérer les sous-éléments.</CardDescription>
               </div>
-              <Button
+              <MotionButton
                 variant="outline"
                 size="sm"
                 onClick={() => {
@@ -817,9 +823,10 @@ const RoleNavConfigsPage = () => {
                   setIsAddExistingItemDialogOpen(true);
                 }}
                 className="flex-shrink-0"
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               >
                 <PlusCircle className="mr-2 h-4 w-4" /> Ajouter racine
-              </Button>
+              </MotionButton>
             </CardHeader>
             <CardContent className="space-y-2 p-4 border border-dashed border-muted-foreground/30 rounded-android-tile">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -844,7 +851,7 @@ const RoleNavConfigsPage = () => {
                 </DragOverlay>
               </DndContext>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       )}
 

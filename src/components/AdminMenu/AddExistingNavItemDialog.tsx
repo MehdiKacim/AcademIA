@@ -7,7 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Home, Info, Search as SearchIcon, ArrowLeft, XCircle, Check, Code } from "lucide-react";
 import { NavItem, Profile, RoleNavItemConfig } from "@/lib/dataModels";
@@ -15,7 +15,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { addRoleNavItemConfig, updateRoleNavItemConfig } from "@/lib/navItems";
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from '@/components/ui/card'; // Import MotionCard
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
@@ -283,11 +283,11 @@ const AddExistingNavItemDialog = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>2. Choisir le parent pour l'élément sélectionné</Label>
-                  <Button variant="ghost" size="sm" onClick={handleCancelSelection}>
+                  <MotionButton variant="ghost" size="sm" onClick={handleCancelSelection} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                     <ArrowLeft className="h-4 w-4 mr-2" /> Annuler la sélection
-                  </Button>
+                  </MotionButton>
                 </div>
-                <Card className="p-3 rounded-android-tile bg-muted/20">
+                <MotionCard className="p-3 rounded-android-tile bg-muted/20" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}>
                   <CardHeader className="p-0 pb-2">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <ItemIconComponent className="h-5 w-5 text-primary" /> {selectedGenericItemInfo?.label}
@@ -299,7 +299,7 @@ const AddExistingNavItemDialog = ({
                   <CardContent className="p-0 text-sm text-muted-foreground">
                     {selectedGenericItemInfo?.description || "Aucune description."}
                   </CardContent>
-                </Card>
+                </MotionCard>
 
                 <div>
                   <Label htmlFor="parent-selector" className="mb-2 block">Rechercher un parent</Label>
@@ -324,9 +324,9 @@ const AddExistingNavItemDialog = ({
             )}
           </div>
           <DialogFooter>
-            <Button onClick={handleAddExistingItem} disabled={isAddButtonDisabled}>
+            <MotionButton onClick={handleAddExistingItem} disabled={isAddButtonDisabled} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isAdding ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
@@ -100,9 +100,9 @@ const ChangePasswordDialog = ({ isOpen, onClose }: ChangePasswordDialogProps) =>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handlePasswordChange} disabled={isLoading}>
+            <MotionButton onClick={handlePasswordChange} disabled={isLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isLoading ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Changer le mot de passe"}
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

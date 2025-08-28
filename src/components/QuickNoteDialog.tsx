@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { PlusCircle } from "lucide-react";
 import { addNote } from "@/lib/notes"; // Import addNote from Supabase-based notes.ts
 import { showSuccess, showError } from "@/utils/toast";
@@ -91,9 +91,9 @@ const QuickNoteDialog = ({ isOpen, onClose, noteKey, contextTitle, onNoteAdded }
             />
           </div>
           <DialogFooter>
-            <Button onClick={handleAddNote} disabled={!noteContent.replace(/<[^>]*>/g, '').trim()}>
+            <MotionButton onClick={handleAddNote} disabled={!noteContent.replace(/<[^>]*>/g, '').trim()} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <PlusCircle className="h-4 w-4 mr-2" /> Ajouter la note
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { showSuccess, showError } from "@/utils/toast";
 import { Class, Curriculum, SchoolYear, Establishment } from "@/lib/dataModels";
 import { updateClassInStorage, loadCurricula, loadSchoolYears, getEstablishmentName, getCurriculumName, getSchoolYearName } from "@/lib/courseData";
@@ -215,9 +215,9 @@ const EditClassDialog = ({ isOpen, onClose, classToEdit, onSave, establishments,
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')}>
+            <MotionButton onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

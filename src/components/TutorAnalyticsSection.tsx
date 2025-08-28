@@ -5,6 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import {
   BarChart,
@@ -21,7 +22,7 @@ import {
 import { Profile, Class, Curriculum, StudentCourseProgress, StudentClassEnrollment } from "@/lib/dataModels"; // Import StudentClassEnrollment
 import { getUserFullName, getAllStudentClassEnrollments } from "@/lib/studentData"; // Import getAllStudentClassEnrollments
 import { loadClasses, loadCurricula, getClassName, getCurriculumName, getEstablishmentName } from "@/lib/courseData"; // Import getClassName, getCurriculumName, getEstablishmentName
-import { Button } from "@/components/ui/button"; // Import Button
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Mail } from "lucide-react"; // Import Mail icon
 import { showError } from "@/utils/toast"; // Import showError
 
@@ -142,7 +143,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
       <>
         <p className="text-lg text-muted-foreground mb-8">Surveillez la progression de vos élèves et recevez des alertes importantes.</p>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Élèves Supervisés</CardTitle>
               <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
@@ -151,8 +152,8 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
               <p className="text-2xl font-bold text-primary">{supervisedStudents.length}</p>
               <p className="text-sm text-muted-foreground">Élèves en difficulté : {studentsAtRisk}</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Progression Moyenne</CardTitle>
               <CardDescription>Vue d'overview de l'avancement de vos élèves.</CardDescription>
@@ -161,8 +162,8 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
               <p className="text-2xl font-bold text-primary">{averageStudentProgress}</p>
               <p className="text-sm text-muted-foreground">Contactez les enseignants si nécessaire.</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Performance des Élèves</CardTitle>
               <CardDescription>Scores moyens de vos élèves.</CardDescription>
@@ -186,8 +187,8 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Tendances de Progression Individuelle</CardTitle>
               <CardDescription>Suivi de la progression de certains élèves au fil du temps.</CardDescription>
@@ -212,7 +213,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );
@@ -221,7 +222,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
       <>
         <p className="text-lg text-muted-foreground mb-8">Notifications pour les élèves en difficulté et suggestions d'interventions.</p>
         <div className="grid gap-6">
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Alertes Récentes</CardTitle>
               <CardDescription>Informations importantes sur vos élèves.</CardDescription>
@@ -236,17 +237,17 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
                       **{alert.studentId ? `${allProfiles.find(p => p.id === alert.studentId)?.first_name} ${allProfiles.find(p => p.id === alert.studentId)?.last_name}` : 'N/A'}** {alert.description}
                       {alert.recommendation && <span className="block text-xs italic mt-1">Recommandation: {alert.recommendation}</span>}
                       {alert.studentId && (
-                        <Button variant="ghost" size="sm" className="ml-2" onClick={() => onSendMessageToUser(alert.studentId)}>
+                        <MotionButton variant="ghost" size="sm" className="ml-2" onClick={() => onSendMessageToUser(alert.studentId)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                           <Mail className="h-4 w-4" />
-                        </Button>
+                        </MotionButton>
                       )}
                     </li>
                   ))
                 )}
               </ul>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Recommandations d'Intervention</CardTitle>
               <CardDescription>Actions suggérées pour aider vos élèves.</CardDescription>
@@ -258,7 +259,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
                 <li>Pour les élèves en avance : Proposer des défis supplémentaires ou des ressources avancées.</li>
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );
@@ -267,7 +268,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
       <>
         <p className="text-lg text-muted-foreground mb-8">Statistiques agrégées par classe.</p>
         <div className="grid gap-6">
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Performance Moyenne par Classe</CardTitle>
               <CardDescription>Progression moyenne et nombre d'élèves par classe.</CardDescription>
@@ -292,8 +293,8 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Détail des Classes</CardTitle>
               <CardDescription>Liste des classes avec leurs statistiques clés.</CardDescription>
@@ -311,7 +312,7 @@ const TutorAnalyticsSection = ({ allProfiles, allStudentCourseProgresses, allCla
                 )}
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { showSuccess, showError } from "@/utils/toast";
 import { Subject, Establishment } from "@/lib/dataModels";
 import { updateSubjectInStorage, getEstablishmentName } from "@/lib/courseData";
@@ -139,9 +139,9 @@ const EditSubjectDialog = ({ isOpen, onClose, subject, onSave, establishments }:
             )}
           </div>
           <DialogFooter>
-            <Button onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')}>
+            <MotionButton onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

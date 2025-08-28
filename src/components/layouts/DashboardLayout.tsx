@@ -3,7 +3,7 @@ import { Home, BookOpen, PlusSquare, BarChart2, User, LogOut, Settings, Info, Gr
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { ThemeToggle } from "../theme-toggle";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
@@ -237,21 +237,22 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                   <React.Fragment key={item.id}>
                     {item.type === 'category_or_action' && item.children && item.children.length > 0 ? (
                       // This is a category that should open the immersive submenu
-                      <Button
+                      <MotionButton
                         variant="ghost"
                         onClick={() => handleNavItemClick(item)}
                         className={cn(
                           "flex items-center gap-1",
                           activeDesktopSubmenuParent?.id === item.id ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
                         )}
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       >
                         {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
                         {item.label}
                         <ChevronDown className="ml-1 h-4 w-4" />
-                      </Button>
+                      </MotionButton>
                     ) : (
                       // This is a direct route or an action without children
-                      <Button
+                      <MotionButton
                         key={item.id}
                         variant="ghost"
                         onClick={() => handleNavItemClick(item)}
@@ -259,6 +260,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                           "flex items-center gap-1",
                           (item.route && (location.pathname + location.search).startsWith(item.route)) ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
                         )}
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       >
                         {React.createElement(iconMap[item.icon_name || 'Info'] || Info, { className: "h-5 w-5" })}
                         {item.label}
@@ -268,7 +270,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                           </span>
                         )}
                         {item.is_external && <ExternalLink className="ml-auto h-4 w-4" />}
-                      </Button>
+                      </MotionButton>
                     )}
                   </React.Fragment>
                 ))}
@@ -278,10 +280,10 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)}>
+                    <MotionButton variant="outline" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <Search className="h-5 w-5" />
                       <span className="sr-only">Recherche globale</span>
-                    </Button>
+                    </MotionButton>
                   </TooltipTrigger>
                   <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
                     <p>Recherche (Ctrl + F)</p>
@@ -290,10 +292,10 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" onClick={() => openChat()}>
+                    <MotionButton variant="outline" size="icon" onClick={() => openChat()} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <BotMessageSquare className="h-5 w-5" />
                       <span className="sr-only">AiA Chat</span>
-                    </Button>
+                    </MotionButton>
                   </TooltipTrigger>
                   <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
                     <p>AiA Chat</p>
@@ -302,10 +304,10 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+                    <MotionButton variant="ghost" size="icon" className="rounded-full h-10 w-10" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <User className="h-5 w-5" />
                       <span className="sr-only">Menu utilisateur</span>
-                    </Button>
+                    </MotionButton>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
                     <DropdownMenuLabel>{currentUserProfile.first_name} {currentUserProfile.last_name}</DropdownMenuLabel>
@@ -335,9 +337,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             </div>
             <div className="flex items-center gap-2">
               {/* ThemeToggle removed from here */}
-              <Button variant="outline" onClick={() => navigate('/auth')}>
+              <MotionButton variant="outline" onClick={() => navigate('/auth')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <LogIn className="h-5 w-5 mr-2" /> Connexion
-              </Button>
+              </MotionButton>
             </div>
           </div>
         )}
@@ -380,9 +382,9 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       </main>
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
-        <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')}>
+        <MotionButton variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           À propos
-        </Button>
+        </MotionButton>
       </footer>
       
       {currentUserProfile && isMobile && ( // Only render NavSheet if mobile
@@ -406,6 +408,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
               isAuthenticated={true}
               unreadMessagesCount={unreadMessages} // Pass unread messages count
               isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here
+              onInitiateThemeChange={onInitiateThemeChange} // Pass onInitiateThemeChange
             />
           </div>
         </>

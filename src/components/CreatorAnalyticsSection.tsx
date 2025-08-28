@@ -5,6 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import {
   LineChart,
@@ -170,7 +171,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
       <>
         <p className="text-lg text-muted-foreground mb-8">Obtenez des informations détaillées sur la performance de vos cours et l'engagement des élèves.</p>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Vue d'overview des Cours</CardTitle>
               <CardDescription>Statistiques générales de vos contenus.</CardDescription>
@@ -179,8 +180,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
               <p className="text-2xl font-bold text-primary">{creatorAnalytics.totalCourses}</p>
               <p className="text-sm text-muted-foreground">Cours publiés : {creatorAnalytics.publishedCourses}</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Statistiques des Élèves</CardTitle>
               <CardDescription>Engagement et progression des apprenants.</CardDescription>
@@ -190,8 +191,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
               <p className="text-sm text-muted-foreground">Élèves inscrits</p>
               <p className="text-sm text-muted-foreground">Note moyenne des cours : {creatorAnalytics.averageCourseRating}</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Nouvelles Inscriptions</CardTitle>
               <CardDescription>Les derniers élèves à rejoindre vos cours.</CardDescription>
@@ -200,8 +201,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
               <p className="text-2xl font-bold text-primary">{creatorAnalytics.newEnrollmentsLastMonth}</p>
               <p className="text-sm text-muted-foreground">Le mois dernier</p>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Performance des Cours (Vue d'ensemble)</CardTitle>
               <CardDescription>Taux de complétion et nombre d'élèves par cours.</CardDescription>
@@ -226,7 +227,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );
@@ -243,7 +244,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
               if (!courseStats) return null; // Should not happen if data is correctly generated
 
               return (
-                <Card key={course.id} className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+                <MotionCard key={course.id} className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
                   <CardHeader>
                     <CardTitle>{course.title}</CardTitle>
                     <CardDescription>Statistiques détaillées pour ce cours.</CardDescription>
@@ -272,7 +273,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
-                </Card>
+                </MotionCard>
               );
             })
           )}
@@ -284,7 +285,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
       <>
         <p className="text-lg text-muted-foreground mb-8">Suivi de l'activité et de l'engagement des apprenants.</p>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Élèves Actifs</CardTitle>
               <CardDescription>Nombre d'élèves actifs cette semaine.</CardDescription>
@@ -293,8 +294,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
               <p className="text-2xl font-bold text-primary">{Math.floor(filteredStudentProfiles.length * 0.7)}</p>
               <p className="text-sm text-muted-foreground">sur {filteredStudentProfiles.length} élèves inscrits.</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Nouvelles Inscriptions</CardTitle>
               <CardDescription>Élèves inscrits au cours du dernier mois.</CardDescription>
@@ -303,8 +304,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
               <p className="text-2xl font-bold text-primary">{creatorAnalytics.newEnrollmentsLastMonth}</p>
               <p className="text-sm text-muted-foreground">Nouveaux élèves.</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Durée Moyenne des Sessions</CardTitle>
               <CardDescription>Temps moyen passé par les élèves sur la plateforme.</CardDescription>
@@ -313,8 +314,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
               <p className="text-2xl font-bold text-primary">{creatorAnalytics.averageSessionDuration}</p>
               <p className="text-sm text-muted-foreground">Par session.</p>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Évolution de l'Engagement</CardTitle>
               <CardDescription>Nombre d'élèves actifs et nouvelles inscriptions par mois.</CardDescription>
@@ -339,8 +340,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours les Plus Performants</CardTitle>
               <CardDescription>Les cours avec les meilleurs taux de complétion.</CardDescription>
@@ -356,8 +357,8 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
                 )}
               </ul>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours avec le Plus de Décrochage</CardTitle>
               <CardDescription>Identifiez les cours où les élèves ont tendance à abandonner.</CardDescription>
@@ -373,7 +374,7 @@ const CreatorAnalyticsSection = ({ view, selectedClassId, selectedCurriculumId, 
                 )}
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );

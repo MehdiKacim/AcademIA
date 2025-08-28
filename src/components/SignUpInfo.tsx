@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, UserPlus } from 'lucide-react';
 
@@ -18,9 +18,9 @@ export const SignUpInfo: React.FC<SignUpInfoProps> = ({ onSwitchToLogin }) => {
       <p className="text-muted-foreground">
         Veuillez contacter un administrateur pour obtenir un compte.
       </p>
-      <Button type="button" className="w-full" onClick={onSwitchToLogin}>
+      <MotionButton type="button" className="w-full" onClick={onSwitchToLogin} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
         <ArrowLeft className="h-4 w-4 mr-2" /> Retour à la connexion
-      </Button>
+      </MotionButton>
     </div>
   );
 };

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast";
 import { Curriculum, Establishment } from "@/lib/dataModels";
@@ -154,9 +154,9 @@ const EditCurriculumDialog = ({ isOpen, onClose, curriculum, onSave, establishme
             )}
           </div>
           <DialogFooter>
-            <Button onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')}>
+            <MotionButton onClick={handleSave} disabled={isLoading || (!establishmentId && currentRole !== 'administrator')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

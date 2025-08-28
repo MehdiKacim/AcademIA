@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { showSuccess, showError } from "@/utils/toast";
 import { Profile } from "@/lib/dataModels"; // Removed Establishment import
 import { updateProfile } from "@/lib/studentData"; // Import updateProfile
@@ -189,16 +189,17 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
+                      <MotionButton
                         variant={"outline"}
                         className={cn(
                           "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                           !enrollmentStartDate && "text-muted-foreground"
                         )}
+                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {enrollmentStartDate ? format(enrollmentStartDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
+                      </MotionButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                       <Calendar
@@ -217,16 +218,17 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
+                      <MotionButton
                         variant={"outline"}
                         className={cn(
                           "col-span-3 justify-start text-left font-normal rounded-android-tile", // Apply rounded-android-tile
                           !enrollmentEndDate && "text-muted-foreground"
                         )}
+                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         {enrollmentEndDate ? format(enrollmentEndDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                      </Button>
+                      </MotionButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 backdrop-blur-lg bg-background/80 rounded-android-tile z-[9999]"> {/* Apply rounded-android-tile */}
                       <Calendar
@@ -243,7 +245,7 @@ const EditProfileDialog = ({ isOpen, onClose, currentUserProfile, onSave }: Edit
             )}
           </div>
           <DialogFooter>
-            <Button onClick={handleSave}>Enregistrer les modifications</Button>
+            <MotionButton onClick={handleSave} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Enregistrer les modifications</MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

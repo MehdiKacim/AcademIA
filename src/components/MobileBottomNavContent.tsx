@@ -21,6 +21,7 @@ interface MobileBottomNavContentProps {
   isAuthenticated: boolean;
   unreadMessagesCount?: number;
   isMobileNavSheetOpen: boolean; // New prop to control animation
+  onInitiateThemeChange: (newTheme: Profile['theme']) => void; // Add onInitiateThemeChange prop
 }
 
 const MobileBottomNavContent = ({
@@ -30,6 +31,7 @@ const MobileBottomNavContent = ({
   isAuthenticated,
   unreadMessagesCount = 0,
   isMobileNavSheetOpen,
+  onInitiateThemeChange, // Destructure the new prop
 }: MobileBottomNavContentProps) => {
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
@@ -95,7 +97,7 @@ const MobileBottomNavContent = ({
                 animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
                 transition={{ duration: 1.5, ease: "easeInOut" }}
             >
-              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={true} /> {/* Pass disableInternalAnimation={true} */}
+              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               <span className="sr-only">Ouvrir le menu</span>
               {unreadMessagesCount > 0 && (
                 <span className="absolute top-[-4px] right-[-4px] transform translate-x-0 translate-y-0 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
@@ -178,16 +180,13 @@ const MobileBottomNavContent = ({
                 animate={{ rotate: isMobileNavSheetOpen ? 360 : 0 }} // Apply rotation here
                 transition={{ duration: 1.5, ease: "easeInOut" }}
             >
-              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={true} /> {/* Pass disableInternalAnimation={true} */}
+              <Logo iconClassName="h-10 w-10" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
               <span className="sr-only">Ouvrir le menu</span>
             </MotionButton>
           </div>
 
-          {/* Right side: MessageSquare button */}
-          <MotionButton variant="outline" onClick={() => navigate('/auth')} className={peripheralNavButtonClasses}>
-            <MessageSquare className="h-5 w-5" />
-            <span className="sr-only">Messagerie</span>
-          </MotionButton>
+          {/* Right side: Theme Toggle */}
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} className={peripheralNavButtonClasses} />
         </div>
       )}
     </div>

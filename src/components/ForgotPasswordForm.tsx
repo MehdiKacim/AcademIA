@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, MailQuestion } from 'lucide-react';
@@ -58,12 +58,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSucces
           autoComplete="email"
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <MotionButton type="submit" className="w-full" disabled={isLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
         {isLoading ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Envoyer le lien de réinitialisation"}
-      </Button>
-      <Button type="button" variant="outline" className="w-full" onClick={onSwitchToLogin}>
+      </MotionButton>
+      <MotionButton type="button" variant="outline" className="w-full" onClick={onSwitchToLogin} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
         <ArrowLeft className="h-4 w-4 mr-2" /> Retour à la connexion
-      </Button>
+      </MotionButton>
     </form>
   );
 };

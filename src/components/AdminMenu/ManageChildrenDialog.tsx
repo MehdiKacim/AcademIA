@@ -7,7 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, GripVertical, LayoutList, Globe, ExternalLink, X,
@@ -61,6 +61,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 
@@ -129,9 +130,9 @@ const SortableChildItem = React.forwardRef<HTMLDivElement, SortableChildItemProp
             {item.is_global && <Globe className="h-3 w-3 text-muted-foreground ml-1" title="Configuration globale" />}
           </div>
           {isDraggableAndDeletable && (
-            <Button variant="destructive" size="sm" onClick={() => onRemove(item.configId!)} className="flex-shrink-0 mt-2 sm:mt-0">
+            <MotionButton variant="destructive" size="sm" onClick={() => onRemove(item.configId!)} className="flex-shrink-0 mt-2 sm:mt-0" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Trash2 className="h-3 w-3" />
-            </Button>
+            </MotionButton>
           )}
         </div>
       </ContextMenuTrigger>
@@ -414,7 +415,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
           <div className="flex-grow overflow-y-auto pr-2">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-                <Card className="flex flex-col rounded-android-tile">
+                <MotionCard className="flex flex-col rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
                   <CardHeader>
                     <CardTitle className="text-lg">Ajouter un sous-élément existant</CardTitle>
                     <CardDescription>Sélectionnez un élément générique déjà créé à ajouter comme enfant.</CardDescription>
@@ -438,7 +439,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             const IconComponent = item.icon_name ? (iconMap[item.icon_name] || Info) : Info;
                             const isSelected = selectedGenericItemToAdd === item.id;
                             return (
-                              <Button
+                              <MotionButton
                                 key={item.id}
                                 variant="outline"
                                 className={cn(
@@ -446,6 +447,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                                   isSelected ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent hover:text-accent-foreground"
                                 )}
                                 onClick={() => setSelectedGenericItemToAdd(item.id)}
+                                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                               >
                                 <Check className={cn("h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
                                 <IconComponent className="h-4 w-4 text-primary" />
@@ -453,28 +455,28 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                                   <span className="font-medium">{item.label}</span>
                                   <span className="text-xs text-muted-foreground italic">({getItemTypeLabel(item.type)})</span>
                                 </div>
-                              </Button>
+                              </MotionButton>
                             );
                           })
                         )}
                       </div>
                     </ScrollArea>
-                    <Button onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd}>
+                    <MotionButton onClick={handleAddSelectedGenericItemAsChild} disabled={!selectedGenericItemToAdd} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                       <PlusCircle className="h-4 w-4 mr-2" /> Ajouter comme enfant
-                    </Button>
+                    </MotionButton>
                   </CardContent>
-                </Card>
+                </MotionCard>
 
-                <Card className="rounded-android-tile lg:col-span-2">
+                <MotionCard className="rounded-android-tile lg:col-span-2" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
                   <Collapsible open={isNewChildFormOpen} onOpenChange={setIsNewChildFormOpen}>
                     <CardHeader>
                       <CollapsibleTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-between p-0">
+                        <MotionButton variant="ghost" className="w-full justify-between p-0" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                           <CardTitle className="flex items-center gap-2">
                             <PlusCircle className="h-6 w-6 text-primary" /> Créer un nouvel élément générique et l'ajouter
                           </CardTitle>
                           {isNewChildFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                        </Button>
+                        </MotionButton>
                       </CollapsibleTrigger>
                     </CardHeader>
                     <CollapsibleContent>
@@ -517,11 +519,12 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <Label htmlFor="new-child-icon">Nom de l'icône (Lucide React)</Label>
                             <Popover open={isIconSelectOpen} onOpenChange={setIsIconSelectOpen}>
                               <PopoverTrigger asChild>
-                                <Button
+                                <MotionButton
                                   variant="outline"
                                   role="combobox"
                                   aria-expanded={isIconSelectOpen}
                                   className="w-full justify-between rounded-android-tile"
+                                  whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                                 >
                                   {newChildIconName ? (
                                     <div className="flex items-center gap-2">
@@ -532,7 +535,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                                     "Sélectionner une icône..."
                                   )}
                                   <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
+                                </MotionButton>
                               </PopoverTrigger>
                               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
                                 <Command>
@@ -573,13 +576,13 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
                             <Textarea id="new-child-description" value={newChildDescription} onChange={(e) => setNewChildDescription(e.target.value)} />
                           </div>
                         </div>
-                        <Button onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()}>
+                        <MotionButton onClick={handleAddNewGenericChild} disabled={isAddingNewChild || !newChildLabel.trim()} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                           {isAddingNewChild ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Créer et ajouter
-                        </Button>
+                        </MotionButton>
                       </CardContent>
                     </CollapsibleContent>
                   </Collapsible>
-                </Card>
+                </MotionCard>
               </div>
               <DragOverlay>
                 {activeDragItem ? (
@@ -595,7 +598,7 @@ const ManageChildrenDialog = ({ isOpen, onClose, parentItem, selectedRoleFilter,
             </DndContext>
           </div>
           <DialogFooter>
-            <Button onClick={onClose}>Fermer</Button>
+            <MotionButton onClick={onClose} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Fermer</MotionButton>
           </DialogFooter>
         </div>
       </DialogContent>

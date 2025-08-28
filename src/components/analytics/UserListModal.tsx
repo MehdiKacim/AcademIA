@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, MotionCard } from "@/components/ui/card"; // Import MotionCard
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Profile } from "@/lib/dataModels";
 import { User, Mail, Building2 } from "lucide-react";
@@ -42,7 +42,7 @@ const UserListModal = ({ isOpen, onClose, title, description, users, establishme
                 <p className="text-muted-foreground text-center py-4">Aucun utilisateur trouvé.</p>
               ) : (
                 users.map(user => (
-                  <Card key={user.id} className="p-3 rounded-android-tile"> {/* Apply rounded-android-tile */}
+                  <MotionCard key={user.id} className="p-3 rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)" }} whileTap={{ scale: 0.99 }}> {/* Apply rounded-android-tile */}
                     <CardContent className="p-0 flex items-center gap-3">
                       <User className="h-8 w-8 text-primary" />
                       <div className="flex-grow">
@@ -57,7 +57,7 @@ const UserListModal = ({ isOpen, onClose, title, description, users, establishme
                         )}
                       </div>
                     </CardContent>
-                  </Card>
+                  </MotionCard>
                 ))
               )}
             </div>

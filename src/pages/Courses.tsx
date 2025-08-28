@@ -4,10 +4,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { loadCourses, loadEstablishments, getEstablishmentName } from "@/lib/courseData"; // Import getEstablishmentName
 import { BookOpen, Lock, CheckCircle, Search, Building2 } from "lucide-react"; // Import icons
 import { cn } from "@/lib/utils"; // Import cn
@@ -137,12 +138,14 @@ const Courses = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => {
               return (
-                <Card
+                <MotionCard
                   key={course.id}
                   className={cn(
                     "flex flex-col shadow-lg transition-all duration-300 ease-in-out rounded-android-tile hover:scale-[1.02] transition-transform", // Apply rounded-android-tile and hover effect
                     course.isCompleted && "border-green-500 ring-2 ring-green-500/50"
                   )}
+                  whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {course.image_url && (
                     <img
@@ -172,12 +175,12 @@ const Courses = () => {
                       }).length}/{course.modules.length} modules)
                     </p>
                     <Link to={`/courses/${course.id}`}>
-                      <Button className="w-full">
+                      <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                         {course.isCompleted ? "Revoir le cours" : "Commencer le cours"}
-                      </Button>
+                      </MotionButton>
                     </Link>
                   </CardContent>
-                </Card>
+                </MotionCard>
               );
             })}
           </div>
@@ -192,7 +195,7 @@ const Courses = () => {
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((course: any) => (
-              <Card key={course.id} className="rounded-android-tile hover:scale-[1.02] transition-transform"> {/* Apply rounded-android-tile and hover effect */}
+              <MotionCard key={course.id} className="rounded-android-tile hover:scale-[1.02] transition-transform" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }} whileTap={{ scale: 0.98 }}> {/* Apply rounded-android-tile and hover effect */}
                 <CardHeader>
                   <CardTitle>{course.title}</CardTitle>
                   <CardDescription>{course.description}</CardDescription>
@@ -202,19 +205,19 @@ const Courses = () => {
                   <p className="text-sm text-muted-foreground">Élèves inscrits: {course.students}</p>
                   <div className="flex gap-2 mt-4">
                     <Link to={`/create-course/${course.id}`}>
-                      <Button variant="outline">Modifier</Button>
+                      <MotionButton variant="outline" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Modifier</MotionButton>
                     </Link>
                     <Link to={`/analytics?view=course-performance&courseId=${course.id}`}>
-                      <Button variant="secondary">Voir les statistiques</Button>
+                      <MotionButton variant="secondary" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Voir les statistiques</MotionButton>
                     </Link>
                   </div>
                 </CardContent>
-              </Card>
+              </MotionCard>
             ))}
           </div>
           <div className="mt-8 text-center">
             <Link to="/create-course">
-              <Button size="lg">Créer un nouveau cours</Button>
+              <MotionButton size="lg" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Créer un nouveau cours</MotionButton>
             </Link>
           </div>
         </>
@@ -228,16 +231,16 @@ const Courses = () => {
           )}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesToDisplay.map((data: any, index: number) => (
-              <Card key={index} className="rounded-android-tile hover:scale-[1.02] transition-transform"> {/* Apply rounded-android-tile and hover effect */}
+              <MotionCard key={index} className="rounded-android-tile hover:scale-[1.02] transition-transform" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }} whileTap={{ scale: 0.98 }}> {/* Apply rounded-android-tile and hover effect */}
                 <CardHeader>
                   <CardTitle>{data.courseTitle}</CardTitle>
                   <CardDescription>Élève: {data.studentName}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">Progression: {data.progress}%</p>
-                  <Button variant="outline" className="mt-4 w-full">Voir le détail</Button>
+                  <MotionButton variant="outline" className="mt-4 w-full" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Voir le détail</MotionButton>
                 </CardContent>
-              </Card>
+              </MotionCard>
             ))}
           </div>
         </>

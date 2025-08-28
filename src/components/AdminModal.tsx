@@ -13,7 +13,7 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useRole } from '@/contexts/RoleContext';
 import LoadingSpinner from "@/components/LoadingSpinner"; // Import LoadingSpinner
+import { bootstrapNavItems } from '@/lib/navItems'; // Import bootstrapNavItems
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -220,21 +221,21 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
         <div className="space-y-4">
           {currentUserProfile?.role === 'administrator' ? (
             <>
-              <Button onClick={() => setIsDataModelModalOpen(true)} className="w-full rounded-android-tile" variant="outline">
+              <MotionButton onClick={() => setIsDataModelModalOpen(true)} className="w-full rounded-android-tile" variant="outline" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
-              </Button>
+              </MotionButton>
               
-              <Button onClick={handleBootstrapNavItems} className="w-full rounded-android-tile" variant="outline">
+              <MotionButton onClick={handleBootstrapNavItems} className="w-full rounded-android-tile" variant="outline" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <RefreshCw className="h-4 w-4 mr-2" /> Initialiser menus par défaut
-              </Button>
+              </MotionButton>
 
-              <Button onClick={handleClearAllData} className="w-full rounded-android-tile" variant="destructive">
+              <MotionButton onClick={handleClearAllData} className="w-full rounded-android-tile" variant="destructive" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <Eraser className="h-4 w-4 mr-2" /> Réinitialiser toutes les données
-              </Button>
+              </MotionButton>
 
-              <Button onClick={onClose} className="w-full rounded-android-tile" variant="secondary">
+              <MotionButton onClick={onClose} className="w-full rounded-android-tile" variant="secondary" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 Fermer
-              </Button>
+              </MotionButton>
             </>
           ) : (
             <>
@@ -245,12 +246,12 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
               {!currentUserProfile && (
                 <Collapsible open={showCreateAdminForm} onOpenChange={setShowCreateAdminForm}>
                   <CollapsibleTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between rounded-android-tile">
+                    <MotionButton variant="outline" className="w-full justify-between rounded-android-tile" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                       <div className="flex items-center gap-2">
                         <UserPlus className="h-4 w-4" /> Créer un administrateur initial
                       </div>
                       {showCreateAdminForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
+                    </MotionButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-4 p-4 border rounded-android-tile bg-muted/20"> {/* Apply rounded-android-tile */}
                     <p className="text-sm text-muted-foreground">
@@ -292,15 +293,15 @@ const AdminModal = ({ isOpen, onClose }: AdminModalProps) => {
                       onChange={(e) => setAdminPassword(e.target.value)}
                       className="rounded-android-tile"
                     />
-                    <Button onClick={handleCreateInitialAdmin} className="w-full rounded-android-tile" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'}>
+                    <MotionButton onClick={handleCreateInitialAdmin} className="w-full rounded-android-tile" disabled={isCreatingAdmin || usernameAvailabilityStatus === 'checking' || emailAvailabilityStatus === 'checking'} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                       {isCreatingAdmin ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />} Créer l'administrateur
-                    </Button>
+                    </MotionButton>
                   </CollapsibleContent>
                 </Collapsible>
               )}
-              <Button onClick={onClose} className="w-full rounded-android-tile" variant="secondary">
+              <MotionButton onClick={onClose} className="w-full rounded-android-tile" variant="secondary" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 Fermer
-              </Button>
+              </MotionButton>
             </>
           )}
         </div>

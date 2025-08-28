@@ -5,6 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import {
   LineChart,
@@ -83,7 +84,7 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
       <>
         <p className="text-lg text-muted-foreground mb-8">Suivez votre progression et identifiez vos points forts et faibles.</p>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Progression Globale</CardTitle>
               <CardDescription>Votre avancement général dans les cours.</CardDescription>
@@ -92,8 +93,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
               <p className="text-2xl font-bold text-primary">{overallProgress}</p>
               <p className="text-sm text-muted-foreground">Cours terminés : {completedCoursesCount}</p>
             </CardContent>
-          </Card>
-          <Card>
+          </MotionCard>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Points Forts</CardTitle>
               <CardDescription>Vos domaines d'excellence.</CardDescription>
@@ -102,8 +103,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
               <p className="text-lg font-semibold">{strongestSubject}</p>
               <p className="text-sm text-muted-foreground">Heures passées : {hoursSpent}</p>
             </CardContent>
-          </Card>
-          <Card>
+          </MotionCard>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Points à Améliorer</CardTitle>
               <CardDescription>Les sujets nécessitant plus d'attention.</CardDescription>
@@ -112,8 +113,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
               <p className="text-lg font-semibold">{weakestSubject}</p>
               <p className="text-sm text-muted-foreground">N'hésitez pas à demander de l'aide à AiA !</p>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3">
+          </MotionCard>
+          <MotionCard className="lg:col-span-3" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Historique de Progression</CardTitle>
               <CardDescription>Votre progression au fil du temps.</CardDescription>
@@ -137,7 +138,7 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );
@@ -146,7 +147,7 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
       <>
         <p className="text-lg text-muted-foreground mb-8">Détails de vos résultats aux quiz.</p>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-3">
+          <MotionCard className="lg:col-span-3" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Scores des Derniers Quiz</CardTitle>
               <CardDescription>Vos performances récentes aux évaluations.</CardDescription>
@@ -170,8 +171,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-3">
+          </MotionCard>
+          <MotionCard className="lg:col-span-3" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Historique Détaillé des Quiz</CardTitle>
               <CardDescription>Liste de tous vos quiz terminés.</CardDescription>
@@ -198,7 +199,7 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
                 {studentProgress.length === 0 && <p>Aucun quiz terminé pour le moment.</p>}
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );
@@ -207,7 +208,7 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
       <>
         <p className="text-lg text-muted-foreground mb-8">Statistiques sur votre interaction avec le tuteur IA.</p>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Total Interactions AiA</CardTitle>
               <CardDescription>Nombre total de conversations avec AiA.</CardDescription>
@@ -216,8 +217,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
               <p className="text-2xl font-bold text-primary">{totalAiaInteractions}</p>
               <p className="text-sm text-muted-foreground">Questions posées et réponses reçues.</p>
             </CardContent>
-          </Card>
-          <Card>
+          </MotionCard>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Sujets les Plus Abordés</CardTitle>
               <CardDescription>Les thèmes sur lesquels vous avez le plus sollicité AiA.</CardDescription>
@@ -229,8 +230,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
                 ))}
               </ul>
             </CardContent>
-          </Card>
-          <Card>
+          </MotionCard>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Fréquence d'Utilisation</CardTitle>
               <CardDescription>Votre utilisation d'AiA au fil du temps.</CardDescription>
@@ -254,8 +255,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
-          <Card>
+          </MotionCard>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Durée Moyenne d'Interaction</CardTitle>
               <CardDescription>Temps moyen passé par interaction avec AiA.</CardDescription>
@@ -264,8 +265,8 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
               <p className="text-2xl font-bold text-primary">{avgInteractionLength} min</p>
               <p className="text-sm text-muted-foreground">Par session de chat.</p>
             </CardContent>
-          </Card>
-          <Card>
+          </MotionCard>
+          <MotionCard whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
             <CardHeader>
               <CardTitle>Score de Satisfaction AiA</CardTitle>
               <CardDescription>Votre satisfaction globale avec l'aide d'AiA.</CardDescription>
@@ -274,7 +275,7 @@ const StudentAnalyticsSection = ({ studentProfile, courses, studentCourseProgres
               <p className="text-2xl font-bold text-primary">{avgSatisfaction} / 5</p>
               <p className="text-sm text-muted-foreground">Basé sur vos retours implicites.</p>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       </>
     );

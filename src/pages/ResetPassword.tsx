@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LockKeyhole, CheckCircle, ArrowLeft } from 'lucide-react';
@@ -88,7 +88,7 @@ const ResetPassword = () => {
         <Logo iconClassName="w-24 h-24" showText={false} />
       </motion.div>
 
-      <Card className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80">
+      <MotionCard className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80" whileHover={{ scale: 1.01, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
         <CardHeader className="text-center mb-4">
           <CardTitle className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
             Réinitialiser le mot de passe
@@ -98,60 +98,62 @@ const ResetPassword = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <motion.div
-            key={isPasswordUpdated ? 'success' : 'form'}
-            initial="initial"
-            animate="enter"
-            exit="exit"
-            variants={variants}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            {isPasswordUpdated ? (
-              <div className="space-y-4 text-center">
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                <CardTitle className="text-2xl font-bold">Mot de passe mis à jour !</CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Votre mot de passe a été changé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
-                </CardDescription>
-                <Button type="button" className="w-full" onClick={() => navigate('/auth')}>
-                  <ArrowLeft className="h-4 w-4 mr-2" /> Retour à la connexion
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={handlePasswordReset} className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="new-password">Nouveau mot de passe</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isPasswordUpdated ? 'success' : 'form'}
+              initial="initial"
+              animate="enter"
+              exit="exit"
+              variants={variants}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              {isPasswordUpdated ? (
+                <div className="space-y-4 text-center">
+                  <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                  <CardTitle className="text-2xl font-bold">Mot de passe mis à jour !</CardTitle>
+                  <CardDescription className="text-muted-foreground">
+                    Votre mot de passe a été changé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
+                  </CardDescription>
+                  <MotionButton type="button" className="w-full" onClick={() => navigate('/auth')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Retour à la connexion
+                  </MotionButton>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="confirm-password">Confirmer le nouveau mot de passe</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Réinitialiser le mot de passe"}
-                </Button>
-                <Button type="button" variant="outline" className="w-full" onClick={() => navigate('/auth')}>
-                  <ArrowLeft className="h-4 w-4 mr-2" /> Annuler
-                </Button>
-              </form>
-            )}
-          </motion.div>
+              ) : (
+                <form onSubmit={handlePasswordReset} className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="new-password">Nouveau mot de passe</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirm-password">Confirmer le nouveau mot de passe</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <MotionButton type="submit" className="w-full" disabled={isLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    {isLoading ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Réinitialiser le mot de passe"}
+                  </MotionButton>
+                  <MotionButton type="button" variant="outline" className="w-full" onClick={() => navigate('/auth')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Annuler
+                  </MotionButton>
+                </form>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </CardContent>
-      </Card>
+      </MotionCard>
     </div>
   );
 };

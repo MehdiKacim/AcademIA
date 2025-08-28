@@ -4,6 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { useSearchParams, useNavigate } from "react-router-dom";

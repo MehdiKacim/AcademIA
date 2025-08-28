@@ -5,8 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, ExternalLink, Home, MessageSquare, Search, User, LogOut, Settings, Info, BookOpen, PlusSquare, Users, GraduationCap, PenTool, NotebookText, School, LayoutList, BriefcaseBusiness, UserRoundCog, ClipboardCheck, BotMessageSquare, LayoutDashboard, LineChart, UsersRound, UserRoundSearch, BellRing, Building2, BookText, UserCog, TrendingUp, BookMarked, CalendarDays, UserCheck, Globe, Check } from "lucide-react";
@@ -244,16 +245,16 @@ const GenericNavItemsPage = () => {
         Définissez les éléments de navigation de base disponibles pour tous les rôles.
       </p>
 
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <Collapsible open={isNewItemFormOpen} onOpenChange={setIsNewItemFormOpen}>
           <CardHeader>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between p-0">
+              <MotionButton variant="ghost" className="w-full justify-between p-0" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 <CardTitle className="flex items-center gap-2">
-                  <PlusCircle className="h-5 w-5 text-primary" /> Ajouter un nouvel élément générique
+                  <PlusCircle className="h-6 w-6 text-primary" /> Ajouter un nouvel élément générique
                 </CardTitle>
                 {isNewItemFormOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-              </Button>
+              </MotionButton>
             </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
@@ -296,11 +297,12 @@ const GenericNavItemsPage = () => {
                   <Label htmlFor="new-item-icon">Nom de l'icône (Lucide React)</Label>
                   <Popover open={isNewItemIconSelectOpen} onOpenChange={setIsNewItemIconSelectOpen}>
                     <PopoverTrigger asChild>
-                      <Button
+                      <MotionButton
                         variant="outline"
                         role="combobox"
                         aria-expanded={isNewItemIconSelectOpen}
                         className="w-full justify-between rounded-android-tile"
+                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                       >
                         {newItemIconName ? (
                           <div className="flex items-center gap-2">
@@ -311,7 +313,7 @@ const GenericNavItemsPage = () => {
                           "Sélectionner une icône..."
                         )}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
+                      </MotionButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
                       <Command>
@@ -352,15 +354,15 @@ const GenericNavItemsPage = () => {
                   <Textarea id="new-item-description" value={newItemDescription} onChange={(e) => setNewItemDescription(e.target.value)} />
                 </div>
               </div>
-              <Button onClick={handleAddGenericNavItem} disabled={isAddingItem} className="mt-4">
+              <MotionButton onClick={handleAddGenericNavItem} disabled={isAddingItem} className="mt-4" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                 {isAddingItem ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />} Ajouter l'élément générique
-              </Button>
+              </MotionButton>
             </CardContent>
           </CollapsibleContent>
         </Collapsible>
-      </Card>
+      </MotionCard>
 
-      <Card className="rounded-android-tile">
+      <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LayoutList className="h-6 w-6 text-primary" /> Liste des éléments génériques
@@ -380,12 +382,12 @@ const GenericNavItemsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Collapsible defaultOpen={true}>
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0">
+                <MotionButton variant="ghost" className="w-full justify-between p-0" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <LayoutList className="h-5 w-5 text-primary" /> Catégories / Actions ({categoriesAndActions.length})
                   </h3>
                   <ChevronDown className="h-5 w-5 collapsible-icon" />
-                </Button>
+                </MotionButton>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
@@ -417,12 +419,12 @@ const GenericNavItemsPage = () => {
                                   </div>
                                 </td>
                                 <td className="p-2 flex gap-2">
-                                  <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                  <MotionButton variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                  </MotionButton>
+                                  <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  </MotionButton>
                                 </td>
                               </tr>
                             );
@@ -437,12 +439,12 @@ const GenericNavItemsPage = () => {
 
             <Collapsible defaultOpen={true}>
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0">
+                <MotionButton variant="ghost" className="w-full justify-between p-0" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <LinkIcon className="h-5 w-5 text-primary" /> Routes ({routes.length})
                   </h3>
                   <ChevronDown className="h-5 w-5 collapsible-icon" />
-                </Button>
+                </MotionButton>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
                 <ScrollArea className="h-[300px] w-full rounded-md border rounded-android-tile">
@@ -474,12 +476,12 @@ const GenericNavItemsPage = () => {
                                   </div>
                                 </td>
                                 <td className="p-2 flex gap-2">
-                                  <Button variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)}>
+                                  <MotionButton variant="outline" size="sm" onClick={() => handleEditGenericNavItem(item)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)}>
+                                  </MotionButton>
+                                  <MotionButton variant="destructive" size="sm" onClick={() => handleDeleteGenericNavItem(item.id)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  </MotionButton>
                                 </td>
                               </tr>
                             );
@@ -493,7 +495,7 @@ const GenericNavItemsPage = () => {
             </Collapsible>
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
 
       {/* Edit Generic Nav Item Dialog */}
       {currentItemToEdit && (
@@ -509,7 +511,13 @@ const GenericNavItemsPage = () => {
               <div className="grid gap-4 py-4 flex-grow">
                 <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-item-label" className="sm:text-right">Libellé</Label>
-                  <Input id="edit-item-label" value={editItemLabel} onChange={(e) => setEditItemLabel(e.target.value)} className="sm:col-span-3" required />
+                  <Input
+                    id="edit-item-label"
+                    value={editItemLabel}
+                    onChange={(e) => setEditItemLabel(e.target.value)}
+                    className="sm:col-span-3"
+                    required
+                  />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-item-type">Type d'élément</Label>
@@ -544,11 +552,12 @@ const GenericNavItemsPage = () => {
                   <Label htmlFor="edit-item-icon">Icône</Label>
                   <Popover open={isEditItemIconSelectOpen} onOpenChange={setIsEditItemIconSelectOpen}>
                     <PopoverTrigger asChild>
-                      <Button
+                      <MotionButton
                         variant="outline"
                         role="combobox"
                         aria-expanded={isEditItemIconSelectOpen}
                         className="sm:col-span-3 w-full justify-between rounded-android-tile"
+                        whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                       >
                         {editItemIconName ? (
                           <div className="flex items-center gap-2">
@@ -559,7 +568,7 @@ const GenericNavItemsPage = () => {
                           "Sélectionner une icône..."
                         )}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
+                      </MotionButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]">
                       <Command>
@@ -601,9 +610,9 @@ const GenericNavItemsPage = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleSaveEditedGenericNavItem} disabled={isSavingEdit}>
+                <MotionButton onClick={handleSaveEditedGenericNavItem} disabled={isSavingEdit} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   {isSavingEdit ? <LoadingSpinner iconClassName="h-4 w-4 mr-2" /> : "Enregistrer les modifications"}
-                </Button>
+                </MotionButton>
               </DialogFooter>
             </div>
           </DialogContent>

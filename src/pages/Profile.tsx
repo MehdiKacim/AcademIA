@@ -5,6 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
 import { loadCourses, loadEstablishments, getEstablishmentName } from "@/lib/courseData"; // Import getEstablishmentName
@@ -12,7 +13,7 @@ import { getProfileById, updateProfile, getStudentCourseProgress, upsertStudentC
 import type { Profile } from "@/lib/dataModels"; // Import Profile as type
 import { Course, StudentCourseProgress, Establishment } from "@/lib/dataModels"; // Re-added Establishment type
 import { User, BookOpen, GraduationCap, PenTool, Users, Mail, CheckCircle, Edit, Clock, BriefcaseBusiness, UserCog, Building2, CalendarDays } from "lucide-react"; // Added Building2 and CalendarDays icon
-import { Button } from "@/components/ui/button";
+import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate, useOutletContext } from "react-router-dom"; // Import Link, useNavigate, and useOutletContext
 import EditProfileDialog from "@/components/EditProfileDialog";
@@ -129,7 +130,7 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+          <MotionCard className="lg:col-span-full rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Changed to lg:col-span-full */}
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <User className="h-12 w-12 text-primary" />
@@ -153,16 +154,16 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
+              <MotionButton variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
-              </Button>
+              </MotionButton>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">Rôle actuel: Élève</p>
             </CardContent>
-          </Card>
+          </MotionCard>
 
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Progression Globale</CardTitle>
               <CardDescription>Votre avancement général dans les cours.</CardDescription>
@@ -172,8 +173,8 @@ const Profile = () => {
               <Progress value={overallProgress} className="w-full mt-2" />
               <p className="text-sm text-muted-foreground mt-2">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours Terminés</CardTitle>
               <CardDescription>Votre succès jusqu'à présent.</CardDescription>
@@ -191,8 +192,8 @@ const Profile = () => {
                 {completedCoursesCount === 0 && <li>Aucun cours terminé.</li>}
               </ul>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Activité Récente</CardTitle>
               <CardDescription>Vos dernières actions sur la plateforme.</CardDescription>
@@ -208,7 +209,7 @@ const Profile = () => {
                 ))}
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       );
     } else if (currentRole === 'professeur') {
@@ -226,7 +227,7 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+          <MotionCard className="lg:col-span-full rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Changed to lg:col-span-full */}
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <PenTool className="h-12 w-12 text-primary" />
@@ -245,16 +246,16 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
+              <MotionButton variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
-              </Button>
+              </MotionButton>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">Rôle actuel: Professeur</p>
             </CardContent>
-          </Card>
+          </MotionCard>
 
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours Créés</CardTitle>
               <CardDescription>Vos contributions à la plateforme.</CardDescription>
@@ -263,8 +264,8 @@ const Profile = () => {
               <p className="text-2xl font-bold text-primary">{createdCourses.length}</p>
               <p className="text-sm text-muted-foreground">Dont {publishedCoursesCount} publiés.</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Impact sur les Élèves</CardTitle>
               <CardDescription>Nombre total d'élèves inscrits à vos cours.</CardDescription>
@@ -273,8 +274,8 @@ const Profile = () => {
               <p className="text-2xl font-bold text-primary">{totalStudents}</p>
               <p className="text-sm text-muted-foreground">élèves uniques.</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Cours Populaires</CardTitle>
               <CardDescription>Vos cours les plus consultés.</CardDescription>
@@ -291,8 +292,8 @@ const Profile = () => {
                 {createdCourses.length === 0 && <li>Aucun cours créé.</li>}
               </ul>
             </CardContent>
-          </Card>
-          <Card className="lg:col-span-full rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="lg:col-span-full rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Activité Récente</CardTitle>
               <CardDescription>Vos dernières actions en tant que créateur.</CardDescription>
@@ -308,7 +309,7 @@ const Profile = () => {
                 ))}
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       );
     } else if (currentRole === 'tutor') {
@@ -323,7 +324,7 @@ const Profile = () => {
 
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
-          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+          <MotionCard className="lg:col-span-full rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Changed to lg:col-span-full */}
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <Users className="h-12 w-12 text-primary" />
@@ -342,16 +343,16 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
+              <MotionButton variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
-              </Button>
+              </MotionButton>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">Rôle actuel: Tuteur</p>
             </CardContent>
-          </Card>
+          </MotionCard>
 
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Élèves Supervisés</CardTitle>
               <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
@@ -360,8 +361,8 @@ const Profile = () => {
               <p className="text-2xl font-bold text-primary">{supervisedStudents.length}</p>
               <p className="text-sm text-muted-foreground">Élèves en difficulté : {studentsAtRisk}</p>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Progression des Élèves</CardTitle>
               <CardDescription>Vue d'overview de l'avancement de vos élèves.</CardDescription>
@@ -372,16 +373,16 @@ const Profile = () => {
                   <li key={student.user_id}>
                     {/* Resolve full name asynchronously */}
                     <ResolveUserName userId={student.user_id} />: {Math.floor(Math.random() * 100)}% de progression moyenne
-                    <Button variant="ghost" size="sm" className="ml-2" onClick={() => handleSendMessageToUser(student.user_id)}>
+                    <MotionButton variant="ghost" size="sm" className="ml-2" onClick={() => handleSendMessageToUser(student.user_id)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <Mail className="h-4 w-4" />
-                    </Button>
+                    </MotionButton>
                   </li>
                 ))}
                 {supervisedStudents.length === 0 && <li>Aucun élève supervisé.</li>}
               </ul>
             </CardContent>
-          </Card>
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          </MotionCard>
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Alertes Récentes</CardTitle>
               <CardDescription>Informations importantes sur vos élèves.</CardDescription>
@@ -397,7 +398,7 @@ const Profile = () => {
                 ))}
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
         </div>
       );
     } else if (currentRole === 'administrator' || currentRole === 'director' || currentRole === 'deputy_director') {
@@ -405,7 +406,7 @@ const Profile = () => {
       // For admin/director roles, we can show basic profile info and maybe some high-level stats
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:col-span-3">
-          <Card className="lg:col-span-full rounded-android-tile"> {/* Changed to lg:col-span-full */}
+          <MotionCard className="lg:col-span-full rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Changed to lg:col-span-full */}
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4"> {/* Adjusted for responsiveness */}
               <div className="flex items-center space-x-4">
                 <BriefcaseBusiness className="h-12 w-12 text-primary" />
@@ -424,18 +425,18 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto"> {/* Made button full width on small screens */}
+              <MotionButton variant="outline" onClick={() => setIsEditProfileModalOpen(true)} className="w-full sm:w-auto" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Made button full width on small screens */}
                 <Edit className="h-4 w-4 mr-2" /> Modifier le profil
-              </Button>
+              </MotionButton>
             </CardHeader>
             <CardContent>
               <p className="text-lg text-muted-foreground">
                 Rôle actuel: {currentRole === 'administrator' ? 'Administrateur' : currentRole === 'director' ? 'Directeur' : 'Directeur Adjoint'}
               </p>
             </CardContent>
-          </Card>
+          </MotionCard>
           {/* Add more admin/director specific cards here if needed, e.g., quick stats or links */}
-          <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+          <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
             <CardHeader>
               <CardTitle>Accès Rapide</CardTitle>
               <CardDescription>Liens utiles pour votre rôle.</CardDescription>
@@ -458,19 +459,19 @@ const Profile = () => {
                 )}
               </ul>
             </CardContent>
-          </Card>
+          </MotionCard>
           {currentRole === 'administrator' && (
-            <Card className="rounded-android-tile"> {/* Apply rounded-android-tile */}
+            <MotionCard className="rounded-android-tile" whileHover={{ scale: 1.01, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}> {/* Apply rounded-android-tile */}
               <CardHeader>
                 <CardTitle>Outils Administrateur</CardTitle>
                 <CardDescription>Accès aux fonctions d'administration avancées.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => setIsAdminModalOpen(true)} className="w-full">
+                <MotionButton onClick={() => setIsAdminModalOpen(true)} className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                   <UserCog className="h-4 w-4 mr-2" /> Ouvrir le panneau Admin
-                </Button>
+                </MotionButton>
               </CardContent>
-            </Card>
+            </MotionCard>
           )}
         </div>
       );
