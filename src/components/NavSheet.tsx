@@ -169,11 +169,11 @@ const NavSheet = ({
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
-        side="bottom" // Changed to bottom
+        side="bottom"
         className={cn(
-          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg", // Changed rounded-b-lg to rounded-t-lg
-          isMobile ? "h-full" : "h-[calc(100vh-68px)]", // Keep height logic
-          isMobile ? "bottom-0" : "top-[68px]" // Adjust position for mobile bottom sheet
+          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-40", // Added z-40
+          "h-[calc(100vh-68px)]", // Always this height on mobile
+          "bottom-[68px]" // Position it above the bottom header
         )}
         {...swipeHandlers}
       >
