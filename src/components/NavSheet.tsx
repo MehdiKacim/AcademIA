@@ -227,14 +227,8 @@ const NavSheet = ({
           </motion.div>
         </ScrollArea>
 
-        {/* Removed duplicated MobileBottomNavContent from here */}
-        <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          {isMobile && (
-            <div className="flex justify-center pt-2">
-              <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
-            </div>
-          )}
-        </div>
+        {/* Empty footer for the drawer */}
+        <div className="flex-shrink-0" />
     </MobileDrawer>
   );
 };
