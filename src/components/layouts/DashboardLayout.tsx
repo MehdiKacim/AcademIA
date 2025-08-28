@@ -350,7 +350,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
       <main
         className={cn(
-          "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
+          "flex-grow px-4 sm:px-6 md:px-8 overflow-y-auto", // Changed p- to px-
           isMobile
             ? "pt-[calc(68px+env(safe-area-inset-top))] pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: 68px from top, bottom padding for persistent footer
             : (
