@@ -86,8 +86,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add android/app/build.gradle
-          # Ne plus ajouter le fichier capacitor.hash car il n'est plus pertinent.
-          git commit -m "chore: Auto. incrémentation de la version Android"
+          git add capacitor.hash # Ajoute le hash de la mise à jour web
+          git commit -m "chore: Auto. incrémentation de la version Android et publication de mise à jour web"
           git push
 
       # 10. Rend le script gradlew exécutable
@@ -99,7 +99,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21' # <-- La version de Java est maintenant 21
 
       # 12. Mise en cache des dépendances Gradle
       - name: Cache Gradle dependencies
