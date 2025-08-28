@@ -188,20 +188,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
   const outletContextValue = React.useMemo(() => ({ setIsAdminModalOpen, onInitiateThemeChange }), [setIsAdminModalOpen, onInitiateThemeChange]);
 
-  const headerDoubleTapRef = useRef({ lastTap: 0 });
-  const handleHeaderClick = useCallback(() => {
-    if (isMobile && currentUserProfile) {
-      const now = Date.now();
-      const DOUBLE_TAP_DELAY = 300; // milliseconds
-      if (now - headerDoubleTapRef.current.lastTap < DOUBLE_TAP_DELAY) {
-        setIsMobileNavSheetOpen(true);
-        headerDoubleTapRef.current.lastTap = 0; // Reset to prevent triple taps
-      } else {
-        headerDoubleTapRef.current.lastTap = now;
-      }
-    }
-  }, [isMobile, currentUserProfile]);
-
   // Handler for navigation items (both top-level direct links and submenu items)
   const handleNavItemClick = useCallback((item: NavItem) => {
     if (item.route) {
@@ -223,7 +209,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header
         ref={headerRef} // Attach ref to header
-        onClick={handleHeaderClick}
         className={cn(
           "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]", // Added h-[68px]
           isMobile ? "bottom-0" : "top-0", // Conditional positioning
@@ -238,10 +223,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             {isMobile ? (
               // Mobile header when logged in (bottom fixed)
               <div className="flex items-center justify-around w-full"> {/* Changed to justify-around for spacing */}
-                <Button variant="ghost" size="icon" onClick={() => setIsMobileNavSheetOpen(true)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Ouvrir le menu</span>
-                </Button>
+                {/* Removed Hamburger Menu Button */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchOverlayOpen(true)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
@@ -266,7 +248,12 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
                   </TooltipContent>
                 </Tooltip>
 
-                <Logo iconClassName="h-8 w-8" showText={false} /> {/* Centered Logo Icon */}
+                {/* Logo - now opens NavSheet on click and has surrounding style */}
+                <Logo 
+                  iconClassName="h-10 w-10 bg-muted/20 hover:bg-muted/40 flex items-center justify-center rounded-full" 
+                  showText={false} 
+                  onLogoClick={() => setIsMobileNavSheetOpen(true)} // Open NavSheet on logo click
+                />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
