@@ -375,7 +375,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
             onInitiateThemeChange={onInitiateThemeChange}
             isMobile={isMobile}
           />
-          <div className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
+          <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
             <MobileBottomNavContent
               onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
               onOpenAiAChat={() => openChat()}

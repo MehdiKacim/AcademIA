@@ -172,8 +172,8 @@ const NavSheet = ({
       <SheetContent
         side="bottom"
         className={cn(
-          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-50", // Increased z-index to 50
-          "h-full inset-0" // Make it full screen
+          "w-full flex flex-col p-0 backdrop-blur-lg bg-background/80 rounded-t-lg z-[995]", // Adjusted z-index
+          "h-[calc(100vh-68px)] bottom-0" // Adjusted height and position
         )}
         {...swipeHandlers}
       >
@@ -250,16 +250,8 @@ const NavSheet = ({
           </motion.div>
         </ScrollArea>
 
-        {/* Bottom action bar - Now using MobileBottomNavContent */}
+        {/* Removed duplicated MobileBottomNavContent from here */}
         <div className="p-4 border-t border-border flex-shrink-0 space-y-2">
-          <MobileBottomNavContent
-            onOpenGlobalSearch={onOpenGlobalSearch}
-            onOpenAiAChat={onOpenAiAChat}
-            onOpenMobileNavSheet={() => onOpenChange(false)} // Clicking the central button closes the sheet
-            onInitiateThemeChange={onInitiateThemeChange}
-            isAuthenticated={!!currentUserProfile}
-            unreadMessagesCount={unreadMessagesCount} // Pass unread messages count
-          />
           {isMobile && (
             <div className="flex justify-center pt-2">
               <div className="w-1/4 h-1 bg-muted-foreground rounded-full" />
