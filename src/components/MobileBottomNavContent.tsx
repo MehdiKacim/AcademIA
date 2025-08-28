@@ -13,7 +13,7 @@ import { motion } from 'framer-motion'; // Import motion
 interface MobileBottomNavContentProps {
   onOpenGlobalSearch?: () => void;
   onOpenAiAChat?: () => void;
-  onOpenMobileNavSheet: () => void;
+  onToggleMobileNavSheet: () => void; // Renamed prop
   onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isAuthenticated: boolean;
   unreadMessagesCount?: number;
@@ -23,7 +23,7 @@ interface MobileBottomNavContentProps {
 const MobileBottomNavContent = ({
   onOpenGlobalSearch,
   onOpenAiAChat,
-  onOpenMobileNavSheet,
+  onToggleMobileNavSheet, // Renamed prop
   onInitiateThemeChange,
   isAuthenticated,
   unreadMessagesCount = 0,
@@ -72,7 +72,7 @@ const MobileBottomNavContent = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onOpenMobileNavSheet}
+            onClick={onToggleMobileNavSheet} // Use the new prop here
             className={centralLogoButtonClasses}
           >
             <motion.div // Wrap Logo with motion.div

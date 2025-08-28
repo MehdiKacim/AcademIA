@@ -206,6 +206,10 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
     visible: { opacity: 1, y: 0 },
   };
 
+  const toggleMobileNavSheet = useCallback(() => {
+    setIsMobileNavSheetOpen(prev => !prev);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-background overflow-x-hidden">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
@@ -366,7 +370,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
         <>
           <NavSheet
             isOpen={isMobileNavSheetOpen}
-            onOpenChange={setIsMobileNavSheetOpen}
+            onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
             navItems={staticNavItems} // Pass static nav items for unauthenticated users
             onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
             onOpenAiAChat={() => openChat()}
@@ -379,7 +383,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => {
             <MobileBottomNavContent
               onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
               onOpenAiAChat={() => openChat()}
-              onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
+              onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={false}
               unreadMessagesCount={0} // Pass unread messages count

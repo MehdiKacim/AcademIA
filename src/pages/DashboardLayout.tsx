@@ -210,6 +210,10 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
     }
   }, [navigate]);
 
+  const toggleMobileNavSheet = useCallback(() => {
+    setIsMobileNavSheetOpen(prev => !prev);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header
@@ -350,13 +354,13 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
 
       <main
         className={cn(
-          "flex-grow p-4 sm:p-6 md:p-8 overflow-y-auto",
+          "flex-grow px-4 sm:px-6 md:px-8 overflow-y-auto",
           isMobile
-            ? "pt-[calc(4px+12.5vh)] pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: 12.5vh from top, plus 4px for existing small padding
+            ? "pt-[calc(68px+env(safe-area-inset-top))] pb-[calc(68px+env(safe-area-inset-bottom))]" // Mobile: 68px from top, bottom padding for persistent footer
             : (
                 currentUserProfile && activeDesktopSubmenuParent
-                  ? "pt-[calc(68px+224px+env(safe-area-inset-top)+12.5vh)] pb-4" // Desktop with submenu
-                  : "pt-[calc(68px+env(safe-area-inset-top)+12.5vh)] pb-4" // Desktop without submenu
+                  ? "pt-[calc(68px+224px+env(safe-area-inset-top))] pb-4" // Desktop with submenu (68px header + 224px submenu), standard bottom padding
+                  : "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Desktop without submenu, standard bottom padding
               )
         )}
       >
@@ -384,7 +388,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         <>
           <NavSheet
             isOpen={isMobileNavSheetOpen}
-            onOpenChange={setIsMobileNavSheetOpen}
+            onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
             navItems={fullNavTreeWithActions}
             onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
             onOpenAiAChat={() => openChat()}
@@ -394,14 +398,15 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             isMobile={isMobile}
           />
           {/* Persistent mobile bottom navigation bar */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
+          <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
             <MobileBottomNavContent
               onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
               onOpenAiAChat={() => openChat()}
-              onOpenMobileNavSheet={() => setIsMobileNavSheetOpen(true)}
+              onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
               onInitiateThemeChange={onInitiateThemeChange}
               isAuthenticated={true}
               unreadMessagesCount={unreadMessages} // Pass unread messages count
+              isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here
             />
           </div>
         </>
