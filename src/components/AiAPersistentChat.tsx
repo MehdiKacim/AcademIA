@@ -113,7 +113,7 @@ const AiAPersistentChat = () => {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.2 }}
           className={cn(
-            "fixed top-[68px] right-4 z-50 w-80 bg-card border border-border rounded-lg shadow-xl flex flex-col overflow-hidden rounded-android-tile backdrop-blur-lg bg-background/80",
+            "fixed top-[68px] right-4 z-[998] w-80 bg-card border border-border rounded-lg shadow-xl flex flex-col overflow-hidden rounded-android-tile backdrop-blur-lg bg-background/80",
             isCollapsed ? "h-14" : "h-[calc(100vh-120px)] max-h-[500px]"
           )}
         >

@@ -220,7 +220,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
       <header
         ref={headerRef} // Attach ref to header
         className={cn(
-          "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]", // Added h-[68px]
+          "fixed left-0 right-0 z-[1000] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]", // Added h-[68px]
           isMobile ? "hidden" : (currentUserProfile && "opacity-100 pointer-events-auto") // Hide on mobile, show on desktop if logged in
         )}
       >
@@ -399,7 +399,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
             isMobile={isMobile}
           />
           {/* Persistent mobile bottom navigation bar */}
-          <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px]">
+          <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px] border-t-2 border-border">
             <MobileBottomNavContent
               onOpenGlobalSearch={() => setIsGlobalSearchOverlayOpen(true)}
               onOpenAiAChat={() => openChat()}

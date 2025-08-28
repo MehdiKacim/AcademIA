@@ -156,7 +156,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="top" className="h-full flex flex-col"> {/* Removed swipe handlers here */}
+      <SheetContent side="top" className="h-full flex flex-col z-[998]"> {/* Removed swipe handlers here */}
         <div className="flex items-center space-x-2 py-4 border-b">
           <Input
             ref={inputRef}
