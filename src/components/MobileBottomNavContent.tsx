@@ -39,14 +39,13 @@ const MobileBottomNavContent = ({
   };
 
   const commonButtonClasses = "rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40";
-  // Corrected positioning for the central logo button
   const centralLogoButtonClasses = cn(
     "relative rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80",
     "absolute left-1/2 -translate-x-1/2 top-[-28px] z-10" // Adjusted positioning: 56px height, so -28px from top aligns its center with the parent's top edge.
   );
 
   return (
-    <div className="flex items-center justify-around w-full h-[68px] px-4 py-3 relative"> {/* Added relative to parent for absolute positioning */}
+    <div className="flex items-center justify-around w-full h-[68px] px-4 py-3 relative">
       {isAuthenticated ? (
         <>
           <Tooltip>
@@ -72,6 +71,9 @@ const MobileBottomNavContent = ({
               <p>AiA Chat</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* Placeholder for the central button to maintain spacing */}
+          <div className="w-14 h-14" />
 
           {/* Central Logo Button - Authenticated */}
           <Button
@@ -125,6 +127,9 @@ const MobileBottomNavContent = ({
       ) : (
         // Unauthenticated layout: only central logo (navigates to auth) and theme toggle
         <div className="flex items-center justify-center w-full h-full">
+          {/* Placeholder for the central button to maintain spacing */}
+          <div className="w-14 h-14" />
+
           {/* Central Logo Button - Unauthenticated */}
           <Button
             variant="ghost"
