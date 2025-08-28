@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare, Menu } from "lucide-react"; // Added Menu icon
+import { Search, BotMessageSquare, User, LogIn, Settings, LogOut, MessageSquare } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle"; // Still needed for desktop header, but not directly in this component's main layout
@@ -39,6 +39,12 @@ const MobileBottomNavContent = ({
   };
 
   const commonButtonClasses = "rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40";
+  const centralLogoButtonClasses = cn(
+    "relative rounded-full h-14 w-14 shadow-lg border-2 border-primary ring-2 ring-primary/50 bg-background/80",
+    "absolute left-1/2 -translate-x-1/2 top-[-28px] z-10"
+  );
+
+  const buttonContainerClasses = "flex items-center justify-around w-full h-full";
 
   const buttonPressAnimation = {
     scale: 0.95,
@@ -46,24 +52,10 @@ const MobileBottomNavContent = ({
   };
 
   return (
-    <div className="flex items-center justify-around w-full h-[68px] px-4 py-3 relative">
+    <div className={buttonContainerClasses}>
       {isAuthenticated ? (
         <>
           {/* Left side buttons */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={onToggleMobileNavSheet} className={commonButtonClasses}>
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Ouvrir le menu</span>
-                </Button>
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-              <p>Menu</p>
-            </TooltipContent>
-          </Tooltip>
-
           <Tooltip>
             <TooltipTrigger asChild>
               <motion.div whileTap={buttonPressAnimation}>
@@ -92,24 +84,32 @@ const MobileBottomNavContent = ({
             </TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={commonButtonClasses}>
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="sr-only">Messagerie</span>
-                  {unreadMessagesCount > 0 && (
-                    <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {unreadMessagesCount}
-                    </span>
-                  )}
-                </Button>
+          {/* Central button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              console.log("Central button clicked!");
+              onToggleMobileNavSheet();
+            }}
+            className={centralLogoButtonClasses}
+            asChild
+          >
+            <motion.div whileTap={buttonPressAnimation}>
+              <motion.div
+                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Logo iconClassName="h-8 w-8" showText={false} />
               </motion.div>
-            </TooltipTrigger>
-            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-              <p>Messagerie</p>
-            </TooltipContent>
-          </Tooltip>
+              <span className="sr-only">Ouvrir le menu</span>
+              {unreadMessagesCount > 0 && (
+                <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadMessagesCount}
+                </span>
+              )}
+            </motion.div>
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -135,35 +135,11 @@ const MobileBottomNavContent = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </>
-      ) : (
-        <div className="flex items-center justify-around w-full h-full">
-          {/* Left side: Menu button */}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={onToggleMobileNavSheet} className={commonButtonClasses}>
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Ouvrir le menu</span>
-                </Button>
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50">
-              <p>Menu</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Center: Login button */}
-          <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
-            <LogIn className="h-5 w-5" />
-            <span className="sr-only">Connexion</span>
-          </Button>
-
-          {/* Right side: MessageSquare button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.div whileTap={buttonPressAnimation}>
-                <Button variant="ghost" size="icon" onClick={() => navigate('/auth')} className={commonButtonClasses}>
+                <Button variant="ghost" size="icon" onClick={() => navigate('/messages')} className={commonButtonClasses}>
                   <MessageSquare className="h-5 w-5" />
                   <span className="sr-only">Messagerie</span>
                 </Button>
@@ -173,6 +149,46 @@ const MobileBottomNavContent = ({
               <p>Messagerie</p>
             </TooltipContent>
           </Tooltip>
+        </>
+      ) : (
+        <div className="relative flex items-center justify-around w-full h-full">
+          {/* Left side: Login button */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2">
+            <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
+              <LogIn className="h-5 w-5" />
+              <span className="sr-only">Connexion</span>
+            </Button>
+          </div>
+
+          {/* Central button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              console.log("Central button clicked!");
+              navigate('/auth');
+            }}
+            className={centralLogoButtonClasses}
+            asChild
+          >
+            <motion.div whileTap={buttonPressAnimation}>
+              <motion.div
+                animate={{ rotate: isMobileNavSheetOpen ? 180 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Logo iconClassName="h-8 w-8" showText={false} />
+              </motion.div>
+              <span className="sr-only">Connexion</span>
+            </motion.div>
+          </Button>
+
+          {/* Right side: MessageSquare button */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <Button variant="outline" onClick={() => navigate('/auth')} className={commonButtonClasses}>
+              <MessageSquare className="h-5 w-5" />
+              <span className="sr-only">Messagerie</span>
+            </Button>
+          </div>
         </div>
       )}
     </div>
