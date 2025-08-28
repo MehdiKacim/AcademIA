@@ -13,7 +13,7 @@ import { ArrowLeft, X, Search, Menu, User, LogOut, Settings, Info, BookOpen, Sun
 import { NavItem, Profile } from "@/lib/dataModels";
 import { cn } from "@/lib/utils";
 import { useRole } from "@/contexts/RoleContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } => "react-router-dom";
 import { useSwipeable } from 'react-swipeable';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './theme-toggle';
@@ -27,8 +27,8 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 interface NavSheetProps {
-  isOpen: boolean; // For mobile sheet
-  onOpenChange: (open: boolean) => void; // Changed from onClose
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   navItems: NavItem[]; // Full nav tree
   onOpenGlobalSearch: () => void;
   onOpenAiAChat: () => void;
@@ -36,14 +36,11 @@ interface NavSheetProps {
   unreadMessagesCount: number;
   onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isMobile: boolean; // To differentiate mobile vs desktop behavior
-  isDesktopImmersiveOpen: boolean; // For desktop immersive sheet
-  onCloseDesktopImmersive: () => void; // For desktop immersive sheet
-  desktopImmersiveParent: NavItem | null; // The parent item for desktop immersive
 }
 
 const NavSheet = ({
   isOpen,
-  onOpenChange, // Changed from onClose
+  onOpenChange,
   navItems,
   onOpenGlobalSearch,
   onOpenAiAChat,
@@ -51,9 +48,6 @@ const NavSheet = ({
   unreadMessagesCount,
   onInitiateThemeChange,
   isMobile,
-  isDesktopImmersiveOpen,
-  onCloseDesktopImmersive,
-  desktopImmersiveParent,
 }: NavSheetProps) => {
   const { currentUserProfile, signOut } = useRole();
   const navigate = useNavigate();
@@ -62,47 +56,34 @@ const NavSheet = ({
   const { openChat } = useCourseChat();
 
   const [drawerNavStack, setDrawerNavStack] = useState<NavItem[]>([]);
-  // Removed searchQuery state
-
-  // Determine which state to use for opening/closing based on isMobile
-  const currentOpenState = isMobile ? isOpen : isDesktopImmersiveOpen;
-  const currentOnOpenChange = isMobile ? onOpenChange : onCloseDesktopImmersive; // Use onOpenChange for mobile, onCloseDesktopImmersive for desktop
 
   const swipeHandlers = useSwipeable({
     onSwipedUp: () => { // Swipe UP to OPEN (for bottom sheet)
-      if (isMobile && !currentOpenState) { // If mobile and sheet is currently closed
-        currentOnOpenChange(true); // Call onOpenChange to open it
+      if (isMobile && !isOpen) { // If mobile and sheet is currently closed
+        onOpenChange(true); // Call onOpenChange to open it
       }
     },
     onSwipedDown: () => { // Swipe DOWN to CLOSE (for bottom sheet)
-      if (isMobile && currentOpenState) { // If mobile and sheet is currently open
-        currentOnOpenChange(false); // Call onOpenChange to close it
+      if (isMobile && isOpen) { // If mobile and sheet is currently open
+        onOpenChange(false); // Call onOpenChange to close it
       }
     },
     preventScrollOnSwipe: true,
     trackMouse: true,
   });
 
-  // Reset stack when sheet closes or desktop immersive parent changes
+  // Reset stack when sheet closes
   useEffect(() => {
-    if (!currentOpenState) {
+    if (!isOpen) {
       setDrawerNavStack([]);
-      // Removed setSearchQuery('');
-    } else if (isDesktopImmersiveOpen && desktopImmersiveParent) {
-      setDrawerNavStack([desktopImmersiveParent]);
-      // Removed setSearchQuery('');
-    } else if (isDesktopImmersiveOpen && !desktopImmersiveParent) {
-      // If desktop immersive is open but no parent, close it
-      onCloseDesktopImmersive();
     }
-  }, [currentOpenState, isDesktopImmersiveOpen, desktopImmersiveParent, onCloseDesktopImmersive]);
+  }, [isOpen]);
 
   const handleItemClick = useCallback((item: NavItem) => {
     const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
     if (isCategory) {
       setDrawerNavStack(prevStack => [...prevStack, item]);
-      // Removed setSearchQuery(''); // Clear search when entering a category
     } else if (item.route) {
       if (item.is_external) {
         window.open(item.route, '_blank');
@@ -111,7 +92,7 @@ const NavSheet = ({
       } else {
         navigate(item.route);
       }
-      currentOnOpenChange(false); // Close the sheet after navigation
+      onOpenChange(false); // Close the sheet after navigation
     } else if (item.onClick) {
       if (item.id === 'nav-global-search') {
         onOpenGlobalSearch();
@@ -120,29 +101,23 @@ const NavSheet = ({
       } else {
         item.onClick();
       }
-      currentOnOpenChange(false); // Close the sheet after action
+      onOpenChange(false); // Close the sheet after action
     }
-  }, [navigate, currentOnOpenChange, onOpenGlobalSearch, onOpenAiAChat]);
+  }, [navigate, onOpenChange, onOpenGlobalSearch, onOpenAiAChat]);
 
   const handleBack = useCallback(() => {
-    if (isDesktopImmersiveOpen && drawerNavStack.length === 1) {
-      // If in desktop immersive mode and at the first level of the stack, close the immersive sheet
-      onCloseDesktopImmersive();
-    } else {
-      setDrawerNavStack(prevStack => {
-        const newStack = [...prevStack];
-        newStack.pop();
-        return newStack;
-      });
-      // Removed setSearchQuery(''); // Clear search when going back
-    }
-  }, [isDesktopImmersiveOpen, drawerNavStack.length, onCloseDesktopImmersive]);
+    setDrawerNavStack(prevStack => {
+      const newStack = [...prevStack];
+      newStack.pop();
+      return newStack;
+    });
+  }, []);
 
   const handleLogout = useCallback(async () => {
     await signOut();
-    currentOnOpenChange(false);
+    onOpenChange(false);
     navigate("/");
-  }, [signOut, currentOnOpenChange, navigate]);
+  }, [signOut, onOpenChange, navigate]);
 
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
@@ -153,22 +128,7 @@ const NavSheet = ({
   const currentItemsToDisplay = React.useMemo(() => {
     let itemsToFilter: NavItem[] = [];
 
-    if (isDesktopImmersiveOpen) {
-      if (!desktopImmersiveParent) {
-        console.error("CRITICAL ERROR: isDesktopImmersiveOpen is true but desktopImmersiveParent is null/undefined.");
-        currentOnOpenChange(false);
-        return [];
-      }
-      const currentParentInStack = drawerNavStack[drawerNavStack.length - 1];
-      // If the stack is empty or the top of the stack is the initial desktopImmersiveParent,
-      // then we are at the first level of the immersive menu.
-      if (drawerNavStack.length === 0 || (drawerNavStack.length === 1 && currentParentInStack?.id === desktopImmersiveParent.id)) {
-        itemsToFilter = Array.isArray(desktopImmersiveParent.children) ? desktopImmersiveParent.children : [];
-      } else {
-        // We are deeper in the stack
-        itemsToFilter = (currentParentInStack && Array.isArray(currentParentInStack.children)) ? currentParentInStack.children : [];
-      }
-    } else if (drawerNavStack.length === 0) {
+    if (drawerNavStack.length === 0) {
       // For mobile, if stack is empty, show top-level items
       itemsToFilter = navItems.filter(item =>
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
@@ -197,9 +157,8 @@ const NavSheet = ({
       }
     }
 
-    // Removed lowerCaseQuery and filtering by searchQuery
     return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, isDesktopImmersiveOpen, desktopImmersiveParent, currentOnOpenChange, unreadMessagesCount]);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, unreadMessagesCount]);
 
   const currentDrawerTitle = drawerNavStack.length > 0 ? drawerNavStack[drawerNavStack.length - 1].label : "Menu";
   const currentDrawerIconName = drawerNavStack.length > 0
@@ -208,7 +167,7 @@ const NavSheet = ({
   const CurrentDrawerIconComponent = iconMap[currentDrawerIconName || 'Info'] || Info;
 
   return (
-    <Sheet open={currentOpenState} onOpenChange={currentOnOpenChange}>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom" // Changed to bottom
         className={cn(
@@ -237,8 +196,6 @@ const NavSheet = ({
           <SheetTitle className="sr-only">Menu de navigation</SheetTitle>
           <SheetDescription className="sr-only">Accédez aux différentes sections de l'application.</SheetDescription>
         </SheetHeader>
-
-        {/* Removed search input block */}
 
         <ScrollArea className="flex-grow p-4">
           {drawerNavStack.length > 0 && (

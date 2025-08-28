@@ -102,7 +102,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
   };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const isModifierPressed = event.ctrlKey || event.metaKey;
+    const isModifierPressed = event.ctrlKey || event.shiftKey;
 
     if (isModifierPressed && event.shiftKey && event.key === 'S') {
       event.preventDefault();
@@ -441,7 +441,7 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
         </Button>
       </footer>
       
-      {currentUserProfile && (
+      {currentUserProfile && isMobile && ( // Only render NavSheet if mobile
         <NavSheet
           isOpen={isMobileNavSheetOpen}
           onOpenChange={setIsMobileNavSheetOpen}
@@ -452,9 +452,6 @@ const DashboardLayout = ({ setIsAdminModalOpen, onInitiateThemeChange }: Dashboa
           unreadMessagesCount={unreadMessages}
           onInitiateThemeChange={onInitiateThemeChange}
           isMobile={isMobile}
-          isDesktopImmersiveOpen={!!activeDesktopSubmenuParent} // Pass state of immersive submenu
-          onCloseDesktopImmersive={() => setActiveDesktopSubmenuParent(null)} // Pass close handler
-          desktopImmersiveParent={activeDesktopSubmenuParent} // Pass the active parent
         />
       )}
       {currentUserProfile && <AiAPersistentChat />}
