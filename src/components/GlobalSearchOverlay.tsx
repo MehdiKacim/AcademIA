@@ -168,9 +168,9 @@ const GlobalSearchOverlay = ({ isOpen, onClose }: GlobalSearchOverlayProps) => {
           animate={{ y: '0%' }}
           exit={{ y: '-100%' }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed inset-x-0 top-0 bottom-[68px] z-[1001] bg-background/80 backdrop-blur-lg" // Changed top, added bottom, removed height and padding
+          className="fixed inset-0 z-[1001] bg-background/80 backdrop-blur-lg" // Changed top, added bottom, removed height and padding
         >
-          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full py-4 px-4 md:px-8"> {/* Added padding here */}
+          <div className="max-w-4xl mx-auto flex flex-col gap-4 h-full pt-16 px-4 md:px-8"> {/* Added padding here */}
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground" />
