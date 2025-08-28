@@ -110,28 +110,35 @@ const MobileBottomNavContent = ({
           </div>
 
           {/* User Dropdown Button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <MotionButton variant="ghost" size="icon" className={peripheralNavButtonClasses}>
-                <User className="h-5 w-5" />
-                <span className="sr-only">Menu utilisateur</span>
-              </MotionButton>
-            </TooltipTrigger>
-            <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
-              <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
-                <User className="mr-2 h-4 w-4" /> Mon Profil
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")}>
-                <Settings className="mr-2 h-4 w-4" /> Paramètres
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Tooltip> {/* Added Tooltip wrapper */}
+            <TooltipTrigger asChild> {/* Added TooltipTrigger wrapper */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <MotionButton variant="ghost" size="icon" className={peripheralNavButtonClasses}>
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Menu utilisateur</span>
+                  </MotionButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="backdrop-blur-lg bg-background/80">
+                  <DropdownMenuLabel>{currentUserProfile?.first_name} {currentUserProfile?.last_name}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <User className="mr-2 h-4 w-4" /> Mon Profil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <Settings className="mr-2 h-4 w-4" /> Paramètres
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TooltipTrigger> {/* Closing TooltipTrigger */}
+            <TooltipContent className="backdrop-blur-lg bg-background/80 z-50"> {/* Tooltip content */}
+              <p>Menu utilisateur</p>
+            </TooltipContent>
+          </Tooltip> {/* Closing Tooltip */}
 
           {/* Messages Button */}
           <Tooltip>
