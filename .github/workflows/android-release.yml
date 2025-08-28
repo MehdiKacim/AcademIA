@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '20'
 
-      # 3. Mise en cache des dépendances npm (pnpm)
+      # 3. Mise en cache des dépendances pnpm
       - name: Cache pnpm modules
         uses: actions/cache@v4
         with:
@@ -43,7 +43,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      # 4. Installe les dépendances npm
+      # 4. Installe toutes les dépendances, y compris les plugins Capacitor
       - name: Install npm dependencies
         run: npm install --frozen-lockfile
 
@@ -51,7 +51,7 @@ jobs:
       - name: Build web app
         run: npm run build
 
-      # 6. Installe l'outil de ligne de commande Capacitor
+      # 6. Installe l'outil de ligne de commande Capacitor de façon globale
       - name: Install Capacitor CLI
         run: npm install -g @capacitor/cli
 
@@ -61,7 +61,7 @@ jobs:
 
       # 8. Publication des mises à jour web via Capacitor Live Updates
       - name: Publish web updates
-        run: npx cap live-updates:publish --channel Production
+        run: npx cap live-updates:publish Production
         env:
           CAPACITOR_LIVE_UPDATES_APP_ID: ${{ secrets.CAPACITOR_LIVE_UPDATES_APP_ID }}
           CAPACITOR_LIVE_UPDATES_TOKEN: ${{ secrets.CAPACITOR_LIVE_UPDATES_TOKEN }}
@@ -70,14 +70,19 @@ jobs:
       - name: Increment Android Version with Shell Script
         id: increment_version
         run: |
+          # Fichier à modifier
           GRADLE_FILE="android/app/build.gradle"
+          # Lit et incrémente le versionCode
           CURRENT_VERSION_CODE=$(grep "versionCode" $GRADLE_FILE | awk '{print $NF}')
           NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
+          # Lit et incrémente le versionName (patch)
           CURRENT_VERSION_NAME=$(grep "versionName" $GRADLE_FILE | cut -d\" -f2)
           IFS='.' read -r major minor patch <<< "$CURRENT_VERSION_NAME"
           NEW_VERSION_NAME="$major.$minor.$((patch + 1))"
+          # Remplace les versions dans le fichier
           sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" $GRADLE_FILE
           sed -i "s/versionName \"$CURRENT_VERSION_NAME\"/versionName \"$NEW_VERSION_NAME\"/" $GRADLE_FILE
+          # Exporte les nouvelles versions pour les étapes suivantes
           echo "Nouvelle version: $NEW_VERSION_NAME ($NEW_VERSION_CODE)"
           echo "version_name=$NEW_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
@@ -96,7 +101,7 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # 12. Configure le JDK Java nécessaire
+      # 12. Configure le JDK Java nécessaire pour la compilation Android
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
