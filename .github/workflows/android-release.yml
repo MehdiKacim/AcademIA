@@ -59,11 +59,11 @@ jobs:
           git commit -m "chore: Auto. incrémentation de la version Android pour le build ${{ steps.increment_version.outputs.version_name }}"
           git push
 
-      # Ajout automatique du gradle wrapper si absent
+      # Génère le gradle wrapper s'il manque
       - name: Generate Gradle Wrapper if missing
         run: |
           if [ ! -f android/gradlew ]; then
-            echo "Gradle wrapper manquant, génération..."
+            echo "Gradle wrapper manquant, génération…"
             cd android
             gradle wrapper
             cd ..
@@ -71,6 +71,7 @@ jobs:
             echo "Gradle wrapper déjà présent."
           fi
 
+      # Commit le gradle wrapper s'il vient d'être généré
       - name: Commit Gradle Wrapper if generated
         run: |
           if [ -f android/gradlew ] && [ -n "$(git status --porcelain android/gradlew android/gradlew.bat android/gradle/wrapper)" ]; then
