@@ -60,7 +60,6 @@ const SimpleItemSelector = ({
             className
           )}
           disabled={disabled}
-          // Removed whileHover and whileTap from here as they are not directly on the CommandItem
         >
           <div className="flex items-center gap-2 flex-grow overflow-hidden">
             {value && SelectedIconComponent && <SelectedIconComponent className="h-5 w-5 text-primary flex-shrink-0" />}
@@ -84,7 +83,8 @@ const SimpleItemSelector = ({
       </PopoverTrigger>
       <PopoverContent className={cn(
         "w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999] backdrop-blur-lg bg-background/80",
-        popoverContentClassName
+        popoverContentClassName,
+        "pointer-events-auto" // Ensure the popover content itself allows pointer events
       )}>
         <Command className="rounded-android-tile">
           <CommandInput
@@ -104,6 +104,7 @@ const SimpleItemSelector = ({
                     key={option.id}
                     value={option.label}
                     onSelect={() => {
+                      console.log("Item selected:", option.id); // Diagnostic log
                       onValueChange(option.id === value ? null : option.id);
                       setOpen(false);
                       onSearchQueryChange(''); // Clear search after selection
