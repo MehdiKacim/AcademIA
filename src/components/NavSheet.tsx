@@ -19,6 +19,8 @@ import Logo from './Logo';
 import { useCourseChat } from '@/contexts/CourseChatContext';
 import MobileBottomNavContent from './MobileBottomNavContent'; // Import MobileBottomNavContent
 import MobileDrawer from './MobileDrawer'; // Import the new custom drawer
+import packageJson from '../../package.json'; // Import package.json for version
+import { MadeWithDyad } from './made-with-dyad'; // Import MadeWithDyad
 
 const iconMap: { [key: string]: React.ElementType } = {
   Home: Home, MessageSquare: MessageSquare, Search: Search, User: User, LogOut: LogOut, Settings: Settings, Info: Info, BookOpen: BookOpen, Sun: Sun, Moon: Moon, ChevronUp: ChevronUp, ExternalLink: ExternalLink, Menu: Menu, BotMessageSquare: BotMessageSquare, SlidersHorizontal: SlidersHorizontal, MessageSquareQuote: MessageSquareQuote, ShieldCheck: ShieldCheck, Target: Target, BellRing: BellRing, ChevronDown: ChevronDown,
@@ -35,6 +37,16 @@ interface NavSheetProps {
   onInitiateThemeChange: (newTheme: Profile['theme']) => void;
   isMobile: boolean; // To differentiate mobile vs desktop behavior
 }
+
+const containerVariants = {
+  hidden: { opacity: 0, transition: { staggerChildren: 0.05, staggerDirection: -1 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
 
 const NavSheet = ({
   isOpen,
@@ -195,12 +207,22 @@ const NavSheet = ({
             </Button>
           </div>
         )}
+        {currentUserProfile && (
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-sm text-muted-foreground text-center mb-4"
+          >
+            Bonjour, {currentUserProfile.first_name} ! Prêt à apprendre ?
+          </motion.p>
+        )}
         <motion.div
-          key={drawerNavStack.length}
-          initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          key={drawerNavStack.length} // Key to trigger AnimatePresence for the grid
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
           className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4"
         >
           {currentItemsToDisplay.length === 0 ? (
@@ -212,36 +234,50 @@ const NavSheet = ({
               const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
               return (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  className={cn(
-                    "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm", // Adjusted min-height, padding, and rounded-lg, added shadow-sm
-                    "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out", // Subtle hover with shadow
-                    isLinkActive ? "bg-primary/20 text-primary font-semibold shadow-md border-l-4 border-primary" : "text-foreground", // Active state with stronger background and shadow
-                    isCategory ? "bg-muted/15" : "" // Subtle background for categories
-                  )}
-                  onClick={() => handleItemClick(item)}
-                >
-                  <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/30" : "bg-muted/20")}> {/* Smaller rounded-md for icon container */}
-                    <IconComponent className="h-6 w-6" /> {/* Slightly larger icon */}
-                  </div>
-                  <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
-                      {item.badge}
-                    </span>
-                  )}
-                  {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
-                  {isCategory && <ChevronDown className={cn("h-4 w-4 ml-auto text-muted-foreground transition-transform duration-200", drawerNavStack.some(d => d.id === item.id) ? "rotate-180" : "rotate-90")} />}
-                </Button>
+                <motion.div key={item.id} variants={itemVariants}> {/* Wrap each button in motion.div */}
+                  <Button
+                    variant="ghost"
+                    whileHover={{ scale: 1.02, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }} // Subtle lift and shadow on hover
+                    whileTap={{ scale: 0.98 }} // Slight press effect on tap
+                    className={cn(
+                      "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm", // Adjusted min-height, padding, and rounded-lg, added shadow-sm
+                      "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out", // Subtle hover with shadow
+                      isLinkActive ? "bg-primary/20 text-primary font-semibold shadow-md border-l-4 border-primary" : "text-foreground", // Active state with stronger background and shadow
+                      isCategory ? "bg-muted/15" : "" // Subtle background for categories
+                    )}
+                    onClick={() => handleItemClick(item)}
+                  >
+                    <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/30" : "bg-muted/20")}> {/* Smaller rounded-md for icon container */}
+                      <IconComponent className="h-6 w-6" /> {/* Slightly larger icon */}
+                    </div>
+                    <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
+                        {item.badge}
+                      </span>
+                    )}
+                    {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
+                    {isCategory && (
+                      <motion.div
+                        animate={{ rotate: drawerNavStack.some(d => d.id === item.id) ? 180 : 0 }} // Animate rotation based on stack presence, 0 for default, 180 for open
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="h-4 w-4 ml-auto text-muted-foreground"
+                      >
+                        <ChevronDown />
+                      </motion.div>
+                    )}
+                  </Button>
+                </motion.div>
               );
             })
           )}
         </motion.div>
       </ScrollArea>
 
-      {/* Removed Footer for NavSheet */}
+      <div className="flex-shrink-0 p-4 border-t border-border text-center text-xs text-muted-foreground">
+        <p>Version de l'application: {packageJson.version}</p>
+        <MadeWithDyad />
+      </div>
     </MobileDrawer>
   );
 };
