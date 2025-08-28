@@ -155,7 +155,7 @@ const NavSheet = ({
 
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
-      <SheetHeader className="p-4 flex-shrink-0"> {/* Removed border-b border-border */}
+      <SheetHeader className="p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {drawerNavStack.length > 0 ? (
@@ -164,10 +164,10 @@ const NavSheet = ({
                 <span className="sr-only">Retour</span>
               </Button>
             ) : (
-              // If at root, show a placeholder or nothing, as the main logo is in the bottom nav
               <div className="h-10 w-10" /> 
             )}
-            {/* Removed title display from header */}
+            <CurrentDrawerIconComponent className="h-6 w-6 text-primary" />
+            <SheetTitle className="text-xl font-bold text-foreground">{currentDrawerTitle}</SheetTitle>
           </div>
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-10 w-10 bg-muted/20 hover:bg-muted/40">
             <X className="h-5 w-5" />
@@ -176,55 +176,71 @@ const NavSheet = ({
         </div>
       </SheetHeader>
 
-        <ScrollArea className="flex-grow p-4">
-          <motion.div
-            key={drawerNavStack.length}
-            initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4"
-          >
-            {currentItemsToDisplay.length === 0 ? ( // Simplified condition
-              <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
-            ) : (
-              currentItemsToDisplay.map((item) => {
-                const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
-                const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
-                const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
+      <ScrollArea className="flex-grow p-4">
+        {currentUserProfile && drawerNavStack.length === 0 && (
+          <div className="flex items-center gap-3 p-4 mb-4 bg-muted/15 rounded-lg shadow-sm">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${currentUserProfile.first_name} ${currentUserProfile.last_name}`} />
+              <AvatarFallback>{currentUserProfile.first_name[0]}{currentUserProfile.last_name[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold text-lg">{currentUserProfile.first_name} {currentUserProfile.last_name}</p>
+              <p className="text-sm text-muted-foreground">{currentUserProfile.email}</p>
+            </div>
+          </div>
+        )}
+        <motion.div
+          key={drawerNavStack.length}
+          initial={{ opacity: 0, x: drawerNavStack.length > 0 ? 50 : -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: drawerNavStack.length > 0 ? -50 : 50 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4"
+        >
+          {currentItemsToDisplay.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4 col-span-full">Aucun élément de menu configuré pour ce rôle.</p>
+          ) : (
+            currentItemsToDisplay.map((item) => {
+              const IconComponent = iconMap[item.icon_name || 'Info'] || Info;
+              const isLinkActive = item.route && (location.pathname + location.search).startsWith(item.route);
+              const isCategory = item.type === 'category_or_action' && (item.route === null || item.route === undefined);
 
-                return (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    className={cn(
-                      "flex flex-row items-center justify-start h-auto min-h-[52px] text-left w-full px-3 py-2 rounded-lg", // Adjusted min-height, padding, and rounded-lg
-                      "hover:bg-muted/20 transition-colors duration-200 ease-in-out", // Subtle hover
-                      isLinkActive ? "bg-primary/10 text-primary font-semibold" : "text-foreground", // Active state
-                      isCategory ? "bg-muted/10" : "" // Subtle background for categories
-                    )}
-                    onClick={() => handleItemClick(item)}
-                  >
-                    <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/20" : "bg-muted/20")}> {/* Smaller rounded-md for icon container */}
-                      <IconComponent className="h-5 w-5" /> {/* Slightly smaller icon */}
-                    </div>
-                    <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
-                        {item.badge}
-                      </span>
-                    )}
-                    {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
-                    {isCategory && <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />}
-                  </Button>
-                );
-              })
-            )}
-          </motion.div>
-        </ScrollArea>
+              return (
+                <Button
+                  key={item.id}
+                  variant="ghost"
+                  className={cn(
+                    "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm", // Adjusted min-height, padding, and rounded-lg, added shadow-sm
+                    "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out", // Subtle hover with shadow
+                    isLinkActive ? "bg-primary/20 text-primary font-semibold shadow-md" : "text-foreground", // Active state with stronger background and shadow
+                    isCategory ? "bg-muted/15" : "" // Subtle background for categories
+                  )}
+                  onClick={() => handleItemClick(item)}
+                >
+                  <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/30" : "bg-muted/20")}> {/* Smaller rounded-md for icon container */}
+                    <IconComponent className="h-6 w-6" /> {/* Slightly larger icon */}
+                  </div>
+                  <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full px-2 py-0.5 text-xs leading-none">
+                      {item.badge}
+                    </span>
+                  )}
+                  {item.is_external && <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground" />}
+                  {isCategory && <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground rotate-90" />}
+                </Button>
+              );
+            })
+          )}
+        </motion.div>
+      </ScrollArea>
 
-        {/* Empty footer for the drawer */}
-        <div className="flex-shrink-0" />
+      <div className="flex-shrink-0 p-4 border-t border-border flex items-center justify-between">
+        <Button variant="link" onClick={() => { navigate('/about'); onOpenChange(false); }} className="text-muted-foreground hover:text-foreground">
+          <Info className="h-4 w-4 mr-2" /> À propos
+        </Button>
+        <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+      </div>
     </MobileDrawer>
   );
 };

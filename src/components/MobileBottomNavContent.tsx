@@ -122,7 +122,7 @@ const MobileBottomNavContent = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+          {!isMobileNavSheetOpen && <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />}
         </>
       ) : (
         // Unauthenticated layout: only central logo (navigates to auth) and theme toggle
@@ -149,7 +149,7 @@ const MobileBottomNavContent = ({
             <span className="sr-only">Connexion</span>
           </Button>
           <div className="absolute right-4">
-            <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+            {!isMobileNavSheetOpen && <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />}
           </div>
         </div>
       )}
