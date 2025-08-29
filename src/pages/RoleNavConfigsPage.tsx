@@ -18,8 +18,8 @@ import { showSuccess, showError } from "@/utils/toast";
 import { loadAllNavItemsRaw, addNavItem, updateNavItem, deleteNavItem, addRoleNavItemConfig, updateRoleNavItemConfig, deleteRoleNavItemConfig, getRoleNavItemConfigsByRole, resetRoleNavConfigsForRole } from "@/lib/navItems";
 import { useRole } from '@/contexts/RoleContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea }
- from "@/components/ui/textarea";
+import { Textarea
+ } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -160,8 +160,10 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             isDragging && "ring-2 ring-primary/50 shadow-xl",
             isCategory ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             isCategory && level === 0 && "border-l-4 border-primary/50",
-            "flex-wrap sm:flex-nowrap select-none hover:scale-[1.01] transition-transform" // Added hover effect
+            "flex-wrap sm:flex-nowrap select-none hover:scale-[1.01] transition-transform", // Added hover effect
+            isDraggableAndDeletable ? "cursor-grab" : "" // Add cursor-grab to the whole item if draggable
           )}
+          {...(isDraggableAndDeletable ? { ...listeners, ...attributes } : {})} // Apply listeners/attributes to the main div
         >
           <div className="flex items-center gap-2 flex-grow cursor-pointer select-none" onClick={(e) => {
             if (hasChildren) {
@@ -170,14 +172,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             }
           }}>
             {isDraggableAndDeletable && (
-              <div
-                {...listeners}
-                {...attributes}
-                className="cursor-grab p-1 rounded-md hover:bg-muted/20"
-              >
-                <GripVertical className="h-5 w-5" />
-                <span className="sr-only">Déplacer l'élément</span>
-              </div>
+              <GripVertical className="h-5 w-5 text-muted-foreground" /> // Just show the icon
             )}
             {hasChildren && (
               <MotionButton
@@ -533,7 +528,7 @@ const RoleNavConfigsPage = () => {
 
     const overSortable = over.data.current?.sortable;
     const overConfiguredItem = allConfiguredItemsFlat.find(item => item.configId === overId);
-    const overIsRootContainer = overId === 'configured-container';
+    const overIsRootContainer = overId === 'configured-container'; // This is the ID of the main container
     const overIsChildContainer = overId.startsWith('configured-container-children-of-');
 
     if (overSortable) {
@@ -608,7 +603,7 @@ const RoleNavConfigsPage = () => {
     // 3. Insert the item into its new position in the copied tree
     const insertNode = (nodes: NavItem[], nodeToInsert: NavItem, targetParentId: string | null, targetIndex: number): NavItem[] => {
       if (targetParentId === null) {
-        const newRootNodes = [...nodes];
+        const newRootNodes = [...nodes]; // nodes here is the current level of the tree (e.g., configuredItemsTree)
         newRootNodes.splice(targetIndex, 0, nodeToInsert);
         return newRootNodes;
       }
@@ -630,7 +625,7 @@ const RoleNavConfigsPage = () => {
     const itemsToUpdateInDb: RoleNavItemConfig[] = [];
     const reindexAndCollect = (items: NavItem[], currentParentId: string | null = null) => {
       items.forEach((item, index) => {
-        if (item.configId) {
+        if (item.configId) { // Only update if it's a configured item
           itemsToUpdateInDb.push({
             id: item.configId,
             nav_item_id: item.id,
