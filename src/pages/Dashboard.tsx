@@ -4,29 +4,31 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  MotionCard, // Import MotionCard
+  MotionCard,
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses, loadEstablishments, getEstablishmentName } from "@/lib/courseData"; // Import loadEstablishments
+import { loadCourses, loadEstablishments, getEstablishmentName, loadClasses, loadCurricula } from "@/lib/courseData";
 import { getAllStudentCourseProgress, getAllProfiles, getAllStudentClassEnrollments } from "@/lib/studentData";
-import { Course, StudentCourseProgress, Profile, Class, Curriculum, StudentClassEnrollment, Establishment } from "@/lib/dataModels"; // Import Establishment
+import { Course, StudentCourseProgress, Profile, Class, Curriculum, StudentClassEnrollment, Establishment } from "@/lib/dataModels";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
-import { CheckCircle } from "lucide-react";
+import { Button, MotionButton } from "@/components/ui/button";
+import { CheckCircle, BookOpen, Users, GraduationCap, PenTool, BriefcaseBusiness, BotMessageSquare, LayoutList, Building2, BarChart2, UserCog, MessageSquare, AlertTriangle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { motion } from "framer-motion"; // Import motion for animations
-import { cn } from "@/lib/utils"; // Import cn for conditional styling
-import { showError } from "@/utils/toast"; // Import showError
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { showError } from "@/utils/toast";
+import { useCourseChat } from "@/contexts/CourseChatContext"; // Import useCourseChat
 
 const Dashboard = () => {
   const { currentUserProfile, currentRole, isLoadingUser } = useRole();
+  const { openChat } = useCourseChat(); // Use openChat from context
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCourseProgresses, setStudentCourseProgresses] = useState<StudentCourseProgress[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
-  const [establishments, setEstablishments] = useState<Establishment[]>([]); // New state for establishments
+  const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [allStudentClassEnrollments, setAllStudentClassEnrollments] = useState<StudentClassEnrollment[]>([]);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ const Dashboard = () => {
         setClasses(loadedClasses);
         const loadedCurricula = await loadCurricula();
         setCurricula(loadedCurricula);
-        setEstablishments(await loadEstablishments()); // Load establishments
+        setEstablishments(await loadEstablishments());
         setAllStudentClassEnrollments(await getAllStudentClassEnrollments());
       } catch (error: any) {
         console.error("Error fetching data for Dashboard:", error);
@@ -106,8 +108,10 @@ const Dashboard = () => {
         return progress && !progress.modules_progress.every(m => m.is_completed);
       });
 
+      const nextCourseToResume = coursesInProgress.length > 0 ? coursesInProgress[0] : null;
+
       return (
-        <motion.div 
+        <motion.div
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-5xl mx-auto"
           initial="hidden"
           animate="visible"
@@ -120,41 +124,39 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Mes Cours Actuels</CardTitle>
-                <CardDescription>Continuez votre apprentissage.</CardDescription>
+                <CardTitle className={gradientClasses}>Mon Parcours Actuel</CardTitle>
+                <CardDescription>Reprenez là où vous en étiez.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">{coursesInProgress.length}</p>
-                <p className="text-sm text-muted-foreground">cours en cours.</p>
-                {coursesInProgress.length > 0 && (
-                  <Link to={`/courses/${coursesInProgress[0].id}`} className="mt-4 block">
-                    <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Reprendre le dernier cours</MotionButton>
-                  </Link>
+                {nextCourseToResume ? (
+                  <>
+                    <p className="text-2xl font-bold text-primary">{nextCourseToResume.title}</p>
+                    <p className="text-sm text-muted-foreground">Cours en cours.</p>
+                    <Link to={`/courses/${nextCourseToResume.id}`} className="mt-4 block">
+                      <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                        <BookOpen className="h-4 w-4 mr-2" /> Reprendre le cours
+                      </MotionButton>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-muted-foreground">Aucun cours en cours</p>
+                    <p className="text-sm text-muted-foreground">Commencez un nouveau cours dès maintenant !</p>
+                    <Link to="/courses" className="mt-4 block">
+                      <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                        <BookOpen className="h-4 w-4 mr-2" /> Explorer les cours
+                      </MotionButton>
+                    </Link>
+                  </>
                 )}
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
-              <CardHeader>
-                <CardTitle className={gradientClasses}>Cours Terminés</CardTitle>
-                <CardDescription>Votre succès jusqu'à présent.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-primary">{completedCoursesCount}</p>
-                <p className="text-sm text-muted-foreground">cours terminés sur {enrolledCourses.length} inscrits.</p>
-                {completedCoursesCount > 0 && (
-                  <Link to="/courses" className="mt-4 block">
-                    <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir tous les cours terminées</MotionButton>
-                  </Link>
-                )}
-              </CardContent>
-            </MotionCard>
-          </motion.div>
-          <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Progression Globale</CardTitle>
                 <CardDescription>Votre avancement général.</CardDescription>
@@ -164,8 +166,42 @@ const Dashboard = () => {
                 <Progress value={overallProgress} className="w-full mt-2" />
                 <p className="text-sm text-muted-foreground mt-2">Modules terminés : {totalModulesCompleted} / {totalModulesAvailable}</p>
                 <Link to="/analytics?view=personal" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir mes statistiques</MotionButton>
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <BarChart2 className="h-4 w-4 mr-2" /> Voir mes statistiques
+                  </MotionButton>
                 </Link>
+              </CardContent>
+            </MotionCard>
+          </motion.div>
+
+          <motion.div variants={cardVariants}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+              <CardHeader>
+                <CardTitle className={gradientClasses}>Mes Réussites</CardTitle>
+                <CardDescription>Vos succès jusqu'à présent.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-primary">{completedCoursesCount}</p>
+                <p className="text-sm text-muted-foreground">cours terminés sur {enrolledCourses.length} inscrits.</p>
+                <Link to="/courses" className="mt-4 block">
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <CheckCircle className="h-4 w-4 mr-2" /> Voir tous les cours terminés
+                  </MotionButton>
+                </Link>
+              </CardContent>
+            </MotionCard>
+          </motion.div>
+
+          <motion.div variants={cardVariants} className="lg:col-span-full">
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+              <CardHeader>
+                <CardTitle className={gradientClasses}>Besoin d'aide ?</CardTitle>
+                <CardDescription>Discutez avec votre tuteur AiA.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MotionButton onClick={() => openChat()} className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                  <BotMessageSquare className="h-4 w-4 mr-2" /> Poser une question à AiA
+                </MotionButton>
               </CardContent>
             </MotionCard>
           </motion.div>
@@ -182,7 +218,7 @@ const Dashboard = () => {
       ).size;
 
       return (
-        <motion.div 
+        <motion.div
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-5xl mx-auto"
           initial="hidden"
           animate="visible"
@@ -195,22 +231,30 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Mes Cours Créés</CardTitle>
+                <CardTitle className={gradientClasses}>Mes Cours & Créations</CardTitle>
                 <CardDescription>Gérez vos contenus d'apprentissage.</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold text-primary">{createdCourses.length}</p>
                 <p className="text-sm text-muted-foreground">{publishedCoursesCount} sont publiés.</p>
                 <Link to="/courses" className="mt-4 block">
-                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer mes cours</MotionButton>
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <BookOpen className="h-4 w-4 mr-2" /> Gérer mes cours
+                  </MotionButton>
+                </Link>
+                <Link to="/create-course" className="mt-2 block">
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <PenTool className="h-4 w-4 mr-2" /> Créer un nouveau cours
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Impact sur les Élèves</CardTitle>
                 <CardDescription>Nombre total d'élèves inscrits à vos cours.</CardDescription>
@@ -219,13 +263,16 @@ const Dashboard = () => {
                 <p className="text-2xl font-bold text-primary">{studentsInMyCourses}</p>
                 <p className="text-sm text-muted-foreground">élèves uniques.</p>
                 <Link to="/analytics?view=overview" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir les analytiques</MotionButton>
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <BarChart2 className="h-4 w-4 mr-2" /> Voir les analytiques
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Gestion des Classes</CardTitle>
                 <CardDescription>Organisez vos élèves en classes.</CardDescription>
@@ -234,7 +281,25 @@ const Dashboard = () => {
                 <p className="text-2xl font-bold text-primary">{classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).length}</p>
                 <p className="text-sm text-muted-foreground">classes gérées.</p>
                 <Link to="/classes" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer les classes</MotionButton>
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Users className="h-4 w-4 mr-2" /> Gérer les classes
+                  </MotionButton>
+                </Link>
+              </CardContent>
+            </MotionCard>
+          </motion.div>
+
+          <motion.div variants={cardVariants} className="lg:col-span-full">
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+              <CardHeader>
+                <CardTitle className={gradientClasses}>Communication Rapide</CardTitle>
+                <CardDescription>Envoyez des messages à vos élèves ou collègues.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link to="/messages" className="block">
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <MessageSquare className="h-4 w-4 mr-2" /> Accéder à la messagerie
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
@@ -242,16 +307,12 @@ const Dashboard = () => {
         </motion.div>
       );
     } else if (currentRole === 'tutor') {
-      const managedClassIds = classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).map(cls => cls.id);
-      const studentsInMyClasses = allProfiles.filter(p => 
-        p.role === 'student' && allStudentClassEnrollments.some(e => e.student_id === p.id && managedClassIds.includes(e.class_id))
-      );
-      
-      const studentsAtRisk = studentsInMyClasses.filter(s => studentCourseProgresses.some(scp => scp.user_id === s.id && scp.modules_progress.some(mp => mp.sections_progress.some(sp => sp.quiz_result && !sp.quiz_result.passed)))).length;
-      const totalSupervisedStudents = studentsInMyClasses.length;
+      const studentsInMyEstablishment = allProfiles.filter(p => p.role === 'student' && p.establishment_id === currentUserProfile.establishment_id);
+      const studentsAtRisk = studentsInMyEstablishment.filter(s => studentCourseProgresses.some(scp => scp.user_id === s.id && scp.modules_progress.some(mp => mp.sections_progress.some(sp => sp.quiz_result && !sp.quiz_result.passed)))).length;
+      const totalSupervisedStudents = studentsInMyEstablishment.length;
 
       return (
-        <motion.div 
+        <motion.div
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-5xl mx-auto"
           initial="hidden"
           animate="visible"
@@ -264,22 +325,25 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Élèves Supervisés</CardTitle>
+                <CardTitle className={gradientClasses}>Mes Élèves Supervisés</CardTitle>
                 <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold text-primary">{totalSupervisedStudents}</p>
-                <p className="text-sm text-muted-foreground">élèves au total.</p>
+                <p className="text-sm text-muted-foreground">élèves au total dans votre établissement.</p>
                 <Link to="/pedagogical-management" className="mt-4 block">
-                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir tous les élèves</MotionButton>
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <GraduationCap className="h-4 w-4 mr-2" /> Gérer les élèves
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Élèves en Difficulté</CardTitle>
                 <CardDescription>Élèves nécessitant une attention particulière.</CardDescription>
@@ -288,22 +352,43 @@ const Dashboard = () => {
                 <p className="text-2xl font-bold text-destructive">{studentsAtRisk}</p>
                 <p className="text-sm text-muted-foreground">élèves avec des difficultés récentes.</p>
                 <Link to="/analytics?view=alerts" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir les alertes</MotionButton>
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <AlertTriangle className="h-4 w-4 mr-2" /> Voir les alertes
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Performance des Classes</CardTitle>
-                <CardDescription>Vue d'overview de la progression par classe.</CardDescription>
+                <CardDescription>Vue d'ensemble de la progression par classe.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">{classes.filter(cls => cls.creator_ids.includes(currentUserProfile.id)).length}</p>
+                <p className="text-2xl font-bold text-primary">{classes.filter(cls => cls.establishment_id === currentUserProfile.establishment_id).length}</p>
                 <p className="text-sm text-muted-foreground">classes supervisées.</p>
                 <Link to="/analytics?view=class-performance" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir les performances</MotionButton>
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <BarChart2 className="h-4 w-4 mr-2" /> Voir les performances
+                  </MotionButton>
+                </Link>
+              </CardContent>
+            </MotionCard>
+          </motion.div>
+
+          <motion.div variants={cardVariants} className="lg:col-span-full">
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+              <CardHeader>
+                <CardTitle className={gradientClasses}>Contacter un Élève</CardTitle>
+                <CardDescription>Envoyez un message rapide à un élève.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link to="/messages" className="block">
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <MessageSquare className="h-4 w-4 mr-2" /> Accéder à la messagerie
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
@@ -314,9 +399,12 @@ const Dashboard = () => {
       const totalDirectors = allProfiles.filter(p => p.role === 'director').length;
       const totalDeputyDirectors = allProfiles.filter(p => p.role === 'deputy_director').length;
       const totalEstablishments = establishments.length;
+      const totalProfessors = allProfiles.filter(p => p.role === 'professeur').length;
+      const totalStudents = allProfiles.filter(p => p.role === 'student').length;
+      const totalCourses = courses.length;
 
       return (
-        <motion.div 
+        <motion.div
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-5xl mx-auto"
           initial="hidden"
           animate="visible"
@@ -329,57 +417,76 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Utilisateurs Administrateurs</CardTitle>
-                <CardDescription>Nombre total d'administrateurs sur la plateforme.</CardDescription>
+                <CardTitle className={gradientClasses}>Statistiques Globales</CardTitle>
+                <CardDescription>Vue d'ensemble de la plateforme.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">{allProfiles.filter(p => p.role === 'administrator').length}</p>
-                <Link to="/admin-users" className="mt-4 block">
-                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer les administrateurs</MotionButton>
+                <p className="text-2xl font-bold text-primary">{totalStudents} Élèves</p>
+                <p className="text-2xl font-bold text-primary">{totalProfessors} Professeurs</p>
+                <p className="text-sm text-muted-foreground mt-2">{totalEstablishments} Établissements, {totalCourses} Cours</p>
+                <Link to="/analytics?view=overview" className="mt-4 block">
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <BarChart2 className="h-4 w-4 mr-2" /> Analytiques globales
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Directeurs</CardTitle>
-                <CardDescription>Nombre total de directeurs sur la plateforme.</CardDescription>
+                <CardTitle className={gradientClasses}>Gestion des Utilisateurs</CardTitle>
+                <CardDescription>Administrateurs, Directeurs, Professeurs, Élèves.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">{totalDirectors}</p>
+                <p className="text-2xl font-bold text-primary">{allProfiles.length} Utilisateurs</p>
+                <p className="text-sm text-muted-foreground">Dont {totalDirectors} Directeurs, {totalDeputyDirectors} Directeurs Adjoints.</p>
                 <Link to="/admin-users" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer les directeurs</MotionButton>
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <UserCog className="h-4 w-4 mr-2" /> Gérer les utilisateurs
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Directeurs Adjoints</CardTitle>
-                <CardDescription>Nombre total de directeurs adjoints sur la plateforme.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-primary">{totalDeputyDirectors}</p>
-                <Link to="/admin-users" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer les directeurs adjoints</MotionButton>
-                </Link>
-              </CardContent>
-            </MotionCard>
-          </motion.div>
-          <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
-              <CardHeader>
-                <CardTitle className={gradientClasses}>Établissements</CardTitle>
-                <CardDescription>Nombre total d'établissements gérés.</CardDescription>
+                <CardTitle className={gradientClasses}>Gestion des Établissements</CardTitle>
+                <CardDescription>Créez et gérez les établissements scolaires.</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold text-primary">{totalEstablishments}</p>
+                <p className="text-sm text-muted-foreground">établissements gérés.</p>
                 <Link to="/establishments" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer les établissements</MotionButton>
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Building2 className="h-4 w-4 mr-2" /> Gérer les établissements
+                  </MotionButton>
+                </Link>
+              </CardContent>
+            </MotionCard>
+          </motion.div>
+
+          <motion.div variants={cardVariants} className="lg:col-span-full">
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+              <CardHeader>
+                <CardTitle className={gradientClasses}>Configuration Système</CardTitle>
+                <CardDescription>Accès aux outils d'administration avancés.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link to="/admin-menu-management" className="block">
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <LayoutList className="h-4 w-4 mr-2" /> Gérer les menus
+                  </MotionButton>
+                </Link>
+                <Link to="/data-model" className="mt-2 block">
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Code className="h-4 w-4 mr-2" /> Voir le modèle de données
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
@@ -393,7 +500,7 @@ const Dashboard = () => {
       const curriculaInMyScope = curricula.filter(cur => cur.establishment_id === currentUserProfile.establishment_id).length;
 
       return (
-        <motion.div 
+        <motion.div
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-5xl mx-auto"
           initial="hidden"
           animate="visible"
@@ -406,56 +513,71 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Mon Rôle</CardTitle>
-                <CardDescription>Vue d'overview de votre rôle.</CardDescription>
+                <CardTitle className={gradientClasses}>Vue d'Ensemble de l'Établissement</CardTitle>
+                <CardDescription>Statistiques clés de votre établissement.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">{currentRole === 'director' ? 'Directeur' : 'Directeur Adjoint'}</p>
-                <Link to="/profile" className="mt-4 block">
-                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir mon profil</MotionButton>
+                <p className="text-2xl font-bold text-primary">{currentUserProfile.establishment_id ? getEstablishmentName(currentUserProfile.establishment_id, establishments) : 'N/A'}</p>
+                <p className="text-sm text-muted-foreground mt-2">{professeursInMyScope} Professeurs, {studentsInMyScope} Élèves</p>
+                <p className="text-sm text-muted-foreground">{curriculaInMyScope} Cursus, {classesInMyScope} Classes</p>
+                <Link to="/establishments" className="mt-4 block">
+                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Building2 className="h-4 w-4 mr-2" /> Gérer l'établissement
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
-                <CardTitle className={gradientClasses}>Personnel & Élèves</CardTitle>
-                <CardDescription>Nombre de professeurs et d'élèves.</CardDescription>
+                <CardTitle className={gradientClasses}>Gestion du Personnel</CardTitle>
+                <CardDescription>Gérez les professeurs et tuteurs de votre établissement.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">{professeursInMyScope} Professeurs, {studentsInMyScope} Élèves</p>
+                <p className="text-2xl font-bold text-primary">{professeursInMyScope} Professeurs</p>
+                <p className="text-sm text-muted-foreground">et {allProfiles.filter(p => p.role === 'tutor' && p.establishment_id === currentUserProfile.establishment_id).length} Tuteurs.</p>
                 <Link to="/admin-users" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer les utilisateurs</MotionButton>
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Users className="h-4 w-4 mr-2" /> Gérer le personnel
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
+
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Structure Pédagogique</CardTitle>
-                <CardDescription>Cursus et classes.</CardDescription>
+                <CardDescription>Gérez les cursus et classes de votre établissement.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">{curriculaInMyScope} Cursus, {classesInMyScope} Classes</p>
+                <p className="text-2xl font-bold text-primary">{curriculaInMyScope} Cursus</p>
+                <p className="text-sm text-muted-foreground">et {classesInMyScope} Classes.</p>
                 <Link to="/curricula" className="mt-4 block">
-                  <MotionButton variant="outline" className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Gérer les cursus et classes</MotionButton>
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <LayoutList className="h-4 w-4 mr-2" /> Gérer les cursus & classes
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
           </motion.div>
-          <motion.div variants={cardVariants} className="lg:col-span-3">
-            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+
+          <motion.div variants={cardVariants} className="lg:col-span-full">
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80 shadow-card-shadow" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Analytiques</CardTitle>
-                <CardDescription>Accédez aux statistiques détaillées.</CardDescription>
+                <CardDescription>Accédez aux statistiques détaillées de votre établissement.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link to="/analytics?view=overview" className="mt-4 block">
-                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>Voir les analytiques</MotionButton>
+                <Link to="/analytics?view=overview" className="block">
+                  <MotionButton className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <BarChart2 className="h-4 w-4 mr-2" /> Voir les analytiques
+                  </MotionButton>
                 </Link>
               </CardContent>
             </MotionCard>
@@ -467,7 +589,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden"> {/* Removed min-h-screen */}
+    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Background blobs for immersive design */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-50 animate-blob"></div>
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
@@ -477,7 +599,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-7xl mx-auto" // Keep max-width for the main content block
+        className="w-full max-w-7xl mx-auto"
       >
         <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan text-center">
           Tableau de bord {currentUserProfile?.first_name} {currentUserProfile?.last_name} ({currentRole === 'student' ? 'Élève' : currentRole === 'professeur' ? 'Professeur' : currentRole === 'tutor' ? 'Tuteur' : currentRole === 'director' ? 'Directeur' : currentRole === 'deputy_director' ? 'Directeur Adjoint' : 'Administrateur'})
