@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card"; // Import MotionCard
-import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, MotionCard } from "@/components/ui/card";
+import { Button, MotionButton } from "@/components/ui/button";
 import { ArrowLeft, UserPlus, LockKeyhole, MailQuestion } from 'lucide-react';
 import Logo from "@/components/Logo";
 import { LoginForm } from "@/components/LoginForm";
@@ -14,10 +14,10 @@ import { cn } from '@/lib/utils';
 type AuthView = 'login' | 'signup-info' | 'forgot-password' | 'password-reset-success';
 
 interface AuthPageProps {
-  onAuthTransition: (message: string, callback?: () => void) => void; // New prop
+  onAuthTransition: (message: string, callback?: () => void) => void;
 }
 
-const AuthPage = ({ onAuthTransition }: AuthPageProps) => { // Add onAuthTransition prop
+const AuthPage = ({ onAuthTransition }: AuthPageProps) => {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<AuthView>('login');
   const [resetEmail, setResetEmail] = useState<string>('');
@@ -40,7 +40,7 @@ const AuthPage = ({ onAuthTransition }: AuthPageProps) => { // Add onAuthTransit
             onSuccess={handleLoginSuccess}
             onSwitchToSignup={() => setCurrentView('signup-info')}
             onForgotPasswordClick={() => setCurrentView('forgot-password')}
-            onAuthTransition={onAuthTransition} // Pass onAuthTransition
+            onAuthTransition={onAuthTransition}
           />
         );
       case 'signup-info':
@@ -109,8 +109,8 @@ const AuthPage = ({ onAuthTransition }: AuthPageProps) => { // Add onAuthTransit
         <Logo iconClassName="w-24 h-24" showText={false} />
       </motion.div>
 
-      <MotionCard className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80 relative" whileHover={{ scale: 1.01, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}> {/* Added relative positioning */}
-        {window.history.length > 1 && ( // Only show back button if there's history
+      <MotionCard className="w-full max-w-md p-6 rounded-android-tile shadow-xl backdrop-blur-lg bg-background/80 relative" whileHover={{ scale: 1.01, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+        {window.history.length > 1 && (
           <MotionButton
             variant="ghost"
             size="icon"

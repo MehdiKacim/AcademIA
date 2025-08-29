@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, MotionButton } from "@/components/ui/button"; // Import MotionButton
+import { Button, MotionButton } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Logo from "@/components/Logo";
 import {
@@ -7,7 +7,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  MotionCard, // Import MotionCard
+  MotionCard,
 } from "@/components/ui/card";
 import {
   SlidersHorizontal,
@@ -19,31 +19,29 @@ import {
   LogIn,
   Download,
   Info,
-  BotMessageSquare, // Added BotMessageSquare for AiA Bot
-  UserCog, // Added UserCog for Admin access button
-  Menu, // Added Menu icon for mobile navigation
-  SunMoon, // Added SunMoon for theme toggle
-} from "lucide-react"; // Import all necessary icons
+  BotMessageSquare,
+  UserCog,
+  Menu,
+  SunMoon,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-// Removed BottomNavigationBar import
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRole } from "@/contexts/RoleContext";
 import { showSuccess, showError } from "@/utils/toast";
-// Removed AuthModal import
-// Removed AboutModal import
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NavItem } from "@/lib/dataModels";
-import { useCourseChat } from '@/contexts/CourseChatContext'; // Import useCourseChat
-import MobileBottomNavContent from "@/components/MobileBottomNavContent"; // Import the new component
-import NavSheet from "@/components/NavSheet"; // Import NavSheet for unauthenticated users
-import { motion } from 'framer-motion'; // Import motion for animations
+import { useCourseChat } from '@/contexts/CourseChatContext';
+import MobileBottomNavContent from "@/components/MobileBottomNavContent";
+import NavSheet from "@/components/NavSheet";
+import { motion } from 'framer-motion';
+import { Profile as ProfileType } from '@/lib/dataModels'; // Import ProfileType
 
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
-  onInitiateThemeChange: (newTheme: string) => void; // Add onInitiateThemeChange prop
-  onAuthTransition: (message: string, callback?: () => void) => void; // New prop
+  onInitiateThemeChange: (newTheme: ProfileType['theme']) => void;
+  onAuthTransition: (message: string, callback?: () => void) => void;
 }
 
 // Map icon_name strings to Lucide React components
@@ -51,7 +49,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, SunMoon,
 };
 
-const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }: IndexProps) => { // Add onAuthTransition prop
+const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }: IndexProps) => {
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -60,10 +58,10 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
   };
 
   const { currentUserProfile, currentRole } = useRole();
-  const { openChat } = useCourseChat(); // Get openChat from context
+  const { openChat } = useCourseChat();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false); // State for mobile nav sheet
+  const [isMobileNavSheetOpen, setIsMobileNavSheetOpen] = useState(false);
   const logoTapCountRef = useRef(0);
   const location = useLocation();
 
@@ -210,7 +208,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
   };
 
   const toggleMobileNavSheet = useCallback(() => {
-    console.log("toggleMobileNavSheet called from Index!"); // Add this log
+    console.log("toggleMobileNavSheet called from Index!");
     setIsMobileNavSheetOpen(prev => !prev);
   }, []);
 
@@ -220,15 +218,15 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
 
       <header className={cn(
           "fixed left-0 right-0 z-50 px-4 py-3 flex items-center justify-between border-b backdrop-blur-lg bg-background/80 shadow-sm h-[68px]",
-          isMobile ? "hidden" : "top-0" // Hide on mobile, show on desktop
+          isMobile ? "hidden" : "top-0"
         )}
-        style={{ top: isMobile ? 'auto' : 'env(safe-area-inset-top)' }} // Adjust top/bottom based on mobile
+        style={{ top: isMobile ? 'auto' : 'env(safe-area-inset-top)' }}
       >
         <div className="flex items-center gap-4">
-          <Logo onLogoClick={handleLogoClick} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
+          <Logo onLogoClick={handleLogoClick} disableInternalAnimation={false} />
         </div>
         <nav className="hidden md:flex items-center gap-4">
-          {staticNavItems.filter(item => item.id !== 'login-link').map((item) => { // Filter out login link for desktop header
+          {staticNavItems.filter(item => item.id !== 'login-link').map((item) => {
             const isActive = 
               (item.route === '/' && location.pathname === '/' && !location.hash) ||
               (item.route?.startsWith('#') && location.pathname === '/' && location.hash === item.route);
@@ -250,20 +248,20 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} /> {/* Add ThemeToggle here */}
-          <MotionButton variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}> {/* Navigate to /about */}
+          <ThemeToggle onInitiateThemeChange={onInitiateThemeChange} />
+          <MotionButton variant="ghost" size="icon" onClick={() => navigate('/about')} className="hidden sm:flex" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Info className="h-5 w-5" />
             <span className="sr-only">À propos</span>
           </MotionButton>
-          <MotionButton variant="outline" onClick={() => navigate('/auth')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Redirect to AuthPage */}
+          <MotionButton variant="outline" onClick={() => navigate('/auth')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <LogIn className="h-5 w-5 mr-2" /> Connexion
           </MotionButton>
         </div>
       </header>
 
       <main className={cn(
-          "flex-grow flex flex-col items-center justify-center text-center px-4 overflow-y-auto overflow-x-hidden", // Added overflow-x-hidden here
-          "pt-[calc(68px+env(safe-area-inset-top))] pb-4" // Fixed 68px padding from top for both mobile and desktop
+          "flex-grow flex flex-col items-center justify-center text-center px-4 overflow-y-auto overflow-x-hidden",
+          "pt-[calc(68px+env(safe-area-inset-top))] pb-4"
         )}>
         <section
           id="accueil"
@@ -275,9 +273,8 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
             <div className="flex justify-center mb-8">
-              <Logo onLogoClick={handleLogoClick} iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
+              <Logo onLogoClick={handleLogoClick} iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} disableInternalAnimation={false} />
             </div>
-            {/* NEW: Animated AcademIA text */}
             <motion.h1
               className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan mb-4"
               variants={textVariants}
@@ -290,7 +287,6 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
                 </motion.span>
               ))}
             </motion.h1>
-            {/* Existing h2 */}
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary via-foreground to-primary bg-[length:200%_auto] animate-background-pan">
               L'Avenir de l'Apprentissage est Ici
             </h2>
@@ -300,10 +296,9 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
               chaque apprenant.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <MotionButton size="lg" onClick={() => navigate('/auth')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Redirect to AuthPage */}
+              <MotionButton size="lg" onClick={() => navigate('/auth')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 Découvrir AiA
               </MotionButton>
-              {/* Removed Admin Access Button */}
             </div>
           </div>
         </section>
@@ -324,7 +319,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
               <BotMessageSquare className="w-24 h-24 text-primary" />
             </div>
             <div>
-              <MotionButton size="lg" onClick={() => openChat()} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Updated call */}
+              <MotionButton size="lg" onClick={() => openChat()} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 Parler à AiA
               </MotionButton>
             </div>
@@ -347,7 +342,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"
           >
             {methodology.map((item, index) => (
-              <MotionCard key={index} className="text-center" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}> {/* Added hover effect */}
+              <MotionCard key={index} className="text-center" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
                   <CardHeader>
                     <div className="flex justify-center mb-4">{item.icon}</div>
                     <CardTitle>{item.title}</CardTitle>
@@ -363,7 +358,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
 
       <footer className="p-4 text-center text-sm text-muted-foreground border-t">
         © {new Date().getFullYear()} AcademIA. Tous droits réservés.{" "}
-        <MotionButton variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> {/* Navigate to /about */}
+        <MotionButton variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => navigate('/about')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           À propos
         </MotionButton>
       </footer>
@@ -372,12 +367,12 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
         <>
           <NavSheet
             isOpen={isMobileNavSheetOpen}
-            onOpenChange={toggleMobileNavSheet} // Use the new prop here
-            navItems={staticNavItems} // Pass static nav items for unauthenticated users
+            onOpenChange={toggleMobileNavSheet}
+            navItems={staticNavItems}
             onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
             onOpenAiAChat={() => openChat()}
             onOpenAuthModal={() => navigate('/auth')}
-            unreadMessagesCount={0} // No unread messages for unauthenticated
+            unreadMessagesCount={0}
             isMobile={isMobile}
             onInitiateThemeChange={onInitiateThemeChange}
           />
@@ -385,10 +380,10 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }:
             <MobileBottomNavContent
               onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
               onOpenAiAChat={() => openChat()}
-              onToggleMobileNavSheet={toggleMobileNavSheet} // Use the new prop here
+              onToggleMobileNavSheet={toggleMobileNavSheet}
               isAuthenticated={false}
-              unreadMessagesCount={0} // Pass unread messages count
-              isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here
+              unreadMessagesCount={0}
+              isMobileNavSheetOpen={isMobileNavSheetOpen}
               onInitiateThemeChange={onInitiateThemeChange}
             />
           </div>
