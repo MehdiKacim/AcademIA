@@ -40,11 +40,12 @@ import { useTheme } from "next-themes";
 import AuthPage from './pages/AuthPage';
 import ResetPassword from './pages/ResetPassword';
 import { Profile as ProfileType } from './lib/dataModels'; // Import Profile type
+import AuthLoader from './components/AuthLoader'; // Import AuthLoader
 
 const queryClient = new QueryClient();
 
 const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen, onAuthTransition, onInitiateThemeChange }: { isAdminModalOpen: boolean; setIsAdminModalOpen: (isOpen: boolean) => void; onAuthTransition: (message: string, callback?: () => void, duration?: number) => void; onInitiateThemeChange: (newTheme: ProfileType['theme']) => void; }) => {
-  const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
+  const { currentUserProfile, dynamicRoutes } = useRole(); // Removed isLoadingUser from here
   const { setTheme } = useTheme();
 
   // Define a base map of route paths to components
@@ -77,10 +78,6 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen, onAuthT
       // console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
     }
   }, [dynamicRoutes, currentUserProfile]);
-
-  if (isLoadingUser) {
-    return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
-  }
 
   return (
     <BrowserRouter>
@@ -183,7 +180,13 @@ const App = () => {
             />
             <RoleProvider onAuthTransition={triggerOverlay}>
               <CourseChatProvider>
-                <AuthenticatedAppRoutes isAdminModalOpen={isAdminModalOpen} setIsAdminModalOpen={setIsAdminModalOpen} onAuthTransition={triggerOverlay} onInitiateThemeChange={handleInitiateThemeChange} />
+                <AuthLoader
+                  isAdminModalOpen={isAdminModalOpen}
+                  setIsAdminModalOpen={setIsAdminModalOpen}
+                  onAuthTransition={triggerOverlay}
+                  onInitiateThemeChange={handleInitiateThemeChange}
+                  AuthenticatedAppRoutes={AuthenticatedAppRoutes}
+                />
               </CourseChatProvider>
             </RoleProvider>
             <AdminModal
