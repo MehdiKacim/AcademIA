@@ -37,7 +37,7 @@ const MobileDrawer = ({ isOpen, onClose, children, className, contentClassName }
       {isOpen && (
         <motion.div
           className={cn(
-            "fixed inset-0 z-[997] flex flex-col items-center justify-end", // Full screen overlay, positioned at bottom
+            "fixed inset-x-0 top-0 bottom-[68px] z-[997] flex flex-col items-center justify-end", // Adjusted to stop 68px from bottom
             "bg-background/80 backdrop-blur-lg", // Blurred background
             className
           )}
@@ -53,7 +53,7 @@ const MobileDrawer = ({ isOpen, onClose, children, className, contentClassName }
             className={cn(
               "relative w-full bg-background shadow-lg flex flex-col overflow-hidden",
               "rounded-t-card-lg", // Rounded top corners
-              "h-[calc(100vh-68px)]", // Occupy space above bottom nav bar
+              "h-full", // Now takes full height of its parent (which is already adjusted by bottom-[68px])
               contentClassName
             )}
             variants={contentVariants}
