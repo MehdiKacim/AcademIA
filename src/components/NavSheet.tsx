@@ -196,7 +196,7 @@ const NavSheet = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-            className="flex items-center gap-3 p-4 mb-4 bg-muted/15 rounded-android-tile shadow-card-shadow cursor-pointer hover:bg-muted/20 transition-colors duration-200 ease-in-out" // Changed rounded-lg to rounded-android-tile, added shadow-card-shadow
+            className="flex items-center gap-3 p-4 mb-4 bg-muted/15 rounded-android-tile shadow-card-shadow cursor-pointer hover:bg-muted/20 transition-colors duration-200 ease-in-out" // Changed rounded-lg to rounded-android-tile, added shadow-sm to shadow-card-shadow
             onClick={() => {
               navigate("/profile");
               onOpenChange(false);
@@ -281,10 +281,7 @@ const NavSheet = ({
           )}
         </motion.div>
       </ScrollArea>
-      <div className="flex-shrink-0 p-4 text-center text-sm text-muted-foreground border-t border-border">
-        <p className="mb-2">Version de l'application : {packageJson.version}</p>
-        <MadeWithDyad />
-      </div>
+      {/* Removed the footer div containing version and MadeWithDyad */}
     </MobileDrawer>
   );
 };

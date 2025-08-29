@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn } '@/lib/utils';
 import { useSwipeable } from 'react-swipeable';
 
 interface MobileDrawerProps {
@@ -37,7 +37,7 @@ const MobileDrawer = ({ isOpen, onClose, children, className, contentClassName }
       {isOpen && (
         <motion.div
           className={cn(
-            "fixed inset-x-0 top-0 bottom-[68px] z-[997] flex flex-col items-center justify-end", // Adjusted to stop 68px from bottom
+            "fixed inset-x-0 top-0 bottom-[68px] z-[999] flex flex-col items-center justify-end", // Adjusted z-index to 999
             "bg-background/80 backdrop-blur-lg", // Blurred background
             className
           )}
