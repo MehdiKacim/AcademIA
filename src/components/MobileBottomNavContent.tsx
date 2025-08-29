@@ -80,7 +80,7 @@ const MobileBottomNavContent = ({
           <div className={cn(
               "relative rounded-full flex items-center justify-center",
               "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-              "translate-y-[-34px] z-10", // Lifted position
+              "translate-y-[-34px] z-[998]", // Lifted position and increased z-index
               "transition-all duration-300 ease-in-out", // For smooth ring transition
               isMobileNavSheetOpen ? "ring-2 ring-primary" : "ring-0" // Conditional ring for active state
           )}>
@@ -163,7 +163,7 @@ const MobileBottomNavContent = ({
           <div className={cn(
               "relative rounded-full flex items-center justify-center",
               "h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28", // Wrapper size
-              "translate-y-[-34px] z-10", // Lifted position
+              "translate-y-[-34px] z-[998]", // Lifted position and increased z-index
               "transition-all duration-300 ease-in-out", // For smooth ring transition
               isMobileNavSheetOpen ? "ring-2 ring-primary" : "ring-0" // Conditional ring for active state
           )}>
