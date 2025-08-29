@@ -1,151 +1,163 @@
-import React, { useState, useMemo } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronDown, XCircle, Info, Search as SearchIcon } from "lucide-react";
+"use client";
+
+import * as React from "react";
+import { Check, ChevronDown, Info } from "lucide-react";
+
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion"; // Import motion
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+interface SelectOption {
+  id: string;
+  label: string;
+  icon_name?: string;
+  description?: string;
+  level?: number; // For hierarchical display
+  isNew?: boolean; // For distinguishing new generic items
+  typeLabel?: string; // For displaying item type
+}
 
 interface SimpleItemSelectorProps {
   id: string;
-  options: { id: string; label: string; icon_name?: string; description?: string; isNew?: boolean; level?: number; typeLabel?: string }[];
-  value: string | null | undefined;
+  options: SelectOption[];
+  value: string | null;
   onValueChange: (value: string | null) => void;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   placeholder?: string;
   emptyMessage?: string;
-  iconMap?: { [key: string]: React.ElementType };
+  iconMap: { [key: string]: React.ElementType };
   disabled?: boolean;
   className?: string;
   popoverContentClassName?: string;
 }
 
-// Create a MotionCommandItem component by wrapping the shadcn CommandItem with framer-motion
-const MotionCommandItem = motion(CommandItem);
+const SimpleItemSelector = React.forwardRef<HTMLButtonElement, SimpleItemSelectorProps>(
+  ({
+    id,
+    options,
+    value,
+    onValueChange,
+    searchQuery,
+    onSearchQueryChange,
+    placeholder = "Sélectionner un élément...",
+    emptyMessage = "Aucun élément trouvé.",
+    iconMap,
+    disabled,
+    className,
+    popoverContentClassName,
+  }, ref) => {
+    const [open, setOpen] = React.useState(false);
 
-const SimpleItemSelector = ({
-  id,
-  options,
-  value,
-  onValueChange,
-  searchQuery,
-  onSearchQueryChange,
-  placeholder = "Sélectionner un élément...",
-  emptyMessage = "Aucun élément trouvé.",
-  iconMap = {},
-  disabled = false,
-  className,
-  popoverContentClassName,
-}: SimpleItemSelectorProps) => {
-  const [open, setOpen] = useState(false);
+    const selectedOption = React.useMemo(
+      () => options.find((option) => option.id === value),
+      [options, value],
+    );
 
-  const selectedOption = useMemo(() => options.find((option) => option.id === value), [options, value]);
-  const SelectedIconComponent = selectedOption?.icon_name ? (iconMap[selectedOption.icon_name] || Info) : Info;
+    const filteredOptions = React.useMemo(() => {
+      if (!searchQuery) return options;
+      const lowerCaseQuery = searchQuery.toLowerCase();
+      return options.filter(
+        (option) =>
+          option.label.toLowerCase().includes(lowerCaseQuery) ||
+          option.description?.toLowerCase().includes(lowerCaseQuery) ||
+          option.icon_name?.toLowerCase().includes(lowerCaseQuery) ||
+          option.typeLabel?.toLowerCase().includes(lowerCaseQuery)
+      );
+    }, [options, searchQuery]);
 
-  const handleClearSelection = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the popover
-    onValueChange(null);
-    setOpen(false);
-    onSearchQueryChange('');
-  };
+    const handleSelect = (currentId: string) => {
+      onValueChange(currentId === value ? null : currentId);
+      setOpen(false);
+      onSearchQueryChange(''); // Clear search query on select
+    };
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn(
-            "w-full justify-between rounded-android-tile h-10 px-3 py-2 text-base",
-            "transition-all duration-200 ease-in-out",
-            value ? "text-foreground" : "text-muted-foreground",
-            className
-          )}
-          disabled={disabled}
-        >
-          <div className="flex items-center gap-2 flex-grow overflow-hidden">
-            {value && SelectedIconComponent && <SelectedIconComponent className="h-5 w-5 text-primary flex-shrink-0" />}
-            <span className="truncate">
-              {value ? selectedOption?.label : placeholder}
-            </span>
-          </div>
-          {value && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClearSelection}
-              className="h-6 w-6 p-0 ml-2 flex-shrink-0 text-muted-foreground hover:text-destructive"
-              aria-label="Effacer la sélection"
-            >
-              <XCircle className="h-4 w-4" />
-            </Button>
-          )}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className={cn(
-        "w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999] backdrop-blur-lg bg-background/80",
-        popoverContentClassName,
-        "pointer-events-auto"
-      )}>
-        <Command className="rounded-android-tile">
-          <CommandInput
-            placeholder="Rechercher..."
-            value={searchQuery}
-            onValueChange={onSearchQueryChange}
-            className="h-12 text-base px-4 rounded-t-android-tile border-b border-border focus:ring-0 focus:ring-offset-0"
-          />
-          <CommandList className="max-h-60 overflow-y-auto">
-            <CommandEmpty className="py-4 text-center text-muted-foreground">{emptyMessage}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => {
-                const OptionIcon = option.icon_name ? (iconMap[option.icon_name] || Info) : Info;
-                const isSelected = value === option.id;
-                return (
-                  <MotionCommandItem
-                    key={option.id}
-                    value={option.label}
-                    onSelect={() => {
-                      onValueChange(option.id === value ? null : option.id);
-                      setOpen(false);
-                      onSearchQueryChange(''); // Clear search after selection
-                    }}
-                    className={cn(
-                      "flex items-center gap-2 p-3 hover:bg-accent hover:text-accent-foreground",
-                      isSelected ? "bg-accent text-accent-foreground font-semibold" : "text-foreground",
-                      "transition-colors duration-150 ease-in-out",
-                      "!pointer-events-auto !opacity-100 !cursor-pointer"
-                    )}
-                    tabIndex={0}
-                    whileHover={{ scale: 1.02, backgroundColor: "hsl(var(--accent))", color: "hsl(var(--accent-foreground))", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }} // Lift and shadow on hover
-                    whileTap={{ scale: 0.98, backgroundColor: "hsl(var(--accent-foreground))", color: "hsl(var(--background))" }} // Press effect on tap
-                    transition={{ duration: 0.15, ease: "easeOut" }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        isSelected ? "opacity-100 text-primary" : "opacity-0"
+    const CurrentIconComponent = selectedOption?.icon_name
+      ? iconMap[selectedOption.icon_name] || Info
+      : Info;
+
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className={cn("w-full justify-between rounded-android-tile", className)}
+            disabled={disabled}
+            ref={ref}
+          >
+            {selectedOption ? (
+              <span className="flex items-center gap-2 truncate">
+                {selectedOption.icon_name && (
+                  <CurrentIconComponent className="h-4 w-4" />
+                )}
+                {selectedOption.label}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className={cn("w-[var(--radix-popover-trigger-width)] p-0 rounded-android-tile z-[9999]", popoverContentClassName)}>
+          <Command>
+            <CommandInput
+              placeholder={placeholder}
+              value={searchQuery}
+              onValueChange={onSearchQueryChange}
+            />
+            <CommandList>
+              <CommandEmpty>{emptyMessage}</CommandEmpty>
+              <CommandGroup>
+                {filteredOptions.map((option) => {
+                  const OptionIconComponent = option.icon_name
+                    ? iconMap[option.icon_name] || Info
+                    : Info;
+                  return (
+                    <CommandItem
+                      key={option.id}
+                      value={option.label}
+                      onSelect={() => handleSelect(option.id)}
+                      style={{ paddingLeft: `${(option.level || 0) * 16 + 8}px` }} // Indent for hierarchy
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === option.id ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      <OptionIconComponent className="mr-2 h-4 w-4" />
+                      <span>{option.label}</span>
+                      {option.description && (
+                        <span className="ml-auto text-xs text-muted-foreground truncate max-w-[50%]">
+                          {option.description}
+                        </span>
                       )}
-                    />
-                    <OptionIcon className="h-5 w-5 text-primary" />
-                    <div className="flex flex-col items-start flex-grow">
-                      <span className="font-medium">{option.label}</span>
-                      {option.description && <span className="text-xs text-muted-foreground">{option.description}</span>}
-                    </div>
-                    {option.isNew && (
-                      <span className="ml-auto text-xs text-primary-foreground bg-primary rounded-full px-2 py-0.5">Nouveau</span>
-                    )}
-                  </MotionCommandItem>
-                );
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-};
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    );
+  },
+);
+
+SimpleItemSelector.displayName = "SimpleItemSelector";
 
 export default SimpleItemSelector;
