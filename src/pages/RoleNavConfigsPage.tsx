@@ -54,7 +54,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog';
-import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog';
+import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Drawer,
@@ -161,7 +161,7 @@ const SortableNavItem = React.forwardRef<HTMLDivElement, SortableNavItemProps>((
             isCategory ? "bg-muted/40 font-semibold text-lg" : "bg-background text-base",
             isCategory && level === 0 && "border-l-4 border-primary/50",
             "flex-wrap sm:flex-nowrap select-none hover:scale-[1.01] transition-transform", // Added hover effect
-            isDraggableAndDeletable ? "cursor-grab" : "" // Add cursor-grab to the whole item if draggable
+            isDraggableAndDeletable ? "cursor-grab draggable-element" : "" // Add cursor-grab and draggable-element class
           )}
           {...(isDraggableAndDeletable ? { ...listeners, ...attributes } : {})} // Apply listeners/attributes to the main div
         >
