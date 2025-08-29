@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } '@/lib/utils';
+import { cn } from '@/lib/utils'; // Correction: Ajout de 'from'
 import { useSwipeable } from 'react-swipeable';
 
 interface MobileDrawerProps {
