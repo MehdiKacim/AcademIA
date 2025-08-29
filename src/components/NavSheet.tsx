@@ -114,8 +114,7 @@ const NavSheet = ({
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
-    { id: 'profile-about', label: 'À propos', icon_name: 'Info', route: '/about', is_external: false, type: 'route', order_index: 3 }, // About link
-    { id: 'profile-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 4 },
+    // Removed 'À propos' and 'Déconnexion' from here
   ];
 
   const staticAnonNavItems: NavItem[] = [
@@ -135,6 +134,11 @@ const NavSheet = ({
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
       );
       if (currentUserProfile) {
+        // Add 'À propos' and 'Déconnexion' directly to the root level
+        itemsToFilter.push(
+          { id: 'root-about', label: 'À propos', icon_name: 'Info', route: '/about', is_external: false, type: 'route', order_index: 997 },
+          { id: 'root-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 998 }
+        );
         // Add "Mon Compte" as a category in the main list
         itemsToFilter.push({
           id: 'profile-category',
@@ -159,7 +163,7 @@ const NavSheet = ({
     }
 
     return itemsToFilter.sort((a, b) => a.order_index - b.order_index);
-  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, staticAnonNavItems, unreadMessagesCount]);
+  }, [navItems, drawerNavStack, currentUserProfile, staticProfileActions, staticAnonNavItems, unreadMessagesCount, handleLogout]);
 
   return (
     <MobileDrawer isOpen={isOpen} onClose={() => onOpenChange(false)}>
