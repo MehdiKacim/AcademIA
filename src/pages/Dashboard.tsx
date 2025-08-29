@@ -7,7 +7,7 @@ import {
   MotionCard, // Import MotionCard
 } from "@/components/ui/card";
 import { useRole } from "@/contexts/RoleContext";
-import { loadCourses, loadClasses, loadCurricula, loadEstablishments } from "@/lib/courseData"; // Import loadEstablishments
+import { loadCourses, loadEstablishments, getEstablishmentName } from "@/lib/courseData"; // Import loadEstablishments
 import { getAllStudentCourseProgress, getAllProfiles, getAllStudentClassEnrollments } from "@/lib/studentData";
 import { Course, StudentCourseProgress, Profile, Class, Curriculum, StudentClassEnrollment, Establishment } from "@/lib/dataModels"; // Import Establishment
 import React, { useState, useEffect } from "react";
@@ -120,7 +120,7 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Mes Cours Actuels</CardTitle>
                 <CardDescription>Continuez votre apprentissage.</CardDescription>
@@ -137,7 +137,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Cours Terminés</CardTitle>
                 <CardDescription>Votre succès jusqu'à présent.</CardDescription>
@@ -154,7 +154,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Progression Globale</CardTitle>
                 <CardDescription>Votre avancement général.</CardDescription>
@@ -195,7 +195,7 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Mes Cours Créés</CardTitle>
                 <CardDescription>Gérez vos contenus d'apprentissage.</CardDescription>
@@ -210,7 +210,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Impact sur les Élèves</CardTitle>
                 <CardDescription>Nombre total d'élèves inscrits à vos cours.</CardDescription>
@@ -225,7 +225,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Gestion des Classes</CardTitle>
                 <CardDescription>Organisez vos élèves en classes.</CardDescription>
@@ -264,7 +264,7 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Élèves Supervisés</CardTitle>
                 <CardDescription>Nombre d'élèves sous votre tutelle.</CardDescription>
@@ -279,7 +279,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Élèves en Difficulté</CardTitle>
                 <CardDescription>Élèves nécessitant une attention particulière.</CardDescription>
@@ -294,7 +294,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Performance des Classes</CardTitle>
                 <CardDescription>Vue d'overview de la progression par classe.</CardDescription>
@@ -329,7 +329,7 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Utilisateurs Administrateurs</CardTitle>
                 <CardDescription>Nombre total d'administrateurs sur la plateforme.</CardDescription>
@@ -343,7 +343,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Directeurs</CardTitle>
                 <CardDescription>Nombre total de directeurs sur la plateforme.</CardDescription>
@@ -357,7 +357,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Directeurs Adjoints</CardTitle>
                 <CardDescription>Nombre total de directeurs adjoints sur la plateforme.</CardDescription>
@@ -371,7 +371,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Établissements</CardTitle>
                 <CardDescription>Nombre total d'établissements gérés.</CardDescription>
@@ -406,7 +406,7 @@ const Dashboard = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Mon Rôle</CardTitle>
                 <CardDescription>Vue d'overview de votre rôle.</CardDescription>
@@ -420,7 +420,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Personnel & Élèves</CardTitle>
                 <CardDescription>Nombre de professeurs et d'élèves.</CardDescription>
@@ -434,7 +434,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants}>
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Structure Pédagogique</CardTitle>
                 <CardDescription>Cursus et classes.</CardDescription>
@@ -448,7 +448,7 @@ const Dashboard = () => {
             </MotionCard>
           </motion.div>
           <motion.div variants={cardVariants} className="lg:col-span-3">
-            <MotionCard className="rounded-android-tile bg-card/80 backdrop-blur-lg" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
+            <MotionCard className="rounded-android-tile backdrop-blur-lg bg-card/80" whileHover={{ scale: 1.02, boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)" }}>
               <CardHeader>
                 <CardTitle className={gradientClasses}>Analytiques</CardTitle>
                 <CardDescription>Accédez aux statistiques détaillées.</CardDescription>
