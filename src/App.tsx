@@ -43,6 +43,87 @@ import { Profile as ProfileType } from './lib/dataModels'; // Import Profile typ
 
 const queryClient = new QueryClient();
 
+const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen, onAuthTransition, onInitiateThemeChange }: { isAdminModalOpen: boolean; setIsAdminModalOpen: (isOpen: boolean) => void; onAuthTransition: (message: string, callback?: () => void, duration?: number) => void; onInitiateThemeChange: (newTheme: ProfileType['theme']) => void; }) => {
+  const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
+  const { setTheme } = useTheme();
+
+  // Define a base map of route paths to components
+  const baseRouteComponentMap: { [key: string]: React.ElementType } = {
+    "/dashboard": Dashboard,
+    "/courses": Courses,
+    "/create-course": CreateCourse,
+    "/create-course/:courseId": CreateCourse,
+    "/analytics": Analytics,
+    "/courses/:courseId": CourseDetail,
+    "/courses/:courseId/modules/:moduleIndex": ModuleDetail,
+    "/all-notes": AllNotes,
+    "/about": About,
+    "/data-model": DataModelViewer,
+    "/admin-users": AdminUserManagementPage,
+    "/establishments": EstablishmentManagementPage,
+    "/subjects": SubjectManagementPage,
+    "/school-years": SchoolYearManagementPage,
+    "/professor-assignments": ProfessorSubjectAssignmentPage,
+    "/curricula": CurriculumManagementPage,
+    "/classes": ClassManagementPage,
+    "/students": StudentManagementPage,
+    "/pedagogical-management": PedagogicalManagementPage,
+    "/admin-menu-management/generic-items": GenericNavItemsPage,
+    "/admin-menu-management/role-configs": RoleNavConfigsPage,
+  };
+
+  useEffect(() => {
+    if (currentUserProfile && dynamicRoutes.length > 0) {
+      // console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
+    }
+  }, [dynamicRoutes, currentUserProfile]);
+
+  if (isLoadingUser) {
+    return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={onInitiateThemeChange} onAuthTransition={onAuthTransition} />} />
+        <Route path="/auth" element={<AuthPage onAuthTransition={onAuthTransition} />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/about" element={<About />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={onInitiateThemeChange} />}>
+            <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/messages" element={<Messages />} />
+            {dynamicRoutes.map(item => {
+              const Component = baseRouteComponentMap[item.route!];
+              if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages", "/about"].includes(item.route!)) {
+                return (
+                  <Route
+                    key={item.id}
+                    path={item.route}
+                    element={<Component />}
+                  />
+                );
+              }
+              return null;
+            })}
+          </Route>
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <AdminModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+      />
+    </BrowserRouter>
+  );
+};
+
 const App = () => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const { setTheme } = useTheme();
@@ -85,84 +166,6 @@ const App = () => {
     }, 1000);
   }, [triggerOverlay, setTheme]);
 
-  // Define AuthenticatedAppRoutes inside App to ensure it's within RoleProvider's scope
-  const AuthenticatedAppRoutes = () => {
-    const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
-    // const { setTheme } = useTheme(); // Already available from parent App component
-
-    // Define a base map of route paths to components
-    const baseRouteComponentMap: { [key: string]: React.ElementType } = {
-      "/dashboard": Dashboard,
-      "/courses": Courses,
-      "/create-course": CreateCourse,
-      "/create-course/:courseId": CreateCourse,
-      "/analytics": Analytics,
-      "/courses/:courseId": CourseDetail,
-      "/courses/:courseId/modules/:moduleIndex": ModuleDetail,
-      "/all-notes": AllNotes,
-      "/about": About,
-      "/data-model": DataModelViewer,
-      "/admin-users": AdminUserManagementPage,
-      "/establishments": EstablishmentManagementPage,
-      "/subjects": SubjectManagementPage,
-      "/school-years": SchoolYearManagementPage,
-      "/professor-assignments": ProfessorSubjectAssignmentPage,
-      "/curricula": CurriculumManagementPage,
-      "/classes": ClassManagementPage,
-      "/students": StudentManagementPage,
-      "/pedagogical-management": PedagogicalManagementPage,
-      "/admin-menu-management/generic-items": GenericNavItemsPage,
-      "/admin-menu-management/role-configs": RoleNavConfigsPage,
-    };
-
-    useEffect(() => {
-      if (currentUserProfile && dynamicRoutes.length > 0) {
-        // console.log("[App.tsx] dynamicRoutes from RoleContext (in useEffect):", dynamicRoutes.map(r => r.route));
-      }
-    }, [dynamicRoutes, currentUserProfile]);
-
-    if (isLoadingUser) {
-      return <SplashScreen onComplete={() => { /* No-op, as isLoadingUser will become false */ }} />;
-    }
-
-    return (
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} onAuthTransition={triggerOverlay} />} />
-          <Route path="/auth" element={<AuthPage onAuthTransition={triggerOverlay} />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/about" element={<About />} />
-
-          <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />}>
-              <Route path="/admin-menu-management" element={<Navigate to="/admin-menu-management/generic-items" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/messages" element={<Messages />} />
-              {dynamicRoutes.map(item => {
-                const Component = baseRouteComponentMap[item.route!];
-                if (Component && item.route !== "/dashboard" && !["/profile", "/settings", "/messages", "/about"].includes(item.route!)) {
-                  return (
-                    <Route
-                      key={item.id}
-                      path={item.route}
-                      element={<Component />}
-                    />
-                  );
-                }
-                return null;
-              })}
-            </Route>
-          </Route>
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  };
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider storageKey="vite-ui-theme" attribute="data-theme">
@@ -184,13 +187,9 @@ const App = () => {
             />
             <RoleProvider onAuthTransition={triggerOverlay}>
               <CourseChatProvider>
-                <AuthenticatedAppRoutes />
+                <AuthenticatedAppRoutes isAdminModalOpen={isAdminModalOpen} setIsAdminModalOpen={setIsAdminModalOpen} onAuthTransition={triggerOverlay} onInitiateThemeChange={handleInitiateThemeChange} />
               </CourseChatProvider>
             </RoleProvider>
-            <AdminModal
-              isOpen={isAdminModalOpen}
-              onClose={() => setIsAdminModalOpen(false)}
-            />
             {isOverlayActive && (
               <ThemeTransitionOverlay
                 isOpen={isOverlayActive}
