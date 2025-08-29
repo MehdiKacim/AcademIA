@@ -29,6 +29,7 @@ interface NavSheetProps {
   onOpenAuthModal: () => void;
   unreadMessagesCount: number;
   isMobile: boolean; // To differentiate mobile vs desktop behavior
+  onInitiateThemeChange?: (newTheme: Profile['theme']) => void; // Add onInitiateThemeChange prop
 }
 
 const containerVariants = {
@@ -53,6 +54,7 @@ const NavSheet = ({
   onOpenAuthModal,
   unreadMessagesCount,
   isMobile,
+  onInitiateThemeChange, // Destructure the new prop
 }: NavSheetProps) => {
   const { currentUserProfile, signOut, currentRole } = useRole();
   const navigate = useNavigate();
@@ -190,8 +192,11 @@ const NavSheet = ({
 
       <ScrollArea className="flex-grow p-4">
         {currentUserProfile && drawerNavStack.length === 0 && (
-          <div 
-            className="flex items-center gap-3 p-4 mb-4 bg-muted/15 rounded-lg shadow-sm cursor-pointer hover:bg-muted/20 transition-colors duration-200 ease-in-out"
+          <motion.div // Add motion.div here
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+            className="flex items-center gap-3 p-4 mb-4 bg-muted/15 rounded-android-tile shadow-card-shadow cursor-pointer hover:bg-muted/20 transition-colors duration-200 ease-in-out" // Changed rounded-lg to rounded-android-tile, added shadow-card-shadow
             onClick={() => {
               navigate("/profile");
               onOpenChange(false);
@@ -208,7 +213,7 @@ const NavSheet = ({
             <MotionButton variant="ghost" size="sm" className="flex-shrink-0" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
               <User className="h-4 w-4 mr-2" /> Voir le profil
             </MotionButton>
-          </div>
+          </motion.div>
         )}
         {currentUserProfile && (
           <motion.p
@@ -243,14 +248,14 @@ const NavSheet = ({
                     whileHover={{ scale: 1.02, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }} // Subtle lift and shadow on hover
                     whileTap={{ scale: 0.98 }} // Slight press effect on tap
                     className={cn(
-                      "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-lg shadow-sm", // Adjusted min-height, padding, and rounded-lg, added shadow-sm
+                      "flex flex-row items-center justify-start h-auto min-h-[60px] text-left w-full px-3 py-2 rounded-android-tile shadow-card-shadow", // Changed rounded-lg to rounded-android-tile, shadow-sm to shadow-card-shadow
                       "hover:bg-muted/20 hover:shadow-md transition-all duration-200 ease-in-out", // Subtle hover with shadow
-                      isLinkActive ? "bg-primary/20 text-primary font-semibold shadow-md border-l-4 border-primary" : "text-foreground", // Active state with stronger background and shadow
-                      isCategory ? "bg-muted/15" : "" // Subtle background for categories
+                      isLinkActive ? "bg-primary/10 text-primary font-semibold shadow-md border-l-4 border-primary" : "text-foreground", // Active state with softer background
+                      isCategory ? "bg-muted/10" : "" // Subtle background for categories
                     )}
                     onClick={() => handleItemClick(item)}
                   >
-                    <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/30" : "bg-muted/20")}> {/* Smaller rounded-md for icon container */}
+                    <div className={cn("flex items-center justify-center rounded-md mr-3", isLinkActive ? "bg-primary/20" : "bg-muted/10")}> {/* Smaller rounded-md for icon container, adjusted active bg */}
                       <IconComponent className="h-6 w-6" /> {/* Slightly larger icon */}
                     </div>
                     <span className="title text-base font-medium line-clamp-2 flex-grow">{item.label}</span>
@@ -276,6 +281,10 @@ const NavSheet = ({
           )}
         </motion.div>
       </ScrollArea>
+      <div className="flex-shrink-0 p-4 text-center text-sm text-muted-foreground border-t border-border">
+        <p className="mb-2">Version de l'application : {packageJson.version}</p>
+        <MadeWithDyad />
+      </div>
     </MobileDrawer>
   );
 };

@@ -7,12 +7,11 @@ interface MobileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  className?: string; // For the main container
-  overlayClassName?: string; // For the overlay div
-  contentClassName?: string; // For the actual drawer content div
+  className?: string; // For the main overlay container
+  contentClassName?: string; // For the actual drawer content panel
 }
 
-const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, contentClassName }: MobileDrawerProps) => {
+const MobileDrawer = ({ isOpen, onClose, children, className, contentClassName }: MobileDrawerProps) => {
   const swipeHandlers = useSwipeable({
     onSwipedDown: () => {
       if (isOpen) {
@@ -29,31 +28,37 @@ const MobileDrawer = ({ isOpen, onClose, children, className, overlayClassName, 
   };
 
   const contentVariants = {
-    hidden: { y: '100%' },
-    visible: { y: '0%' },
+    hidden: { y: '100%' }, // Start from bottom
+    visible: { y: '0%' },  // Slide up
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className={cn("fixed inset-0 z-[995] flex flex-col", className)} // Z-index ajusté à 995
+          className={cn(
+            "fixed inset-0 z-[997] flex flex-col items-center justify-end", // Full screen overlay, positioned at bottom
+            "bg-background/80 backdrop-blur-lg", // Blurred background
+            className
+          )}
           initial="hidden"
           animate="visible"
           exit="hidden"
           variants={overlayVariants}
           transition={{ duration: 0.2, ease: "easeOut" }}
+          onClick={onClose} // Close when clicking outside the drawer content
         >
-          {/* Drawer Content */}
+          {/* Drawer Content Panel */}
           <motion.div
             className={cn(
-              "fixed left-0 right-0 w-full bg-background shadow-lg flex flex-col overflow-hidden z-[995]", // Removed rounded-t-3xl
-              "top-0 bottom-[68px]", // Définit le haut à 0px (collé en haut de l'écran) et le bas à 68px (au-dessus de la barre de navigation inférieure)
-              "backdrop-blur-lg bg-background/80", // Added blur and transparency for immersive design
+              "relative w-full bg-background shadow-lg flex flex-col overflow-hidden",
+              "rounded-t-card-lg", // Rounded top corners
+              "h-[calc(100vh-68px)]", // Occupy space above bottom nav bar
               contentClassName
             )}
             variants={contentVariants}
             transition={{ duration: 0.3, ease: "easeOut" }}
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the drawer content
             {...swipeHandlers} // Apply swipe handlers to the content area
           >
             {children}
