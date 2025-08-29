@@ -114,14 +114,12 @@ const NavSheet = ({
   const staticProfileActions: NavItem[] = [
     { id: 'profile-view', label: 'Mon profil', icon_name: 'User', is_external: false, type: 'route', route: '/profile', order_index: 0 },
     { id: 'profile-settings', label: 'Paramètres', icon_name: 'Settings', is_external: false, type: 'route', route: '/settings', order_index: 1 },
-    // Removed 'À propos' and 'Déconnexion' from here
   ];
 
   const staticAnonNavItems: NavItem[] = [
     { id: 'home-anon', label: "Accueil", icon_name: 'Home', route: '/', is_external: false, order_index: 0, type: 'route' },
     { id: 'aia-bot-link', label: "AiA Bot", icon_name: 'BotMessageSquare', route: '#aiaBot', is_external: false, order_index: 1, type: 'route' },
     { id: 'methodology-link', label: "Méthodologie", icon_name: 'SlidersHorizontal', route: '#methodologie', is_external: false, order_index: 2, type: 'route' },
-    { id: 'about-link', label: "À propos", icon_name: 'Info', route: '/about', is_external: false, order_index: 3, type: 'route' },
     { id: 'login-link', label: "Connexion", icon_name: 'LogIn', route: '/auth', is_external: false, order_index: 5, type: 'route' },
   ];
 
@@ -134,11 +132,6 @@ const NavSheet = ({
         (item.parent_nav_item_id === null || item.parent_nav_item_id === undefined)
       );
       if (currentUserProfile) {
-        // Add 'À propos' and 'Déconnexion' directly to the root level
-        itemsToFilter.push(
-          { id: 'root-about', label: 'À propos', icon_name: 'Info', route: '/about', is_external: false, type: 'route', order_index: 997 },
-          { id: 'root-logout', label: 'Déconnexion', icon_name: 'LogOut', is_external: false, type: 'category_or_action', onClick: handleLogout, order_index: 998 }
-        );
         // Add "Mon Compte" as a category in the main list
         itemsToFilter.push({
           id: 'profile-category',
@@ -214,9 +207,14 @@ const NavSheet = ({
               <p className="font-semibold text-lg">{currentUserProfile.first_name} {currentUserProfile.last_name}</p>
               <p className="text-sm text-muted-foreground">{currentUserProfile.email}</p>
             </div>
-            <MotionButton variant="ghost" size="sm" className="flex-shrink-0" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <User className="h-4 w-4 mr-2" /> Voir le profil
-            </MotionButton>
+            <div className="flex gap-2 flex-shrink-0"> {/* New flex container for buttons */}
+              <MotionButton variant="ghost" size="sm" className="flex-shrink-0" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <User className="h-4 w-4 mr-2" /> Voir le profil
+              </MotionButton>
+              <MotionButton variant="ghost" size="sm" onClick={handleLogout} className="flex-shrink-0" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <LogOut className="h-4 w-4 mr-2" /> Déconnexion
+              </MotionButton>
+            </div>
           </motion.div>
         )}
         {currentUserProfile && (
@@ -285,7 +283,21 @@ const NavSheet = ({
           )}
         </motion.div>
       </ScrollArea>
-      {/* Removed the footer div containing version and MadeWithDyad */}
+      {/* "À propos" button at the very end */}
+      <div className="px-4 pb-4 flex-shrink-0">
+        <MotionButton
+          variant="ghost"
+          onClick={() => {
+            navigate("/about");
+            onOpenChange(false);
+          }}
+          className="w-full justify-start rounded-android-tile"
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+        >
+          <Info className="h-5 w-5 mr-2" />
+          <span className="text-base font-medium">À propos</span>
+        </MotionButton>
+      </div>
     </MobileDrawer>
   );
 };
