@@ -379,7 +379,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => { 
             unreadMessagesCount={0} // No unread messages for unauthenticated
             isMobile={isMobile}
           />
-          <div className="fixed bottom-0 left-0 right-0 z-[996] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px] border-t-2 border-border">
+          <div className="fixed bottom-0 left-0 right-0 z-[1001] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px] border-t-2 border-border">
             <MobileBottomNavContent
               onOpenGlobalSearch={() => { /* No-op for unauthenticated */ }}
               onOpenAiAChat={() => openChat()}
