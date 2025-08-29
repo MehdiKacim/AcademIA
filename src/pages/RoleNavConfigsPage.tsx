@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
-import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
+import ManageChildrenDialog from '@/components/AdminMenu/ManageChildren';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 import {
@@ -54,7 +54,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { arrayMove } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
 import AddExistingNavItemDialog from '@/components/AdminMenu/AddExistingNavItemDialog';
-import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleDialog';
+import EditRoleConfigDialog from '@/components/AdminMenu/EditRoleConfigDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Drawer,
