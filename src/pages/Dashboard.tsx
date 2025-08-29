@@ -13,7 +13,7 @@ import { Course, StudentCourseProgress, Profile, Class, Curriculum, StudentClass
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button, MotionButton } from "@/components/ui/button";
-import { CheckCircle, BookOpen, Users, GraduationCap, PenTool, BriefcaseBusiness, BotMessageSquare, LayoutList, Building2, BarChart2, UserCog, MessageSquare, AlertTriangle } from "lucide-react";
+import { CheckCircle, BookOpen, Users, GraduationCap, PenTool, BriefcaseBusiness, BotMessageSquare, LayoutList, Building2, BarChart2, UserCog, MessageSquare, AlertTriangle, Code } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
