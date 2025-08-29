@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
-import ManageChildrenDialog from '@/components/AdminMenu/ManageChildren';
+import ManageChildrenDialog from '@/components/AdminMenu/ManageChildrenDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SimpleItemSelector from '@/components/ui/SimpleItemSelector';
 import {
