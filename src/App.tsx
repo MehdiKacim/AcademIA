@@ -117,23 +117,26 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     <ThemeProvider storageKey="vite-ui-theme" attribute="data-theme"> {/* Removed defaultTheme prop */}
       <TooltipProvider>
         <React.Fragment> {/* Wrap multiple children in a Fragment */}
-          <Toaster 
-            position="top-center" 
+          <Toaster
+            position="top-center"
+            richColors // Added richColors
+            closeButton // Added closeButton
             containerClassName="fixed top-16 left-0 right-0 z-[9999] flex flex-col" // Positionnement explicite du conteneur
             toastOptions={{
               duration: 5000,
+              // Removed classNames.toast as it's handled by custom component
               classNames: {
-                toast: "!w-full !max-w-full rounded-lg border border-border shadow-md backdrop-blur-lg bg-background/60", // Styles pour les toasts individuels
-                success: "bg-success text-success-foreground border-success",
-                error: "bg-destructive text-destructive-foreground border-destructive",
-                loading: "bg-primary text-primary-foreground border-primary",
+                // These classNames will apply to the sonner wrapper, but the custom component will handle its own styling
+                success: "bg-transparent border-transparent", 
+                error: "bg-transparent border-transparent",
+                loading: "bg-transparent border-transparent",
               },
             }}
           />
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />} /> 
+              <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />} />
               <Route path="/auth" element={<AuthPage />} /> {/* New AuthPage route */}
               <Route path="/reset-password" element={<ResetPassword />} /> {/* New ResetPassword route */}
               <Route path="/about" element={<About />} /> {/* New About page route */}
@@ -170,9 +173,9 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-          <AdminModal 
-            isOpen={isAdminModalOpen} 
-            onClose={() => setIsAdminModalOpen(false)} 
+          <AdminModal
+            isOpen={isAdminModalOpen}
+            onClose={() => setIsAdminModalOpen(false)}
           />
           {isThemeTransitionActive && (
             <ThemeTransitionOverlay

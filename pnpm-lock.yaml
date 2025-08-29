@@ -17,9 +17,6 @@ importers:
       '@capacitor/ios':
         specifier: ^7.4.3
         version: 7.4.3(@capacitor/core@7.4.3)
-      '@capacitor/live-updates':
-        specifier: ^0.4.0
-        version: 0.4.0(@capacitor/core@7.4.3)
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -291,11 +288,6 @@ packages:
     resolution: {integrity: sha512-VNm7cHODgh3KK/4ZC2rXU9gBlvHii/mYFLI+XMXwq24nhB679QxHhz+pUuI7PatYoM2q4MAL0NR/dRgehKCaSA==}
     peerDependencies:
       '@capacitor/core': ^7.4.0
-
-  '@capacitor/live-updates@0.4.0':
-    resolution: {integrity: sha512-UwrA72yKgui17x+qBZGs8qI8Z98zTj1GeCqFZ/A9q06SIeeaN97yfMcxlA5yL7awRysSEM9Wu31eH33j2UKbIw==}
-    peerDependencies:
-      '@capacitor/core': ^7.0.0
 
   '@dnd-kit/accessibility@3.1.1':
     resolution: {integrity: sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==}
@@ -3103,10 +3095,6 @@ snapshots:
       tslib: 2.8.1
 
   '@capacitor/ios@7.4.3(@capacitor/core@7.4.3)':
-    dependencies:
-      '@capacitor/core': 7.4.3
-
-  '@capacitor/live-updates@0.4.0(@capacitor/core@7.4.3)':
     dependencies:
       '@capacitor/core': 7.4.3
 
