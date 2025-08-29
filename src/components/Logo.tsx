@@ -12,14 +12,15 @@ interface LogoProps {
 
 const Logo = ({ iconClassName, textClassName, showText = true, onLogoClick = () => {}, disableInternalAnimation = false }: LogoProps) => {
   return (
-    <div className="flex items-center gap-2" onClick={onLogoClick}>
+    <div className={cn("flex items-center gap-2", "text-primary")} onClick={onLogoClick}> {/* Set text-primary on parent div */}
       <div className={cn("w-8 h-8", iconClassName)}>
         <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
+            {/* Define gradient stops using currentColor, which will inherit from the parent div */}
             <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="hsl(var(--primary))" />
-              <stop offset="50%" stopColor="hsl(var(--foreground))" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" />
+              <stop offset="0%" stopColor="currentColor" />
+              <stop offset="50%" stopColor="currentColor" />
+              <stop offset="100%" stopColor="currentColor" />
             </linearGradient>
           </defs>
           {/* Orbits */}
