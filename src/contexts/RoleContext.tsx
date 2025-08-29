@@ -23,7 +23,7 @@ interface RoleContextType {
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
-export const RoleProvider = ({ children }: { children: ReactNode }) => {
+export const RoleProvider = ({ children, onAuthTransition }: { children: ReactNode; onAuthTransition: (message: string, callback?: () => void) => void }) => { // Add onAuthTransition prop
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [navItems, setNavItems] = useState<NavItem[]>([]); // State for structured nav items
   const [dynamicRoutes, setDynamicRoutes] = useState<NavItem[]>([]); // State for flattened dynamic routes
@@ -205,25 +205,30 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const handleSignOut = async () => {
     setIsLoadingUser(true); // Set loading state while signing out
     console.log("[RoleContext] Attempting to sign out..."); // Added log
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("[RoleContext] Error signing out:", error); // Updated log
-      showError(`Erreur lors de la déconnexion: ${error.message}`);
-    } else {
-      console.log("[RoleContext] Signed out successfully."); // Updated log
-      setCurrentUserProfile(null); // Clear profile on successful sign out
-      setNavItems([]); // Clear nav items
-      setDynamicRoutes([]); // Clear dynamic routes
-      // Removed setUnreadNotificationsCount(0);
-      // The onAuthStateChange listener will also catch this and update state
-    }
-    setIsLoadingUser(false); // Reset loading state
+
+    const performSignOut = async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("[RoleContext] Error signing out:", error); // Updated log
+        showError(`Erreur lors de la déconnexion: ${error.message}`);
+      } else {
+        console.log("[RoleContext] Signed out successfully."); // Updated log
+        setCurrentUserProfile(null); // Clear profile on successful sign out
+        setNavItems([]); // Clear nav items
+        setDynamicRoutes([]); // Clear dynamic routes
+        // Removed setUnreadNotificationsCount(0);
+        // The onAuthStateChange listener will also catch this and update state
+      }
+      setIsLoadingUser(false); // Reset loading state
+    };
+
+    onAuthTransition("Déconnexion en cours...", performSignOut); // Trigger overlay before actual sign out
   };
 
   const currentRole = currentUserProfile ? currentUserProfile.role : null;
 
   return (
-    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut, fetchUserProfile, navItems, dynamicRoutes }}>
+    <RoleContext.Provider value={{ currentUserProfile, setCurrentUserProfile, currentRole, isLoadingUser, updateUserTheme, signOut: handleSignOut, fetchUserProfile, navItems, dynamicRoutes, onAuthTransition }}>
       {children}
     </RoleContext.Provider>
   );

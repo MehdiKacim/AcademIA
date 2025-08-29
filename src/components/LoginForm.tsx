@@ -10,9 +10,10 @@ interface LoginFormProps {
   onSuccess: () => void;
   onSwitchToSignup: () => void; // Re-added prop for consistency with AuthPage
   onForgotPasswordClick: () => void; // New prop
+  onAuthTransition: (message: string, callback?: () => void) => void; // New prop
 }
 
-export const LoginForm = ({ onSuccess, onSwitchToSignup, onForgotPasswordClick }: LoginFormProps) => {
+export const LoginForm = ({ onSuccess, onSwitchToSignup, onForgotPasswordClick, onAuthTransition }: LoginFormProps) => { // Add onAuthTransition prop
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -20,18 +21,23 @@ export const LoginForm = ({ onSuccess, onSwitchToSignup, onForgotPasswordClick }
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent default form submission
     setIsLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: password.trim(),
-    });
 
-    if (error) {
-      console.error("Login error:", error);
-      showError(`Erreur de connexion: ${error.message}`);
-    } else if (data.user) {
-      onSuccess();
-    }
-    setIsLoading(false);
+    const performLogin = async () => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+        showError(`Erreur de connexion: ${error.message}`);
+      } else if (data.user) {
+        onSuccess();
+      }
+      setIsLoading(false);
+    };
+
+    onAuthTransition("Connexion en cours...", performLogin); // Trigger overlay before actual login
   };
 
   return (

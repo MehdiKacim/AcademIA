@@ -5,10 +5,10 @@ import Logo from './Logo'; // Import the Logo component
 
 interface ThemeTransitionOverlayProps {
   isOpen: boolean;
-  targetThemeName: string; // Ex: "Clair", "Sombre", "Violet Sombre"
+  message: string; // Changed from targetThemeName
 }
 
-const ThemeTransitionOverlay = ({ isOpen, targetThemeName }: ThemeTransitionOverlayProps) => {
+const ThemeTransitionOverlay = ({ isOpen, message }: ThemeTransitionOverlayProps) => { // Changed prop name
   const textVariants = {
     hidden: { opacity: 0, x: -20 },
     visible: {
@@ -66,7 +66,7 @@ const ThemeTransitionOverlay = ({ isOpen, targetThemeName }: ThemeTransitionOver
             exit="exit" // Assure que le texte disparaît aussi
             transition={{ delay: 0.8, duration: 1.5, ease: "easeInOut" }} // Durée de l'animation du bloc de texte
           >
-            {targetThemeName.split("").map((char, index) => (
+            {message.split("").map((char, index) => ( // Use message here
               <motion.span key={index} variants={letterVariants}>
                 {char}
               </motion.span>

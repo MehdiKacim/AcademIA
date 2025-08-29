@@ -43,6 +43,7 @@ import { motion } from 'framer-motion'; // Import motion for animations
 interface IndexProps {
   setIsAdminModalOpen: (isOpen: boolean) => void;
   onInitiateThemeChange: (newTheme: string) => void; // Add onInitiateThemeChange prop
+  onAuthTransition: (message: string, callback?: () => void) => void; // New prop
 }
 
 // Map icon_name strings to Lucide React components
@@ -50,7 +51,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   Home, MessageSquareQuote, SlidersHorizontal, Info, LogIn, Download, MessageCircleMore, BotMessageSquare, SunMoon,
 };
 
-const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => { // Add onInitiateThemeChange prop
+const Index = ({ setIsAdminModalOpen, onInitiateThemeChange, onAuthTransition }: IndexProps) => { // Add onAuthTransition prop
   const [activeSection, setActiveSection] = useState('accueil');
   const sectionRefs = {
     accueil: useRef<HTMLDivElement>(null),
@@ -274,7 +275,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => { 
             <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/20 rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
             <div className="flex justify-center mb-8">
-              <Logo iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
+              <Logo onLogoClick={handleLogoClick} iconClassName="w-24 h-24 sm:w-40 sm:h-40" showText={false} disableInternalAnimation={false} /> {/* Pass disableInternalAnimation={false} */}
             </div>
             {/* NEW: Animated AcademIA text */}
             <motion.h1
@@ -378,6 +379,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => { 
             onOpenAuthModal={() => navigate('/auth')}
             unreadMessagesCount={0} // No unread messages for unauthenticated
             isMobile={isMobile}
+            onInitiateThemeChange={onInitiateThemeChange}
           />
           <div className="fixed bottom-0 left-0 right-0 z-[1001] px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-lg bg-background/80 h-[68px] border-t-2 border-border">
             <MobileBottomNavContent
@@ -387,7 +389,7 @@ const Index = ({ setIsAdminModalOpen, onInitiateThemeChange }: IndexProps) => { 
               isAuthenticated={false}
               unreadMessagesCount={0} // Pass unread messages count
               isMobileNavSheetOpen={isMobileNavSheetOpen} // Pass the state here
-              onInitiateThemeChange={onInitiateThemeChange} // Pass onInitiateThemeChange
+              onInitiateThemeChange={onInitiateThemeChange}
             />
           </div>
         </>

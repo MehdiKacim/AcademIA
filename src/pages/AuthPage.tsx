@@ -13,7 +13,11 @@ import { cn } from '@/lib/utils';
 
 type AuthView = 'login' | 'signup-info' | 'forgot-password' | 'password-reset-success';
 
-const AuthPage = () => {
+interface AuthPageProps {
+  onAuthTransition: (message: string, callback?: () => void) => void; // New prop
+}
+
+const AuthPage = ({ onAuthTransition }: AuthPageProps) => { // Add onAuthTransition prop
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<AuthView>('login');
   const [resetEmail, setResetEmail] = useState<string>('');
@@ -36,6 +40,7 @@ const AuthPage = () => {
             onSuccess={handleLoginSuccess}
             onSwitchToSignup={() => setCurrentView('signup-info')}
             onForgotPasswordClick={() => setCurrentView('forgot-password')}
+            onAuthTransition={onAuthTransition} // Pass onAuthTransition
           />
         );
       case 'signup-info':

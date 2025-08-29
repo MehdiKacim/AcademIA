@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster } from "@/components/ui/sonner"; // Changed import name to Toaster
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@radix-ui/react-tooltip"; // Corrected import path
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
@@ -47,11 +47,47 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
   const { currentUserProfile, isLoadingUser, dynamicRoutes } = useRole();
   const { setTheme } = useTheme(); // Get setTheme from next-themes
 
-  const [isThemeTransitionActive, setIsThemeTransitionActive] = useState(false);
-  const [transitioningToThemeName, setTransitioningToThemeName] = useState('');
+  const [isOverlayActive, setIsOverlayActive] = useState(false); // Renamed from isThemeTransitionActive
+  const [overlayMessage, setOverlayMessage] = useState(''); // Renamed from transitioningToThemeName
 
-  // Removed initialTheme as defaultTheme prop is removed from ThemeProvider
-  // const initialTheme = currentUserProfile?.theme || "dark";
+  // New generic function to trigger the overlay animation
+  const triggerOverlay = useCallback((message: string, callback?: () => void, duration: number = 1500) => {
+    setOverlayMessage(message);
+    setIsOverlayActive(true);
+
+    // Execute callback after the initial animation duration
+    const callbackTimer = setTimeout(() => {
+      if (callback) {
+        callback();
+      }
+    }, duration);
+
+    // Hide the overlay after a slightly longer duration
+    const hideOverlayTimer = setTimeout(() => {
+      setIsOverlayActive(false);
+      setOverlayMessage(''); // Clear message after hiding
+    }, duration + 500); // Give a bit more time for UI to settle
+
+    return () => {
+      clearTimeout(callbackTimer);
+      clearTimeout(hideOverlayTimer);
+    };
+  }, []); // No dependencies needed for useCallback as it's only called once or on auth state change
+
+  const handleInitiateThemeChange = useCallback((newTheme: string) => { // Changed newTheme type to string
+    const themeDisplayNameMap: { [key: string]: string } = {
+      'light': 'Clair',
+      'dark': 'Sombre',
+      'dark-purple': 'Violet Sombre',
+      'system': 'Système',
+    };
+    const displayName = themeDisplayNameMap[newTheme] || newTheme;
+
+    triggerOverlay(`Changement de thème vers ${displayName}...`, () => {
+      setTheme(newTheme); // Apply the theme after the overlay starts
+    }, 1000); // Shorter duration for theme change animation
+  }, [triggerOverlay, setTheme]);
+
 
   // Define a base map of route paths to components
   const baseRouteComponentMap: { [key: string]: React.ElementType } = {
@@ -86,24 +122,6 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
     // console.log("[App.tsx] currentUserProfile (in useEffect):", currentUserProfile);
   }, [dynamicRoutes, currentUserProfile]);
 
-  const handleInitiateThemeChange = useCallback((newTheme: string) => { // Changed newTheme type to string
-    const themeDisplayNameMap: { [key: string]: string } = {
-      'light': 'Clair',
-      'dark': 'Sombre',
-      'dark-purple': 'Violet Sombre',
-      'system': 'Système',
-    };
-    const displayName = themeDisplayNameMap[newTheme] || newTheme;
-
-    setTransitioningToThemeName(displayName);
-    setIsThemeTransitionActive(true);
-    setTheme(newTheme); // Applique le thème immédiatement en arrière-plan
-
-    // Cache la superposition après la durée de l'animation
-    setTimeout(() => {
-      setIsThemeTransitionActive(false);
-    }, 4000); // Durée ajustée à 4 secondes
-  }, [setTheme]);
 
   if (isLoadingUser) {
     // console.log("[App.tsx] AuthenticatedAppRoutes: isLoadingUser is true, rendering SplashScreen.");
@@ -136,9 +154,9 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} />} />
-              <Route path="/auth" element={<AuthPage />} /> {/* New AuthPage route */}
-              <Route path="/reset-password" element={<ResetPassword />} /> {/* New ResetPassword route */}
+              <Route path="/" element={currentUserProfile ? <Navigate to="/dashboard" replace /> : <Index setIsAdminModalOpen={setIsAdminModalOpen} onInitiateThemeChange={handleInitiateThemeChange} onAuthTransition={triggerOverlay} />} />
+              <Route path="/auth" element={<AuthPage onAuthTransition={triggerOverlay} />} /> {/* Pass triggerOverlay */}
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/about" element={<About />} /> {/* New About page route */}
 
               <Route element={<ProtectedRoute />}>
@@ -177,10 +195,10 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
             isOpen={isAdminModalOpen}
             onClose={() => setIsAdminModalOpen(false)}
           />
-          {isThemeTransitionActive && (
+          {isOverlayActive && ( // Use isOverlayActive
             <ThemeTransitionOverlay
-              isOpen={isThemeTransitionActive}
-              targetThemeName={transitioningToThemeName}
+              isOpen={isOverlayActive}
+              message={overlayMessage} // Pass overlayMessage
             />
           )}
         </React.Fragment>
