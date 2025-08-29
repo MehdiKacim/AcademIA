@@ -121,7 +121,7 @@ const AuthenticatedAppRoutes = ({ isAdminModalOpen, setIsAdminModalOpen }: { isA
             position="top-center"
             richColors // Added richColors
             closeButton // Added closeButton
-            containerClassName="fixed top-16 left-0 right-0 z-[9999] flex flex-col" // Positionnement explicite du conteneur
+            containerClassName="fixed inset-x-0 top-0 z-[9999] flex flex-col items-center p-4" // Positionnement explicite du conteneur
             toastOptions={{
               duration: 5000,
               // Removed classNames.toast as it's handled by custom component

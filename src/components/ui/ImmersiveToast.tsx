@@ -28,17 +28,17 @@ const ImmersiveToast = ({ title, message, type, action, Icon }: ImmersiveToastPr
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      initial={{ opacity: 0, y: -50 }} // Start higher for a "drop-down" effect
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }} // Exit upwards
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "flex items-start gap-3 p-4 rounded-lg shadow-lg border",
-        "w-full max-w-md md:max-w-lg lg:max-w-xl", // Responsive width
-        type === 'success' && "bg-success/90 text-success-foreground border-success",
-        type === 'error' && "bg-destructive/90 text-destructive-foreground border-destructive",
-        type === 'info' && "bg-primary/90 text-primary-foreground border-primary",
-        type === 'loading' && "bg-muted/90 text-muted-foreground border-muted",
+        "flex items-start gap-3 px-6 py-4", // Adjusted padding for bar-like appearance
+        "w-full max-w-full", // Take full width of its container, but respect max-width of container
+        type === 'success' && "bg-success/90 text-success-foreground",
+        type === 'error' && "bg-destructive/90 text-destructive-foreground",
+        type === 'info' && "bg-primary/90 text-primary-foreground",
+        type === 'loading' && "bg-muted/90 text-muted-foreground",
         "backdrop-blur-md" // Add blur for immersive effect
       )}
     >
